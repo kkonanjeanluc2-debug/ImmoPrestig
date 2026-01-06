@@ -98,7 +98,7 @@ const Index = () => {
           />
           <StatCard
             title="Revenus mensuels"
-            value="32 450 €"
+            value="32 450 F CFA"
             change="+8% vs mois dernier"
             changeType="positive"
             icon={Wallet}

@@ -59,8 +59,8 @@ export function PropertyCard({
         <div className="absolute bottom-3 right-3">
           <span className="bg-navy text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-semibold">
             {type === "location" 
-              ? `${price.toLocaleString('fr-FR')} €/mois`
-              : `${price.toLocaleString('fr-FR')} €`
+              ? `${price.toLocaleString('fr-FR')} F CFA/mois`
+              : `${price.toLocaleString('fr-FR')} F CFA`
             }
           </span>
         </div>

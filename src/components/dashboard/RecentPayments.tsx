@@ -90,7 +90,7 @@ export function RecentPayments() {
               </div>
               <div className="text-right">
                 <p className="font-semibold text-foreground">
-                  {payment.amount.toLocaleString('fr-FR')} €
+                  {payment.amount.toLocaleString('fr-FR')} F CFA
                 </p>
                 <p className="text-sm text-muted-foreground">{payment.date}</p>
               </div>

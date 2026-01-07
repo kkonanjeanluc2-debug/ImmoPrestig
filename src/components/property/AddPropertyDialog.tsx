@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Home, Building, MapPin } from "lucide-react";
+import { Plus, Home, Building, MapPin, Upload, X, ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddPropertyDialogProps {
   onPropertyAdd?: (property: PropertyFormData) => void;
@@ -31,6 +32,64 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
     type: "location",
     propertyType: "appartement",
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Veuillez sélectionner une image valide");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dépasser 5 Mo");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `properties/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image: urlData.publicUrl });
+      setImagePreview(urlData.publicUrl);
+      toast.success("Image importée avec succès !");
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error("Erreur lors de l'import de l'image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    setFormData({ ...formData, image: undefined });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,13 +115,8 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
     onPropertyAdd?.(newProperty);
     toast.success("Bien ajouté avec succès !");
     setFormData({ type: "location", propertyType: "appartement" });
+    setImagePreview(null);
     setOpen(false);
-  };
-
-  const propertyTypeIcon = {
-    maison: Home,
-    appartement: Building,
-    terrain: MapPin,
   };
 
   return (
@@ -203,15 +257,59 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
             </div>
           )}
 
-          {/* URL de l'image */}
+          {/* Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="image">URL de l'image</Label>
-            <Input
-              id="image"
-              placeholder="https://exemple.com/image.jpg"
-              value={formData.image || ""}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            />
+            <Label>Photo du bien</Label>
+            <div className="space-y-3">
+              {imagePreview ? (
+                <div className="relative rounded-lg overflow-hidden border border-border">
+                  <img 
+                    src={imagePreview} 
+                    alt="Aperçu" 
+                    className="w-full h-48 object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8"
+                    onClick={removeImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-emerald/50 hover:bg-emerald/5 transition-colors"
+                >
+                  {isUploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-10 w-10 text-emerald animate-spin" />
+                      <p className="text-sm text-muted-foreground">Import en cours...</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="p-3 rounded-full bg-emerald/10">
+                        <ImageIcon className="h-8 w-8 text-emerald" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Cliquez pour importer une image</p>
+                        <p className="text-sm text-muted-foreground">ou glissez-déposez</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">PNG, JPG, WEBP (max 5 Mo)</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
           </div>
 
           {/* Description */}
@@ -231,7 +329,7 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuler
             </Button>
-            <Button type="submit" className="bg-emerald hover:bg-emerald-dark">
+            <Button type="submit" className="bg-emerald hover:bg-emerald-dark" disabled={isUploading}>
               Ajouter le bien
             </Button>
           </div>

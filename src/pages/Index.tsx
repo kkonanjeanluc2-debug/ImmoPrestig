@@ -1,11 +1,27 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { RecentPayments } from "@/components/dashboard/RecentPayments";
-import { Building2, Users, Wallet, TrendingUp, Plus } from "lucide-react";
+import { AddPropertyDialog, PropertyFormData } from "@/components/property/AddPropertyDialog";
+import { Building2, Users, Wallet, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const properties = [
+interface Property {
+  id: string;
+  image: string;
+  title: string;
+  address: string;
+  price: number;
+  type: "location" | "vente";
+  propertyType: "maison" | "appartement" | "terrain";
+  bedrooms?: number;
+  bathrooms?: number;
+  area: number;
+  status: "disponible" | "occupé" | "en attente";
+}
+
+const initialProperties: Property[] = [
   {
     id: "1",
     image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
@@ -59,6 +75,25 @@ const properties = [
 ];
 
 const Index = () => {
+  const [properties, setProperties] = useState(initialProperties);
+
+  const handlePropertyAdd = (propertyData: PropertyFormData) => {
+    const newProperty = {
+      id: Date.now().toString(),
+      image: propertyData.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
+      title: propertyData.title,
+      address: propertyData.address,
+      price: propertyData.price,
+      type: propertyData.type,
+      propertyType: propertyData.propertyType,
+      bedrooms: propertyData.bedrooms,
+      bathrooms: propertyData.bathrooms,
+      area: propertyData.area,
+      status: "disponible" as const,
+    };
+    setProperties([newProperty, ...properties]);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -72,10 +107,7 @@ const Index = () => {
               Bienvenue, Jean. Voici un aperçu de votre patrimoine immobilier.
             </p>
           </div>
-          <Button className="bg-emerald hover:bg-emerald-dark text-primary-foreground gap-2">
-            <Plus className="h-4 w-4" />
-            Ajouter un bien
-          </Button>
+          <AddPropertyDialog onPropertyAdd={handlePropertyAdd} />
         </div>
 
         {/* Stats Grid */}

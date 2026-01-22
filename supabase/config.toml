@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-sms-reminder]
 verify_jwt = false
+
+[functions.daily-sms-reminders]
+verify_jwt = false

@@ -1,10 +1,8 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Plus, 
   Search, 
   Users, 
   FileText, 
@@ -25,6 +23,7 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
+import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
 
 const contractStatusConfig = {
   active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
@@ -230,10 +229,7 @@ export default function Tenants() {
               Gérez vos locataires, contrats et paiements
             </p>
           </div>
-          <Button className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un locataire
-          </Button>
+          <AddTenantDialog />
         </div>
 
         {/* Search */}

@@ -7,6 +7,7 @@ import { PropertyPerformanceChart } from "@/components/dashboard/PropertyPerform
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
 import { RecentPayments } from "@/components/dashboard/RecentPayments";
+import { PropertyMap } from "@/components/dashboard/PropertyMap";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DraggableWidget } from "@/components/dashboard/DraggableWidget";
 import { useDashboardPreferences, WidgetId } from "@/hooks/useDashboardPreferences";
@@ -141,13 +142,16 @@ const AdvancedDashboard = () => {
       case "recent-payments":
         return <RecentPayments />;
 
+      case "property-map":
+        return <PropertyMap properties={properties || []} />;
+
       default:
         return null;
     }
   };
 
   // Filter and sort widgets for main grid
-  const mainWidgets: WidgetId[] = ["revenue-trend", "late-analysis", "property-performance", "occupancy", "property-types", "recent-payments"];
+  const mainWidgets: WidgetId[] = ["property-map", "revenue-trend", "late-analysis", "property-performance", "occupancy", "property-types", "recent-payments"];
   const sortedMainWidgets = preferences.widgetOrder.filter((id) => mainWidgets.includes(id) && isVisible(id));
 
   return (
@@ -203,7 +207,7 @@ const AdvancedDashboard = () => {
                       key={widgetId}
                       id={widgetId}
                       className={
-                        widgetId === "revenue-trend"
+                        widgetId === "revenue-trend" || widgetId === "property-map"
                           ? "col-span-full lg:col-span-2"
                           : widgetId === "recent-payments"
                           ? "md:col-span-2 lg:col-span-1"

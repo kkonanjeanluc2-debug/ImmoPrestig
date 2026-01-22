@@ -5,7 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Home, Building2, LandPlot, Pencil, Check, X, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MapPin, Home, Building2, LandPlot, Pencil, Check, X, Loader2, Maximize2, Navigation, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -118,6 +126,110 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
     }
   }, [map, positions]);
+  
+  return null;
+}
+
+// Map controls component for navigation
+interface MapControlsProps {
+  properties: (Property & { lat: number; lng: number })[];
+  onFitAll: () => void;
+  onFocusProperty: (id: string) => void;
+}
+
+function MapControlsOverlay({ properties, onFitAll, onFocusProperty }: MapControlsProps) {
+  return (
+    <div className="absolute top-3 right-3 z-[1000] flex gap-2">
+      <Button
+        size="sm"
+        variant="secondary"
+        onClick={onFitAll}
+        className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
+      >
+        <Maximize2 className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Voir tout</span>
+      </Button>
+      
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
+          >
+            <Navigation className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Aller à</span>
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56 max-h-64 overflow-y-auto bg-background z-[1001]">
+          <DropdownMenuLabel>Sélectionner un bien</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {properties.map((property) => (
+            <DropdownMenuItem
+              key={property.id}
+              onClick={() => onFocusProperty(property.id)}
+              className="cursor-pointer"
+            >
+              <div className="flex items-center gap-2 w-full">
+                <div
+                  className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                  style={{
+                    backgroundColor:
+                      property.status === "occupé"
+                        ? "#10b981"
+                        : property.status === "disponible"
+                        ? "#3b82f6"
+                        : "#f59e0b",
+                  }}
+                />
+                <span className="truncate">{property.title}</span>
+              </div>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+// Hook to control map from outside
+function useMapControl() {
+  const map = useMap();
+  
+  const fitAll = useCallback((positions: [number, number][]) => {
+    if (positions.length > 0) {
+      const bounds = L.latLngBounds(positions);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    }
+  }, [map]);
+  
+  const focusOn = useCallback((lat: number, lng: number) => {
+    map.flyTo([lat, lng], 16, { duration: 0.8 });
+  }, [map]);
+  
+  return { fitAll, focusOn };
+}
+
+// Map controller component that receives commands
+interface MapControllerProps {
+  command: { type: 'fitAll'; positions: [number, number][] } | { type: 'focusOn'; lat: number; lng: number } | null;
+  onCommandExecuted: () => void;
+}
+
+function MapController({ command, onCommandExecuted }: MapControllerProps) {
+  const { fitAll, focusOn } = useMapControl();
+  
+  useEffect(() => {
+    if (command) {
+      if (command.type === 'fitAll') {
+        fitAll(command.positions);
+      } else if (command.type === 'focusOn') {
+        focusOn(command.lat, command.lng);
+      }
+      onCommandExecuted();
+    }
+  }, [command, fitAll, focusOn, onCommandExecuted]);
   
   return null;
 }
@@ -433,6 +545,29 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
     }
   }, [onCoordinatesUpdated]);
 
+  // Map command state for navigation
+  const [mapCommand, setMapCommand] = useState<
+    { type: 'fitAll'; positions: [number, number][] } | 
+    { type: 'focusOn'; lat: number; lng: number } | 
+    null
+  >(null);
+
+  const handleFitAll = useCallback(() => {
+    const allPositions: [number, number][] = geocodedProperties.map((p) => [p.lat, p.lng]);
+    setMapCommand({ type: 'fitAll', positions: allPositions });
+  }, [geocodedProperties]);
+
+  const handleFocusProperty = useCallback((propertyId: string) => {
+    const property = geocodedProperties.find((p) => p.id === propertyId);
+    if (property) {
+      setMapCommand({ type: 'focusOn', lat: property.lat, lng: property.lng });
+    }
+  }, [geocodedProperties]);
+
+  const clearCommand = useCallback(() => {
+    setMapCommand(null);
+  }, []);
+
   // Default center (Senegal - Dakar as example)
   const defaultCenter: [number, number] = [14.6928, -17.4467];
   const positions: [number, number][] = geocodedProperties.map((p) => [p.lat, p.lng]);
@@ -483,7 +618,14 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
             </div>
           </div>
         ) : (
-          <div className="h-[400px] rounded-lg overflow-hidden border border-border">
+          <div className="h-[400px] rounded-lg overflow-hidden border border-border relative">
+            {/* Map Controls */}
+            <MapControlsOverlay
+              properties={geocodedProperties}
+              onFitAll={handleFitAll}
+              onFocusProperty={handleFocusProperty}
+            />
+            
             <MapContainer
               center={positions.length > 0 ? positions[0] : defaultCenter}
               zoom={12}
@@ -495,6 +637,7 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               {positions.length > 1 && <FitBounds positions={positions} />}
+              <MapController command={mapCommand} onCommandExecuted={clearCommand} />
               {geocodedProperties.map((property) => (
                 <DraggableMarker
                   key={property.id}

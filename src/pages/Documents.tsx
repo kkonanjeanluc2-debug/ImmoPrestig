@@ -1,12 +1,11 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   FileText, 
   Search, 
-  Upload, 
   Download, 
   Eye, 
   Trash2,
@@ -29,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDocuments, useDeleteDocument, DocumentWithDetails } from "@/hooks/useDocuments";
+import { AddDocumentDialog } from "@/components/document/AddDocumentDialog";
 import { toast } from "sonner";
 
 const typeConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
@@ -185,10 +185,7 @@ export default function Documents() {
               Gérez vos contrats, quittances et fichiers
             </p>
           </div>
-          <Button className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto">
-            <Upload className="h-4 w-4 mr-2" />
-            Ajouter un document
-          </Button>
+          <AddDocumentDialog />
         </div>
 
         {/* Stats */}

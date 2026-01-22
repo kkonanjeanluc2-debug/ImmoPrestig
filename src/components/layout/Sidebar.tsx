@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Building2, 
@@ -10,11 +10,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
@@ -34,6 +36,8 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -139,6 +143,27 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             );
           })}
         </nav>
+
+        {/* User info and logout */}
+        <div className="p-3 border-t border-navy-light">
+          {(!collapsed || mobileOpen) && user && (
+            <p className="text-xs text-primary-foreground/60 truncate mb-2 px-2">
+              {user.email}
+            </p>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={async () => {
+              await signOut();
+              navigate("/login");
+            }}
+            className="w-full text-primary-foreground/70 hover:text-primary-foreground hover:bg-navy-light justify-start"
+          >
+            <LogOut className={cn("h-4 w-4", (!collapsed || mobileOpen) && "mr-2")} />
+            {(!collapsed || mobileOpen) && <span className="text-sm">Déconnexion</span>}
+          </Button>
+        </div>
 
         {/* Collapse Button - Desktop only */}
         <div className="p-3 border-t border-navy-light hidden lg:block">

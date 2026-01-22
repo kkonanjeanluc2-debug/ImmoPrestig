@@ -4,6 +4,7 @@ import { Bell, Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLatePaymentNotifications } from "@/hooks/useLatePaymentNotifications";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,6 +12,9 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
+  
+  // Subscribe to real-time late payment notifications
+  useLatePaymentNotifications();
 
   return (
     <div className="min-h-screen bg-muted">

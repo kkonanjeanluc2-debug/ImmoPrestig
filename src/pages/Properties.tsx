@@ -15,12 +15,14 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useProperties } from "@/hooks/useProperties";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const Properties = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const { canCreate } = usePermissions();
   
   const { data: properties, isLoading, error } = useProperties();
 
@@ -61,7 +63,7 @@ const Properties = () => {
                 { key: 'status', label: 'Statut', format: (v) => v === 'disponible' ? 'Disponible' : v === 'occupé' ? 'Occupé' : 'En attente' },
               ]}
             />
-            <AddPropertyDialog />
+            {canCreate && <AddPropertyDialog />}
           </div>
         </div>
 

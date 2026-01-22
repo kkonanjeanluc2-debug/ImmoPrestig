@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const contractStatusConfig = {
   active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
@@ -198,6 +199,7 @@ function TenantCard({ tenant }: { tenant: TenantWithDetails }) {
 export default function Tenants() {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: tenants, isLoading, error } = useTenants();
+  const { canCreate } = usePermissions();
 
   const filteredTenants = (tenants || []).filter(tenant =>
     tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -257,7 +259,7 @@ export default function Tenants() {
                 }},
               ]}
             />
-            <AddTenantDialog />
+            {canCreate && <AddTenantDialog />}
           </div>
         </div>
 

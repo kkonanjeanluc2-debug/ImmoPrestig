@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,29 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+// Custom cluster icon
+const createClusterCustomIcon = (cluster: any) => {
+  const count = cluster.getChildCount();
+  let size = "small";
+  let diameter = 36;
+  
+  if (count >= 10 && count < 50) {
+    size = "medium";
+    diameter = 44;
+  } else if (count >= 50) {
+    size = "large";
+    diameter = 52;
+  }
+
+  return L.divIcon({
+    html: `<div class="cluster-icon cluster-${size}">
+      <span>${count}</span>
+    </div>`,
+    className: "custom-cluster-marker",
+    iconSize: L.point(diameter, diameter, true),
+  });
+};
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -638,13 +662,23 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
               />
               {positions.length > 1 && <FitBounds positions={positions} />}
               <MapController command={mapCommand} onCommandExecuted={clearCommand} />
-              {geocodedProperties.map((property) => (
-                <DraggableMarker
-                  key={property.id}
-                  property={property}
-                  onDragEnd={handleCoordinatesUpdate}
-                />
-              ))}
+              <MarkerClusterGroup
+                chunkedLoading
+                iconCreateFunction={createClusterCustomIcon}
+                maxClusterRadius={60}
+                spiderfyOnMaxZoom={true}
+                showCoverageOnHover={false}
+                zoomToBoundsOnClick={true}
+                animate={true}
+              >
+                {geocodedProperties.map((property) => (
+                  <DraggableMarker
+                    key={property.id}
+                    property={property}
+                    onDragEnd={handleCoordinatesUpdate}
+                  />
+                ))}
+              </MarkerClusterGroup>
             </MapContainer>
           </div>
         )}

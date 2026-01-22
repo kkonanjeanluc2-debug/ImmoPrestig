@@ -85,11 +85,36 @@ export const useDeleteTenant = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // First, get the tenant to find their property_id
+      const { data: tenant, error: fetchError } = await supabase
+        .from("tenants")
+        .select("property_id")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      const propertyId = tenant?.property_id;
+
+      // Delete the tenant (contracts and payments will need cascade or manual deletion)
       const { error } = await supabase.from("tenants").delete().eq("id", id);
       if (error) throw error;
+
+      // If tenant had a property, update its status to 'disponible'
+      if (propertyId) {
+        const { error: updateError } = await supabase
+          .from("properties")
+          .update({ status: "disponible" })
+          .eq("id", propertyId);
+        
+        if (updateError) {
+          console.error("Error updating property status:", updateError);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
     },
   });
 };

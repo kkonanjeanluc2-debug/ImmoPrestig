@@ -86,3 +86,32 @@ export const useDeleteContract = () => {
     },
   });
 };
+
+export const useExpireContract = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ contractId, propertyId }: { contractId: string; propertyId: string }) => {
+      // Update contract status to expired
+      const { error: contractError } = await supabase
+        .from("contracts")
+        .update({ status: "expired" })
+        .eq("id", contractId);
+
+      if (contractError) throw contractError;
+
+      // Update property status to disponible
+      const { error: propertyError } = await supabase
+        .from("properties")
+        .update({ status: "disponible" })
+        .eq("id", propertyId);
+
+      if (propertyError) throw propertyError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    },
+  });
+};

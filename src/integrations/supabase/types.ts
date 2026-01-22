@@ -297,6 +297,8 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          latitude: number | null
+          longitude: number | null
           owner_id: string | null
           price: number
           property_type: string
@@ -315,6 +317,8 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           owner_id?: string | null
           price: number
           property_type: string
@@ -333,6 +337,8 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           owner_id?: string | null
           price?: number
           property_type?: string

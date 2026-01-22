@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { useDocuments, useDeleteDocument, DocumentWithDetails } from "@/hooks/useDocuments";
 import { AddDocumentDialog } from "@/components/document/AddDocumentDialog";
+import { ViewDocumentDialog } from "@/components/document/ViewDocumentDialog";
 import { toast } from "sonner";
 
 const typeConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
@@ -63,78 +64,123 @@ function StatCard({ title, value, icon: Icon, color }: { title: string; value: s
 }
 
 function DocumentCard({ document, onDelete }: { document: DocumentWithDetails; onDelete: (id: string) => void }) {
+  const [viewOpen, setViewOpen] = useState(false);
   const typeInfo = typeConfig[document.type] || typeConfig.other;
   const statusInfo = statusConfig[document.status] || statusConfig.valid;
   const TypeIcon = typeInfo.icon;
 
+  const handleDownload = () => {
+    if (document.file_url) {
+      const link = window.document.createElement("a");
+      link.href = document.file_url;
+      link.download = document.name;
+      link.target = "_blank";
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+    } else {
+      toast.error("Aucun fichier disponible pour ce document");
+    }
+  };
+
+  const handleView = () => {
+    if (document.file_url) {
+      setViewOpen(true);
+    } else {
+      toast.error("Aucun fichier disponible pour ce document");
+    }
+  };
+
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          {/* Icon */}
-          <div className={`h-12 w-12 rounded-lg ${typeInfo.color} flex items-center justify-center flex-shrink-0`}>
-            <TypeIcon className="h-6 w-6" />
-          </div>
+    <>
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+            {/* Icon */}
+            <div className={`h-12 w-12 rounded-lg ${typeInfo.color} flex items-center justify-center flex-shrink-0`}>
+              <TypeIcon className="h-6 w-6" />
+            </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="font-semibold text-foreground truncate">{document.name}</h3>
-                <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <Badge variant="secondary" className={typeInfo.color}>
-                    {typeInfo.label}
-                  </Badge>
-                  <Badge variant="secondary" className={statusInfo.color}>
-                    {statusInfo.label}
-                  </Badge>
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground truncate">{document.name}</h3>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <Badge variant="secondary" className={typeInfo.color}>
+                      {typeInfo.label}
+                    </Badge>
+                    <Badge variant="secondary" className={statusInfo.color}>
+                      {statusInfo.label}
+                    </Badge>
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">{document.file_size || '-'}</span>
+              </div>
+
+              <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                {document.property && (
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{(document.property as any)?.title || 'Bien non assigné'}</span>
+                  </div>
+                )}
+                {document.tenant && (
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{(document.tenant as any)?.name || 'Locataire non assigné'}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                  <span>{new Date(document.created_at).toLocaleDateString('fr-FR')}</span>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">{document.file_size || '-'}</span>
-            </div>
 
-            <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-              {document.property && (
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{(document.property as any)?.title || 'Bien non assigné'}</span>
-                </div>
-              )}
-              {document.tenant && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{(document.tenant as any)?.name || 'Locataire non assigné'}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 flex-shrink-0" />
-                <span>{new Date(document.created_at).toLocaleDateString('fr-FR')}</span>
+              {/* Actions */}
+              <div className="flex items-center gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 sm:flex-none"
+                  onClick={handleView}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Voir</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 sm:flex-none"
+                  onClick={handleDownload}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Télécharger</span>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => onDelete(document.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2 mt-4">
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                <Eye className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Voir</span>
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                <Download className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Télécharger</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => onDelete(document.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <ViewDocumentDialog
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        document={{
+          name: document.name,
+          file_url: document.file_url,
+          type: document.type,
+        }}
+      />
+    </>
   );
 }
 

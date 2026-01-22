@@ -57,84 +57,84 @@ const tenants: Tenant[] = [
     id: "1",
     name: "Marie Dupont",
     email: "marie.dupont@email.com",
-    phone: "+33 6 12 34 56 78",
+    phone: "+225 07 12 34 56 78",
     property: "Appartement Haussmannien",
-    propertyAddress: "15 Rue de Rivoli, Paris 75001",
+    propertyAddress: "15 Rue du Commerce, Abidjan Plateau",
     contract: {
       id: "c1",
       startDate: "2024-01-01",
       endDate: "2026-12-31",
-      rentAmount: 1200,
-      deposit: 2400,
+      rentAmount: 450000,
+      deposit: 900000,
       status: "active"
     },
     payments: [
-      { id: "p1", date: "2026-01-05", amount: 1200, status: "paid" },
-      { id: "p2", date: "2025-12-03", amount: 1200, status: "paid" },
-      { id: "p3", date: "2025-11-05", amount: 1200, status: "paid" },
+      { id: "p1", date: "2026-01-05", amount: 450000, status: "paid" },
+      { id: "p2", date: "2025-12-03", amount: 450000, status: "paid" },
+      { id: "p3", date: "2025-11-05", amount: 450000, status: "paid" },
     ]
   },
   {
     id: "2",
     name: "Pierre Martin",
     email: "pierre.martin@email.com",
-    phone: "+33 6 98 76 54 32",
+    phone: "+225 05 98 76 54 32",
     property: "Studio Moderne",
-    propertyAddress: "8 Avenue des Champs-Élysées, Paris 75008",
+    propertyAddress: "8 Boulevard de la République, Abidjan Cocody",
     contract: {
       id: "c2",
       startDate: "2023-06-01",
       endDate: "2026-05-31",
-      rentAmount: 850,
-      deposit: 1700,
+      rentAmount: 320000,
+      deposit: 640000,
       status: "ending_soon"
     },
     payments: [
-      { id: "p4", date: "2026-01-10", amount: 850, status: "pending" },
-      { id: "p5", date: "2025-12-05", amount: 850, status: "paid" },
-      { id: "p6", date: "2025-11-08", amount: 850, status: "late" },
+      { id: "p4", date: "2026-01-10", amount: 320000, status: "pending" },
+      { id: "p5", date: "2025-12-05", amount: 320000, status: "paid" },
+      { id: "p6", date: "2025-11-08", amount: 320000, status: "late" },
     ]
   },
   {
     id: "3",
     name: "Sophie Bernard",
     email: "sophie.bernard@email.com",
-    phone: "+33 6 45 67 89 01",
+    phone: "+225 01 45 67 89 01",
     property: "Maison de Ville",
-    propertyAddress: "25 Rue du Commerce, Lyon 69002",
+    propertyAddress: "25 Rue du Jardin, Yamoussoukro",
     contract: {
       id: "c3",
       startDate: "2022-09-01",
       endDate: "2025-08-31",
-      rentAmount: 1800,
-      deposit: 3600,
+      rentAmount: 680000,
+      deposit: 1360000,
       status: "expired"
     },
     payments: [
-      { id: "p7", date: "2025-08-02", amount: 1800, status: "paid" },
-      { id: "p8", date: "2025-07-03", amount: 1800, status: "paid" },
-      { id: "p9", date: "2025-06-05", amount: 1800, status: "paid" },
+      { id: "p7", date: "2025-08-02", amount: 680000, status: "paid" },
+      { id: "p8", date: "2025-07-03", amount: 680000, status: "paid" },
+      { id: "p9", date: "2025-06-05", amount: 680000, status: "paid" },
     ]
   },
   {
     id: "4",
     name: "Lucas Petit",
     email: "lucas.petit@email.com",
-    phone: "+33 6 23 45 67 89",
+    phone: "+225 07 23 45 67 89",
     property: "Loft Industriel",
-    propertyAddress: "12 Quai de la Seine, Paris 75019",
+    propertyAddress: "12 Quai du Port, Abidjan Marcory",
     contract: {
       id: "c4",
       startDate: "2025-03-01",
       endDate: "2028-02-28",
-      rentAmount: 2200,
-      deposit: 4400,
+      rentAmount: 550000,
+      deposit: 1100000,
       status: "active"
     },
     payments: [
-      { id: "p10", date: "2026-01-03", amount: 2200, status: "paid" },
-      { id: "p11", date: "2025-12-02", amount: 2200, status: "paid" },
-      { id: "p12", date: "2025-11-04", amount: 2200, status: "paid" },
+      { id: "p10", date: "2026-01-03", amount: 550000, status: "paid" },
+      { id: "p11", date: "2025-12-02", amount: 550000, status: "paid" },
+      { id: "p12", date: "2025-11-04", amount: 550000, status: "paid" },
     ]
   },
 ];
@@ -229,7 +229,7 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
             {/* Rent Amount */}
             <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1">
               <span className="text-xl sm:text-2xl font-bold text-foreground">
-                {tenant.contract.rentAmount.toLocaleString('fr-FR')} €
+                {tenant.contract.rentAmount.toLocaleString('fr-FR')} <span className="text-sm font-normal">F CFA</span>
               </span>
               <span className="text-xs text-muted-foreground">/mois</span>
             </div>
@@ -252,7 +252,7 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="flex items-center gap-1.5">
               <Euro className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-muted-foreground">Dépôt:</span>
-              <span className="font-medium">{tenant.contract.deposit.toLocaleString('fr-FR')} €</span>
+              <span className="font-medium">{tenant.contract.deposit.toLocaleString('fr-FR')} F CFA</span>
             </div>
           </div>
         </div>
@@ -295,7 +295,7 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
                         </div>
                       </div>
                       <span className="font-semibold text-foreground">
-                        {payment.amount.toLocaleString('fr-FR')} €
+                        {payment.amount.toLocaleString('fr-FR')} F CFA
                       </span>
                     </div>
                   );

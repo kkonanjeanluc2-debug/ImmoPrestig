@@ -141,6 +141,65 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   "en attente": { label: "En attente", variant: "outline" },
 };
 
+// Draggable marker component
+interface DraggableMarkerProps {
+  property: Property & { lat: number; lng: number };
+  onDragEnd: (id: string, lat: number, lng: number) => void;
+}
+
+function DraggableMarker({ property, onDragEnd }: DraggableMarkerProps) {
+  const [position, setPosition] = useState<[number, number]>([property.lat, property.lng]);
+  const markerRef = useRef<L.Marker>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setPosition([property.lat, property.lng]);
+  }, [property.lat, property.lng]);
+
+  const eventHandlers = {
+    dragend() {
+      const marker = markerRef.current;
+      if (marker != null) {
+        const newPos = marker.getLatLng();
+        setPosition([newPos.lat, newPos.lng]);
+        
+        // Save to database
+        saveCoordinates(property.id, newPos.lat, newPos.lng)
+          .then(() => {
+            onDragEnd(property.id, newPos.lat, newPos.lng);
+            toast({
+              title: "Position mise à jour",
+              description: `${property.title} déplacé vers ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}`,
+            });
+          })
+          .catch(() => {
+            // Revert position on error
+            setPosition([property.lat, property.lng]);
+            toast({
+              title: "Erreur",
+              description: "Impossible de sauvegarder la nouvelle position.",
+              variant: "destructive",
+            });
+          });
+      }
+    },
+  };
+
+  return (
+    <Marker
+      draggable={true}
+      eventHandlers={eventHandlers}
+      position={position}
+      ref={markerRef}
+      icon={createCustomIcon(property.status)}
+    >
+      <Popup>
+        <PropertyPopup property={{ ...property, lat: position[0], lng: position[1] }} onUpdate={onDragEnd} />
+      </Popup>
+    </Marker>
+  );
+}
+
 // Popup content component with edit functionality
 interface PropertyPopupProps {
   property: Property & { lat: number; lng: number };
@@ -386,7 +445,7 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
             <CardTitle className="text-base font-semibold">Carte des biens</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               {geocodedProperties.length} bien(s) localisé(s) sur {properties.length}
-              {geocodedProperties.length > 0 && " • Cliquez sur un marqueur pour modifier"}
+              {geocodedProperties.length > 0 && " • Glissez un marqueur pour déplacer"}
             </p>
           </div>
           <div className="flex items-center gap-3 text-xs">
@@ -437,18 +496,11 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
               />
               {positions.length > 1 && <FitBounds positions={positions} />}
               {geocodedProperties.map((property) => (
-                <Marker
+                <DraggableMarker
                   key={property.id}
-                  position={[property.lat, property.lng]}
-                  icon={createCustomIcon(property.status)}
-                >
-                  <Popup>
-                    <PropertyPopup
-                      property={property}
-                      onUpdate={handleCoordinatesUpdate}
-                    />
-                  </Popup>
-                </Marker>
+                  property={property}
+                  onDragEnd={handleCoordinatesUpdate}
+                />
               ))}
             </MapContainer>
           </div>

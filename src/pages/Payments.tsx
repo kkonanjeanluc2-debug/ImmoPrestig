@@ -12,11 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
-  Plus, 
   Search, 
   Wallet,
   TrendingUp,
-  TrendingDown,
   Clock,
   CheckCircle,
   XCircle,
@@ -30,6 +28,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
 import { usePayments } from "@/hooks/usePayments";
+import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 
 const statusConfig = {
   paid: { 
@@ -172,10 +171,7 @@ export default function Payments() {
               Suivi des loyers et encaissements
             </p>
           </div>
-          <Button className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Enregistrer un paiement
-          </Button>
+          <AddPaymentDialog />
         </div>
 
         {/* Stats */}

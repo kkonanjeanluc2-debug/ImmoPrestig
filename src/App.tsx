@@ -11,6 +11,7 @@ import Owners from "./pages/Owners";
 import Tenants from "./pages/Tenants";
 import Payments from "./pages/Payments";
 import Documents from "./pages/Documents";
+import AdvancedDashboard from "./pages/AdvancedDashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><AdvancedDashboard /></ProtectedRoute>} />
             <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
             <Route path="/owners" element={<ProtectedRoute><Owners /></ProtectedRoute>} />
             <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />

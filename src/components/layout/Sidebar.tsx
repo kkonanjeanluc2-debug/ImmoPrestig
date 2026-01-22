@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Menu,
   X,
-  LogOut
+  LogOut,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -20,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard avancé", href: "/dashboard", icon: BarChart3 },
   { name: "Biens immobiliers", href: "/properties", icon: Building2 },
   { name: "Locataires", href: "/tenants", icon: Users },
   { name: "Propriétaires", href: "/owners", icon: Home },

@@ -23,10 +23,9 @@ import {
   Calendar as CalendarIcon,
   Home,
   Loader2,
-  FileText,
-  Download
+  FileText
 } from "lucide-react";
-import { exportToCsv } from "@/lib/exportCsv";
+import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
@@ -179,23 +178,19 @@ export default function Payments() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                exportToCsv(payments || [], 'paiements', [
-                  { key: 'tenant', label: 'Locataire', format: (v) => v?.name || 'Inconnu' },
-                  { key: 'tenant', label: 'Bien', format: (v) => v?.property?.title || 'Non assigné' },
-                  { key: 'amount', label: 'Montant (F CFA)', format: (v) => Number(v).toString() },
-                  { key: 'due_date', label: 'Échéance', format: (v) => new Date(v).toLocaleDateString('fr-FR') },
-                  { key: 'paid_date', label: 'Date de paiement', format: (v) => v ? new Date(v).toLocaleDateString('fr-FR') : '' },
-                  { key: 'status', label: 'Statut', format: (v) => v === 'paid' ? 'Payé' : v === 'pending' ? 'En attente' : v === 'late' ? 'En retard' : 'À venir' },
-                  { key: 'method', label: 'Mode de paiement', format: (v) => v || '' },
-                ]);
-              }}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Exporter CSV
-            </Button>
+            <ExportDropdown
+              data={payments || []}
+              filename="paiements"
+              columns={[
+                { key: 'tenant', label: 'Locataire', format: (v) => v?.name || 'Inconnu' },
+                { key: 'tenant', label: 'Bien', format: (v) => v?.property?.title || 'Non assigné' },
+                { key: 'amount', label: 'Montant (F CFA)', format: (v) => Number(v).toString() },
+                { key: 'due_date', label: 'Échéance', format: (v) => new Date(v).toLocaleDateString('fr-FR') },
+                { key: 'paid_date', label: 'Date de paiement', format: (v) => v ? new Date(v).toLocaleDateString('fr-FR') : '' },
+                { key: 'status', label: 'Statut', format: (v) => v === 'paid' ? 'Payé' : v === 'pending' ? 'En attente' : v === 'late' ? 'En retard' : 'À venir' },
+                { key: 'method', label: 'Mode de paiement', format: (v) => v || '' },
+              ]}
+            />
             <AddPaymentDialog />
           </div>
         </div>

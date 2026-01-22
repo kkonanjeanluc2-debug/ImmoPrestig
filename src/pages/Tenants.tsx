@@ -18,11 +18,10 @@ import {
   ChevronDown,
   ChevronUp,
   Wallet,
-  Loader2,
-  Download
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { exportToCsv } from "@/lib/exportCsv";
+import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
@@ -239,29 +238,25 @@ export default function Tenants() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                exportToCsv(tenants || [], 'locataires', [
-                  { key: 'name', label: 'Nom' },
-                  { key: 'email', label: 'Email' },
-                  { key: 'phone', label: 'Téléphone', format: (v) => v || '' },
-                  { key: 'property', label: 'Bien', format: (v) => v?.title || 'Non assigné' },
-                  { key: 'property', label: 'Adresse', format: (v) => v?.address || '' },
-                  { key: 'contracts', label: 'Loyer (F CFA)', format: (v) => {
-                    const active = v?.find((c: any) => c.status === 'active');
-                    return active ? Number(active.rent_amount).toString() : '';
-                  }},
-                  { key: 'contracts', label: 'Statut contrat', format: (v) => {
-                    const active = v?.find((c: any) => c.status === 'active');
-                    return active ? 'Actif' : 'Inactif';
-                  }},
-                ]);
-              }}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Exporter CSV
-            </Button>
+            <ExportDropdown
+              data={tenants || []}
+              filename="locataires"
+              columns={[
+                { key: 'name', label: 'Nom' },
+                { key: 'email', label: 'Email' },
+                { key: 'phone', label: 'Téléphone', format: (v) => v || '' },
+                { key: 'property', label: 'Bien', format: (v) => v?.title || 'Non assigné' },
+                { key: 'property', label: 'Adresse', format: (v) => v?.address || '' },
+                { key: 'contracts', label: 'Loyer (F CFA)', format: (v) => {
+                  const active = v?.find((c: any) => c.status === 'active');
+                  return active ? Number(active.rent_amount).toString() : '';
+                }},
+                { key: 'contracts', label: 'Statut contrat', format: (v) => {
+                  const active = v?.find((c: any) => c.status === 'active');
+                  return active ? 'Actif' : 'Inactif';
+                }},
+              ]}
+            />
             <AddTenantDialog />
           </div>
         </div>

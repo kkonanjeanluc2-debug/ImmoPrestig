@@ -17,7 +17,8 @@ import {
   File,
   Calendar,
   Building2,
-  User
+  User,
+  Loader2
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -27,110 +28,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDocuments, useDeleteDocument, DocumentWithDetails } from "@/hooks/useDocuments";
+import { toast } from "sonner";
 
-type DocumentType = "contract" | "receipt" | "invoice" | "other";
-type DocumentStatus = "valid" | "expired" | "pending";
-
-interface Document {
-  id: string;
-  name: string;
-  type: DocumentType;
-  status: DocumentStatus;
-  property: string;
-  tenant?: string;
-  date: string;
-  size: string;
-}
-
-const mockDocuments: Document[] = [
-  {
-    id: "1",
-    name: "Contrat de bail - Apt 12B",
-    type: "contract",
-    status: "valid",
-    property: "Résidence Les Palmiers",
-    tenant: "Kouamé Yao",
-    date: "2024-01-15",
-    size: "2.4 MB"
-  },
-  {
-    id: "2",
-    name: "Quittance Janvier 2024",
-    type: "receipt",
-    status: "valid",
-    property: "Villa Cocody",
-    tenant: "Adjoua Bamba",
-    date: "2024-01-31",
-    size: "156 KB"
-  },
-  {
-    id: "3",
-    name: "Contrat de bail - Studio 3",
-    type: "contract",
-    status: "expired",
-    property: "Immeuble Plateau",
-    tenant: "Konan Serge",
-    date: "2023-06-01",
-    size: "1.8 MB"
-  },
-  {
-    id: "4",
-    name: "Facture travaux plomberie",
-    type: "invoice",
-    status: "valid",
-    property: "Résidence Les Palmiers",
-    date: "2024-01-20",
-    size: "890 KB"
-  },
-  {
-    id: "5",
-    name: "État des lieux entrée",
-    type: "other",
-    status: "valid",
-    property: "Villa Cocody",
-    tenant: "Adjoua Bamba",
-    date: "2024-01-10",
-    size: "5.2 MB"
-  },
-  {
-    id: "6",
-    name: "Quittance Décembre 2023",
-    type: "receipt",
-    status: "valid",
-    property: "Immeuble Plateau",
-    tenant: "Diabaté Fanta",
-    date: "2023-12-31",
-    size: "148 KB"
-  },
-  {
-    id: "7",
-    name: "Avenant contrat - Apt 5A",
-    type: "contract",
-    status: "pending",
-    property: "Résidence Les Palmiers",
-    tenant: "Ouattara Ibrahim",
-    date: "2024-01-25",
-    size: "1.1 MB"
-  },
-  {
-    id: "8",
-    name: "Attestation d'assurance",
-    type: "other",
-    status: "valid",
-    property: "Villa Cocody",
-    date: "2024-01-05",
-    size: "320 KB"
-  }
-];
-
-const typeConfig: Record<DocumentType, { label: string; icon: React.ElementType; color: string }> = {
+const typeConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   contract: { label: "Contrat", icon: FileCheck, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
   receipt: { label: "Quittance", icon: Receipt, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
   invoice: { label: "Facture", icon: FileText, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
   other: { label: "Autre", icon: File, color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400" }
 };
 
-const statusConfig: Record<DocumentStatus, { label: string; color: string }> = {
+const statusConfig: Record<string, { label: string; color: string }> = {
   valid: { label: "Valide", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
   expired: { label: "Expiré", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
   pending: { label: "En attente", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" }
@@ -154,9 +62,9 @@ function StatCard({ title, value, icon: Icon, color }: { title: string; value: s
   );
 }
 
-function DocumentCard({ document }: { document: Document }) {
-  const typeInfo = typeConfig[document.type];
-  const statusInfo = statusConfig[document.status];
+function DocumentCard({ document, onDelete }: { document: DocumentWithDetails; onDelete: (id: string) => void }) {
+  const typeInfo = typeConfig[document.type] || typeConfig.other;
+  const statusInfo = statusConfig[document.status] || statusConfig.valid;
   const TypeIcon = typeInfo.icon;
 
   return (
@@ -182,23 +90,25 @@ function DocumentCard({ document }: { document: Document }) {
                   </Badge>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">{document.size}</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">{document.file_size || '-'}</span>
             </div>
 
             <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{document.property}</span>
-              </div>
+              {document.property && (
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{(document.property as any)?.title || 'Bien non assigné'}</span>
+                </div>
+              )}
               {document.tenant && (
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{document.tenant}</span>
+                  <span className="truncate">{(document.tenant as any)?.name || 'Locataire non assigné'}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 flex-shrink-0" />
-                <span>{new Date(document.date).toLocaleDateString('fr-FR')}</span>
+                <span>{new Date(document.created_at).toLocaleDateString('fr-FR')}</span>
               </div>
             </div>
 
@@ -212,7 +122,12 @@ function DocumentCard({ document }: { document: Document }) {
                 <Download className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Télécharger</span>
               </Button>
-              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => onDelete(document.id)}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -228,24 +143,36 @@ export default function Documents() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  const { data: documents, isLoading, error } = useDocuments();
+  const deleteDocument = useDeleteDocument();
+
   const stats = {
-    total: mockDocuments.length,
-    contracts: mockDocuments.filter(d => d.type === "contract").length,
-    receipts: mockDocuments.filter(d => d.type === "receipt").length,
-    expired: mockDocuments.filter(d => d.status === "expired").length
+    total: documents?.length || 0,
+    contracts: documents?.filter(d => d.type === "contract").length || 0,
+    receipts: documents?.filter(d => d.type === "receipt").length || 0,
+    expired: documents?.filter(d => d.status === "expired").length || 0
   };
 
-  const filteredDocuments = mockDocuments.filter(doc => {
+  const filteredDocuments = (documents || []).filter(doc => {
     const matchesSearch = 
       doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.property.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (doc.tenant && doc.tenant.toLowerCase().includes(searchQuery.toLowerCase()));
+      (doc.property as any)?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (doc.tenant as any)?.name?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesType = typeFilter === "all" || doc.type === typeFilter;
     const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
 
     return matchesSearch && matchesType && matchesStatus;
   });
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDocument.mutateAsync(id);
+      toast.success("Document supprimé avec succès");
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la suppression");
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -335,21 +262,41 @@ export default function Documents() {
           </CardContent>
         </Card>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-destructive">Erreur lors du chargement des documents.</p>
+          </div>
+        )}
+
         {/* Documents List */}
-        <div className="grid gap-4">
-          {filteredDocuments.length > 0 ? (
-            filteredDocuments.map((document) => (
-              <DocumentCard key={document.id} document={document} />
-            ))
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Aucun document trouvé</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {!isLoading && !error && (
+          <div className="grid gap-4">
+            {filteredDocuments.length > 0 ? (
+              filteredDocuments.map((document) => (
+                <DocumentCard key={document.id} document={document} onDelete={handleDelete} />
+              ))
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    {documents?.length === 0 
+                      ? "Aucun document enregistré. Ajoutez votre premier document !"
+                      : "Aucun document trouvé."}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

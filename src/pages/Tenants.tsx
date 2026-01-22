@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import {
   Search, 
   Users, 
   FileText, 
-  Wallet, 
+  Clock,
   AlertTriangle,
   Phone,
   Mail,
@@ -16,155 +16,15 @@ import {
   Calendar,
   Euro,
   CheckCircle,
-  Clock,
   XCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Wallet,
+  Loader2
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-
-interface Payment {
-  id: string;
-  date: string;
-  amount: number;
-  status: "paid" | "pending" | "late";
-}
-
-interface Contract {
-  id: string;
-  startDate: string;
-  endDate: string;
-  rentAmount: number;
-  deposit: number;
-  status: "active" | "expired" | "ending_soon";
-}
-
-interface Tenant {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  avatar?: string;
-  property: string;
-  propertyAddress: string;
-  contract: Contract;
-  payments: Payment[];
-}
-
-const tenants: Tenant[] = [
-  {
-    id: "1",
-    name: "Marie Dupont",
-    email: "marie.dupont@email.com",
-    phone: "+225 07 12 34 56 78",
-    property: "Appartement Haussmannien",
-    propertyAddress: "15 Rue du Commerce, Abidjan Plateau",
-    contract: {
-      id: "c1",
-      startDate: "2024-01-01",
-      endDate: "2026-12-31",
-      rentAmount: 450000,
-      deposit: 900000,
-      status: "active"
-    },
-    payments: [
-      { id: "p1", date: "2026-01-05", amount: 450000, status: "paid" },
-      { id: "p2", date: "2025-12-03", amount: 450000, status: "paid" },
-      { id: "p3", date: "2025-11-05", amount: 450000, status: "paid" },
-    ]
-  },
-  {
-    id: "2",
-    name: "Pierre Martin",
-    email: "pierre.martin@email.com",
-    phone: "+225 05 98 76 54 32",
-    property: "Studio Moderne",
-    propertyAddress: "8 Boulevard de la République, Abidjan Cocody",
-    contract: {
-      id: "c2",
-      startDate: "2023-06-01",
-      endDate: "2026-05-31",
-      rentAmount: 320000,
-      deposit: 640000,
-      status: "ending_soon"
-    },
-    payments: [
-      { id: "p4", date: "2026-01-10", amount: 320000, status: "pending" },
-      { id: "p5", date: "2025-12-05", amount: 320000, status: "paid" },
-      { id: "p6", date: "2025-11-08", amount: 320000, status: "late" },
-    ]
-  },
-  {
-    id: "3",
-    name: "Sophie Bernard",
-    email: "sophie.bernard@email.com",
-    phone: "+225 01 45 67 89 01",
-    property: "Maison de Ville",
-    propertyAddress: "25 Rue du Jardin, Yamoussoukro",
-    contract: {
-      id: "c3",
-      startDate: "2022-09-01",
-      endDate: "2025-08-31",
-      rentAmount: 680000,
-      deposit: 1360000,
-      status: "expired"
-    },
-    payments: [
-      { id: "p7", date: "2025-08-02", amount: 680000, status: "paid" },
-      { id: "p8", date: "2025-07-03", amount: 680000, status: "paid" },
-      { id: "p9", date: "2025-06-05", amount: 680000, status: "paid" },
-    ]
-  },
-  {
-    id: "4",
-    name: "Lucas Petit",
-    email: "lucas.petit@email.com",
-    phone: "+225 07 23 45 67 89",
-    property: "Loft Industriel",
-    propertyAddress: "12 Quai du Port, Abidjan Marcory",
-    contract: {
-      id: "c4",
-      startDate: "2025-03-01",
-      endDate: "2028-02-28",
-      rentAmount: 550000,
-      deposit: 1100000,
-      status: "active"
-    },
-    payments: [
-      { id: "p10", date: "2026-01-03", amount: 550000, status: "paid" },
-      { id: "p11", date: "2025-12-02", amount: 550000, status: "paid" },
-      { id: "p12", date: "2025-11-04", amount: 550000, status: "paid" },
-    ]
-  },
-];
-
-const stats = [
-  { 
-    title: "Total Locataires", 
-    value: "24", 
-    icon: Users, 
-    color: "text-emerald" 
-  },
-  { 
-    title: "Contrats Actifs", 
-    value: "21", 
-    icon: FileText, 
-    color: "text-blue-500" 
-  },
-  { 
-    title: "Paiements en attente", 
-    value: "3", 
-    icon: Clock, 
-    color: "text-amber-500" 
-  },
-  { 
-    title: "Retards de paiement", 
-    value: "2", 
-    icon: AlertTriangle, 
-    color: "text-red-500" 
-  },
-];
+import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 
 const contractStatusConfig = {
   active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
@@ -176,11 +36,16 @@ const paymentStatusConfig = {
   paid: { label: "Payé", icon: CheckCircle, className: "text-emerald" },
   pending: { label: "En attente", icon: Clock, className: "text-amber-500" },
   late: { label: "En retard", icon: XCircle, className: "text-red-500" },
+  upcoming: { label: "À venir", icon: Clock, className: "text-blue-500" },
 };
 
-function TenantCard({ tenant }: { tenant: Tenant }) {
+function TenantCard({ tenant }: { tenant: TenantWithDetails }) {
   const [expanded, setExpanded] = useState(false);
-  const contractStatus = contractStatusConfig[tenant.contract.status];
+  
+  // Get active contract
+  const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
+  const contractStatus = activeContract?.status as keyof typeof contractStatusConfig || 'expired';
+  const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
 
   return (
     <Card className="overflow-hidden">
@@ -199,8 +64,8 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 <h3 className="font-semibold text-foreground truncate">{tenant.name}</h3>
-                <Badge variant="outline" className={cn("w-fit", contractStatus.className)}>
-                  {contractStatus.label}
+                <Badge variant="outline" className={cn("w-fit", statusConfig.className)}>
+                  {statusConfig.label}
                 </Badge>
               </div>
 
@@ -210,52 +75,62 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
                   <Mail className="h-3.5 w-3.5 flex-shrink-0" />
                   <span className="truncate">{tenant.email}</span>
                 </a>
-                <a href={`tel:${tenant.phone}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                  <Phone className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span>{tenant.phone}</span>
-                </a>
+                {tenant.phone && (
+                  <a href={`tel:${tenant.phone}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                    <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{tenant.phone}</span>
+                  </a>
+                )}
               </div>
 
               {/* Property */}
-              <div className="flex items-start gap-1.5 text-sm">
-                <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-foreground">{tenant.property}</p>
-                  <p className="text-muted-foreground text-xs">{tenant.propertyAddress}</p>
+              {tenant.property && (
+                <div className="flex items-start gap-1.5 text-sm">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-foreground">{tenant.property.title}</p>
+                    <p className="text-muted-foreground text-xs">{tenant.property.address}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Rent Amount */}
-            <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1">
-              <span className="text-xl sm:text-2xl font-bold text-foreground">
-                {tenant.contract.rentAmount.toLocaleString('fr-FR')} <span className="text-sm font-normal">F CFA</span>
-              </span>
-              <span className="text-xs text-muted-foreground">/mois</span>
-            </div>
+            {activeContract && (
+              <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1">
+                <span className="text-xl sm:text-2xl font-bold text-foreground">
+                  {Number(activeContract.rent_amount).toLocaleString('fr-FR')} <span className="text-sm font-normal">F CFA</span>
+                </span>
+                <span className="text-xs text-muted-foreground">/mois</span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Contract Summary */}
-        <div className="px-4 sm:px-6 pb-4">
-          <div className="flex flex-wrap gap-3 sm:gap-6 text-sm">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-muted-foreground">Début:</span>
-              <span className="font-medium">{new Date(tenant.contract.startDate).toLocaleDateString('fr-FR')}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-muted-foreground">Fin:</span>
-              <span className="font-medium">{new Date(tenant.contract.endDate).toLocaleDateString('fr-FR')}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Euro className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-muted-foreground">Dépôt:</span>
-              <span className="font-medium">{tenant.contract.deposit.toLocaleString('fr-FR')} F CFA</span>
+        {activeContract && (
+          <div className="px-4 sm:px-6 pb-4">
+            <div className="flex flex-wrap gap-3 sm:gap-6 text-sm">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">Début:</span>
+                <span className="font-medium">{new Date(activeContract.start_date).toLocaleDateString('fr-FR')}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">Fin:</span>
+                <span className="font-medium">{new Date(activeContract.end_date).toLocaleDateString('fr-FR')}</span>
+              </div>
+              {activeContract.deposit && (
+                <div className="flex items-center gap-1.5">
+                  <Euro className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-muted-foreground">Dépôt:</span>
+                  <span className="font-medium">{Number(activeContract.deposit).toLocaleString('fr-FR')} F CFA</span>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Expand Button */}
         <button
@@ -273,33 +148,37 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="p-4 sm:p-6">
               <h4 className="text-sm font-medium text-foreground mb-3">Derniers paiements</h4>
               <div className="space-y-2">
-                {tenant.payments.map((payment) => {
-                  const status = paymentStatusConfig[payment.status];
-                  const StatusIcon = status.icon;
-                  return (
-                    <div
-                      key={payment.id}
-                      className="flex items-center justify-between p-3 bg-background rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <StatusIcon className={cn("h-4 w-4", status.className)} />
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {new Date(payment.date).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            })}
-                          </p>
-                          <p className={cn("text-xs", status.className)}>{status.label}</p>
+                {tenant.payments && tenant.payments.length > 0 ? (
+                  tenant.payments.slice(0, 5).map((payment) => {
+                    const status = paymentStatusConfig[payment.status as keyof typeof paymentStatusConfig] || paymentStatusConfig.pending;
+                    const StatusIcon = status.icon;
+                    return (
+                      <div
+                        key={payment.id}
+                        className="flex items-center justify-between p-3 bg-background rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <StatusIcon className={cn("h-4 w-4", status.className)} />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {new Date(payment.due_date).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </p>
+                            <p className={cn("text-xs", status.className)}>{status.label}</p>
+                          </div>
                         </div>
+                        <span className="font-semibold text-foreground">
+                          {Number(payment.amount).toLocaleString('fr-FR')} F CFA
+                        </span>
                       </div>
-                      <span className="font-semibold text-foreground">
-                        {payment.amount.toLocaleString('fr-FR')} F CFA
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">Aucun paiement enregistré</p>
+                )}
               </div>
             </div>
           </div>
@@ -311,12 +190,32 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
 
 export default function Tenants() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: tenants, isLoading, error } = useTenants();
 
-  const filteredTenants = tenants.filter(tenant =>
+  const filteredTenants = (tenants || []).filter(tenant =>
     tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenant.property.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenant.email.toLowerCase().includes(searchQuery.toLowerCase())
+    tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tenant.property?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Compute stats
+  const totalTenants = tenants?.length || 0;
+  const activeContracts = tenants?.filter(t => 
+    t.contracts?.some(c => c.status === 'active')
+  ).length || 0;
+  const pendingPayments = tenants?.reduce((sum, t) => 
+    sum + (t.payments?.filter(p => p.status === 'pending').length || 0)
+  , 0) || 0;
+  const latePayments = tenants?.reduce((sum, t) => 
+    sum + (t.payments?.filter(p => p.status === 'late').length || 0)
+  , 0) || 0;
+
+  const stats = [
+    { title: "Total Locataires", value: totalTenants.toString(), icon: Users, color: "text-emerald" },
+    { title: "Contrats Actifs", value: activeContracts.toString(), icon: FileText, color: "text-blue-500" },
+    { title: "Paiements en attente", value: pendingPayments.toString(), icon: Clock, color: "text-amber-500" },
+    { title: "Retards de paiement", value: latePayments.toString(), icon: AlertTriangle, color: "text-red-500" },
+  ];
 
   return (
     <DashboardLayout>
@@ -367,25 +266,45 @@ export default function Tenants() {
           ))}
         </div>
 
-        {/* Tenant List */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            Liste des locataires ({filteredTenants.length})
-          </h2>
-          <div className="grid gap-4">
-            {filteredTenants.map((tenant) => (
-              <TenantCard key={tenant.id} tenant={tenant} />
-            ))}
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-          {filteredTenants.length === 0 && (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Aucun locataire trouvé</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-destructive">Erreur lors du chargement des locataires.</p>
+          </div>
+        )}
+
+        {/* Tenant List */}
+        {!isLoading && !error && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-foreground">
+              Liste des locataires ({filteredTenants.length})
+            </h2>
+            <div className="grid gap-4">
+              {filteredTenants.map((tenant) => (
+                <TenantCard key={tenant.id} tenant={tenant} />
+              ))}
+            </div>
+            {filteredTenants.length === 0 && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    {tenants?.length === 0 
+                      ? "Aucun locataire enregistré. Ajoutez votre premier locataire !"
+                      : "Aucun locataire trouvé."}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

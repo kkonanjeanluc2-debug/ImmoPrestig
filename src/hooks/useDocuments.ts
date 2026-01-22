@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { logActivityDirect } from "@/lib/activityLogger";
 
 export type Document = Tables<"documents">;
 export type DocumentInsert = TablesInsert<"documents">;
@@ -49,16 +50,29 @@ export const useCreateDocument = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      await logActivityDirect(
+        user.id,
+        "document_uploaded",
+        "document",
+        data.name,
+        data.id,
+        { type: data.type, file_size: data.file_size }
+      );
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };
 
 export const useUpdateDocument = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: DocumentUpdate & { id: string }) => {
@@ -70,24 +84,50 @@ export const useUpdateDocument = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      if (user) {
+        await logActivityDirect(
+          user.id,
+          "update",
+          "document",
+          data.name,
+          data.id
+        );
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };
 
 export const useDeleteDocument = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, name }: { id: string; name?: string }) => {
       const { error } = await supabase.from("documents").delete().eq("id", id);
       if (error) throw error;
+
+      // Log activity
+      if (user) {
+        await logActivityDirect(
+          user.id,
+          "delete",
+          "document",
+          name || "Document supprimé",
+          id
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };

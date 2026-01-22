@@ -43,9 +43,9 @@ const Owners = () => {
   const activeOwners = owners?.filter(o => o.status === "actif").length || 0;
   const totalProperties = properties?.length || 0;
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, name: string) => {
     try {
-      await deleteOwner.mutateAsync(id);
+      await deleteOwner.mutateAsync({ id, name });
       toast.success("Propriétaire supprimé avec succès");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la suppression");
@@ -208,7 +208,7 @@ const Owners = () => {
                           {canDelete && (
                             <DropdownMenuItem 
                               className="text-destructive"
-                              onClick={() => handleDelete(owner.id)}
+                              onClick={() => handleDelete(owner.id, owner.name)}
                             >
                               Supprimer
                             </DropdownMenuItem>

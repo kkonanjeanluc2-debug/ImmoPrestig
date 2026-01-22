@@ -4,6 +4,7 @@ import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { RecentPayments } from "@/components/dashboard/RecentPayments";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
+import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { Building2, Users, Wallet, TrendingUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -102,9 +103,10 @@ const Index = () => {
 
         {/* Charts Section */}
         {!isLoading && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <RevenueChart payments={payments || []} />
             <OccupancyChart properties={properties || []} />
+            <PropertyTypesChart properties={properties || []} />
           </div>
         )}
 

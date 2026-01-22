@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Home, Building2, LandPlot } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -27,6 +28,7 @@ interface Property {
 
 interface PropertyMapProps {
   properties: Property[];
+  onCoordinatesUpdated?: () => void;
 }
 
 // Custom marker icons based on status
@@ -81,6 +83,18 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
   return null;
 };
 
+// Save coordinates to database
+const saveCoordinates = async (propertyId: string, lat: number, lng: number) => {
+  try {
+    await supabase
+      .from("properties")
+      .update({ latitude: lat, longitude: lng })
+      .eq("id", propertyId);
+  } catch (error) {
+    console.error("Error saving coordinates:", error);
+  }
+};
+
 // Component to fit map bounds to markers
 function FitBounds({ positions }: { positions: [number, number][] }) {
   const map = useMap();
@@ -114,7 +128,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   "en attente": { label: "En attente", variant: "outline" },
 };
 
-export function PropertyMap({ properties }: PropertyMapProps) {
+export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapProps) {
   const [geocodedProperties, setGeocodedProperties] = useState<
     (Property & { lat: number; lng: number })[]
   >([]);
@@ -125,14 +139,15 @@ export function PropertyMap({ properties }: PropertyMapProps) {
     const geocodeProperties = async () => {
       setIsLoading(true);
       const results: (Property & { lat: number; lng: number })[] = [];
+      let coordinatesUpdated = false;
 
       for (const property of properties) {
-        // Check if already has coordinates
+        // Check if already has coordinates in database
         if (property.latitude && property.longitude) {
           results.push({
             ...property,
-            lat: property.latitude,
-            lng: property.longitude,
+            lat: Number(property.latitude),
+            lng: Number(property.longitude),
           });
           continue;
         }
@@ -141,6 +156,9 @@ export function PropertyMap({ properties }: PropertyMapProps) {
         const cached = geocodeCacheRef.current.get(property.address);
         if (cached) {
           results.push({ ...property, ...cached });
+          // Save to database if not already saved
+          await saveCoordinates(property.id, cached.lat, cached.lng);
+          coordinatesUpdated = true;
           continue;
         }
 
@@ -149,6 +167,9 @@ export function PropertyMap({ properties }: PropertyMapProps) {
         if (coords) {
           geocodeCacheRef.current.set(property.address, coords);
           results.push({ ...property, ...coords });
+          // Save coordinates to database
+          await saveCoordinates(property.id, coords.lat, coords.lng);
+          coordinatesUpdated = true;
         }
 
         // Small delay to avoid rate limiting
@@ -157,6 +178,11 @@ export function PropertyMap({ properties }: PropertyMapProps) {
 
       setGeocodedProperties(results);
       setIsLoading(false);
+      
+      // Notify parent if coordinates were updated
+      if (coordinatesUpdated && onCoordinatesUpdated) {
+        onCoordinatesUpdated();
+      }
     };
 
     if (properties.length > 0) {
@@ -164,7 +190,7 @@ export function PropertyMap({ properties }: PropertyMapProps) {
     } else {
       setIsLoading(false);
     }
-  }, [properties]);
+  }, [properties, onCoordinatesUpdated]);
 
   // Default center (Senegal - Dakar as example)
   const defaultCenter: [number, number] = [14.6928, -17.4467];

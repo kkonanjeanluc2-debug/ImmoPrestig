@@ -403,6 +403,7 @@ export default function Payments() {
                                   tenantId={payment.tenant_id}
                                   tenantName={tenantName}
                                   tenantEmail={tenant?.email || null}
+                                  tenantPhone={tenant?.phone || null}
                                   propertyTitle={propertyTitle}
                                   amount={Number(payment.amount)}
                                   dueDate={payment.due_date}

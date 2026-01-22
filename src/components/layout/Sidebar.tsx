@@ -12,12 +12,29 @@ import {
   Menu,
   X,
   LogOut,
-  BarChart3
+  BarChart3,
+  Shield,
+  UserCog,
+  Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
+import { useCurrentUserRole, ROLE_LABELS, type AppRole } from "@/hooks/useUserRoles";
+
+const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
+  admin: <Shield className="h-3 w-3" />,
+  gestionnaire: <UserCog className="h-3 w-3" />,
+  lecture_seule: <Eye className="h-3 w-3" />,
+};
+
+const ROLE_BADGE_COLORS: Record<AppRole, string> = {
+  admin: "bg-emerald/20 text-emerald border-emerald/30",
+  gestionnaire: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  lecture_seule: "bg-sand/20 text-sand border-sand/30",
+};
 
 const navigation = [
   { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
@@ -40,6 +57,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { data: userRole } = useCurrentUserRole();
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -149,9 +167,37 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         {/* User info and logout */}
         <div className="p-3 border-t border-navy-light">
           {(!collapsed || mobileOpen) && user && (
-            <p className="text-xs text-primary-foreground/60 truncate mb-2 px-2">
-              {user.email}
-            </p>
+            <div className="mb-2 px-2">
+              <p className="text-xs text-primary-foreground/60 truncate">
+                {user.email}
+              </p>
+              {userRole && (
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "mt-1 text-[10px] px-1.5 py-0 h-5 gap-1",
+                    ROLE_BADGE_COLORS[userRole.role]
+                  )}
+                >
+                  {ROLE_ICONS[userRole.role]}
+                  {ROLE_LABELS[userRole.role]}
+                </Badge>
+              )}
+            </div>
+          )}
+          {collapsed && !mobileOpen && userRole && (
+            <div className="flex justify-center mb-2">
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "p-1 h-6 w-6 flex items-center justify-center",
+                  ROLE_BADGE_COLORS[userRole.role]
+                )}
+                title={ROLE_LABELS[userRole.role]}
+              >
+                {ROLE_ICONS[userRole.role]}
+              </Badge>
+            </div>
           )}
           <Button
             variant="ghost"

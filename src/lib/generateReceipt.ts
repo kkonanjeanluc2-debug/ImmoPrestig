@@ -45,7 +45,7 @@ const numberToWords = (num: number): string => {
   return num.toLocaleString("fr-FR");
 };
 
-export const generateRentReceipt = (data: ReceiptData): void => {
+const createReceiptDocument = (data: ReceiptData): jsPDF => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   
@@ -211,9 +211,18 @@ export const generateRentReceipt = (data: ReceiptData): void => {
     { align: "center" }
   );
   
-  // Save the PDF
+  return doc;
+};
+
+export const generateRentReceipt = (data: ReceiptData): void => {
+  const doc = createReceiptDocument(data);
   const fileName = `quittance_${data.tenantName.replace(/\s+/g, "_")}_${data.period.replace(/\s+/g, "_")}.pdf`;
   doc.save(fileName);
+};
+
+export const generateRentReceiptBase64 = (data: ReceiptData): string => {
+  const doc = createReceiptDocument(data);
+  return doc.output("datauristring").split(",")[1];
 };
 
 export const getPaymentPeriod = (dueDate: string): string => {

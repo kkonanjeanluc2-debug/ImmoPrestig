@@ -32,7 +32,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
-import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
+import { ReceiptActions } from "@/components/payment/ReceiptActions";
 import { toast } from "sonner";
 
 const statusConfig = {
@@ -367,33 +367,17 @@ export default function Payments() {
                               {formatCurrency(Number(payment.amount))}
                             </span>
                             {payment.status === "paid" && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs"
-                                onClick={() => {
-                                  try {
-                                    generateRentReceipt({
-                                      paymentId: payment.id,
-                                      tenantName: tenantName,
-                                      tenantEmail: tenant?.email,
-                                      propertyTitle: propertyTitle,
-                                      propertyAddress: tenant?.property?.address,
-                                      amount: Number(payment.amount),
-                                      paidDate: payment.paid_date || payment.due_date,
-                                      dueDate: payment.due_date,
-                                      period: getPaymentPeriod(payment.due_date),
-                                      method: payment.method || undefined,
-                                    });
-                                    toast.success("Quittance générée avec succès");
-                                  } catch (error) {
-                                    toast.error("Erreur lors de la génération de la quittance");
-                                  }
-                                }}
-                              >
-                                <FileText className="h-3 w-3 mr-1" />
-                                Quittance
-                              </Button>
+                              <ReceiptActions
+                                paymentId={payment.id}
+                                tenantName={tenantName}
+                                tenantEmail={tenant?.email || null}
+                                propertyTitle={propertyTitle}
+                                propertyAddress={tenant?.property?.address}
+                                amount={Number(payment.amount)}
+                                paidDate={payment.paid_date || payment.due_date}
+                                dueDate={payment.due_date}
+                                method={payment.method || undefined}
+                              />
                             )}
                             {payment.status !== "paid" && (
                               <>

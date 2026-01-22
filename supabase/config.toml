@@ -2,3 +2,6 @@ project_id = "zkgfymmqvzifrqnczsjs"
 
 [functions.expire-contracts]
 verify_jwt = false
+
+[functions.notify-late-payments]
+verify_jwt = false

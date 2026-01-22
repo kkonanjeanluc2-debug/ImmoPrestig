@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, Clock } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { RolesSettings } from "@/components/settings/RolesSettings";
+import { ActivityHistory } from "@/components/settings/ActivityHistory";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -24,7 +25,7 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger
               value="profile"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
@@ -38,6 +39,13 @@ const Settings = () => {
             >
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Rôles</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="activity"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+            >
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Activité</span>
             </TabsTrigger>
             <TabsTrigger
               value="display"
@@ -68,6 +76,10 @@ const Settings = () => {
 
           <TabsContent value="roles">
             <RolesSettings />
+          </TabsContent>
+
+          <TabsContent value="activity">
+            <ActivityHistory />
           </TabsContent>
 
           <TabsContent value="display">

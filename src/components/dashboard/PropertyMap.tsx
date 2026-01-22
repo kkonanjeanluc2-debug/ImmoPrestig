@@ -10,11 +10,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuCheckboxItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MapPin, Home, Building2, LandPlot, Pencil, Check, X, Loader2, Maximize2, Navigation, ChevronDown } from "lucide-react";
+import { MapPin, Home, Building2, LandPlot, Pencil, Check, X, Loader2, Maximize2, Navigation, ChevronDown, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -154,16 +155,67 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
   return null;
 }
 
+// Status filter types
+type StatusFilter = "occupé" | "disponible" | "en attente";
+
+const STATUS_FILTERS: { value: StatusFilter; label: string; color: string }[] = [
+  { value: "occupé", label: "Occupé", color: "#10b981" },
+  { value: "disponible", label: "Disponible", color: "#3b82f6" },
+  { value: "en attente", label: "En attente", color: "#f59e0b" },
+];
+
 // Map controls component for navigation
 interface MapControlsProps {
   properties: (Property & { lat: number; lng: number })[];
   onFitAll: () => void;
   onFocusProperty: (id: string) => void;
+  statusFilters: StatusFilter[];
+  onToggleStatusFilter: (status: StatusFilter) => void;
 }
 
-function MapControlsOverlay({ properties, onFitAll, onFocusProperty }: MapControlsProps) {
+function MapControlsOverlay({ properties, onFitAll, onFocusProperty, statusFilters, onToggleStatusFilter }: MapControlsProps) {
+  const activeFiltersCount = statusFilters.length;
+  
   return (
     <div className="absolute top-3 right-3 z-[1000] flex gap-2">
+      {/* Status Filter */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
+          >
+            <Filter className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Filtrer</span>
+            {activeFiltersCount < 3 && (
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] ml-1">
+                {activeFiltersCount}
+              </Badge>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48 bg-background z-[1001]">
+          <DropdownMenuLabel>Afficher par statut</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {STATUS_FILTERS.map((filter) => (
+            <DropdownMenuCheckboxItem
+              key={filter.value}
+              checked={statusFilters.includes(filter.value)}
+              onCheckedChange={() => onToggleStatusFilter(filter.value)}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: filter.color }}
+                />
+                <span>{filter.label}</span>
+              </div>
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <Button
         size="sm"
         variant="secondary"
@@ -576,17 +628,36 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
     null
   >(null);
 
+  // Status filter state - show all by default
+  const [statusFilters, setStatusFilters] = useState<StatusFilter[]>(["occupé", "disponible", "en attente"]);
+
+  const handleToggleStatusFilter = useCallback((status: StatusFilter) => {
+    setStatusFilters((prev) => {
+      if (prev.includes(status)) {
+        // Don't allow deselecting all filters
+        if (prev.length === 1) return prev;
+        return prev.filter((s) => s !== status);
+      }
+      return [...prev, status];
+    });
+  }, []);
+
+  // Filter properties based on selected statuses
+  const filteredProperties = geocodedProperties.filter((p) => 
+    statusFilters.includes(p.status as StatusFilter)
+  );
+
   const handleFitAll = useCallback(() => {
-    const allPositions: [number, number][] = geocodedProperties.map((p) => [p.lat, p.lng]);
+    const allPositions: [number, number][] = filteredProperties.map((p) => [p.lat, p.lng]);
     setMapCommand({ type: 'fitAll', positions: allPositions });
-  }, [geocodedProperties]);
+  }, [filteredProperties]);
 
   const handleFocusProperty = useCallback((propertyId: string) => {
-    const property = geocodedProperties.find((p) => p.id === propertyId);
+    const property = filteredProperties.find((p) => p.id === propertyId);
     if (property) {
       setMapCommand({ type: 'focusOn', lat: property.lat, lng: property.lng });
     }
-  }, [geocodedProperties]);
+  }, [filteredProperties]);
 
   const clearCommand = useCallback(() => {
     setMapCommand(null);
@@ -594,7 +665,7 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
 
   // Default center (Senegal - Dakar as example)
   const defaultCenter: [number, number] = [14.6928, -17.4467];
-  const positions: [number, number][] = geocodedProperties.map((p) => [p.lat, p.lng]);
+  const positions: [number, number][] = filteredProperties.map((p) => [p.lat, p.lng]);
 
   return (
     <Card className="col-span-full">
@@ -645,9 +716,11 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
           <div className="h-[400px] rounded-lg overflow-hidden border border-border relative">
             {/* Map Controls */}
             <MapControlsOverlay
-              properties={geocodedProperties}
+              properties={filteredProperties}
               onFitAll={handleFitAll}
               onFocusProperty={handleFocusProperty}
+              statusFilters={statusFilters}
+              onToggleStatusFilter={handleToggleStatusFilter}
             />
             
             <MapContainer
@@ -671,7 +744,7 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
                 zoomToBoundsOnClick={true}
                 animate={true}
               >
-                {geocodedProperties.map((property) => (
+                {filteredProperties.map((property) => (
                   <DraggableMarker
                     key={property.id}
                     property={property}

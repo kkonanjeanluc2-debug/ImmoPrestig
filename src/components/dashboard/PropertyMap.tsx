@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Home, Building2, LandPlot } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { MapPin, Home, Building2, LandPlot, Pencil, Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -13,6 +18,16 @@ L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+// Validation schema for coordinates
+const coordinatesSchema = z.object({
+  latitude: z.number()
+    .min(-90, "La latitude doit être entre -90 et 90")
+    .max(90, "La latitude doit être entre -90 et 90"),
+  longitude: z.number()
+    .min(-180, "La longitude doit être entre -180 et 180")
+    .max(180, "La longitude doit être entre -180 et 180"),
 });
 
 interface Property {
@@ -85,14 +100,12 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
 
 // Save coordinates to database
 const saveCoordinates = async (propertyId: string, lat: number, lng: number) => {
-  try {
-    await supabase
-      .from("properties")
-      .update({ latitude: lat, longitude: lng })
-      .eq("id", propertyId);
-  } catch (error) {
-    console.error("Error saving coordinates:", error);
-  }
+  const { error } = await supabase
+    .from("properties")
+    .update({ latitude: lat, longitude: lng })
+    .eq("id", propertyId);
+  
+  if (error) throw error;
 };
 
 // Component to fit map bounds to markers
@@ -128,7 +141,164 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   "en attente": { label: "En attente", variant: "outline" },
 };
 
+// Popup content component with edit functionality
+interface PropertyPopupProps {
+  property: Property & { lat: number; lng: number };
+  onUpdate: (id: string, lat: number, lng: number) => void;
+}
+
+function PropertyPopup({ property, onUpdate }: PropertyPopupProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [latitude, setLatitude] = useState(property.lat.toString());
+  const [longitude, setLongitude] = useState(property.lng.toString());
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleSave = async () => {
+    setError(null);
+    
+    const latNum = parseFloat(latitude);
+    const lngNum = parseFloat(longitude);
+
+    // Validate inputs
+    const result = coordinatesSchema.safeParse({ latitude: latNum, longitude: lngNum });
+    if (!result.success) {
+      setError(result.error.errors[0].message);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await saveCoordinates(property.id, latNum, lngNum);
+      onUpdate(property.id, latNum, lngNum);
+      setIsEditing(false);
+      toast({
+        title: "Coordonnées mises à jour",
+        description: "La position du bien a été corrigée.",
+      });
+    } catch (err: any) {
+      setError("Erreur lors de la sauvegarde");
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder les coordonnées.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setLatitude(property.lat.toString());
+    setLongitude(property.lng.toString());
+    setError(null);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="min-w-[220px] p-1">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <PropertyTypeIcon type={property.property_type} />
+          <h3 className="font-semibold text-sm">{property.title}</h3>
+        </div>
+        {!isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="p-1 rounded hover:bg-muted transition-colors"
+            title="Modifier les coordonnées"
+          >
+            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        )}
+      </div>
+      
+      <p className="text-xs text-muted-foreground mb-2">{property.address}</p>
+      
+      {isEditing ? (
+        <div className="space-y-3 pt-2 border-t">
+          <div className="space-y-1.5">
+            <Label htmlFor={`lat-${property.id}`} className="text-xs">
+              Latitude
+            </Label>
+            <Input
+              id={`lat-${property.id}`}
+              type="number"
+              step="0.0000001"
+              value={latitude}
+              onChange={(e) => setLatitude(e.target.value)}
+              className="h-8 text-xs"
+              placeholder="-90 à 90"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`lng-${property.id}`} className="text-xs">
+              Longitude
+            </Label>
+            <Input
+              id={`lng-${property.id}`}
+              type="number"
+              step="0.0000001"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+              className="h-8 text-xs"
+              placeholder="-180 à 180"
+            />
+          </div>
+          
+          {error && (
+            <p className="text-xs text-destructive">{error}</p>
+          )}
+          
+          <div className="flex items-center gap-2 pt-1">
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="h-7 text-xs flex-1"
+            >
+              {isSaving ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <>
+                  <Check className="h-3 w-3 mr-1" />
+                  Enregistrer
+                </>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSaving}
+              className="h-7 text-xs"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-bold text-primary">
+              {Number(property.price).toLocaleString("fr-FR")} F CFA
+            </span>
+            <Badge variant={statusConfig[property.status]?.variant || "outline"}>
+              {statusConfig[property.status]?.label || property.status}
+            </Badge>
+          </div>
+          <div className="text-[10px] text-muted-foreground border-t pt-2">
+            <span>GPS: {property.lat.toFixed(6)}, {property.lng.toFixed(6)}</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapProps) {
+  const { toast } = useToast();
   const [geocodedProperties, setGeocodedProperties] = useState<
     (Property & { lat: number; lng: number })[]
   >([]);
@@ -188,9 +358,21 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
     if (properties.length > 0) {
       geocodeProperties();
     } else {
+      setGeocodedProperties([]);
       setIsLoading(false);
     }
   }, [properties, onCoordinatesUpdated]);
+
+  const handleCoordinatesUpdate = useCallback((propertyId: string, lat: number, lng: number) => {
+    setGeocodedProperties((prev) =>
+      prev.map((p) =>
+        p.id === propertyId ? { ...p, lat, lng } : p
+      )
+    );
+    if (onCoordinatesUpdated) {
+      onCoordinatesUpdated();
+    }
+  }, [onCoordinatesUpdated]);
 
   // Default center (Senegal - Dakar as example)
   const defaultCenter: [number, number] = [14.6928, -17.4467];
@@ -204,6 +386,7 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
             <CardTitle className="text-base font-semibold">Carte des biens</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               {geocodedProperties.length} bien(s) localisé(s) sur {properties.length}
+              {geocodedProperties.length > 0 && " • Cliquez sur un marqueur pour modifier"}
             </p>
           </div>
           <div className="flex items-center gap-3 text-xs">
@@ -260,21 +443,10 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
                   icon={createCustomIcon(property.status)}
                 >
                   <Popup>
-                    <div className="min-w-[200px] p-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <PropertyTypeIcon type={property.property_type} />
-                        <h3 className="font-semibold text-sm">{property.title}</h3>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-2">{property.address}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-primary">
-                          {Number(property.price).toLocaleString("fr-FR")} F CFA
-                        </span>
-                        <Badge variant={statusConfig[property.status]?.variant || "outline"}>
-                          {statusConfig[property.status]?.label || property.status}
-                        </Badge>
-                      </div>
-                    </div>
+                    <PropertyPopup
+                      property={property}
+                      onUpdate={handleCoordinatesUpdate}
+                    />
                   </Popup>
                 </Marker>
               ))}

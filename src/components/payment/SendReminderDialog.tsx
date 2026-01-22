@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateEmailLog } from "@/hooks/useEmailLogs";
 import { Loader2, Mail, Send } from "lucide-react";
 
 interface SendReminderDialogProps {
   paymentId: string;
+  tenantId: string;
   tenantName: string;
   tenantEmail: string | null;
   propertyTitle: string;
@@ -25,6 +27,7 @@ interface SendReminderDialogProps {
 
 export function SendReminderDialog({
   paymentId,
+  tenantId,
   tenantName,
   tenantEmail,
   propertyTitle,
@@ -35,6 +38,7 @@ export function SendReminderDialog({
   const [open, setOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
+  const createEmailLog = useCreateEmailLog();
 
   const isLate = status === "late";
 
@@ -65,6 +69,18 @@ export function SendReminderDialog({
       if (error) throw error;
 
       if (data?.success) {
+        // Log the email
+        await createEmailLog.mutateAsync({
+          tenant_id: tenantId,
+          email_type: isLate ? "late_payment" : "reminder",
+          recipient_email: tenantEmail,
+          subject: isLate 
+            ? `Rappel urgent : Loyer en retard - ${propertyTitle}`
+            : `Rappel : Échéance de loyer à venir - ${propertyTitle}`,
+          status: "sent",
+          payment_id: paymentId,
+        });
+
         toast({
           title: "Rappel envoyé",
           description: `Un email de rappel a été envoyé à ${tenantEmail}.`,

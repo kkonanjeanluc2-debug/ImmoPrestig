@@ -24,6 +24,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
+import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 
 const contractStatusConfig = {
   active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
@@ -92,6 +93,11 @@ function TenantCard({ tenant }: { tenant: TenantWithDetails }) {
                   </div>
                 </div>
               )}
+
+              {/* Email History Button */}
+              <div className="mt-3">
+                <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
+              </div>
             </div>
 
             {/* Rent Amount */}

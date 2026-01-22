@@ -17,11 +17,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateEmailLog } from "@/hooks/useEmailLogs";
 import { Loader2, FileText, Mail, Download, ChevronDown } from "lucide-react";
 import { generateRentReceipt, generateRentReceiptBase64, getPaymentPeriod } from "@/lib/generateReceipt";
 
 interface ReceiptActionsProps {
   paymentId: string;
+  tenantId: string;
   tenantName: string;
   tenantEmail: string | null;
   propertyTitle: string;
@@ -34,6 +36,7 @@ interface ReceiptActionsProps {
 
 export function ReceiptActions({
   paymentId,
+  tenantId,
   tenantName,
   tenantEmail,
   propertyTitle,
@@ -46,6 +49,7 @@ export function ReceiptActions({
   const [isSending, setIsSending] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const createEmailLog = useCreateEmailLog();
 
   const period = getPaymentPeriod(dueDate);
 
@@ -106,6 +110,16 @@ export function ReceiptActions({
       if (error) throw error;
 
       if (data?.success) {
+        // Log the email
+        await createEmailLog.mutateAsync({
+          tenant_id: tenantId,
+          email_type: "receipt",
+          recipient_email: tenantEmail!,
+          subject: `Quittance de loyer - ${period} - ${propertyTitle}`,
+          status: "sent",
+          payment_id: paymentId,
+        });
+
         toast({
           title: "Quittance envoyée",
           description: `La quittance a été envoyée à ${tenantEmail}.`,

@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { useCreateTenant } from "@/hooks/useTenants";
 import { useCreateContract } from "@/hooks/useContracts";
-import { useProperties } from "@/hooks/useProperties";
+import { useProperties, useUpdateProperty } from "@/hooks/useProperties";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -53,6 +53,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const [open, setOpen] = useState(false);
   const createTenant = useCreateTenant();
   const createContract = useCreateContract();
+  const updateProperty = useUpdateProperty();
   const { data: properties, isLoading: propertiesLoading } = useProperties();
 
   const availableProperties = properties?.filter(p => p.status === 'disponible') || [];
@@ -71,7 +72,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     },
   });
 
-  const isSubmitting = createTenant.isPending || createContract.isPending;
+  const isSubmitting = createTenant.isPending || createContract.isPending || updateProperty.isPending;
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -92,6 +93,12 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         rent_amount: parseFloat(values.rent_amount),
         deposit: values.deposit ? parseFloat(values.deposit) : null,
         status: 'active',
+      });
+
+      // Update property status to 'occupé'
+      await updateProperty.mutateAsync({
+        id: values.property_id,
+        status: 'occupé',
       });
 
       toast.success("Locataire et contrat créés avec succès");

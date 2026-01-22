@@ -31,6 +31,7 @@ import { fr } from "date-fns/locale";
 import { usePayments } from "@/hooks/usePayments";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
+import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { toast } from "sonner";
 
@@ -395,12 +396,23 @@ export default function Payments() {
                               </Button>
                             )}
                             {payment.status !== "paid" && (
-                              <CollectPaymentDialog
-                                paymentId={payment.id}
-                                tenantName={tenantName}
-                                amount={Number(payment.amount)}
-                                currentMethod={payment.method}
-                              />
+                              <>
+                                <SendReminderDialog
+                                  paymentId={payment.id}
+                                  tenantName={tenantName}
+                                  tenantEmail={tenant?.email || null}
+                                  propertyTitle={propertyTitle}
+                                  amount={Number(payment.amount)}
+                                  dueDate={payment.due_date}
+                                  status={payment.status}
+                                />
+                                <CollectPaymentDialog
+                                  paymentId={payment.id}
+                                  tenantName={tenantName}
+                                  amount={Number(payment.amount)}
+                                  currentMethod={payment.method}
+                                />
+                              </>
                             )}
                           </div>
                         </div>

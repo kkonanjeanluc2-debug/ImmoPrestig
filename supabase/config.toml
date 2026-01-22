@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.notify-late-payments]
 verify_jwt = false
+
+[functions.send-payment-reminder]
+verify_jwt = false

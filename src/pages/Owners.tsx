@@ -1,10 +1,8 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Plus, 
   Search, 
   Phone, 
   Mail, 
@@ -20,10 +18,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useOwners, useDeleteOwner } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { toast } from "sonner";
+import { AddOwnerDialog } from "@/components/owner/AddOwnerDialog";
 
 const Owners = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,10 +63,7 @@ const Owners = () => {
               Gérez vos propriétaires et leurs biens
             </p>
           </div>
-          <Button className="bg-emerald hover:bg-emerald-dark text-primary-foreground gap-2 w-full sm:w-auto">
-            <Plus className="h-4 w-4" />
-            Ajouter un propriétaire
-          </Button>
+          <AddOwnerDialog />
         </div>
 
         {/* Search */}

@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MapPin, Home, Building2, LandPlot, Pencil, Check, X, Loader2, Maximize2, Navigation, ChevronDown, Filter } from "lucide-react";
+import { MapPin, Home, Building2, LandPlot, Pencil, Check, X, Loader2, Maximize2, Navigation, ChevronDown, Filter, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -175,96 +175,192 @@ interface MapControlsProps {
 
 function MapControlsOverlay({ properties, onFitAll, onFocusProperty, statusFilters, onToggleStatusFilter }: MapControlsProps) {
   const activeFiltersCount = statusFilters.length;
-  
-  return (
-    <div className="absolute top-3 right-3 z-[1000] flex gap-2">
-      {/* Status Filter */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
-          >
-            <Filter className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Filtrer</span>
-            {activeFiltersCount < 3 && (
-              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] ml-1">
-                {activeFiltersCount}
-              </Badge>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48 bg-background z-[1001]">
-          <DropdownMenuLabel>Afficher par statut</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {STATUS_FILTERS.map((filter) => (
-            <DropdownMenuCheckboxItem
-              key={filter.value}
-              checked={statusFilters.includes(filter.value)}
-              onCheckedChange={() => onToggleStatusFilter(filter.value)}
-            >
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: filter.color }}
-                />
-                <span>{filter.label}</span>
-              </div>
-            </DropdownMenuCheckboxItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-      <Button
-        size="sm"
-        variant="secondary"
-        onClick={onFitAll}
-        className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
-      >
-        <Maximize2 className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Voir tout</span>
-      </Button>
-      
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
-          >
-            <Navigation className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Aller à</span>
-            <ChevronDown className="h-3 w-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 max-h-64 overflow-y-auto bg-background z-[1001]">
-          <DropdownMenuLabel>Sélectionner un bien</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {properties.map((property) => (
-            <DropdownMenuItem
-              key={property.id}
-              onClick={() => onFocusProperty(property.id)}
-              className="cursor-pointer"
+  // Filter properties based on search query
+  const searchResults = searchQuery.trim() 
+    ? properties.filter((p) => 
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.address.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
+  const handleSearchSelect = (propertyId: string) => {
+    onFocusProperty(propertyId);
+    setSearchQuery("");
+    setIsSearchOpen(false);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && searchResults.length > 0) {
+      handleSearchSelect(searchResults[0].id);
+    }
+    if (e.key === "Escape") {
+      setSearchQuery("");
+      setIsSearchOpen(false);
+    }
+  };
+
+  return (
+    <div className="absolute top-3 left-3 right-3 z-[1000] flex justify-between items-start gap-2">
+      {/* Search Bar */}
+      <div className="relative flex-1 max-w-xs">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Rechercher un bien..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsSearchOpen(true);
+            }}
+            onFocus={() => setIsSearchOpen(true)}
+            onKeyDown={handleSearchKeyDown}
+            className="h-8 pl-8 pr-8 text-sm bg-background/95 backdrop-blur-sm shadow-md border-border"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                searchInputRef.current?.focus();
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted"
             >
-              <div className="flex items-center gap-2 w-full">
-                <div
-                  className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                  style={{
-                    backgroundColor:
-                      property.status === "occupé"
-                        ? "#10b981"
-                        : property.status === "disponible"
-                        ? "#3b82f6"
-                        : "#f59e0b",
-                  }}
-                />
-                <span className="truncate">{property.title}</span>
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+        
+        {/* Search Results Dropdown */}
+        {isSearchOpen && searchQuery.trim() && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto z-[1002]">
+            {searchResults.length > 0 ? (
+              searchResults.map((property) => (
+                <button
+                  key={property.id}
+                  onClick={() => handleSearchSelect(property.id)}
+                  className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-2 text-sm"
+                >
+                  <div
+                    className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor:
+                        property.status === "occupé"
+                          ? "#10b981"
+                          : property.status === "disponible"
+                          ? "#3b82f6"
+                          : "#f59e0b",
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{property.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{property.address}</p>
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                Aucun bien trouvé
               </div>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Control Buttons */}
+      <div className="flex gap-2">
+        {/* Status Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Filtrer</span>
+              {activeFiltersCount < 3 && (
+                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] ml-1">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-background z-[1001]">
+            <DropdownMenuLabel>Afficher par statut</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {STATUS_FILTERS.map((filter) => (
+              <DropdownMenuCheckboxItem
+                key={filter.value}
+                checked={statusFilters.includes(filter.value)}
+                onCheckedChange={() => onToggleStatusFilter(filter.value)}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: filter.color }}
+                  />
+                  <span>{filter.label}</span>
+                </div>
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={onFitAll}
+          className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Voir tout</span>
+        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 gap-1.5 bg-background/95 backdrop-blur-sm shadow-md hover:bg-background"
+            >
+              <Navigation className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Aller à</span>
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 max-h-64 overflow-y-auto bg-background z-[1001]">
+            <DropdownMenuLabel>Sélectionner un bien</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {properties.map((property) => (
+              <DropdownMenuItem
+                key={property.id}
+                onClick={() => onFocusProperty(property.id)}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <div
+                    className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor:
+                        property.status === "occupé"
+                          ? "#10b981"
+                          : property.status === "disponible"
+                          ? "#3b82f6"
+                          : "#f59e0b",
+                    }}
+                  />
+                  <span className="truncate">{property.title}</span>
+                </div>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

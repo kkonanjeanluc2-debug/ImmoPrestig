@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
 import { usePayments } from "@/hooks/usePayments";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
+import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 
 const statusConfig = {
   paid: { 
@@ -362,9 +363,12 @@ export default function Payments() {
                               {formatCurrency(Number(payment.amount))}
                             </span>
                             {payment.status !== "paid" && (
-                              <Button size="sm" variant="outline" className="text-xs">
-                                Encaisser
-                              </Button>
+                              <CollectPaymentDialog
+                                paymentId={payment.id}
+                                tenantName={tenantName}
+                                amount={Number(payment.amount)}
+                                currentMethod={payment.method}
+                              />
                             )}
                           </div>
                         </div>

@@ -189,3 +189,45 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--navy) / 0.5);
 }
+
+/* Map Cluster Markers */
+.custom-cluster-marker {
+  background: transparent;
+}
+
+.cluster-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 3px solid white;
+  transition: transform 0.2s ease;
+}
+
+.cluster-icon:hover {
+  transform: scale(1.1);
+}
+
+.cluster-small {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--navy-light)));
+  width: 36px;
+  height: 36px;
+  font-size: 12px;
+}
+
+.cluster-medium {
+  background: linear-gradient(135deg, hsl(var(--emerald)), hsl(var(--emerald-dark)));
+  width: 44px;
+  height: 44px;
+  font-size: 14px;
+}
+
+.cluster-large {
+  background: linear-gradient(135deg, hsl(45 93% 47%), hsl(30 90% 45%));
+  width: 52px;
+  height: 52px;
+  font-size: 16px;
+}

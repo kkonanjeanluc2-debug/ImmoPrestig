@@ -6,9 +6,12 @@ import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
-import { Building2, Users, Wallet, TrendingUp, Loader2 } from "lucide-react";
+import { Building2, Users, Wallet, TrendingUp, Loader2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperties } from "@/hooks/useProperties";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,9 +19,33 @@ import { Link } from "react-router-dom";
 
 const Index = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
+
+  const handleGenerateReceipts = async () => {
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-monthly-receipts');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Génération terminée",
+        description: `${data.sent || 0} quittance(s) envoyée(s), ${data.skipped || 0} déjà envoyée(s).`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de générer les quittances.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const isLoading = propertiesLoading || tenantsLoading || paymentsLoading;
 
@@ -56,7 +83,21 @@ const Index = () => {
               Bienvenue. Voici un aperçu de votre patrimoine immobilier.
             </p>
           </div>
-          <AddPropertyDialog />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleGenerateReceipts}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <FileText className="h-4 w-4 mr-2" />
+              )}
+              Générer les quittances
+            </Button>
+            <AddPropertyDialog />
+          </div>
         </div>
 
         {/* Stats Grid */}

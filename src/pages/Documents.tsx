@@ -64,7 +64,7 @@ function StatCard({ title, value, icon: Icon, color }: { title: string; value: s
   );
 }
 
-function DocumentCard({ document, onDelete, canDelete }: { document: DocumentWithDetails; onDelete: (id: string) => void; canDelete: boolean }) {
+function DocumentCard({ document, onDelete, canDelete }: { document: DocumentWithDetails; onDelete: (id: string, name: string) => void; canDelete: boolean }) {
   const [viewOpen, setViewOpen] = useState(false);
   const typeInfo = typeConfig[document.type] || typeConfig.other;
   const statusInfo = statusConfig[document.status] || statusConfig.valid;
@@ -163,7 +163,7 @@ function DocumentCard({ document, onDelete, canDelete }: { document: DocumentWit
                     variant="ghost" 
                     size="sm" 
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => onDelete(document.id)}
+                    onClick={() => onDelete(document.id, document.name)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -215,9 +215,9 @@ export default function Documents() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, name: string) => {
     try {
-      await deleteDocument.mutateAsync(id);
+      await deleteDocument.mutateAsync({ id, name });
       toast.success("Document supprimé avec succès");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la suppression");

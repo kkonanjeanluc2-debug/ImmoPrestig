@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { logActivityDirect } from "@/lib/activityLogger";
 
 export type Owner = Tables<"owners">;
 export type OwnerInsert = TablesInsert<"owners">;
@@ -40,16 +41,29 @@ export const useCreateOwner = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      await logActivityDirect(
+        user.id,
+        "create",
+        "owner",
+        data.name,
+        data.id,
+        { email: data.email, phone: data.phone }
+      );
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["owners"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };
 
 export const useUpdateOwner = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: OwnerUpdate & { id: string }) => {
@@ -61,24 +75,50 @@ export const useUpdateOwner = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      if (user) {
+        await logActivityDirect(
+          user.id,
+          "update",
+          "owner",
+          data.name,
+          data.id
+        );
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["owners"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };
 
 export const useDeleteOwner = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, name }: { id: string; name?: string }) => {
       const { error } = await supabase.from("owners").delete().eq("id", id);
       if (error) throw error;
+
+      // Log activity
+      if (user) {
+        await logActivityDirect(
+          user.id,
+          "delete",
+          "owner",
+          name || "Propriétaire supprimé",
+          id
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["owners"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };

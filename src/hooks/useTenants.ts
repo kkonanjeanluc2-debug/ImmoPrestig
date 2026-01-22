@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { logActivityDirect } from "@/lib/activityLogger";
 
 export type Tenant = Tables<"tenants">;
 export type TenantInsert = TablesInsert<"tenants">;
@@ -51,16 +52,29 @@ export const useCreateTenant = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      await logActivityDirect(
+        user.id,
+        "create",
+        "tenant",
+        data.name,
+        data.id,
+        { email: data.email, phone: data.phone }
+      );
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };
 
 export const useUpdateTenant = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: TenantUpdate & { id: string }) => {
@@ -72,19 +86,33 @@ export const useUpdateTenant = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      if (user) {
+        await logActivityDirect(
+          user.id,
+          "update",
+          "tenant",
+          data.name,
+          data.id
+        );
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };
 
 export const useDeleteTenant = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, name }: { id: string; name?: string }) => {
       // First, get the tenant to find their property_id
       const { data: tenant, error: fetchError } = await supabase
         .from("tenants")
@@ -111,10 +139,22 @@ export const useDeleteTenant = () => {
           console.error("Error updating property status:", updateError);
         }
       }
+
+      // Log activity
+      if (user) {
+        await logActivityDirect(
+          user.id,
+          "delete",
+          "tenant",
+          name || "Locataire supprimé",
+          id
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };

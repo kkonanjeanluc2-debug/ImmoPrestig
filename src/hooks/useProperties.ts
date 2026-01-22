@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { logActivityDirect } from "@/lib/activityLogger";
 
 export type Property = Tables<"properties">;
 export type PropertyInsert = TablesInsert<"properties">;
@@ -59,16 +60,29 @@ export const useCreateProperty = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      await logActivityDirect(
+        user.id,
+        "create",
+        "property",
+        data.title,
+        data.id,
+        { address: data.address, price: data.price }
+      );
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };
 
 export const useUpdateProperty = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: PropertyUpdate & { id: string }) => {
@@ -80,24 +94,50 @@ export const useUpdateProperty = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      if (user) {
+        await logActivityDirect(
+          user.id,
+          "update",
+          "property",
+          data.title,
+          data.id
+        );
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };
 
 export const useDeleteProperty = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, title }: { id: string; title?: string }) => {
       const { error } = await supabase.from("properties").delete().eq("id", id);
       if (error) throw error;
+
+      // Log activity
+      if (user) {
+        await logActivityDirect(
+          user.id,
+          "delete",
+          "property",
+          title || "Bien supprimé",
+          id
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
 };

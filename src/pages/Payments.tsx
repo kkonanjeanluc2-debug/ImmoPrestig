@@ -369,6 +369,7 @@ export default function Payments() {
                             {payment.status === "paid" && (
                               <ReceiptActions
                                 paymentId={payment.id}
+                                tenantId={payment.tenant_id}
                                 tenantName={tenantName}
                                 tenantEmail={tenant?.email || null}
                                 propertyTitle={propertyTitle}
@@ -383,6 +384,7 @@ export default function Payments() {
                               <>
                                 <SendReminderDialog
                                   paymentId={payment.id}
+                                  tenantId={payment.tenant_id}
                                   tenantName={tenantName}
                                   tenantEmail={tenant?.email || null}
                                   propertyTitle={propertyTitle}

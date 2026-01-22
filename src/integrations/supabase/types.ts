@@ -128,6 +128,42 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          created_at: string
+          email_type: string
+          id: string
+          payment_id: string | null
+          recipient_email: string
+          status: string
+          subject: string
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          id?: string
+          payment_id?: string | null
+          recipient_email: string
+          status?: string
+          subject: string
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          id?: string
+          payment_id?: string | null
+          recipient_email?: string
+          status?: string
+          subject?: string
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       owners: {
         Row: {
           address: string | null

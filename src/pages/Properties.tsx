@@ -9,7 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Grid3X3, List, Loader2 } from "lucide-react";
+import { Plus, Search, Grid3X3, List, Loader2, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/exportCsv";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useProperties } from "@/hooks/useProperties";
@@ -44,7 +45,28 @@ const Properties = () => {
               Gérez l'ensemble de votre patrimoine immobilier
             </p>
           </div>
-          <AddPropertyDialog />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                exportToCsv(properties || [], 'biens', [
+                  { key: 'title', label: 'Titre' },
+                  { key: 'address', label: 'Adresse' },
+                  { key: 'property_type', label: 'Type', format: (v) => v === 'maison' ? 'Maison' : v === 'appartement' ? 'Appartement' : 'Terrain' },
+                  { key: 'type', label: 'Mode', format: (v) => v === 'location' ? 'Location' : 'Vente' },
+                  { key: 'price', label: 'Prix (F CFA)', format: (v) => Number(v).toString() },
+                  { key: 'area', label: 'Surface (m²)', format: (v) => v ? Number(v).toString() : '' },
+                  { key: 'bedrooms', label: 'Chambres', format: (v) => v ? v.toString() : '' },
+                  { key: 'bathrooms', label: 'Salles de bain', format: (v) => v ? v.toString() : '' },
+                  { key: 'status', label: 'Statut', format: (v) => v === 'disponible' ? 'Disponible' : v === 'occupé' ? 'Occupé' : 'En attente' },
+                ]);
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exporter CSV
+            </Button>
+            <AddPropertyDialog />
+          </div>
         </div>
 
         {/* Filters */}

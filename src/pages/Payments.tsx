@@ -35,6 +35,7 @@ import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog"
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { ReceiptActions } from "@/components/payment/ReceiptActions";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const statusConfig = {
   paid: { 
@@ -67,6 +68,7 @@ export default function Payments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const { canCreate, canEdit } = usePermissions();
 
   const { data: payments, isLoading, error } = usePayments();
 
@@ -191,7 +193,7 @@ export default function Payments() {
                 { key: 'method', label: 'Mode de paiement', format: (v) => v || '' },
               ]}
             />
-            <AddPaymentDialog />
+            {canCreate && <AddPaymentDialog />}
           </div>
         </div>
 
@@ -396,7 +398,7 @@ export default function Payments() {
                                 method={payment.method || undefined}
                               />
                             )}
-                            {payment.status !== "paid" && (
+                            {payment.status !== "paid" && canEdit && (
                               <>
                                 <SendReminderDialog
                                   paymentId={payment.id}

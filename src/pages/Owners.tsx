@@ -24,12 +24,14 @@ import { useOwners, useDeleteOwner } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { toast } from "sonner";
 import { AddOwnerDialog } from "@/components/owner/AddOwnerDialog";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const Owners = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: owners, isLoading, error } = useOwners();
   const { data: properties } = useProperties();
   const deleteOwner = useDeleteOwner();
+  const { canCreate, canEdit, canDelete } = usePermissions();
 
   const filteredOwners = (owners || []).filter(owner =>
     owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,7 +65,7 @@ const Owners = () => {
               Gérez vos propriétaires et leurs biens
             </p>
           </div>
-          <AddOwnerDialog />
+          {canCreate && <AddOwnerDialog />}
         </div>
 
         {/* Search */}
@@ -201,14 +203,16 @@ const Owners = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-card border border-border z-50">
                           <DropdownMenuItem>Voir les détails</DropdownMenuItem>
-                          <DropdownMenuItem>Modifier</DropdownMenuItem>
+                          {canEdit && <DropdownMenuItem>Modifier</DropdownMenuItem>}
                           <DropdownMenuItem>Voir les biens</DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => handleDelete(owner.id)}
-                          >
-                            Supprimer
-                          </DropdownMenuItem>
+                          {canDelete && (
+                            <DropdownMenuItem 
+                              className="text-destructive"
+                              onClick={() => handleDelete(owner.id)}
+                            >
+                              Supprimer
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

@@ -31,6 +31,7 @@ import { useDocuments, useDeleteDocument, DocumentWithDetails } from "@/hooks/us
 import { AddDocumentDialog } from "@/components/document/AddDocumentDialog";
 import { ViewDocumentDialog } from "@/components/document/ViewDocumentDialog";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const typeConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   contract: { label: "Contrat", icon: FileCheck, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
@@ -63,7 +64,7 @@ function StatCard({ title, value, icon: Icon, color }: { title: string; value: s
   );
 }
 
-function DocumentCard({ document, onDelete }: { document: DocumentWithDetails; onDelete: (id: string) => void }) {
+function DocumentCard({ document, onDelete, canDelete }: { document: DocumentWithDetails; onDelete: (id: string) => void; canDelete: boolean }) {
   const [viewOpen, setViewOpen] = useState(false);
   const typeInfo = typeConfig[document.type] || typeConfig.other;
   const statusInfo = statusConfig[document.status] || statusConfig.valid;
@@ -157,14 +158,16 @@ function DocumentCard({ document, onDelete }: { document: DocumentWithDetails; o
                   <Download className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">Télécharger</span>
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => onDelete(document.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {canDelete && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => onDelete(document.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -188,6 +191,7 @@ export default function Documents() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { canCreate, canDelete } = usePermissions();
 
   const { data: documents, isLoading, error } = useDocuments();
   const deleteDocument = useDeleteDocument();
@@ -231,7 +235,7 @@ export default function Documents() {
               Gérez vos contrats, quittances et fichiers
             </p>
           </div>
-          <AddDocumentDialog />
+          {canCreate && <AddDocumentDialog />}
         </div>
 
         {/* Stats */}
@@ -324,7 +328,7 @@ export default function Documents() {
           <div className="grid gap-4">
             {filteredDocuments.length > 0 ? (
               filteredDocuments.map((document) => (
-                <DocumentCard key={document.id} document={document} onDelete={handleDelete} />
+                <DocumentCard key={document.id} document={document} onDelete={handleDelete} canDelete={canDelete} />
               ))
             ) : (
               <Card>

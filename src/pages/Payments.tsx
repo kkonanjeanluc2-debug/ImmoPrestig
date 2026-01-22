@@ -22,7 +22,8 @@ import {
   Filter,
   Calendar as CalendarIcon,
   Home,
-  Loader2
+  Loader2,
+  FileText
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,8 @@ import { fr } from "date-fns/locale";
 import { usePayments } from "@/hooks/usePayments";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
+import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
+import { toast } from "sonner";
 
 const statusConfig = {
   paid: { 
@@ -358,10 +361,39 @@ export default function Payments() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between sm:justify-end gap-4 pl-11 sm:pl-0">
+                          <div className="flex items-center justify-between sm:justify-end gap-2 pl-11 sm:pl-0">
                             <span className="text-lg font-bold text-foreground whitespace-nowrap">
                               {formatCurrency(Number(payment.amount))}
                             </span>
+                            {payment.status === "paid" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs"
+                                onClick={() => {
+                                  try {
+                                    generateRentReceipt({
+                                      paymentId: payment.id,
+                                      tenantName: tenantName,
+                                      tenantEmail: tenant?.email,
+                                      propertyTitle: propertyTitle,
+                                      propertyAddress: tenant?.property?.address,
+                                      amount: Number(payment.amount),
+                                      paidDate: payment.paid_date || payment.due_date,
+                                      dueDate: payment.due_date,
+                                      period: getPaymentPeriod(payment.due_date),
+                                      method: payment.method || undefined,
+                                    });
+                                    toast.success("Quittance générée avec succès");
+                                  } catch (error) {
+                                    toast.error("Erreur lors de la génération de la quittance");
+                                  }
+                                }}
+                              >
+                                <FileText className="h-3 w-3 mr-1" />
+                                Quittance
+                              </Button>
+                            )}
                             {payment.status !== "paid" && (
                               <CollectPaymentDialog
                                 paymentId={payment.id}

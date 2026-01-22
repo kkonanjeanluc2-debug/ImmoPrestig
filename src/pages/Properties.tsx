@@ -9,99 +9,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Filter, Grid3X3, List } from "lucide-react";
+import { Plus, Search, Grid3X3, List, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-
-const allProperties = [
-  {
-    id: "1",
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-    title: "Villa Belle Époque",
-    address: "16 Avenue Foch, Paris 16ème",
-    price: 3500,
-    type: "location" as const,
-    propertyType: "maison" as const,
-    bedrooms: 5,
-    bathrooms: 3,
-    area: 280,
-    status: "disponible" as const,
-  },
-  {
-    id: "2",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
-    title: "Appartement Haussmannien",
-    address: "42 Boulevard Saint-Germain, Paris 5ème",
-    price: 1850,
-    type: "location" as const,
-    propertyType: "appartement" as const,
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 120,
-    status: "occupé" as const,
-  },
-  {
-    id: "3",
-    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
-    title: "Loft Design Bastille",
-    address: "8 Rue de la Roquette, Paris 11ème",
-    price: 2200,
-    type: "location" as const,
-    propertyType: "appartement" as const,
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 95,
-    status: "en attente" as const,
-  },
-  {
-    id: "4",
-    image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80",
-    title: "Terrain Constructible",
-    address: "Chemin des Vignes, Fontainebleau",
-    price: 185000,
-    type: "vente" as const,
-    propertyType: "terrain" as const,
-    area: 1200,
-    status: "disponible" as const,
-  },
-  {
-    id: "5",
-    image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80",
-    title: "Studio Moderne",
-    address: "25 Rue du Temple, Paris 3ème",
-    price: 950,
-    type: "location" as const,
-    propertyType: "appartement" as const,
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 35,
-    status: "occupé" as const,
-  },
-  {
-    id: "6",
-    image: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80",
-    title: "Maison de Maître",
-    address: "12 Rue Victor Hugo, Versailles",
-    price: 4200,
-    type: "location" as const,
-    propertyType: "maison" as const,
-    bedrooms: 6,
-    bathrooms: 4,
-    area: 350,
-    status: "disponible" as const,
-  },
-];
+import { useProperties } from "@/hooks/useProperties";
+import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 
 const Properties = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  
+  const { data: properties, isLoading, error } = useProperties();
 
-  const filteredProperties = allProperties.filter((property) => {
+  const filteredProperties = (properties || []).filter((property) => {
     const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          property.address.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === "all" || property.propertyType === typeFilter;
+    const matchesType = typeFilter === "all" || property.property_type === typeFilter;
     const matchesStatus = statusFilter === "all" || property.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
   });
@@ -119,10 +44,7 @@ const Properties = () => {
               Gérez l'ensemble de votre patrimoine immobilier
             </p>
           </div>
-          <Button className="bg-emerald hover:bg-emerald-dark text-primary-foreground gap-2">
-            <Plus className="h-4 w-4" />
-            Ajouter un bien
-          </Button>
+          <AddPropertyDialog />
         </div>
 
         {/* Filters */}
@@ -193,28 +115,57 @@ const Properties = () => {
           </p>
         </div>
 
-        {/* Properties Grid */}
-        <div className={cn(
-          "grid gap-6",
-          viewMode === "grid" 
-            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
-            : "grid-cols-1"
-        )}>
-          {filteredProperties.map((property, index) => (
-            <div 
-              key={property.id} 
-              style={{ animationDelay: `${index * 50}ms` }}
-              className="animate-fade-in"
-            >
-              <PropertyCard {...property} />
-            </div>
-          ))}
-        </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
 
-        {filteredProperties.length === 0 && (
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-destructive">Erreur lors du chargement des biens.</p>
+          </div>
+        )}
+
+        {/* Properties Grid */}
+        {!isLoading && !error && (
+          <div className={cn(
+            "grid gap-6",
+            viewMode === "grid" 
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
+              : "grid-cols-1"
+          )}>
+            {filteredProperties.map((property, index) => (
+              <div 
+                key={property.id} 
+                style={{ animationDelay: `${index * 50}ms` }}
+                className="animate-fade-in"
+              >
+              <PropertyCard 
+                image={property.image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"}
+                title={property.title}
+                address={property.address}
+                price={property.price}
+                type={property.type as "location" | "vente"}
+                propertyType={property.property_type as "maison" | "appartement" | "terrain"}
+                bedrooms={property.bedrooms || undefined}
+                bathrooms={property.bathrooms || undefined}
+                area={property.area || 0}
+                status={property.status as "disponible" | "occupé" | "en attente"}
+              />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && !error && filteredProperties.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
-              Aucun bien ne correspond à vos critères de recherche.
+              {properties?.length === 0 
+                ? "Aucun bien enregistré. Ajoutez votre premier bien !"
+                : "Aucun bien ne correspond à vos critères de recherche."}
             </p>
           </div>
         )}

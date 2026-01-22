@@ -5,48 +5,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Home, Building, MapPin, Upload, X, ImageIcon, Loader2 } from "lucide-react";
+import { Plus, Home, Building, MapPin, X, ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useCreateProperty } from "@/hooks/useProperties";
 
 interface AddPropertyDialogProps {
-  onPropertyAdd?: (property: PropertyFormData) => void;
+  onSuccess?: () => void;
 }
 
-export interface PropertyFormData {
-  title: string;
-  address: string;
-  price: number;
-  type: "location" | "vente";
-  propertyType: "maison" | "appartement" | "terrain";
-  bedrooms?: number;
-  bathrooms?: number;
-  area: number;
-  description?: string;
-  image?: string;
-}
-
-export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => {
+export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<PropertyFormData>>({
+  const [formData, setFormData] = useState({
+    title: "",
+    address: "",
+    price: "",
     type: "location",
-    propertyType: "appartement",
+    property_type: "appartement",
+    bedrooms: "",
+    bathrooms: "",
+    area: "",
+    description: "",
+    image_url: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const createProperty = useCreateProperty();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error("Veuillez sélectionner une image valide");
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("L'image ne doit pas dépasser 5 Mo");
       return;
@@ -55,24 +50,21 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
     setIsUploading(true);
 
     try {
-      // Create unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `properties/${fileName}`;
 
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('property-images')
         .upload(filePath, file);
 
       if (error) throw error;
 
-      // Get public URL
       const { data: urlData } = supabase.storage
         .from('property-images')
         .getPublicUrl(filePath);
 
-      setFormData({ ...formData, image: urlData.publicUrl });
+      setFormData({ ...formData, image_url: urlData.publicUrl });
       setImagePreview(urlData.publicUrl);
       toast.success("Image importée avec succès !");
     } catch (error) {
@@ -85,13 +77,29 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
 
   const removeImage = () => {
     setImagePreview(null);
-    setFormData({ ...formData, image: undefined });
+    setFormData({ ...formData, image_url: "" });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      address: "",
+      price: "",
+      type: "location",
+      property_type: "appartement",
+      bedrooms: "",
+      bathrooms: "",
+      area: "",
+      description: "",
+      image_url: "",
+    });
+    setImagePreview(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title || !formData.address || !formData.price || !formData.area) {
@@ -99,28 +107,31 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
       return;
     }
 
-    const newProperty: PropertyFormData = {
-      title: formData.title,
-      address: formData.address,
-      price: formData.price,
-      type: formData.type || "location",
-      propertyType: formData.propertyType || "appartement",
-      bedrooms: formData.bedrooms,
-      bathrooms: formData.bathrooms,
-      area: formData.area,
-      description: formData.description,
-      image: formData.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-    };
+    try {
+      await createProperty.mutateAsync({
+        title: formData.title,
+        address: formData.address,
+        price: Number(formData.price),
+        type: formData.type,
+        property_type: formData.property_type,
+        bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
+        bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
+        area: Number(formData.area),
+        description: formData.description || null,
+        image_url: formData.image_url || null,
+      });
 
-    onPropertyAdd?.(newProperty);
-    toast.success("Bien ajouté avec succès !");
-    setFormData({ type: "location", propertyType: "appartement" });
-    setImagePreview(null);
-    setOpen(false);
+      toast.success("Bien ajouté avec succès !");
+      resetForm();
+      setOpen(false);
+      onSuccess?.();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'ajout du bien");
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) resetForm(); }}>
       <DialogTrigger asChild>
         <Button className="bg-emerald hover:bg-emerald-dark text-primary-foreground gap-2">
           <Plus className="h-4 w-4" />
@@ -132,13 +143,12 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
           <DialogTitle className="text-2xl font-display">Ajouter un nouveau bien</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-          {/* Type de transaction */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Type de transaction *</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value: "location" | "vente") => setFormData({ ...formData, type: value })}
+                onValueChange={(value) => setFormData({ ...formData, type: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner" />
@@ -152,10 +162,8 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
             <div className="space-y-2">
               <Label htmlFor="propertyType">Type de bien *</Label>
               <Select
-                value={formData.propertyType}
-                onValueChange={(value: "maison" | "appartement" | "terrain") => 
-                  setFormData({ ...formData, propertyType: value })
-                }
+                value={formData.property_type}
+                onValueChange={(value) => setFormData({ ...formData, property_type: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner" />
@@ -184,13 +192,12 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
             </div>
           </div>
 
-          {/* Titre et Adresse */}
           <div className="space-y-2">
             <Label htmlFor="title">Titre du bien *</Label>
             <Input
               id="title"
               placeholder="Ex: Villa Belle Époque"
-              value={formData.title || ""}
+              value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
           </div>
@@ -200,12 +207,11 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
             <Input
               id="address"
               placeholder="Ex: 16 Avenue Foch, Paris 16ème"
-              value={formData.address || ""}
+              value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             />
           </div>
 
-          {/* Prix et Surface */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">
@@ -215,8 +221,8 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
                 id="price"
                 type="number"
                 placeholder="Ex: 150000"
-                value={formData.price || ""}
-                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -225,14 +231,13 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
                 id="area"
                 type="number"
                 placeholder="Ex: 120"
-                value={formData.area || ""}
-                onChange={(e) => setFormData({ ...formData, area: Number(e.target.value) })}
+                value={formData.area}
+                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
               />
             </div>
           </div>
 
-          {/* Chambres et Salles de bain (sauf terrain) */}
-          {formData.propertyType !== "terrain" && (
+          {formData.property_type !== "terrain" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="bedrooms">Chambres</Label>
@@ -240,8 +245,8 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
                   id="bedrooms"
                   type="number"
                   placeholder="Ex: 3"
-                  value={formData.bedrooms || ""}
-                  onChange={(e) => setFormData({ ...formData, bedrooms: Number(e.target.value) })}
+                  value={formData.bedrooms}
+                  onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -250,14 +255,13 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
                   id="bathrooms"
                   type="number"
                   placeholder="Ex: 2"
-                  value={formData.bathrooms || ""}
-                  onChange={(e) => setFormData({ ...formData, bathrooms: Number(e.target.value) })}
+                  value={formData.bathrooms}
+                  onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
                 />
               </div>
             </div>
           )}
 
-          {/* Image Upload */}
           <div className="space-y-2">
             <Label>Photo du bien</Label>
             <div className="space-y-3">
@@ -312,24 +316,27 @@ export const AddPropertyDialog = ({ onPropertyAdd }: AddPropertyDialogProps) => 
             </div>
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               placeholder="Décrivez le bien..."
               rows={3}
-              value={formData.description || ""}
+              value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuler
             </Button>
-            <Button type="submit" className="bg-emerald hover:bg-emerald-dark" disabled={isUploading}>
+            <Button 
+              type="submit" 
+              className="bg-emerald hover:bg-emerald-dark" 
+              disabled={isUploading || createProperty.isPending}
+            >
+              {createProperty.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Ajouter le bien
             </Button>
           </div>

@@ -1,98 +1,44 @@
-import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { RecentPayments } from "@/components/dashboard/RecentPayments";
-import { AddPropertyDialog, PropertyFormData } from "@/components/property/AddPropertyDialog";
-import { Building2, Users, Wallet, TrendingUp } from "lucide-react";
+import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
+import { Building2, Users, Wallet, TrendingUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface Property {
-  id: string;
-  image: string;
-  title: string;
-  address: string;
-  price: number;
-  type: "location" | "vente";
-  propertyType: "maison" | "appartement" | "terrain";
-  bedrooms?: number;
-  bathrooms?: number;
-  area: number;
-  status: "disponible" | "occupé" | "en attente";
-}
-
-const initialProperties: Property[] = [
-  {
-    id: "1",
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-    title: "Villa Belle Époque",
-    address: "16 Avenue Foch, Paris 16ème",
-    price: 3500,
-    type: "location" as const,
-    propertyType: "maison" as const,
-    bedrooms: 5,
-    bathrooms: 3,
-    area: 280,
-    status: "disponible" as const,
-  },
-  {
-    id: "2",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
-    title: "Appartement Haussmannien",
-    address: "42 Boulevard Saint-Germain, Paris 5ème",
-    price: 1850,
-    type: "location" as const,
-    propertyType: "appartement" as const,
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 120,
-    status: "occupé" as const,
-  },
-  {
-    id: "3",
-    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
-    title: "Loft Design Bastille",
-    address: "8 Rue de la Roquette, Paris 11ème",
-    price: 2200,
-    type: "location" as const,
-    propertyType: "appartement" as const,
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 95,
-    status: "en attente" as const,
-  },
-  {
-    id: "4",
-    image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80",
-    title: "Terrain Constructible",
-    address: "Chemin des Vignes, Fontainebleau",
-    price: 185000,
-    type: "vente" as const,
-    propertyType: "terrain" as const,
-    area: 1200,
-    status: "disponible" as const,
-  },
-];
+import { useProperties } from "@/hooks/useProperties";
+import { useTenants } from "@/hooks/useTenants";
+import { usePayments } from "@/hooks/usePayments";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const Index = () => {
-  const [properties, setProperties] = useState(initialProperties);
+  const { user } = useAuth();
+  const { data: properties, isLoading: propertiesLoading } = useProperties();
+  const { data: tenants, isLoading: tenantsLoading } = useTenants();
+  const { data: payments, isLoading: paymentsLoading } = usePayments();
 
-  const handlePropertyAdd = (propertyData: PropertyFormData) => {
-    const newProperty = {
-      id: Date.now().toString(),
-      image: propertyData.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-      title: propertyData.title,
-      address: propertyData.address,
-      price: propertyData.price,
-      type: propertyData.type,
-      propertyType: propertyData.propertyType,
-      bedrooms: propertyData.bedrooms,
-      bathrooms: propertyData.bathrooms,
-      area: propertyData.area,
-      status: "disponible" as const,
-    };
-    setProperties([newProperty, ...properties]);
-  };
+  const isLoading = propertiesLoading || tenantsLoading || paymentsLoading;
+
+  // Compute stats
+  const totalProperties = properties?.length || 0;
+  const activeTenants = tenants?.filter(t => 
+    t.contracts?.some(c => c.status === 'active')
+  ).length || 0;
+  
+  const monthlyRevenue = payments?.filter(p => {
+    const paidDate = p.paid_date ? new Date(p.paid_date) : null;
+    const now = new Date();
+    return p.status === 'paid' && paidDate && 
+           paidDate.getMonth() === now.getMonth() && 
+           paidDate.getFullYear() === now.getFullYear();
+  }).reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+  const occupiedProperties = properties?.filter(p => p.status === 'occupé').length || 0;
+  const occupancyRate = totalProperties > 0 
+    ? Math.round((occupiedProperties / totalProperties) * 100) 
+    : 0;
+
+  const recentProperties = properties?.slice(0, 4) || [];
 
   return (
     <DashboardLayout>
@@ -104,47 +50,53 @@ const Index = () => {
               Tableau de bord
             </h1>
             <p className="text-muted-foreground mt-1">
-              Bienvenue, Jean. Voici un aperçu de votre patrimoine immobilier.
+              Bienvenue. Voici un aperçu de votre patrimoine immobilier.
             </p>
           </div>
-          <AddPropertyDialog onPropertyAdd={handlePropertyAdd} />
+          <AddPropertyDialog />
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Total des biens"
-            value={24}
-            change="+2 ce mois"
-            changeType="positive"
-            icon={Building2}
-            iconBg="navy"
-          />
-          <StatCard
-            title="Locataires actifs"
-            value={18}
-            change="100% occupés"
-            changeType="positive"
-            icon={Users}
-            iconBg="emerald"
-          />
-          <StatCard
-            title="Revenus mensuels"
-            value="32 450 F CFA"
-            change="+8% vs mois dernier"
-            changeType="positive"
-            icon={Wallet}
-            iconBg="sand"
-          />
-          <StatCard
-            title="Taux d'occupation"
-            value="94%"
-            change="+2% vs trimestre"
-            changeType="positive"
-            icon={TrendingUp}
-            iconBg="navy"
-          />
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard
+              title="Total des biens"
+              value={totalProperties}
+              change={totalProperties > 0 ? `${totalProperties} bien${totalProperties > 1 ? 's' : ''}` : "Aucun bien"}
+              changeType="positive"
+              icon={Building2}
+              iconBg="navy"
+            />
+            <StatCard
+              title="Locataires actifs"
+              value={activeTenants}
+              change={activeTenants > 0 ? "Contrats actifs" : "Aucun locataire"}
+              changeType="positive"
+              icon={Users}
+              iconBg="emerald"
+            />
+            <StatCard
+              title="Revenus mensuels"
+              value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
+              change="Ce mois-ci"
+              changeType="positive"
+              icon={Wallet}
+              iconBg="sand"
+            />
+            <StatCard
+              title="Taux d'occupation"
+              value={`${occupancyRate}%`}
+              change={`${occupiedProperties}/${totalProperties} biens`}
+              changeType="positive"
+              icon={TrendingUp}
+              iconBg="navy"
+            />
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -154,17 +106,43 @@ const Index = () => {
               <h2 className="text-xl font-display font-semibold text-foreground">
                 Biens récents
               </h2>
-              <Button variant="ghost" className="text-navy hover:text-navy-dark">
-                Voir tous les biens →
-              </Button>
+              <Link to="/properties">
+                <Button variant="ghost" className="text-navy hover:text-navy-dark">
+                  Voir tous les biens →
+                </Button>
+              </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {properties.map((property, index) => (
-                <div key={property.id} style={{ animationDelay: `${index * 100}ms` }}>
-                  <PropertyCard {...property} />
-                </div>
-              ))}
-            </div>
+            
+            {propertiesLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : recentProperties.length === 0 ? (
+              <div className="text-center py-12 bg-card rounded-xl border border-border/50">
+                <p className="text-muted-foreground">
+                  Aucun bien enregistré. Ajoutez votre premier bien !
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {recentProperties.map((property, index) => (
+                  <div key={property.id} style={{ animationDelay: `${index * 100}ms` }}>
+                    <PropertyCard 
+                      image={property.image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"}
+                      title={property.title}
+                      address={property.address}
+                      price={property.price}
+                      type={property.type as "location" | "vente"}
+                      propertyType={property.property_type as "maison" | "appartement" | "terrain"}
+                      bedrooms={property.bedrooms || undefined}
+                      bathrooms={property.bathrooms || undefined}
+                      area={property.area || 0}
+                      status={property.status as "disponible" | "occupé" | "en attente"}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Payments Section */}

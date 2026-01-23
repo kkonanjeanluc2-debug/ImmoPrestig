@@ -2,11 +2,13 @@ import { Check, Star, Zap, Building2, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useSubscriptionPlans } from "@/hooks/useSubscriptionPlans";
+import { useSubscriptionPlans, SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
 
 const planIcons: Record<string, React.ReactNode> = {
   "Gratuit": <Zap className="h-6 w-6" />,
@@ -18,6 +20,10 @@ const planIcons: Record<string, React.ReactNode> = {
 const Pricing = () => {
   const { data: plans, isLoading } = useSubscriptionPlans();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const activePlans = plans?.filter(plan => plan.is_active) || [];
 
@@ -38,6 +44,17 @@ const Pricing = () => {
     return 0;
   };
 
+  const handleSelectPlan = (plan: SubscriptionPlan) => {
+    if (user) {
+      // User is logged in, show checkout dialog
+      setSelectedPlan(plan);
+      setCheckoutOpen(true);
+    } else {
+      // Not logged in, redirect to signup
+      navigate("/signup");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Header */}
@@ -50,12 +67,20 @@ const Pricing = () => {
             <span className="font-bold text-xl">ImmoGest</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link to="/login">
-              <Button variant="ghost">Se connecter</Button>
-            </Link>
-            <Link to="/signup">
-              <Button>Commencer gratuitement</Button>
-            </Link>
+            {user ? (
+              <Link to="/">
+                <Button>Accéder au tableau de bord</Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost">Se connecter</Button>
+                </Link>
+                <Link to="/signup">
+                  <Button>Commencer gratuitement</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -225,14 +250,13 @@ const Pricing = () => {
                     </CardContent>
 
                     <CardFooter>
-                      <Link to="/signup" className="w-full">
-                        <Button
-                          className="w-full"
-                          variant={plan.is_popular ? "default" : "outline"}
-                        >
-                          {plan.price_monthly === 0 ? "Commencer gratuitement" : "Choisir ce forfait"}
-                        </Button>
-                      </Link>
+                      <Button
+                        className="w-full"
+                        variant={plan.is_popular ? "default" : "outline"}
+                        onClick={() => handleSelectPlan(plan)}
+                      >
+                        {plan.price_monthly === 0 ? "Commencer gratuitement" : "Choisir ce forfait"}
+                      </Button>
                     </CardFooter>
                   </Card>
                 );
@@ -258,7 +282,7 @@ const Pricing = () => {
             <div>
               <h3 className="font-semibold mb-2">Comment fonctionne le paiement ?</h3>
               <p className="text-muted-foreground text-sm">
-                Nous acceptons Orange Money, MTN Money, Wave et les cartes bancaires pour votre confort.
+                Nous acceptons Orange Money, MTN Money, Wave, Moov Money et les cartes bancaires pour votre confort.
               </p>
             </div>
             <div>
@@ -300,6 +324,14 @@ const Pricing = () => {
           <p>© 2025 ImmoGest. Tous droits réservés.</p>
         </div>
       </footer>
+
+      {/* Checkout Dialog */}
+      <SubscriptionCheckoutDialog
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        plan={selectedPlan}
+        billingCycle={billingCycle}
+      />
     </div>
   );
 };

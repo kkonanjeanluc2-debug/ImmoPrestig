@@ -257,31 +257,71 @@ export function ReceiptTemplateManager() {
       doc.text(signatureText, pageWidth - 20, yPos, { align: "right" });
 
       // Watermark
-      if (formData.watermark_enabled && formData.watermark_type === "text" && formData.watermark_text) {
-        doc.saveGraphicsState();
+      if (formData.watermark_enabled) {
         const opacity = formData.watermark_opacity / 100;
-        const grayValue = Math.round(200 + (55 * (1 - opacity)));
-        doc.setTextColor(grayValue, grayValue, grayValue);
-        doc.setFontSize(60);
-        doc.setFont("helvetica", "bold");
+        
+        if (formData.watermark_type === "text" && formData.watermark_text) {
+          doc.saveGraphicsState();
+          const grayValue = Math.round(200 + (55 * (1 - opacity)));
+          doc.setTextColor(grayValue, grayValue, grayValue);
+          doc.setFontSize(60);
+          doc.setFont("helvetica", "bold");
 
-        if (formData.watermark_position === "diagonal") {
-          doc.setFontSize(40);
-          for (let i = -2; i < 4; i++) {
-            for (let j = -2; j < 4; j++) {
-              const x = (pageWidth / 3) * i + 30;
-              const y = (pageHeight / 4) * j + 60;
-              if (x > -50 && x < pageWidth + 50 && y > -50 && y < pageHeight + 50) {
-                doc.text(formData.watermark_text, x, y, { align: "center" });
+          if (formData.watermark_position === "diagonal") {
+            doc.setFontSize(40);
+            for (let i = -2; i < 4; i++) {
+              for (let j = -2; j < 4; j++) {
+                const x = (pageWidth / 3) * i + 30;
+                const y = (pageHeight / 4) * j + 60;
+                if (x > -50 && x < pageWidth + 50 && y > -50 && y < pageHeight + 50) {
+                  doc.text(formData.watermark_text, x, y, { align: "center" });
+                }
               }
             }
+          } else if (formData.watermark_position === "bottom-right") {
+            doc.text(formData.watermark_text, pageWidth - 50, pageHeight - 50, { align: "center" });
+          } else {
+            doc.text(formData.watermark_text, pageWidth / 2, pageHeight / 2, { align: "center" });
           }
-        } else if (formData.watermark_position === "bottom-right") {
-          doc.text(formData.watermark_text, pageWidth - 50, pageHeight - 50, { align: "center" });
-        } else {
-          doc.text(formData.watermark_text, pageWidth / 2, pageHeight / 2, { align: "center" });
+          doc.restoreGraphicsState();
+        } else if (formData.watermark_type === "agency_logo" && agency?.logo_url) {
+          // Agency logo watermark - load and render
+          try {
+            const response = await fetch(agency.logo_url);
+            const blob = await response.blob();
+            const logoBase64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+
+            const logoSize = 60;
+            doc.saveGraphicsState();
+            
+            if (formData.watermark_position === "diagonal") {
+              const smallLogoSize = 40;
+              for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 4; j++) {
+                  const x = (pageWidth / 3) * i + 20;
+                  const y = (pageHeight / 4) * j + 40;
+                  if (x > 0 && x < pageWidth - smallLogoSize && y > 0 && y < pageHeight - smallLogoSize) {
+                    doc.setGState(new (doc as any).GState({ opacity: opacity }));
+                    doc.addImage(logoBase64, 'PNG', x, y, smallLogoSize, smallLogoSize);
+                  }
+                }
+              }
+            } else if (formData.watermark_position === "bottom-right") {
+              doc.setGState(new (doc as any).GState({ opacity: opacity }));
+              doc.addImage(logoBase64, 'PNG', pageWidth - logoSize - 20, pageHeight - logoSize - 40, logoSize, logoSize);
+            } else {
+              doc.setGState(new (doc as any).GState({ opacity: opacity }));
+              doc.addImage(logoBase64, 'PNG', (pageWidth - logoSize) / 2, (pageHeight - logoSize) / 2, logoSize, logoSize);
+            }
+            doc.restoreGraphicsState();
+          } catch (e) {
+            console.error("Failed to load agency logo for watermark preview:", e);
+          }
         }
-        doc.restoreGraphicsState();
       }
 
       // Footer
@@ -751,23 +791,35 @@ export function ReceiptTemplateManager() {
                         <RadioGroup
                           value={formData.watermark_type}
                           onValueChange={(value) => setFormData({ ...formData, watermark_type: value })}
-                          className="flex gap-4"
+                          className="grid grid-cols-3 gap-2"
                         >
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 p-2 border rounded-lg">
                             <RadioGroupItem value="text" id="wm-text" />
-                            <Label htmlFor="wm-text" className="flex items-center gap-2 cursor-pointer">
+                            <Label htmlFor="wm-text" className="flex items-center gap-2 cursor-pointer text-sm">
                               <Type className="h-4 w-4" />
                               Texte
                             </Label>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 p-2 border rounded-lg">
                             <RadioGroupItem value="image" id="wm-image" />
-                            <Label htmlFor="wm-image" className="flex items-center gap-2 cursor-pointer">
+                            <Label htmlFor="wm-image" className="flex items-center gap-2 cursor-pointer text-sm">
                               <ImageIcon className="h-4 w-4" />
                               Image
                             </Label>
                           </div>
+                          <div className="flex items-center space-x-2 p-2 border rounded-lg">
+                            <RadioGroupItem value="agency_logo" id="wm-logo" />
+                            <Label htmlFor="wm-logo" className="flex items-center gap-2 cursor-pointer text-sm">
+                              <Star className="h-4 w-4" />
+                              Logo agence
+                            </Label>
+                          </div>
                         </RadioGroup>
+                        {formData.watermark_type === "agency_logo" && !agency?.logo_url && (
+                          <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                            ⚠️ Aucun logo d'agence configuré. Veuillez ajouter un logo dans les paramètres d'agence.
+                          </p>
+                        )}
                       </div>
 
                       {formData.watermark_type === "text" && (

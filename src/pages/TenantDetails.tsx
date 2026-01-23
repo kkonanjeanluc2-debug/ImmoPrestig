@@ -329,7 +329,11 @@ const TenantDetails = () => {
                                 <CollectPaymentDialog
                                   paymentId={payment.id}
                                   tenantName={tenant.name}
+                                  tenantEmail={tenant.email}
                                   amount={Number(payment.amount)}
+                                  dueDate={payment.due_date}
+                                  propertyTitle={tenant.property?.title || "Bien immobilier"}
+                                  propertyAddress={tenant.property?.address}
                                   currentMethod={payment.method}
                                 />
                                 <SendReminderDialog

@@ -414,7 +414,10 @@ export default function Payments() {
                                 <CollectPaymentDialog
                                   paymentId={payment.id}
                                   tenantName={tenantName}
+                                  tenantEmail={tenant?.email || null}
                                   amount={Number(payment.amount)}
+                                  dueDate={payment.due_date}
+                                  propertyTitle={propertyTitle}
                                   currentMethod={payment.method}
                                 />
                               </>

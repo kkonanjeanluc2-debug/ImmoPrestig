@@ -1,20 +1,129 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Loader2, ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
+import { Plus, X, Loader2, ChevronLeft, ChevronRight, ImageIcon, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { usePropertyImages, useAddPropertyImage, useDeletePropertyImage } from "@/hooks/usePropertyImages";
+import { usePropertyImages, useAddPropertyImage, useDeletePropertyImage, useReorderPropertyImages, PropertyImage } from "@/hooks/usePropertyImages";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface PropertyImageGalleryProps {
   propertyId: string;
   mainImage?: string | null;
   canEdit?: boolean;
 }
+
+interface SortableThumbnailProps {
+  image: { id: string; image_url: string };
+  index: number;
+  selectedIndex: number;
+  onSelect: (index: number) => void;
+  onDelete: (id: string) => void;
+  canEdit: boolean;
+  isMainImage: boolean;
+}
+
+const SortableThumbnail = ({
+  image,
+  index,
+  selectedIndex,
+  onSelect,
+  onDelete,
+  canEdit,
+  isMainImage,
+}: SortableThumbnailProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: image.id, disabled: isMainImage || !canEdit });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all group/thumb",
+        selectedIndex === index
+          ? "border-primary ring-2 ring-primary/20"
+          : "border-transparent hover:border-muted-foreground/30",
+        isDragging && "shadow-lg"
+      )}
+    >
+      <button
+        onClick={() => onSelect(index)}
+        className="w-full h-full"
+      >
+        <img
+          src={image.image_url}
+          alt=""
+          className="w-full h-full object-cover"
+        />
+      </button>
+      
+      {/* Drag Handle */}
+      {canEdit && !isMainImage && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute bottom-0 left-0 right-0 p-1 bg-black/50 text-white flex items-center justify-center cursor-grab active:cursor-grabbing opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+        >
+          <GripVertical className="h-3 w-3" />
+        </div>
+      )}
+
+      {/* Delete Button */}
+      {canEdit && !isMainImage && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(image.id);
+          }}
+          className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover/thumb:opacity-100 hover:opacity-100 transition-opacity"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
+
+      {/* Main Image Badge */}
+      {isMainImage && (
+        <div className="absolute bottom-0 left-0 right-0 bg-primary/80 text-primary-foreground text-[10px] text-center py-0.5">
+          Principale
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const PropertyImageGallery = ({
   propertyId,
@@ -24,15 +133,72 @@ export const PropertyImageGallery = ({
   const { data: images = [], isLoading } = usePropertyImages(propertyId);
   const addImage = useAddPropertyImage();
   const deleteImage = useDeletePropertyImage();
+  const reorderImages = useReorderPropertyImages();
   const [isUploading, setIsUploading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [localImages, setLocalImages] = useState<typeof images | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Use local state for optimistic updates during drag, otherwise use server data
+  const galleryImages = localImages || images;
 
   // Combine main image with gallery images
   const allImages = mainImage
-    ? [{ id: "main", image_url: mainImage }, ...images]
-    : images;
+    ? [{ id: "main", image_url: mainImage }, ...galleryImages]
+    : galleryImages;
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      setLocalImages(null);
+      return;
+    }
+
+    // Don't allow dragging the main image
+    if (active.id === "main" || over.id === "main") {
+      setLocalImages(null);
+      return;
+    }
+
+    const oldIndex = galleryImages.findIndex((img) => img.id === active.id);
+    const newIndex = galleryImages.findIndex((img) => img.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      setLocalImages(null);
+      return;
+    }
+
+    const newOrder = arrayMove(galleryImages, oldIndex, newIndex);
+    setLocalImages(newOrder as PropertyImage[]);
+
+    try {
+      await reorderImages.mutateAsync({
+        propertyId,
+        images: newOrder.map((img, idx) => ({
+          id: img.id,
+          display_order: idx,
+        })),
+      });
+      toast.success("Ordre des images mis à jour");
+    } catch (error) {
+      toast.error("Erreur lors de la réorganisation");
+    } finally {
+      setLocalImages(null);
+    }
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -146,39 +312,40 @@ export const PropertyImageGallery = ({
         </div>
       )}
 
-      {/* Thumbnails */}
+      {/* Thumbnails with Drag and Drop */}
       {allImages.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {allImages.map((img, index) => (
-            <button
-              key={img.id}
-              onClick={() => setSelectedIndex(index)}
-              className={cn(
-                "relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
-                selectedIndex === index
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "border-transparent hover:border-muted-foreground/30"
-              )}
-            >
-              <img
-                src={img.image_url}
-                alt=""
-                className="w-full h-full object-cover"
-              />
-              {canEdit && img.id !== "main" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteImage(img.id);
-                  }}
-                  className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </button>
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={allImages.map((img) => img.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {allImages.map((img, index) => (
+                <SortableThumbnail
+                  key={img.id}
+                  image={img}
+                  index={index}
+                  selectedIndex={selectedIndex}
+                  onSelect={setSelectedIndex}
+                  onDelete={handleDeleteImage}
+                  canEdit={canEdit}
+                  isMainImage={img.id === "main"}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
+
+      {/* Hint for reordering */}
+      {canEdit && galleryImages.length > 1 && (
+        <p className="text-xs text-muted-foreground text-center">
+          Glissez-déposez les miniatures pour réorganiser l'ordre des photos
+        </p>
       )}
 
       {/* Add Images Button */}

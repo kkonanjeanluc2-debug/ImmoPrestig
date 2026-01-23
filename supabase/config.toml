@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.daily-sms-reminders]
 verify_jwt = false
+
+[functions.notify-upcoming-payments]
+verify_jwt = false

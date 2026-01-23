@@ -8,10 +8,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useCreateOwner, useOwners } from "@/hooks/useOwners";
+
+const downloadTemplate = () => {
+  const templateData = [
+    {
+      "Nom": "Marie Martin",
+      "Email": "marie.martin@email.com",
+      "Téléphone": "+221 77 987 65 43",
+      "Adresse": "123 Rue de la Paix, Dakar",
+      "Statut": "actif",
+    },
+  ];
+  
+  const worksheet = XLSX.utils.json_to_sheet(templateData);
+  worksheet['!cols'] = [
+    { wch: 20 }, { wch: 25 }, { wch: 18 }, { wch: 30 }, { wch: 10 }
+  ];
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Propriétaires");
+  XLSX.writeFile(workbook, "modele_proprietaires.xlsx");
+  toast.success("Modèle téléchargé");
+};
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -176,6 +197,17 @@ export function ImportOwnersDialog() {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Template Download */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={downloadTemplate}
+            className="gap-2 w-full"
+          >
+            <Download className="h-4 w-4" />
+            Télécharger le modèle Excel
+          </Button>
+
           {/* File Upload */}
           <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
             <input

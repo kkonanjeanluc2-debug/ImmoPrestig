@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useCreateTenant, useTenants } from "@/hooks/useTenants";
@@ -18,6 +18,31 @@ import { useUpdateProperty } from "@/hooks/useProperties";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+
+const downloadTemplate = () => {
+  const templateData = [
+    {
+      "Nom": "Jean Dupont",
+      "Email": "jean.dupont@email.com",
+      "Téléphone": "+221 77 123 45 67",
+      "Bien": "Appartement Centre-Ville",
+      "Date début": "2024-01-01",
+      "Date fin": "2024-12-31",
+      "Loyer": 150000,
+      "Dépôt": 300000,
+    },
+  ];
+  
+  const worksheet = XLSX.utils.json_to_sheet(templateData);
+  worksheet['!cols'] = [
+    { wch: 20 }, { wch: 25 }, { wch: 18 }, { wch: 25 }, 
+    { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 }
+  ];
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Locataires");
+  XLSX.writeFile(workbook, "modele_locataires.xlsx");
+  toast.success("Modèle téléchargé");
+};
 
 interface ParsedTenant {
   name: string;
@@ -229,6 +254,17 @@ export function ImportTenantsDialog() {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Template Download */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={downloadTemplate}
+            className="gap-2 w-full"
+          >
+            <Download className="h-4 w-4" />
+            Télécharger le modèle Excel
+          </Button>
+
           {/* File Upload */}
           <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
             <input

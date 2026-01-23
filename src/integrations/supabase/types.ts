@@ -110,6 +110,63 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_schedules: {
+        Row: {
+          created_at: string
+          id: string
+          late_payment_days_after: number
+          late_payment_enabled: boolean
+          late_payment_time: string
+          monthly_receipt_day: number
+          monthly_receipt_enabled: boolean
+          monthly_receipt_time: string
+          payment_reminder_days_before: number
+          payment_reminder_enabled: boolean
+          payment_reminder_time: string
+          sms_reminder_enabled: boolean
+          sms_reminder_time: string
+          sms_reminder_weekdays: number[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          late_payment_days_after?: number
+          late_payment_enabled?: boolean
+          late_payment_time?: string
+          monthly_receipt_day?: number
+          monthly_receipt_enabled?: boolean
+          monthly_receipt_time?: string
+          payment_reminder_days_before?: number
+          payment_reminder_enabled?: boolean
+          payment_reminder_time?: string
+          sms_reminder_enabled?: boolean
+          sms_reminder_time?: string
+          sms_reminder_weekdays?: number[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          late_payment_days_after?: number
+          late_payment_enabled?: boolean
+          late_payment_time?: string
+          monthly_receipt_day?: number
+          monthly_receipt_enabled?: boolean
+          monthly_receipt_time?: string
+          payment_reminder_days_before?: number
+          payment_reminder_enabled?: boolean
+          payment_reminder_time?: string
+          sms_reminder_enabled?: boolean
+          sms_reminder_time?: string
+          sms_reminder_weekdays?: number[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           created_at: string

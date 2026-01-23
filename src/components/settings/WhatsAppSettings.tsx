@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import DOMPurify from "dompurify";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -114,10 +115,13 @@ function MessagePreview({ content, signature }: { content: string; signature: st
   const fullMessage = `${content}\n\n${signature}`;
   const previewText = replaceVariablesForPreview(fullMessage);
   
-  // Convert WhatsApp formatting to HTML
-  const formattedText = previewText
-    .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
-    .replace(/\n/g, '<br />');
+  // Convert WhatsApp formatting to HTML with sanitization
+  const formattedText = DOMPurify.sanitize(
+    previewText
+      .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br />'),
+    { ALLOWED_TAGS: ['strong', 'br'] }
+  );
 
   return (
     <div className="bg-[#dcf8c6] dark:bg-[#005c4b] rounded-lg p-3 shadow-sm max-w-full">

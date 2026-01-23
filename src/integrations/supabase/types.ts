@@ -49,6 +49,7 @@ export type Database = {
       }
       agencies: {
         Row: {
+          accent_color: string | null
           account_type: Database["public"]["Enums"]["account_type"]
           address: string | null
           city: string | null
@@ -61,11 +62,14 @@ export type Database = {
           longitude: number | null
           name: string
           phone: string | null
+          primary_color: string | null
+          sidebar_color: string | null
           siret: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          accent_color?: string | null
           account_type?: Database["public"]["Enums"]["account_type"]
           address?: string | null
           city?: string | null
@@ -78,11 +82,14 @@ export type Database = {
           longitude?: number | null
           name: string
           phone?: string | null
+          primary_color?: string | null
+          sidebar_color?: string | null
           siret?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          accent_color?: string | null
           account_type?: Database["public"]["Enums"]["account_type"]
           address?: string | null
           city?: string | null
@@ -95,6 +102,8 @@ export type Database = {
           longitude?: number | null
           name?: string
           phone?: string | null
+          primary_color?: string | null
+          sidebar_color?: string | null
           siret?: string | null
           updated_at?: string
           user_id?: string

@@ -92,6 +92,15 @@ export default function Payments() {
     const matchesSearch = 
       tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       propertyTitle.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Handle "due_soon" filter for payments due within 7 days
+    if (statusFilter === "due_soon") {
+      const dueDate = new Date(payment.due_date);
+      const daysUntilDue = differenceInDays(dueDate, new Date());
+      const isDueSoon = payment.status !== 'paid' && isFuture(dueDate) && daysUntilDue <= 7 && daysUntilDue >= 0;
+      return matchesSearch && isDueSoon;
+    }
+    
     const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -317,6 +326,12 @@ export default function Payments() {
                       </SelectTrigger>
                       <SelectContent className="bg-background border shadow-lg z-50">
                         <SelectItem value="all">Tous</SelectItem>
+                        <SelectItem value="due_soon">
+                          <span className="flex items-center gap-2">
+                            <AlertCircle className="h-3 w-3 text-orange-500" />
+                            Échéance proche (7j)
+                          </span>
+                        </SelectItem>
                         <SelectItem value="paid">Payés</SelectItem>
                         <SelectItem value="pending">En attente</SelectItem>
                         <SelectItem value="late">En retard</SelectItem>

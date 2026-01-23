@@ -4,8 +4,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Bell, Mail, MessageSquare, Clock, Loader2 } from "lucide-react";
+import { Bell, Mail, MessageSquare, Clock, Loader2, BellRing } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface NotificationPrefs {
   emailEnabled: boolean;
@@ -18,6 +19,13 @@ interface NotificationPrefs {
 export function NotificationSettings() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const { 
+    isSupported: pushSupported, 
+    isEnabled: pushEnabled, 
+    isLoading: pushLoading,
+    permission: pushPermission,
+    togglePushNotifications 
+  } = usePushNotifications();
   const [prefs, setPrefs] = useState<NotificationPrefs>({
     emailEnabled: true,
     smsEnabled: true,
@@ -115,6 +123,32 @@ export function NotificationSettings() {
                 id="sms-notif"
                 checked={prefs.smsEnabled}
                 onCheckedChange={(checked) => updatePref("smsEnabled", checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <BellRing className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <Label htmlFor="push-notif" className="text-base font-medium">
+                    Notifications push navigateur
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {!pushSupported 
+                      ? "Non supporté par votre navigateur"
+                      : pushPermission === "denied"
+                      ? "Bloqué - Activez dans les paramètres du navigateur"
+                      : "Recevoir des alertes même hors de l'application"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="push-notif"
+                checked={pushEnabled}
+                disabled={!pushSupported || pushPermission === "denied" || pushLoading}
+                onCheckedChange={togglePushNotifications}
               />
             </div>
           </div>

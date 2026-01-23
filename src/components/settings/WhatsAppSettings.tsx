@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { MessageCircle, RotateCcw, Save } from "lucide-react";
+import { MessageCircle, RotateCcw, Save, Eye } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface WhatsAppTemplates {
   receipt: string;
@@ -88,9 +89,53 @@ const VARIABLE_HINTS: Record<keyof Omit<WhatsAppTemplates, 'signature'>, string[
   document: ["{tenantName}", "{documentName}", "{documentUrl}"],
 };
 
+// Sample data for preview
+const SAMPLE_DATA: Record<string, string> = {
+  tenantName: "Mamadou Diallo",
+  propertyTitle: "Appartement F3 - Almadies",
+  period: "Janvier 2026",
+  amount: "350 000",
+  paidDate: "15/01/2026",
+  dueDate: "01/02/2026",
+  documentName: "Contrat de bail 2026",
+  documentUrl: "https://exemple.com/document.pdf",
+};
+
+function replaceVariablesForPreview(template: string): string {
+  let result = template;
+  for (const [key, value] of Object.entries(SAMPLE_DATA)) {
+    result = result.replace(new RegExp(`\\{${key}\\}`, "g"), value);
+  }
+  return result;
+}
+
+// WhatsApp-style message bubble component
+function MessagePreview({ content, signature }: { content: string; signature: string }) {
+  const fullMessage = `${content}\n\n${signature}`;
+  const previewText = replaceVariablesForPreview(fullMessage);
+  
+  // Convert WhatsApp formatting to HTML
+  const formattedText = previewText
+    .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br />');
+
+  return (
+    <div className="bg-[#dcf8c6] dark:bg-[#005c4b] rounded-lg p-3 shadow-sm max-w-full">
+      <div 
+        className="text-sm text-foreground whitespace-pre-wrap break-words"
+        dangerouslySetInnerHTML={{ __html: formattedText }}
+      />
+      <div className="text-[10px] text-muted-foreground text-right mt-1">
+        12:34 ✓✓
+      </div>
+    </div>
+  );
+}
+
 export function WhatsAppSettings() {
   const [templates, setTemplates] = useState<WhatsAppTemplates>(DEFAULT_TEMPLATES);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("receipt");
 
   useEffect(() => {
     setTemplates(getWhatsAppTemplates());
@@ -125,6 +170,13 @@ export function WhatsAppSettings() {
     setTemplates(prev => ({ ...prev, [key]: value }));
   };
 
+  const currentTemplate = useMemo(() => {
+    if (activeTab === "signature") {
+      return templates.receipt; // Show receipt as example with signature
+    }
+    return templates[activeTab as keyof WhatsAppTemplates] || "";
+  }, [activeTab, templates]);
+
   const renderVariableHints = (templateKey: keyof Omit<WhatsAppTemplates, 'signature'>) => (
     <div className="flex flex-wrap gap-1 mt-2">
       <span className="text-xs text-muted-foreground">Variables :</span>
@@ -148,134 +200,170 @@ export function WhatsAppSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs defaultValue="receipt" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto gap-1">
-            <TabsTrigger value="receipt" className="text-xs">Quittance</TabsTrigger>
-            <TabsTrigger value="reminder" className="text-xs">Rappel</TabsTrigger>
-            <TabsTrigger value="lateReminder" className="text-xs">Retard</TabsTrigger>
-            <TabsTrigger value="document" className="text-xs">Document</TabsTrigger>
-            <TabsTrigger value="signature" className="text-xs">Signature</TabsTrigger>
-          </TabsList>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Editor Section */}
+          <div className="space-y-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-5 h-auto gap-1">
+                <TabsTrigger value="receipt" className="text-xs">Quittance</TabsTrigger>
+                <TabsTrigger value="reminder" className="text-xs">Rappel</TabsTrigger>
+                <TabsTrigger value="lateReminder" className="text-xs">Retard</TabsTrigger>
+                <TabsTrigger value="document" className="text-xs">Document</TabsTrigger>
+                <TabsTrigger value="signature" className="text-xs">Signature</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="receipt" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Message pour les quittances de loyer</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleReset("receipt")}
-                  className="text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Réinitialiser
-                </Button>
-              </div>
-              <Textarea
-                value={templates.receipt}
-                onChange={(e) => updateTemplate("receipt", e.target.value)}
-                rows={12}
-                className="font-mono text-sm"
-              />
-              {renderVariableHints("receipt")}
-            </div>
-          </TabsContent>
+              <TabsContent value="receipt" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Message pour les quittances de loyer</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("receipt")}
+                      className="text-xs"
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={templates.receipt}
+                    onChange={(e) => updateTemplate("receipt", e.target.value)}
+                    rows={10}
+                    className="font-mono text-sm"
+                  />
+                  {renderVariableHints("receipt")}
+                </div>
+              </TabsContent>
 
-          <TabsContent value="reminder" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Message de rappel avant échéance</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleReset("reminder")}
-                  className="text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Réinitialiser
-                </Button>
-              </div>
-              <Textarea
-                value={templates.reminder}
-                onChange={(e) => updateTemplate("reminder", e.target.value)}
-                rows={10}
-                className="font-mono text-sm"
-              />
-              {renderVariableHints("reminder")}
-            </div>
-          </TabsContent>
+              <TabsContent value="reminder" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Message de rappel avant échéance</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("reminder")}
+                      className="text-xs"
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={templates.reminder}
+                    onChange={(e) => updateTemplate("reminder", e.target.value)}
+                    rows={10}
+                    className="font-mono text-sm"
+                  />
+                  {renderVariableHints("reminder")}
+                </div>
+              </TabsContent>
 
-          <TabsContent value="lateReminder" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Message de rappel pour loyer en retard</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleReset("lateReminder")}
-                  className="text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Réinitialiser
-                </Button>
-              </div>
-              <Textarea
-                value={templates.lateReminder}
-                onChange={(e) => updateTemplate("lateReminder", e.target.value)}
-                rows={10}
-                className="font-mono text-sm"
-              />
-              {renderVariableHints("lateReminder")}
-            </div>
-          </TabsContent>
+              <TabsContent value="lateReminder" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Message de rappel pour loyer en retard</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("lateReminder")}
+                      className="text-xs"
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={templates.lateReminder}
+                    onChange={(e) => updateTemplate("lateReminder", e.target.value)}
+                    rows={10}
+                    className="font-mono text-sm"
+                  />
+                  {renderVariableHints("lateReminder")}
+                </div>
+              </TabsContent>
 
-          <TabsContent value="document" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Message pour partage de document</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleReset("document")}
-                  className="text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Réinitialiser
-                </Button>
-              </div>
-              <Textarea
-                value={templates.document}
-                onChange={(e) => updateTemplate("document", e.target.value)}
-                rows={8}
-                className="font-mono text-sm"
-              />
-              {renderVariableHints("document")}
-            </div>
-          </TabsContent>
+              <TabsContent value="document" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Message pour partage de document</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("document")}
+                      className="text-xs"
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={templates.document}
+                    onChange={(e) => updateTemplate("document", e.target.value)}
+                    rows={10}
+                    className="font-mono text-sm"
+                  />
+                  {renderVariableHints("document")}
+                </div>
+              </TabsContent>
 
-          <TabsContent value="signature" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Signature (ajoutée à tous les messages)</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleReset("signature")}
-                  className="text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Réinitialiser
-                </Button>
-              </div>
-              <Textarea
-                value={templates.signature}
-                onChange={(e) => updateTemplate("signature", e.target.value)}
-                rows={4}
-                className="font-mono text-sm"
-              />
+              <TabsContent value="signature" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Signature (ajoutée à tous les messages)</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("signature")}
+                      className="text-xs"
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={templates.signature}
+                    onChange={(e) => updateTemplate("signature", e.target.value)}
+                    rows={4}
+                    className="font-mono text-sm"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Preview Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Aperçu en temps réel</Label>
             </div>
-          </TabsContent>
-        </Tabs>
+            
+            {/* WhatsApp Chat Preview */}
+            <div className="bg-[#e5ddd5] dark:bg-[#0b141a] rounded-lg p-4 min-h-[300px] relative overflow-hidden">
+              {/* Chat background pattern */}
+              <div className="absolute inset-0 opacity-5 dark:opacity-10" 
+                   style={{ 
+                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` 
+                   }} 
+              />
+              
+              <ScrollArea className="h-[280px] relative">
+                <div className="space-y-2 pr-2">
+                  <MessagePreview 
+                    content={currentTemplate} 
+                    signature={templates.signature} 
+                  />
+                </div>
+              </ScrollArea>
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Les variables entre accolades seront remplacées par les vraies valeurs lors de l'envoi.
+            </p>
+          </div>
+        </div>
 
         <div className="flex justify-between pt-4 border-t">
           <Button variant="outline" onClick={handleResetAll}>

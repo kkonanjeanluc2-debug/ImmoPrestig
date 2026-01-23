@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -17,9 +16,40 @@ interface SMSRequest {
   paymentId?: string;
 }
 
-serve(async (req) => {
+async function validateAuth(req: Request): Promise<{ authenticated: boolean; userId?: string; error?: string }> {
+  const authHeader = req.headers.get("Authorization");
+  
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { authenticated: false, error: "Missing or invalid Authorization header" };
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data, error } = await supabase.auth.getUser();
+  
+  if (error || !data?.user) {
+    return { authenticated: false, error: error?.message || "Invalid token" };
+  }
+
+  return { authenticated: true, userId: data.user.id };
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Validate authentication
+  const auth = await validateAuth(req);
+  if (!auth.authenticated) {
+    return new Response(
+      JSON.stringify({ success: false, error: auth.error }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {
@@ -76,29 +106,21 @@ serve(async (req) => {
       throw new Error(twilioData.message || "Erreur lors de l'envoi du SMS");
     }
 
-    // Log the SMS in database
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const supabaseClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        { global: { headers: { Authorization: authHeader } } }
-      );
+    // Log the SMS in database using service role to insert
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      
-      if (user) {
-        await supabaseClient.from('email_logs').insert({
-          user_id: user.id,
-          tenant_id: tenantId,
-          payment_id: paymentId || null,
-          email_type: 'sms_reminder',
-          recipient_email: tenantPhone,
-          subject: status === 'late' ? 'SMS - Rappel urgent' : 'SMS - Rappel de paiement',
-          status: 'sent'
-        });
-      }
-    }
+    await supabaseClient.from('email_logs').insert({
+      user_id: auth.userId,
+      tenant_id: tenantId,
+      payment_id: paymentId || null,
+      email_type: 'sms_reminder',
+      recipient_email: tenantPhone,
+      subject: status === 'late' ? 'SMS - Rappel urgent' : 'SMS - Rappel de paiement',
+      status: 'sent'
+    });
 
     return new Response(
       JSON.stringify({ 

@@ -1,5 +1,15 @@
 import jsPDF from "jspdf";
 
+interface AgencyInfo {
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  logo_url?: string | null;
+}
+
 interface ReceiptData {
   paymentId: string;
   tenantName: string;
@@ -12,6 +22,7 @@ interface ReceiptData {
   period: string;
   method?: string;
   ownerName?: string;
+  agency?: AgencyInfo | null;
 }
 
 const numberToWords = (num: number): string => {
@@ -45,7 +56,22 @@ const numberToWords = (num: number): string => {
   return num.toLocaleString("fr-FR");
 };
 
-const createReceiptDocument = (data: ReceiptData): jsPDF => {
+const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   
@@ -56,22 +82,75 @@ const createReceiptDocument = (data: ReceiptData): jsPDF => {
   
   // Header background
   doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 45, "F");
+  doc.rect(0, 0, pageWidth, 55, "F");
   
-  // Header text
+  let headerYOffset = 0;
+  
+  // Agency logo and info
+  if (data.agency) {
+    // Try to load and add logo
+    if (data.agency.logo_url) {
+      try {
+        const logoBase64 = await loadImageAsBase64(data.agency.logo_url);
+        if (logoBase64) {
+          doc.addImage(logoBase64, 'PNG', 15, 8, 20, 20);
+          headerYOffset = 25;
+        }
+      } catch (e) {
+        // Logo loading failed, continue without it
+      }
+    }
+    
+    // Agency name
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(data.agency.name, headerYOffset > 0 ? 40 : 15, 15);
+    
+    // Agency contact info
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    let contactY = 22;
+    
+    if (data.agency.phone) {
+      doc.text(`Tél: ${data.agency.phone}`, headerYOffset > 0 ? 40 : 15, contactY);
+      contactY += 5;
+    }
+    if (data.agency.email) {
+      doc.text(data.agency.email, headerYOffset > 0 ? 40 : 15, contactY);
+      contactY += 5;
+    }
+    if (data.agency.address || data.agency.city) {
+      const addressParts = [data.agency.address, data.agency.city, data.agency.country].filter(Boolean);
+      const fullAddress = addressParts.join(", ");
+      if (fullAddress) {
+        doc.text(fullAddress, headerYOffset > 0 ? 40 : 15, contactY);
+      }
+    }
+  }
+  
+  // Title - positioned on the right or center
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
+  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("QUITTANCE DE LOYER", pageWidth / 2, 25, { align: "center" });
   
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth / 2, 35, { align: "center" });
+  if (data.agency) {
+    doc.text("QUITTANCE DE LOYER", pageWidth - 15, 18, { align: "right" });
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth - 15, 26, { align: "right" });
+  } else {
+    doc.setFontSize(24);
+    doc.text("QUITTANCE DE LOYER", pageWidth / 2, 25, { align: "center" });
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth / 2, 35, { align: "center" });
+  }
   
   // Reset text color
   doc.setTextColor(...textColor);
   
-  let yPos = 60;
+  let yPos = 70;
   
   // Period box
   doc.setFillColor(...lightGray);
@@ -82,7 +161,10 @@ const createReceiptDocument = (data: ReceiptData): jsPDF => {
   
   yPos += 35;
   
-  // Owner section (if available)
+  // Two-column layout for Owner and Tenant
+  const colWidth = (pageWidth - 40) / 2;
+  
+  // Owner section (left column)
   if (data.ownerName) {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
@@ -90,28 +172,25 @@ const createReceiptDocument = (data: ReceiptData): jsPDF => {
     doc.text("BAILLEUR", 15, yPos);
     doc.setTextColor(...textColor);
     doc.setFont("helvetica", "normal");
-    yPos += 7;
-    doc.text(data.ownerName, 15, yPos);
-    yPos += 15;
+    doc.text(data.ownerName, 15, yPos + 7);
   }
   
-  // Tenant section
+  // Tenant section (right column)
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("LOCATAIRE", 15, yPos);
+  doc.text("LOCATAIRE", 15 + colWidth + 10, yPos);
   doc.setTextColor(...textColor);
   doc.setFont("helvetica", "normal");
-  yPos += 7;
-  doc.text(data.tenantName, 15, yPos);
+  doc.text(data.tenantName, 15 + colWidth + 10, yPos + 7);
   if (data.tenantEmail) {
-    yPos += 5;
     doc.setFontSize(9);
-    doc.text(data.tenantEmail, 15, yPos);
+    doc.text(data.tenantEmail, 15 + colWidth + 10, yPos + 12);
   }
   
+  yPos += 25;
+  
   // Property section
-  yPos += 15;
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
@@ -177,7 +256,8 @@ const createReceiptDocument = (data: ReceiptData): jsPDF => {
   // Declaration text
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  const declarationText = `Je soussigné(e), propriétaire du bien désigné ci-dessus, déclare avoir reçu de ${data.tenantName} la somme de ${data.amount.toLocaleString("fr-FR")} F CFA au titre du loyer pour la période indiquée, et lui en donne quittance, sous réserve de tous mes droits.`;
+  const signerName = data.agency?.name || data.ownerName || "le bailleur";
+  const declarationText = `Je soussigné(e), ${signerName}, propriétaire/gestionnaire du bien désigné ci-dessus, déclare avoir reçu de ${data.tenantName} la somme de ${data.amount.toLocaleString("fr-FR")} F CFA au titre du loyer pour la période indiquée, et lui en donne quittance, sous réserve de tous mes droits.`;
   
   const splitDeclaration = doc.splitTextToSize(declarationText, pageWidth - 30);
   doc.text(splitDeclaration, 15, yPos);
@@ -196,32 +276,51 @@ const createReceiptDocument = (data: ReceiptData): jsPDF => {
   
   yPos += 15;
   doc.setFont("helvetica", "italic");
-  doc.text("Signature du bailleur", pageWidth - 20, yPos, { align: "right" });
+  doc.text("Signature du bailleur/gestionnaire", pageWidth - 20, yPos, { align: "right" });
   
-  // Footer
+  // Footer with agency info
   doc.setFillColor(...lightGray);
-  doc.rect(0, doc.internal.pageSize.getHeight() - 20, pageWidth, 20, "F");
+  doc.rect(0, doc.internal.pageSize.getHeight() - 25, pageWidth, 25, "F");
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(128, 128, 128);
-  doc.text(
-    "Ce document est une quittance de loyer générée automatiquement.",
-    pageWidth / 2,
-    doc.internal.pageSize.getHeight() - 10,
-    { align: "center" }
-  );
+  
+  if (data.agency) {
+    doc.text(
+      `Document généré par ${data.agency.name}`,
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 15,
+      { align: "center" }
+    );
+    const contactLine = [data.agency.phone, data.agency.email].filter(Boolean).join(" | ");
+    if (contactLine) {
+      doc.text(
+        contactLine,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 8,
+        { align: "center" }
+      );
+    }
+  } else {
+    doc.text(
+      "Ce document est une quittance de loyer générée automatiquement.",
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: "center" }
+    );
+  }
   
   return doc;
 };
 
-export const generateRentReceipt = (data: ReceiptData): void => {
-  const doc = createReceiptDocument(data);
+export const generateRentReceipt = async (data: ReceiptData): Promise<void> => {
+  const doc = await createReceiptDocument(data);
   const fileName = `quittance_${data.tenantName.replace(/\s+/g, "_")}_${data.period.replace(/\s+/g, "_")}.pdf`;
   doc.save(fileName);
 };
 
-export const generateRentReceiptBase64 = (data: ReceiptData): string => {
-  const doc = createReceiptDocument(data);
+export const generateRentReceiptBase64 = async (data: ReceiptData): Promise<string> => {
+  const doc = await createReceiptDocument(data);
   return doc.output("datauristring").split(",")[1];
 };
 

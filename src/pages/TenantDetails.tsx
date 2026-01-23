@@ -36,6 +36,7 @@ import { WhatsAppHistoryDialog } from "@/components/tenant/WhatsAppHistoryDialog
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
+import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";
@@ -69,11 +70,13 @@ const TenantDetails = () => {
   const navigate = useNavigate();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
   const { data: activityLogs = [] } = useActivityLogs();
+  const { data: agency } = useAgency();
   const deleteTenant = useDeleteTenant();
   const { canEdit, canDelete } = usePermissions();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [whatsappHistoryOpen, setWhatsappHistoryOpen] = useState(false);
+  const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null);
 
   const tenant = tenants.find(t => t.id === id) as TenantWithDetails | undefined;
   
@@ -346,22 +349,43 @@ const TenantDetails = () => {
                                 variant="ghost"
                                 className="text-xs h-8 px-2"
                                 title="Télécharger la quittance"
-                                onClick={() => {
-                                  generateRentReceipt({
-                                    paymentId: payment.id,
-                                    tenantName: tenant.name,
-                                    tenantEmail: tenant.email,
-                                    propertyTitle: tenant.property?.title || "Bien immobilier",
-                                    propertyAddress: tenant.property?.address,
-                                    amount: Number(payment.amount),
-                                    paidDate: payment.paid_date!,
-                                    dueDate: payment.due_date,
-                                    period: getPaymentPeriod(payment.due_date),
-                                    method: payment.method || undefined,
-                                  });
+                                disabled={downloadingReceipt === payment.id}
+                                onClick={async () => {
+                                  setDownloadingReceipt(payment.id);
+                                  try {
+                                    await generateRentReceipt({
+                                      paymentId: payment.id,
+                                      tenantName: tenant.name,
+                                      tenantEmail: tenant.email,
+                                      propertyTitle: tenant.property?.title || "Bien immobilier",
+                                      propertyAddress: tenant.property?.address,
+                                      amount: Number(payment.amount),
+                                      paidDate: payment.paid_date!,
+                                      dueDate: payment.due_date,
+                                      period: getPaymentPeriod(payment.due_date),
+                                      method: payment.method || undefined,
+                                      agency: agency ? {
+                                        name: agency.name,
+                                        email: agency.email,
+                                        phone: agency.phone || undefined,
+                                        address: agency.address || undefined,
+                                        city: agency.city || undefined,
+                                        country: agency.country || undefined,
+                                        logo_url: agency.logo_url,
+                                      } : undefined,
+                                    });
+                                  } catch (error) {
+                                    toast.error("Erreur lors de la génération de la quittance");
+                                  } finally {
+                                    setDownloadingReceipt(null);
+                                  }
                                 }}
                               >
-                                <Download className="h-4 w-4" />
+                                {downloadingReceipt === payment.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Download className="h-4 w-4" />
+                                )}
                               </Button>
                             )}
                             {(payment.status === 'pending' || payment.status === 'late') && (

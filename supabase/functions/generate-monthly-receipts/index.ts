@@ -26,6 +26,16 @@ interface OwnerData {
   name: string;
 }
 
+interface AgencyData {
+  name: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  logo_url: string | null;
+}
+
 interface PaymentRow {
   id: string;
   amount: number;
@@ -35,28 +45,6 @@ interface PaymentRow {
   user_id: string;
   tenant_id: string;
   tenant: TenantData[] | null;
-}
-
-async function validateAuth(req: Request): Promise<{ authenticated: boolean; userId?: string; error?: string }> {
-  const authHeader = req.headers.get("Authorization");
-  
-  if (!authHeader?.startsWith("Bearer ")) {
-    return { authenticated: false, error: "Missing or invalid Authorization header" };
-  }
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-
-  const { data, error } = await supabase.auth.getUser();
-  
-  if (error || !data?.user) {
-    return { authenticated: false, error: error?.message || "Invalid token" };
-  }
-
-  return { authenticated: true, userId: data.user.id };
 }
 
 const getPaymentPeriod = (dueDate: string): string => {
@@ -79,88 +67,106 @@ const generateReceiptHtml = (
   propertyTitle: string,
   propertyAddress: string,
   ownerName: string | null,
-  period: string
+  period: string,
+  agency: AgencyData | null
 ): string => {
+  const agencyName = agency?.name || "Votre gestionnaire immobilier";
+  const agencyContact = [agency?.phone, agency?.email].filter(Boolean).join(" | ");
+  
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
       <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #1a365d; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: #f8f9fa; padding: 20px; border-radius: 0 0 8px 8px; }
-        .amount-box { background: #1a365d; color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; }
-        .amount { font-size: 24px; font-weight: bold; }
-        .details { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #1a365d; color: white; padding: 25px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .content { padding: 25px; }
+        .period-box { background: #e8f4f8; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-weight: bold; color: #1a365d; }
+        .amount-box { background: #1a365d; color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
+        .amount { font-size: 28px; font-weight: bold; }
+        .details { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .details-title { color: #1a365d; font-weight: bold; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
         .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
         .row:last-child { border-bottom: none; }
         .label { color: #666; }
         .value { font-weight: 500; }
-        .footer { text-align: center; color: #888; font-size: 12px; margin-top: 20px; }
+        .declaration { font-size: 13px; color: #555; margin-top: 20px; line-height: 1.6; padding: 15px; background: #fafafa; border-radius: 8px; border-left: 3px solid #1a365d; }
+        .signature { text-align: right; margin-top: 25px; font-style: italic; color: #666; }
+        .footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f0f0f0; }
+        .badge { display: inline-block; background: #38a169; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
       </style>
     </head>
     <body>
-      <div class="header">
-        <h1 style="margin: 0;">QUITTANCE DE LOYER</h1>
-        <p style="margin: 10px 0 0 0;">N° ${paymentId.substring(0, 8).toUpperCase()}</p>
-      </div>
-      <div class="content">
-        <div style="background: #e8e8e8; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
-          <strong>Période : ${period}</strong>
+      <div class="container">
+        <div class="header">
+          ${agency?.logo_url ? `<img src="${agency.logo_url}" alt="Logo" style="max-height: 50px; margin-bottom: 10px;">` : ''}
+          <h1>QUITTANCE DE LOYER</h1>
+          <p>N° ${paymentId.substring(0, 8).toUpperCase()}</p>
         </div>
-        
-        ${ownerName ? `
-        <div class="details">
-          <p style="margin: 0 0 5px 0; color: #1a365d; font-weight: bold; font-size: 12px;">BAILLEUR</p>
-          <p style="margin: 0;">${ownerName}</p>
-        </div>
-        ` : ''}
-        
-        <div class="details">
-          <p style="margin: 0 0 5px 0; color: #1a365d; font-weight: bold; font-size: 12px;">LOCATAIRE</p>
-          <p style="margin: 0;">${tenantName}</p>
-          <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">${tenantEmail}</p>
-        </div>
-        
-        <div class="details">
-          <p style="margin: 0 0 5px 0; color: #1a365d; font-weight: bold; font-size: 12px;">BIEN LOUÉ</p>
-          <p style="margin: 0;">${propertyTitle}</p>
-          <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">${propertyAddress}</p>
-        </div>
-        
-        <div class="amount-box">
-          <p style="margin: 0 0 5px 0; font-size: 14px;">Montant du loyer reçu</p>
-          <p class="amount" style="margin: 0;">${amount.toLocaleString("fr-FR")} F CFA</p>
-        </div>
-        
-        <div class="details">
-          <div class="row">
-            <span class="label">Date d'échéance</span>
-            <span class="value">${new Date(dueDate).toLocaleDateString("fr-FR")}</span>
+        <div class="content">
+          <div class="period-box">
+            📅 Période : ${period}
           </div>
-          <div class="row">
-            <span class="label">Date de paiement</span>
-            <span class="value">${new Date(paidDate).toLocaleDateString("fr-FR")}</span>
+          
+          <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div class="details" style="flex: 1;">
+              <p class="details-title">👤 Bailleur</p>
+              <p style="margin: 0; font-weight: 500;">${ownerName || agencyName}</p>
+            </div>
+            <div class="details" style="flex: 1;">
+              <p class="details-title">🏠 Locataire</p>
+              <p style="margin: 0; font-weight: 500;">${tenantName}</p>
+              <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">${tenantEmail}</p>
+            </div>
           </div>
-          <div class="row">
-            <span class="label">Mode de paiement</span>
-            <span class="value">${method || 'Non spécifié'}</span>
+          
+          <div class="details">
+            <p class="details-title">📍 Bien loué</p>
+            <p style="margin: 0; font-weight: 500;">${propertyTitle}</p>
+            ${propertyAddress ? `<p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">${propertyAddress}</p>` : ''}
           </div>
+          
+          <div class="amount-box">
+            <p style="margin: 0 0 5px 0; font-size: 14px; opacity: 0.9;">Montant du loyer reçu</p>
+            <p class="amount" style="margin: 0;">${amount.toLocaleString("fr-FR")} F CFA</p>
+            <span class="badge" style="margin-top: 10px;">✓ PAYÉ</span>
+          </div>
+          
+          <div class="details">
+            <div class="row">
+              <span class="label">📆 Date d'échéance</span>
+              <span class="value">${new Date(dueDate).toLocaleDateString("fr-FR")}</span>
+            </div>
+            <div class="row">
+              <span class="label">✅ Date de paiement</span>
+              <span class="value">${new Date(paidDate).toLocaleDateString("fr-FR")}</span>
+            </div>
+            <div class="row">
+              <span class="label">💳 Mode de paiement</span>
+              <span class="value">${method || 'Non spécifié'}</span>
+            </div>
+          </div>
+          
+          <div class="declaration">
+            Je soussigné(e), ${ownerName || agencyName}, propriétaire/gestionnaire du bien désigné ci-dessus, 
+            déclare avoir reçu de ${tenantName} la somme de ${amount.toLocaleString("fr-FR")} F CFA 
+            au titre du loyer pour la période de ${period}, et lui en donne quittance, sous réserve de tous mes droits.
+          </div>
+          
+          <p class="signature">
+            Fait le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}<br>
+            <strong>${ownerName || agencyName}</strong>
+          </p>
         </div>
-        
-        <p style="font-size: 13px; color: #555; margin-top: 20px;">
-          Je soussigné(e), propriétaire du bien désigné ci-dessus, déclare avoir reçu de ${tenantName} 
-          la somme de ${amount.toLocaleString("fr-FR")} F CFA au titre du loyer pour la période indiquée, 
-          et lui en donne quittance, sous réserve de tous mes droits.
-        </p>
-        
-        <p style="text-align: right; margin-top: 20px;">
-          Fait le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-        </p>
-      </div>
-      <div class="footer">
-        <p>Ce document est une quittance de loyer générée automatiquement.</p>
+        <div class="footer">
+          <p style="margin: 0 0 5px 0;"><strong>${agencyName}</strong></p>
+          ${agencyContact ? `<p style="margin: 0;">${agencyContact}</p>` : ''}
+          <p style="margin: 10px 0 0 0; font-size: 11px; color: #aaa;">Ce document est une quittance de loyer générée automatiquement.</p>
+        </div>
       </div>
     </body>
     </html>
@@ -172,29 +178,39 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Validate authentication
-  const auth = await validateAuth(req);
-  if (!auth.authenticated) {
-    return new Response(
-      JSON.stringify({ success: false, error: auth.error }),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the current month's date range
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    // Parse request body to check for specific month or user filtering
+    let targetMonth: Date;
+    let targetUserId: string | null = null;
+    
+    try {
+      const body = await req.json();
+      // Allow specifying a specific month (for testing or manual runs)
+      if (body.month && body.year) {
+        targetMonth = new Date(body.year, body.month - 1, 1);
+      } else {
+        // Default: process the previous month
+        const now = new Date();
+        targetMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      }
+      targetUserId = body.user_id || null;
+    } catch {
+      // No body or invalid JSON - use previous month
+      const now = new Date();
+      targetMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    }
 
-    console.log(`Processing receipts for ${firstDayOfMonth.toISOString()} to ${lastDayOfMonth.toISOString()}`);
+    const firstDayOfMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1);
+    const lastDayOfMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0);
 
-    // Find all paid payments for the current month for this user
-    const { data: payments, error: paymentsError } = await supabase
+    console.log(`Processing receipts for ${firstDayOfMonth.toISOString().split("T")[0]} to ${lastDayOfMonth.toISOString().split("T")[0]}`);
+
+    // Build query for paid payments
+    let query = supabase
       .from("payments")
       .select(`
         id,
@@ -217,15 +233,34 @@ Deno.serve(async (req) => {
         )
       `)
       .eq("status", "paid")
-      .eq("user_id", auth.userId)
       .gte("due_date", firstDayOfMonth.toISOString().split("T")[0])
       .lte("due_date", lastDayOfMonth.toISOString().split("T")[0]);
+
+    // Filter by user if specified
+    if (targetUserId) {
+      query = query.eq("user_id", targetUserId);
+    }
+
+    const { data: payments, error: paymentsError } = await query;
 
     if (paymentsError) {
       throw paymentsError;
     }
 
     console.log(`Found ${payments?.length || 0} paid payments for the month`);
+
+    // Get agency info for each unique user
+    const userIds = [...new Set((payments || []).map((p: PaymentRow) => p.user_id))];
+    const agencyMap = new Map<string, AgencyData | null>();
+
+    for (const userId of userIds) {
+      const { data: agency } = await supabase
+        .from("agencies")
+        .select("name, email, phone, address, city, country, logo_url")
+        .eq("user_id", userId)
+        .single();
+      agencyMap.set(userId, agency);
+    }
 
     const results = {
       processed: 0,
@@ -272,13 +307,15 @@ Deno.serve(async (req) => {
       const propertyTitle = property?.title || "Bien loué";
       const propertyAddress = property?.address || "";
       const ownerName = owner?.name || null;
+      const agency = agencyMap.get(payment.user_id) || null;
 
       try {
         // Send the receipt email
+        const fromName = agency?.name || "Gestion Locative";
         const emailResponse = await resend.emails.send({
-          from: "Gestion Locative <onboarding@resend.dev>",
+          from: `${fromName} <onboarding@resend.dev>`,
           to: [tenant.email],
-          subject: `Quittance de loyer - ${period} - ${propertyTitle}`,
+          subject: `✅ Quittance de loyer - ${period} - ${propertyTitle}`,
           html: generateReceiptHtml(
             payment.id,
             payment.amount,
@@ -290,7 +327,8 @@ Deno.serve(async (req) => {
             propertyTitle,
             propertyAddress,
             ownerName,
-            period
+            period,
+            agency
           ),
         });
 
@@ -307,10 +345,21 @@ Deno.serve(async (req) => {
           status: "sent",
         });
 
+        // Create a notification for the user
+        await supabase.from("notifications").insert({
+          user_id: payment.user_id,
+          title: "Quittance envoyée",
+          message: `Quittance de ${period} envoyée à ${tenant.name}`,
+          type: "info",
+          entity_type: "payment",
+          entity_id: payment.id,
+        });
+
         results.sent++;
-      } catch (emailError: any) {
+      } catch (emailError: unknown) {
+        const errorMessage = emailError instanceof Error ? emailError.message : "Unknown error";
         console.error(`Failed to send email for payment ${payment.id}:`, emailError);
-        results.errors.push(`Payment ${payment.id}: ${emailError.message}`);
+        results.errors.push(`Payment ${payment.id}: ${errorMessage}`);
       }
     }
 
@@ -320,6 +369,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: `Traitement terminé: ${results.sent} quittances envoyées, ${results.skipped} ignorées`,
+        period: `${getPaymentPeriod(firstDayOfMonth.toISOString())}`,
         results,
       }),
       {
@@ -327,10 +377,11 @@ Deno.serve(async (req) => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error in generate-monthly-receipts:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: errorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

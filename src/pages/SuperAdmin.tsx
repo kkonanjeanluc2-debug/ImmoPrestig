@@ -48,6 +48,8 @@ const SuperAdmin = () => {
   const logAction = useLogSuperAdminAction();
   
   const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | "agence" | "proprietaire">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AppRole>>({});
 
   // Audit logging helper
@@ -69,12 +71,27 @@ const SuperAdmin = () => {
     return <Navigate to="/" replace />;
   }
 
-  const filteredAgencies = (agencies || []).filter(
-    (agency) =>
+  const filteredAgencies = (agencies || []).filter((agency) => {
+    // Text search filter
+    const matchesSearch = 
       agency.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       agency.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agency.city?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      agency.city?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Type filter
+    const matchesType = typeFilter === "all" || agency.account_type === typeFilter;
+    
+    // Status filter
+    const matchesStatus = 
+      statusFilter === "all" || 
+      (statusFilter === "active" && agency.is_active) ||
+      (statusFilter === "inactive" && !agency.is_active);
+    
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  const activeCount = (agencies || []).filter(a => a.is_active).length;
+  const inactiveCount = (agencies || []).filter(a => !a.is_active).length;
 
   const getInitials = (name: string) => {
     return name
@@ -290,9 +307,9 @@ const SuperAdmin = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Search */}
-            <div className="mb-6">
-              <div className="relative max-w-sm">
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Rechercher par nom, email ou ville..."
@@ -301,6 +318,48 @@ const SuperAdmin = () => {
                   className="pl-10"
                 />
               </div>
+              
+              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Type de compte" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="all">Tous les types</SelectItem>
+                  <SelectItem value="agence">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Agences ({totalAgencies})
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="proprietaire">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Propriétaires ({totalProprietaires})
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="active">
+                    <div className="flex items-center gap-2">
+                      <Power className="h-4 w-4 text-green-600" />
+                      Actifs ({activeCount})
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="inactive">
+                    <div className="flex items-center gap-2">
+                      <PowerOff className="h-4 w-4 text-red-600" />
+                      Inactifs ({inactiveCount})
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {isLoadingAgencies ? (

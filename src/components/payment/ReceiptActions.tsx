@@ -19,9 +19,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateEmailLog } from "@/hooks/useEmailLogs";
+import { useLogWhatsAppMessage } from "@/hooks/useWhatsAppLogs";
 import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle } from "lucide-react";
 import { generateRentReceipt, generateRentReceiptBase64, getPaymentPeriod } from "@/lib/generateReceipt";
-import { generateReceiptMessage, openWhatsApp } from "@/lib/whatsapp";
+import { generateReceiptMessage, openWhatsApp, formatPhoneForWhatsApp } from "@/lib/whatsapp";
 
 interface ReceiptActionsProps {
   paymentId: string;
@@ -54,6 +55,7 @@ export function ReceiptActions({
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   const createEmailLog = useCreateEmailLog();
+  const logWhatsAppMessage = useLogWhatsAppMessage();
 
   const period = getPaymentPeriod(dueDate);
 
@@ -143,7 +145,7 @@ export function ReceiptActions({
     }
   };
 
-  const handleSendWhatsApp = () => {
+  const handleSendWhatsApp = async () => {
     if (!tenantPhone) {
       toast({
         title: "Erreur",
@@ -160,6 +162,19 @@ export function ReceiptActions({
       period,
       paidDate,
     });
+
+    // Log the WhatsApp message
+    try {
+      await logWhatsAppMessage.mutateAsync({
+        tenantId,
+        paymentId,
+        messageType: "receipt",
+        recipientPhone: formatPhoneForWhatsApp(tenantPhone),
+        messagePreview: message,
+      });
+    } catch (error) {
+      console.error("Failed to log WhatsApp message:", error);
+    }
 
     openWhatsApp(tenantPhone, message);
 

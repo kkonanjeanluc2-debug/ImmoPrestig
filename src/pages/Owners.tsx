@@ -13,7 +13,8 @@ import {
   Users,
   Pencil,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Eye
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useOwners, useDeleteOwner, Owner } from "@/hooks/useOwners";
 import { useProperties, Property } from "@/hooks/useProperties";
 import { toast } from "sonner";
@@ -35,6 +37,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const Owners = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingOwner, setEditingOwner] = useState<Owner | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -197,19 +200,22 @@ const Owners = () => {
 
               return (
                 <Collapsible key={owner.id} open={isExpanded} onOpenChange={() => toggleExpanded(owner.id)}>
-                  <Card className="overflow-hidden">
+                  <Card className="overflow-hidden hover:shadow-md transition-shadow">
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Owner Info */}
-                        <div className="flex items-start gap-3 sm:gap-4">
-                          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-navy flex items-center justify-center flex-shrink-0">
+                        {/* Owner Info - Clickable */}
+                        <div 
+                          className="flex items-start gap-3 sm:gap-4 cursor-pointer group"
+                          onClick={() => navigate(`/owners/${owner.id}`)}
+                        >
+                          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-navy flex items-center justify-center flex-shrink-0 group-hover:ring-2 group-hover:ring-primary/20 transition-all">
                             <span className="text-primary-foreground font-semibold text-sm sm:text-base">
                               {owner.name.split(' ').map(n => n[0]).join('')}
                             </span>
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-semibold text-foreground text-sm sm:text-base">{owner.name}</h3>
+                              <h3 className="font-semibold text-foreground text-sm sm:text-base group-hover:text-primary transition-colors">{owner.name}</h3>
                               <Badge 
                                 variant={owner.status === "actif" ? "default" : "secondary"}
                                 className={owner.status === "actif" ? "bg-emerald text-primary-foreground" : ""}
@@ -267,6 +273,10 @@ const Owners = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-card border border-border z-50">
+                              <DropdownMenuItem onClick={() => navigate(`/owners/${owner.id}`)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Voir les détails
+                              </DropdownMenuItem>
                               {canEdit && (
                                 <DropdownMenuItem onClick={() => handleEdit(owner)}>
                                   <Pencil className="h-4 w-4 mr-2" />

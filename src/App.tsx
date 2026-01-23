@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
 import Owners from "./pages/Owners";
+import OwnerDetails from "./pages/OwnerDetails";
 import Tenants from "./pages/Tenants";
 import Payments from "./pages/Payments";
 import Documents from "./pages/Documents";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
             <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetails /></ProtectedRoute>} />
             <Route path="/owners" element={<ProtectedRoute><Owners /></ProtectedRoute>} />
+            <Route path="/owners/:id" element={<ProtectedRoute><OwnerDetails /></ProtectedRoute>} />
             <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
             <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
             <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />

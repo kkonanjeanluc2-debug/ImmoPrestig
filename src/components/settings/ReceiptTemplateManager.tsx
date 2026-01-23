@@ -45,6 +45,7 @@ import {
   Download,
   RefreshCw,
 } from "lucide-react";
+import { ReceiptTemplateImportExport } from "./ReceiptTemplateImportExport";
 import {
   useReceiptTemplates,
   useCreateReceiptTemplate,
@@ -480,10 +481,13 @@ export function ReceiptTemplateManager() {
               </CardDescription>
             </div>
           </div>
-          <Button onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau modèle
-          </Button>
+          <div className="flex items-center gap-2">
+            <ReceiptTemplateImportExport templates={templates} />
+            <Button onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau modèle
+            </Button>
+          </div>
         </div>
       </CardHeader>
 

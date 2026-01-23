@@ -2,6 +2,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { RecentPayments } from "@/components/dashboard/RecentPayments";
+import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
@@ -198,9 +199,10 @@ const Index = () => {
             )}
           </div>
 
-          {/* Payments Section */}
-          <div className="xl:col-span-1">
+          {/* Right Column: Payments & Activity */}
+          <div className="xl:col-span-1 space-y-6">
             <RecentPayments />
+            <RecentActivity />
           </div>
         </div>
       </div>

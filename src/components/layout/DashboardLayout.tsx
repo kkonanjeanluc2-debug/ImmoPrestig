@@ -1,12 +1,14 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useCallback } from "react";
 import { Sidebar } from "./Sidebar";
-import { Search, User, Moon } from "lucide-react";
+import { Search, User, Moon, MoonStar } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLatePaymentNotifications } from "@/hooks/useLatePaymentNotifications";
 import { usePushNotificationTrigger } from "@/hooks/usePushNotificationTrigger";
 import { useDoNotDisturb } from "@/hooks/useDoNotDisturb";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { useToast } from "@/hooks/use-toast";
 import {
   Tooltip,
   TooltipContent,
@@ -20,9 +22,13 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const { getSchedule, isInDNDPeriod } = useDoNotDisturb();
+  const [dndKey, setDndKey] = useState(0); // Force re-render on DND change
+  const { getSchedule, saveSchedule, isInDNDPeriod } = useDoNotDisturb();
+  const { toast } = useToast();
+  
   const schedule = getSchedule();
-  const isDNDActive = schedule.enabled && isInDNDPeriod();
+  const isInPeriod = isInDNDPeriod();
+  const isDNDActive = schedule.enabled && isInPeriod;
   
   // Subscribe to real-time late payment notifications
   useLatePaymentNotifications();
@@ -30,8 +36,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Trigger browser push notifications for new in-app notifications
   usePushNotificationTrigger();
 
+  const toggleDND = useCallback(() => {
+    const currentSchedule = getSchedule();
+    const newEnabled = !currentSchedule.enabled;
+    saveSchedule({ ...currentSchedule, enabled: newEnabled });
+    setDndKey((k) => k + 1); // Force re-render
+    
+    toast({
+      title: newEnabled ? "Ne pas déranger activé" : "Ne pas déranger désactivé",
+      description: newEnabled 
+        ? `Sons désactivés de ${currentSchedule.startTime} à ${currentSchedule.endTime}`
+        : "Vous recevrez à nouveau les sons de notification",
+    });
+  }, [getSchedule, saveSchedule, toast]);
+
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen bg-muted" key={dndKey}>
       <Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
       
       {/* Main Content */}
@@ -58,25 +78,48 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Do Not Disturb Indicator */}
-            {isDNDActive && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
-                      <Moon className="h-3.5 w-3.5" />
-                      <span className="text-xs font-medium hidden sm:inline">NPD</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Mode Ne pas déranger actif</p>
-                    <p className="text-xs text-muted-foreground">
-                      {schedule.startTime} - {schedule.endTime}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            {/* Do Not Disturb Toggle Button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleDND}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2 py-1 h-8 rounded-full transition-colors",
+                      isDNDActive
+                        ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}
+                  >
+                    {isDNDActive ? (
+                      <Moon className="h-4 w-4" />
+                    ) : (
+                      <MoonStar className="h-4 w-4" />
+                    )}
+                    <span className="text-xs font-medium hidden sm:inline">
+                      {isDNDActive ? "NPD" : ""}
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isDNDActive ? (
+                    <>
+                      <p>Mode Ne pas déranger actif</p>
+                      <p className="text-xs text-muted-foreground">
+                        {schedule.startTime} - {schedule.endTime}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Cliquer pour désactiver
+                      </p>
+                    </>
+                  ) : (
+                    <p>Activer Ne pas déranger</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             
             <NotificationCenter />
             <div className="h-8 w-px bg-border hidden sm:block" />

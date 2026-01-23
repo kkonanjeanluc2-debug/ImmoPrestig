@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 export type ExportColumn<T> = {
   key: keyof T;
@@ -41,7 +41,7 @@ export function exportToCsv<T extends Record<string, any>>(
   downloadBlob(blob, `${filename}.csv`);
 }
 
-export function exportToExcel<T extends Record<string, any>>(
+export async function exportToExcel<T extends Record<string, any>>(
   data: T[],
   filename: string,
   columns: ExportColumn<T>[]
@@ -50,23 +50,39 @@ export function exportToExcel<T extends Record<string, any>>(
 
   const rows = prepareData(data, columns);
   
-  const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Données');
+  
+  // Add header row
+  worksheet.addRow(rows[0]);
+  
+  // Style header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' }
+    };
+  });
+  
+  // Add data rows
+  for (let i = 1; i < rows.length; i++) {
+    worksheet.addRow(rows[i]);
+  }
   
   // Auto-size columns
-  const colWidths = columns.map((col, i) => {
+  columns.forEach((col, i) => {
     const maxLength = Math.max(
       col.label.length,
       ...rows.slice(1).map(row => String(row[i]).length)
     );
-    return { wch: Math.min(maxLength + 2, 50) };
+    worksheet.getColumn(i + 1).width = Math.min(maxLength + 2, 50);
   });
-  worksheet['!cols'] = colWidths;
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Données');
-
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
   downloadBlob(blob, `${filename}.xlsx`);
 }

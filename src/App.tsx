@@ -11,6 +11,7 @@ import PropertyDetails from "./pages/PropertyDetails";
 import Owners from "./pages/Owners";
 import OwnerDetails from "./pages/OwnerDetails";
 import Tenants from "./pages/Tenants";
+import TenantDetails from "./pages/TenantDetails";
 import Payments from "./pages/Payments";
 import Documents from "./pages/Documents";
 import AdvancedDashboard from "./pages/AdvancedDashboard";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/owners" element={<ProtectedRoute><Owners /></ProtectedRoute>} />
             <Route path="/owners/:id" element={<ProtectedRoute><OwnerDetails /></ProtectedRoute>} />
             <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
+            <Route path="/tenants/:id" element={<ProtectedRoute><TenantDetails /></ProtectedRoute>} />
             <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
             <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

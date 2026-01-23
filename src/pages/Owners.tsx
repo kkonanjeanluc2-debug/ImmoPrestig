@@ -11,7 +11,9 @@ import {
   MoreVertical,
   Loader2,
   Users,
-  Pencil
+  Pencil,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -22,18 +24,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useOwners, useDeleteOwner, Owner } from "@/hooks/useOwners";
-import { useProperties } from "@/hooks/useProperties";
+import { useProperties, Property } from "@/hooks/useProperties";
 import { toast } from "sonner";
 import { AddOwnerDialog } from "@/components/owner/AddOwnerDialog";
 import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
 import { ImportOwnersDialog } from "@/components/owner/ImportOwnersDialog";
 import { MergeOwnersDialog } from "@/components/owner/MergeOwnersDialog";
+import { OwnerPropertiesList } from "@/components/owner/OwnerPropertiesList";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const Owners = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingOwner, setEditingOwner] = useState<Owner | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [expandedOwners, setExpandedOwners] = useState<Set<string>>(new Set());
   const { data: owners, isLoading, error } = useOwners();
   const { data: properties } = useProperties();
   const deleteOwner = useDeleteOwner();
@@ -44,10 +49,41 @@ const Owners = () => {
     owner.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Group properties by owner
+  const propertiesByOwner = (properties || []).reduce((acc, property) => {
+    if (property.owner_id) {
+      if (!acc[property.owner_id]) {
+        acc[property.owner_id] = [];
+      }
+      acc[property.owner_id].push(property);
+    }
+    return acc;
+  }, {} as Record<string, Property[]>);
+
   // Compute stats
   const totalOwners = owners?.length || 0;
   const activeOwners = owners?.filter(o => o.status === "actif").length || 0;
   const totalProperties = properties?.length || 0;
+
+  // Calculate monthly revenue per owner (from location properties)
+  const getOwnerRevenue = (ownerId: string) => {
+    const ownerProperties = propertiesByOwner[ownerId] || [];
+    return ownerProperties
+      .filter(p => p.type === "location")
+      .reduce((sum, p) => sum + (p.price || 0), 0);
+  };
+
+  const toggleExpanded = (ownerId: string) => {
+    setExpandedOwners(prev => {
+      const next = new Set(prev);
+      if (next.has(ownerId)) {
+        next.delete(ownerId);
+      } else {
+        next.add(ownerId);
+      }
+      return next;
+    });
+  };
 
   const handleDelete = async (id: string, name: string) => {
     try {
@@ -153,93 +189,125 @@ const Owners = () => {
         {/* Owners List */}
         {!isLoading && !error && filteredOwners.length > 0 && (
           <div className="grid gap-4">
-            {filteredOwners.map((owner) => (
-              <Card key={owner.id} className="overflow-hidden">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    {/* Owner Info */}
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-navy flex items-center justify-center flex-shrink-0">
-                        <span className="text-primary-foreground font-semibold text-sm sm:text-base">
-                          {owner.name.split(' ').map(n => n[0]).join('')}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-foreground text-sm sm:text-base">{owner.name}</h3>
-                          <Badge 
-                            variant={owner.status === "actif" ? "default" : "secondary"}
-                            className={owner.status === "actif" ? "bg-emerald text-primary-foreground" : ""}
-                          >
-                            {owner.status}
-                          </Badge>
-                        </div>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                            <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span className="truncate">{owner.email}</span>
-                          </p>
-                          {owner.phone && (
-                            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                              <Phone className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                              <span>{owner.phone}</span>
-                            </p>
-                          )}
-                          {owner.address && (
-                            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                              <span className="truncate">{owner.address}</span>
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+            {filteredOwners.map((owner) => {
+              const ownerProperties = propertiesByOwner[owner.id] || [];
+              const propertyCount = ownerProperties.length;
+              const monthlyRevenue = getOwnerRevenue(owner.id);
+              const isExpanded = expandedOwners.has(owner.id);
 
-                    {/* Stats & Actions */}
-                    <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-border">
-                      <div className="text-center">
-                        <p className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-1">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          0
-                        </p>
-                        <p className="text-xs text-muted-foreground">Biens</p>
+              return (
+                <Collapsible key={owner.id} open={isExpanded} onOpenChange={() => toggleExpanded(owner.id)}>
+                  <Card className="overflow-hidden">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        {/* Owner Info */}
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-navy flex items-center justify-center flex-shrink-0">
+                            <span className="text-primary-foreground font-semibold text-sm sm:text-base">
+                              {owner.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold text-foreground text-sm sm:text-base">{owner.name}</h3>
+                              <Badge 
+                                variant={owner.status === "actif" ? "default" : "secondary"}
+                                className={owner.status === "actif" ? "bg-emerald text-primary-foreground" : ""}
+                              >
+                                {owner.status}
+                              </Badge>
+                            </div>
+                            <div className="mt-2 space-y-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                                <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                <span className="truncate">{owner.email}</span>
+                              </p>
+                              {owner.phone && (
+                                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                  <span>{owner.phone}</span>
+                                </p>
+                              )}
+                              {owner.address && (
+                                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                  <span className="truncate">{owner.address}</span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Stats & Actions */}
+                        <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-border">
+                          <CollapsibleTrigger asChild>
+                            <button className="text-center hover:bg-muted p-2 rounded-lg transition-colors">
+                              <p className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-1">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                {propertyCount}
+                                {propertyCount > 0 && (
+                                  isExpanded 
+                                    ? <ChevronUp className="h-3 w-3 ml-1" />
+                                    : <ChevronDown className="h-3 w-3 ml-1" />
+                                )}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Bien{propertyCount > 1 ? "s" : ""}</p>
+                            </button>
+                          </CollapsibleTrigger>
+                          <div className="text-center">
+                            <p className="text-lg sm:text-xl font-bold text-emerald">
+                              {monthlyRevenue.toLocaleString('fr-FR')} F
+                            </p>
+                            <p className="text-xs text-muted-foreground">Revenus/mois</p>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-card border border-border z-50">
+                              {canEdit && (
+                                <DropdownMenuItem onClick={() => handleEdit(owner)}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Modifier
+                                </DropdownMenuItem>
+                              )}
+                              {propertyCount > 0 && (
+                                <DropdownMenuItem onClick={() => toggleExpanded(owner.id)}>
+                                  <Building2 className="h-4 w-4 mr-2" />
+                                  {isExpanded ? "Masquer les biens" : "Voir les biens"}
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete && (
+                                <DropdownMenuItem 
+                                  className="text-destructive"
+                                  onClick={() => handleDelete(owner.id, owner.name)}
+                                >
+                                  Supprimer
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-lg sm:text-xl font-bold text-emerald">
-                          0 F CFA
-                        </p>
-                        <p className="text-xs text-muted-foreground">Revenus/mois</p>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-card border border-border z-50">
-                          <DropdownMenuItem>Voir les détails</DropdownMenuItem>
-                          {canEdit && (
-                            <DropdownMenuItem onClick={() => handleEdit(owner)}>
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Modifier
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem>Voir les biens</DropdownMenuItem>
-                          {canDelete && (
-                            <DropdownMenuItem 
-                              className="text-destructive"
-                              onClick={() => handleDelete(owner.id, owner.name)}
-                            >
-                              Supprimer
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+                      {/* Properties List (Collapsible) */}
+                      <CollapsibleContent>
+                        {propertyCount > 0 && (
+                          <div className="mt-4 pt-4 border-t border-border">
+                            <p className="text-xs font-medium text-muted-foreground mb-3">
+                              Biens de {owner.name}
+                            </p>
+                            <OwnerPropertiesList properties={ownerProperties} maxDisplay={5} />
+                          </div>
+                        )}
+                      </CollapsibleContent>
+                    </CardContent>
+                  </Card>
+                </Collapsible>
+              );
+            })}
           </div>
         )}
 

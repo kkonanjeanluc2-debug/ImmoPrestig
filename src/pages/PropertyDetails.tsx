@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useProperty, useDeleteProperty } from "@/hooks/useProperties";
+import { useOwners } from "@/hooks/useOwners";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,8 @@ import {
   Home,
   Building,
   Map,
-  Loader2
+  Loader2,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -40,10 +42,13 @@ const PropertyDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: property, isLoading, error } = useProperty(id || "");
+  const { data: owners = [] } = useOwners();
   const deleteProperty = useDeleteProperty();
   const { canEdit, canDelete } = usePermissions();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const owner = property?.owner_id ? owners.find(o => o.id === property.owner_id) : null;
 
   const handleDelete = async () => {
     if (!property) return;
@@ -253,6 +258,30 @@ const PropertyDetails = () => {
                     </Badge>
                   </div>
                 </div>
+
+                {/* Owner Info */}
+                {owner && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">Propriétaire</p>
+                      <div 
+                        className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                        onClick={() => navigate("/owners")}
+                      >
+                        <div className="p-2 bg-primary/10 rounded-full">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{owner.name}</p>
+                          {owner.email && (
+                            <p className="text-xs text-muted-foreground">{owner.email}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <Separator />
 

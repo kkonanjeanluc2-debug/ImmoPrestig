@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -12,6 +12,7 @@ import { ActivityHistory } from "@/components/settings/ActivityHistory";
 import { WhatsAppSettings } from "@/components/settings/WhatsAppSettings";
 import { AgencySettings } from "@/components/settings/AgencySettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
+import { ReceiptSettings } from "@/components/settings/ReceiptSettings";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("agency");
@@ -29,7 +30,7 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-11 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger
               value="agency"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
@@ -43,6 +44,13 @@ const Settings = () => {
             >
               <Paintbrush className="h-4 w-4" />
               <span className="hidden sm:inline">Couleurs</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="receipts"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+            >
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Quittances</span>
             </TabsTrigger>
             <TabsTrigger
               value="profile"
@@ -108,6 +116,10 @@ const Settings = () => {
 
           <TabsContent value="branding">
             <BrandingSettings />
+          </TabsContent>
+
+          <TabsContent value="receipts">
+            <ReceiptSettings />
           </TabsContent>
 
           <TabsContent value="profile">

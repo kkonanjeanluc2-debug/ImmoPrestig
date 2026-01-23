@@ -26,6 +26,7 @@ import { useProperties } from "@/hooks/useProperties";
 import { toast } from "sonner";
 import { AddOwnerDialog } from "@/components/owner/AddOwnerDialog";
 import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
+import { ImportOwnersDialog } from "@/components/owner/ImportOwnersDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const Owners = () => {
@@ -74,7 +75,10 @@ const Owners = () => {
               Gérez vos propriétaires et leurs biens
             </p>
           </div>
-          {canCreate && <AddOwnerDialog />}
+          <div className="flex gap-2">
+            {canCreate && <ImportOwnersDialog />}
+            {canCreate && <AddOwnerDialog />}
+          </div>
         </div>
 
         {/* Search */}

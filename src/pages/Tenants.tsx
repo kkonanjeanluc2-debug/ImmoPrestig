@@ -27,6 +27,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
+import { ImportTenantsDialog } from "@/components/tenant/ImportTenantsDialog";
 import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -285,6 +286,7 @@ export default function Tenants() {
                 }},
               ]}
             />
+            {canCreate && <ImportTenantsDialog />}
             {canCreate && <AddTenantDialog />}
           </div>
         </div>

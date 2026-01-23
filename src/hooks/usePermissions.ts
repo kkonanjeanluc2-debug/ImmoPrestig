@@ -11,6 +11,13 @@ export interface Permissions {
 }
 
 const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">> = {
+  super_admin: {
+    canCreate: true,
+    canEdit: true,
+    canDelete: true,
+    canManageUsers: true,
+    isReadOnly: false,
+  },
   admin: {
     canCreate: true,
     canEdit: true,

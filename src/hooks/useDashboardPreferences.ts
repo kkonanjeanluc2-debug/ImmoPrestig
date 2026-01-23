@@ -9,6 +9,7 @@ export type WidgetId =
   | "occupancy"
   | "property-types"
   | "recent-payments"
+  | "recent-activity"
   | "property-map"
   | "kpi-roi"
   | "kpi-recovery"
@@ -32,6 +33,7 @@ const DEFAULT_PREFERENCES: DashboardPreferences = {
     "occupancy",
     "property-types",
     "recent-payments",
+    "recent-activity",
     "property-map",
     "kpi-roi",
     "kpi-recovery",
@@ -51,6 +53,7 @@ const DEFAULT_PREFERENCES: DashboardPreferences = {
     "occupancy",
     "property-types",
     "recent-payments",
+    "recent-activity",
   ],
   period: "month",
 };
@@ -63,6 +66,7 @@ export const WIDGET_LABELS: Record<WidgetId, string> = {
   occupancy: "Taux d'occupation",
   "property-types": "Types de biens",
   "recent-payments": "Paiements récents",
+  "recent-activity": "Activité récente",
   "property-map": "Carte des biens",
   "kpi-roi": "ROI par propriété",
   "kpi-recovery": "Taux de recouvrement",

@@ -14,6 +14,7 @@ export interface AgencyWithProfile {
   country: string | null;
   created_at: string;
   logo_url: string | null;
+  is_active: boolean;
   profile?: {
     full_name: string | null;
     email: string | null;
@@ -168,6 +169,31 @@ export function useSuperAdminUpdateRole() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-agencies"] });
       queryClient.invalidateQueries({ queryKey: ["all-users-roles"] });
+    },
+  });
+}
+
+// Toggle account activation (super admin only)
+export function useToggleAccountStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      is_active,
+    }: {
+      id: string;
+      is_active: boolean;
+    }) => {
+      const { error } = await supabase
+        .from("agencies")
+        .update({ is_active })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-agencies"] });
     },
   });
 }

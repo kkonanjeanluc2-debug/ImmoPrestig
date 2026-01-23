@@ -57,6 +57,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_active: boolean
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -77,6 +78,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          is_active?: boolean
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -97,6 +99,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_active?: boolean
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null

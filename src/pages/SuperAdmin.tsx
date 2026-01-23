@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2 } from "lucide-react";
-import { useIsSuperAdmin, useAllAgencies, useDeleteAgency, useSuperAdminUpdateRole, AgencyWithProfile } from "@/hooks/useSuperAdmin";
+import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff } from "lucide-react";
+import { useIsSuperAdmin, useAllAgencies, useDeleteAgency, useSuperAdminUpdateRole, useToggleAccountStatus, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 import { AppRole, ROLE_LABELS } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -41,6 +41,7 @@ const SuperAdmin = () => {
   const { data: agencies, isLoading: isLoadingAgencies } = useAllAgencies();
   const deleteAgency = useDeleteAgency();
   const updateRole = useSuperAdminUpdateRole();
+  const toggleStatus = useToggleAccountStatus();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AppRole>>({});
@@ -105,6 +106,22 @@ const SuperAdmin = () => {
       toast({
         title: "Erreur",
         description: error.message || "Impossible de supprimer l'agence.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleStatus = async (agency: AgencyWithProfile) => {
+    try {
+      await toggleStatus.mutateAsync({ id: agency.id, is_active: !agency.is_active });
+      toast({
+        title: agency.is_active ? "Compte désactivé" : "Compte activé",
+        description: `Le compte "${agency.name}" a été ${agency.is_active ? "désactivé" : "activé"}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de modifier le statut du compte.",
         variant: "destructive",
       });
     }
@@ -220,6 +237,7 @@ const SuperAdmin = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Compte</TableHead>
+                      <TableHead>Statut</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Localisation</TableHead>
                       <TableHead>Rôle</TableHead>
@@ -249,6 +267,17 @@ const SuperAdmin = () => {
                                 </p>
                               </div>
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant="outline" 
+                              className={agency.is_active 
+                                ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                                : "bg-red-500/10 text-red-600 border-red-500/20"
+                              }
+                            >
+                              {agency.is_active ? "Actif" : "Désactivé"}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
@@ -315,36 +344,57 @@ const SuperAdmin = () => {
                             })}
                           </TableCell>
                           <TableCell className="text-right">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Supprimer ce compte ?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Cette action est irréversible. Le compte "{agency.name}" et toutes ses données associées seront définitivement supprimés.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteAgency(agency)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleToggleStatus(agency)}
+                                disabled={toggleStatus.isPending}
+                                className={agency.is_active 
+                                  ? "text-orange-600 hover:text-orange-600 hover:bg-orange-500/10" 
+                                  : "text-green-600 hover:text-green-600 hover:bg-green-500/10"
+                                }
+                                title={agency.is_active ? "Désactiver le compte" : "Activer le compte"}
+                              >
+                                {toggleStatus.isPending ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : agency.is_active ? (
+                                  <PowerOff className="h-4 w-4" />
+                                ) : (
+                                  <Power className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                   >
-                                    Supprimer
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Supprimer ce compte ?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Cette action est irréversible. Le compte "{agency.name}" et toutes ses données associées seront définitivement supprimés.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteAgency(agency)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Supprimer
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );

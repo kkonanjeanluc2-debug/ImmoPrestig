@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { useProperty, useDeleteProperty, Property } from "@/hooks/useProperties";
+import { useProperty, useDeleteProperty } from "@/hooks/useProperties";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
+import { PropertyImageGallery } from "@/components/property/PropertyImageGallery";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import {
@@ -136,25 +137,30 @@ const PropertyDetails = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Image Section */}
+          {/* Image Gallery Section */}
           <div className="lg:col-span-2 space-y-4">
             <Card className="overflow-hidden">
-              <div className="relative aspect-video">
-                <img
-                  src={property.image_url || defaultImage}
-                  alt={property.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 left-4 flex gap-2">
-                  <Badge variant="secondary" className="bg-card/90 backdrop-blur-sm text-foreground font-medium flex items-center gap-1.5">
-                    {typeIcons[property.property_type]}
-                    {typeLabels[property.property_type] || property.property_type}
-                  </Badge>
-                  <Badge className={cn("border backdrop-blur-sm", statusClasses[property.status] || "")}>
-                    {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
-                  </Badge>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Photos</CardTitle>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary" className="flex items-center gap-1.5">
+                      {typeIcons[property.property_type]}
+                      {typeLabels[property.property_type] || property.property_type}
+                    </Badge>
+                    <Badge className={cn("border", statusClasses[property.status] || "")}>
+                      {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
+              </CardHeader>
+              <CardContent>
+                <PropertyImageGallery
+                  propertyId={property.id}
+                  mainImage={property.image_url}
+                  canEdit={canEdit}
+                />
+              </CardContent>
             </Card>
 
             {/* Description */}

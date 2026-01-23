@@ -525,6 +525,81 @@ export type Database = {
           },
         ]
       }
+      receipt_templates: {
+        Row: {
+          created_at: string
+          currency_symbol: string
+          date_format: string
+          declaration_text: string
+          footer_text: string
+          id: string
+          is_default: boolean
+          name: string
+          show_amount_in_words: boolean
+          show_contacts: boolean
+          show_logo: boolean
+          signature_text: string
+          title: string
+          updated_at: string
+          user_id: string
+          watermark_angle: number
+          watermark_enabled: boolean
+          watermark_image_url: string | null
+          watermark_opacity: number
+          watermark_position: string
+          watermark_text: string | null
+          watermark_type: string
+        }
+        Insert: {
+          created_at?: string
+          currency_symbol?: string
+          date_format?: string
+          declaration_text?: string
+          footer_text?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          show_amount_in_words?: boolean
+          show_contacts?: boolean
+          show_logo?: boolean
+          signature_text?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+          watermark_angle?: number
+          watermark_enabled?: boolean
+          watermark_image_url?: string | null
+          watermark_opacity?: number
+          watermark_position?: string
+          watermark_text?: string | null
+          watermark_type?: string
+        }
+        Update: {
+          created_at?: string
+          currency_symbol?: string
+          date_format?: string
+          declaration_text?: string
+          footer_text?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          show_amount_in_words?: boolean
+          show_contacts?: boolean
+          show_logo?: boolean
+          signature_text?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          watermark_angle?: number
+          watermark_enabled?: boolean
+          watermark_image_url?: string | null
+          watermark_opacity?: number
+          watermark_position?: string
+          watermark_text?: string | null
+          watermark_type?: string
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           avatar_url: string | null

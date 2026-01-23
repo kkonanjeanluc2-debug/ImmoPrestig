@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +23,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAgency } from "@/hooks/useAgency";
 import { Loader2, CheckCircle, Banknote, Mail, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { generateRentReceiptBase64, getPaymentPeriod } from "@/lib/generateReceipt";
+import { generateRentReceiptBase64WithTemplate, getPaymentPeriod } from "@/lib/generateReceipt";
+import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
+import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
 
 interface CollectPaymentDialogProps {
   paymentId: string;
@@ -68,9 +70,16 @@ export function CollectPaymentDialog({
   const [method, setMethod] = useState(currentMethod || "especes");
   const [sendReceipt, setSendReceipt] = useState(!!tenantEmail);
   const [isSendingReceipt, setIsSendingReceipt] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplate | null>(null);
   const updatePayment = useUpdatePayment();
   const { data: agency } = useAgency();
   const { toast } = useToast();
+
+  const handleTemplateChange = useCallback((templateId: string | null, template: ReceiptTemplate | null) => {
+    setSelectedTemplateId(templateId);
+    setSelectedTemplate(template);
+  }, []);
 
   const handleCollect = async () => {
     const paidDate = new Date().toISOString().split("T")[0];
@@ -94,7 +103,7 @@ export function CollectPaymentDialog({
         setIsSendingReceipt(true);
         try {
           const period = getPaymentPeriod(dueDate);
-          const pdfBase64 = await generateRentReceiptBase64({
+          const pdfBase64 = await generateRentReceiptBase64WithTemplate({
             paymentId,
             tenantName,
             tenantEmail,
@@ -115,6 +124,7 @@ export function CollectPaymentDialog({
               country: agency.country || undefined,
               logo_url: agency.logo_url,
             } : undefined,
+            template: selectedTemplate,
           });
 
           const { data, error } = await supabase.functions.invoke("send-receipt-email", {
@@ -220,6 +230,15 @@ export function CollectPaymentDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Template selector */}
+          {sendReceipt && (
+            <ReceiptTemplateSelector
+              value={selectedTemplateId}
+              onChange={handleTemplateChange}
+              disabled={!tenantEmail}
+            />
+          )}
 
           {/* Auto receipt option */}
           <div className="flex items-center space-x-3 p-3 bg-primary/5 rounded-lg border border-primary/20">

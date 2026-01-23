@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import { getReceiptTemplates, type ReceiptTemplates } from "@/components/settings/ReceiptSettings";
+import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
 
 interface AgencyInfo {
   name: string;
@@ -25,6 +26,34 @@ interface ReceiptData {
   ownerName?: string;
   agency?: AgencyInfo | null;
 }
+
+interface ReceiptDataWithTemplate extends ReceiptData {
+  template?: ReceiptTemplate | null;
+}
+
+// Convert database template to legacy format for compatibility
+const convertDbTemplateToLegacy = (template: ReceiptTemplate): ReceiptTemplates => {
+  return {
+    title: template.title,
+    declarationText: template.declaration_text,
+    footerText: template.footer_text,
+    showLogo: template.show_logo,
+    showAgencyContact: template.show_contacts,
+    showOwnerSection: true,
+    showAmountInWords: template.show_amount_in_words,
+    showPaymentDetails: true,
+    dateFormat: template.date_format === "long" ? "long" : "short",
+    currency: template.currency_symbol,
+    signatureLabel: template.signature_text,
+    watermarkEnabled: template.watermark_enabled,
+    watermarkType: template.watermark_type as "text" | "image",
+    watermarkText: template.watermark_text || "ORIGINAL",
+    watermarkImageUrl: template.watermark_image_url,
+    watermarkOpacity: template.watermark_opacity,
+    watermarkAngle: template.watermark_angle,
+    watermarkPosition: template.watermark_position as "center" | "diagonal" | "bottom-right",
+  };
+};
 
 const numberToWords = (num: number): string => {
   const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
@@ -104,10 +133,10 @@ const replaceVariables = (
     .replace(/{adresse}/g, addressParts.join(", "));
 };
 
-const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
+const createReceiptDocument = async (data: ReceiptData, templateOverride?: ReceiptTemplates): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  const templates = getReceiptTemplates();
+  const templates = templateOverride || getReceiptTemplates();
   
   // Colors
   const primaryColor: [number, number, number] = [26, 54, 93]; // Navy
@@ -409,6 +438,13 @@ export const generateRentReceipt = async (data: ReceiptData): Promise<void> => {
 
 export const generateRentReceiptBase64 = async (data: ReceiptData): Promise<string> => {
   const doc = await createReceiptDocument(data);
+  return doc.output("datauristring").split(",")[1];
+};
+
+export const generateRentReceiptBase64WithTemplate = async (data: ReceiptDataWithTemplate): Promise<string> => {
+  const { template, ...receiptData } = data;
+  const legacyTemplate = template ? convertDbTemplateToLegacy(template) : undefined;
+  const doc = await createReceiptDocument(receiptData, legacyTemplate);
   return doc.output("datauristring").split(",")[1];
 };
 

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Property } from "@/hooks/useProperties";
+import { useNavigate } from "react-router-dom";
 
 interface PropertyCardProps {
   property: Property;
@@ -19,6 +20,7 @@ export function PropertyCard({
   canEdit = false,
   canDelete = false,
 }: PropertyCardProps) {
+  const navigate = useNavigate();
   const { 
     image_url, 
     title, 
@@ -46,8 +48,15 @@ export function PropertyCard({
     terrain: "Terrain",
   };
 
+  const handleCardClick = () => {
+    navigate(`/properties/${property.id}`);
+  };
+
   return (
-    <div className="group bg-card rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 border border-border/50 animate-fade-in">
+    <div 
+      className="group bg-card rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 border border-border/50 animate-fade-in cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
         <img 

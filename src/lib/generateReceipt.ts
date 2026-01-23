@@ -46,7 +46,7 @@ const convertDbTemplateToLegacy = (template: ReceiptTemplate): ReceiptTemplates 
     currency: template.currency_symbol,
     signatureLabel: template.signature_text,
     watermarkEnabled: template.watermark_enabled,
-    watermarkType: template.watermark_type as "text" | "image",
+    watermarkType: template.watermark_type as "text" | "image" | "agency_logo",
     watermarkText: template.watermark_text || "ORIGINAL",
     watermarkImageUrl: template.watermark_image_url,
     watermarkOpacity: template.watermark_opacity,
@@ -351,45 +351,108 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
   
   // Watermark (rendered before footer so it's behind content)
-  if (templates.watermarkEnabled && templates.watermarkType === "text" && templates.watermarkText) {
+  if (templates.watermarkEnabled) {
     const pageHeight = doc.internal.pageSize.getHeight();
     const opacity = templates.watermarkOpacity / 100;
     
-    // Save current graphics state
-    doc.saveGraphicsState();
-    
-    // Set watermark color with opacity (light gray)
-    const grayValue = Math.round(200 + (55 * (1 - opacity)));
-    doc.setTextColor(grayValue, grayValue, grayValue);
-    doc.setFontSize(60);
-    doc.setFont("helvetica", "bold");
-    
-    // Calculate position based on setting
-    let wmX = pageWidth / 2;
-    let wmY = pageHeight / 2;
-    
-    if (templates.watermarkPosition === "bottom-right") {
-      wmX = pageWidth - 50;
-      wmY = pageHeight - 50;
-    }
-    
-    // For diagonal, render multiple smaller texts across the page
-    if (templates.watermarkPosition === "diagonal") {
-      doc.setFontSize(40);
-      for (let i = -2; i < 4; i++) {
-        for (let j = -2; j < 4; j++) {
-          const x = (pageWidth / 3) * i + 30;
-          const y = (pageHeight / 4) * j + 60;
-          if (x > -50 && x < pageWidth + 50 && y > -50 && y < pageHeight + 50) {
-            doc.text(templates.watermarkText, x, y, { align: "center" });
+    if (templates.watermarkType === "text" && templates.watermarkText) {
+      // Text watermark
+      doc.saveGraphicsState();
+      
+      const grayValue = Math.round(200 + (55 * (1 - opacity)));
+      doc.setTextColor(grayValue, grayValue, grayValue);
+      doc.setFontSize(60);
+      doc.setFont("helvetica", "bold");
+      
+      let wmX = pageWidth / 2;
+      let wmY = pageHeight / 2;
+      
+      if (templates.watermarkPosition === "bottom-right") {
+        wmX = pageWidth - 50;
+        wmY = pageHeight - 50;
+      }
+      
+      if (templates.watermarkPosition === "diagonal") {
+        doc.setFontSize(40);
+        for (let i = -2; i < 4; i++) {
+          for (let j = -2; j < 4; j++) {
+            const x = (pageWidth / 3) * i + 30;
+            const y = (pageHeight / 4) * j + 60;
+            if (x > -50 && x < pageWidth + 50 && y > -50 && y < pageHeight + 50) {
+              doc.text(templates.watermarkText, x, y, { align: "center" });
+            }
           }
         }
+      } else {
+        doc.text(templates.watermarkText, wmX, wmY, { align: "center" });
       }
-    } else {
-      doc.text(templates.watermarkText, wmX, wmY, { align: "center" });
+      
+      doc.restoreGraphicsState();
+    } else if (templates.watermarkType === "agency_logo" && data.agency?.logo_url) {
+      // Agency logo watermark
+      try {
+        const logoBase64 = await loadImageAsBase64(data.agency.logo_url);
+        if (logoBase64) {
+          doc.saveGraphicsState();
+          
+          // Calculate size and position
+          const logoSize = 60;
+          let logoX = (pageWidth - logoSize) / 2;
+          let logoY = (pageHeight - logoSize) / 2;
+          
+          if (templates.watermarkPosition === "bottom-right") {
+            logoX = pageWidth - logoSize - 20;
+            logoY = pageHeight - logoSize - 40;
+          } else if (templates.watermarkPosition === "diagonal") {
+            // For diagonal, place multiple logos
+            const smallLogoSize = 40;
+            for (let i = 0; i < 3; i++) {
+              for (let j = 0; j < 4; j++) {
+                const x = (pageWidth / 3) * i + 20;
+                const y = (pageHeight / 4) * j + 40;
+                if (x > 0 && x < pageWidth - smallLogoSize && y > 0 && y < pageHeight - smallLogoSize) {
+                  doc.setGState(new (doc as any).GState({ opacity: opacity }));
+                  doc.addImage(logoBase64, 'PNG', x, y, smallLogoSize, smallLogoSize);
+                }
+              }
+            }
+            doc.restoreGraphicsState();
+            // Skip the single logo rendering below
+          }
+          
+          if (templates.watermarkPosition !== "diagonal") {
+            doc.setGState(new (doc as any).GState({ opacity: opacity }));
+            doc.addImage(logoBase64, 'PNG', logoX, logoY, logoSize, logoSize);
+            doc.restoreGraphicsState();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load agency logo for watermark:", e);
+      }
+    } else if (templates.watermarkType === "image" && templates.watermarkImageUrl) {
+      // Custom image watermark
+      try {
+        const imageBase64 = await loadImageAsBase64(templates.watermarkImageUrl);
+        if (imageBase64) {
+          doc.saveGraphicsState();
+          
+          const imageSize = 60;
+          let imgX = (pageWidth - imageSize) / 2;
+          let imgY = (pageHeight - imageSize) / 2;
+          
+          if (templates.watermarkPosition === "bottom-right") {
+            imgX = pageWidth - imageSize - 20;
+            imgY = pageHeight - imageSize - 40;
+          }
+          
+          doc.setGState(new (doc as any).GState({ opacity: opacity }));
+          doc.addImage(imageBase64, 'PNG', imgX, imgY, imageSize, imageSize);
+          doc.restoreGraphicsState();
+        }
+      } catch (e) {
+        console.error("Failed to load watermark image:", e);
+      }
     }
-    
-    doc.restoreGraphicsState();
   }
   
   // Footer with agency info

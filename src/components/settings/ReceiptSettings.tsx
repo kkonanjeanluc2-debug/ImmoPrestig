@@ -32,7 +32,7 @@ export interface ReceiptTemplates {
   signatureLabel: string;
   // Watermark settings
   watermarkEnabled: boolean;
-  watermarkType: "text" | "image";
+  watermarkType: "text" | "image" | "agency_logo";
   watermarkText: string;
   watermarkImageUrl: string | null;
   watermarkOpacity: number;

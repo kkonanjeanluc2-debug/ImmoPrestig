@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
 import { ImportTenantsDialog } from "@/components/tenant/ImportTenantsDialog";
+import { MergeTenantsDialog } from "@/components/tenant/MergeTenantsDialog";
 import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -287,6 +288,7 @@ export default function Tenants() {
               ]}
             />
             {canCreate && <ImportTenantsDialog />}
+            {canEdit && <MergeTenantsDialog />}
             {canCreate && <AddTenantDialog />}
           </div>
         </div>

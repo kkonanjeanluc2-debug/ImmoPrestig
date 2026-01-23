@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { AddOwnerDialog } from "@/components/owner/AddOwnerDialog";
 import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
 import { ImportOwnersDialog } from "@/components/owner/ImportOwnersDialog";
+import { MergeOwnersDialog } from "@/components/owner/MergeOwnersDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const Owners = () => {
@@ -77,6 +78,7 @@ const Owners = () => {
           </div>
           <div className="flex gap-2">
             {canCreate && <ImportOwnersDialog />}
+            {canEdit && <MergeOwnersDialog />}
             {canCreate && <AddOwnerDialog />}
           </div>
         </div>

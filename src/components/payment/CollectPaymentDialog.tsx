@@ -17,14 +17,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePayment } from "@/hooks/usePayments";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, Banknote } from "lucide-react";
+import { Loader2, CheckCircle, Banknote, Mail, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { generateRentReceiptBase64, getPaymentPeriod } from "@/lib/generateReceipt";
 
 interface CollectPaymentDialogProps {
   paymentId: string;
   tenantName: string;
+  tenantEmail?: string | null;
   amount: number;
+  dueDate: string;
+  propertyTitle?: string;
+  propertyAddress?: string;
+  ownerName?: string;
   currentMethod?: string | null;
   onSuccess?: () => void;
 }
@@ -36,31 +44,100 @@ const paymentMethods = [
   { value: "cheque", label: "Chèque" },
 ];
 
+const methodLabels: Record<string, string> = {
+  especes: "Espèces",
+  virement: "Virement bancaire",
+  mobile_money: "Mobile Money",
+  cheque: "Chèque",
+};
+
 export function CollectPaymentDialog({
   paymentId,
   tenantName,
+  tenantEmail,
   amount,
+  dueDate,
+  propertyTitle = "Bien immobilier",
+  propertyAddress,
+  ownerName,
   currentMethod,
   onSuccess,
 }: CollectPaymentDialogProps) {
   const [open, setOpen] = useState(false);
   const [method, setMethod] = useState(currentMethod || "especes");
+  const [sendReceipt, setSendReceipt] = useState(!!tenantEmail);
+  const [isSendingReceipt, setIsSendingReceipt] = useState(false);
   const updatePayment = useUpdatePayment();
   const { toast } = useToast();
 
   const handleCollect = async () => {
+    const paidDate = new Date().toISOString().split("T")[0];
+    
     try {
       await updatePayment.mutateAsync({
         id: paymentId,
         status: "paid",
-        paid_date: new Date().toISOString().split("T")[0],
+        paid_date: paidDate,
         method: method,
+        tenantName: tenantName,
       });
 
       toast({
         title: "Paiement encaissé",
         description: `Le paiement de ${tenantName} a été enregistré avec succès.`,
       });
+
+      // Send receipt automatically if enabled
+      if (sendReceipt && tenantEmail) {
+        setIsSendingReceipt(true);
+        try {
+          const period = getPaymentPeriod(dueDate);
+          const pdfBase64 = generateRentReceiptBase64({
+            paymentId,
+            tenantName,
+            tenantEmail,
+            propertyTitle,
+            propertyAddress,
+            amount,
+            paidDate,
+            dueDate,
+            period,
+            method: methodLabels[method] || method,
+            ownerName,
+          });
+
+          const { data, error } = await supabase.functions.invoke("send-receipt-email", {
+            body: {
+              tenantName,
+              tenantEmail,
+              propertyTitle,
+              amount,
+              period,
+              pdfBase64,
+            },
+          });
+
+          if (error) throw error;
+
+          if (data?.success) {
+            toast({
+              title: "Quittance envoyée",
+              description: `La quittance a été envoyée à ${tenantEmail}.`,
+            });
+          } else {
+            throw new Error(data?.error || "Erreur lors de l'envoi");
+          }
+        } catch (receiptError: any) {
+          console.error("Error sending receipt:", receiptError);
+          toast({
+            title: "Paiement enregistré",
+            description: `Le paiement a été encaissé mais l'envoi de la quittance a échoué: ${receiptError.message}`,
+            variant: "destructive",
+          });
+        } finally {
+          setIsSendingReceipt(false);
+        }
+      }
 
       setOpen(false);
       onSuccess?.();
@@ -75,6 +152,8 @@ export function CollectPaymentDialog({
 
   const formatCurrency = (value: number) =>
     value.toLocaleString("fr-FR") + " F CFA";
+
+  const isLoading = updatePayment.isPending || isSendingReceipt;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -130,6 +209,35 @@ export function CollectPaymentDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Auto receipt option */}
+          <div className="flex items-center space-x-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+            <Checkbox
+              id="send-receipt"
+              checked={sendReceipt}
+              onCheckedChange={(checked) => setSendReceipt(checked === true)}
+              disabled={!tenantEmail}
+            />
+            <div className="flex-1">
+              <Label 
+                htmlFor="send-receipt" 
+                className="text-sm font-medium cursor-pointer flex items-center gap-2"
+              >
+                <FileText className="h-4 w-4 text-primary" />
+                Envoyer la quittance automatiquement
+              </Label>
+              {tenantEmail ? (
+                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                  <Mail className="h-3 w-3" />
+                  {tenantEmail}
+                </p>
+              ) : (
+                <p className="text-xs text-destructive mt-0.5">
+                  Aucun email disponible pour ce locataire
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
@@ -138,13 +246,13 @@ export function CollectPaymentDialog({
           </Button>
           <Button
             onClick={handleCollect}
-            disabled={updatePayment.isPending}
+            disabled={isLoading}
             className="bg-emerald hover:bg-emerald/90"
           >
-            {updatePayment.isPending ? (
+            {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Encaissement...
+                {isSendingReceipt ? "Envoi quittance..." : "Encaissement..."}
               </>
             ) : (
               <>

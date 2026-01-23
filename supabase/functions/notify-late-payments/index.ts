@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "resend";
+import { Resend } from "npm:resend";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -11,6 +11,7 @@ const corsHeaders = {
 
 interface PaymentWithTenant {
   id: string;
+  user_id: string;
   amount: number;
   due_date: string;
   tenant: {
@@ -40,6 +41,7 @@ Deno.serve(async (req) => {
       .from("payments")
       .select(`
         id,
+        user_id,
         amount,
         due_date,
         tenant:tenants(
@@ -75,6 +77,32 @@ Deno.serve(async (req) => {
       .from("payments")
       .update({ status: "late" })
       .in("id", latePaymentIds);
+
+    // Create in-app notifications for each late payment
+    const notificationPromises = latePayments.map(async (payment: any) => {
+      const tenant = payment.tenant;
+      const propertyTitle = tenant?.property?.title || "Bien immobilier";
+      const tenantName = tenant?.name || "Locataire";
+      const amount = Number(payment.amount).toLocaleString("fr-FR");
+      const dueDate = new Date(payment.due_date).toLocaleDateString("fr-FR");
+
+      try {
+        await supabase.from("notifications").insert({
+          user_id: payment.user_id,
+          title: "Paiement en retard",
+          message: `Le paiement de ${amount} F CFA pour ${propertyTitle} (${tenantName}) est en retard depuis le ${dueDate}.`,
+          type: "warning",
+          entity_type: "payment",
+          entity_id: payment.id,
+        });
+        return { paymentId: payment.id, notificationCreated: true };
+      } catch (err) {
+        console.error(`Failed to create notification for payment ${payment.id}:`, err);
+        return { paymentId: payment.id, notificationCreated: false };
+      }
+    });
+
+    await Promise.all(notificationPromises);
 
     // Send email notifications
     const emailPromises = latePayments.map(async (payment: any) => {

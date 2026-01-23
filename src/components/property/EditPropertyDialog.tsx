@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Home, Building, MapPin, X, ImageIcon, Loader2 } from "lucide-react";
+import { Home, Building, MapPin, X, ImageIcon, Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUpdateProperty, Property } from "@/hooks/useProperties";
+import { useOwners } from "@/hooks/useOwners";
 
 interface EditPropertyDialogProps {
   property: Property;
@@ -29,11 +30,13 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
     description: "",
     image_url: "",
     status: "disponible",
+    owner_id: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const updateProperty = useUpdateProperty();
+  const { data: owners = [] } = useOwners();
 
   useEffect(() => {
     if (property && open) {
@@ -49,6 +52,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         description: property.description || "",
         image_url: property.image_url || "",
         status: property.status || "disponible",
+        owner_id: property.owner_id || "",
       });
       setImagePreview(property.image_url || null);
     }
@@ -126,6 +130,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         description: formData.description || null,
         image_url: formData.image_url || null,
         status: formData.status,
+        owner_id: formData.owner_id || null,
       });
 
       toast.success("Bien modifié avec succès !");
@@ -208,6 +213,32 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Owner Selector */}
+          <div className="space-y-2">
+            <Label htmlFor="owner">Propriétaire</Label>
+            <Select
+              value={formData.owner_id || "none"}
+              onValueChange={(value) => setFormData({ ...formData, owner_id: value === "none" ? "" : value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un propriétaire (optionnel)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <span className="text-muted-foreground">Aucun propriétaire</span>
+                </SelectItem>
+                {owners.map((owner) => (
+                  <SelectItem key={owner.id} value={owner.id}>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {owner.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

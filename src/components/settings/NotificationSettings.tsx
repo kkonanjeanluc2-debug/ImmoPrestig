@@ -4,9 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Bell, Mail, MessageSquare, Clock, Loader2, BellRing } from "lucide-react";
+import { Bell, Mail, MessageSquare, Clock, Loader2, BellRing, Volume2, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useNotificationSound, NotificationSoundType } from "@/hooks/useNotificationSound";
 
 interface NotificationPrefs {
   emailEnabled: boolean;
@@ -14,6 +15,7 @@ interface NotificationPrefs {
   paymentReminders: boolean;
   contractExpiry: boolean;
   reminderDaysBefore: number;
+  soundsEnabled: boolean;
 }
 
 export function NotificationSettings() {
@@ -26,12 +28,14 @@ export function NotificationSettings() {
     permission: pushPermission,
     togglePushNotifications 
   } = usePushNotifications();
+  const { testSound } = useNotificationSound();
   const [prefs, setPrefs] = useState<NotificationPrefs>({
     emailEnabled: true,
     smsEnabled: true,
     paymentReminders: true,
     contractExpiry: true,
     reminderDaysBefore: 3,
+    soundsEnabled: true,
   });
 
   useEffect(() => {
@@ -49,6 +53,7 @@ export function NotificationSettings() {
     await new Promise((resolve) => setTimeout(resolve, 500));
     
     localStorage.setItem("notificationPrefs", JSON.stringify(prefs));
+    localStorage.setItem("notificationSoundsEnabled", String(prefs.soundsEnabled));
     
     toast({
       title: "Préférences enregistrées",
@@ -193,6 +198,62 @@ export function NotificationSettings() {
               />
             </div>
           </div>
+        </div>
+
+        {/* Sound Settings */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            Sons de notification
+          </h3>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                <Volume2 className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <Label htmlFor="sounds-enabled" className="text-base font-medium">
+                  Activer les sons
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Jouer un son lors des nouvelles notifications
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="sounds-enabled"
+              checked={prefs.soundsEnabled}
+              onCheckedChange={(checked) => updatePref("soundsEnabled", checked)}
+            />
+          </div>
+
+          {prefs.soundsEnabled && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 border rounded-lg bg-muted/30">
+              <p className="col-span-full text-sm text-muted-foreground mb-2">
+                Tester les sons :
+              </p>
+              {([
+                { type: "payment" as NotificationSoundType, label: "Paiement", color: "bg-emerald-500" },
+                { type: "contract" as NotificationSoundType, label: "Contrat", color: "bg-blue-500" },
+                { type: "warning" as NotificationSoundType, label: "Alerte", color: "bg-amber-500" },
+                { type: "error" as NotificationSoundType, label: "Erreur", color: "bg-red-500" },
+                { type: "success" as NotificationSoundType, label: "Succès", color: "bg-green-500" },
+                { type: "info" as NotificationSoundType, label: "Info", color: "bg-sky-500" },
+              ]).map(({ type, label, color }) => (
+                <Button
+                  key={type}
+                  variant="outline"
+                  size="sm"
+                  className="justify-start gap-2"
+                  onClick={() => testSound(type)}
+                >
+                  <div className={`h-2 w-2 rounded-full ${color}`} />
+                  <Play className="h-3 w-3" />
+                  {label}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Timing Settings */}

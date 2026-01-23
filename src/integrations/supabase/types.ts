@@ -47,6 +47,60 @@ export type Database = {
         }
         Relationships: []
       }
+      agencies: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string
+          id: string
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          name: string
+          phone: string | null
+          siret: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          name: string
+          phone?: string | null
+          siret?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          name?: string
+          phone?: string | null
+          siret?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           created_at: string
@@ -584,6 +638,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_type: "agence" | "proprietaire"
       app_role: "admin" | "gestionnaire" | "lecture_seule"
     }
     CompositeTypes: {
@@ -712,6 +767,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: ["agence", "proprietaire"],
       app_role: ["admin", "gestionnaire", "lecture_seule"],
     },
   },

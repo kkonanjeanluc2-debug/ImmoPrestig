@@ -23,12 +23,14 @@ import {
   Calendar as CalendarIcon,
   Home,
   Loader2,
-  FileText
+  FileText,
+  AlertCircle
 } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
+import { differenceInDays, isFuture, isPast } from "date-fns";
 import { usePayments } from "@/hooks/usePayments";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
@@ -333,10 +335,21 @@ export default function Payments() {
                     const tenantName = tenant?.name || 'Locataire inconnu';
                     const propertyTitle = tenant?.property?.title || 'Bien non assigné';
                     
+                    // Check if payment is due within the next 7 days
+                    const dueDate = new Date(payment.due_date);
+                    const daysUntilDue = differenceInDays(dueDate, new Date());
+                    const isDueSoon = payment.status !== 'paid' && isFuture(dueDate) && daysUntilDue <= 7 && daysUntilDue >= 0;
+                    const isOverdue = payment.status !== 'paid' && isPast(dueDate) && daysUntilDue < 0;
+                    
                     return (
                       <div
                         key={payment.id}
-                        className="p-4 sm:p-5 hover:bg-muted/30 transition-colors"
+                        className={cn(
+                          "p-4 sm:p-5 transition-colors",
+                          isDueSoon ? "bg-orange-500/5 hover:bg-orange-500/10 border-l-4 border-l-orange-500" : 
+                          isOverdue ? "bg-destructive/5 hover:bg-destructive/10 border-l-4 border-l-destructive" : 
+                          "hover:bg-muted/30"
+                        )}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex items-start gap-3">
@@ -354,6 +367,12 @@ export default function Payments() {
                                 <Badge variant="outline" className={cn("text-xs", status.className)}>
                                   {status.label}
                                 </Badge>
+                                {isDueSoon && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/20 text-orange-600 dark:text-orange-400">
+                                    <AlertCircle className="h-3 w-3" />
+                                    {daysUntilDue === 0 ? "Aujourd'hui" : `Dans ${daysUntilDue} jour${daysUntilDue > 1 ? 's' : ''}`}
+                                  </span>
+                                )}
                               </div>
                               <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
@@ -364,7 +383,7 @@ export default function Payments() {
                               <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <CalendarIcon className="h-3 w-3" />
-                                  Échéance: {new Date(payment.due_date).toLocaleDateString('fr-FR')}
+                                  Échéance: {dueDate.toLocaleDateString('fr-FR')}
                                 </span>
                                 {payment.paid_date && (
                                   <span className="flex items-center gap-1 text-emerald">

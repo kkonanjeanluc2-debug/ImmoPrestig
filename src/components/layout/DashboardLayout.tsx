@@ -4,6 +4,7 @@ import { Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useLatePaymentNotifications } from "@/hooks/useLatePaymentNotifications";
+import { usePushNotificationTrigger } from "@/hooks/usePushNotificationTrigger";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 interface DashboardLayoutProps {
@@ -15,6 +16,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Subscribe to real-time late payment notifications
   useLatePaymentNotifications();
+  
+  // Trigger browser push notifications for new in-app notifications
+  usePushNotificationTrigger();
 
   return (
     <div className="min-h-screen bg-muted">

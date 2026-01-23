@@ -22,7 +22,8 @@ import {
   XCircle,
   FileText,
   Euro,
-  AlertCircle
+  AlertCircle,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -32,6 +33,7 @@ import { TenantPaymentStatusChart } from "@/components/tenant/TenantPaymentStatu
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
+import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";
@@ -313,8 +315,8 @@ const TenantDetails = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-right">
+                          <div className="flex items-center gap-2">
+                            <div className="text-right mr-2">
                               <p className="font-bold text-foreground">
                                 {Number(payment.amount).toLocaleString('fr-FR')} F CFA
                               </p>
@@ -324,6 +326,31 @@ const TenantDetails = () => {
                                 </p>
                               )}
                             </div>
+                            {/* Download receipt button for paid payments */}
+                            {payment.status === 'paid' && payment.paid_date && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-xs h-8 px-2"
+                                title="Télécharger la quittance"
+                                onClick={() => {
+                                  generateRentReceipt({
+                                    paymentId: payment.id,
+                                    tenantName: tenant.name,
+                                    tenantEmail: tenant.email,
+                                    propertyTitle: tenant.property?.title || "Bien immobilier",
+                                    propertyAddress: tenant.property?.address,
+                                    amount: Number(payment.amount),
+                                    paidDate: payment.paid_date!,
+                                    dueDate: payment.due_date,
+                                    period: getPaymentPeriod(payment.due_date),
+                                    method: payment.method || undefined,
+                                  });
+                                }}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            )}
                             {(payment.status === 'pending' || payment.status === 'late') && (
                               <>
                                 <CollectPaymentDialog

@@ -13,8 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateEmailLog } from "@/hooks/useEmailLogs";
+import { useLogWhatsAppMessage } from "@/hooks/useWhatsAppLogs";
 import { Loader2, Mail, MessageSquare, Send, MessageCircle } from "lucide-react";
-import { generatePaymentReminderMessage, openWhatsApp } from "@/lib/whatsapp";
+import { generatePaymentReminderMessage, openWhatsApp, formatPhoneForWhatsApp } from "@/lib/whatsapp";
 
 interface SendReminderDialogProps {
   paymentId: string;
@@ -44,6 +45,7 @@ export function SendReminderDialog({
   const [activeTab, setActiveTab] = useState<"email" | "sms" | "whatsapp">("email");
   const { toast } = useToast();
   const createEmailLog = useCreateEmailLog();
+  const logWhatsAppMessage = useLogWhatsAppMessage();
 
   const isLate = status === "late";
   const canSendEmail = !!tenantEmail;
@@ -56,11 +58,11 @@ export function SendReminderDialog({
     } else if (activeTab === "sms") {
       await handleSendSms();
     } else if (activeTab === "whatsapp") {
-      handleSendWhatsApp();
+      await handleSendWhatsApp();
     }
   };
 
-  const handleSendWhatsApp = () => {
+  const handleSendWhatsApp = async () => {
     if (!tenantPhone) return;
     
     const message = generatePaymentReminderMessage({
@@ -70,6 +72,19 @@ export function SendReminderDialog({
       dueDate,
       isLate,
     });
+    
+    // Log the WhatsApp message
+    try {
+      await logWhatsAppMessage.mutateAsync({
+        tenantId,
+        paymentId,
+        messageType: isLate ? "late_reminder" : "reminder",
+        recipientPhone: formatPhoneForWhatsApp(tenantPhone),
+        messagePreview: message,
+      });
+    } catch (error) {
+      console.error("Failed to log WhatsApp message:", error);
+    }
     
     openWhatsApp(tenantPhone, message);
     

@@ -530,6 +530,42 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_logs: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          id: string
+          message_preview: string
+          message_type: string
+          payment_id: string | null
+          recipient_phone: string
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          message_preview: string
+          message_type: string
+          payment_id?: string | null
+          recipient_phone: string
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          message_preview?: string
+          message_type?: string
+          payment_id?: string | null
+          recipient_phone?: string
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

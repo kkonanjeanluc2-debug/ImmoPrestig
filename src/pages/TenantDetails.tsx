@@ -23,7 +23,8 @@ import {
   FileText,
   Euro,
   AlertCircle,
-  Download
+  Download,
+  MessageCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -31,6 +32,7 @@ import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { TenantPaymentChart } from "@/components/tenant/TenantPaymentChart";
 import { TenantPaymentStatusChart } from "@/components/tenant/TenantPaymentStatusChart";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
+import { WhatsAppHistoryDialog } from "@/components/tenant/WhatsAppHistoryDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
@@ -71,6 +73,7 @@ const TenantDetails = () => {
   const { canEdit, canDelete } = usePermissions();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [whatsappHistoryOpen, setWhatsappHistoryOpen] = useState(false);
 
   const tenant = tenants.find(t => t.id === id) as TenantWithDetails | undefined;
   
@@ -182,6 +185,16 @@ const TenantDetails = () => {
           </div>
           <div className="flex gap-2">
             <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
+            <Button variant="outline" onClick={() => setWhatsappHistoryOpen(true)} className="text-green-600 border-green-600/30 hover:bg-green-50 dark:hover:bg-green-950">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              WhatsApp
+            </Button>
+            <WhatsAppHistoryDialog
+              open={whatsappHistoryOpen}
+              onOpenChange={setWhatsappHistoryOpen}
+              tenantId={tenant.id}
+              tenantName={tenant.name}
+            />
             {canEdit && (
               <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="h-4 w-4 mr-2" />

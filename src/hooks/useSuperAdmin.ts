@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole, AppRole } from "./useUserRoles";
 
+export interface AgencyStats {
+  properties_count: number;
+  tenants_count: number;
+  payments_count: number;
+  total_revenue: number;
+}
+
 export interface AgencyWithProfile {
   id: string;
   user_id: string;
@@ -20,6 +27,7 @@ export interface AgencyWithProfile {
     email: string | null;
   };
   role?: AppRole;
+  stats?: AgencyStats;
 }
 
 // Check if current user is super_admin
@@ -61,7 +69,28 @@ export function useAllAgencies() {
 
       if (rolesError) throw rolesError;
 
-      // Combine data
+      // Get all properties for stats
+      const { data: properties, error: propertiesError } = await supabase
+        .from("properties")
+        .select("user_id");
+
+      if (propertiesError) throw propertiesError;
+
+      // Get all tenants for stats
+      const { data: tenants, error: tenantsError } = await supabase
+        .from("tenants")
+        .select("user_id");
+
+      if (tenantsError) throw tenantsError;
+
+      // Get all payments for stats
+      const { data: payments, error: paymentsError } = await supabase
+        .from("payments")
+        .select("user_id, amount, status");
+
+      if (paymentsError) throw paymentsError;
+
+      // Combine data with stats
       const agenciesWithProfiles: AgencyWithProfile[] = (agencies || []).map(
         (agency) => {
           const profile = (profiles || []).find(
@@ -70,12 +99,26 @@ export function useAllAgencies() {
           const userRole = (roles || []).find(
             (r) => r.user_id === agency.user_id
           );
+          
+          // Calculate stats for this agency
+          const agencyProperties = (properties || []).filter(p => p.user_id === agency.user_id);
+          const agencyTenants = (tenants || []).filter(t => t.user_id === agency.user_id);
+          const agencyPayments = (payments || []).filter(p => p.user_id === agency.user_id);
+          const paidPayments = agencyPayments.filter(p => p.status === 'paid');
+          const totalRevenue = paidPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+
           return {
             ...agency,
             profile: profile
               ? { full_name: profile.full_name, email: profile.email }
               : undefined,
             role: userRole?.role as AppRole | undefined,
+            stats: {
+              properties_count: agencyProperties.length,
+              tenants_count: agencyTenants.length,
+              payments_count: agencyPayments.length,
+              total_revenue: totalRevenue,
+            },
           };
         }
       );

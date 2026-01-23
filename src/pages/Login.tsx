@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Building2, Mail, Lock } from "lucide-react";
+import { Loader2, Building2, Mail, Lock, CreditCard } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -101,6 +101,13 @@ const Login = () => {
                 S'inscrire
               </Link>
             </p>
+            <Link 
+              to="/pricing" 
+              className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <CreditCard className="h-4 w-4" />
+              Voir nos tarifs
+            </Link>
           </CardFooter>
         </form>
       </Card>

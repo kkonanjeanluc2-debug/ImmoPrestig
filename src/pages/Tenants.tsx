@@ -18,7 +18,8 @@ import {
   ChevronDown,
   ChevronUp,
   Wallet,
-  Loader2
+  Loader2,
+  Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
@@ -26,6 +27,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
+import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -42,7 +44,13 @@ const paymentStatusConfig = {
   upcoming: { label: "À venir", icon: Clock, className: "text-blue-500" },
 };
 
-function TenantCard({ tenant }: { tenant: TenantWithDetails }) {
+interface TenantCardProps {
+  tenant: TenantWithDetails;
+  onEdit: (tenant: TenantWithDetails) => void;
+  canEdit: boolean;
+}
+
+function TenantCard({ tenant, onEdit, canEdit }: TenantCardProps) {
   const [expanded, setExpanded] = useState(false);
   
   // Get active contract
@@ -98,8 +106,19 @@ function TenantCard({ tenant }: { tenant: TenantWithDetails }) {
               )}
 
               {/* Email History Button */}
-              <div className="mt-3">
+              <div className="mt-3 flex items-center gap-2">
                 <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
+                {canEdit && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEdit(tenant)}
+                    className="gap-1.5"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Modifier
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -198,8 +217,15 @@ function TenantCard({ tenant }: { tenant: TenantWithDetails }) {
 
 export default function Tenants() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { data: tenants, isLoading, error } = useTenants();
-  const { canCreate } = usePermissions();
+  const { canCreate, canEdit } = usePermissions();
+
+  const handleEditTenant = (tenant: TenantWithDetails) => {
+    setEditingTenant(tenant);
+    setEditDialogOpen(true);
+  };
 
   const filteredTenants = (tenants || []).filter(tenant =>
     tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -315,7 +341,12 @@ export default function Tenants() {
             </h2>
             <div className="grid gap-4">
               {filteredTenants.map((tenant) => (
-                <TenantCard key={tenant.id} tenant={tenant} />
+                <TenantCard 
+                  key={tenant.id} 
+                  tenant={tenant} 
+                  onEdit={handleEditTenant}
+                  canEdit={canEdit}
+                />
               ))}
             </div>
             {filteredTenants.length === 0 && (
@@ -332,6 +363,13 @@ export default function Tenants() {
             )}
           </div>
         )}
+
+        {/* Edit Tenant Dialog */}
+        <EditTenantDialog
+          tenant={editingTenant}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+        />
       </div>
     </DashboardLayout>
   );

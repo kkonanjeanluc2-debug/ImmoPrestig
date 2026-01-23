@@ -17,10 +17,12 @@ import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 const Index = () => {
   const { user } = useAuth();
+  const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const { data: properties, isLoading: propertiesLoading } = useProperties();
@@ -50,7 +52,12 @@ const Index = () => {
     }
   };
 
-  const isLoading = propertiesLoading || tenantsLoading || paymentsLoading;
+  // Redirect super admin to their dedicated space
+  if (!roleLoading && userRole?.role === "super_admin") {
+    return <Navigate to="/super-admin" replace />;
+  }
+
+  const isLoading = propertiesLoading || tenantsLoading || paymentsLoading || roleLoading;
 
   // Compute stats
   const totalProperties = properties?.length || 0;

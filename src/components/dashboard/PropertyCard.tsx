@@ -1,39 +1,46 @@
-import { MapPin, Bed, Bath, Maximize } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Property } from "@/hooks/useProperties";
 
 interface PropertyCardProps {
-  image: string;
-  title: string;
-  address: string;
-  price: number;
-  type: "location" | "vente";
-  propertyType: "maison" | "appartement" | "terrain";
-  bedrooms?: number;
-  bathrooms?: number;
-  area: number;
-  status: "disponible" | "occupé" | "en attente";
+  property: Property;
+  onEdit?: (property: Property) => void;
+  onDelete?: (property: Property) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export function PropertyCard({
-  image,
-  title,
-  address,
-  price,
-  type,
-  propertyType,
-  bedrooms,
-  bathrooms,
-  area,
-  status,
+  property,
+  onEdit,
+  onDelete,
+  canEdit = false,
+  canDelete = false,
 }: PropertyCardProps) {
-  const statusClasses = {
+  const { 
+    image_url, 
+    title, 
+    address, 
+    price, 
+    type, 
+    property_type: propertyType, 
+    bedrooms, 
+    bathrooms, 
+    area, 
+    status 
+  } = property;
+
+  const image = image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
+
+  const statusClasses: Record<string, string> = {
     disponible: "bg-emerald/10 text-emerald border-emerald/20",
     occupé: "bg-navy/10 text-navy border-navy/20",
     "en attente": "bg-sand text-navy border-sand-dark/20",
   };
 
-  const typeLabels = {
+  const typeLabels: Record<string, string> = {
     maison: "Maison",
     appartement: "Appartement",
     terrain: "Terrain",
@@ -50,9 +57,9 @@ export function PropertyCard({
         />
         <div className="absolute top-3 left-3 flex gap-2">
           <Badge variant="secondary" className="bg-card/90 backdrop-blur-sm text-foreground font-medium">
-            {typeLabels[propertyType]}
+            {typeLabels[propertyType] || propertyType}
           </Badge>
-          <Badge className={cn("border backdrop-blur-sm", statusClasses[status])}>
+          <Badge className={cn("border backdrop-blur-sm", statusClasses[status] || "")}>
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </Badge>
         </div>
@@ -64,6 +71,37 @@ export function PropertyCard({
             }
           </span>
         </div>
+        {/* Action buttons on hover */}
+        {(canEdit || canDelete) && (
+          <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            {canEdit && (
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-8 w-8 bg-card/90 backdrop-blur-sm hover:bg-card"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(property);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                size="icon"
+                variant="destructive"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(property);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -80,22 +118,24 @@ export function PropertyCard({
 
         {/* Features */}
         <div className="flex items-center gap-4 pt-3 border-t border-border">
-          {bedrooms !== undefined && (
+          {bedrooms !== undefined && bedrooms !== null && (
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Bed className="h-4 w-4" />
               <span>{bedrooms}</span>
             </div>
           )}
-          {bathrooms !== undefined && (
+          {bathrooms !== undefined && bathrooms !== null && (
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Bath className="h-4 w-4" />
               <span>{bathrooms}</span>
             </div>
           )}
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Maximize className="h-4 w-4" />
-            <span>{area} m²</span>
-          </div>
+          {area && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Maximize className="h-4 w-4" />
+              <span>{area} m²</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

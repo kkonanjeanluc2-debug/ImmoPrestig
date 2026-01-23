@@ -9,30 +9,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Grid3X3, List, Loader2 } from "lucide-react";
+import { Search, Grid3X3, List, Loader2 } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useProperties } from "@/hooks/useProperties";
+import { useProperties, useDeleteProperty, Property } from "@/hooks/useProperties";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
+import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
 import { usePermissions } from "@/hooks/usePermissions";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Properties = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const { canCreate } = usePermissions();
+  const [transactionFilter, setTransactionFilter] = useState("all");
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
+  const { canCreate, canEdit, canDelete } = usePermissions();
   
   const { data: properties, isLoading, error } = useProperties();
+  const deleteProperty = useDeleteProperty();
 
   const filteredProperties = (properties || []).filter((property) => {
     const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          property.address.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === "all" || property.property_type === typeFilter;
     const matchesStatus = statusFilter === "all" || property.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
+    const matchesTransaction = transactionFilter === "all" || property.type === transactionFilter;
+    return matchesSearch && matchesType && matchesStatus && matchesTransaction;
   });
+
+  const handleDelete = async () => {
+    if (!deletingProperty) return;
+    try {
+      await deleteProperty.mutateAsync({ id: deletingProperty.id, title: deletingProperty.title });
+      toast.success("Bien supprimé avec succès");
+      setDeletingProperty(null);
+    } catch (error) {
+      toast.error("Erreur lors de la suppression");
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -78,7 +106,17 @@ const Properties = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            <Select value={transactionFilter} onValueChange={setTransactionFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Transaction" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous</SelectItem>
+                <SelectItem value="location">Location</SelectItem>
+                <SelectItem value="vente">Vente</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Type de bien" />
@@ -163,18 +201,13 @@ const Properties = () => {
                 style={{ animationDelay: `${index * 50}ms` }}
                 className="animate-fade-in"
               >
-              <PropertyCard 
-                image={property.image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"}
-                title={property.title}
-                address={property.address}
-                price={property.price}
-                type={property.type as "location" | "vente"}
-                propertyType={property.property_type as "maison" | "appartement" | "terrain"}
-                bedrooms={property.bedrooms || undefined}
-                bathrooms={property.bathrooms || undefined}
-                area={property.area || 0}
-                status={property.status as "disponible" | "occupé" | "en attente"}
-              />
+                <PropertyCard 
+                  property={property}
+                  onEdit={setEditingProperty}
+                  onDelete={setDeletingProperty}
+                  canEdit={canEdit}
+                  canDelete={canDelete}
+                />
               </div>
             ))}
           </div>
@@ -190,6 +223,33 @@ const Properties = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Dialog */}
+      {editingProperty && (
+        <EditPropertyDialog
+          property={editingProperty}
+          open={!!editingProperty}
+          onOpenChange={(open) => !open && setEditingProperty(null)}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingProperty} onOpenChange={(open) => !open && setDeletingProperty(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce bien ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer "{deletingProperty?.title}" ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

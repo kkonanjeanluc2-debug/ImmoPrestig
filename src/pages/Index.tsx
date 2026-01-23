@@ -182,16 +182,7 @@ const Index = () => {
                 {recentProperties.map((property, index) => (
                   <div key={property.id} style={{ animationDelay: `${index * 100}ms` }}>
                     <PropertyCard 
-                      image={property.image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"}
-                      title={property.title}
-                      address={property.address}
-                      price={property.price}
-                      type={property.type as "location" | "vente"}
-                      propertyType={property.property_type as "maison" | "appartement" | "terrain"}
-                      bedrooms={property.bedrooms || undefined}
-                      bathrooms={property.bathrooms || undefined}
-                      area={property.area || 0}
-                      status={property.status as "disponible" | "occupé" | "en attente"}
+                      property={property}
                     />
                   </div>
                 ))}

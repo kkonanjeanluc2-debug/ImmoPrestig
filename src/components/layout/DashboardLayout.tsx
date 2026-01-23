@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useLatePaymentNotifications } from "@/hooks/useLatePaymentNotifications";
 import { usePushNotificationTrigger } from "@/hooks/usePushNotificationTrigger";
 import { useDoNotDisturb } from "@/hooks/useDoNotDisturb";
+import { useBrandColors } from "@/hooks/useBrandColors";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -35,6 +36,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Trigger browser push notifications for new in-app notifications
   usePushNotificationTrigger();
+
+  // Apply brand colors from agency settings
+  useBrandColors();
 
   const toggleDND = useCallback(() => {
     const currentSchedule = getSchedule();

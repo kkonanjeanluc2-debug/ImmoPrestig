@@ -7,7 +7,7 @@ import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
-import { Building2, Users, Wallet, TrendingUp, Loader2, FileText } from "lucide-react";
+import { Building2, Users, Wallet, TrendingUp, Loader2, FileText, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperties } from "@/hooks/useProperties";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
+import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 
@@ -25,6 +26,7 @@ const Index = () => {
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
+  const { data: whatsappStats } = useWhatsAppLogsCount();
 
   const handleGenerateReceipts = async () => {
     setIsGenerating(true);
@@ -107,7 +109,7 @@ const Index = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <StatCard
               title="Total des biens"
               value={totalProperties}
@@ -139,6 +141,14 @@ const Index = () => {
               changeType="positive"
               icon={TrendingUp}
               iconBg="navy"
+            />
+            <StatCard
+              title="Messages WhatsApp"
+              value={whatsappStats?.total || 0}
+              change={`${whatsappStats?.thisMonth || 0} ce mois`}
+              changeType="positive"
+              icon={MessageCircle}
+              iconBg="emerald"
             />
           </div>
         )}

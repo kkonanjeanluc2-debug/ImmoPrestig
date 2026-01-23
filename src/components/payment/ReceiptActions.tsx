@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,7 +7,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -22,8 +21,10 @@ import { useCreateEmailLog } from "@/hooks/useEmailLogs";
 import { useLogWhatsAppMessage } from "@/hooks/useWhatsAppLogs";
 import { useAgency } from "@/hooks/useAgency";
 import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle } from "lucide-react";
-import { generateRentReceipt, generateRentReceiptBase64, getPaymentPeriod } from "@/lib/generateReceipt";
+import { generateRentReceipt, generateRentReceiptBase64WithTemplate, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateReceiptMessage, openWhatsApp, formatPhoneForWhatsApp } from "@/lib/whatsapp";
+import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
+import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
 
 interface ReceiptActionsProps {
   paymentId: string;
@@ -55,10 +56,17 @@ export function ReceiptActions({
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplate | null>(null);
   const { toast } = useToast();
   const createEmailLog = useCreateEmailLog();
   const logWhatsAppMessage = useLogWhatsAppMessage();
   const { data: agency } = useAgency();
+
+  const handleTemplateChange = useCallback((templateId: string | null, template: ReceiptTemplate | null) => {
+    setSelectedTemplateId(templateId);
+    setSelectedTemplate(template);
+  }, []);
 
   const period = getPaymentPeriod(dueDate);
 
@@ -115,7 +123,10 @@ export function ReceiptActions({
 
     setIsSending(true);
     try {
-      const pdfBase64 = await generateRentReceiptBase64(getReceiptData());
+      const pdfBase64 = await generateRentReceiptBase64WithTemplate({
+        ...getReceiptData(),
+        template: selectedTemplate,
+      });
 
       const { data, error } = await supabase.functions.invoke("send-receipt-email", {
         body: {
@@ -273,6 +284,11 @@ export function ReceiptActions({
                 Un PDF de la quittance sera généré et envoyé en pièce jointe.
               </span>
             </div>
+
+            <ReceiptTemplateSelector
+              value={selectedTemplateId}
+              onChange={handleTemplateChange}
+            />
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">

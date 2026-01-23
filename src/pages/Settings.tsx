@@ -12,7 +12,7 @@ import { ActivityHistory } from "@/components/settings/ActivityHistory";
 import { WhatsAppSettings } from "@/components/settings/WhatsAppSettings";
 import { AgencySettings } from "@/components/settings/AgencySettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
-import { ReceiptSettings } from "@/components/settings/ReceiptSettings";
+import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("agency");
@@ -119,7 +119,7 @@ const Settings = () => {
           </TabsContent>
 
           <TabsContent value="receipts">
-            <ReceiptSettings />
+            <ReceiptTemplateManager />
           </TabsContent>
 
           <TabsContent value="profile">

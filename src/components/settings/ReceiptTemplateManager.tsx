@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,9 @@ import {
   Droplets,
   Type,
   ImageIcon,
+  Eye,
+  Download,
+  RefreshCw,
 } from "lucide-react";
 import {
   useReceiptTemplates,
@@ -51,6 +54,7 @@ import {
   type ReceiptTemplate,
   type ReceiptTemplateInsert,
 } from "@/hooks/useReceiptTemplates";
+import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
 
 const DEFAULT_TEMPLATE_VALUES: ReceiptTemplateInsert = {
@@ -82,6 +86,7 @@ const VARIABLE_HINTS: Record<string, string[]> = {
 
 export function ReceiptTemplateManager() {
   const { data: templates = [], isLoading } = useReceiptTemplates();
+  const { data: agency } = useAgency();
   const createTemplate = useCreateReceiptTemplate();
   const updateTemplate = useUpdateReceiptTemplate();
   const deleteTemplate = useDeleteReceiptTemplate();
@@ -93,6 +98,252 @@ export function ReceiptTemplateManager() {
   const [templateToDelete, setTemplateToDelete] = useState<ReceiptTemplate | null>(null);
   const [formData, setFormData] = useState<ReceiptTemplateInsert>(DEFAULT_TEMPLATE_VALUES);
   const [activeTab, setActiveTab] = useState("content");
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Generate PDF preview
+  const generatePdfPreview = useCallback(async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const jsPDF = (await import("jspdf")).default;
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      // Sample data for preview
+      const sampleData = {
+        tenantName: "Marie Dupont",
+        ownerName: agency?.name || "Propriétaire Exemple",
+        propertyTitle: "Appartement T3 - Centre-ville",
+        propertyAddress: "123 Rue de la Paix, 75001 Paris",
+        amount: 850000,
+        period: "Janvier 2024",
+        paidDate: new Date().toISOString(),
+        dueDate: new Date().toISOString(),
+        method: "Virement bancaire",
+        paymentId: "PAY-12345678",
+      };
+
+      // Colors
+      const primaryColor: [number, number, number] = [26, 54, 93];
+      const textColor: [number, number, number] = [51, 51, 51];
+      const lightGray: [number, number, number] = [245, 245, 245];
+
+      // Header
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, pageWidth, 55, "F");
+
+      // Agency info
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(agency?.name || "Nom de l'agence", 15, 15);
+
+      if (formData.show_contacts) {
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        let contactY = 22;
+        if (agency?.phone) {
+          doc.text(`Tél: ${agency.phone}`, 15, contactY);
+          contactY += 5;
+        }
+        if (agency?.email) {
+          doc.text(agency.email, 15, contactY);
+          contactY += 5;
+        }
+        if (agency?.address || agency?.city) {
+          const addressParts = [agency.address, agency.city, agency.country].filter(Boolean);
+          doc.text(addressParts.join(", "), 15, contactY);
+        }
+      }
+
+      // Title
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text(formData.title, pageWidth - 15, 18, { align: "right" });
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text(`N° ${sampleData.paymentId.substring(0, 8).toUpperCase()}`, pageWidth - 15, 26, { align: "right" });
+
+      doc.setTextColor(...textColor);
+      let yPos = 70;
+
+      // Period box
+      doc.setFillColor(...lightGray);
+      doc.roundedRect(15, yPos, pageWidth - 30, 20, 3, 3, "F");
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Période : ${sampleData.period}`, pageWidth / 2, yPos + 12, { align: "center" });
+
+      yPos += 35;
+
+      // Owner section
+      const colWidth = (pageWidth - 40) / 2;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...primaryColor);
+      doc.text("BAILLEUR", 15, yPos);
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "normal");
+      doc.text(sampleData.ownerName, 15, yPos + 7);
+
+      // Tenant section
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...primaryColor);
+      doc.text("LOCATAIRE", 15 + colWidth + 10, yPos);
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "normal");
+      doc.text(sampleData.tenantName, 15 + colWidth + 10, yPos + 7);
+
+      yPos += 25;
+
+      // Property section
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...primaryColor);
+      doc.text("BIEN LOUÉ", 15, yPos);
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "normal");
+      yPos += 7;
+      doc.text(sampleData.propertyTitle, 15, yPos);
+      yPos += 5;
+      doc.setFontSize(9);
+      doc.text(sampleData.propertyAddress, 15, yPos);
+
+      yPos += 20;
+
+      // Amount box
+      doc.setFillColor(...primaryColor);
+      doc.roundedRect(15, yPos, pageWidth - 30, 35, 3, 3, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${sampleData.amount.toLocaleString("fr-FR")} ${formData.currency_symbol}`, pageWidth / 2, yPos + 26, { align: "center" });
+
+      yPos += 50;
+
+      // Amount in words
+      if (formData.show_amount_in_words) {
+        doc.setTextColor(...textColor);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+        doc.text("Soit : huit cent cinquante mille francs CFA", 15, yPos);
+        yPos += 15;
+      }
+
+      // Declaration
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...textColor);
+      const declarationText = formData.declaration_text
+        .replace(/{bailleur}/g, sampleData.ownerName)
+        .replace(/{locataire}/g, sampleData.tenantName)
+        .replace(/{montant}/g, `${sampleData.amount.toLocaleString("fr-FR")} ${formData.currency_symbol}`)
+        .replace(/{periode}/g, sampleData.period)
+        .replace(/{bien}/g, sampleData.propertyTitle);
+      const splitDeclaration = doc.splitTextToSize(declarationText, pageWidth - 30);
+      doc.text(splitDeclaration, 15, yPos);
+      yPos += splitDeclaration.length * 5 + 20;
+
+      // Signature
+      const today = new Date().toLocaleDateString("fr-FR", formData.date_format === "long" ? { day: "numeric", month: "long", year: "numeric" } : undefined);
+      doc.text(`Fait le ${today}`, pageWidth - 20, yPos, { align: "right" });
+      yPos += 15;
+      doc.setFont("helvetica", "italic");
+      const signatureText = formData.signature_text.replace(/{bailleur}/g, sampleData.ownerName);
+      doc.text(signatureText, pageWidth - 20, yPos, { align: "right" });
+
+      // Watermark
+      if (formData.watermark_enabled && formData.watermark_type === "text" && formData.watermark_text) {
+        doc.saveGraphicsState();
+        const opacity = formData.watermark_opacity / 100;
+        const grayValue = Math.round(200 + (55 * (1 - opacity)));
+        doc.setTextColor(grayValue, grayValue, grayValue);
+        doc.setFontSize(60);
+        doc.setFont("helvetica", "bold");
+
+        if (formData.watermark_position === "diagonal") {
+          doc.setFontSize(40);
+          for (let i = -2; i < 4; i++) {
+            for (let j = -2; j < 4; j++) {
+              const x = (pageWidth / 3) * i + 30;
+              const y = (pageHeight / 4) * j + 60;
+              if (x > -50 && x < pageWidth + 50 && y > -50 && y < pageHeight + 50) {
+                doc.text(formData.watermark_text, x, y, { align: "center" });
+              }
+            }
+          }
+        } else if (formData.watermark_position === "bottom-right") {
+          doc.text(formData.watermark_text, pageWidth - 50, pageHeight - 50, { align: "center" });
+        } else {
+          doc.text(formData.watermark_text, pageWidth / 2, pageHeight / 2, { align: "center" });
+        }
+        doc.restoreGraphicsState();
+      }
+
+      // Footer
+      doc.setFillColor(...lightGray);
+      doc.rect(0, pageHeight - 25, pageWidth, 25, "F");
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(128, 128, 128);
+
+      const footerText = formData.footer_text
+        .replace(/{agence}/g, agency?.name || "Agence")
+        .replace(/{telephone}/g, agency?.phone || "")
+        .replace(/{email}/g, agency?.email || "");
+      doc.text(footerText, pageWidth / 2, pageHeight - 15, { align: "center" });
+
+      if (formData.show_contacts) {
+        const contactLine = [agency?.phone, agency?.email].filter(Boolean).join(" | ");
+        if (contactLine) {
+          doc.text(contactLine, pageWidth / 2, pageHeight - 8, { align: "center" });
+        }
+      }
+
+      // Create blob URL
+      const pdfBlob = doc.output("blob");
+      const url = URL.createObjectURL(pdfBlob);
+
+      // Cleanup previous URL
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+
+      setPdfUrl(url);
+    } catch (error) {
+      console.error("Error generating PDF preview:", error);
+      toast.error("Erreur lors de la génération de l'aperçu");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  }, [formData, agency, pdfUrl]);
+
+  // Generate PDF when switching to preview tab
+  useEffect(() => {
+    if (activeTab === "preview" && isDialogOpen) {
+      generatePdfPreview();
+    }
+  }, [activeTab, isDialogOpen]);
+
+  // Cleanup PDF URL on unmount
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
+
+  const handleDownloadPreview = () => {
+    if (!pdfUrl) return;
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = `apercu_${formData.name || "modele"}.pdf`;
+    link.click();
+  };
 
   const handleOpenCreate = () => {
     setEditingTemplate(null);
@@ -357,10 +608,14 @@ export function ReceiptTemplateManager() {
               <Separator />
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="content">Contenu</TabsTrigger>
                   <TabsTrigger value="layout">Mise en page</TabsTrigger>
                   <TabsTrigger value="watermark">Filigrane</TabsTrigger>
+                  <TabsTrigger value="preview" className="flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    Aperçu
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="content" className="space-y-4 mt-4">
@@ -557,6 +812,64 @@ export function ReceiptTemplateManager() {
                       </div>
                     </>
                   )}
+                </TabsContent>
+
+                <TabsContent value="preview" className="mt-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Aperçu en temps réel de votre modèle de quittance
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={generatePdfPreview}
+                          disabled={isGeneratingPdf}
+                        >
+                          {isGeneratingPdf ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                          )}
+                          Actualiser
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDownloadPreview}
+                          disabled={!pdfUrl || isGeneratingPdf}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Télécharger
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg bg-muted/30 overflow-hidden">
+                      {isGeneratingPdf ? (
+                        <div className="flex flex-col items-center justify-center h-[400px] gap-3">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                          <p className="text-sm text-muted-foreground">Génération de l'aperçu...</p>
+                        </div>
+                      ) : pdfUrl ? (
+                        <iframe
+                          src={pdfUrl}
+                          className="w-full h-[400px]"
+                          title="Aperçu du modèle de quittance"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-[400px] gap-3 text-muted-foreground">
+                          <FileText className="h-12 w-12 opacity-30" />
+                          <p className="text-sm">Cliquez sur "Actualiser" pour générer l'aperçu</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-muted-foreground text-center">
+                      L'aperçu utilise des données fictives pour démonstration
+                    </p>
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>

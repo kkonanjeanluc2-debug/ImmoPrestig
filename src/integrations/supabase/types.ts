@@ -110,6 +110,51 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_logs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          details: Json | null
+          error_message: string | null
+          id: string
+          items_failed: number
+          items_processed: number
+          items_success: number
+          started_at: string
+          status: string
+          task_type: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          items_failed?: number
+          items_processed?: number
+          items_success?: number
+          started_at?: string
+          status?: string
+          task_type: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          items_failed?: number
+          items_processed?: number
+          items_success?: number
+          started_at?: string
+          status?: string
+          task_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       automation_schedules: {
         Row: {
           created_at: string

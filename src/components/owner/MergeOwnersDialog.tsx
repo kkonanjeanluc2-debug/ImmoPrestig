@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { findDuplicateGroups } from "@/lib/duplicateDetection";
 
 interface MergedOwner {
   name: string;
@@ -24,10 +25,17 @@ interface MergedOwner {
   status: string;
 }
 
+interface DuplicateGroup {
+  group: Owner[];
+  score: number;
+  reasons: string[];
+}
+
 export function MergeOwnersDialog() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"select" | "merge">("select");
   const [selectedOwners, setSelectedOwners] = useState<Owner[]>([]);
+  const [selectedGroupInfo, setSelectedGroupInfo] = useState<{ score: number; reasons: string[] } | null>(null);
   const [mergedData, setMergedData] = useState<MergedOwner | null>(null);
   const [primaryId, setPrimaryId] = useState<string>("");
   const [isMerging, setIsMerging] = useState(false);
@@ -36,53 +44,24 @@ export function MergeOwnersDialog() {
   const updateOwner = useUpdateOwner();
   const deleteOwner = useDeleteOwner();
 
-  // Find potential duplicates (same email or phone)
-  const duplicateGroups = useMemo(() => {
+  // Find potential duplicates using advanced algorithm
+  const duplicateGroups = useMemo((): DuplicateGroup[] => {
     if (!owners) return [];
-    
-    const groups: Owner[][] = [];
-    const processed = new Set<string>();
-    
-    owners.forEach((owner) => {
-      if (processed.has(owner.id)) return;
-      
-      const duplicates = owners.filter((o) => {
-        if (o.id === owner.id || processed.has(o.id)) return false;
-        
-        // Check for similar names
-        const nameSimilar = o.name.toLowerCase().includes(owner.name.toLowerCase().split(' ')[0]) ||
-                           owner.name.toLowerCase().includes(o.name.toLowerCase().split(' ')[0]);
-        
-        // Check for same email domain or similar email
-        const emailSimilar = o.email.split('@')[0].toLowerCase() === owner.email.split('@')[0].toLowerCase();
-        
-        // Check for same phone
-        const phoneSimilar = o.phone && owner.phone && 
-                            o.phone.replace(/\D/g, '') === owner.phone.replace(/\D/g, '');
-        
-        return nameSimilar || emailSimilar || phoneSimilar;
-      });
-      
-      if (duplicates.length > 0) {
-        const group = [owner, ...duplicates];
-        group.forEach((o) => processed.add(o.id));
-        groups.push(group);
-      }
-    });
-    
-    return groups;
+    return findDuplicateGroups(owners, 0.5);
   }, [owners]);
 
   const resetState = () => {
     setStep("select");
     setSelectedOwners([]);
+    setSelectedGroupInfo(null);
     setMergedData(null);
     setPrimaryId("");
     setIsMerging(false);
   };
 
-  const handleSelectGroup = (group: Owner[]) => {
+  const handleSelectGroup = ({ group, score, reasons }: DuplicateGroup) => {
     setSelectedOwners(group);
+    setSelectedGroupInfo({ score, reasons });
     setPrimaryId(group[0].id);
     
     // Pre-merge: take the most complete data
@@ -163,26 +142,40 @@ export function MergeOwnersDialog() {
               ) : (
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-3 pr-4">
-                    {duplicateGroups.map((group, index) => (
+                    {duplicateGroups.map((duplicateGroup, index) => (
                       <button
                         key={index}
-                        onClick={() => handleSelectGroup(group)}
+                        onClick={() => handleSelectGroup(duplicateGroup)}
                         className="w-full p-4 border rounded-lg hover:bg-muted/50 transition-colors text-left"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
-                            {group.length} entrées similaires
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                              {duplicateGroup.group.length} entrées
+                            </Badge>
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                              {Math.round(duplicateGroup.score * 100)}% similaire
+                            </Badge>
+                          </div>
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="space-y-1">
-                          {group.map((owner) => (
+                          {duplicateGroup.group.map((owner) => (
                             <div key={owner.id} className="text-sm">
                               <span className="font-medium">{owner.name}</span>
                               <span className="text-muted-foreground ml-2">({owner.email})</span>
                             </div>
                           ))}
                         </div>
+                        {duplicateGroup.reasons.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {duplicateGroup.reasons.map((reason, i) => (
+                              <span key={i} className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                                {reason}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>

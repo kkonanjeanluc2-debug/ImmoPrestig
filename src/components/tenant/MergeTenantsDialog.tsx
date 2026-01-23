@@ -13,9 +13,10 @@ import { toast } from "sonner";
 import { useTenants, TenantWithDetails, useUpdateTenant, useDeleteTenant } from "@/hooks/useTenants";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { findDuplicateGroups } from "@/lib/duplicateDetection";
+import { Progress } from "@/components/ui/progress";
 
 interface MergedTenant {
   name: string;
@@ -24,10 +25,17 @@ interface MergedTenant {
   property_id: string | null;
 }
 
+interface DuplicateGroup {
+  group: TenantWithDetails[];
+  score: number;
+  reasons: string[];
+}
+
 export function MergeTenantsDialog() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"select" | "merge">("select");
   const [selectedTenants, setSelectedTenants] = useState<TenantWithDetails[]>([]);
+  const [selectedGroupInfo, setSelectedGroupInfo] = useState<{ score: number; reasons: string[] } | null>(null);
   const [mergedData, setMergedData] = useState<MergedTenant | null>(null);
   const [primaryId, setPrimaryId] = useState<string>("");
   const [isMerging, setIsMerging] = useState(false);
@@ -36,53 +44,24 @@ export function MergeTenantsDialog() {
   const updateTenant = useUpdateTenant();
   const deleteTenant = useDeleteTenant();
 
-  // Find potential duplicates (same email or phone)
-  const duplicateGroups = useMemo(() => {
+  // Find potential duplicates using advanced algorithm
+  const duplicateGroups = useMemo((): DuplicateGroup[] => {
     if (!tenants) return [];
-    
-    const groups: TenantWithDetails[][] = [];
-    const processed = new Set<string>();
-    
-    tenants.forEach((tenant) => {
-      if (processed.has(tenant.id)) return;
-      
-      const duplicates = tenants.filter((t) => {
-        if (t.id === tenant.id || processed.has(t.id)) return false;
-        
-        // Check for similar names (Levenshtein-like simple check)
-        const nameSimilar = t.name.toLowerCase().includes(tenant.name.toLowerCase().split(' ')[0]) ||
-                           tenant.name.toLowerCase().includes(t.name.toLowerCase().split(' ')[0]);
-        
-        // Check for same email domain or similar email
-        const emailSimilar = t.email.split('@')[0].toLowerCase() === tenant.email.split('@')[0].toLowerCase();
-        
-        // Check for same phone
-        const phoneSimilar = t.phone && tenant.phone && 
-                            t.phone.replace(/\D/g, '') === tenant.phone.replace(/\D/g, '');
-        
-        return nameSimilar || emailSimilar || phoneSimilar;
-      });
-      
-      if (duplicates.length > 0) {
-        const group = [tenant, ...duplicates];
-        group.forEach((t) => processed.add(t.id));
-        groups.push(group);
-      }
-    });
-    
-    return groups;
+    return findDuplicateGroups(tenants, 0.5);
   }, [tenants]);
 
   const resetState = () => {
     setStep("select");
     setSelectedTenants([]);
+    setSelectedGroupInfo(null);
     setMergedData(null);
     setPrimaryId("");
     setIsMerging(false);
   };
 
-  const handleSelectGroup = (group: TenantWithDetails[]) => {
+  const handleSelectGroup = ({ group, score, reasons }: DuplicateGroup) => {
     setSelectedTenants(group);
+    setSelectedGroupInfo({ score, reasons });
     setPrimaryId(group[0].id);
     
     // Pre-merge: take the most complete data
@@ -171,26 +150,40 @@ export function MergeTenantsDialog() {
               ) : (
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-3 pr-4">
-                    {duplicateGroups.map((group, index) => (
+                    {duplicateGroups.map((duplicateGroup, index) => (
                       <button
                         key={index}
-                        onClick={() => handleSelectGroup(group)}
+                        onClick={() => handleSelectGroup(duplicateGroup)}
                         className="w-full p-4 border rounded-lg hover:bg-muted/50 transition-colors text-left"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
-                            {group.length} entrées similaires
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                              {duplicateGroup.group.length} entrées
+                            </Badge>
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                              {Math.round(duplicateGroup.score * 100)}% similaire
+                            </Badge>
+                          </div>
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="space-y-1">
-                          {group.map((tenant) => (
+                          {duplicateGroup.group.map((tenant) => (
                             <div key={tenant.id} className="text-sm">
                               <span className="font-medium">{tenant.name}</span>
                               <span className="text-muted-foreground ml-2">({tenant.email})</span>
                             </div>
                           ))}
                         </div>
+                        {duplicateGroup.reasons.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {duplicateGroup.reasons.map((reason, i) => (
+                              <span key={i} className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                                {reason}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>

@@ -1,11 +1,18 @@
 import { ReactNode, useState } from "react";
 import { Sidebar } from "./Sidebar";
-import { Search, User } from "lucide-react";
+import { Search, User, Moon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useLatePaymentNotifications } from "@/hooks/useLatePaymentNotifications";
 import { usePushNotificationTrigger } from "@/hooks/usePushNotificationTrigger";
+import { useDoNotDisturb } from "@/hooks/useDoNotDisturb";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -13,6 +20,9 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const { getSchedule, isInDNDPeriod } = useDoNotDisturb();
+  const schedule = getSchedule();
+  const isDNDActive = schedule.enabled && isInDNDPeriod();
   
   // Subscribe to real-time late payment notifications
   useLatePaymentNotifications();
@@ -48,6 +58,26 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Do Not Disturb Indicator */}
+            {isDNDActive && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+                      <Moon className="h-3.5 w-3.5" />
+                      <span className="text-xs font-medium hidden sm:inline">NPD</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Mode Ne pas déranger actif</p>
+                    <p className="text-xs text-muted-foreground">
+                      {schedule.startTime} - {schedule.endTime}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
             <NotificationCenter />
             <div className="h-8 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-3">

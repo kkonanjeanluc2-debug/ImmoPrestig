@@ -10,7 +10,8 @@ import {
   MapPin,
   MoreVertical,
   Loader2,
-  Users
+  Users,
+  Pencil
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -20,14 +21,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useOwners, useDeleteOwner } from "@/hooks/useOwners";
+import { useOwners, useDeleteOwner, Owner } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { toast } from "sonner";
 import { AddOwnerDialog } from "@/components/owner/AddOwnerDialog";
+import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const Owners = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingOwner, setEditingOwner] = useState<Owner | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { data: owners, isLoading, error } = useOwners();
   const { data: properties } = useProperties();
   const deleteOwner = useDeleteOwner();
@@ -50,6 +54,11 @@ const Owners = () => {
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la suppression");
     }
+  };
+
+  const handleEdit = (owner: Owner) => {
+    setEditingOwner(owner);
+    setEditDialogOpen(true);
   };
 
   return (
@@ -203,7 +212,12 @@ const Owners = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-card border border-border z-50">
                           <DropdownMenuItem>Voir les détails</DropdownMenuItem>
-                          {canEdit && <DropdownMenuItem>Modifier</DropdownMenuItem>}
+                          {canEdit && (
+                            <DropdownMenuItem onClick={() => handleEdit(owner)}>
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Modifier
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem>Voir les biens</DropdownMenuItem>
                           {canDelete && (
                             <DropdownMenuItem 
@@ -222,6 +236,13 @@ const Owners = () => {
             ))}
           </div>
         )}
+
+        {/* Edit Owner Dialog */}
+        <EditOwnerDialog
+          owner={editingOwner}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+        />
       </div>
     </DashboardLayout>
   );

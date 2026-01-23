@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 /**
  * Hook to trigger browser push notifications when new in-app notifications are created.
@@ -9,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export function usePushNotificationTrigger() {
   const { user } = useAuth();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const { playSoundForNotification } = useNotificationSound();
 
   const showPushNotification = useCallback(async (title: string, body: string, data?: Record<string, unknown>) => {
     // Check if push notifications are enabled
@@ -55,10 +57,13 @@ export function usePushNotificationTrigger() {
             id: string;
             title: string;
             message: string;
-            type: string;
+            type: "info" | "warning" | "error" | "success";
             entity_type?: string;
             entity_id?: string;
           };
+
+          // Play notification sound
+          playSoundForNotification(notification.type, notification.entity_type);
 
           // Show browser push notification
           await showPushNotification(notification.title, notification.message, {
@@ -78,5 +83,5 @@ export function usePushNotificationTrigger() {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [user?.id, showPushNotification]);
+  }, [user?.id, showPushNotification, playSoundForNotification]);
 }

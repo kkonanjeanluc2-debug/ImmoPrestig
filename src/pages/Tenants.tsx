@@ -19,11 +19,13 @@ import {
   ChevronUp,
   Wallet,
   Loader2,
-  Pencil
+  Pencil,
+  Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
@@ -49,10 +51,11 @@ const paymentStatusConfig = {
 interface TenantCardProps {
   tenant: TenantWithDetails;
   onEdit: (tenant: TenantWithDetails) => void;
+  onView: (tenant: TenantWithDetails) => void;
   canEdit: boolean;
 }
 
-function TenantCard({ tenant, onEdit, canEdit }: TenantCardProps) {
+function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
   const [expanded, setExpanded] = useState(false);
   
   // Get active contract
@@ -107,8 +110,17 @@ function TenantCard({ tenant, onEdit, canEdit }: TenantCardProps) {
                 </div>
               )}
 
-              {/* Email History Button */}
+              {/* Actions */}
               <div className="mt-3 flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onView(tenant)}
+                  className="gap-1.5"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  Voir détails
+                </Button>
                 <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
                 {canEdit && (
                   <Button
@@ -218,6 +230,7 @@ function TenantCard({ tenant, onEdit, canEdit }: TenantCardProps) {
 }
 
 export default function Tenants() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -227,6 +240,10 @@ export default function Tenants() {
   const handleEditTenant = (tenant: TenantWithDetails) => {
     setEditingTenant(tenant);
     setEditDialogOpen(true);
+  };
+
+  const handleViewTenant = (tenant: TenantWithDetails) => {
+    navigate(`/tenants/${tenant.id}`);
   };
 
   const filteredTenants = (tenants || []).filter(tenant =>
@@ -349,6 +366,7 @@ export default function Tenants() {
                   key={tenant.id} 
                   tenant={tenant} 
                   onEdit={handleEditTenant}
+                  onView={handleViewTenant}
                   canEdit={canEdit}
                 />
               ))}

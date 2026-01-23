@@ -77,20 +77,22 @@ const Index = () => {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
               Tableau de bord
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Bienvenue. Voici un aperçu de votre patrimoine immobilier.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
               onClick={handleGenerateReceipts}
               disabled={isGenerating}
+              className="w-full sm:w-auto text-sm"
+              size="sm"
             >
               {isGenerating ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

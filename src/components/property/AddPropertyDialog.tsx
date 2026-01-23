@@ -138,9 +138,9 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) resetForm(); }}>
       <DialogTrigger asChild>
-        <Button className="bg-emerald hover:bg-emerald-dark text-primary-foreground gap-2">
+        <Button className="bg-emerald hover:bg-emerald-dark text-primary-foreground gap-2 w-full sm:w-auto text-sm" size="sm">
           <Plus className="h-4 w-4" />
-          Ajouter un bien
+          <span className="whitespace-nowrap">Ajouter un bien</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">

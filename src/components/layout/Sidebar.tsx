@@ -15,7 +15,8 @@ import {
   BarChart3,
   Shield,
   UserCog,
-  Eye
+  Eye,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUserRole, ROLE_LABELS, type AppRole } from "@/hooks/useUserRoles";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   admin: <Shield className="h-3 w-3" />,
@@ -58,6 +60,15 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: userRole } = useCurrentUserRole();
+  const { canInstall, isIOS, promptInstall } = usePWAInstall();
+
+  const handleInstallClick = async () => {
+    if (isIOS) {
+      navigate("/install");
+    } else {
+      await promptInstall();
+    }
+  };
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -163,6 +174,24 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             );
           })}
         </nav>
+
+        {/* Install PWA Button */}
+        {canInstall && (
+          <div className="px-3 pb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleInstallClick}
+              className={cn(
+                "w-full bg-emerald/10 border-emerald/30 text-emerald hover:bg-emerald/20 hover:text-emerald-light",
+                collapsed && !mobileOpen && "px-2"
+              )}
+            >
+              <Download className={cn("h-4 w-4", (!collapsed || mobileOpen) && "mr-2")} />
+              {(!collapsed || mobileOpen) && <span className="text-sm">Installer l'app</span>}
+            </Button>
+          </div>
+        )}
 
         {/* User info and logout */}
         <div className="p-3 border-t border-navy-light">

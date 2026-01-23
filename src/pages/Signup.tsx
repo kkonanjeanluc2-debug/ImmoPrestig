@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Building2, Mail, Lock, User, Phone, MapPin, Building, Home } from "lucide-react";
+import { Loader2, Building2, Mail, Lock, User, Phone, MapPin, Building, Home, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type AccountType = "agence" | "proprietaire";
@@ -397,6 +397,13 @@ const Signup = () => {
                 Se connecter
               </Link>
             </p>
+            <Link 
+              to="/pricing" 
+              className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <CreditCard className="h-4 w-4" />
+              Voir nos tarifs
+            </Link>
           </CardFooter>
         </form>
       </Card>

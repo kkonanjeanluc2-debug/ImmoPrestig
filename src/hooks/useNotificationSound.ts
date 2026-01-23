@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { useDoNotDisturb } from "@/hooks/useDoNotDisturb";
 
 export type NotificationSoundType = "info" | "warning" | "error" | "success" | "payment" | "contract";
 
@@ -30,11 +31,18 @@ const ENTITY_TO_SOUND: Record<string, NotificationSoundType> = {
 
 export function useNotificationSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { isInDNDPeriod } = useDoNotDisturb();
 
-  const playSound = useCallback((type: NotificationSoundType = "info", volume = 0.5) => {
+  const playSound = useCallback((type: NotificationSoundType = "info", volume = 0.5, bypassDND = false) => {
     // Check if sounds are enabled
     const soundsEnabled = localStorage.getItem("notificationSoundsEnabled") !== "false";
     if (!soundsEnabled) return;
+
+    // Check Do Not Disturb mode (unless bypassed for testing)
+    if (!bypassDND && isInDNDPeriod()) {
+      console.debug("Sound suppressed: Do Not Disturb mode active");
+      return;
+    }
 
     try {
       // Stop any currently playing sound
@@ -55,7 +63,7 @@ export function useNotificationSound() {
     } catch (error) {
       console.debug("Error playing notification sound:", error);
     }
-  }, []);
+  }, [isInDNDPeriod]);
 
   const playSoundForNotification = useCallback((
     notificationType: "info" | "warning" | "error" | "success",
@@ -72,7 +80,8 @@ export function useNotificationSound() {
   }, [playSound]);
 
   const testSound = useCallback((type: NotificationSoundType) => {
-    playSound(type, 0.7);
+    // Bypass DND for testing sounds
+    playSound(type, 0.7, true);
   }, [playSound]);
 
   return {

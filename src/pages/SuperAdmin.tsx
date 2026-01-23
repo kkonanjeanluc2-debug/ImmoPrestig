@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff, Home, CreditCard, TrendingUp } from "lucide-react";
 import { useIsSuperAdmin, useAllAgencies, useDeleteAgency, useSuperAdminUpdateRole, useToggleAccountStatus, AgencyWithProfile } from "@/hooks/useSuperAdmin";
+import { useLogSuperAdminAction, SuperAdminActionType } from "@/hooks/useSuperAdminAudit";
+import { AuditLogCard } from "@/components/superadmin/AuditLogCard";
 import { AppRole, ROLE_LABELS } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -42,9 +44,24 @@ const SuperAdmin = () => {
   const deleteAgency = useDeleteAgency();
   const updateRole = useSuperAdminUpdateRole();
   const toggleStatus = useToggleAccountStatus();
+  const logAction = useLogSuperAdminAction();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AppRole>>({});
+
+  // Audit logging helper
+  const logAudit = useCallback(async (
+    actionType: SuperAdminActionType,
+    targetUserId?: string,
+    targetAgencyId?: string,
+    details?: Record<string, any>
+  ) => {
+    try {
+      await logAction.mutateAsync({ actionType, targetUserId, targetAgencyId, details });
+    } catch (error) {
+      console.error("Failed to log audit:", error);
+    }
+  }, [logAction]);
 
   // Redirect if not super admin
   if (!isLoadingRole && !isSuperAdmin) {
@@ -71,15 +88,21 @@ const SuperAdmin = () => {
     setPendingRoleChanges((prev) => ({ ...prev, [userId]: newRole }));
   };
 
-  const saveRoleChange = async (userId: string) => {
-    const newRole = pendingRoleChanges[userId];
+  const saveRoleChange = async (agency: AgencyWithProfile) => {
+    const newRole = pendingRoleChanges[agency.user_id];
     if (!newRole) return;
 
     try {
-      await updateRole.mutateAsync({ userId, role: newRole });
+      await updateRole.mutateAsync({ 
+        userId: agency.user_id, 
+        role: newRole,
+        oldRole: agency.role,
+        agencyData: { id: agency.id, name: agency.name, email: agency.email },
+        logAudit,
+      });
       setPendingRoleChanges((prev) => {
         const updated = { ...prev };
-        delete updated[userId];
+        delete updated[agency.user_id];
         return updated;
       });
       toast({
@@ -97,7 +120,11 @@ const SuperAdmin = () => {
 
   const handleDeleteAgency = async (agency: AgencyWithProfile) => {
     try {
-      await deleteAgency.mutateAsync(agency.id);
+      await deleteAgency.mutateAsync({ 
+        id: agency.id,
+        agencyData: { name: agency.name, email: agency.email, user_id: agency.user_id },
+        logAudit,
+      });
       toast({
         title: "Agence supprimée",
         description: `L'agence "${agency.name}" a été supprimée.`,
@@ -113,7 +140,12 @@ const SuperAdmin = () => {
 
   const handleToggleStatus = async (agency: AgencyWithProfile) => {
     try {
-      await toggleStatus.mutateAsync({ id: agency.id, is_active: !agency.is_active });
+      await toggleStatus.mutateAsync({ 
+        id: agency.id, 
+        is_active: !agency.is_active,
+        agencyData: { user_id: agency.user_id, name: agency.name, email: agency.email },
+        logAudit,
+      });
       toast({
         title: agency.is_active ? "Compte désactivé" : "Compte activé",
         description: `Le compte "${agency.name}" a été ${agency.is_active ? "désactivé" : "activé"}.`,
@@ -371,7 +403,7 @@ const SuperAdmin = () => {
                               {hasPendingChange && (
                                 <Button
                                   size="sm"
-                                  onClick={() => saveRoleChange(agency.user_id)}
+                                  onClick={() => saveRoleChange(agency)}
                                   disabled={updateRole.isPending}
                                 >
                                   {updateRole.isPending ? (
@@ -450,6 +482,9 @@ const SuperAdmin = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Audit Log */}
+        <AuditLogCard />
       </div>
     </DashboardLayout>
   );

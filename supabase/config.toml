@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.fedapay-webhook]
 verify_jwt = false
+
+[functions.notify-subscription-expiry]
+verify_jwt = false

@@ -7,7 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, RotateCcw, Save, Eye, Info, Download, Loader2 } from "lucide-react";
+import { FileText, RotateCcw, Save, Eye, Info, Download, Loader2, Droplets, ImageIcon, Type } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +30,14 @@ export interface ReceiptTemplates {
   dateFormat: "short" | "long";
   currency: string;
   signatureLabel: string;
+  // Watermark settings
+  watermarkEnabled: boolean;
+  watermarkType: "text" | "image";
+  watermarkText: string;
+  watermarkImageUrl: string | null;
+  watermarkOpacity: number;
+  watermarkAngle: number;
+  watermarkPosition: "center" | "diagonal" | "bottom-right";
 }
 
 const DEFAULT_TEMPLATES: ReceiptTemplates = {
@@ -41,6 +52,14 @@ const DEFAULT_TEMPLATES: ReceiptTemplates = {
   dateFormat: "long",
   currency: "F CFA",
   signatureLabel: "Signature du bailleur/gestionnaire",
+  // Watermark defaults
+  watermarkEnabled: false,
+  watermarkType: "text",
+  watermarkText: "ORIGINAL",
+  watermarkImageUrl: null,
+  watermarkOpacity: 15,
+  watermarkAngle: -45,
+  watermarkPosition: "diagonal",
 };
 
 const VARIABLE_HINTS: Record<string, string[]> = {
@@ -294,6 +313,50 @@ export function ReceiptSettings() {
       const signatureLabel = replaceVariablesForPreview(templates.signatureLabel);
       doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
       
+      // Watermark (rendered before footer so it's behind content)
+      if (templates.watermarkEnabled && templates.watermarkType === "text" && templates.watermarkText) {
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const opacity = templates.watermarkOpacity / 100;
+        
+        // Save current graphics state
+        doc.saveGraphicsState();
+        
+        // Set watermark color with opacity (light gray)
+        const grayValue = Math.round(200 + (55 * (1 - opacity)));
+        doc.setTextColor(grayValue, grayValue, grayValue);
+        doc.setFontSize(60);
+        doc.setFont("helvetica", "bold");
+        
+        // Calculate position based on setting
+        let wmX = pageWidth / 2;
+        let wmY = pageHeight / 2;
+        
+        if (templates.watermarkPosition === "bottom-right") {
+          wmX = pageWidth - 50;
+          wmY = pageHeight - 50;
+        }
+        
+        // For diagonal, we need to use a workaround since jsPDF doesn't support rotation easily
+        // We'll render multiple smaller texts for the diagonal effect
+        if (templates.watermarkPosition === "diagonal") {
+          doc.setFontSize(40);
+          // Render text multiple times across the page diagonally
+          for (let i = -2; i < 4; i++) {
+            for (let j = -2; j < 4; j++) {
+              const x = (pageWidth / 3) * i + 30;
+              const y = (pageHeight / 4) * j + 60;
+              if (x > -50 && x < pageWidth + 50 && y > -50 && y < pageHeight + 50) {
+                doc.text(templates.watermarkText, x, y, { align: "center" });
+              }
+            }
+          }
+        } else {
+          doc.text(templates.watermarkText, wmX, wmY, { align: "center" });
+        }
+        
+        doc.restoreGraphicsState();
+      }
+      
       // Footer
       doc.setFillColor(...lightGray);
       doc.rect(0, doc.internal.pageSize.getHeight() - 25, pageWidth, 25, "F");
@@ -436,9 +499,10 @@ export function ReceiptSettings() {
 
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="content">Contenu</TabsTrigger>
             <TabsTrigger value="layout">Mise en page</TabsTrigger>
+            <TabsTrigger value="watermark">Filigrane</TabsTrigger>
             <TabsTrigger value="preview">Aperçu texte</TabsTrigger>
             <TabsTrigger value="preview-pdf">Aperçu PDF</TabsTrigger>
           </TabsList>
@@ -673,6 +737,177 @@ export function ReceiptSettings() {
                 </SelectContent>
               </Select>
             </div>
+          </TabsContent>
+
+          <TabsContent value="watermark" className="space-y-6 mt-6">
+            {/* Watermark enable toggle */}
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Droplets className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <Label htmlFor="watermarkEnabled">Activer le filigrane</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Ajouter un filigrane sur toutes les quittances générées
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="watermarkEnabled"
+                checked={templates.watermarkEnabled}
+                onCheckedChange={(checked) => handleChange("watermarkEnabled", checked)}
+              />
+            </div>
+
+            {templates.watermarkEnabled && (
+              <>
+                <Separator />
+
+                {/* Watermark type */}
+                <div className="space-y-3">
+                  <Label>Type de filigrane</Label>
+                  <RadioGroup
+                    value={templates.watermarkType}
+                    onValueChange={(value) => handleChange("watermarkType", value as "text" | "image")}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="text" id="watermark-text" />
+                      <Label htmlFor="watermark-text" className="flex items-center gap-2 cursor-pointer">
+                        <Type className="h-4 w-4" />
+                        Texte
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="image" id="watermark-image" />
+                      <Label htmlFor="watermark-image" className="flex items-center gap-2 cursor-pointer">
+                        <ImageIcon className="h-4 w-4" />
+                        Image
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator />
+
+                {/* Text watermark settings */}
+                {templates.watermarkType === "text" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="watermarkText">Texte du filigrane</Label>
+                      <Input
+                        id="watermarkText"
+                        value={templates.watermarkText}
+                        onChange={(e) => handleChange("watermarkText", e.target.value)}
+                        placeholder="ORIGINAL"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Suggestions : ORIGINAL, COPIE, PAYÉ, CONFIDENTIEL
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Image watermark settings */}
+                {templates.watermarkType === "image" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Image du filigrane</Label>
+                      {templates.watermarkImageUrl ? (
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={templates.watermarkImageUrl}
+                            alt="Watermark preview"
+                            className="h-16 w-auto object-contain bg-muted rounded p-2"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleChange("watermarkImageUrl", null)}
+                          >
+                            Supprimer
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                          <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Aucune image sélectionnée
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Uploadez votre logo dans les paramètres d'agence pour l'utiliser comme filigrane
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Opacity slider */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Opacité</Label>
+                    <span className="text-sm text-muted-foreground">
+                      {templates.watermarkOpacity}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[templates.watermarkOpacity]}
+                    onValueChange={(value) => handleChange("watermarkOpacity", value[0])}
+                    min={5}
+                    max={50}
+                    step={5}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Une opacité plus faible rend le filigrane plus discret
+                  </p>
+                </div>
+
+                <Separator />
+
+                {/* Position */}
+                <div className="space-y-3">
+                  <Label>Position du filigrane</Label>
+                  <RadioGroup
+                    value={templates.watermarkPosition}
+                    onValueChange={(value) => handleChange("watermarkPosition", value as "center" | "diagonal" | "bottom-right")}
+                    className="grid grid-cols-3 gap-4"
+                  >
+                    <div className="flex flex-col items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="center" id="pos-center" className="sr-only" />
+                      <Label htmlFor="pos-center" className="cursor-pointer text-center">
+                        <div className={`w-16 h-20 border-2 rounded flex items-center justify-center mb-2 ${templates.watermarkPosition === "center" ? "border-primary bg-primary/10" : "border-muted"}`}>
+                          <span className="text-xs text-muted-foreground">ABC</span>
+                        </div>
+                        Centre
+                      </Label>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="diagonal" id="pos-diagonal" className="sr-only" />
+                      <Label htmlFor="pos-diagonal" className="cursor-pointer text-center">
+                        <div className={`w-16 h-20 border-2 rounded flex items-center justify-center mb-2 ${templates.watermarkPosition === "diagonal" ? "border-primary bg-primary/10" : "border-muted"}`}>
+                          <span className="text-xs text-muted-foreground rotate-[-45deg]">ABC</span>
+                        </div>
+                        Diagonale
+                      </Label>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="bottom-right" id="pos-bottom-right" className="sr-only" />
+                      <Label htmlFor="pos-bottom-right" className="cursor-pointer text-center">
+                        <div className={`w-16 h-20 border-2 rounded flex items-end justify-end p-1 mb-2 ${templates.watermarkPosition === "bottom-right" ? "border-primary bg-primary/10" : "border-muted"}`}>
+                          <span className="text-xs text-muted-foreground">ABC</span>
+                        </div>
+                        Bas-droite
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="preview" className="mt-6">

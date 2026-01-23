@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff } from "lucide-react";
+import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff, Home, CreditCard, TrendingUp } from "lucide-react";
 import { useIsSuperAdmin, useAllAgencies, useDeleteAgency, useSuperAdminUpdateRole, useToggleAccountStatus, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 import { AppRole, ROLE_LABELS } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
@@ -129,6 +129,9 @@ const SuperAdmin = () => {
 
   const totalAgencies = agencies?.filter((a) => a.account_type === "agence").length || 0;
   const totalProprietaires = agencies?.filter((a) => a.account_type === "proprietaire").length || 0;
+  const totalProperties = agencies?.reduce((sum, a) => sum + (a.stats?.properties_count || 0), 0) || 0;
+  const totalTenants = agencies?.reduce((sum, a) => sum + (a.stats?.tenants_count || 0), 0) || 0;
+  const totalRevenue = agencies?.reduce((sum, a) => sum + (a.stats?.total_revenue || 0), 0) || 0;
 
   if (isLoadingRole) {
     return (
@@ -159,42 +162,81 @@ const SuperAdmin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <Building2 className="h-6 w-6 text-primary" />
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Building2 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Agences</p>
-                  <p className="text-2xl font-bold">{totalAgencies}</p>
+                  <p className="text-xs text-muted-foreground">Agences</p>
+                  <p className="text-xl font-bold">{totalAgencies}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-500/10 rounded-lg">
-                  <Users className="h-6 w-6 text-green-600" />
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500/10 rounded-lg">
+                  <Users className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Propriétaires</p>
-                  <p className="text-2xl font-bold">{totalProprietaires}</p>
+                  <p className="text-xs text-muted-foreground">Propriétaires</p>
+                  <p className="text-xl font-bold">{totalProprietaires}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-accent/10 rounded-lg">
-                  <Users className="h-6 w-6 text-accent" />
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <Home className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total comptes</p>
-                  <p className="text-2xl font-bold">{agencies?.length || 0}</p>
+                  <p className="text-xs text-muted-foreground">Biens</p>
+                  <p className="text-xl font-bold">{totalProperties}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                  <Users className="h-5 w-5 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Locataires</p>
+                  <p className="text-xl font-bold">{totalTenants}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500/10 rounded-lg">
+                  <CreditCard className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total comptes</p>
+                  <p className="text-xl font-bold">{agencies?.length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-accent/10 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-accent" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Revenus totaux</p>
+                  <p className="text-lg font-bold">{totalRevenue.toLocaleString()} FCFA</p>
                 </div>
               </div>
             </CardContent>
@@ -239,7 +281,9 @@ const SuperAdmin = () => {
                       <TableHead>Compte</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead>Type</TableHead>
-                      <TableHead>Localisation</TableHead>
+                      <TableHead className="text-center">Biens</TableHead>
+                      <TableHead className="text-center">Locataires</TableHead>
+                      <TableHead className="text-right">Revenus</TableHead>
                       <TableHead>Rôle</TableHead>
                       <TableHead>Inscrit le</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -284,15 +328,16 @@ const SuperAdmin = () => {
                               {ACCOUNT_TYPE_LABELS[agency.account_type] || agency.account_type}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            {agency.city ? (
-                              <span>
-                                {agency.city}
-                                {agency.country ? `, ${agency.country}` : ""}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">Non renseigné</span>
-                            )}
+                          <TableCell className="text-center">
+                            <span className="font-medium">{agency.stats?.properties_count || 0}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="font-medium">{agency.stats?.tenants_count || 0}</span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="font-medium text-green-600">
+                              {(agency.stats?.total_revenue || 0).toLocaleString()} FCFA
+                            </span>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">

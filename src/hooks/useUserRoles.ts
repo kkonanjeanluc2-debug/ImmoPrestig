@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type AppRole = "admin" | "gestionnaire" | "lecture_seule";
+export type AppRole = "super_admin" | "admin" | "gestionnaire" | "lecture_seule";
 
 export interface UserRole {
   id: string;
@@ -21,12 +21,14 @@ export interface UserWithRole {
 }
 
 export const ROLE_LABELS: Record<AppRole, string> = {
+  super_admin: "Super Admin",
   admin: "Administrateur",
   gestionnaire: "Gestionnaire",
   lecture_seule: "Lecture seule",
 };
 
 export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
+  super_admin: "Accès total à toutes les agences et utilisateurs de la plateforme",
   admin: "Accès complet : peut gérer les utilisateurs, les paramètres et toutes les données",
   gestionnaire: "Peut créer, modifier et supprimer des biens, locataires et paiements",
   lecture_seule: "Peut uniquement consulter les données sans les modifier",

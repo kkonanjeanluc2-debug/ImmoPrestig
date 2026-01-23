@@ -16,7 +16,8 @@ import {
   Shield,
   UserCog,
   Eye,
-  Download
+  Download,
+  Crown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -29,12 +30,14 @@ import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useAgency } from "@/hooks/useAgency";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
+  super_admin: <Crown className="h-3 w-3" />,
   admin: <Shield className="h-3 w-3" />,
   gestionnaire: <UserCog className="h-3 w-3" />,
   lecture_seule: <Eye className="h-3 w-3" />,
 };
 
 const ROLE_BADGE_COLORS: Record<AppRole, string> = {
+  super_admin: "bg-purple-500/20 text-purple-400 border-purple-500/30",
   admin: "bg-emerald/20 text-emerald border-emerald/30",
   gestionnaire: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   lecture_seule: "bg-sand/20 text-sand border-sand/30",
@@ -176,6 +179,28 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               </NavLink>
             );
           })}
+          
+          {/* Super Admin Link - Only for super_admin role */}
+          {userRole?.role === "super_admin" && (
+            <NavLink
+              to="/super-admin"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group mt-4 border border-purple-500/30",
+                location.pathname === "/super-admin"
+                  ? "bg-purple-600 text-white" 
+                  : "text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
+              )}
+            >
+              <Crown className={cn(
+                "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                (!collapsed && !mobileOpen) || (collapsed && !mobileOpen) ? "" : "",
+                collapsed && !mobileOpen && "mx-auto"
+              )} />
+              {(!collapsed || mobileOpen) && (
+                <span className="font-medium text-sm">Super Admin</span>
+              )}
+            </NavLink>
+          )}
         </nav>
 
         {/* Install PWA Button */}

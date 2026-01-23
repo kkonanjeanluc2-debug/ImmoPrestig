@@ -34,12 +34,14 @@ import {
 } from "@/hooks/useUserRoles";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
+  super_admin: <Crown className="h-4 w-4 text-purple-600" />,
   admin: <Crown className="h-4 w-4" />,
   gestionnaire: <UserCog className="h-4 w-4" />,
   lecture_seule: <Eye className="h-4 w-4" />,
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
+  super_admin: "bg-purple-100 text-purple-800 border-purple-300",
   admin: "bg-amber-100 text-amber-800 border-amber-300",
   gestionnaire: "bg-blue-100 text-blue-800 border-blue-300",
   lecture_seule: "bg-gray-100 text-gray-800 border-gray-300",

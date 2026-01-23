@@ -9,11 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2 } from "lucide-react";
+import { Search, Grid3X3, List, Loader2, User } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useProperties, useDeleteProperty, Property } from "@/hooks/useProperties";
+import { useOwners } from "@/hooks/useOwners";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -35,11 +36,13 @@ const Properties = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [transactionFilter, setTransactionFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("all");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
   const { canCreate, canEdit, canDelete } = usePermissions();
   
   const { data: properties, isLoading, error } = useProperties();
+  const { data: owners = [] } = useOwners();
   const deleteProperty = useDeleteProperty();
 
   const filteredProperties = (properties || []).filter((property) => {
@@ -48,7 +51,12 @@ const Properties = () => {
     const matchesType = typeFilter === "all" || property.property_type === typeFilter;
     const matchesStatus = statusFilter === "all" || property.status === statusFilter;
     const matchesTransaction = transactionFilter === "all" || property.type === transactionFilter;
-    return matchesSearch && matchesType && matchesStatus && matchesTransaction;
+    const matchesOwner = ownerFilter === "all" 
+      ? true 
+      : ownerFilter === "none" 
+        ? !property.owner_id 
+        : property.owner_id === ownerFilter;
+    return matchesSearch && matchesType && matchesStatus && matchesTransaction && matchesOwner;
   });
 
   const handleDelete = async () => {
@@ -137,6 +145,25 @@ const Properties = () => {
                 <SelectItem value="disponible">Disponible</SelectItem>
                 <SelectItem value="occupé">Occupé</SelectItem>
                 <SelectItem value="en attente">En attente</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Propriétaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les propriétaires</SelectItem>
+                <SelectItem value="none">
+                  <span className="text-muted-foreground">Sans propriétaire</span>
+                </SelectItem>
+                {owners.map((owner) => (
+                  <SelectItem key={owner.id} value={owner.id}>
+                    <div className="flex items-center gap-2">
+                      <User className="h-3 w-3" />
+                      {owner.name}
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <div className="flex rounded-lg border border-border overflow-hidden">

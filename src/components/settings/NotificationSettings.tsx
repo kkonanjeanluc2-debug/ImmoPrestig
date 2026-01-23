@@ -4,10 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Bell, Mail, MessageSquare, Clock, Loader2, BellRing, Volume2, Play } from "lucide-react";
+import { Bell, Mail, MessageSquare, Clock, Loader2, BellRing, Volume2, Play, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useNotificationSound, NotificationSoundType } from "@/hooks/useNotificationSound";
+import { useDoNotDisturb, DNDSchedule } from "@/hooks/useDoNotDisturb";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface NotificationPrefs {
   emailEnabled: boolean;
@@ -17,6 +19,16 @@ interface NotificationPrefs {
   reminderDaysBefore: number;
   soundsEnabled: boolean;
 }
+
+const DAYS_OF_WEEK = [
+  { value: 0, label: "Dim" },
+  { value: 1, label: "Lun" },
+  { value: 2, label: "Mar" },
+  { value: 3, label: "Mer" },
+  { value: 4, label: "Jeu" },
+  { value: 5, label: "Ven" },
+  { value: 6, label: "Sam" },
+];
 
 export function NotificationSettings() {
   const { toast } = useToast();
@@ -29,6 +41,7 @@ export function NotificationSettings() {
     togglePushNotifications 
   } = usePushNotifications();
   const { testSound } = useNotificationSound();
+  const { getSchedule, saveSchedule, isInDNDPeriod } = useDoNotDisturb();
   const [prefs, setPrefs] = useState<NotificationPrefs>({
     emailEnabled: true,
     smsEnabled: true,
@@ -37,6 +50,12 @@ export function NotificationSettings() {
     reminderDaysBefore: 3,
     soundsEnabled: true,
   });
+  const [dndSchedule, setDndSchedule] = useState<DNDSchedule>({
+    enabled: false,
+    startTime: "22:00",
+    endTime: "07:00",
+    days: [0, 1, 2, 3, 4, 5, 6],
+  });
 
   useEffect(() => {
     // Load from localStorage
@@ -44,7 +63,9 @@ export function NotificationSettings() {
     if (saved) {
       setPrefs(JSON.parse(saved));
     }
-  }, []);
+    // Load DND schedule
+    setDndSchedule(getSchedule());
+  }, [getSchedule]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -54,6 +75,7 @@ export function NotificationSettings() {
     
     localStorage.setItem("notificationPrefs", JSON.stringify(prefs));
     localStorage.setItem("notificationSoundsEnabled", String(prefs.soundsEnabled));
+    saveSchedule(dndSchedule);
     
     toast({
       title: "Préférences enregistrées",
@@ -68,6 +90,22 @@ export function NotificationSettings() {
     value: NotificationPrefs[K]
   ) => {
     setPrefs((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateDND = <K extends keyof DNDSchedule>(
+    key: K,
+    value: DNDSchedule[K]
+  ) => {
+    setDndSchedule((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const toggleDNDDay = (day: number) => {
+    setDndSchedule((prev) => ({
+      ...prev,
+      days: prev.days.includes(day)
+        ? prev.days.filter((d) => d !== day)
+        : [...prev.days, day].sort(),
+    }));
   };
 
   return (
@@ -252,6 +290,95 @@ export function NotificationSettings() {
                   {label}
                 </Button>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Do Not Disturb Settings */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            Ne pas déranger
+          </h3>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <Moon className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <Label htmlFor="dnd-enabled" className="text-base font-medium">
+                  Mode Ne pas déranger
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {dndSchedule.enabled && isInDNDPeriod() 
+                    ? "Actuellement actif - Sons désactivés"
+                    : "Désactiver les sons pendant les heures configurées"}
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="dnd-enabled"
+              checked={dndSchedule.enabled}
+              onCheckedChange={(checked) => updateDND("enabled", checked)}
+            />
+          </div>
+
+          {dndSchedule.enabled && (
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              {/* Time Range */}
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="dnd-start" className="text-sm whitespace-nowrap">
+                    De
+                  </Label>
+                  <Input
+                    id="dnd-start"
+                    type="time"
+                    value={dndSchedule.startTime}
+                    onChange={(e) => updateDND("startTime", e.target.value)}
+                    className="w-28"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="dnd-end" className="text-sm whitespace-nowrap">
+                    À
+                  </Label>
+                  <Input
+                    id="dnd-end"
+                    type="time"
+                    value={dndSchedule.endTime}
+                    onChange={(e) => updateDND("endTime", e.target.value)}
+                    className="w-28"
+                  />
+                </div>
+              </div>
+
+              {/* Days Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Jours actifs</Label>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK.map(({ value, label }) => (
+                    <div key={value} className="flex items-center gap-1.5">
+                      <Checkbox
+                        id={`dnd-day-${value}`}
+                        checked={dndSchedule.days.includes(value)}
+                        onCheckedChange={() => toggleDNDDay(value)}
+                      />
+                      <Label 
+                        htmlFor={`dnd-day-${value}`}
+                        className="text-sm cursor-pointer"
+                      >
+                        {label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Les sons de notification seront désactivés pendant cette période. 
+                Les notifications in-app resteront visibles.
+              </p>
             </div>
           )}
         </div>

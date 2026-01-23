@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -36,6 +35,28 @@ interface PaymentRow {
   user_id: string;
   tenant_id: string;
   tenant: TenantData[] | null;
+}
+
+async function validateAuth(req: Request): Promise<{ authenticated: boolean; userId?: string; error?: string }> {
+  const authHeader = req.headers.get("Authorization");
+  
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { authenticated: false, error: "Missing or invalid Authorization header" };
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data, error } = await supabase.auth.getUser();
+  
+  if (error || !data?.user) {
+    return { authenticated: false, error: error?.message || "Invalid token" };
+  }
+
+  return { authenticated: true, userId: data.user.id };
 }
 
 const getPaymentPeriod = (dueDate: string): string => {
@@ -146,9 +167,18 @@ const generateReceiptHtml = (
   `;
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Validate authentication
+  const auth = await validateAuth(req);
+  if (!auth.authenticated) {
+    return new Response(
+      JSON.stringify({ success: false, error: auth.error }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {
@@ -163,7 +193,7 @@ serve(async (req) => {
 
     console.log(`Processing receipts for ${firstDayOfMonth.toISOString()} to ${lastDayOfMonth.toISOString()}`);
 
-    // Find all paid payments for the current month
+    // Find all paid payments for the current month for this user
     const { data: payments, error: paymentsError } = await supabase
       .from("payments")
       .select(`
@@ -187,6 +217,7 @@ serve(async (req) => {
         )
       `)
       .eq("status", "paid")
+      .eq("user_id", auth.userId)
       .gte("due_date", firstDayOfMonth.toISOString().split("T")[0])
       .lte("due_date", lastDayOfMonth.toISOString().split("T")[0]);
 

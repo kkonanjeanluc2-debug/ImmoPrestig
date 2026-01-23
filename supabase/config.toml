@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.notify-upcoming-payments]
 verify_jwt = false
+
+[functions.check-expiring-contracts]
+verify_jwt = false

@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "resend";
 
@@ -7,9 +6,40 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+async function validateAuth(req: Request): Promise<{ authenticated: boolean; userId?: string; error?: string }> {
+  const authHeader = req.headers.get("Authorization");
+  
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { authenticated: false, error: "Missing or invalid Authorization header" };
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data, error } = await supabase.auth.getUser();
+  
+  if (error || !data?.user) {
+    return { authenticated: false, error: error?.message || "Invalid token" };
+  }
+
+  return { authenticated: true, userId: data.user.id };
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Validate authentication
+  const auth = await validateAuth(req);
+  if (!auth.authenticated) {
+    return new Response(
+      JSON.stringify({ success: false, error: auth.error }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {
@@ -28,7 +58,7 @@ serve(async (req) => {
 
     console.log(`Checking for payments due on ${targetDate}`);
 
-    // Fetch payments due in exactly 3 days that are not yet paid
+    // Fetch payments due in exactly 3 days that are not yet paid for this user
     const { data: upcomingPayments, error: paymentsError } = await supabase
       .from("payments")
       .select(`
@@ -46,6 +76,7 @@ serve(async (req) => {
         )
       `)
       .eq("due_date", targetDate)
+      .eq("user_id", auth.userId)
       .in("status", ["pending"]);
 
     if (paymentsError) {

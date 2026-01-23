@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, RotateCcw, Save, Eye, Info } from "lucide-react";
+import { FileText, RotateCcw, Save, Eye, Info, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -95,10 +95,257 @@ export function ReceiptSettings() {
   const [templates, setTemplates] = useState<ReceiptTemplates>(getReceiptTemplates);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState("content");
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
     setTemplates(getReceiptTemplates());
   }, []);
+
+  // Generate PDF preview when switching to preview tab or when templates change
+  const generatePdfPreview = useCallback(async () => {
+    setIsGeneratingPdf(true);
+    
+    try {
+      // Dynamic import to avoid loading jsPDF until needed
+      const { default: jsPDF } = await import("jspdf");
+      
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Colors
+      const primaryColor: [number, number, number] = [26, 54, 93];
+      const textColor: [number, number, number] = [51, 51, 51];
+      const lightGray: [number, number, number] = [245, 245, 245];
+      
+      // Header background
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, pageWidth, 55, "F");
+      
+      // Agency name
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      
+      if (templates.showLogo) {
+        // Placeholder for logo
+        doc.setFillColor(255, 255, 255, 0.2);
+        doc.roundedRect(15, 8, 20, 20, 2, 2, "F");
+        doc.text(SAMPLE_DATA.agence, 40, 15);
+      } else {
+        doc.text(SAMPLE_DATA.agence, 15, 15);
+      }
+      
+      // Agency contact info
+      if (templates.showAgencyContact) {
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        let contactY = 22;
+        doc.text(`Tél: ${SAMPLE_DATA.telephone}`, templates.showLogo ? 40 : 15, contactY);
+        contactY += 5;
+        doc.text(SAMPLE_DATA.email, templates.showLogo ? 40 : 15, contactY);
+        contactY += 5;
+        doc.text(SAMPLE_DATA.adresse, templates.showLogo ? 40 : 15, contactY);
+      }
+      
+      // Title
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text(templates.title, pageWidth - 15, 18, { align: "right" });
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("N° ABC12345", pageWidth - 15, 26, { align: "right" });
+      
+      // Reset text color
+      doc.setTextColor(...textColor);
+      
+      let yPos = 70;
+      
+      // Period box
+      doc.setFillColor(...lightGray);
+      doc.roundedRect(15, yPos, pageWidth - 30, 20, 3, 3, "F");
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Période : ${SAMPLE_DATA.periode}`, pageWidth / 2, yPos + 12, { align: "center" });
+      
+      yPos += 35;
+      
+      const colWidth = (pageWidth - 40) / 2;
+      
+      // Owner section
+      if (templates.showOwnerSection) {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...primaryColor);
+        doc.text("BAILLEUR", 15, yPos);
+        doc.setTextColor(...textColor);
+        doc.setFont("helvetica", "normal");
+        doc.text(SAMPLE_DATA.bailleur, 15, yPos + 7);
+      }
+      
+      // Tenant section
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...primaryColor);
+      doc.text("LOCATAIRE", templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos);
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "normal");
+      doc.text(SAMPLE_DATA.locataire, templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos + 7);
+      doc.setFontSize(9);
+      doc.text("amadou.diallo@email.com", templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos + 12);
+      
+      yPos += 25;
+      
+      // Property section
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...primaryColor);
+      doc.text("BIEN LOUÉ", 15, yPos);
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "normal");
+      yPos += 7;
+      doc.text(SAMPLE_DATA.bien, 15, yPos);
+      yPos += 5;
+      doc.setFontSize(9);
+      doc.text("Route des Almadies, Dakar", 15, yPos);
+      
+      yPos += 20;
+      
+      // Amount box
+      doc.setFillColor(...primaryColor);
+      doc.roundedRect(15, yPos, pageWidth - 30, 35, 3, 3, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text(`250 000 ${templates.currency}`, pageWidth / 2, yPos + 26, { align: "center" });
+      
+      yPos += 50;
+      
+      // Amount in words
+      if (templates.showAmountInWords) {
+        doc.setTextColor(...textColor);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+        doc.text("Soit : deux cent cinquante mille francs CFA", 15, yPos);
+        yPos += 15;
+      }
+      
+      // Payment details table
+      if (templates.showPaymentDetails) {
+        doc.setFillColor(...lightGray);
+        doc.rect(15, yPos, pageWidth - 30, 8, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...textColor);
+        doc.text("DÉTAILS DU PAIEMENT", 20, yPos + 5.5);
+        
+        yPos += 12;
+        doc.setFont("helvetica", "normal");
+        
+        const formatDate = (date: string) => {
+          if (templates.dateFormat === "long") {
+            return date;
+          }
+          return "01/01/2024";
+        };
+        
+        const details = [
+          ["Date d'échéance", formatDate("1 janvier 2024")],
+          ["Date de paiement", formatDate("5 janvier 2024")],
+          ["Mode de paiement", "Virement"],
+        ];
+        
+        details.forEach(([label, value]) => {
+          doc.text(label, 20, yPos);
+          doc.text(value, pageWidth - 20, yPos, { align: "right" });
+          yPos += 7;
+        });
+        
+        yPos += 15;
+      } else {
+        yPos += 10;
+      }
+      
+      // Declaration text
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...textColor);
+      const declarationText = replaceVariablesForPreview(templates.declarationText);
+      
+      const splitDeclaration = doc.splitTextToSize(declarationText, pageWidth - 30);
+      doc.text(splitDeclaration, 15, yPos);
+      
+      yPos += splitDeclaration.length * 5 + 20;
+      
+      // Date and signature
+      const today = templates.dateFormat === "long" 
+        ? "23 janvier 2026"
+        : "23/01/2026";
+      
+      doc.setFont("helvetica", "normal");
+      doc.text(`Fait le ${today}`, pageWidth - 20, yPos, { align: "right" });
+      
+      yPos += 15;
+      doc.setFont("helvetica", "italic");
+      const signatureLabel = replaceVariablesForPreview(templates.signatureLabel);
+      doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
+      
+      // Footer
+      doc.setFillColor(...lightGray);
+      doc.rect(0, doc.internal.pageSize.getHeight() - 25, pageWidth, 25, "F");
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(128, 128, 128);
+      
+      const footerText = replaceVariablesForPreview(templates.footerText);
+      doc.text(footerText, pageWidth / 2, doc.internal.pageSize.getHeight() - 15, { align: "center" });
+      
+      if (templates.showAgencyContact) {
+        doc.text(
+          `${SAMPLE_DATA.telephone} | ${SAMPLE_DATA.email}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 8,
+          { align: "center" }
+        );
+      }
+      
+      // Generate blob URL for preview
+      const pdfBlob = doc.output("blob");
+      const url = URL.createObjectURL(pdfBlob);
+      
+      // Clean up previous URL
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+      
+      setPdfUrl(url);
+    } catch (error) {
+      console.error("Error generating PDF preview:", error);
+      toast.error("Erreur lors de la génération de l'aperçu");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  }, [templates, pdfUrl]);
+
+  // Generate PDF when switching to preview tab
+  useEffect(() => {
+    if (activeTab === "preview-pdf") {
+      generatePdfPreview();
+    }
+  }, [activeTab, generatePdfPreview]);
+
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
 
   const handleChange = <K extends keyof ReceiptTemplates>(
     field: K,
@@ -117,13 +364,22 @@ export function ReceiptSettings() {
   const handleReset = (field: keyof ReceiptTemplates) => {
     setTemplates((prev) => ({ ...prev, [field]: DEFAULT_TEMPLATES[field] }));
     setHasChanges(true);
-    toast.info("Valeur réinitialisée");
   };
 
   const handleResetAll = () => {
     setTemplates(DEFAULT_TEMPLATES);
     setHasChanges(true);
     toast.info("Modèle réinitialisé aux valeurs par défaut");
+  };
+
+  const handleDownloadPreview = () => {
+    if (pdfUrl) {
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = "apercu_quittance.pdf";
+      link.click();
+      toast.success("Aperçu téléchargé");
+    }
   };
 
   const renderVariableHints = (field: keyof typeof VARIABLE_HINTS) => {
@@ -180,10 +436,11 @@ export function ReceiptSettings() {
 
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="content">Contenu</TabsTrigger>
             <TabsTrigger value="layout">Mise en page</TabsTrigger>
-            <TabsTrigger value="preview">Aperçu</TabsTrigger>
+            <TabsTrigger value="preview">Aperçu texte</TabsTrigger>
+            <TabsTrigger value="preview-pdf">Aperçu PDF</TabsTrigger>
           </TabsList>
 
           <TabsContent value="content" className="space-y-6 mt-6">
@@ -555,6 +812,71 @@ export function ReceiptSettings() {
                   )}
                 </div>
               </ScrollArea>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="preview-pdf" className="mt-6">
+            <div className="bg-muted/30 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Aperçu PDF en temps réel</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={generatePdfPreview}
+                    disabled={isGeneratingPdf}
+                  >
+                    {isGeneratingPdf ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                    )}
+                    Actualiser
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadPreview}
+                    disabled={!pdfUrl || isGeneratingPdf}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Télécharger
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-background overflow-hidden" style={{ height: "600px" }}>
+                {isGeneratingPdf ? (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
+                      <p className="text-sm text-muted-foreground">Génération du PDF...</p>
+                    </div>
+                  </div>
+                ) : pdfUrl ? (
+                  <iframe
+                    src={pdfUrl}
+                    className="w-full h-full"
+                    title="Aperçu de la quittance"
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <FileText className="h-12 w-12 mx-auto mb-2 text-muted-foreground/50" />
+                      <p className="text-sm text-muted-foreground">
+                        Cliquez sur "Actualiser" pour générer l'aperçu
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground mt-3 text-center">
+                L'aperçu utilise des données fictives. Les vraies quittances utiliseront les informations de votre agence et de vos locataires.
+              </p>
             </div>
           </TabsContent>
         </Tabs>

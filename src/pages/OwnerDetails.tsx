@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useOwners, useDeleteOwner } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { usePayments } from "@/hooks/usePayments";
+import { useTenants } from "@/hooks/useTenants";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
 import { OwnerPropertiesList } from "@/components/owner/OwnerPropertiesList";
+import { OwnerRevenueChart } from "@/components/owner/OwnerRevenueChart";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -51,6 +53,7 @@ const OwnerDetails = () => {
   const { data: owners = [], isLoading: ownersLoading } = useOwners();
   const { data: properties = [] } = useProperties();
   const { data: payments = [] } = usePayments();
+  const { data: tenants = [] } = useTenants();
   const { data: activityLogs = [] } = useActivityLogs();
   const deleteOwner = useDeleteOwner();
   const { canEdit, canDelete } = usePermissions();
@@ -63,12 +66,9 @@ const OwnerDetails = () => {
   // Get tenants from owner's properties for payment calculations
   const propertyIds = ownerProperties.map(p => p.id);
   
-  // Filter payments related to owner's properties (through contracts/tenants)
-  const ownerPayments = payments.filter(p => {
-    // We need to check if payment is related to a tenant in one of owner's properties
-    // For now, simplified approach - would need tenant->property relationship
-    return true; // Placeholder - in real app, filter by tenant's property
-  });
+  // Find tenants who are in owner's properties
+  const ownerTenants = tenants.filter(t => t.property_id && propertyIds.includes(t.property_id));
+  const ownerTenantIds = ownerTenants.map(t => t.id);
 
   // Activity logs related to this owner
   const ownerActivityLogs = activityLogs.filter(log => 
@@ -250,8 +250,11 @@ const OwnerDetails = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Properties */}
+          {/* Left Column - Properties & Revenue */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Revenue Chart */}
+            <OwnerRevenueChart payments={payments} tenantIds={ownerTenantIds} />
+
             {/* Properties Card */}
             <Card>
               <CardHeader>

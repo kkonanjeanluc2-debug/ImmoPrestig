@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, Clock } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, Clock, History } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { NotificationHistory } from "@/components/settings/NotificationHistory";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { RolesSettings } from "@/components/settings/RolesSettings";
 import { ActivityHistory } from "@/components/settings/ActivityHistory";
@@ -25,7 +26,7 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger
               value="profile"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
@@ -59,7 +60,14 @@ const Settings = () => {
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
             >
               <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Notifications</span>
+              <span className="hidden sm:inline">Alertes</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="notification-history"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+            >
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Historique</span>
             </TabsTrigger>
             <TabsTrigger
               value="security"
@@ -88,6 +96,10 @@ const Settings = () => {
 
           <TabsContent value="notifications">
             <NotificationSettings />
+          </TabsContent>
+
+          <TabsContent value="notification-history">
+            <NotificationHistory />
           </TabsContent>
 
           <TabsContent value="security">

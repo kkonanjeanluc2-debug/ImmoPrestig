@@ -10,32 +10,58 @@ import {
 } from "@/components/ui/dialog";
 import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { useCreateOwner, useOwners } from "@/hooks/useOwners";
-
-const downloadTemplate = () => {
-  const templateData = [
-    {
-      "Nom": "Marie Martin",
-      "Email": "marie.martin@email.com",
-      "Téléphone": "+221 77 987 65 43",
-      "Adresse": "123 Rue de la Paix, Dakar",
-      "Statut": "actif",
-    },
-  ];
-  
-  const worksheet = XLSX.utils.json_to_sheet(templateData);
-  worksheet['!cols'] = [
-    { wch: 20 }, { wch: 25 }, { wch: 18 }, { wch: 30 }, { wch: 10 }
-  ];
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Propriétaires");
-  XLSX.writeFile(workbook, "modele_proprietaires.xlsx");
-  toast.success("Modèle téléchargé");
-};
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+
+const downloadTemplate = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Propriétaires");
+  
+  // Add header row
+  worksheet.addRow(["Nom", "Email", "Téléphone", "Adresse", "Statut"]);
+  
+  // Style header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' }
+    };
+  });
+  
+  // Add sample data
+  worksheet.addRow([
+    "Marie Martin",
+    "marie.martin@email.com",
+    "+221 77 987 65 43",
+    "123 Rue de la Paix, Dakar",
+    "actif",
+  ]);
+  
+  // Set column widths
+  worksheet.columns = [
+    { width: 20 },
+    { width: 25 },
+    { width: 18 },
+    { width: 30 },
+    { width: 10 }
+  ];
+  
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = "modele_proprietaires.xlsx";
+  link.click();
+  URL.revokeObjectURL(url);
+  toast.success("Modèle téléchargé");
+};
 
 interface ParsedOwner {
   name: string;
@@ -75,13 +101,38 @@ export function ImportOwnersDialog() {
     setIsProcessing(true);
     
     try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
+      const workbook = new ExcelJS.Workbook();
+      const arrayBuffer = await file.arrayBuffer();
+      await workbook.xlsx.load(arrayBuffer);
+      
+      const worksheet = workbook.worksheets[0];
+      if (!worksheet) {
+        throw new Error("No worksheet found");
+      }
+      
+      const rows: Record<string, any>[] = [];
+      const headers: string[] = [];
+      
+      worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) {
+          row.eachCell((cell) => {
+            headers.push(String(cell.value || "").trim());
+          });
+        } else {
+          const rowData: Record<string, any> = {};
+          row.eachCell((cell, colNumber) => {
+            const header = headers[colNumber - 1];
+            if (header) {
+              rowData[header] = cell.value;
+            }
+          });
+          if (Object.keys(rowData).length > 0) {
+            rows.push(rowData);
+          }
+        }
+      });
 
-      const parsed: ParsedOwner[] = jsonData.map((row) => {
+      const parsed: ParsedOwner[] = rows.map((row) => {
         const errors: string[] = [];
         const name = String(row["Nom"] || row["name"] || row["Name"] || "").trim();
         const email = String(row["Email"] || row["email"] || row["E-mail"] || "").trim().toLowerCase();

@@ -21,7 +21,8 @@ import {
   CheckCircle,
   XCircle,
   FileText,
-  Euro
+  Euro,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -33,7 +34,7 @@ import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, differenceInDays, isFuture, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
   AlertDialog,
@@ -274,19 +275,39 @@ const TenantDetails = () => {
                     {tenant.payments.map((payment) => {
                       const status = paymentStatusConfig[payment.status as keyof typeof paymentStatusConfig] || paymentStatusConfig.pending;
                       const StatusIcon = status.icon;
+                      
+                      // Check if payment is due within the next 7 days
+                      const dueDate = new Date(payment.due_date);
+                      const daysUntilDue = differenceInDays(dueDate, new Date());
+                      const isDueSoon = payment.status !== 'paid' && isFuture(dueDate) && daysUntilDue <= 7 && daysUntilDue >= 0;
+                      const isOverdue = payment.status !== 'paid' && isPast(dueDate) && daysUntilDue < 0;
+                      
                       return (
                         <div
                           key={payment.id}
-                          className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
+                          className={cn(
+                            "flex items-center justify-between p-4 rounded-lg",
+                            isDueSoon ? "bg-orange-500/10 border border-orange-500/30" : 
+                            isOverdue ? "bg-destructive/10 border border-destructive/30" : 
+                            "bg-muted/50"
+                          )}
                         >
                           <div className="flex items-center gap-3">
                             <div className={cn("p-2 rounded-lg", status.className)}>
                               <StatusIcon className="h-4 w-4" />
                             </div>
                             <div>
-                              <p className="font-medium text-foreground">
-                                {format(new Date(payment.due_date), "dd MMMM yyyy", { locale: fr })}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-foreground">
+                                  {format(dueDate, "dd MMMM yyyy", { locale: fr })}
+                                </p>
+                                {isDueSoon && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/20 text-orange-600 dark:text-orange-400">
+                                    <AlertCircle className="h-3 w-3" />
+                                    {daysUntilDue === 0 ? "Aujourd'hui" : `Dans ${daysUntilDue} jour${daysUntilDue > 1 ? 's' : ''}`}
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-muted-foreground">
                                 Échéance • {status.label}
                               </p>

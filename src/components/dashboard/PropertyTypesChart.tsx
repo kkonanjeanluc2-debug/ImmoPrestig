@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell } from "recharts";
 import { Home } from "lucide-react";
 
 interface PropertyTypesChartProps {
@@ -104,35 +104,33 @@ export function PropertyTypesChart({ properties }: PropertyTypesChartProps) {
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-[200px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={renderCustomLabel}
-                  outerRadius={80}
-                  innerRadius={40}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                  ))}
-                </Pie>
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value, name, props) => [
-                        `${value} bien${Number(value) > 1 ? "s" : ""}`,
-                        props.payload.name,
-                      ]}
-                    />
-                  }
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={renderCustomLabel}
+                outerRadius={80}
+                innerRadius={40}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                ))}
+              </Pie>
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, name, props) => [
+                      `${value} bien${Number(value) > 1 ? "s" : ""}`,
+                      props.payload.name,
+                    ]}
+                  />
+                }
+              />
+            </PieChart>
           </ChartContainer>
         )}
 

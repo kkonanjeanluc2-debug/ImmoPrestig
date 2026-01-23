@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
 import { Building2 } from "lucide-react";
 
 interface OccupancyChartProps {
@@ -89,34 +89,32 @@ export function OccupancyChart({ properties }: OccupancyChartProps) {
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-[200px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} layout="vertical" margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <XAxis type="number" domain={[0, 100]} hide />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                  width={70}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value, name, props) => [
-                        `${props.payload.occupied}/${props.payload.total} (${value}%)`,
-                        "Occupation",
-                      ]}
-                    />
-                  }
-                />
-                <Bar dataKey="occupancy" radius={[0, 4, 4, 0]} barSize={24}>
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getBarColor(entry.occupancy)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart data={data} layout="vertical" margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <XAxis type="number" domain={[0, 100]} hide />
+              <YAxis
+                type="category"
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                width={70}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, name, props) => [
+                      `${props.payload.occupied}/${props.payload.total} (${value}%)`,
+                      "Occupation",
+                    ]}
+                  />
+                }
+              />
+              <Bar dataKey="occupancy" radius={[0, 4, 4, 0]} barSize={24}>
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry.occupancy)} />
+                ))}
+              </Bar>
+            </BarChart>
           </ChartContainer>
         )}
 

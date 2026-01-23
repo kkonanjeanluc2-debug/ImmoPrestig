@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { PeriodFilter } from "@/hooks/useDashboardPreferences";
 
@@ -85,50 +85,59 @@ export function RevenueTrendChart({ payments, period }: RevenueTrendChartProps) 
       </CardHeader>
       <CardContent className="pt-0">
         <ChartContainer config={chartConfig} className="h-[280px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis
-                dataKey="name"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-              />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    formatter={(value) => [`${Number(value).toLocaleString("fr-FR")} F CFA`]}
-                  />
-                }
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="attendus"
-                stroke="hsl(var(--muted-foreground))"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={false}
-                name="Attendus"
-              />
-              <Line
-                type="monotone"
-                dataKey="revenus"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                dot={{ r: 4, fill: "hsl(var(--primary))" }}
-                activeDot={{ r: 6 }}
-                name="Revenus"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+              tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  formatter={(value) => [`${Number(value).toLocaleString("fr-FR")} F CFA`]}
+                />
+              }
+            />
+            <Line
+              type="monotone"
+              dataKey="attendus"
+              stroke="hsl(var(--muted-foreground))"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={false}
+              name="Attendus"
+            />
+            <Line
+              type="monotone"
+              dataKey="revenus"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2}
+              dot={{ r: 4, fill: "hsl(var(--primary))" }}
+              activeDot={{ r: 6 }}
+              name="Revenus"
+            />
+          </LineChart>
         </ChartContainer>
+        
+        {/* Custom Legend */}
+        <div className="flex items-center justify-center gap-6 mt-4">
+          <div className="flex items-center gap-2 text-sm">
+            <div className="h-0.5 w-6 bg-muted-foreground" style={{ borderStyle: 'dashed' }} />
+            <span className="text-muted-foreground">Attendus</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <div className="h-0.5 w-6 bg-primary" />
+            <span className="text-muted-foreground">Revenus</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

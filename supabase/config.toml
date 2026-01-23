@@ -26,3 +26,9 @@ verify_jwt = false
 
 [functions.check-expiring-contracts]
 verify_jwt = false
+
+[functions.fedapay-checkout]
+verify_jwt = false
+
+[functions.fedapay-webhook]
+verify_jwt = false

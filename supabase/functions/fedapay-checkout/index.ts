@@ -1,0 +1,252 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface CheckoutRequest {
+  plan_id: string;
+  billing_cycle: "monthly" | "yearly";
+  payment_method: "orange_money" | "mtn_money" | "wave" | "moov" | "card";
+  customer_phone?: string;
+  return_url?: string;
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Verify authorization
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Non autorisé" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify user
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: "Utilisateur non authentifié" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = userData.user.id;
+
+    // Get agency for this user
+    const { data: agency, error: agencyError } = await supabase
+      .from("agencies")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (agencyError || !agency) {
+      return new Response(
+        JSON.stringify({ error: "Agence non trouvée" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Parse request body
+    const body: CheckoutRequest = await req.json();
+    const { plan_id, billing_cycle, payment_method, customer_phone, return_url } = body;
+
+    if (!plan_id || !billing_cycle || !payment_method) {
+      return new Response(
+        JSON.stringify({ error: "Paramètres manquants: plan_id, billing_cycle, payment_method requis" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get subscription plan
+    const { data: plan, error: planError } = await supabase
+      .from("subscription_plans")
+      .select("*")
+      .eq("id", plan_id)
+      .eq("is_active", true)
+      .single();
+
+    if (planError || !plan) {
+      return new Response(
+        JSON.stringify({ error: "Forfait non trouvé ou inactif" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Calculate amount based on billing cycle
+    const amount = billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+
+    // If free plan, activate directly
+    if (amount === 0) {
+      // Upsert subscription
+      const { error: subError } = await supabase
+        .from("agency_subscriptions")
+        .upsert({
+          agency_id: agency.id,
+          plan_id: plan.id,
+          billing_cycle,
+          status: "active",
+          starts_at: new Date().toISOString(),
+        }, { onConflict: "agency_id" });
+
+      if (subError) {
+        throw new Error(`Erreur activation abonnement: ${subError.message}`);
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Forfait gratuit activé",
+          subscription_status: "active" 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get FedaPay credentials
+    const fedapaySecretKey = Deno.env.get("FEDAPAY_SECRET_KEY");
+    if (!fedapaySecretKey) {
+      return new Response(
+        JSON.stringify({ error: "Configuration FedaPay manquante" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Determine FedaPay environment
+    const isSandbox = fedapaySecretKey.startsWith("sk_sandbox_");
+    const fedapayBaseUrl = isSandbox 
+      ? "https://sandbox-api.fedapay.com/v1" 
+      : "https://api.fedapay.com/v1";
+
+    // Create transaction record first
+    const { data: transaction, error: txError } = await supabase
+      .from("payment_transactions")
+      .insert({
+        agency_id: agency.id,
+        plan_id: plan.id,
+        amount,
+        currency: "XOF",
+        payment_method,
+        billing_cycle,
+        customer_email: agency.email,
+        customer_phone: customer_phone || agency.phone,
+        customer_name: agency.name,
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (txError || !transaction) {
+      throw new Error(`Erreur création transaction: ${txError?.message}`);
+    }
+
+    // Create FedaPay transaction
+    const fedapayPayload = {
+      description: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`,
+      amount: Math.round(amount),
+      currency: { iso: "XOF" },
+      callback_url: return_url || `${supabaseUrl}/functions/v1/fedapay-webhook`,
+      customer: {
+        firstname: agency.name.split(" ")[0] || agency.name,
+        lastname: agency.name.split(" ").slice(1).join(" ") || "",
+        email: agency.email,
+        phone_number: {
+          number: customer_phone || agency.phone || "",
+          country: "CI",
+        },
+      },
+      metadata: {
+        transaction_id: transaction.id,
+        agency_id: agency.id,
+        plan_id: plan.id,
+        billing_cycle,
+      },
+    };
+
+    const fedapayResponse = await fetch(`${fedapayBaseUrl}/transactions`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${fedapaySecretKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(fedapayPayload),
+    });
+
+    const fedapayData = await fedapayResponse.json();
+
+    if (!fedapayResponse.ok) {
+      // Update transaction as failed
+      await supabase
+        .from("payment_transactions")
+        .update({
+          status: "failed",
+          error_message: fedapayData.message || "Erreur FedaPay",
+        })
+        .eq("id", transaction.id);
+
+      return new Response(
+        JSON.stringify({ error: fedapayData.message || "Erreur création paiement FedaPay" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Update transaction with FedaPay reference
+    await supabase
+      .from("payment_transactions")
+      .update({
+        fedapay_transaction_id: String(fedapayData.v1.transaction.id),
+        fedapay_reference: fedapayData.v1.transaction.reference,
+      })
+      .eq("id", transaction.id);
+
+    // Generate payment token/URL
+    const tokenResponse = await fetch(`${fedapayBaseUrl}/transactions/${fedapayData.v1.transaction.id}/token`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${fedapaySecretKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenResponse.ok) {
+      return new Response(
+        JSON.stringify({ error: "Erreur génération lien de paiement" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        transaction_id: transaction.id,
+        fedapay_transaction_id: fedapayData.v1.transaction.id,
+        payment_url: tokenData.url,
+        token: tokenData.token,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
+  } catch (error) {
+    console.error("Checkout error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Erreur serveur";
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

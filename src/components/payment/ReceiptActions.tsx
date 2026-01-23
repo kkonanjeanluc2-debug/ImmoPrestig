@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateEmailLog } from "@/hooks/useEmailLogs";
 import { useLogWhatsAppMessage } from "@/hooks/useWhatsAppLogs";
+import { useAgency } from "@/hooks/useAgency";
 import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle } from "lucide-react";
 import { generateRentReceipt, generateRentReceiptBase64, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateReceiptMessage, openWhatsApp, formatPhoneForWhatsApp } from "@/lib/whatsapp";
@@ -52,14 +53,16 @@ export function ReceiptActions({
   method,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   const createEmailLog = useCreateEmailLog();
   const logWhatsAppMessage = useLogWhatsAppMessage();
+  const { data: agency } = useAgency();
 
   const period = getPaymentPeriod(dueDate);
 
-  const receiptData = {
+  const getReceiptData = () => ({
     paymentId,
     tenantName,
     tenantEmail,
@@ -70,11 +73,21 @@ export function ReceiptActions({
     dueDate,
     period,
     method,
-  };
+    agency: agency ? {
+      name: agency.name,
+      email: agency.email,
+      phone: agency.phone || undefined,
+      address: agency.address || undefined,
+      city: agency.city || undefined,
+      country: agency.country || undefined,
+      logo_url: agency.logo_url,
+    } : undefined,
+  });
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    setIsDownloading(true);
     try {
-      generateRentReceipt(receiptData);
+      await generateRentReceipt(getReceiptData());
       toast({
         title: "Quittance générée",
         description: "Le PDF a été téléchargé avec succès.",
@@ -85,6 +98,8 @@ export function ReceiptActions({
         description: "Impossible de générer la quittance.",
         variant: "destructive",
       });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -100,7 +115,7 @@ export function ReceiptActions({
 
     setIsSending(true);
     try {
-      const pdfBase64 = generateRentReceiptBase64(receiptData);
+      const pdfBase64 = await generateRentReceiptBase64(getReceiptData());
 
       const { data, error } = await supabase.functions.invoke("send-receipt-email", {
         body: {
@@ -194,9 +209,9 @@ export function ReceiptActions({
             <ChevronDown className="h-3 w-3 ml-1" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleDownload}>
-            <Download className="h-4 w-4 mr-2" />
+        <DropdownMenuContent align="end" className="bg-popover">
+          <DropdownMenuItem onClick={handleDownload} disabled={isDownloading}>
+            {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             Télécharger PDF
           </DropdownMenuItem>
           <DropdownMenuSeparator />

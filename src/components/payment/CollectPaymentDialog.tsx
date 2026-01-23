@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePayment } from "@/hooks/usePayments";
 import { useToast } from "@/hooks/use-toast";
+import { useAgency } from "@/hooks/useAgency";
 import { Loader2, CheckCircle, Banknote, Mail, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateRentReceiptBase64, getPaymentPeriod } from "@/lib/generateReceipt";
@@ -68,6 +69,7 @@ export function CollectPaymentDialog({
   const [sendReceipt, setSendReceipt] = useState(!!tenantEmail);
   const [isSendingReceipt, setIsSendingReceipt] = useState(false);
   const updatePayment = useUpdatePayment();
+  const { data: agency } = useAgency();
   const { toast } = useToast();
 
   const handleCollect = async () => {
@@ -92,7 +94,7 @@ export function CollectPaymentDialog({
         setIsSendingReceipt(true);
         try {
           const period = getPaymentPeriod(dueDate);
-          const pdfBase64 = generateRentReceiptBase64({
+          const pdfBase64 = await generateRentReceiptBase64({
             paymentId,
             tenantName,
             tenantEmail,
@@ -104,6 +106,15 @@ export function CollectPaymentDialog({
             period,
             method: methodLabels[method] || method,
             ownerName,
+            agency: agency ? {
+              name: agency.name,
+              email: agency.email,
+              phone: agency.phone || undefined,
+              address: agency.address || undefined,
+              city: agency.city || undefined,
+              country: agency.country || undefined,
+              logo_url: agency.logo_url,
+            } : undefined,
           });
 
           const { data, error } = await supabase.functions.invoke("send-receipt-email", {

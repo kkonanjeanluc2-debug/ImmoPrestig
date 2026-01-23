@@ -68,7 +68,19 @@ export function AddOwnerDialog() {
       form.reset();
       setOpen(false);
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de l'ajout du propriétaire");
+      console.error("Error creating owner:", error);
+      // Check for duplicate error
+      if (error?.message?.includes("duplicate") || error?.code === "23505") {
+        if (error?.message?.includes("email")) {
+          toast.error("Un propriétaire avec cet email existe déjà");
+        } else if (error?.message?.includes("phone")) {
+          toast.error("Un propriétaire avec ce numéro de téléphone existe déjà");
+        } else {
+          toast.error("Ce propriétaire existe déjà");
+        }
+      } else {
+        toast.error(error.message || "Erreur lors de l'ajout du propriétaire");
+      }
     }
   };
 

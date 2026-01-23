@@ -105,9 +105,20 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       form.reset();
       setOpen(false);
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating tenant:", error);
-      toast.error("Erreur lors de la création du locataire");
+      // Check for duplicate error
+      if (error?.message?.includes("duplicate") || error?.code === "23505") {
+        if (error?.message?.includes("email")) {
+          toast.error("Un locataire avec cet email existe déjà");
+        } else if (error?.message?.includes("phone")) {
+          toast.error("Un locataire avec ce numéro de téléphone existe déjà");
+        } else {
+          toast.error("Ce locataire existe déjà");
+        }
+      } else {
+        toast.error("Erreur lors de la création du locataire");
+      }
     }
   };
 

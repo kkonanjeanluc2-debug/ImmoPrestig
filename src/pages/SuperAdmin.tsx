@@ -12,6 +12,7 @@ import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2,
 import { useIsSuperAdmin, useAllAgencies, useDeleteAgency, useSuperAdminUpdateRole, useToggleAccountStatus, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 import { useLogSuperAdminAction, SuperAdminActionType } from "@/hooks/useSuperAdminAudit";
 import { AuditLogCard } from "@/components/superadmin/AuditLogCard";
+import { RegistrationChart } from "@/components/superadmin/RegistrationChart";
 import { AppRole, ROLE_LABELS } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -274,6 +275,11 @@ const SuperAdmin = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Registration Chart */}
+        {agencies && agencies.length > 0 && (
+          <RegistrationChart agencies={agencies} />
+        )}
 
         {/* Agencies List */}
         <Card>

@@ -321,6 +321,48 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   const signatureLabel = replaceVariables(templates.signatureLabel, data, templates);
   doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
   
+  // Watermark (rendered before footer so it's behind content)
+  if (templates.watermarkEnabled && templates.watermarkType === "text" && templates.watermarkText) {
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const opacity = templates.watermarkOpacity / 100;
+    
+    // Save current graphics state
+    doc.saveGraphicsState();
+    
+    // Set watermark color with opacity (light gray)
+    const grayValue = Math.round(200 + (55 * (1 - opacity)));
+    doc.setTextColor(grayValue, grayValue, grayValue);
+    doc.setFontSize(60);
+    doc.setFont("helvetica", "bold");
+    
+    // Calculate position based on setting
+    let wmX = pageWidth / 2;
+    let wmY = pageHeight / 2;
+    
+    if (templates.watermarkPosition === "bottom-right") {
+      wmX = pageWidth - 50;
+      wmY = pageHeight - 50;
+    }
+    
+    // For diagonal, render multiple smaller texts across the page
+    if (templates.watermarkPosition === "diagonal") {
+      doc.setFontSize(40);
+      for (let i = -2; i < 4; i++) {
+        for (let j = -2; j < 4; j++) {
+          const x = (pageWidth / 3) * i + 30;
+          const y = (pageHeight / 4) * j + 60;
+          if (x > -50 && x < pageWidth + 50 && y > -50 && y < pageHeight + 50) {
+            doc.text(templates.watermarkText, x, y, { align: "center" });
+          }
+        }
+      }
+    } else {
+      doc.text(templates.watermarkText, wmX, wmY, { align: "center" });
+    }
+    
+    doc.restoreGraphicsState();
+  }
+  
   // Footer with agency info
   doc.setFillColor(...lightGray);
   doc.rect(0, doc.internal.pageSize.getHeight() - 25, pageWidth, 25, "F");

@@ -46,6 +46,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { ReceiptTemplateImportExport } from "./ReceiptTemplateImportExport";
+import { WatermarkThumbnail } from "./WatermarkThumbnail";
 import {
   useReceiptTemplates,
   useCreateReceiptTemplate,
@@ -561,6 +562,10 @@ export function ReceiptTemplateManager() {
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                     {template.title}
                   </p>
+
+                  {/* Watermark Thumbnail Preview */}
+                  <WatermarkThumbnail template={template} agencyLogoUrl={agency?.logo_url} />
+
                   <div className="flex flex-wrap gap-1 mb-3">
                     {template.show_logo && (
                       <Badge variant="outline" className="text-xs">Logo</Badge>

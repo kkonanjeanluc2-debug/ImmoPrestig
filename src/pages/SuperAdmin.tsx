@@ -9,13 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff, Home, CreditCard, TrendingUp, ClipboardList } from "lucide-react";
+import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff, Home, CreditCard, TrendingUp, ClipboardList, Receipt } from "lucide-react";
 import { useIsSuperAdmin, useAllAgencies, useDeleteAgency, useSuperAdminUpdateRole, useToggleAccountStatus, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 import { useLogSuperAdminAction, SuperAdminActionType } from "@/hooks/useSuperAdminAudit";
 import { AuditLogCard } from "@/components/superadmin/AuditLogCard";
 import { RegistrationChart } from "@/components/superadmin/RegistrationChart";
 import { SubscriptionPlansManager } from "@/components/superadmin/SubscriptionPlansManager";
 import { AgencySubscriptionsManager } from "@/components/superadmin/AgencySubscriptionsManager";
+import { TransactionsDashboard } from "@/components/superadmin/TransactionsDashboard";
 import { AppRole, ROLE_LABELS } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -219,7 +220,7 @@ const SuperAdmin = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto gap-2 bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-4 h-auto gap-2 bg-muted/50 p-1">
             <TabsTrigger
               value="overview"
               className="flex items-center gap-2 data-[state=active]:bg-background py-2.5"
@@ -235,6 +236,14 @@ const SuperAdmin = () => {
               <CreditCard className="h-4 w-4" />
               <span className="hidden sm:inline">Abonnements</span>
               <span className="sm:hidden">Forfaits</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="transactions"
+              className="flex items-center gap-2 data-[state=active]:bg-background py-2.5"
+            >
+              <Receipt className="h-4 w-4" />
+              <span className="hidden sm:inline">Transactions</span>
+              <span className="sm:hidden">Paiements</span>
             </TabsTrigger>
             <TabsTrigger
               value="audit"
@@ -591,6 +600,11 @@ const SuperAdmin = () => {
           <TabsContent value="subscriptions" className="space-y-6">
             <SubscriptionPlansManager />
             <AgencySubscriptionsManager />
+          </TabsContent>
+
+          {/* Transactions Tab */}
+          <TabsContent value="transactions" className="space-y-6">
+            <TransactionsDashboard />
           </TabsContent>
 
           {/* Audit Tab */}

@@ -23,8 +23,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCurrentUserRole, ROLE_LABELS, type AppRole } from "@/hooks/useUserRoles";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { useAgency } from "@/hooks/useAgency";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   admin: <Shield className="h-3 w-3" />,
@@ -60,6 +62,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: userRole } = useCurrentUserRole();
+  const { data: agency } = useAgency();
   const { canInstall, isIOS, promptInstall } = usePWAInstall();
 
   const handleInstallClick = async () => {
@@ -193,12 +196,30 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           </div>
         )}
 
-        {/* User info and logout */}
+        {/* Agency/User info and logout */}
         <div className="p-3 border-t border-navy-light">
-          {(!collapsed || mobileOpen) && user && (
-            <div className="mb-2 px-2">
+          {(!collapsed || mobileOpen) && (
+            <div className="mb-3 px-2">
+              {/* Agency branding */}
+              <div className="flex items-center gap-3 mb-2">
+                <Avatar className="h-10 w-10 border border-navy-light">
+                  <AvatarImage src={agency?.logo_url || undefined} alt={agency?.name || "Logo"} />
+                  <AvatarFallback className="bg-emerald/20 text-emerald text-sm font-semibold">
+                    {agency?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-primary-foreground truncate">
+                    {agency?.name || "Mon agence"}
+                  </p>
+                  <p className="text-xs text-primary-foreground/50 truncate">
+                    {agency?.account_type === "proprietaire" ? "Propriétaire" : "Agence"}
+                  </p>
+                </div>
+              </div>
+              {/* User email and role */}
               <p className="text-xs text-primary-foreground/60 truncate">
-                {user.email}
+                {user?.email}
               </p>
               {userRole && (
                 <Badge 
@@ -214,18 +235,26 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               )}
             </div>
           )}
-          {collapsed && !mobileOpen && userRole && (
-            <div className="flex justify-center mb-2">
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "p-1 h-6 w-6 flex items-center justify-center",
-                  ROLE_BADGE_COLORS[userRole.role]
-                )}
-                title={ROLE_LABELS[userRole.role]}
-              >
-                {ROLE_ICONS[userRole.role]}
-              </Badge>
+          {collapsed && !mobileOpen && (
+            <div className="flex flex-col items-center gap-2 mb-2">
+              <Avatar className="h-8 w-8 border border-navy-light">
+                <AvatarImage src={agency?.logo_url || undefined} alt={agency?.name || "Logo"} />
+                <AvatarFallback className="bg-emerald/20 text-emerald text-xs font-semibold">
+                  {agency?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}
+                </AvatarFallback>
+              </Avatar>
+              {userRole && (
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "p-1 h-6 w-6 flex items-center justify-center",
+                    ROLE_BADGE_COLORS[userRole.role]
+                  )}
+                  title={ROLE_LABELS[userRole.role]}
+                >
+                  {ROLE_ICONS[userRole.role]}
+                </Badge>
+              )}
             </div>
           )}
           <Button

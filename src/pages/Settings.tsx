@@ -14,10 +14,69 @@ import { AgencySettings } from "@/components/settings/AgencySettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
+import { useIsSuperAdmin } from "@/hooks/useSuperAdmin";
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState("agency");
+  const { isSuperAdmin } = useIsSuperAdmin();
+  const [activeTab, setActiveTab] = useState(isSuperAdmin ? "profile" : "agency");
 
+  // Super Admin: simplified settings
+  if (isSuperAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-display font-bold text-foreground">
+              Paramètres
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Gérez votre compte Super Admin
+            </p>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 h-auto gap-2 bg-transparent p-0 max-w-md">
+              <TabsTrigger
+                value="profile"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">Profil</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="display"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+              >
+                <Palette className="h-4 w-4" />
+                <span className="hidden sm:inline">Affichage</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="security"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Sécurité</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile">
+              <ProfileSettings />
+            </TabsContent>
+
+            <TabsContent value="display">
+              <DisplaySettings />
+            </TabsContent>
+
+            <TabsContent value="security">
+              <SecuritySettings />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Regular users: full settings
   return (
     <DashboardLayout>
       <div className="space-y-6">

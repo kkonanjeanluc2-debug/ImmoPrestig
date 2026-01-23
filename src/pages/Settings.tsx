@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText, Settings2 } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -14,6 +14,7 @@ import { AgencySettings } from "@/components/settings/AgencySettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
+import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { useIsSuperAdmin } from "@/hooks/useSuperAdmin";
 
 const Settings = () => {
@@ -113,6 +114,13 @@ const Settings = () => {
               <span className="hidden sm:inline">Quittances</span>
             </TabsTrigger>
             <TabsTrigger
+              value="subscription"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Abonnement</span>
+            </TabsTrigger>
+            <TabsTrigger
               value="profile"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
             >
@@ -187,6 +195,10 @@ const Settings = () => {
 
           <TabsContent value="receipts">
             <ReceiptTemplateManager />
+          </TabsContent>
+
+          <TabsContent value="subscription">
+            <SubscriptionSettings />
           </TabsContent>
 
           <TabsContent value="profile">

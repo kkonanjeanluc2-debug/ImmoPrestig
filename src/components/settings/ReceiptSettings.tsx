@@ -38,6 +38,7 @@ export interface ReceiptTemplates {
   watermarkOpacity: number;
   watermarkAngle: number;
   watermarkPosition: "center" | "diagonal" | "bottom-right";
+  watermarkLogoSize: "small" | "medium" | "large";
 }
 
 const DEFAULT_TEMPLATES: ReceiptTemplates = {
@@ -60,6 +61,7 @@ const DEFAULT_TEMPLATES: ReceiptTemplates = {
   watermarkOpacity: 15,
   watermarkAngle: -45,
   watermarkPosition: "diagonal",
+  watermarkLogoSize: "medium",
 };
 
 const VARIABLE_HINTS: Record<string, string[]> = {

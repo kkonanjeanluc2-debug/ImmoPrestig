@@ -52,6 +52,7 @@ const convertDbTemplateToLegacy = (template: ReceiptTemplate): ReceiptTemplates 
     watermarkOpacity: template.watermark_opacity,
     watermarkAngle: template.watermark_angle,
     watermarkPosition: template.watermark_position as "center" | "diagonal" | "bottom-right",
+    watermarkLogoSize: ((template as any).watermark_logo_size as "small" | "medium" | "large") || "medium",
   };
 };
 

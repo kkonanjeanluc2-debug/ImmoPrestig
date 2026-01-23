@@ -29,6 +29,7 @@ import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { TenantPaymentChart } from "@/components/tenant/TenantPaymentChart";
 import { TenantPaymentStatusChart } from "@/components/tenant/TenantPaymentStatusChart";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
+import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -290,14 +291,29 @@ const TenantDetails = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-foreground">
-                              {Number(payment.amount).toLocaleString('fr-FR')} F CFA
-                            </p>
-                            {payment.paid_date && (
-                              <p className="text-xs text-muted-foreground">
-                                Payé le {format(new Date(payment.paid_date), "dd/MM/yyyy")}
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <p className="font-bold text-foreground">
+                                {Number(payment.amount).toLocaleString('fr-FR')} F CFA
                               </p>
+                              {payment.paid_date && (
+                                <p className="text-xs text-muted-foreground">
+                                  Payé le {format(new Date(payment.paid_date), "dd/MM/yyyy")}
+                                </p>
+                              )}
+                            </div>
+                            {(payment.status === 'pending' || payment.status === 'late') && (
+                              <SendReminderDialog
+                                paymentId={payment.id}
+                                tenantId={tenant.id}
+                                tenantName={tenant.name}
+                                tenantEmail={tenant.email}
+                                tenantPhone={tenant.phone}
+                                propertyTitle={tenant.property?.title || "Bien non assigné"}
+                                amount={Number(payment.amount)}
+                                dueDate={payment.due_date}
+                                status={payment.status}
+                              />
                             )}
                           </div>
                         </div>

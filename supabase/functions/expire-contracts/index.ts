@@ -23,7 +23,13 @@ Deno.serve(async (req) => {
     // Find all active contracts with end_date < today
     const { data: expiredContracts, error: fetchError } = await supabase
       .from("contracts")
-      .select("id, property_id")
+      .select(`
+        id, 
+        user_id,
+        property_id,
+        tenant:tenants(name),
+        property:properties(title)
+      `)
       .eq("status", "active")
       .lt("end_date", today);
 
@@ -71,6 +77,29 @@ Deno.serve(async (req) => {
         console.error("Error updating properties:", updatePropertiesError);
       }
     }
+
+    // Create in-app notifications for expired contracts
+    const notificationPromises = expiredContracts.map(async (contract: any) => {
+      const tenantName = contract.tenant?.name || "Locataire";
+      const propertyTitle = contract.property?.title || "Bien immobilier";
+
+      try {
+        await supabase.from("notifications").insert({
+          user_id: contract.user_id,
+          title: "Contrat expiré",
+          message: `Le contrat de ${tenantName} pour ${propertyTitle} a expiré. Le bien a été remis en disponible.`,
+          type: "info",
+          entity_type: "contract",
+          entity_id: contract.id,
+        });
+        return { contractId: contract.id, notificationCreated: true };
+      } catch (err) {
+        console.error(`Failed to create notification for contract ${contract.id}:`, err);
+        return { contractId: contract.id, notificationCreated: false };
+      }
+    });
+
+    await Promise.all(notificationPromises);
 
     console.log(
       `Expired ${contractIds.length} contracts and updated ${propertyIds.length} properties`

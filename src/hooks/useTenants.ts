@@ -63,11 +63,27 @@ export const useCreateTenant = () => {
         { email: data.email, phone: data.phone }
       );
 
+      // Create notification for new tenant
+      try {
+        await supabase.from("notifications").insert({
+          user_id: user.id,
+          title: "Nouveau locataire",
+          message: `Le locataire ${data.name} a été ajouté avec succès.`,
+          type: "success",
+          entity_type: "tenant",
+          entity_id: data.id,
+        });
+      } catch (err) {
+        console.error("Failed to create notification:", err);
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
     },
   });
 };

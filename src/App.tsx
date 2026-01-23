@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SplashScreen from "@/components/SplashScreen";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { Loader2 } from "lucide-react";
 
 // Lazy load pages for code splitting
@@ -51,6 +52,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+        <PWAInstallBanner />
         <Toaster />
         <Sonner />
         <BrowserRouter>

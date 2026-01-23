@@ -13,19 +13,22 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateEmailLog } from "@/hooks/useEmailLogs";
-import { Loader2, FileText, Mail, Download, ChevronDown } from "lucide-react";
+import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle } from "lucide-react";
 import { generateRentReceipt, generateRentReceiptBase64, getPaymentPeriod } from "@/lib/generateReceipt";
+import { generateReceiptMessage, openWhatsApp } from "@/lib/whatsapp";
 
 interface ReceiptActionsProps {
   paymentId: string;
   tenantId: string;
   tenantName: string;
   tenantEmail: string | null;
+  tenantPhone?: string | null;
   propertyTitle: string;
   propertyAddress?: string;
   amount: number;
@@ -39,6 +42,7 @@ export function ReceiptActions({
   tenantId,
   tenantName,
   tenantEmail,
+  tenantPhone,
   propertyTitle,
   propertyAddress,
   amount,
@@ -139,6 +143,32 @@ export function ReceiptActions({
     }
   };
 
+  const handleSendWhatsApp = () => {
+    if (!tenantPhone) {
+      toast({
+        title: "Erreur",
+        description: "Ce locataire n'a pas de numéro de téléphone enregistré.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const message = generateReceiptMessage({
+      tenantName,
+      propertyTitle,
+      amount,
+      period,
+      paidDate,
+    });
+
+    openWhatsApp(tenantPhone, message);
+
+    toast({
+      title: "WhatsApp ouvert",
+      description: "Le message a été pré-rempli dans WhatsApp.",
+    });
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -154,12 +184,21 @@ export function ReceiptActions({
             <Download className="h-4 w-4 mr-2" />
             Télécharger PDF
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => setDialogOpen(true)}
             disabled={!tenantEmail}
           >
             <Mail className="h-4 w-4 mr-2" />
             Envoyer par email
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={handleSendWhatsApp}
+            disabled={!tenantPhone}
+            className="text-green-600 focus:text-green-600"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Envoyer via WhatsApp
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

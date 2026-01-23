@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateEmailLog } from "@/hooks/useEmailLogs";
-import { Loader2, Mail, MessageSquare, Send } from "lucide-react";
+import { Loader2, Mail, MessageSquare, Send, MessageCircle } from "lucide-react";
+import { generatePaymentReminderMessage, openWhatsApp } from "@/lib/whatsapp";
 
 interface SendReminderDialogProps {
   paymentId: string;
@@ -40,20 +41,44 @@ export function SendReminderDialog({
 }: SendReminderDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [activeTab, setActiveTab] = useState<"email" | "sms">("email");
+  const [activeTab, setActiveTab] = useState<"email" | "sms" | "whatsapp">("email");
   const { toast } = useToast();
   const createEmailLog = useCreateEmailLog();
 
   const isLate = status === "late";
   const canSendEmail = !!tenantEmail;
   const canSendSms = !!tenantPhone;
+  const canSendWhatsApp = !!tenantPhone;
 
   const handleSendReminder = async () => {
     if (activeTab === "email") {
       await handleSendEmail();
-    } else {
+    } else if (activeTab === "sms") {
       await handleSendSms();
+    } else if (activeTab === "whatsapp") {
+      handleSendWhatsApp();
     }
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!tenantPhone) return;
+    
+    const message = generatePaymentReminderMessage({
+      tenantName,
+      propertyTitle,
+      amount,
+      dueDate,
+      isLate,
+    });
+    
+    openWhatsApp(tenantPhone, message);
+    
+    toast({
+      title: "WhatsApp ouvert",
+      description: "Le message de rappel a été pré-rempli dans WhatsApp.",
+    });
+    
+    setOpen(false);
   };
 
   const handleSendEmail = async () => {
@@ -163,7 +188,7 @@ export function SendReminderDialog({
   const formatCurrency = (value: number) =>
     value.toLocaleString("fr-FR") + " F CFA";
 
-  const hasAnyContact = canSendEmail || canSendSms;
+  const hasAnyContact = canSendEmail || canSendSms || canSendWhatsApp;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -189,15 +214,19 @@ export function SendReminderDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "email" | "sms")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="email" disabled={!canSendEmail} className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "email" | "sms" | "whatsapp")} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="email" disabled={!canSendEmail} className="flex items-center gap-1 text-xs">
+              <Mail className="h-3.5 w-3.5" />
               Email
             </TabsTrigger>
-            <TabsTrigger value="sms" disabled={!canSendSms} className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
+            <TabsTrigger value="sms" disabled={!canSendSms} className="flex items-center gap-1 text-xs">
+              <MessageSquare className="h-3.5 w-3.5" />
               SMS
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp" disabled={!canSendWhatsApp} className="flex items-center gap-1 text-xs text-green-600">
+              <MessageCircle className="h-3.5 w-3.5" />
+              WhatsApp
             </TabsTrigger>
           </TabsList>
 
@@ -262,6 +291,39 @@ export function SendReminderDialog({
               📱 Un SMS sera envoyé via Twilio au numéro indiqué.
             </div>
           </TabsContent>
+
+          <TabsContent value="whatsapp" className="space-y-4 pt-4">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Destinataire</span>
+                <span className="font-medium">{tenantName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Téléphone</span>
+                <span className="font-medium text-sm">{tenantPhone || "Non disponible"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Bien</span>
+                <span className="font-medium text-sm truncate max-w-[180px]">{propertyTitle}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Montant</span>
+                <span className={`font-bold ${isLate ? "text-destructive" : "text-primary"}`}>
+                  {formatCurrency(amount)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Échéance</span>
+                <span className="font-medium">
+                  {new Date(dueDate).toLocaleDateString("fr-FR")}
+                </span>
+              </div>
+            </div>
+            
+            <div className="bg-green-500/10 text-green-700 dark:text-green-300 rounded-lg p-3 text-sm">
+              📱 WhatsApp s'ouvrira avec un message pré-rempli. Envoyez-le manuellement.
+            </div>
+          </TabsContent>
         </Tabs>
 
         {isLate && (
@@ -276,12 +338,18 @@ export function SendReminderDialog({
           </Button>
           <Button 
             onClick={handleSendReminder} 
-            disabled={isSending || (activeTab === "email" && !canSendEmail) || (activeTab === "sms" && !canSendSms)}
+            disabled={isSending || (activeTab === "email" && !canSendEmail) || (activeTab === "sms" && !canSendSms) || (activeTab === "whatsapp" && !canSendWhatsApp)}
+            className={activeTab === "whatsapp" ? "bg-green-600 hover:bg-green-700" : ""}
           >
             {isSending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Envoi en cours...
+              </>
+            ) : activeTab === "whatsapp" ? (
+              <>
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Ouvrir WhatsApp
               </>
             ) : (
               <>

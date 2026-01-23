@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole, AppRole } from "./useUserRoles";
+import type { SuperAdminActionType } from "./useSuperAdminAudit";
 
 export interface AgencyStats {
   properties_count: number;
@@ -154,23 +155,35 @@ export function useUpdateAgency() {
   });
 }
 
-// Delete agency (super admin only)
+// Delete agency (super admin only) - logs audit via onSuccess callback
 export function useDeleteAgency() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, agencyData, logAudit }: { 
+      id: string; 
+      agencyData?: { name: string; email: string; user_id: string };
+      logAudit?: (action: SuperAdminActionType, targetUserId?: string, targetAgencyId?: string, details?: Record<string, any>) => Promise<void>;
+    }) => {
       const { error } = await supabase.from("agencies").delete().eq("id", id);
-
       if (error) throw error;
+      
+      // Log audit after successful deletion
+      if (logAudit && agencyData) {
+        await logAudit('account_deleted', agencyData.user_id, id, {
+          agency_name: agencyData.name,
+          target_email: agencyData.email,
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-agencies"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-audit-logs"] });
     },
   });
 }
 
-// Update user role (super admin only)
+// Update user role (super admin only) - logs audit via callback
 export function useSuperAdminUpdateRole() {
   const queryClient = useQueryClient();
 
@@ -178,21 +191,28 @@ export function useSuperAdminUpdateRole() {
     mutationFn: async ({
       userId,
       role,
+      oldRole,
+      agencyData,
+      logAudit,
     }: {
       userId: string;
       role: AppRole;
+      oldRole?: AppRole;
+      agencyData?: { id: string; name: string; email: string };
+      logAudit?: (action: SuperAdminActionType, targetUserId?: string, targetAgencyId?: string, details?: Record<string, any>) => Promise<void>;
     }) => {
       // Check if user has a role
       const { data: existingRole, error: fetchError } = await supabase
         .from("user_roles")
-        .select("id")
+        .select("id, role")
         .eq("user_id", userId)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
 
+      const previousRole = existingRole?.role || oldRole;
+
       if (existingRole) {
-        // Update existing role
         const { error } = await supabase
           .from("user_roles")
           .update({ role })
@@ -200,7 +220,6 @@ export function useSuperAdminUpdateRole() {
 
         if (error) throw error;
       } else {
-        // Insert new role
         const { error } = await supabase.from("user_roles").insert({
           user_id: userId,
           role,
@@ -208,15 +227,26 @@ export function useSuperAdminUpdateRole() {
 
         if (error) throw error;
       }
+
+      // Log audit after successful update
+      if (logAudit && agencyData) {
+        await logAudit('role_updated', userId, agencyData.id, {
+          agency_name: agencyData.name,
+          target_email: agencyData.email,
+          old_role: previousRole || 'aucun',
+          new_role: role,
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-agencies"] });
       queryClient.invalidateQueries({ queryKey: ["all-users-roles"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-audit-logs"] });
     },
   });
 }
 
-// Toggle account activation (super admin only)
+// Toggle account activation (super admin only) - logs audit via callback
 export function useToggleAccountStatus() {
   const queryClient = useQueryClient();
 
@@ -224,9 +254,13 @@ export function useToggleAccountStatus() {
     mutationFn: async ({
       id,
       is_active,
+      agencyData,
+      logAudit,
     }: {
       id: string;
       is_active: boolean;
+      agencyData?: { user_id: string; name: string; email: string };
+      logAudit?: (action: SuperAdminActionType, targetUserId?: string, targetAgencyId?: string, details?: Record<string, any>) => Promise<void>;
     }) => {
       const { error } = await supabase
         .from("agencies")
@@ -234,9 +268,23 @@ export function useToggleAccountStatus() {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Log audit after successful toggle
+      if (logAudit && agencyData) {
+        await logAudit(
+          is_active ? 'account_activated' : 'account_deactivated',
+          agencyData.user_id,
+          id,
+          {
+            agency_name: agencyData.name,
+            target_email: agencyData.email,
+          }
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-agencies"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-audit-logs"] });
     },
   });
 }

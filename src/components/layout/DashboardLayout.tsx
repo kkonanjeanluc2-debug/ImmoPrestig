@@ -1,10 +1,10 @@
 import { ReactNode, useState } from "react";
 import { Sidebar } from "./Sidebar";
-import { Bell, Search, User } from "lucide-react";
+import { Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLatePaymentNotifications } from "@/hooks/useLatePaymentNotifications";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -44,10 +44,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-emerald rounded-full" />
-            </Button>
+            <NotificationCenter />
             <div className="h-8 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center">

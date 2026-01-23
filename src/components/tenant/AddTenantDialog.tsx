@@ -30,6 +30,8 @@ import { Plus, Loader2 } from "lucide-react";
 import { useCreateTenant } from "@/hooks/useTenants";
 import { useCreateContract } from "@/hooks/useContracts";
 import { useProperties, useUpdateProperty } from "@/hooks/useProperties";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -55,6 +57,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const createContract = useCreateContract();
   const updateProperty = useUpdateProperty();
   const { data: properties, isLoading: propertiesLoading } = useProperties();
+  const limits = useSubscriptionLimits();
 
   const availableProperties = properties?.filter(p => p.status === 'disponible') || [];
 
@@ -125,7 +128,10 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto">
+        <Button 
+          className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto"
+          disabled={!limits.canCreateTenant}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Ajouter un locataire
         </Button>
@@ -134,6 +140,14 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         <DialogHeader>
           <DialogTitle>Ajouter un locataire</DialogTitle>
         </DialogHeader>
+        {!limits.canCreateTenant && limits.maxTenants !== null && (
+          <SubscriptionLimitAlert
+            type="tenant"
+            planName={limits.planName}
+            current={limits.currentTenants}
+            max={limits.maxTenants}
+          />
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Tenant Info Section */}

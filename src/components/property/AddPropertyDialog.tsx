@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCreateProperty } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
 
 interface AddPropertyDialogProps {
   onSuccess?: () => void;
@@ -35,6 +37,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const createProperty = useCreateProperty();
   const { data: owners = [] } = useOwners();
+  const limits = useSubscriptionLimits();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -138,7 +141,11 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) resetForm(); }}>
       <DialogTrigger asChild>
-        <Button className="bg-emerald hover:bg-emerald-dark text-primary-foreground gap-2 w-full sm:w-auto text-sm" size="sm">
+        <Button 
+          className="bg-emerald hover:bg-emerald-dark text-primary-foreground gap-2 w-full sm:w-auto text-sm" 
+          size="sm"
+          disabled={!limits.canCreateProperty}
+        >
           <Plus className="h-4 w-4" />
           <span className="whitespace-nowrap">Ajouter un bien</span>
         </Button>
@@ -147,6 +154,14 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
         <DialogHeader>
           <DialogTitle className="text-2xl font-display">Ajouter un nouveau bien</DialogTitle>
         </DialogHeader>
+        {!limits.canCreateProperty && limits.maxProperties !== null && (
+          <SubscriptionLimitAlert
+            type="property"
+            planName={limits.planName}
+            current={limits.currentProperties}
+            max={limits.maxProperties}
+          />
+        )}
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { getReceiptTemplates, type ReceiptTemplates } from "@/components/settings/ReceiptSettings";
 
 interface AgencyInfo {
   name: string;
@@ -71,9 +72,42 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
   }
 };
 
+const formatDate = (dateStr: string, format: "short" | "long"): string => {
+  const date = new Date(dateStr);
+  if (format === "long") {
+    return date.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+  return date.toLocaleDateString("fr-FR");
+};
+
+const replaceVariables = (
+  template: string,
+  data: ReceiptData,
+  templates: ReceiptTemplates
+): string => {
+  const signerName = data.agency?.name || data.ownerName || "le bailleur";
+  const addressParts = [data.agency?.address, data.agency?.city, data.agency?.country].filter(Boolean);
+  
+  return template
+    .replace(/{bailleur}/g, signerName)
+    .replace(/{locataire}/g, data.tenantName)
+    .replace(/{montant}/g, `${data.amount.toLocaleString("fr-FR")} ${templates.currency}`)
+    .replace(/{periode}/g, data.period)
+    .replace(/{bien}/g, data.propertyTitle)
+    .replace(/{agence}/g, data.agency?.name || signerName)
+    .replace(/{telephone}/g, data.agency?.phone || "")
+    .replace(/{email}/g, data.agency?.email || "")
+    .replace(/{adresse}/g, addressParts.join(", "));
+};
+
 const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const templates = getReceiptTemplates();
   
   // Colors
   const primaryColor: [number, number, number] = [26, 54, 93]; // Navy
@@ -89,7 +123,7 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   // Agency logo and info
   if (data.agency) {
     // Try to load and add logo
-    if (data.agency.logo_url) {
+    if (templates.showLogo && data.agency.logo_url) {
       try {
         const logoBase64 = await loadImageAsBase64(data.agency.logo_url);
         if (logoBase64) {
@@ -108,23 +142,25 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
     doc.text(data.agency.name, headerYOffset > 0 ? 40 : 15, 15);
     
     // Agency contact info
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    let contactY = 22;
-    
-    if (data.agency.phone) {
-      doc.text(`Tél: ${data.agency.phone}`, headerYOffset > 0 ? 40 : 15, contactY);
-      contactY += 5;
-    }
-    if (data.agency.email) {
-      doc.text(data.agency.email, headerYOffset > 0 ? 40 : 15, contactY);
-      contactY += 5;
-    }
-    if (data.agency.address || data.agency.city) {
-      const addressParts = [data.agency.address, data.agency.city, data.agency.country].filter(Boolean);
-      const fullAddress = addressParts.join(", ");
-      if (fullAddress) {
-        doc.text(fullAddress, headerYOffset > 0 ? 40 : 15, contactY);
+    if (templates.showAgencyContact) {
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      let contactY = 22;
+      
+      if (data.agency.phone) {
+        doc.text(`Tél: ${data.agency.phone}`, headerYOffset > 0 ? 40 : 15, contactY);
+        contactY += 5;
+      }
+      if (data.agency.email) {
+        doc.text(data.agency.email, headerYOffset > 0 ? 40 : 15, contactY);
+        contactY += 5;
+      }
+      if (data.agency.address || data.agency.city) {
+        const addressParts = [data.agency.address, data.agency.city, data.agency.country].filter(Boolean);
+        const fullAddress = addressParts.join(", ");
+        if (fullAddress) {
+          doc.text(fullAddress, headerYOffset > 0 ? 40 : 15, contactY);
+        }
       }
     }
   }
@@ -135,13 +171,13 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   doc.setFont("helvetica", "bold");
   
   if (data.agency) {
-    doc.text("QUITTANCE DE LOYER", pageWidth - 15, 18, { align: "right" });
+    doc.text(templates.title, pageWidth - 15, 18, { align: "right" });
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth - 15, 26, { align: "right" });
   } else {
     doc.setFontSize(24);
-    doc.text("QUITTANCE DE LOYER", pageWidth / 2, 25, { align: "center" });
+    doc.text(templates.title, pageWidth / 2, 25, { align: "center" });
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth / 2, 35, { align: "center" });
@@ -165,7 +201,7 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   const colWidth = (pageWidth - 40) / 2;
   
   // Owner section (left column)
-  if (data.ownerName) {
+  if (templates.showOwnerSection && data.ownerName) {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
@@ -179,13 +215,13 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("LOCATAIRE", 15 + colWidth + 10, yPos);
+  doc.text("LOCATAIRE", templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos);
   doc.setTextColor(...textColor);
   doc.setFont("helvetica", "normal");
-  doc.text(data.tenantName, 15 + colWidth + 10, yPos + 7);
+  doc.text(data.tenantName, templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos + 7);
   if (data.tenantEmail) {
     doc.setFontSize(9);
-    doc.text(data.tenantEmail, 15 + colWidth + 10, yPos + 12);
+    doc.text(data.tenantEmail, templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos + 12);
   }
   
   yPos += 25;
@@ -216,48 +252,54 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text(`${data.amount.toLocaleString("fr-FR")} F CFA`, pageWidth / 2, yPos + 26, { align: "center" });
+  doc.text(`${data.amount.toLocaleString("fr-FR")} ${templates.currency}`, pageWidth / 2, yPos + 26, { align: "center" });
   
   yPos += 50;
   
   // Amount in words
-  doc.setTextColor(...textColor);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "italic");
-  const amountInWords = numberToWords(data.amount);
-  doc.text(`Soit : ${amountInWords} francs CFA`, 15, yPos);
-  
-  yPos += 15;
+  if (templates.showAmountInWords) {
+    doc.setTextColor(...textColor);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
+    const amountInWords = numberToWords(data.amount);
+    doc.text(`Soit : ${amountInWords} francs CFA`, 15, yPos);
+    yPos += 15;
+  }
   
   // Payment details table
-  doc.setFillColor(...lightGray);
-  doc.rect(15, yPos, pageWidth - 30, 8, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text("DÉTAILS DU PAIEMENT", 20, yPos + 5.5);
-  
-  yPos += 12;
-  doc.setFont("helvetica", "normal");
-  
-  const details = [
-    ["Date d'échéance", new Date(data.dueDate).toLocaleDateString("fr-FR")],
-    ["Date de paiement", new Date(data.paidDate).toLocaleDateString("fr-FR")],
-    ["Mode de paiement", data.method || "Non spécifié"],
-  ];
-  
-  details.forEach(([label, value]) => {
-    doc.text(label, 20, yPos);
-    doc.text(value, pageWidth - 20, yPos, { align: "right" });
-    yPos += 7;
-  });
-  
-  yPos += 15;
+  if (templates.showPaymentDetails) {
+    doc.setFillColor(...lightGray);
+    doc.rect(15, yPos, pageWidth - 30, 8, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...textColor);
+    doc.text("DÉTAILS DU PAIEMENT", 20, yPos + 5.5);
+    
+    yPos += 12;
+    doc.setFont("helvetica", "normal");
+    
+    const details = [
+      ["Date d'échéance", formatDate(data.dueDate, templates.dateFormat)],
+      ["Date de paiement", formatDate(data.paidDate, templates.dateFormat)],
+      ["Mode de paiement", data.method || "Non spécifié"],
+    ];
+    
+    details.forEach(([label, value]) => {
+      doc.text(label, 20, yPos);
+      doc.text(value, pageWidth - 20, yPos, { align: "right" });
+      yPos += 7;
+    });
+    
+    yPos += 15;
+  } else {
+    yPos += 10;
+  }
   
   // Declaration text
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  const signerName = data.agency?.name || data.ownerName || "le bailleur";
-  const declarationText = `Je soussigné(e), ${signerName}, propriétaire/gestionnaire du bien désigné ci-dessus, déclare avoir reçu de ${data.tenantName} la somme de ${data.amount.toLocaleString("fr-FR")} F CFA au titre du loyer pour la période indiquée, et lui en donne quittance, sous réserve de tous mes droits.`;
+  doc.setTextColor(...textColor);
+  const declarationText = replaceVariables(templates.declarationText, data, templates);
   
   const splitDeclaration = doc.splitTextToSize(declarationText, pageWidth - 30);
   doc.text(splitDeclaration, 15, yPos);
@@ -265,18 +307,19 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   yPos += splitDeclaration.length * 5 + 20;
   
   // Date and signature
-  const today = new Date().toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const today = new Date().toLocaleDateString("fr-FR", 
+    templates.dateFormat === "long" 
+      ? { day: "numeric", month: "long", year: "numeric" }
+      : undefined
+  );
   
   doc.setFont("helvetica", "normal");
   doc.text(`Fait le ${today}`, pageWidth - 20, yPos, { align: "right" });
   
   yPos += 15;
   doc.setFont("helvetica", "italic");
-  doc.text("Signature du bailleur/gestionnaire", pageWidth - 20, yPos, { align: "right" });
+  const signatureLabel = replaceVariables(templates.signatureLabel, data, templates);
+  doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
   
   // Footer with agency info
   doc.setFillColor(...lightGray);
@@ -286,20 +329,23 @@ const createReceiptDocument = async (data: ReceiptData): Promise<jsPDF> => {
   doc.setTextColor(128, 128, 128);
   
   if (data.agency) {
+    const footerText = replaceVariables(templates.footerText, data, templates);
     doc.text(
-      `Document généré par ${data.agency.name}`,
+      footerText,
       pageWidth / 2,
       doc.internal.pageSize.getHeight() - 15,
       { align: "center" }
     );
-    const contactLine = [data.agency.phone, data.agency.email].filter(Boolean).join(" | ");
-    if (contactLine) {
-      doc.text(
-        contactLine,
-        pageWidth / 2,
-        doc.internal.pageSize.getHeight() - 8,
-        { align: "center" }
-      );
+    if (templates.showAgencyContact) {
+      const contactLine = [data.agency.phone, data.agency.email].filter(Boolean).join(" | ");
+      if (contactLine) {
+        doc.text(
+          contactLine,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 8,
+          { align: "center" }
+        );
+      }
     }
   } else {
     doc.text(

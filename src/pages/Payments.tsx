@@ -424,6 +424,7 @@ export default function Payments() {
                                 tenantId={payment.tenant_id}
                                 tenantName={tenantName}
                                 tenantEmail={tenant?.email || null}
+                                tenantPhone={tenant?.phone || null}
                                 propertyTitle={propertyTitle}
                                 propertyAddress={tenant?.property?.address}
                                 amount={Number(payment.amount)}

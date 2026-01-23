@@ -6,7 +6,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X, ExternalLink, FileText } from "lucide-react";
+import { Download, ExternalLink, FileText, MessageCircle } from "lucide-react";
+import { generateDocumentMessage, openWhatsApp } from "@/lib/whatsapp";
+import { useToast } from "@/hooks/use-toast";
 
 interface ViewDocumentDialogProps {
   open: boolean;
@@ -16,14 +18,19 @@ interface ViewDocumentDialogProps {
     file_url: string | null;
     type: string;
   };
+  tenantName?: string;
+  tenantPhone?: string | null;
 }
 
 export function ViewDocumentDialog({
   open,
   onOpenChange,
   document,
+  tenantName,
+  tenantPhone,
 }: ViewDocumentDialogProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   const isImage = document.file_url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
   const isPdf = document.file_url?.match(/\.pdf$/i);
@@ -46,6 +53,32 @@ export function ViewDocumentDialog({
     }
   };
 
+  const handleSendWhatsApp = () => {
+    if (!tenantPhone || !tenantName) {
+      toast({
+        title: "Erreur",
+        description: "Aucun numéro de téléphone disponible pour ce locataire.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const message = generateDocumentMessage({
+      tenantName,
+      documentName: document.name,
+      documentUrl: document.file_url || undefined,
+    });
+
+    openWhatsApp(tenantPhone, message);
+
+    toast({
+      title: "WhatsApp ouvert",
+      description: "Le message a été pré-rempli avec le lien du document.",
+    });
+  };
+
+  const canSendWhatsApp = !!tenantPhone && !!tenantName;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -61,6 +94,17 @@ export function ViewDocumentDialog({
                 <Download className="h-4 w-4 mr-1" />
                 Télécharger
               </Button>
+              {canSendWhatsApp && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSendWhatsApp}
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <MessageCircle className="h-4 w-4 mr-1" />
+                  WhatsApp
+                </Button>
+              )}
             </div>
           </div>
         </DialogHeader>

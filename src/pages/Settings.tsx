@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText, Settings2 } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -13,6 +13,7 @@ import { WhatsAppSettings } from "@/components/settings/WhatsAppSettings";
 import { AgencySettings } from "@/components/settings/AgencySettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
+import { AutomationSettings } from "@/components/settings/AutomationSettings";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("agency");
@@ -30,7 +31,7 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-11 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger
               value="agency"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
@@ -102,6 +103,13 @@ const Settings = () => {
               <span className="hidden sm:inline">WhatsApp</span>
             </TabsTrigger>
             <TabsTrigger
+              value="automation"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+            >
+              <Settings2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Automatisations</span>
+            </TabsTrigger>
+            <TabsTrigger
               value="security"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
             >
@@ -148,6 +156,10 @@ const Settings = () => {
 
           <TabsContent value="whatsapp">
             <WhatsAppSettings />
+          </TabsContent>
+
+          <TabsContent value="automation">
+            <AutomationSettings />
           </TabsContent>
 
           <TabsContent value="security">

@@ -43,7 +43,7 @@ import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
-  email: z.string().trim().email("Email invalide").max(255),
+  email: z.string().trim().email("Email invalide").max(255).optional().or(z.literal("")),
   phone: z.string().trim().max(20).optional(),
   property_id: z.string().uuid("Veuillez sélectionner un bien"),
   start_date: z.string().min(1, "La date de début est requise"),
@@ -97,7 +97,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       // Create tenant
       const tenant = await createTenant.mutateAsync({
         name: values.name,
-        email: values.email,
+        email: values.email || "",
         phone: values.phone || null,
         property_id: values.property_id,
       });
@@ -220,7 +220,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email *</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="kouame.yao@email.com" {...field} />
                       </FormControl>

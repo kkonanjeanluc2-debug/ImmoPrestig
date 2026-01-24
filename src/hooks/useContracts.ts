@@ -92,7 +92,15 @@ export const useExpireContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ contractId, propertyId }: { contractId: string; propertyId: string }) => {
+    mutationFn: async ({ 
+      contractId, 
+      propertyId, 
+      unitId 
+    }: { 
+      contractId: string; 
+      propertyId: string; 
+      unitId?: string | null;
+    }) => {
       // Update contract status to expired
       const { error: contractError } = await supabase
         .from("contracts")
@@ -101,17 +109,47 @@ export const useExpireContract = () => {
 
       if (contractError) throw contractError;
 
-      // Update property status to disponible
-      const { error: propertyError } = await supabase
-        .from("properties")
-        .update({ status: "disponible" })
-        .eq("id", propertyId);
+      // If contract has a unit, update unit status to disponible
+      if (unitId) {
+        const { error: unitError } = await supabase
+          .from("property_units")
+          .update({ status: "disponible" })
+          .eq("id", unitId);
 
-      if (propertyError) throw propertyError;
+        if (unitError) throw unitError;
+
+        // Check if there are other occupied units for this property
+        const { data: occupiedUnits, error: checkError } = await supabase
+          .from("property_units")
+          .select("id")
+          .eq("property_id", propertyId)
+          .eq("status", "occupé");
+
+        if (checkError) throw checkError;
+
+        // Only update property to disponible if no more occupied units
+        if (!occupiedUnits || occupiedUnits.length === 0) {
+          const { error: propertyError } = await supabase
+            .from("properties")
+            .update({ status: "disponible" })
+            .eq("id", propertyId);
+
+          if (propertyError) throw propertyError;
+        }
+      } else {
+        // No unit - just update property status to disponible
+        const { error: propertyError } = await supabase
+          .from("properties")
+          .update({ status: "disponible" })
+          .eq("id", propertyId);
+
+        if (propertyError) throw propertyError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
       queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units"] });
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
     },
   });

@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
         id, 
         user_id,
         property_id,
+        unit_id,
         tenant:tenants(name),
         property:properties(title)
       `)
@@ -84,7 +85,16 @@ Deno.serve(async (req) => {
     }
 
     const contractIds = expiredContracts.map((c) => c.id);
-    const propertyIds = expiredContracts
+    
+    // Separate contracts with and without units
+    const contractsWithUnits = expiredContracts.filter((c) => c.unit_id);
+    const contractsWithoutUnits = expiredContracts.filter((c) => !c.unit_id);
+    
+    const unitIds = contractsWithUnits
+      .map((c) => c.unit_id)
+      .filter((id): id is string => id !== null);
+    
+    const propertyIdsWithoutUnits = contractsWithoutUnits
       .map((c) => c.property_id)
       .filter((id): id is string => id !== null);
 
@@ -98,12 +108,44 @@ Deno.serve(async (req) => {
       throw updateContractsError;
     }
 
-    // Update properties to disponible status
-    if (propertyIds.length > 0) {
+    // Update units to disponible status
+    if (unitIds.length > 0) {
+      const { error: updateUnitsError } = await supabase
+        .from("property_units")
+        .update({ status: "disponible" })
+        .in("id", unitIds);
+
+      if (updateUnitsError) {
+        console.error("Error updating units:", updateUnitsError);
+      }
+    }
+
+    // For contracts with units, check if property should be set to disponible
+    const propertyIdsToCheck = [...new Set(contractsWithUnits.map((c) => c.property_id).filter((id): id is string => id !== null))];
+    
+    for (const propertyId of propertyIdsToCheck) {
+      // Check if there are still occupied units for this property
+      const { data: occupiedUnits, error: checkError } = await supabase
+        .from("property_units")
+        .select("id")
+        .eq("property_id", propertyId)
+        .eq("status", "occupé");
+
+      if (!checkError && (!occupiedUnits || occupiedUnits.length === 0)) {
+        // No more occupied units, set property to disponible
+        await supabase
+          .from("properties")
+          .update({ status: "disponible" })
+          .eq("id", propertyId);
+      }
+    }
+
+    // Update properties without units to disponible status
+    if (propertyIdsWithoutUnits.length > 0) {
       const { error: updatePropertiesError } = await supabase
         .from("properties")
         .update({ status: "disponible" })
-        .in("id", propertyIds);
+        .in("id", propertyIdsWithoutUnits);
 
       if (updatePropertiesError) {
         console.error("Error updating properties:", updatePropertiesError);
@@ -119,7 +161,9 @@ Deno.serve(async (req) => {
         await supabase.from("notifications").insert({
           user_id: contract.user_id,
           title: "Contrat expiré",
-          message: `Le contrat de ${tenantName} pour ${propertyTitle} a expiré. Le bien a été remis en disponible.`,
+          message: contract.unit_id 
+            ? `Le contrat de ${tenantName} pour ${propertyTitle} a expiré. La porte a été libérée.`
+            : `Le contrat de ${tenantName} pour ${propertyTitle} a expiré. Le bien a été remis en disponible.`,
           type: "info",
           entity_type: "contract",
           entity_id: contract.id,
@@ -134,7 +178,7 @@ Deno.serve(async (req) => {
     await Promise.all(notificationPromises);
 
     console.log(
-      `Expired ${contractIds.length} contracts and updated ${propertyIds.length} properties`
+      `Expired ${contractIds.length} contracts, updated ${unitIds.length} units and ${propertyIdsWithoutUnits.length} properties`
     );
 
     return new Response(
@@ -142,7 +186,8 @@ Deno.serve(async (req) => {
         success: true,
         message: `${contractIds.length} contrat(s) expiré(s)`,
         expired_count: contractIds.length,
-        updated_properties: propertyIds.length,
+        updated_units: unitIds.length,
+        updated_properties: propertyIdsWithoutUnits.length,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

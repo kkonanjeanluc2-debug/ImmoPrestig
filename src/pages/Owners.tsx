@@ -104,18 +104,20 @@ const Owners = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
               Propriétaires
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Gérez vos propriétaires et leurs biens
             </p>
           </div>
-          <div className="flex gap-2">
+          
+          {/* Action buttons - scrollable on mobile */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap">
             {canCreate && <ImportOwnersDialog />}
             {canEdit && <MergeOwnersDialog />}
             {canCreate && <AddOwnerDialog />}
@@ -123,40 +125,40 @@ const Owners = () => {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Rechercher un propriétaire..."
-            className="pl-10"
+            className="pl-10 w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
           <Card>
-            <CardContent className="p-4 sm:p-6">
-              <p className="text-xs sm:text-sm text-muted-foreground">Total propriétaires</p>
-              <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">{totalOwners}</p>
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total propriétaires</p>
+              <p className="text-base sm:text-xl font-bold text-foreground mt-0.5">{totalOwners}</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 sm:p-6">
-              <p className="text-xs sm:text-sm text-muted-foreground">Actifs</p>
-              <p className="text-xl sm:text-2xl font-bold text-emerald mt-1">{activeOwners}</p>
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Actifs</p>
+              <p className="text-base sm:text-xl font-bold text-emerald mt-0.5">{activeOwners}</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 sm:p-6">
-              <p className="text-xs sm:text-sm text-muted-foreground">Total biens</p>
-              <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">{totalProperties}</p>
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Total biens</p>
+              <p className="text-base sm:text-xl font-bold text-foreground mt-0.5">{totalProperties}</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 sm:p-6">
-              <p className="text-xs sm:text-sm text-muted-foreground">Revenus mensuels</p>
-              <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">0 F CFA</p>
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Revenus mensuels</p>
+              <p className="text-base sm:text-xl font-bold text-foreground mt-0.5">0 F</p>
             </CardContent>
           </Card>
         </div>
@@ -191,7 +193,7 @@ const Owners = () => {
 
         {/* Owners List */}
         {!isLoading && !error && filteredOwners.length > 0 && (
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4">
             {filteredOwners.map((owner) => {
               const ownerProperties = propertiesByOwner[owner.id] || [];
               const propertyCount = ownerProperties.length;
@@ -201,43 +203,37 @@ const Owners = () => {
               return (
                 <Collapsible key={owner.id} open={isExpanded} onOpenChange={() => toggleExpanded(owner.id)}>
                   <Card className="overflow-hidden hover:shadow-md transition-shadow">
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <CardContent className="p-3 sm:p-4 md:p-6">
+                      <div className="flex flex-col gap-3">
                         {/* Owner Info - Clickable */}
                         <div 
-                          className="flex items-start gap-3 sm:gap-4 cursor-pointer group"
+                          className="flex items-start gap-3 cursor-pointer group"
                           onClick={() => navigate(`/owners/${owner.id}`)}
                         >
-                          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-navy flex items-center justify-center flex-shrink-0 group-hover:ring-2 group-hover:ring-primary/20 transition-all">
-                            <span className="text-primary-foreground font-semibold text-sm sm:text-base">
-                              {owner.name.split(' ').map(n => n[0]).join('')}
+                          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-navy flex items-center justify-center flex-shrink-0 group-hover:ring-2 group-hover:ring-primary/20 transition-all">
+                            <span className="text-primary-foreground font-semibold text-xs sm:text-sm">
+                              {owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </span>
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-semibold text-foreground text-sm sm:text-base group-hover:text-primary transition-colors">{owner.name}</h3>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h3 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate max-w-[150px] sm:max-w-none">{owner.name}</h3>
                               <Badge 
                                 variant={owner.status === "actif" ? "default" : "secondary"}
-                                className={owner.status === "actif" ? "bg-emerald text-primary-foreground" : ""}
+                                className={`text-[10px] sm:text-xs ${owner.status === "actif" ? "bg-emerald text-primary-foreground" : ""}`}
                               >
                                 {owner.status}
                               </Badge>
                             </div>
-                            <div className="mt-2 space-y-1">
-                              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                                <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <div className="mt-1.5 space-y-0.5">
+                              <p className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
+                                <Mail className="h-3 w-3 flex-shrink-0" />
                                 <span className="truncate">{owner.email}</span>
                               </p>
                               {owner.phone && (
-                                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                <p className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
+                                  <Phone className="h-3 w-3 flex-shrink-0" />
                                   <span>{owner.phone}</span>
-                                </p>
-                              )}
-                              {owner.address && (
-                                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                  <span className="truncate">{owner.address}</span>
                                 </p>
                               )}
                             </div>
@@ -245,26 +241,26 @@ const Owners = () => {
                         </div>
 
                         {/* Stats & Actions */}
-                        <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-border">
+                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
                           <CollapsibleTrigger asChild>
-                            <button className="text-center hover:bg-muted p-2 rounded-lg transition-colors">
-                              <p className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-1">
-                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                            <button className="text-center hover:bg-muted p-1.5 sm:p-2 rounded-lg transition-colors">
+                              <p className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1">
+                                <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                                 {propertyCount}
                                 {propertyCount > 0 && (
                                   isExpanded 
-                                    ? <ChevronUp className="h-3 w-3 ml-1" />
-                                    : <ChevronDown className="h-3 w-3 ml-1" />
+                                    ? <ChevronUp className="h-3 w-3" />
+                                    : <ChevronDown className="h-3 w-3" />
                                 )}
                               </p>
-                              <p className="text-xs text-muted-foreground">Bien{propertyCount > 1 ? "s" : ""}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">Bien{propertyCount > 1 ? "s" : ""}</p>
                             </button>
                           </CollapsibleTrigger>
                           <div className="text-center">
-                            <p className="text-lg sm:text-xl font-bold text-emerald">
+                            <p className="text-sm sm:text-base font-bold text-emerald">
                               {monthlyRevenue.toLocaleString('fr-FR')} F
                             </p>
-                            <p className="text-xs text-muted-foreground">Revenus/mois</p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">Revenus/mois</p>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -305,8 +301,8 @@ const Owners = () => {
                       {/* Properties List (Collapsible) */}
                       <CollapsibleContent>
                         {propertyCount > 0 && (
-                          <div className="mt-4 pt-4 border-t border-border">
-                            <p className="text-xs font-medium text-muted-foreground mb-3">
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-2">
                               Biens de {owner.name}
                             </p>
                             <OwnerPropertiesList properties={ownerProperties} maxDisplay={5} />

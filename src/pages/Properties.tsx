@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2, User, UserCheck } from "lucide-react";
+import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ const Properties = () => {
   const [transactionFilter, setTransactionFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [assignedFilter, setAssignedFilter] = useState("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
   const { canCreate, canEdit, canDelete } = usePermissions();
@@ -70,7 +71,21 @@ const Properties = () => {
       : assignedFilter === "unassigned"
         ? !assignedTo
         : assignedTo === assignedFilter;
-    return matchesSearch && matchesType && matchesStatus && matchesTransaction && matchesOwner && matchesAssigned;
+    
+    // Filter by unit availability
+    const summary = unitsSummary[property.id];
+    const hasUnits = summary && summary.total_units > 0;
+    const matchesAvailability = availabilityFilter === "all"
+      ? true
+      : availabilityFilter === "with_available"
+        ? hasUnits && summary.available_units > 0
+        : availabilityFilter === "fully_occupied"
+          ? hasUnits && summary.available_units === 0
+          : availabilityFilter === "no_units"
+            ? !hasUnits
+            : true;
+    
+    return matchesSearch && matchesType && matchesStatus && matchesTransaction && matchesOwner && matchesAssigned && matchesAvailability;
   });
 
   const handleDelete = async () => {
@@ -179,6 +194,30 @@ const Properties = () => {
                     </div>
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            {/* Availability Filter for multi-unit properties */}
+            <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Disponibilité" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes disponibilités</SelectItem>
+                <SelectItem value="with_available">
+                  <div className="flex items-center gap-2">
+                    <DoorOpen className="h-3 w-3 text-green-600" />
+                    Portes disponibles
+                  </div>
+                </SelectItem>
+                <SelectItem value="fully_occupied">
+                  <div className="flex items-center gap-2">
+                    <DoorOpen className="h-3 w-3 text-orange-600" />
+                    Complet (0 porte)
+                  </div>
+                </SelectItem>
+                <SelectItem value="no_units">
+                  <span className="text-muted-foreground">Sans unités</span>
+                </SelectItem>
               </SelectContent>
             </Select>
             {/* Assigned Filter - Only for agency owner/admin */}

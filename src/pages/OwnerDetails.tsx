@@ -25,7 +25,8 @@ import {
   Building,
   Map,
   Receipt,
-  Clock
+  Clock,
+  Percent
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -376,6 +377,50 @@ const OwnerDetails = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Management Type */}
+            {owner.management_type && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Percent className="h-5 w-5 text-primary" />
+                    Type de gestion
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{owner.management_type.name}</span>
+                    <Badge variant="outline" className="text-lg font-bold px-3 py-1 bg-background">
+                      {owner.management_type.percentage}%
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {owner.management_type.type === "gestion_locative" 
+                      ? "Gestion locative" 
+                      : "Commission de vente"}
+                  </div>
+                  {monthlyRevenue > 0 && owner.management_type.type === "gestion_locative" && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Commission mensuelle</span>
+                          <span className="font-semibold text-primary">
+                            {Math.round(monthlyRevenue * owner.management_type.percentage / 100).toLocaleString('fr-FR')} F
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Commission annuelle</span>
+                          <span className="font-semibold text-primary">
+                            {Math.round(monthlyRevenue * 12 * owner.management_type.percentage / 100).toLocaleString('fr-FR')} F
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Portfolio Summary */}
             <Card>

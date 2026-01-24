@@ -154,29 +154,36 @@ Deno.serve(async (req) => {
     }
 
     // Format phone number for Ivory Coast (+225)
-    // FedaPay expects international format: +225 followed by 8 or 9 digits (without the local leading 0)
-    // Local Ivorian numbers are 10 digits starting with 0 (e.g., 0546493904)
-    // International format removes the leading 0: +225546493904
+    // Observation (via logs): FedaPay validates CI numbers with the leading 0 when using the new 10-digit plan.
+    // We therefore normalize to either:
+    // - 10 digits starting with 0 (new plan)  -> +2250XXXXXXXXX
+    // - 8 digits (legacy plan)                -> +225XXXXXXXX
     const formatIvorianPhone = (phone: string | null | undefined): string => {
       if (!phone) return "";
 
       // Keep digits only
       let digits = phone.replace(/\D/g, "");
 
-      // If user already provided country code 225, remove it (we will re-add it properly)
+      // If user already provided country code 225, remove it (we will re-add it)
       if (digits.startsWith("225")) {
         digits = digits.slice(3);
       }
 
-      // Remove leading 0 if present (local format -> international)
-      // Local: 0546493904 (10 digits) -> International: 546493904 (9 digits)
-      if (digits.startsWith("0")) {
-        digits = digits.slice(1);
+      // Normalize to 10 digits starting with 0 when possible
+      // - If user entered 9 digits without leading 0, prepend it
+      // - If user entered 10 digits starting with 0, keep as-is
+      if (digits.length === 9 && !digits.startsWith("0")) {
+        digits = `0${digits}`;
       }
 
-      // After removing leading 0, should be 9 digits (new format) or 8 digits (legacy)
-      if (!(digits.length === 9 || digits.length === 8)) {
-        console.error(`Invalid CI phone number length: ${digits.length} digits (expected 8 or 9)`);
+      // Accept new format (10 digits starting with 0) or legacy (8 digits)
+      const isNewFormat = digits.length === 10 && digits.startsWith("0");
+      const isLegacyFormat = digits.length === 8;
+
+      if (!isNewFormat && !isLegacyFormat) {
+        console.error(
+          `Invalid CI phone number: digits=${digits} length=${digits.length} (expected 10 digits starting with 0, or 8 digits)`
+        );
         return "";
       }
 

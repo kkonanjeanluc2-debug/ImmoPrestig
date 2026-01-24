@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2, Home, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Loader2, Home, ArrowRight, DoorOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Tooltip,
@@ -34,9 +35,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCreateTenant } from "@/hooks/useTenants";
+import { useCreateTenant, useUpdateTenant } from "@/hooks/useTenants";
 import { useCreateContract } from "@/hooks/useContracts";
 import { useProperties, useUpdateProperty } from "@/hooks/useProperties";
+import { usePropertyUnits, useUpdatePropertyUnit } from "@/hooks/usePropertyUnits";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
 import { toast } from "sonner";
@@ -46,6 +48,7 @@ const formSchema = z.object({
   email: z.string().trim().email("Email invalide").max(255).optional().or(z.literal("")),
   phone: z.string().trim().max(20).optional(),
   property_id: z.string().uuid("Veuillez sélectionner un bien"),
+  unit_id: z.string().optional(),
   start_date: z.string().min(1, "La date de début est requise"),
   end_date: z.string().min(1, "La date de fin est requise"),
   rent_amount: z.string().min(1, "Le montant du loyer est requis"),
@@ -60,19 +63,32 @@ interface AddTenantDialogProps {
 
 export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const [open, setOpen] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
+  
   const createTenant = useCreateTenant();
+  const updateTenant = useUpdateTenant();
   const createContract = useCreateContract();
   const updateProperty = useUpdateProperty();
+  const updatePropertyUnit = useUpdatePropertyUnit();
   const { data: properties, isLoading: propertiesLoading, refetch: refetchProperties } = useProperties();
+  const { data: propertyUnits = [] } = usePropertyUnits(selectedPropertyId || undefined);
   const limits = useSubscriptionLimits();
 
   // Filter only available properties and refetch when dialog opens
-  const availableProperties = properties?.filter(p => p.status === 'disponible') || [];
+  const availableProperties = properties?.filter(p => p.status === 'disponible' || p.type === 'location') || [];
+  
+  // Filter available units (only those with status 'disponible')
+  const availableUnits = propertyUnits.filter(u => u.status === 'disponible');
+  
+  // Check if property has units
+  const selectedProperty = properties?.find(p => p.id === selectedPropertyId);
+  const hasUnits = propertyUnits.length > 0;
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
       refetchProperties();
+      setSelectedPropertyId("");
     }
   };
 
@@ -83,6 +99,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       email: "",
       phone: "",
       property_id: "",
+      unit_id: "",
       start_date: "",
       end_date: "",
       rent_amount: "",
@@ -90,11 +107,23 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     },
   });
 
-  const isSubmitting = createTenant.isPending || createContract.isPending || updateProperty.isPending;
+  // Watch property_id to load units
+  const watchedPropertyId = form.watch("property_id");
+  
+  useEffect(() => {
+    if (watchedPropertyId && watchedPropertyId !== selectedPropertyId) {
+      setSelectedPropertyId(watchedPropertyId);
+      form.setValue("unit_id", "");
+    }
+  }, [watchedPropertyId, selectedPropertyId, form]);
+
+  const isSubmitting = createTenant.isPending || createContract.isPending || updateProperty.isPending || updatePropertyUnit.isPending;
 
   const onSubmit = async (values: FormValues) => {
     try {
-      // Create tenant
+      const unitId = values.unit_id && values.unit_id !== "none" ? values.unit_id : null;
+      
+      // Create tenant with unit_id if applicable
       const tenant = await createTenant.mutateAsync({
         name: values.name,
         email: values.email || "",
@@ -102,10 +131,19 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         property_id: values.property_id,
       });
 
-      // Create associated contract
+      // Update tenant with unit_id if needed
+      if (unitId) {
+        await updateTenant.mutateAsync({
+          id: tenant.id,
+          unit_id: unitId,
+        });
+      }
+
+      // Create associated contract with unit_id
       await createContract.mutateAsync({
         tenant_id: tenant.id,
         property_id: values.property_id,
+        unit_id: unitId,
         start_date: values.start_date,
         end_date: values.end_date,
         rent_amount: parseFloat(values.rent_amount),
@@ -113,19 +151,37 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         status: 'active',
       });
 
-      // Update property status to 'occupé'
-      await updateProperty.mutateAsync({
-        id: values.property_id,
-        status: 'occupé',
-      });
+      // Update unit status to 'occupé' if a unit was selected
+      if (unitId) {
+        await updatePropertyUnit.mutateAsync({
+          id: unitId,
+          status: 'occupé',
+        });
+        
+        // Check if all units are now occupied
+        const remainingAvailableUnits = availableUnits.filter(u => u.id !== unitId);
+        if (remainingAvailableUnits.length === 0) {
+          // All units occupied, mark property as occupied
+          await updateProperty.mutateAsync({
+            id: values.property_id,
+            status: 'occupé',
+          });
+        }
+      } else {
+        // No units, update property status to 'occupé'
+        await updateProperty.mutateAsync({
+          id: values.property_id,
+          status: 'occupé',
+        });
+      }
 
       toast.success("Locataire et contrat créés avec succès");
       form.reset();
+      setSelectedPropertyId("");
       setOpen(false);
       onSuccess?.();
     } catch (error: any) {
       console.error("Error creating tenant:", error);
-      // Check for duplicate error
       if (error?.message?.includes("duplicate") || error?.code === "23505") {
         if (error?.message?.includes("email")) {
           toast.error("Un locataire avec cet email existe déjà");
@@ -140,7 +196,22 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     }
   };
 
-  const noPropertiesAvailable = availableProperties.length === 0;
+  // Determine if we can add a tenant
+  const getAvailableCount = () => {
+    let count = 0;
+    for (const property of availableProperties) {
+      // Check if property has units
+      if (property.type === 'location') {
+        // For simplicity, count properties that are available or have available units
+        if (property.status === 'disponible') {
+          count++;
+        }
+      }
+    }
+    return count || availableProperties.filter(p => p.status === 'disponible').length;
+  };
+
+  const noPropertiesAvailable = availableProperties.filter(p => p.status === 'disponible').length === 0;
   const isButtonDisabled = !limits.canCreateTenant || noPropertiesAvailable;
 
   return (
@@ -156,9 +227,9 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Ajouter un locataire
-                  {availableProperties.length > 0 && (
+                  {availableProperties.filter(p => p.status === 'disponible').length > 0 && (
                     <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-white/20 rounded-full">
-                      {availableProperties.length} bien{availableProperties.length > 1 ? 's' : ''}
+                      {availableProperties.filter(p => p.status === 'disponible').length} bien{availableProperties.filter(p => p.status === 'disponible').length > 1 ? 's' : ''}
                     </span>
                   )}
                 </Button>
@@ -258,10 +329,12 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                     <Select 
                       onValueChange={(value) => {
                         field.onChange(value);
-                        // Auto-fill rent amount from property price
-                        const selectedProperty = availableProperties.find(p => p.id === value);
-                        if (selectedProperty) {
-                          form.setValue('rent_amount', selectedProperty.price.toString());
+                        setSelectedPropertyId(value);
+                        form.setValue("unit_id", "");
+                        // Don't auto-fill rent if property has units
+                        const selectedProp = availableProperties.find(p => p.id === value);
+                        if (selectedProp && !hasUnits) {
+                          form.setValue('rent_amount', selectedProp.price.toString());
                         }
                       }} 
                       value={field.value}
@@ -272,12 +345,12 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-background border z-50">
-                        {availableProperties.length === 0 ? (
+                        {availableProperties.filter(p => p.status === 'disponible' || p.type === 'location').length === 0 ? (
                           <div className="p-2 text-sm text-muted-foreground text-center">
                             Aucun bien disponible
                           </div>
                         ) : (
-                          availableProperties.map((property) => (
+                          availableProperties.filter(p => p.status === 'disponible' || p.type === 'location').map((property) => (
                             <SelectItem key={property.id} value={property.id}>
                               <div className="flex flex-col">
                                 <div className="flex items-center justify-between gap-2">
@@ -295,6 +368,79 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                   </FormItem>
                 )}
               />
+
+              {/* Unit Selection - Only show if property has units */}
+              {selectedPropertyId && hasUnits && (
+                <FormField
+                  control={form.control}
+                  name="unit_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <DoorOpen className="h-4 w-4" />
+                        Sélectionner une porte *
+                      </FormLabel>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Auto-fill rent from unit
+                          const selectedUnit = propertyUnits.find(u => u.id === value);
+                          if (selectedUnit) {
+                            form.setValue('rent_amount', selectedUnit.rent_amount.toString());
+                          }
+                        }} 
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choisir une porte" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background border z-50">
+                          {availableUnits.length === 0 ? (
+                            <div className="p-2 text-sm text-muted-foreground text-center">
+                              Aucune porte disponible
+                            </div>
+                          ) : (
+                            availableUnits.map((unit) => (
+                              <SelectItem key={unit.id} value={unit.id}>
+                                <div className="flex items-center justify-between gap-4 w-full">
+                                  <div className="flex items-center gap-2">
+                                    <DoorOpen className="h-4 w-4 text-primary" />
+                                    <span>{unit.unit_number}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {unit.rooms_count} pièce{unit.rooms_count > 1 ? 's' : ''}
+                                    </Badge>
+                                  </div>
+                                  <span className="text-xs font-medium text-emerald">
+                                    {unit.rent_amount.toLocaleString('fr-FR')} F/mois
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {availableUnits.length === 0 && propertyUnits.length > 0 && (
+                        <p className="text-xs text-amber-600">
+                          Toutes les portes de ce bien sont occupées.
+                        </p>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* Info about multi-unit property */}
+              {selectedPropertyId && hasUnits && (
+                <div className="bg-muted/50 p-3 rounded-lg text-sm">
+                  <p className="text-muted-foreground">
+                    Ce bien comporte <strong>{propertyUnits.length}</strong> porte{propertyUnits.length > 1 ? 's' : ''}, 
+                    dont <strong>{availableUnits.length}</strong> disponible{availableUnits.length > 1 ? 's' : ''}.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Contract Details */}
@@ -373,7 +519,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || (hasUnits && availableUnits.length === 0)}
                 className="flex-1 bg-emerald hover:bg-emerald/90"
               >
                 {isSubmitting ? (

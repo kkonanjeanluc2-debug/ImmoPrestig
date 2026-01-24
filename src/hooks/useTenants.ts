@@ -12,6 +12,13 @@ export type TenantWithDetails = Tenant & {
   property?: Tables<"properties"> | null;
   contracts?: Tables<"contracts">[];
   payments?: Tables<"payments">[];
+  unit?: {
+    id: string;
+    unit_number: string;
+    rooms_count: number;
+    rent_amount: number;
+    status: string;
+  } | null;
 };
 
 export const useTenants = () => {
@@ -26,7 +33,8 @@ export const useTenants = () => {
           *,
           property:properties(*),
           contracts(*),
-          payments(*)
+          payments(*),
+          unit:property_units(id, unit_number, rooms_count, rent_amount, status)
         `)
         .order("created_at", { ascending: false });
 
@@ -129,23 +137,34 @@ export const useDeleteTenant = () => {
 
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name?: string }) => {
-      // First, get the tenant to find their property_id
+      // First, get the tenant to find their property_id and unit_id
       const { data: tenant, error: fetchError } = await supabase
         .from("tenants")
-        .select("property_id")
+        .select("property_id, unit_id")
         .eq("id", id)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
 
       const propertyId = tenant?.property_id;
+      const unitId = tenant?.unit_id;
 
       // Delete the tenant (contracts and payments will need cascade or manual deletion)
       const { error } = await supabase.from("tenants").delete().eq("id", id);
       if (error) throw error;
 
-      // If tenant had a property, update its status to 'disponible'
-      if (propertyId) {
+      // If tenant had a unit, update its status to 'disponible'
+      if (unitId) {
+        const { error: unitError } = await supabase
+          .from("property_units")
+          .update({ status: "disponible" })
+          .eq("id", unitId);
+        
+        if (unitError) {
+          console.error("Error updating unit status:", unitError);
+        }
+      } else if (propertyId) {
+        // If tenant had a property without unit, update property status to 'disponible'
         const { error: updateError } = await supabase
           .from("properties")
           .update({ status: "disponible" })
@@ -170,6 +189,7 @@ export const useDeleteTenant = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

@@ -20,6 +20,7 @@ import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 
 import { toast } from "sonner";
 import {
@@ -50,6 +51,7 @@ const Properties = () => {
   const { data: assignableUsers = [] } = useAssignableUsers();
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
   const deleteProperty = useDeleteProperty();
+  const { data: unitsSummary = {} } = usePropertyUnitsSummary();
 
   const filteredProperties = (properties || []).filter((property) => {
     const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -267,6 +269,7 @@ const Properties = () => {
                   onDelete={setDeletingProperty}
                   canEdit={canEdit}
                   canDelete={canDelete}
+                  unitsSummary={unitsSummary[property.id]}
                 />
               </div>
             ))}

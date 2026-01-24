@@ -20,6 +20,7 @@ import { useState } from "react";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
+import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
@@ -33,6 +34,7 @@ const Index = () => {
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
   const { data: whatsappStats } = useWhatsAppLogsCount();
+  const { data: unitsSummary = {} } = usePropertyUnitsSummary();
 
   const handleGenerateReceipts = async () => {
     setIsGenerating(true);
@@ -209,6 +211,7 @@ const Index = () => {
                   <div key={property.id} style={{ animationDelay: `${index * 100}ms` }}>
                     <PropertyCard 
                       property={property}
+                      unitsSummary={unitsSummary[property.id]}
                     />
                   </div>
                 ))}

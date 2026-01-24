@@ -240,30 +240,57 @@ Deno.serve(async (req) => {
       );
     }
 
+    // FedaPay returns the transaction under "v1/transaction" key (with slash)
+    const fedapayTransaction = fedapayData["v1/transaction"];
+    
+    if (!fedapayTransaction) {
+      console.error("Unexpected FedaPay response structure:", JSON.stringify(fedapayData));
+      return new Response(
+        JSON.stringify({ error: "Réponse FedaPay inattendue" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Update transaction with FedaPay reference
     await supabase
       .from("payment_transactions")
       .update({
-        fedapay_transaction_id: String(fedapayData.v1.transaction.id),
-        fedapay_reference: fedapayData.v1.transaction.reference,
+        fedapay_transaction_id: String(fedapayTransaction.id),
+        fedapay_reference: fedapayTransaction.reference,
       })
       .eq("id", transaction.id);
 
-    // Generate payment token/URL
-    const tokenResponse = await fetch(`${fedapayBaseUrl}/transactions/${fedapayData.v1.transaction.id}/token`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${fedapaySecretKey}`,
-        "Content-Type": "application/json",
-      },
-    });
+    // FedaPay already returns payment_url in the transaction response
+    const paymentUrl = fedapayTransaction.payment_url;
+    
+    if (!paymentUrl) {
+      // Fallback: Generate payment token/URL if not provided
+      const tokenResponse = await fetch(`${fedapayBaseUrl}/transactions/${fedapayTransaction.id}/token`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${fedapaySecretKey}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    const tokenData = await tokenResponse.json();
+      const tokenData = await tokenResponse.json();
 
-    if (!tokenResponse.ok) {
+      if (!tokenResponse.ok) {
+        return new Response(
+          JSON.stringify({ error: "Erreur génération lien de paiement" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
-        JSON.stringify({ error: "Erreur génération lien de paiement" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: true,
+          transaction_id: transaction.id,
+          fedapay_transaction_id: fedapayTransaction.id,
+          payment_url: tokenData.url,
+          token: tokenData.token,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -271,9 +298,9 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         transaction_id: transaction.id,
-        fedapay_transaction_id: fedapayData.v1.transaction.id,
-        payment_url: tokenData.url,
-        token: tokenData.token,
+        fedapay_transaction_id: fedapayTransaction.id,
+        payment_url: paymentUrl,
+        token: fedapayTransaction.payment_token,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

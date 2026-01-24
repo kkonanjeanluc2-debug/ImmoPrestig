@@ -153,6 +153,25 @@ Deno.serve(async (req) => {
       throw new Error(`Erreur création transaction: ${txError?.message}`);
     }
 
+    // Format phone number for Ivory Coast (+225)
+    const formatIvorianPhone = (phone: string | null | undefined): string => {
+      if (!phone) return "";
+      // Remove all non-digit characters
+      let cleaned = phone.replace(/\D/g, "");
+      // Remove leading 225 if present (we'll add it properly)
+      if (cleaned.startsWith("225")) {
+        cleaned = cleaned.substring(3);
+      }
+      // Remove leading 0 if present
+      if (cleaned.startsWith("0")) {
+        cleaned = cleaned.substring(1);
+      }
+      // Return with +225 prefix
+      return cleaned ? `+225${cleaned}` : "";
+    };
+
+    const formattedPhone = formatIvorianPhone(customer_phone || agency.phone);
+
     // Create FedaPay transaction
     const fedapayPayload = {
       description: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`,
@@ -164,7 +183,7 @@ Deno.serve(async (req) => {
         lastname: agency.name.split(" ").slice(1).join(" ") || "",
         email: agency.email,
         phone_number: {
-          number: customer_phone || agency.phone || "",
+          number: formattedPhone,
           country: "CI",
         },
       },
@@ -175,6 +194,8 @@ Deno.serve(async (req) => {
         billing_cycle,
       },
     };
+
+    console.log("FedaPay request:", JSON.stringify({ ...fedapayPayload, environment: isSandbox ? "sandbox" : "production" }));
 
     const fedapayResponse = await fetch(`${fedapayBaseUrl}/transactions`, {
       method: "POST",

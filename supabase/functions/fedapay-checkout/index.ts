@@ -154,20 +154,30 @@ Deno.serve(async (req) => {
     }
 
     // Format phone number for Ivory Coast (+225)
+    // Note: CI numbers are commonly 10 digits (often starting with 0). For FedaPay,
+    // we keep the 10 digits and just prepend +225.
     const formatIvorianPhone = (phone: string | null | undefined): string => {
       if (!phone) return "";
-      // Remove all non-digit characters
-      let cleaned = phone.replace(/\D/g, "");
-      // Remove leading 225 if present (we'll add it properly)
-      if (cleaned.startsWith("225")) {
-        cleaned = cleaned.substring(3);
+
+      // Keep digits only
+      let digits = phone.replace(/\D/g, "");
+
+      // If user already provided country code, remove it (we will re-add it)
+      if (digits.startsWith("225")) {
+        digits = digits.slice(3);
       }
-      // Remove leading 0 if present
-      if (cleaned.startsWith("0")) {
-        cleaned = cleaned.substring(1);
+
+      // If it's 11 digits with a leading 0, normalize to 10 digits (drop only in that case)
+      if (digits.length === 11 && digits.startsWith("0")) {
+        digits = digits.slice(1);
       }
-      // Return with +225 prefix
-      return cleaned ? `+225${cleaned}` : "";
+
+      // Accept 10-digit (new CI format) and 8-digit (legacy) numbers
+      if (!(digits.length === 10 || digits.length === 8)) {
+        return "";
+      }
+
+      return `+225${digits}`;
     };
 
     const formattedPhone = formatIvorianPhone(customer_phone || agency.phone);

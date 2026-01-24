@@ -68,6 +68,7 @@ export type Database = {
           siret: string | null
           updated_at: string
           user_id: string
+          whatsapp_property_template: string | null
         }
         Insert: {
           accent_color?: string | null
@@ -89,6 +90,7 @@ export type Database = {
           siret?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_property_template?: string | null
         }
         Update: {
           accent_color?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           siret?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_property_template?: string | null
         }
         Relationships: []
       }

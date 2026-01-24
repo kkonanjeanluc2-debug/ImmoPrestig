@@ -21,6 +21,7 @@ export interface Agency {
   primary_color: string | null;
   accent_color: string | null;
   sidebar_color: string | null;
+  whatsapp_property_template: string | null;
   created_at: string;
   updated_at: string;
 }

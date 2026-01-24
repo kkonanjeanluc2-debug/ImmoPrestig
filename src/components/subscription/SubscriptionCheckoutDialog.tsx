@@ -34,9 +34,53 @@ export function SubscriptionCheckoutDialog({
 }: SubscriptionCheckoutDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<string>("orange_money");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Validate Ivorian phone number (10 digits starting with 0)
+  const validateIvorianPhone = (phone: string): string | null => {
+    if (!phone.trim()) {
+      return "Veuillez entrer votre numéro de téléphone";
+    }
+    
+    // Remove all non-digits
+    const digits = phone.replace(/\D/g, "");
+    
+    // Remove country code if present
+    let cleanedDigits = digits;
+    if (digits.startsWith("225")) {
+      cleanedDigits = digits.slice(3);
+    }
+    
+    // Check if it starts with 0 (add it back if missing for local format check)
+    const hasLeadingZero = cleanedDigits.startsWith("0");
+    
+    // For CI: local format is 10 digits starting with 0 (e.g., 0708298281)
+    // Or 9 digits without leading 0 (which we'll accept too)
+    if (cleanedDigits.length === 10 && hasLeadingZero) {
+      return null; // Valid: 0xxxxxxxxx
+    }
+    
+    if (cleanedDigits.length === 9 && !hasLeadingZero) {
+      return null; // Valid: xxxxxxxxx (without leading 0)
+    }
+    
+    if (cleanedDigits.length === 8) {
+      return null; // Valid: legacy 8-digit format
+    }
+    
+    return "Format invalide. Entrez 10 chiffres commençant par 0 (ex: 0708298281)";
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setPhoneNumber(value);
+    // Clear error when user starts typing
+    if (phoneError) {
+      setPhoneError(null);
+    }
+  };
 
   if (!plan) return null;
 
@@ -60,13 +104,18 @@ export function SubscriptionCheckoutDialog({
       return;
     }
 
-    if (paymentMethod !== "card" && !phoneNumber && !isFree) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Veuillez entrer votre numéro de téléphone",
-      });
-      return;
+    // Validate phone number for mobile money payments
+    if (paymentMethod !== "card" && !isFree) {
+      const validationError = validateIvorianPhone(phoneNumber);
+      if (validationError) {
+        setPhoneError(validationError);
+        toast({
+          variant: "destructive",
+          title: "Numéro invalide",
+          description: validationError,
+        });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -196,13 +245,18 @@ export function SubscriptionCheckoutDialog({
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+225 07 00 00 00 00"
+                    placeholder="0708298281"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    className={phoneError ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Vous recevrez une demande de paiement sur ce numéro.
-                  </p>
+                  {phoneError ? (
+                    <p className="text-xs text-destructive">{phoneError}</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Format: 10 chiffres commençant par 0 (ex: 0708298281)
+                    </p>
+                  )}
                 </div>
               )}
             </>

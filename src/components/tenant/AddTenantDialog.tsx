@@ -56,10 +56,18 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const createTenant = useCreateTenant();
   const createContract = useCreateContract();
   const updateProperty = useUpdateProperty();
-  const { data: properties, isLoading: propertiesLoading } = useProperties();
+  const { data: properties, isLoading: propertiesLoading, refetch: refetchProperties } = useProperties();
   const limits = useSubscriptionLimits();
 
+  // Filter only available properties and refetch when dialog opens
   const availableProperties = properties?.filter(p => p.status === 'disponible') || [];
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      refetchProperties();
+    }
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -126,7 +134,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button 
           className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto"

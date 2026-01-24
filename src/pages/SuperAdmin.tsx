@@ -17,6 +17,7 @@ import { RegistrationChart } from "@/components/superadmin/RegistrationChart";
 import { SubscriptionPlansManager } from "@/components/superadmin/SubscriptionPlansManager";
 import { AgencySubscriptionsManager } from "@/components/superadmin/AgencySubscriptionsManager";
 import { TransactionsDashboard } from "@/components/superadmin/TransactionsDashboard";
+import { RevenueEvolutionChart } from "@/components/superadmin/RevenueEvolutionChart";
 import { AppRole, ROLE_LABELS } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -604,6 +605,7 @@ const SuperAdmin = () => {
 
           {/* Transactions Tab */}
           <TabsContent value="transactions" className="space-y-6">
+            <RevenueEvolutionChart />
             <TransactionsDashboard />
           </TabsContent>
 

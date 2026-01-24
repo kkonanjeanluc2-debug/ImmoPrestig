@@ -18,10 +18,11 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { useUpdatePayment } from "@/hooks/usePayments";
 import { useToast } from "@/hooks/use-toast";
 import { useAgency } from "@/hooks/useAgency";
-import { Loader2, CheckCircle, Banknote, Mail, FileText } from "lucide-react";
+import { Loader2, CheckCircle, Banknote, Mail, FileText, Percent } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateRentReceiptBase64WithTemplate, getPaymentPeriod } from "@/lib/generateReceipt";
 import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
@@ -37,6 +38,8 @@ interface CollectPaymentDialogProps {
   propertyAddress?: string;
   ownerName?: string;
   currentMethod?: string | null;
+  commissionPercentage?: number;
+  commissionAmount?: number;
   onSuccess?: () => void;
 }
 
@@ -64,6 +67,8 @@ export function CollectPaymentDialog({
   propertyAddress,
   ownerName,
   currentMethod,
+  commissionPercentage = 0,
+  commissionAmount = 0,
   onSuccess,
 }: CollectPaymentDialogProps) {
   const [open, setOpen] = useState(false);
@@ -207,6 +212,27 @@ export function CollectPaymentDialog({
                 {formatCurrency(amount)}
               </span>
             </div>
+            {commissionPercentage > 0 && (
+              <>
+                <Separator className="my-2" />
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Percent className="h-3 w-3" />
+                    Commission ({commissionPercentage}%)
+                  </span>
+                  <span className="font-medium text-primary">
+                    {formatCurrency(commissionAmount)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Net propriétaire</span>
+                  <span className="font-medium">
+                    {formatCurrency(amount - commissionAmount)}
+                  </span>
+                </div>
+              </>
+            )}
+            <Separator className="my-2" />
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Date</span>
               <span className="font-medium">

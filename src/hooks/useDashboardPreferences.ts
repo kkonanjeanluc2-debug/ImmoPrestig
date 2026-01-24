@@ -14,7 +14,8 @@ export type WidgetId =
   | "kpi-roi"
   | "kpi-recovery"
   | "kpi-vacancy"
-  | "kpi-delay";
+  | "kpi-delay"
+  | "commission-evolution";
 
 export type PeriodFilter = "month" | "quarter" | "year";
 
@@ -39,6 +40,7 @@ const DEFAULT_PREFERENCES: DashboardPreferences = {
     "kpi-recovery",
     "kpi-vacancy",
     "kpi-delay",
+    "commission-evolution",
   ],
   widgetOrder: [
     "stats",
@@ -48,6 +50,7 @@ const DEFAULT_PREFERENCES: DashboardPreferences = {
     "kpi-delay",
     "property-map",
     "revenue-trend",
+    "commission-evolution",
     "late-analysis",
     "property-performance",
     "occupancy",
@@ -72,6 +75,7 @@ export const WIDGET_LABELS: Record<WidgetId, string> = {
   "kpi-recovery": "Taux de recouvrement",
   "kpi-vacancy": "Vacance locative",
   "kpi-delay": "Délai moyen de paiement",
+  "commission-evolution": "Évolution des commissions",
 };
 
 export function useDashboardPreferences() {

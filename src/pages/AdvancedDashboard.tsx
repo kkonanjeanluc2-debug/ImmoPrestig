@@ -11,6 +11,7 @@ import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { PropertyMap } from "@/components/dashboard/PropertyMap";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DraggableWidget } from "@/components/dashboard/DraggableWidget";
+import { CommissionEvolutionChart } from "@/components/dashboard/CommissionEvolutionChart";
 import { useDashboardPreferences, WidgetId } from "@/hooks/useDashboardPreferences";
 import { useProperties } from "@/hooks/useProperties";
 import { usePayments } from "@/hooks/usePayments";
@@ -149,13 +150,21 @@ const AdvancedDashboard = () => {
       case "property-map":
         return <PropertyMap properties={properties || []} />;
 
+      case "commission-evolution":
+        return (
+          <CommissionEvolutionChart
+            payments={payments || []}
+            period={preferences.period}
+          />
+        );
+
       default:
         return null;
     }
   };
 
   // Filter and sort widgets for main grid
-  const mainWidgets: WidgetId[] = ["property-map", "revenue-trend", "late-analysis", "property-performance", "occupancy", "property-types", "recent-payments", "recent-activity"];
+  const mainWidgets: WidgetId[] = ["property-map", "revenue-trend", "commission-evolution", "late-analysis", "property-performance", "occupancy", "property-types", "recent-payments", "recent-activity"];
   const sortedMainWidgets = preferences.widgetOrder.filter((id) => mainWidgets.includes(id) && isVisible(id));
 
   return (

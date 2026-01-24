@@ -163,6 +163,23 @@ export const useDeleteTenant = () => {
         if (unitError) {
           console.error("Error updating unit status:", unitError);
         }
+
+        // Check if there are other occupied units for this property
+        if (propertyId) {
+          const { data: occupiedUnits, error: checkError } = await supabase
+            .from("property_units")
+            .select("id")
+            .eq("property_id", propertyId)
+            .eq("status", "occupé");
+
+          if (!checkError && (!occupiedUnits || occupiedUnits.length === 0)) {
+            // No more occupied units, set property to disponible
+            await supabase
+              .from("properties")
+              .update({ status: "disponible" })
+              .eq("id", propertyId);
+          }
+        }
       } else if (propertyId) {
         // If tenant had a property without unit, update property status to 'disponible'
         const { error: updateError } = await supabase

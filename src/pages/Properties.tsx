@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2, User } from "lucide-react";
+import { Search, Grid3X3, List, Loader2, User, UserCheck } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import { useOwners } from "@/hooks/useOwners";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -37,12 +38,15 @@ const Properties = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [transactionFilter, setTransactionFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
+  const [assignedFilter, setAssignedFilter] = useState("all");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
   const { canCreate, canEdit, canDelete } = usePermissions();
   
   const { data: properties, isLoading, error } = useProperties();
   const { data: owners = [] } = useOwners();
+  const { data: assignableUsers = [] } = useAssignableUsers();
+  const { isOwner: isAgencyOwner } = useIsAgencyOwner();
   const deleteProperty = useDeleteProperty();
 
   const filteredProperties = (properties || []).filter((property) => {
@@ -56,7 +60,13 @@ const Properties = () => {
       : ownerFilter === "none" 
         ? !property.owner_id 
         : property.owner_id === ownerFilter;
-    return matchesSearch && matchesType && matchesStatus && matchesTransaction && matchesOwner;
+    const assignedTo = (property as any).assigned_to;
+    const matchesAssigned = assignedFilter === "all"
+      ? true
+      : assignedFilter === "unassigned"
+        ? !assignedTo
+        : assignedTo === assignedFilter;
+    return matchesSearch && matchesType && matchesStatus && matchesTransaction && matchesOwner && matchesAssigned;
   });
 
   const handleDelete = async () => {
@@ -166,6 +176,28 @@ const Properties = () => {
                 ))}
               </SelectContent>
             </Select>
+            {/* Assigned Filter - Only for agency owner/admin */}
+            {isAgencyOwner && assignableUsers.length > 1 && (
+              <Select value={assignedFilter} onValueChange={setAssignedFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Gestionnaire" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les gestionnaires</SelectItem>
+                  <SelectItem value="unassigned">
+                    <span className="text-muted-foreground">Non assignés</span>
+                  </SelectItem>
+                  {assignableUsers.map((user) => (
+                    <SelectItem key={user.user_id} value={user.user_id}>
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-3 w-3" />
+                        {user.full_name || user.email}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <div className="flex rounded-lg border border-border overflow-hidden">
               <Button
                 variant="ghost"

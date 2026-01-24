@@ -8,6 +8,15 @@ export type Owner = Tables<"owners">;
 export type OwnerInsert = TablesInsert<"owners">;
 export type OwnerUpdate = TablesUpdate<"owners">;
 
+export interface OwnerWithManagementType extends Owner {
+  management_type?: {
+    id: string;
+    name: string;
+    percentage: number;
+    type: string;
+  } | null;
+}
+
 export const useOwners = () => {
   const { user } = useAuth();
 
@@ -16,11 +25,14 @@ export const useOwners = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("owners")
-        .select("*")
+        .select(`
+          *,
+          management_type:management_types(id, name, percentage, type)
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Owner[];
+      return data as OwnerWithManagementType[];
     },
     enabled: !!user,
   });

@@ -469,6 +469,42 @@ export type Database = {
         }
         Relationships: []
       }
+      management_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean
+          name: string
+          percentage: number
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          percentage?: number
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          percentage?: number
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -511,6 +547,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          management_type_id: string | null
           name: string
           phone: string | null
           status: string
@@ -522,6 +559,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          management_type_id?: string | null
           name: string
           phone?: string | null
           status?: string
@@ -533,13 +571,22 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          management_type_id?: string | null
           name?: string
           phone?: string | null
           status?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "owners_management_type_id_fkey"
+            columns: ["management_type_id"]
+            isOneToOne: false
+            referencedRelation: "management_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_transactions: {
         Row: {

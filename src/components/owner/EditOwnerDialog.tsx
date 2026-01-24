@@ -17,6 +17,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -25,8 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
-import { useUpdateOwner, Owner } from "@/hooks/useOwners";
+import { Loader2, Percent } from "lucide-react";
+import { useUpdateOwner, OwnerWithManagementType } from "@/hooks/useOwners";
+import { useManagementTypes } from "@/hooks/useManagementTypes";
 import { toast } from "sonner";
 
 const ownerSchema = z.object({
@@ -35,12 +37,13 @@ const ownerSchema = z.object({
   phone: z.string().trim().max(20).optional().or(z.literal("")),
   address: z.string().trim().max(500).optional().or(z.literal("")),
   status: z.enum(["actif", "inactif"]),
+  management_type_id: z.string().optional().or(z.literal("")),
 });
 
 type OwnerFormData = z.infer<typeof ownerSchema>;
 
 interface EditOwnerDialogProps {
-  owner: Owner | null;
+  owner: OwnerWithManagementType | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -48,6 +51,7 @@ interface EditOwnerDialogProps {
 
 export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOwnerDialogProps) {
   const updateOwner = useUpdateOwner();
+  const { data: managementTypes = [] } = useManagementTypes();
 
   const form = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
@@ -57,6 +61,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
       phone: "",
       address: "",
       status: "actif",
+      management_type_id: "",
     },
   });
 
@@ -69,6 +74,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         phone: owner.phone || "",
         address: owner.address || "",
         status: owner.status as "actif" | "inactif",
+        management_type_id: owner.management_type_id || "",
       });
     }
   }, [owner, form]);
@@ -84,6 +90,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         phone: data.phone || null,
         address: data.address || null,
         status: data.status,
+        management_type_id: data.management_type_id || null,
       });
 
       toast.success("Propriétaire modifié avec succès");
@@ -191,6 +198,43 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
                 </FormItem>
               )}
             />
+
+            {managementTypes.length > 0 && (
+              <FormField
+                control={form.control}
+                name="management_type_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Percent className="h-4 w-4" />
+                      Type de gestion
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un type de gestion" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Aucun</SelectItem>
+                        {managementTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            <div className="flex items-center justify-between gap-4">
+                              <span>{type.name}</span>
+                              <span className="text-muted-foreground">({type.percentage}%)</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Pourcentage de commission applicable pour ce propriétaire
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

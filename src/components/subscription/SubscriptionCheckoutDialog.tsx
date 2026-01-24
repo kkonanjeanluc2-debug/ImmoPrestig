@@ -39,6 +39,34 @@ export function SubscriptionCheckoutDialog({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Normalize phone number to international format for display
+  const normalizeIvorianPhone = (phone: string): string | null => {
+    if (!phone.trim()) return null;
+
+    // Keep digits only
+    let digits = phone.replace(/\D/g, "");
+
+    // Remove country code if present
+    if (digits.startsWith("225")) {
+      digits = digits.slice(3);
+    }
+
+    // Normalize to 10 digits starting with 0 when possible
+    if (digits.length === 9 && !digits.startsWith("0")) {
+      digits = `0${digits}`;
+    }
+
+    // Accept new format (10 digits starting with 0) or legacy (8 digits)
+    const isNewFormat = digits.length === 10 && digits.startsWith("0");
+    const isLegacyFormat = digits.length === 8;
+
+    if (!isNewFormat && !isLegacyFormat) {
+      return null;
+    }
+
+    return `+225${digits}`;
+  };
+
   // Validate Ivorian phone number (10 digits starting with 0)
   const validateIvorianPhone = (phone: string): string | null => {
     if (!phone.trim()) {
@@ -81,6 +109,9 @@ export function SubscriptionCheckoutDialog({
       setPhoneError(null);
     }
   };
+
+  // Get normalized phone for display
+  const normalizedPhone = normalizeIvorianPhone(phoneNumber);
 
   if (!plan) return null;
 
@@ -252,6 +283,10 @@ export function SubscriptionCheckoutDialog({
                   />
                   {phoneError ? (
                     <p className="text-xs text-destructive">{phoneError}</p>
+                  ) : normalizedPhone ? (
+                    <p className="text-xs text-muted-foreground">
+                      Numéro envoyé au paiement : <span className="font-medium text-foreground">{normalizedPhone}</span>
+                    </p>
                   ) : (
                     <p className="text-xs text-muted-foreground">
                       Format: 10 chiffres commençant par 0 (ex: 0708298281)

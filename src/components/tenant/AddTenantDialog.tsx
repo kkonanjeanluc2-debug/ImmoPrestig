@@ -26,7 +26,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Home } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCreateTenant } from "@/hooks/useTenants";
 import { useCreateContract } from "@/hooks/useContracts";
 import { useProperties, useUpdateProperty } from "@/hooks/useProperties";
@@ -133,22 +139,39 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     }
   };
 
+  const noPropertiesAvailable = availableProperties.length === 0;
+  const isButtonDisabled = !limits.canCreateTenant || noPropertiesAvailable;
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button 
-          className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto"
-          disabled={!limits.canCreateTenant}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter un locataire
-          {availableProperties.length > 0 && (
-            <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-white/20 rounded-full">
-              {availableProperties.length} bien{availableProperties.length > 1 ? 's' : ''}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="w-full sm:w-auto">
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto"
+                  disabled={isButtonDisabled}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un locataire
+                  {availableProperties.length > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-white/20 rounded-full">
+                      {availableProperties.length} bien{availableProperties.length > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </Button>
+              </DialogTrigger>
             </span>
+          </TooltipTrigger>
+          {noPropertiesAvailable && (
+            <TooltipContent className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              <span>Aucun bien disponible. Ajoutez d'abord un bien.</span>
+            </TooltipContent>
           )}
-        </Button>
-      </DialogTrigger>
+        </Tooltip>
+      </TooltipProvider>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ajouter un locataire</DialogTitle>

@@ -6,6 +6,7 @@ import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
+import { SubscriptionQuotaCard } from "@/components/dashboard/SubscriptionQuotaCard";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { Building2, Users, Wallet, TrendingUp, Loader2, FileText, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -209,8 +210,9 @@ const Index = () => {
             )}
           </div>
 
-          {/* Right Column: Payments & Activity */}
+          {/* Right Column: Quota, Payments & Activity */}
           <div className="xl:col-span-1 space-y-6">
+            <SubscriptionQuotaCard />
             <RecentPayments />
             <RecentActivity />
           </div>

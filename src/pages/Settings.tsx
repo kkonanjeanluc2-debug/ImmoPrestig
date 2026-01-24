@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, UserPlus, UserCheck } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { NotificationHistory } from "@/components/settings/NotificationHistory";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { RolesSettings } from "@/components/settings/RolesSettings";
-import { TeamMembersSettings } from "@/components/settings/TeamMembersSettings";
+import { TeamSettings } from "@/components/settings/TeamSettings";
 import { ActivityHistory } from "@/components/settings/ActivityHistory";
 import { WhatsAppSettings } from "@/components/settings/WhatsAppSettings";
 import { AgencySettings } from "@/components/settings/AgencySettings";
@@ -16,7 +16,6 @@ import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
-import { AssignmentsSettings } from "@/components/settings/AssignmentsSettings";
 import { useIsSuperAdmin } from "@/hooks/useSuperAdmin";
 
 const Settings = () => {
@@ -93,7 +92,7 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:grid-cols-15 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-13 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger
               value="agency"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
@@ -133,15 +132,8 @@ const Settings = () => {
               value="team"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
             >
-              <UserPlus className="h-4 w-4" />
+              <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Équipe</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="assignments"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
-            >
-              <UserCheck className="h-4 w-4" />
-              <span className="hidden sm:inline">Affectations</span>
             </TabsTrigger>
             <TabsTrigger
               value="roles"
@@ -222,11 +214,7 @@ const Settings = () => {
           </TabsContent>
 
           <TabsContent value="team">
-            <TeamMembersSettings />
-          </TabsContent>
-
-          <TabsContent value="assignments">
-            <AssignmentsSettings />
+            <TeamSettings />
           </TabsContent>
 
           <TabsContent value="roles">

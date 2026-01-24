@@ -18,7 +18,8 @@ export const useContracts = () => {
         .select(`
           *,
           property:properties(*),
-          tenant:tenants(*)
+          tenant:tenants(*),
+          unit:property_units(*)
         `)
         .order("created_at", { ascending: false });
 

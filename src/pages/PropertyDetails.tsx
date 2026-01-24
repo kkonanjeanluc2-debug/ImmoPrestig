@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
 import { PropertyImageGallery } from "@/components/property/PropertyImageGallery";
+import { PropertyUnitsManager } from "@/components/property/PropertyUnitsManager";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import {
@@ -190,6 +191,18 @@ const PropertyDetails = () => {
                   <p className="text-muted-foreground whitespace-pre-wrap">
                     {property.description}
                   </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Property Units (Multi-door management) */}
+            {property.type === "location" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gestion des portes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PropertyUnitsManager propertyId={property.id} canEdit={canEdit} />
                 </CardContent>
               </Card>
             )}

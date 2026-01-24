@@ -1,9 +1,10 @@
-import { MapPin, Bed, Bath, Maximize, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, Pencil, Trash2, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Property } from "@/hooks/useProperties";
 import { useNavigate } from "react-router-dom";
+import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
 
 interface PropertyCardProps {
   property: Property;
@@ -33,6 +34,7 @@ export function PropertyCard({
     area, 
     status 
   } = property;
+  const assignedTo = (property as any).assigned_to;
 
   const image = image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
 
@@ -116,9 +118,12 @@ export function PropertyCard({
       {/* Content */}
       <div className="p-5 space-y-4">
         <div>
-          <h3 className="font-display text-lg font-semibold text-foreground group-hover:text-navy transition-colors">
-            {title}
-          </h3>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-display text-lg font-semibold text-foreground group-hover:text-navy transition-colors">
+              {title}
+            </h3>
+            {assignedTo && <AssignmentBadge userId={assignedTo} />}
+          </div>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
             <MapPin className="h-4 w-4" />
             {address}

@@ -3,6 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
   Search, 
   Users, 
   FileText, 
@@ -20,7 +27,8 @@ import {
   Wallet,
   Loader2,
   Pencil,
-  Eye
+  Eye,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
@@ -34,6 +42,8 @@ import { MergeTenantsDialog } from "@/components/tenant/MergeTenantsDialog";
 import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { usePermissions } from "@/hooks/usePermissions";
+import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
+import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
 const contractStatusConfig = {
   active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
@@ -62,6 +72,7 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
   const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
   const contractStatus = activeContract?.status as keyof typeof contractStatusConfig || 'expired';
   const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
+  const assignedTo = (tenant as any).assigned_to;
 
   return (
     <Card className="overflow-hidden">
@@ -80,9 +91,12 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 <h3 className="font-semibold text-foreground truncate">{tenant.name}</h3>
-                <Badge variant="outline" className={cn("w-fit", statusConfig.className)}>
-                  {statusConfig.label}
-                </Badge>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className={cn("w-fit", statusConfig.className)}>
+                    {statusConfig.label}
+                  </Badge>
+                  {assignedTo && <AssignmentBadge userId={assignedTo} />}
+                </div>
               </div>
 
               {/* Contact */}
@@ -232,10 +246,13 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
 export default function Tenants() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [assignedFilter, setAssignedFilter] = useState("all");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { data: tenants, isLoading, error } = useTenants();
   const { canCreate, canEdit } = usePermissions();
+  const { data: assignableUsers = [] } = useAssignableUsers();
+  const { isOwner: isAgencyOwner } = useIsAgencyOwner();
 
   const handleEditTenant = (tenant: TenantWithDetails) => {
     setEditingTenant(tenant);
@@ -246,11 +263,20 @@ export default function Tenants() {
     navigate(`/tenants/${tenant.id}`);
   };
 
-  const filteredTenants = (tenants || []).filter(tenant =>
-    tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenant.property?.title?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTenants = (tenants || []).filter(tenant => {
+    const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.property?.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const assignedTo = (tenant as any).assigned_to;
+    const matchesAssigned = assignedFilter === "all"
+      ? true
+      : assignedFilter === "unassigned"
+        ? !assignedTo
+        : assignedTo === assignedFilter;
+    
+    return matchesSearch && matchesAssigned;
+  });
 
   // Compute stats
   const totalTenants = tenants?.length || 0;
@@ -310,15 +336,39 @@ export default function Tenants() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher un locataire..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un locataire..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          {/* Assigned Filter - Only for agency owner/admin */}
+          {isAgencyOwner && assignableUsers.length > 1 && (
+            <Select value={assignedFilter} onValueChange={setAssignedFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Gestionnaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les gestionnaires</SelectItem>
+                <SelectItem value="unassigned">
+                  <span className="text-muted-foreground">Non assignés</span>
+                </SelectItem>
+                {assignableUsers.map((user) => (
+                  <SelectItem key={user.user_id} value={user.user_id}>
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="h-3 w-3" />
+                      {user.full_name || user.email}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Stats */}

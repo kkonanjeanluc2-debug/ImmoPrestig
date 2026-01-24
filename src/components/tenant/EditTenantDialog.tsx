@@ -18,9 +18,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useUpdateTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { toast } from "sonner";
+import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";
+import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
@@ -39,6 +42,8 @@ interface EditTenantDialogProps {
 
 export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: EditTenantDialogProps) {
   const updateTenant = useUpdateTenant();
+  const { isOwner: isAgencyOwner } = useIsAgencyOwner();
+  const [assignedTo, setAssignedTo] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -57,6 +62,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         email: tenant.email,
         phone: tenant.phone || "",
       });
+      setAssignedTo((tenant as any).assigned_to || null);
     }
   }, [tenant, form]);
 
@@ -69,6 +75,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         name: values.name,
         email: values.email,
         phone: values.phone || null,
+        assigned_to: assignedTo,
       });
 
       toast.success("Locataire modifié avec succès");
@@ -140,6 +147,20 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                 </FormItem>
               )}
             />
+
+            {/* Assignment Selector - Only visible to agency owner/admin */}
+            {isAgencyOwner && (
+              <div className="space-y-2">
+                <Label>Gestionnaire assigné</Label>
+                <AssignUserSelect
+                  value={assignedTo}
+                  onValueChange={setAssignedTo}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Si assigné, seul ce gestionnaire pourra voir ce locataire
+                </p>
+              </div>
+            )}
 
             <div className="flex gap-3 pt-4">
               <Button

@@ -717,6 +717,7 @@ export type Database = {
         Row: {
           address: string
           area: number | null
+          assigned_to: string | null
           bathrooms: number | null
           bedrooms: number | null
           created_at: string
@@ -737,6 +738,7 @@ export type Database = {
         Insert: {
           address: string
           area?: number | null
+          assigned_to?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string
@@ -757,6 +759,7 @@ export type Database = {
         Update: {
           address?: string
           area?: number | null
+          assigned_to?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string
@@ -980,6 +983,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          assigned_to: string | null
           avatar_url: string | null
           created_at: string
           email: string
@@ -991,6 +995,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           avatar_url?: string | null
           created_at?: string
           email: string
@@ -1002,6 +1007,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string
@@ -1087,11 +1093,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_property: {
+        Args: {
+          _assigned_to: string
+          _property_user_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      can_access_tenant: {
+        Args: {
+          _assigned_to: string
+          _tenant_user_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       can_agency_add_member: { Args: { p_agency_id: string }; Returns: boolean }
       get_agency_member_count: {
         Args: { p_agency_id: string }
         Returns: number
       }
+      get_user_agency_id: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1103,6 +1126,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_agency_owner_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {

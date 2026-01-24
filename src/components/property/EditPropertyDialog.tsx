@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUpdateProperty, Property } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
+import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";
+import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
 interface EditPropertyDialogProps {
   property: Property;
@@ -31,12 +33,14 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
     image_url: "",
     status: "disponible",
     owner_id: "",
+    assigned_to: null as string | null,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const updateProperty = useUpdateProperty();
   const { data: owners = [] } = useOwners();
+  const { isOwner: isAgencyOwner } = useIsAgencyOwner();
 
   useEffect(() => {
     if (property && open) {
@@ -53,6 +57,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         image_url: property.image_url || "",
         status: property.status || "disponible",
         owner_id: property.owner_id || "",
+        assigned_to: (property as any).assigned_to || null,
       });
       setImagePreview(property.image_url || null);
     }
@@ -131,6 +136,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         image_url: formData.image_url || null,
         status: formData.status,
         owner_id: formData.owner_id || null,
+        assigned_to: formData.assigned_to,
       });
 
       toast.success("Bien modifié avec succès !");
@@ -240,6 +246,20 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
               </SelectContent>
             </Select>
           </div>
+
+          {/* Assignment Selector - Only visible to agency owner/admin */}
+          {isAgencyOwner && (
+            <div className="space-y-2">
+              <Label>Gestionnaire assigné</Label>
+              <AssignUserSelect
+                value={formData.assigned_to}
+                onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Si assigné, seul ce gestionnaire pourra voir ce bien
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="title">Titre du bien *</Label>

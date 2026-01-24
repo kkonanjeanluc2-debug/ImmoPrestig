@@ -2,6 +2,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select,
   SelectContent,
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2, User, UserCheck } from "lucide-react";
+import { Search, Grid3X3, List, Loader2, User, UserCheck, X } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { BulkAssignDialog } from "@/components/assignment/BulkAssignDialog";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -41,6 +43,8 @@ const Properties = () => {
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
   const { canCreate, canEdit, canDelete } = usePermissions();
   
   const { data: properties, isLoading, error } = useProperties();
@@ -78,6 +82,28 @@ const Properties = () => {
     } catch (error) {
       toast.error("Erreur lors de la suppression");
     }
+  };
+
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredProperties.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredProperties.map(p => p.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
   };
 
   return (
@@ -225,11 +251,53 @@ const Properties = () => {
           </div>
         </div>
 
+        {/* Selection Bar */}
+        {isAgencyOwner && selectedIds.size > 0 && (
+          <div className="flex items-center gap-4 p-4 bg-primary/10 border border-primary/20 rounded-xl animate-fade-in">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={selectedIds.size === filteredProperties.length}
+                onCheckedChange={toggleSelectAll}
+              />
+              <span className="font-medium text-foreground">
+                {selectedIds.size} bien{selectedIds.size > 1 ? "s" : ""} sélectionné{selectedIds.size > 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkAssignOpen(true)}
+              className="gap-2"
+            >
+              <UserCheck className="h-4 w-4" />
+              Assigner
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+              className="gap-1"
+            >
+              <X className="h-4 w-4" />
+              Annuler
+            </Button>
+          </div>
+        )}
+
         {/* Results Count */}
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {filteredProperties.length} bien{filteredProperties.length > 1 ? "s" : ""} trouvé{filteredProperties.length > 1 ? "s" : ""}
-          </p>
+          <div className="flex items-center gap-4">
+            {isAgencyOwner && filteredProperties.length > 0 && (
+              <Checkbox
+                checked={selectedIds.size === filteredProperties.length && filteredProperties.length > 0}
+                onCheckedChange={toggleSelectAll}
+              />
+            )}
+            <p className="text-sm text-muted-foreground">
+              {filteredProperties.length} bien{filteredProperties.length > 1 ? "s" : ""} trouvé{filteredProperties.length > 1 ? "s" : ""}
+            </p>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -258,8 +326,17 @@ const Properties = () => {
               <div 
                 key={property.id} 
                 style={{ animationDelay: `${index * 50}ms` }}
-                className="animate-fade-in"
+                className="animate-fade-in relative"
               >
+                {isAgencyOwner && (
+                  <div className="absolute top-3 left-3 z-10">
+                    <Checkbox
+                      checked={selectedIds.has(property.id)}
+                      onCheckedChange={() => toggleSelection(property.id)}
+                      className="bg-background border-2"
+                    />
+                  </div>
+                )}
                 <PropertyCard 
                   property={property}
                   onEdit={setEditingProperty}
@@ -291,6 +368,15 @@ const Properties = () => {
           onOpenChange={(open) => !open && setEditingProperty(null)}
         />
       )}
+
+      {/* Bulk Assign Dialog */}
+      <BulkAssignDialog
+        open={bulkAssignOpen}
+        onOpenChange={setBulkAssignOpen}
+        selectedIds={Array.from(selectedIds)}
+        entityType="properties"
+        onSuccess={clearSelection}
+      />
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deletingProperty} onOpenChange={(open) => !open && setDeletingProperty(null)}>

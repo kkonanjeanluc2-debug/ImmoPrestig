@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { 
   Select,
   SelectContent,
@@ -29,8 +29,7 @@ import {
   Loader2,
   Pencil,
   Eye,
-  UserCheck,
-  X
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
@@ -45,7 +44,7 @@ import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
-import { BulkAssignDialog } from "@/components/assignment/BulkAssignDialog";
+
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
 const contractStatusConfig = {
@@ -250,8 +249,6 @@ export default function Tenants() {
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
   const { data: tenants, isLoading, error } = useTenants();
   const { canCreate, canEdit } = usePermissions();
   const { data: assignableUsers = [] } = useAssignableUsers();
@@ -266,27 +263,6 @@ export default function Tenants() {
     navigate(`/tenants/${tenant.id}`);
   };
 
-  const toggleSelection = (id: string) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedIds(newSelected);
-  };
-
-  const toggleSelectAll = (filteredList: TenantWithDetails[]) => {
-    if (selectedIds.size === filteredList.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredList.map(t => t.id)));
-    }
-  };
-
-  const clearSelection = () => {
-    setSelectedIds(new Set());
-  };
 
   const filteredTenants = (tenants || []).filter(tenant => {
     const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -431,77 +407,22 @@ export default function Tenants() {
           </div>
         )}
 
-        {/* Selection Bar */}
-        {isAgencyOwner && selectedIds.size > 0 && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 sm:p-4 bg-primary/10 border border-primary/20 rounded-xl animate-fade-in">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={selectedIds.size === filteredTenants.length}
-                onCheckedChange={() => toggleSelectAll(filteredTenants)}
-              />
-              <span className="text-sm font-medium text-foreground">
-                {selectedIds.size} sélectionné{selectedIds.size > 1 ? "s" : ""}
-              </span>
-            </div>
-            <div className="flex-1" />
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setBulkAssignOpen(true)}
-                className="gap-2 flex-1 sm:flex-initial"
-              >
-                <UserCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">Assigner</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearSelection}
-                className="gap-1"
-              >
-                <X className="h-4 w-4" />
-                <span className="hidden sm:inline">Annuler</span>
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Tenant List */}
         {!isLoading && !error && (
           <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center gap-3">
-              {isAgencyOwner && filteredTenants.length > 0 && (
-                <Checkbox
-                  checked={selectedIds.size === filteredTenants.length && filteredTenants.length > 0}
-                  onCheckedChange={() => toggleSelectAll(filteredTenants)}
-                />
-              )}
-              <h2 className="text-base sm:text-lg font-semibold text-foreground">
-                Liste des locataires ({filteredTenants.length})
-              </h2>
-            </div>
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">
+              Liste des locataires ({filteredTenants.length})
+            </h2>
             <div className="grid gap-3 sm:gap-4">
               {filteredTenants.map((tenant) => (
-                <div key={tenant.id} className="relative">
-                  {isAgencyOwner && (
-                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
-                      <Checkbox
-                        checked={selectedIds.has(tenant.id)}
-                        onCheckedChange={() => toggleSelection(tenant.id)}
-                        className="bg-background border-2"
-                      />
-                    </div>
-                  )}
-                  <div className={isAgencyOwner ? "pl-8 sm:pl-10" : ""}>
-                    <TenantCard 
-                      tenant={tenant} 
-                      onEdit={handleEditTenant}
-                      onView={handleViewTenant}
-                      canEdit={canEdit}
-                    />
-                  </div>
-                </div>
+                <TenantCard 
+                  key={tenant.id}
+                  tenant={tenant} 
+                  onEdit={handleEditTenant}
+                  onView={handleViewTenant}
+                  canEdit={canEdit}
+                />
               ))}
             </div>
             {filteredTenants.length === 0 && (
@@ -526,14 +447,6 @@ export default function Tenants() {
           onOpenChange={setEditDialogOpen}
         />
 
-        {/* Bulk Assign Dialog */}
-        <BulkAssignDialog
-          open={bulkAssignOpen}
-          onOpenChange={setBulkAssignOpen}
-          selectedIds={Array.from(selectedIds)}
-          entityType="tenants"
-          onSuccess={clearSelection}
-        />
       </div>
     </DashboardLayout>
   );

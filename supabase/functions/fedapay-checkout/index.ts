@@ -207,19 +207,25 @@ Deno.serve(async (req) => {
     });
 
     const fedapayData = await fedapayResponse.json();
+    
+    console.log("FedaPay response status:", fedapayResponse.status);
+    console.log("FedaPay response data:", JSON.stringify(fedapayData));
 
     if (!fedapayResponse.ok) {
+      const errorMessage = fedapayData.message || fedapayData.error?.message || JSON.stringify(fedapayData);
+      console.error("FedaPay error:", errorMessage);
+      
       // Update transaction as failed
       await supabase
         .from("payment_transactions")
         .update({
           status: "failed",
-          error_message: fedapayData.message || "Erreur FedaPay",
+          error_message: errorMessage,
         })
         .eq("id", transaction.id);
 
       return new Response(
-        JSON.stringify({ error: fedapayData.message || "Erreur création paiement FedaPay" }),
+        JSON.stringify({ error: errorMessage }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

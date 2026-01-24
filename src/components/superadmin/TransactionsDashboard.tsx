@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAllTransactions, useTransactionStats } from "@/hooks/useTransactions";
+import { MonthlyReportPDF } from "./MonthlyReportPDF";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { 
@@ -17,7 +18,6 @@ import {
   Clock,
   Wallet,
   Search,
-  ArrowUpRight,
   ArrowDownRight,
   DollarSign,
   BarChart3,
@@ -73,6 +73,12 @@ export function TransactionsDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Header with PDF Export */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Tableau de bord des transactions</h2>
+        <MonthlyReportPDF />
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>

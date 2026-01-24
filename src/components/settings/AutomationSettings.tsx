@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAutomationSchedules, DEFAULT_SCHEDULE, AutomationSchedule } from "@/hooks/useAutomationSchedules";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Calendar, Bell, MessageSquare, FileText, Loader2, Save } from "lucide-react";
+import { Clock, Calendar, Bell, MessageSquare, FileText, Loader2, Save, Percent, Send } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { AutomationHistory } from "./AutomationHistory";
+import { supabase } from "@/integrations/supabase/client";
 
 const WEEKDAYS = [
   { value: 0, label: "Dimanche" },
@@ -29,6 +30,7 @@ export function AutomationSettings() {
   const { toast } = useToast();
   const [formData, setFormData] = useState<ScheduleFormData>(DEFAULT_SCHEDULE);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSendingCommissionReports, setIsSendingCommissionReports] = useState(false);
 
   useEffect(() => {
     if (schedule) {
@@ -89,6 +91,31 @@ export function AutomationSettings() {
         });
       },
     });
+  };
+
+  const handleSendCommissionReports = async () => {
+    setIsSendingCommissionReports(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-commission-reports', {
+        body: {}
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Rapports envoyés",
+        description: data.message || "Les rapports de commissions ont été envoyés aux propriétaires.",
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingCommissionReports(false);
+    }
   };
 
   if (isLoading) {
@@ -322,6 +349,37 @@ export function AutomationSettings() {
                 </div>
               </div>
             )}
+          </div>
+
+          <Separator />
+
+          {/* Rapports de commissions */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Percent className="h-5 w-5 text-primary" />
+                <div>
+                  <Label className="text-base font-medium">Rapports de commissions</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Envoi automatique le 5 de chaque mois aux propriétaires
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSendCommissionReports}
+                disabled={isSendingCommissionReports}
+                className="gap-2"
+              >
+                {isSendingCommissionReports ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                Envoyer maintenant
+              </Button>
+            </div>
           </div>
 
           <div className="flex justify-end pt-4">

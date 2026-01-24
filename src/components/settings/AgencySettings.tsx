@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAgency, AccountType } from "@/hooks/useAgency";
 import { supabase } from "@/integrations/supabase/client";
@@ -244,39 +243,22 @@ export function AgencySettings() {
           </div>
         </div>
 
-        {/* Account Type */}
-        <div className="space-y-3">
+        {/* Account Type - Read Only */}
+        <div className="space-y-2">
           <Label>Type de compte</Label>
-          <RadioGroup
-            value={formData.account_type}
-            onValueChange={(v) => handleChange("account_type", v)}
-            className="grid grid-cols-2 gap-4"
-          >
-            <Label
-              htmlFor="type-agence"
-              className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                formData.account_type === "agence"
-                  ? "border-primary bg-primary/5"
-                  : "border-muted hover:border-muted-foreground/30"
-              }`}
-            >
-              <RadioGroupItem value="agence" id="type-agence" className="sr-only" />
-              <Building className="h-6 w-6 text-primary" />
-              <span className="font-medium">Agence immobilière</span>
-            </Label>
-            <Label
-              htmlFor="type-proprietaire"
-              className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                formData.account_type === "proprietaire"
-                  ? "border-primary bg-primary/5"
-                  : "border-muted hover:border-muted-foreground/30"
-              }`}
-            >
-              <RadioGroupItem value="proprietaire" id="type-proprietaire" className="sr-only" />
-              <Home className="h-6 w-6 text-emerald" />
-              <span className="font-medium">Propriétaire</span>
-            </Label>
-          </RadioGroup>
+          <div className="flex items-center gap-3 p-4 rounded-lg border-2 border-primary bg-primary/5 w-fit">
+            {formData.account_type === "agence" ? (
+              <>
+                <Building className="h-6 w-6 text-primary" />
+                <span className="font-medium">Agence immobilière</span>
+              </>
+            ) : (
+              <>
+                <Home className="h-6 w-6 text-primary" />
+                <span className="font-medium">Propriétaire</span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Name */}

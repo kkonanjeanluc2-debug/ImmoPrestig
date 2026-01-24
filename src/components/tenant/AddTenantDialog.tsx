@@ -209,7 +209,17 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sélectionner un bien *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Auto-fill rent amount from property price
+                        const selectedProperty = availableProperties.find(p => p.id === value);
+                        if (selectedProperty) {
+                          form.setValue('rent_amount', selectedProperty.price.toString());
+                        }
+                      }} 
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={propertiesLoading ? "Chargement..." : "Choisir un bien"} />

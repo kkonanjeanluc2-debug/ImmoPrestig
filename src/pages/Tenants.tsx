@@ -81,36 +81,34 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         {/* Header */}
-        <div className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        <div className="p-3 sm:p-4 md:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
             {/* Avatar */}
-            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-              <span className="text-lg sm:text-xl font-semibold text-muted-foreground">
-                {tenant.name.split(' ').map(n => n[0]).join('')}
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              <span className="text-base sm:text-lg font-semibold text-muted-foreground">
+                {tenant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </span>
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                <h3 className="font-semibold text-foreground truncate">{tenant.name}</h3>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className={cn("w-fit", statusConfig.className)}>
-                    {statusConfig.label}
-                  </Badge>
-                  {assignedTo && <AssignmentBadge userId={assignedTo} />}
-                </div>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                <h3 className="font-semibold text-sm sm:text-base text-foreground truncate max-w-[180px] sm:max-w-none">{tenant.name}</h3>
+                <Badge variant="outline" className={cn("text-[10px] sm:text-xs", statusConfig.className)}>
+                  {statusConfig.label}
+                </Badge>
+                {assignedTo && <AssignmentBadge userId={assignedTo} />}
               </div>
 
               {/* Contact */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-sm text-muted-foreground mb-3">
+              <div className="flex flex-col gap-1 text-xs sm:text-sm text-muted-foreground mb-2">
                 <a href={`mailto:${tenant.email}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors truncate">
-                  <Mail className="h-3.5 w-3.5 flex-shrink-0" />
+                  <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
                   <span className="truncate">{tenant.email}</span>
                 </a>
                 {tenant.phone && (
                   <a href={`tel:${tenant.phone}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                    <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                    <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
                     <span>{tenant.phone}</span>
                   </a>
                 )}
@@ -118,25 +116,25 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
 
               {/* Property */}
               {tenant.property && (
-                <div className="flex items-start gap-1.5 text-sm">
-                  <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-foreground">{tenant.property.title}</p>
-                    <p className="text-muted-foreground text-xs">{tenant.property.address}</p>
+                <div className="flex items-start gap-1.5 text-xs sm:text-sm">
+                  <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{tenant.property.title}</p>
+                    <p className="text-muted-foreground text-[10px] sm:text-xs truncate">{tenant.property.address}</p>
                   </div>
                 </div>
               )}
 
               {/* Actions */}
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onView(tenant)}
-                  className="gap-1.5"
+                  className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
                 >
-                  <Eye className="h-3.5 w-3.5" />
-                  Voir détails
+                  <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  <span className="hidden xs:inline">Détails</span>
                 </Button>
                 <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
                 {canEdit && (
@@ -144,10 +142,10 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => onEdit(tenant)}
-                    className="gap-1.5"
+                    className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Modifier
+                    <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    <span className="hidden xs:inline">Modifier</span>
                   </Button>
                 )}
               </div>
@@ -155,11 +153,11 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
 
             {/* Rent Amount */}
             {activeContract && (
-              <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1">
-                <span className="text-xl sm:text-2xl font-bold text-foreground">
-                  {Number(activeContract.rent_amount).toLocaleString('fr-FR')} <span className="text-sm font-normal">F CFA</span>
+              <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:gap-1 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
+                <span className="text-base sm:text-xl font-bold text-foreground">
+                  {Number(activeContract.rent_amount).toLocaleString('fr-FR')}
                 </span>
-                <span className="text-xs text-muted-foreground">/mois</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground">F CFA/mois</span>
               </div>
             )}
           </div>
@@ -326,18 +324,20 @@ export default function Tenants() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 sm:space-y-8">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="pt-8 sm:pt-0">
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
+        <div className="flex flex-col gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
               Locataires
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Gérez vos locataires, contrats et paiements
             </p>
           </div>
-          <div className="flex gap-2">
+          
+          {/* Action buttons - scrollable on mobile */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap">
             <ExportDropdown
               data={tenants || []}
               filename="locataires"
@@ -364,12 +364,12 @@ export default function Tenants() {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col gap-3">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Rechercher un locataire..."
-              className="pl-10"
+              className="pl-10 w-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -377,7 +377,7 @@ export default function Tenants() {
           {/* Assigned Filter - Only for agency owner/admin */}
           {isAgencyOwner && assignableUsers.length > 1 && (
             <Select value={assignedFilter} onValueChange={setAssignedFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Gestionnaire" />
               </SelectTrigger>
               <SelectContent>
@@ -399,17 +399,17 @@ export default function Tenants() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
           {stats.map((stat) => (
             <Card key={stat.title}>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <div className={cn("p-2 rounded-lg bg-muted", stat.color)}>
-                    <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={cn("p-1.5 sm:p-2 rounded-lg bg-muted flex-shrink-0", stat.color)}>
+                    <stat.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
-                  <div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">{stat.title}</p>
-                    <p className="text-lg sm:text-2xl font-bold text-foreground">{stat.value}</p>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{stat.title}</p>
+                    <p className="text-base sm:text-lg font-bold text-foreground">{stat.value}</p>
                   </div>
                 </div>
               </CardContent>
@@ -433,57 +433,59 @@ export default function Tenants() {
 
         {/* Selection Bar */}
         {isAgencyOwner && selectedIds.size > 0 && (
-          <div className="flex items-center gap-4 p-4 bg-primary/10 border border-primary/20 rounded-xl animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 sm:p-4 bg-primary/10 border border-primary/20 rounded-xl animate-fade-in">
             <div className="flex items-center gap-2">
               <Checkbox
                 checked={selectedIds.size === filteredTenants.length}
                 onCheckedChange={() => toggleSelectAll(filteredTenants)}
               />
-              <span className="font-medium text-foreground">
-                {selectedIds.size} locataire{selectedIds.size > 1 ? "s" : ""} sélectionné{selectedIds.size > 1 ? "s" : ""}
+              <span className="text-sm font-medium text-foreground">
+                {selectedIds.size} sélectionné{selectedIds.size > 1 ? "s" : ""}
               </span>
             </div>
             <div className="flex-1" />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setBulkAssignOpen(true)}
-              className="gap-2"
-            >
-              <UserCheck className="h-4 w-4" />
-              Assigner
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearSelection}
-              className="gap-1"
-            >
-              <X className="h-4 w-4" />
-              Annuler
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBulkAssignOpen(true)}
+                className="gap-2 flex-1 sm:flex-initial"
+              >
+                <UserCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Assigner</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSelection}
+                className="gap-1"
+              >
+                <X className="h-4 w-4" />
+                <span className="hidden sm:inline">Annuler</span>
+              </Button>
+            </div>
           </div>
         )}
 
         {/* Tenant List */}
         {!isLoading && !error && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-3">
               {isAgencyOwner && filteredTenants.length > 0 && (
                 <Checkbox
                   checked={selectedIds.size === filteredTenants.length && filteredTenants.length > 0}
                   onCheckedChange={() => toggleSelectAll(filteredTenants)}
                 />
               )}
-              <h2 className="text-lg font-semibold text-foreground">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground">
                 Liste des locataires ({filteredTenants.length})
               </h2>
             </div>
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {filteredTenants.map((tenant) => (
                 <div key={tenant.id} className="relative">
                   {isAgencyOwner && (
-                    <div className="absolute top-4 left-4 z-10">
+                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
                       <Checkbox
                         checked={selectedIds.has(tenant.id)}
                         onCheckedChange={() => toggleSelection(tenant.id)}
@@ -491,7 +493,7 @@ export default function Tenants() {
                       />
                     </div>
                   )}
-                  <div className={isAgencyOwner ? "pl-10" : ""}>
+                  <div className={isAgencyOwner ? "pl-8 sm:pl-10" : ""}>
                     <TenantCard 
                       tenant={tenant} 
                       onEdit={handleEditTenant}

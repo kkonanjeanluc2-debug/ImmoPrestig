@@ -26,7 +26,7 @@ const Signup = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
-  const [country, setCountry] = useState("Sénégal");
+  const [country, setCountry] = useState("Côte d'Ivoire");
   const [siret, setSiret] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -246,7 +246,7 @@ const Signup = () => {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="+221 77 123 45 67"
+                      placeholder="+225 07 12 34 56 78"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="pl-10"
@@ -263,7 +263,7 @@ const Signup = () => {
                     <Input
                       id="address"
                       type="text"
-                      placeholder="123 Rue du Commerce"
+                      placeholder="Cocody Riviera, Rue des Jardins"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       className="pl-10"
@@ -278,7 +278,7 @@ const Signup = () => {
                     <Input
                       id="city"
                       type="text"
-                      placeholder="Dakar"
+                      placeholder="Abidjan"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                     />
@@ -288,7 +288,7 @@ const Signup = () => {
                     <Input
                       id="country"
                       type="text"
-                      placeholder="Sénégal"
+                      placeholder="Côte d'Ivoire"
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
                     />
@@ -298,11 +298,11 @@ const Signup = () => {
                 {/* SIRET/RC (only for agencies) */}
                 {accountType === "agence" && (
                   <div className="space-y-2">
-                    <Label htmlFor="siret">N° NINEA / Registre de commerce</Label>
+                    <Label htmlFor="siret">N° RCCM / Registre de commerce</Label>
                     <Input
                       id="siret"
                       type="text"
-                      placeholder="SN-DKR-2024-A-12345"
+                      placeholder="CI-ABJ-2024-B-12345"
                       value={siret}
                       onChange={(e) => setSiret(e.target.value)}
                     />

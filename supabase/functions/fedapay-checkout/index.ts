@@ -13,6 +13,15 @@ interface CheckoutRequest {
   return_url?: string;
 }
 
+const fedapayModeByPaymentMethod: Record<CheckoutRequest["payment_method"], string | null> = {
+  // Based on FedaPay CI naming conventions seen in checkout (ex: mtn_open_ci)
+  orange_money: "orange_ci",
+  mtn_money: "mtn_open_ci",
+  wave: "wave_ci",
+  moov: "moov_ci",
+  card: null,
+};
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -192,12 +201,15 @@ Deno.serve(async (req) => {
 
     const formattedPhone = formatIvorianPhone(customer_phone || agency.phone);
 
+    const fedapayMode = fedapayModeByPaymentMethod[payment_method] ?? null;
+
     // Create FedaPay transaction
     const fedapayPayload = {
       description: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`,
       amount: Math.round(amount),
       currency: { iso: "XOF" },
       callback_url: return_url || `${supabaseUrl}/functions/v1/fedapay-webhook`,
+      ...(fedapayMode ? { mode: fedapayMode } : {}),
       customer: {
         firstname: agency.name.split(" ")[0] || agency.name,
         lastname: agency.name.split(" ").slice(1).join(" ") || "",
@@ -215,7 +227,14 @@ Deno.serve(async (req) => {
       },
     };
 
-    console.log("FedaPay request:", JSON.stringify({ ...fedapayPayload, environment: isSandbox ? "sandbox" : "production" }));
+    console.log(
+      "FedaPay request:",
+      JSON.stringify({
+        ...fedapayPayload,
+        environment: isSandbox ? "sandbox" : "production",
+        selected_payment_method: payment_method,
+      }),
+    );
 
     const fedapayResponse = await fetch(`${fedapayBaseUrl}/transactions`, {
       method: "POST",

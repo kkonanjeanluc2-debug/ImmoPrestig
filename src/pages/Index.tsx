@@ -9,6 +9,7 @@ import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
 import { SubscriptionQuotaCard } from "@/components/dashboard/SubscriptionQuotaCard";
 import { MyAssignedItems } from "@/components/dashboard/MyAssignedItems";
 import { ManagerPerformance } from "@/components/dashboard/ManagerPerformance";
+import { ManagerPerformanceChart } from "@/components/dashboard/ManagerPerformanceChart";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { Building2, Users, Wallet, TrendingUp, Loader2, FileText, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -167,11 +168,14 @@ const Index = () => {
 
         {/* Charts Section */}
         {!isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <RevenueChart payments={payments || []} />
-            <OccupancyChart properties={properties || []} />
-            <PropertyTypesChart properties={properties || []} />
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <RevenueChart payments={payments || []} />
+              <OccupancyChart properties={properties || []} />
+              <PropertyTypesChart properties={properties || []} />
+            </div>
+            <ManagerPerformanceChart />
+          </>
         )}
 
         {/* Main Content Grid */}

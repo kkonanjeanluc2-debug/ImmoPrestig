@@ -23,6 +23,7 @@ import {
   Share2
 } from "lucide-react";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import { useWhatsAppPropertyMessage } from "@/hooks/useWhatsAppPropertyMessage";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
@@ -47,6 +48,7 @@ const PropertyDetails = () => {
   const { data: owners = [] } = useOwners();
   const deleteProperty = useDeleteProperty();
   const { canEdit, canDelete } = usePermissions();
+  const { generateMessage } = useWhatsAppPropertyMessage();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -107,29 +109,6 @@ const PropertyDetails = () => {
 
   const defaultImage = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
 
-  const generateWhatsAppMessage = () => {
-    const transactionType = property.type === "location" ? "À louer" : "À vendre";
-    const priceText = property.type === "location" 
-      ? `${property.price.toLocaleString('fr-FR')} F CFA/mois`
-      : `${property.price.toLocaleString('fr-FR')} F CFA`;
-    
-    let message = `🏠 *${transactionType} - ${typeLabels[property.property_type] || property.property_type}*\n\n`;
-    message += `📍 *${property.title}*\n${property.address}\n\n`;
-    message += `💰 Prix: ${priceText}\n`;
-    
-    if (property.area) message += `📐 Surface: ${property.area} m²\n`;
-    if (property.bedrooms) message += `🛏️ Chambres: ${property.bedrooms}\n`;
-    if (property.bathrooms) message += `🚿 Salles de bain: ${property.bathrooms}\n`;
-    
-    if (property.description) {
-      message += `\n📝 ${property.description.substring(0, 200)}${property.description.length > 200 ? '...' : ''}\n`;
-    }
-    
-    message += `\n📞 Contactez-nous pour plus d'informations !`;
-    
-    return message;
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -151,7 +130,7 @@ const PropertyDetails = () => {
           </div>
           <div className="flex gap-2">
             <WhatsAppButton
-              message={generateWhatsAppMessage()}
+              message={generateMessage(property)}
               variant="outline"
               className="bg-emerald/10 border-emerald/30 hover:bg-emerald hover:text-white"
             >

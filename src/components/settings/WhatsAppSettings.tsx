@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { MessageCircle, RotateCcw, Save, Eye } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { WhatsAppShareSettings } from "./WhatsAppShareSettings";
 
 export interface WhatsAppTemplates {
   receipt: string;
@@ -193,6 +194,7 @@ export function WhatsAppSettings() {
   );
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -381,5 +383,11 @@ export function WhatsAppSettings() {
         </div>
       </CardContent>
     </Card>
+
+    {/* WhatsApp Property Share Settings */}
+    <div className="mt-6">
+      <WhatsAppShareSettings />
+    </div>
+    </>
   );
 }

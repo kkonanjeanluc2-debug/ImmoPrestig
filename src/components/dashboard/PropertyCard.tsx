@@ -6,6 +6,7 @@ import { Property } from "@/hooks/useProperties";
 import { useNavigate } from "react-router-dom";
 import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import { useWhatsAppPropertyMessage } from "@/hooks/useWhatsAppPropertyMessage";
 import {
   Tooltip,
   TooltipContent,
@@ -29,6 +30,7 @@ export function PropertyCard({
   canDelete = false,
 }: PropertyCardProps) {
   const navigate = useNavigate();
+  const { generateMessage } = useWhatsAppPropertyMessage();
   const { 
     image_url, 
     title, 
@@ -44,30 +46,6 @@ export function PropertyCard({
   const assignedTo = (property as any).assigned_to;
 
   const image = image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
-
-  const generateWhatsAppMessage = () => {
-    const typeLabelsMap: Record<string, string> = {
-      maison: "Maison",
-      appartement: "Appartement",
-      terrain: "Terrain",
-    };
-    const transactionType = type === "location" ? "À louer" : "À vendre";
-    const priceText = type === "location" 
-      ? `${price.toLocaleString('fr-FR')} F CFA/mois`
-      : `${price.toLocaleString('fr-FR')} F CFA`;
-    
-    let message = `🏠 *${transactionType} - ${typeLabelsMap[propertyType] || propertyType}*\n\n`;
-    message += `📍 *${title}*\n${address}\n\n`;
-    message += `💰 Prix: ${priceText}\n`;
-    
-    if (area) message += `📐 Surface: ${area} m²\n`;
-    if (bedrooms) message += `🛏️ Chambres: ${bedrooms}\n`;
-    if (bathrooms) message += `🚿 Salles de bain: ${bathrooms}\n`;
-    
-    message += `\n📞 Contactez-nous pour plus d'informations !`;
-    
-    return message;
-  };
 
   const statusClasses: Record<string, string> = {
     disponible: "bg-emerald/10 text-emerald border-emerald/20",
@@ -119,7 +97,7 @@ export function PropertyCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <WhatsAppButton
-                  message={generateWhatsAppMessage()}
+                  message={generateMessage(property)}
                   variant="secondary"
                   size="icon"
                   className="h-8 w-8 bg-card/90 backdrop-blur-sm hover:bg-emerald hover:text-white"

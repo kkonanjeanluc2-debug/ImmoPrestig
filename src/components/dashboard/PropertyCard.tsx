@@ -1,10 +1,17 @@
-import { MapPin, Bed, Bath, Maximize, Pencil, Trash2, User } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, Pencil, Trash2, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Property } from "@/hooks/useProperties";
 import { useNavigate } from "react-router-dom";
 import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PropertyCardProps {
   property: Property;
@@ -37,6 +44,30 @@ export function PropertyCard({
   const assignedTo = (property as any).assigned_to;
 
   const image = image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
+
+  const generateWhatsAppMessage = () => {
+    const typeLabelsMap: Record<string, string> = {
+      maison: "Maison",
+      appartement: "Appartement",
+      terrain: "Terrain",
+    };
+    const transactionType = type === "location" ? "À louer" : "À vendre";
+    const priceText = type === "location" 
+      ? `${price.toLocaleString('fr-FR')} F CFA/mois`
+      : `${price.toLocaleString('fr-FR')} F CFA`;
+    
+    let message = `🏠 *${transactionType} - ${typeLabelsMap[propertyType] || propertyType}*\n\n`;
+    message += `📍 *${title}*\n${address}\n\n`;
+    message += `💰 Prix: ${priceText}\n`;
+    
+    if (area) message += `📐 Surface: ${area} m²\n`;
+    if (bedrooms) message += `🛏️ Chambres: ${bedrooms}\n`;
+    if (bathrooms) message += `🚿 Salles de bain: ${bathrooms}\n`;
+    
+    message += `\n📞 Contactez-nous pour plus d'informations !`;
+    
+    return message;
+  };
 
   const statusClasses: Record<string, string> = {
     disponible: "bg-emerald/10 text-emerald border-emerald/20",
@@ -83,36 +114,52 @@ export function PropertyCard({
           </span>
         </div>
         {/* Action buttons on hover */}
-        {(canEdit || canDelete) && (
-          <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            {canEdit && (
-              <Button
-                size="icon"
-                variant="secondary"
-                className="h-8 w-8 bg-card/90 backdrop-blur-sm hover:bg-card"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit?.(property);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
-            {canDelete && (
-              <Button
-                size="icon"
-                variant="destructive"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete?.(property);
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        )}
+        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <WhatsAppButton
+                  message={generateWhatsAppMessage()}
+                  variant="secondary"
+                  size="icon"
+                  className="h-8 w-8 bg-card/90 backdrop-blur-sm hover:bg-emerald hover:text-white"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Share2 className="h-4 w-4" />
+                </WhatsAppButton>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Partager par WhatsApp</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          {canEdit && (
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-8 w-8 bg-card/90 backdrop-blur-sm hover:bg-card"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(property);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          {canDelete && (
+            <Button
+              size="icon"
+              variant="destructive"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(property);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Content */}

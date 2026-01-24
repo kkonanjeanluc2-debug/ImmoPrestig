@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.notify-subscription-expiry]
 verify_jwt = false
+
+[functions.send-password-reset-confirmation]
+verify_jwt = false

@@ -70,6 +70,8 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase.auth.updateUser({
         password: password,
       });
@@ -78,10 +80,23 @@ const ResetPassword = () => {
         throw error;
       }
 
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke('send-password-reset-confirmation', {
+          body: {
+            email: user?.email,
+            userName: user?.user_metadata?.full_name || user?.email?.split('@')[0],
+          },
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't block the password reset success if email fails
+      }
+
       setIsSuccess(true);
       toast({
         title: "Mot de passe modifié",
-        description: "Votre mot de passe a été réinitialisé avec succès.",
+        description: "Votre mot de passe a été réinitialisé avec succès. Un email de confirmation vous a été envoyé.",
       });
 
       // Sign out and redirect to login after a short delay

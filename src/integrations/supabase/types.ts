@@ -330,6 +330,7 @@ export type Database = {
           start_date: string
           status: string
           tenant_id: string
+          unit_id: string | null
           updated_at: string
           user_id: string
         }
@@ -343,6 +344,7 @@ export type Database = {
           start_date: string
           status?: string
           tenant_id: string
+          unit_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -356,6 +358,7 @@ export type Database = {
           start_date?: string
           status?: string
           tenant_id?: string
+          unit_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -372,6 +375,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "property_units"
             referencedColumns: ["id"]
           },
         ]
@@ -872,6 +882,56 @@ export type Database = {
           },
         ]
       }
+      property_units: {
+        Row: {
+          area: number | null
+          created_at: string
+          description: string | null
+          id: string
+          property_id: string
+          rent_amount: number
+          rooms_count: number
+          status: string
+          unit_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          property_id: string
+          rent_amount?: number
+          rooms_count?: number
+          status?: string
+          unit_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          property_id?: string
+          rent_amount?: number
+          rooms_count?: number
+          status?: string
+          unit_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_units_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receipt_templates: {
         Row: {
           created_at: string
@@ -1041,6 +1101,7 @@ export type Database = {
           name: string
           phone: string | null
           property_id: string | null
+          unit_id: string | null
           updated_at: string
           user_id: string
         }
@@ -1053,6 +1114,7 @@ export type Database = {
           name: string
           phone?: string | null
           property_id?: string | null
+          unit_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1065,6 +1127,7 @@ export type Database = {
           name?: string
           phone?: string | null
           property_id?: string | null
+          unit_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1074,6 +1137,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenants_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "property_units"
             referencedColumns: ["id"]
           },
         ]

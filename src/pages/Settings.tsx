@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -16,6 +16,7 @@ import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
+import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
 import { useIsSuperAdmin } from "@/hooks/useSuperAdmin";
 
 const Settings = () => {
@@ -92,13 +93,20 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-13 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-15 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger
               value="agency"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
             >
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Agence</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="management-types"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+            >
+              <Percent className="h-4 w-4" />
+              <span className="hidden sm:inline">Gestion</span>
             </TabsTrigger>
             <TabsTrigger
               value="branding"
@@ -195,6 +203,10 @@ const Settings = () => {
 
           <TabsContent value="agency">
             <AgencySettings />
+          </TabsContent>
+
+          <TabsContent value="management-types">
+            <ManagementTypesSettings />
           </TabsContent>
 
           <TabsContent value="branding">

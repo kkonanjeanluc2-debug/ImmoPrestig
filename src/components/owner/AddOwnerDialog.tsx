@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,6 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -26,8 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Percent } from "lucide-react";
 import { useCreateOwner } from "@/hooks/useOwners";
+import { useManagementTypes } from "@/hooks/useManagementTypes";
 import { toast } from "sonner";
 
 const ownerSchema = z.object({
@@ -36,6 +38,7 @@ const ownerSchema = z.object({
   phone: z.string().trim().max(20, "Le téléphone doit contenir moins de 20 caractères").optional().or(z.literal("")),
   address: z.string().trim().max(500, "L'adresse doit contenir moins de 500 caractères").optional().or(z.literal("")),
   status: z.enum(["actif", "inactif"]),
+  management_type_id: z.string().optional().or(z.literal("")),
 });
 
 type OwnerFormData = z.infer<typeof ownerSchema>;
@@ -43,6 +46,10 @@ type OwnerFormData = z.infer<typeof ownerSchema>;
 export function AddOwnerDialog() {
   const [open, setOpen] = useState(false);
   const createOwner = useCreateOwner();
+  const { data: managementTypes = [] } = useManagementTypes();
+
+  // Get default management type
+  const defaultManagementType = managementTypes.find((t) => t.is_default);
 
   const form = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
@@ -52,8 +59,16 @@ export function AddOwnerDialog() {
       phone: "",
       address: "",
       status: "actif",
+      management_type_id: "",
     },
   });
+
+  // Set default management type when it's loaded
+  useEffect(() => {
+    if (defaultManagementType && !form.getValues("management_type_id")) {
+      form.setValue("management_type_id", defaultManagementType.id);
+    }
+  }, [defaultManagementType, form]);
 
   const onSubmit = async (data: OwnerFormData) => {
     try {
@@ -63,6 +78,7 @@ export function AddOwnerDialog() {
         phone: data.phone || null,
         address: data.address || null,
         status: data.status,
+        management_type_id: data.management_type_id || null,
       });
       toast.success("Propriétaire ajouté avec succès");
       form.reset();
@@ -175,6 +191,43 @@ export function AddOwnerDialog() {
                 </FormItem>
               )}
             />
+
+            {managementTypes.length > 0 && (
+              <FormField
+                control={form.control}
+                name="management_type_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Percent className="h-4 w-4" />
+                      Type de gestion
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un type de gestion" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Aucun</SelectItem>
+                        {managementTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            <div className="flex items-center justify-between gap-4">
+                              <span>{type.name}</span>
+                              <span className="text-muted-foreground">({type.percentage}%)</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Pourcentage de commission applicable pour ce propriétaire
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

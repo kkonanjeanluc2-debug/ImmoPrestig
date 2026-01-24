@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2, Home } from "lucide-react";
+import { Plus, Loader2, Home, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Tooltip,
   TooltipContent,
@@ -165,9 +166,18 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
             </span>
           </TooltipTrigger>
           {noPropertiesAvailable && (
-            <TooltipContent className="flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              <span>Aucun bien disponible. Ajoutez d'abord un bien.</span>
+            <TooltipContent className="flex flex-col gap-2 p-3">
+              <div className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                <span>Aucun bien disponible</span>
+              </div>
+              <Link 
+                to="/properties" 
+                className="flex items-center gap-1 text-xs text-emerald hover:underline"
+              >
+                Ajouter un bien
+                <ArrowRight className="h-3 w-3" />
+              </Link>
             </TooltipContent>
           )}
         </Tooltip>

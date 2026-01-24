@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.send-password-reset-confirmation]
 verify_jwt = false
+
+[functions.send-commission-reports]
+verify_jwt = false

@@ -29,7 +29,8 @@ import {
   Loader2,
   Pencil,
   Eye,
-  UserCheck
+  UserCheck,
+  DoorOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
@@ -118,7 +119,18 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
                 <div className="flex items-start gap-1.5 text-xs sm:text-sm">
                   <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="font-medium text-foreground truncate">{tenant.property.title}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground truncate">{tenant.property.title}</p>
+                      {tenant.unit && (
+                        <Badge variant="secondary" className="text-[10px] flex items-center gap-1 h-5">
+                          <DoorOpen className="h-3 w-3" />
+                          {tenant.unit.unit_number}
+                          <span className="text-muted-foreground">
+                            ({tenant.unit.rooms_count} pièce{tenant.unit.rooms_count > 1 ? 's' : ''})
+                          </span>
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-muted-foreground text-[10px] sm:text-xs truncate">{tenant.property.address}</p>
                   </div>
                 </div>

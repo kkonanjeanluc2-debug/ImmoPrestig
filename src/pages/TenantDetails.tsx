@@ -24,7 +24,8 @@ import {
   Euro,
   AlertCircle,
   Download,
-  MessageCircle
+  MessageCircle,
+  DoorOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -535,6 +536,26 @@ const TenantDetails = () => {
                       {tenant.property.address}
                     </p>
                   </div>
+
+                  {/* Unit/Door Info */}
+                  {tenant.unit && (
+                    <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <DoorOpen className="h-4 w-4 text-primary" />
+                        <span className="font-medium text-sm">Porte: {tenant.unit.unit_number}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Pièces:</span>
+                          <span className="ml-1 font-medium">{tenant.unit.rooms_count}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Loyer:</span>
+                          <span className="ml-1 font-medium">{tenant.unit.rent_amount.toLocaleString('fr-FR')} F</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 

@@ -19,11 +19,11 @@ interface SubscriptionCheckoutDialogProps {
 }
 
 const paymentMethods = [
-  { id: "orange_money", name: "Orange Money", icon: Smartphone, color: "bg-orange-500" },
-  { id: "mtn_money", name: "MTN Money", icon: Smartphone, color: "bg-yellow-500" },
-  { id: "wave", name: "Wave", icon: Wallet, color: "bg-blue-500" },
-  { id: "moov", name: "Moov Money", icon: Smartphone, color: "bg-blue-600" },
-  { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-gray-600" },
+  { id: "orange_money", name: "Orange Money", icon: Smartphone, color: "bg-orange-500", fedapayMode: "Orange CI" },
+  { id: "mtn_money", name: "MTN Money", icon: Smartphone, color: "bg-yellow-500", fedapayMode: "MTN CI" },
+  { id: "wave", name: "Wave", icon: Wallet, color: "bg-blue-500", fedapayMode: "Wave CI" },
+  { id: "moov", name: "Moov Money", icon: Smartphone, color: "bg-blue-600", fedapayMode: "Moov CI" },
+  { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-gray-600", fedapayMode: null },
 ];
 
 export function SubscriptionCheckoutDialog({
@@ -112,6 +112,9 @@ export function SubscriptionCheckoutDialog({
 
   // Get normalized phone for display
   const normalizedPhone = normalizeIvorianPhone(phoneNumber);
+  
+  // Get selected payment method details
+  const selectedMethod = paymentMethods.find((m) => m.id === paymentMethod);
 
   if (!plan) return null;
 
@@ -295,6 +298,16 @@ export function SubscriptionCheckoutDialog({
                 </div>
               )}
             </>
+          )}
+
+          {/* Payment mode confirmation */}
+          {!isFree && selectedMethod?.fedapayMode && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
+              <p className="text-sm text-muted-foreground">
+                Mode de paiement envoyé :
+              </p>
+              <p className="font-semibold text-primary">{selectedMethod.fedapayMode}</p>
+            </div>
           )}
 
           {/* Submit Button */}

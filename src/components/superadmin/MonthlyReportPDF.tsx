@@ -1,17 +1,42 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { jsPDF } from "jspdf";
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
-import { FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, Calendar } from "lucide-react";
 import { useAllTransactions } from "@/hooks/useTransactions";
 import { useAllAgencies } from "@/hooks/useSuperAdmin";
 import { toast } from "sonner";
 
+// Generate last 12 months options
+function getMonthOptions() {
+  const options = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const date = subMonths(now, i);
+    options.push({
+      value: format(date, "yyyy-MM"),
+      label: format(date, "MMMM yyyy", { locale: fr }),
+      date,
+    });
+  }
+  return options;
+}
+
 export function MonthlyReportPDF() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const { data: transactions } = useAllTransactions();
   const { data: agencies } = useAllAgencies();
+
+  const monthOptions = getMonthOptions();
 
   const generateReport = async () => {
     if (!transactions || !agencies) {
@@ -24,9 +49,13 @@ export function MonthlyReportPDF() {
     try {
       const doc = new jsPDF();
       const now = new Date();
-      const currentMonth = format(now, "MMMM yyyy", { locale: fr });
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
+      
+      // Parse selected month
+      const [year, month] = selectedMonth.split("-").map(Number);
+      const selectedDate = new Date(year, month - 1, 1);
+      const reportMonth = format(selectedDate, "MMMM yyyy", { locale: fr });
+      const monthStart = startOfMonth(selectedDate);
+      const monthEnd = endOfMonth(selectedDate);
 
       // Calculate monthly stats
       const monthlyTransactions = transactions.filter(tx => {
@@ -42,8 +71,9 @@ export function MonthlyReportPDF() {
       const avgTransaction = completedTx.length > 0 ? Math.round(monthlyRevenue / completedTx.length) : 0;
 
       // Previous month comparison
-      const prevMonthStart = startOfMonth(subMonths(now, 1));
-      const prevMonthEnd = endOfMonth(subMonths(now, 1));
+      const prevMonthDate = subMonths(selectedDate, 1);
+      const prevMonthStart = startOfMonth(prevMonthDate);
+      const prevMonthEnd = endOfMonth(prevMonthDate);
       const prevMonthTx = transactions.filter(tx => {
         if (tx.status !== "completed") return false;
         const txDate = new Date(tx.created_at);
@@ -67,7 +97,7 @@ export function MonthlyReportPDF() {
         byPlan[planName] = (byPlan[planName] || 0) + tx.amount;
       });
 
-      // Agency stats
+      // Agency stats (as of selected month end)
       const activeAgencies = agencies.filter(a => a.is_active).length;
       const newAgencies = agencies.filter(a => {
         const createdAt = new Date(a.created_at);
@@ -102,7 +132,7 @@ export function MonthlyReportPDF() {
 
       doc.setFontSize(14);
       doc.setFont("helvetica", "normal");
-      doc.text(currentMonth.toUpperCase(), pageWidth / 2, 35, { align: "center" });
+      doc.text(reportMonth.toUpperCase(), pageWidth / 2, 35, { align: "center" });
 
       y = 60;
 
@@ -270,7 +300,7 @@ export function MonthlyReportPDF() {
       const platformData = [
         ["Total agences", agencies.length.toString()],
         ["Agences actives", activeAgencies.toString()],
-        ["Nouvelles inscriptions", newAgencies.toString()],
+        ["Nouvelles inscriptions (ce mois)", newAgencies.toString()],
         ["Total biens gérés", totalProperties.toString()],
         ["Total locataires", totalTenants.toString()],
       ];
@@ -298,7 +328,7 @@ export function MonthlyReportPDF() {
       );
 
       // Save the PDF
-      const fileName = `rapport-mensuel-${format(now, "yyyy-MM")}.pdf`;
+      const fileName = `rapport-mensuel-${selectedMonth}.pdf`;
       doc.save(fileName);
 
       toast.success("Rapport PDF téléchargé avec succès");
@@ -311,18 +341,34 @@ export function MonthlyReportPDF() {
   };
 
   return (
-    <Button
-      onClick={generateReport}
-      disabled={isGenerating || !transactions || !agencies}
-      variant="outline"
-      className="gap-2"
-    >
-      {isGenerating ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <FileDown className="h-4 w-4" />
-      )}
-      Télécharger le rapport PDF
-    </Button>
+    <div className="flex items-center gap-2">
+      <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+        <SelectTrigger className="w-[180px]">
+          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectValue placeholder="Sélectionner un mois" />
+        </SelectTrigger>
+        <SelectContent className="bg-popover z-50">
+          {monthOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              <span className="capitalize">{option.label}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Button
+        onClick={generateReport}
+        disabled={isGenerating || !transactions || !agencies}
+        variant="outline"
+        className="gap-2"
+      >
+        {isGenerating ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <FileDown className="h-4 w-4" />
+        )}
+        Télécharger PDF
+      </Button>
+    </div>
   );
 }

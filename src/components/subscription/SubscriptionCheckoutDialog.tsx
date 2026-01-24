@@ -302,11 +302,14 @@ export function SubscriptionCheckoutDialog({
 
           {/* Payment mode confirmation */}
           {!isFree && selectedMethod?.fedapayMode && (
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
-              <p className="text-sm text-muted-foreground">
-                Mode de paiement envoyé :
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+              <p className="text-sm text-center">
+                <span className="text-muted-foreground">Mode préféré : </span>
+                <span className="font-semibold text-primary">{selectedMethod.fedapayMode}</span>
               </p>
-              <p className="font-semibold text-primary">{selectedMethod.fedapayMode}</p>
+              <p className="text-xs text-muted-foreground text-center mt-1">
+                Vous pourrez confirmer votre opérateur sur la page de paiement FedaPay
+              </p>
             </div>
           )}
 

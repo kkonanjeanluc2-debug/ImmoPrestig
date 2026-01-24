@@ -17,7 +17,8 @@ import {
   UserCog,
   Eye,
   Download,
-  Crown
+  Crown,
+  ScrollText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -48,6 +49,7 @@ const agencyNavigation = [
   { name: "Dashboard avancé", href: "/dashboard", icon: BarChart3 },
   { name: "Biens immobiliers", href: "/properties", icon: Building2 },
   { name: "Locataires", href: "/tenants", icon: Users },
+  { name: "Contrats", href: "/contracts", icon: ScrollText },
   { name: "Propriétaires", href: "/owners", icon: Home },
   { name: "Paiements", href: "/payments", icon: Wallet },
   { name: "Documents", href: "/documents", icon: FileText },

@@ -36,7 +36,7 @@ export function AgencySettings() {
     phone: "",
     address: "",
     city: "",
-    country: "Sénégal",
+    country: "Côte d'Ivoire",
     siret: "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export function AgencySettings() {
         phone: agency.phone || "",
         address: agency.address || "",
         city: agency.city || "",
-        country: agency.country || "Sénégal",
+        country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
       });
       setLogoUrl(agency.logo_url);
@@ -71,7 +71,7 @@ export function AgencySettings() {
         phone: agency.phone || "",
         address: agency.address || "",
         city: agency.city || "",
-        country: agency.country || "Sénégal",
+        country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
       });
       setLogoUrl(agency.logo_url);
@@ -321,7 +321,7 @@ export function AgencySettings() {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
-                placeholder="+221 77 123 45 67"
+                placeholder="+225 07 12 34 56 78"
                 className="pl-10"
               />
             </div>
@@ -337,7 +337,7 @@ export function AgencySettings() {
               id="agency-address"
               value={formData.address}
               onChange={(e) => handleChange("address", e.target.value)}
-              placeholder="123 Rue du Commerce"
+              placeholder="Cocody Riviera, Rue des Jardins"
               className="pl-10"
             />
           </div>
@@ -351,7 +351,7 @@ export function AgencySettings() {
               id="agency-city"
               value={formData.city}
               onChange={(e) => handleChange("city", e.target.value)}
-              placeholder="Dakar"
+              placeholder="Abidjan"
             />
           </div>
           <div className="space-y-2">
@@ -360,7 +360,7 @@ export function AgencySettings() {
               id="agency-country"
               value={formData.country}
               onChange={(e) => handleChange("country", e.target.value)}
-              placeholder="Sénégal"
+              placeholder="Côte d'Ivoire"
             />
           </div>
         </div>
@@ -368,14 +368,14 @@ export function AgencySettings() {
         {/* SIRET/RC */}
         {formData.account_type === "agence" && (
           <div className="space-y-2">
-            <Label htmlFor="agency-siret">N° NINEA / Registre de commerce</Label>
+            <Label htmlFor="agency-siret">N° RCCM / Registre de commerce</Label>
             <div className="relative">
               <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="agency-siret"
                 value={formData.siret}
                 onChange={(e) => handleChange("siret", e.target.value)}
-                placeholder="SN-DKR-2024-A-12345"
+                placeholder="CI-ABJ-2024-B-12345"
                 className="pl-10"
               />
             </div>

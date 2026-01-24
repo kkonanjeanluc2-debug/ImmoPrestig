@@ -161,7 +161,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                   <FormItem>
                     <FormLabel>Nom complet *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Jean Dupont" {...field} />
+                      <Input placeholder="Kouamé Yao" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -176,7 +176,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                     <FormItem>
                       <FormLabel>Email *</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="jean@email.com" {...field} />
+                        <Input type="email" placeholder="kouame.yao@email.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -190,7 +190,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                     <FormItem>
                       <FormLabel>Téléphone</FormLabel>
                       <FormControl>
-                        <Input placeholder="+225 00 00 00 00" {...field} />
+                        <Input placeholder="+225 07 12 34 56 78" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

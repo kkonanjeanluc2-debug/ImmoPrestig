@@ -1,4 +1,4 @@
-import { MapPin, Bed, Bath, Maximize, Pencil, Trash2, Share2 } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, Pencil, Trash2, Share2, DoorOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,12 +14,19 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+interface UnitsSummary {
+  total_units: number;
+  available_units: number;
+  occupied_units: number;
+}
+
 interface PropertyCardProps {
   property: Property;
   onEdit?: (property: Property) => void;
   onDelete?: (property: Property) => void;
   canEdit?: boolean;
   canDelete?: boolean;
+  unitsSummary?: UnitsSummary;
 }
 
 export function PropertyCard({
@@ -28,6 +35,7 @@ export function PropertyCard({
   onDelete,
   canEdit = false,
   canDelete = false,
+  unitsSummary,
 }: PropertyCardProps) {
   const navigate = useNavigate();
   const { generateMessage } = useWhatsAppPropertyMessage();
@@ -63,6 +71,8 @@ export function PropertyCard({
     navigate(`/properties/${property.id}`);
   };
 
+  const hasUnits = unitsSummary && unitsSummary.total_units > 0;
+
   return (
     <div 
       className="group bg-card rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 border border-border/50 animate-fade-in cursor-pointer"
@@ -75,13 +85,39 @@ export function PropertyCard({
           alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="absolute top-3 left-3 flex gap-2">
+        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
           <Badge variant="secondary" className="bg-card/90 backdrop-blur-sm text-foreground font-medium">
             {typeLabels[propertyType] || propertyType}
           </Badge>
           <Badge className={cn("border backdrop-blur-sm", statusClasses[status] || "")}>
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </Badge>
+          {/* Multi-unit badge */}
+          {hasUnits && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge 
+                    variant="outline" 
+                    className={cn(
+                      "backdrop-blur-sm flex items-center gap-1",
+                      unitsSummary.available_units > 0 
+                        ? "bg-emerald/90 text-white border-emerald" 
+                        : "bg-card/90 text-muted-foreground border-border"
+                    )}
+                  >
+                    <DoorOpen className="h-3 w-3" />
+                    {unitsSummary.available_units}/{unitsSummary.total_units}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {unitsSummary.available_units} porte{unitsSummary.available_units > 1 ? 's' : ''} disponible{unitsSummary.available_units > 1 ? 's' : ''} sur {unitsSummary.total_units}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
         <div className="absolute bottom-3 right-3">
           <span className="bg-navy text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-semibold">
@@ -173,6 +209,13 @@ export function PropertyCard({
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Maximize className="h-4 w-4" />
               <span>{area} m²</span>
+            </div>
+          )}
+          {/* Show units info in features row if no beds/baths */}
+          {hasUnits && !bedrooms && !bathrooms && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <DoorOpen className="h-4 w-4" />
+              <span>{unitsSummary.total_units} porte{unitsSummary.total_units > 1 ? 's' : ''}</span>
             </div>
           )}
         </div>

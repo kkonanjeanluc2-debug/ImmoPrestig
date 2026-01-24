@@ -11,6 +11,7 @@ import { useProperties, useUpdateProperty } from "@/hooks/useProperties";
 import { useTenants, useUpdateTenant } from "@/hooks/useTenants";
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export function AssignmentsSettings() {
@@ -58,10 +59,39 @@ export function AssignmentsSettings() {
     return user?.full_name || user?.email || "Inconnu";
   };
 
+  const sendAssignmentNotification = async (
+    assigneeUserId: string,
+    type: "property" | "tenant",
+    items: Array<{ id: string; name: string; details?: string }>
+  ) => {
+    try {
+      const { error } = await supabase.functions.invoke("send-assignment-notification", {
+        body: {
+          assignee_user_id: assigneeUserId,
+          assignment_type: type,
+          items,
+        },
+      });
+      if (error) {
+        console.error("Email notification error:", error);
+      }
+    } catch (err) {
+      console.error("Failed to send notification:", err);
+    }
+  };
+
   const handlePropertyAssignment = async (propertyId: string, assignedTo: string | null) => {
     try {
+      const property = properties?.find(p => p.id === propertyId);
       await updateProperty.mutateAsync({ id: propertyId, assigned_to: assignedTo });
       toast.success("Affectation mise à jour");
+      
+      // Send email notification if assigning to someone
+      if (assignedTo && property) {
+        sendAssignmentNotification(assignedTo, "property", [
+          { id: propertyId, name: property.title, details: property.address }
+        ]);
+      }
     } catch (error) {
       toast.error("Erreur lors de la mise à jour");
     }
@@ -69,8 +99,16 @@ export function AssignmentsSettings() {
 
   const handleTenantAssignment = async (tenantId: string, assignedTo: string | null) => {
     try {
+      const tenant = tenants?.find(t => t.id === tenantId);
       await updateTenant.mutateAsync({ id: tenantId, assigned_to: assignedTo });
       toast.success("Affectation mise à jour");
+      
+      // Send email notification if assigning to someone
+      if (assignedTo && tenant) {
+        sendAssignmentNotification(assignedTo, "tenant", [
+          { id: tenantId, name: tenant.name, details: tenant.email }
+        ]);
+      }
     } catch (error) {
       toast.error("Erreur lors de la mise à jour");
     }
@@ -89,6 +127,16 @@ export function AssignmentsSettings() {
         )
       );
       toast.success(`${selectedPropertyIds.length} bien(s) affecté(s)`);
+      
+      // Send email notification for bulk assignment
+      if (bulkPropertyAssignee) {
+        const assignedProperties = properties
+          ?.filter(p => selectedPropertyIds.includes(p.id))
+          .map(p => ({ id: p.id, name: p.title, details: p.address })) || [];
+        
+        sendAssignmentNotification(bulkPropertyAssignee, "property", assignedProperties);
+      }
+      
       setSelectedPropertyIds([]);
       setBulkPropertyAssignee(null);
     } catch (error) {
@@ -111,6 +159,16 @@ export function AssignmentsSettings() {
         )
       );
       toast.success(`${selectedTenantIds.length} locataire(s) affecté(s)`);
+      
+      // Send email notification for bulk assignment
+      if (bulkTenantAssignee) {
+        const assignedTenants = tenants
+          ?.filter(t => selectedTenantIds.includes(t.id))
+          .map(t => ({ id: t.id, name: t.name, details: t.email })) || [];
+        
+        sendAssignmentNotification(bulkTenantAssignee, "tenant", assignedTenants);
+      }
+      
       setSelectedTenantIds([]);
       setBulkTenantAssignee(null);
     } catch (error) {

@@ -113,6 +113,53 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_members: {
+        Row: {
+          agency_id: string
+          created_at: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          joined_at: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_members_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agency_subscriptions: {
         Row: {
           agency_id: string
@@ -1040,6 +1087,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_agency_add_member: { Args: { p_agency_id: string }; Returns: boolean }
+      get_agency_member_count: {
+        Args: { p_agency_id: string }
+        Returns: number
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

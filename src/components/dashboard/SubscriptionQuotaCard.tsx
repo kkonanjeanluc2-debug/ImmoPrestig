@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Crown, Infinity } from "lucide-react";
+import { Building2, Users, Crown, Infinity, UserPlus } from "lucide-react";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -67,15 +67,17 @@ export function SubscriptionQuotaCard() {
         <CardContent className="space-y-4">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
         </CardContent>
       </Card>
     );
   }
 
-  const hasLimits = limits.maxProperties !== null || limits.maxTenants !== null;
+  const hasLimits = limits.maxProperties !== null || limits.maxTenants !== null || limits.maxUsers !== null;
   const isNearAnyLimit = 
     (limits.maxProperties !== null && limits.propertiesRemaining !== null && limits.propertiesRemaining <= 2) ||
-    (limits.maxTenants !== null && limits.tenantsRemaining !== null && limits.tenantsRemaining <= 2);
+    (limits.maxTenants !== null && limits.tenantsRemaining !== null && limits.tenantsRemaining <= 2) ||
+    (limits.maxUsers !== null && limits.usersRemaining !== null && limits.usersRemaining <= 1);
 
   return (
     <Card className={isNearAnyLimit ? "border-amber-500/50" : ""}>
@@ -111,6 +113,13 @@ export function SubscriptionQuotaCard() {
           current={limits.currentTenants}
           max={limits.maxTenants}
           colorClass="bg-emerald"
+        />
+        <QuotaItem
+          icon={<UserPlus className="h-4 w-4 text-purple-500" />}
+          label="Utilisateurs"
+          current={limits.currentUsers}
+          max={limits.maxUsers}
+          colorClass="bg-purple-500"
         />
         {isNearAnyLimit && (
           <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-md">

@@ -234,7 +234,10 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                           availableProperties.map((property) => (
                             <SelectItem key={property.id} value={property.id}>
                               <div className="flex flex-col">
-                                <span>{property.title}</span>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span>{property.title}</span>
+                                  <span className="text-xs font-medium text-emerald">{property.price.toLocaleString('fr-FR')} F</span>
+                                </div>
                                 <span className="text-xs text-muted-foreground">{property.address}</span>
                               </div>
                             </SelectItem>

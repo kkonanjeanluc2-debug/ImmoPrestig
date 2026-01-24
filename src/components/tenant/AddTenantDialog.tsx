@@ -142,6 +142,11 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         >
           <Plus className="h-4 w-4 mr-2" />
           Ajouter un locataire
+          {availableProperties.length > 0 && (
+            <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-white/20 rounded-full">
+              {availableProperties.length} bien{availableProperties.length > 1 ? 's' : ''}
+            </span>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">

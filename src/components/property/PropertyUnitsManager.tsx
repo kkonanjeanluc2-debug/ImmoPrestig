@@ -148,6 +148,8 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
     "en attente": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   };
 
+  const existingUnitNumbers = units.map(u => u.unit_number);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -184,6 +186,7 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
                   resetForm();
                 }}
                 isLoading={createUnit.isPending}
+                existingUnitNumbers={existingUnitNumbers}
               />
             </DialogContent>
           </Dialog>
@@ -271,6 +274,8 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
             }}
             isEdit
             isLoading={updateUnit.isPending}
+            existingUnitNumbers={existingUnitNumbers}
+            editingUnitNumber={editingUnit?.unit_number}
           />
         </DialogContent>
       </Dialog>

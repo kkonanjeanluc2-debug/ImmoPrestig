@@ -37,18 +37,11 @@ import {
   useDeletePropertyUnit,
   PropertyUnit,
 } from "@/hooks/usePropertyUnits";
+import { UnitForm, UnitFormData } from "./UnitForm";
 
 interface PropertyUnitsManagerProps {
   propertyId: string;
   canEdit?: boolean;
-}
-
-interface UnitFormData {
-  unit_number: string;
-  rooms_count: number;
-  rent_amount: number;
-  area: number | null;
-  status: string;
 }
 
 const defaultFormData: UnitFormData = {
@@ -155,92 +148,6 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
     "en attente": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   };
 
-  const UnitForm = ({ onSubmit, isEdit = false }: { onSubmit: (e: React.FormEvent) => Promise<void>; isEdit?: boolean }) => (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="unit_number">Numéro de porte *</Label>
-          <Input
-            id="unit_number"
-            value={formData.unit_number}
-            onChange={(e) => setFormData({ ...formData, unit_number: e.target.value })}
-            placeholder="ex: Porte A, Appartement 1..."
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="rooms_count">Nombre de pièces *</Label>
-          <Input
-            id="rooms_count"
-            type="number"
-            min={1}
-            value={formData.rooms_count}
-            onChange={(e) => setFormData({ ...formData, rooms_count: parseInt(e.target.value) || 1 })}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="rent_amount">Loyer mensuel (F CFA) *</Label>
-          <Input
-            id="rent_amount"
-            type="number"
-            min={0}
-            value={formData.rent_amount}
-            onChange={(e) => setFormData({ ...formData, rent_amount: parseFloat(e.target.value) || 0 })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="area">Surface (m²)</Label>
-          <Input
-            id="area"
-            type="number"
-            min={0}
-            value={formData.area || ""}
-            onChange={(e) => setFormData({ ...formData, area: e.target.value ? parseFloat(e.target.value) : null })}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="status">Statut</Label>
-        <Select
-          value={formData.status}
-          onValueChange={(value) => setFormData({ ...formData, status: value })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="disponible">Disponible</SelectItem>
-            <SelectItem value="occupé">Occupé</SelectItem>
-            <SelectItem value="en attente">En attente</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex justify-end gap-2 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            if (isEdit) setEditingUnit(null);
-            else setIsAddOpen(false);
-            resetForm();
-          }}
-        >
-          Annuler
-        </Button>
-        <Button type="submit" disabled={createUnit.isPending || updateUnit.isPending}>
-          {(createUnit.isPending || updateUnit.isPending) && (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          )}
-          {isEdit ? "Modifier" : "Ajouter"}
-        </Button>
-      </div>
-    </form>
-  );
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -268,7 +175,16 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
               <DialogHeader>
                 <DialogTitle>Ajouter une porte</DialogTitle>
               </DialogHeader>
-              <UnitForm onSubmit={handleAddSubmit} />
+              <UnitForm 
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleAddSubmit}
+                onCancel={() => {
+                  setIsAddOpen(false);
+                  resetForm();
+                }}
+                isLoading={createUnit.isPending}
+              />
             </DialogContent>
           </Dialog>
         )}
@@ -345,7 +261,17 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
           <DialogHeader>
             <DialogTitle>Modifier la porte</DialogTitle>
           </DialogHeader>
-          <UnitForm onSubmit={handleEditSubmit} isEdit />
+          <UnitForm 
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleEditSubmit}
+            onCancel={() => {
+              setEditingUnit(null);
+              resetForm();
+            }}
+            isEdit
+            isLoading={updateUnit.isPending}
+          />
         </DialogContent>
       </Dialog>
 

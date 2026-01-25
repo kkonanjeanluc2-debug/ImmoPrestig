@@ -7,6 +7,7 @@ interface PropertyUnitsSummary {
   total_units: number;
   available_units: number;
   occupied_units: number;
+  total_rent: number;
 }
 
 export const usePropertyUnitsSummary = () => {
@@ -17,7 +18,7 @@ export const usePropertyUnitsSummary = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("property_units")
-        .select("property_id, status");
+        .select("property_id, status, rent_amount");
 
       if (error) throw error;
 
@@ -30,9 +31,11 @@ export const usePropertyUnitsSummary = () => {
           total_units: 0,
           available_units: 0,
           occupied_units: 0,
+          total_rent: 0,
         };
         
         existing.total_units++;
+        existing.total_rent += Number(unit.rent_amount) || 0;
         if (unit.status === "disponible") {
           existing.available_units++;
         } else if (unit.status === "occupé") {

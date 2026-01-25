@@ -18,6 +18,7 @@ interface UnitsSummary {
   total_units: number;
   available_units: number;
   occupied_units: number;
+  total_rent: number;
 }
 
 interface PropertyCardProps {
@@ -103,16 +104,20 @@ export function PropertyCard({
                       "backdrop-blur-sm flex items-center gap-1",
                       unitsSummary.available_units > 0 
                         ? "bg-emerald/90 text-white border-emerald" 
-                        : "bg-card/90 text-muted-foreground border-border"
+                        : "bg-orange-500/90 text-white border-orange-500"
                     )}
                   >
                     <DoorOpen className="h-3 w-3" />
-                    {unitsSummary.available_units}/{unitsSummary.total_units}
+                    {unitsSummary.available_units === 0 
+                      ? "Tout occupé" 
+                      : `${unitsSummary.available_units}/${unitsSummary.total_units} dispo`}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    {unitsSummary.available_units} porte{unitsSummary.available_units > 1 ? 's' : ''} disponible{unitsSummary.available_units > 1 ? 's' : ''} sur {unitsSummary.total_units}
+                    {unitsSummary.available_units === 0 
+                      ? `Toutes les ${unitsSummary.total_units} portes sont occupées`
+                      : `${unitsSummary.available_units} porte${unitsSummary.available_units > 1 ? 's' : ''} disponible${unitsSummary.available_units > 1 ? 's' : ''} sur ${unitsSummary.total_units}`}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -122,7 +127,7 @@ export function PropertyCard({
         <div className="absolute bottom-3 right-3">
           <span className="bg-navy text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-semibold">
             {type === "location" 
-              ? `${price.toLocaleString('fr-FR')} F CFA/mois`
+              ? `${(hasUnits ? unitsSummary.total_rent : price).toLocaleString('fr-FR')} F CFA/mois`
               : `${price.toLocaleString('fr-FR')} F CFA`
             }
           </span>

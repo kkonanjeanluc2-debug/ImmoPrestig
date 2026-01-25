@@ -264,7 +264,7 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
                 Ajouter une porte
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby={undefined}>
               <DialogHeader>
                 <DialogTitle>Ajouter une porte</DialogTitle>
               </DialogHeader>
@@ -341,7 +341,7 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
 
       {/* Edit Dialog */}
       <Dialog open={!!editingUnit} onOpenChange={(open) => !open && setEditingUnit(null)}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Modifier la porte</DialogTitle>
           </DialogHeader>

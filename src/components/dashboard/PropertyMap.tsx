@@ -117,7 +117,7 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
       {
         headers: {
-          "User-Agent": "ImmoGest/1.0",
+          "User-Agent": "ImmoPrestige/1.0",
         },
       }
     );

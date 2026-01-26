@@ -38,7 +38,7 @@ export const usePropertyUnitsSummary = () => {
         existing.total_rent += Number(unit.rent_amount) || 0;
         if (unit.status === "disponible") {
           existing.available_units++;
-        } else if (unit.status === "occupé") {
+        } else if (unit.status === "loué") {
           existing.occupied_units++;
         }
         

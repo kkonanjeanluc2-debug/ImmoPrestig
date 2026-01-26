@@ -107,7 +107,8 @@ export function MyAssignedItems() {
   // Status badges for properties
   const statusClasses: Record<string, string> = {
     disponible: "bg-emerald/10 text-emerald border-emerald/20",
-    occupé: "bg-navy/10 text-navy border-navy/20",
+    loué: "bg-navy/10 text-navy border-navy/20",
+    vendu: "bg-purple-500/10 text-purple-500 border-purple-500/20",
     "en attente": "bg-amber-500/10 text-amber-500 border-amber-500/20",
   };
 

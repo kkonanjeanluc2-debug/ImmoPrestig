@@ -81,7 +81,7 @@ interface PropertyMapProps {
 
 // Custom marker icons based on status
 const createCustomIcon = (status: string) => {
-  const color = status === "occupé" ? "#10b981" : status === "disponible" ? "#3b82f6" : "#f59e0b";
+  const color = status === "loué" ? "#10b981" : status === "disponible" ? "#3b82f6" : "#f59e0b";
   
   return L.divIcon({
     className: "custom-marker",
@@ -156,10 +156,10 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
 }
 
 // Status filter types
-type StatusFilter = "occupé" | "disponible" | "en attente";
+type StatusFilter = "loué" | "disponible" | "en attente";
 
 const STATUS_FILTERS: { value: StatusFilter; label: string; color: string }[] = [
-  { value: "occupé", label: "Occupé", color: "#10b981" },
+  { value: "loué", label: "Loué", color: "#10b981" },
   { value: "disponible", label: "Disponible", color: "#3b82f6" },
   { value: "en attente", label: "En attente", color: "#f59e0b" },
 ];
@@ -249,7 +249,7 @@ function MapControlsOverlay({ properties, onFitAll, onFocusProperty, statusFilte
                     className="h-2.5 w-2.5 rounded-full flex-shrink-0"
                     style={{
                       backgroundColor:
-                        property.status === "occupé"
+                        property.status === "loué"
                           ? "#10b981"
                           : property.status === "disponible"
                           ? "#3b82f6"
@@ -347,7 +347,7 @@ function MapControlsOverlay({ properties, onFitAll, onFocusProperty, statusFilte
                     className="h-2.5 w-2.5 rounded-full flex-shrink-0"
                     style={{
                       backgroundColor:
-                        property.status === "occupé"
+                        property.status === "loué"
                           ? "#10b981"
                           : property.status === "disponible"
                           ? "#3b82f6"
@@ -420,7 +420,7 @@ const PropertyTypeIcon = ({ type }: { type: string }) => {
 };
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  "occupé": { label: "Occupé", variant: "default" },
+  "loué": { label: "Loué", variant: "default" },
   "disponible": { label: "Disponible", variant: "secondary" },
   "en attente": { label: "En attente", variant: "outline" },
 };
@@ -725,7 +725,7 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
   >(null);
 
   // Status filter state - show all by default
-  const [statusFilters, setStatusFilters] = useState<StatusFilter[]>(["occupé", "disponible", "en attente"]);
+  const [statusFilters, setStatusFilters] = useState<StatusFilter[]>(["loué", "disponible", "en attente"]);
 
   const handleToggleStatusFilter = useCallback((status: StatusFilter) => {
     setStatusFilters((prev) => {
@@ -777,7 +777,7 @@ export function PropertyMap({ properties, onCoordinatesUpdated }: PropertyMapPro
           <div className="flex items-center gap-3 text-xs">
             <div className="flex items-center gap-1">
               <div className="h-3 w-3 rounded-full bg-emerald" />
-              <span>Occupé</span>
+              <span>Loué</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="h-3 w-3 rounded-full bg-blue-500" />

@@ -83,7 +83,7 @@ const OwnerDetails = () => {
   const venteProperties = ownerProperties.filter(p => p.type === "vente");
   const monthlyRevenue = locationProperties.reduce((sum, p) => sum + (p.price || 0), 0);
   const totalPropertyValue = ownerProperties.reduce((sum, p) => sum + (p.price || 0), 0);
-  const occupiedProperties = ownerProperties.filter(p => p.status === "occupé").length;
+  const occupiedProperties = ownerProperties.filter(p => p.status === "loué").length;
   const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0;
 
   const handleDelete = async () => {
@@ -447,7 +447,7 @@ const OwnerDetails = () => {
                 </div>
                 <Separator />
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Biens occupés</span>
+                  <span className="text-muted-foreground">Biens loués</span>
                   <span className="font-medium">{occupiedProperties} / {totalProperties}</span>
                 </div>
                 <div className="flex justify-between text-sm">

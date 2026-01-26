@@ -54,7 +54,7 @@ const AdvancedDashboard = () => {
     return p.status === "paid" && paidDate && paidDate >= startDate;
   }).reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
-  const occupiedProperties = properties?.filter((p) => p.status === "occupé").length || 0;
+  const occupiedProperties = properties?.filter((p) => p.status === "loué").length || 0;
   const occupancyRate = totalProperties > 0
     ? Math.round((occupiedProperties / totalProperties) * 100)
     : 0;

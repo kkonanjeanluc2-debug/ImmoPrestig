@@ -144,7 +144,7 @@ export const PropertyUnitsManager = ({ propertyId, canEdit = true }: PropertyUni
 
   const statusColors: Record<string, string> = {
     disponible: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    occupé: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+    loué: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
     "en attente": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   };
 

@@ -504,7 +504,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                       </Select>
                       {availableUnits.length === 0 && propertyUnits.length > 0 && (
                         <p className="text-xs text-amber-600">
-                          Toutes les portes de ce bien sont occupées.
+                          Toutes les portes de ce bien sont louées.
                         </p>
                       )}
                       <FormMessage />

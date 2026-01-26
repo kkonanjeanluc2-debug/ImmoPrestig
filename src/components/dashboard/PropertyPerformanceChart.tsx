@@ -38,7 +38,7 @@ export function PropertyPerformanceChart({ properties, payments, period }: Prope
     const startDate = new Date(now.getFullYear(), now.getMonth() - periodMonths + 1, 1);
 
     const propertyData = properties
-      .filter((p) => p.status === "occupé")
+      .filter((p) => p.status === "loué")
       .map((property) => {
         const propertyPayments = payments.filter(
           (pay) => pay.tenant?.property?.id === property.id
@@ -99,7 +99,7 @@ export function PropertyPerformanceChart({ properties, payments, period }: Prope
       <CardContent className="pt-0">
         {data.length === 0 ? (
           <div className="h-[220px] flex items-center justify-center text-muted-foreground">
-            <p>Aucun bien occupé</p>
+            <p>Aucun bien loué</p>
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-[220px] w-full">

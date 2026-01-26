@@ -34,14 +34,36 @@ export function useAgency() {
     queryFn: async () => {
       if (!user?.id) return null;
 
-      const { data, error } = await supabase
+      // First, check if user owns an agency
+      const { data: ownedAgency, error: ownedError } = await supabase
         .from("agencies")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (error) throw error;
-      return data as Agency | null;
+      if (ownedError) throw ownedError;
+      if (ownedAgency) return ownedAgency as Agency;
+
+      // If not an owner, check if user is a member of an agency
+      const { data: membership, error: memberError } = await supabase
+        .from("agency_members")
+        .select("agency_id")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (memberError) throw memberError;
+      if (!membership) return null;
+
+      // Fetch the agency the user is a member of
+      const { data: memberAgency, error: agencyError } = await supabase
+        .from("agencies")
+        .select("*")
+        .eq("id", membership.agency_id)
+        .maybeSingle();
+
+      if (agencyError) throw agencyError;
+      return memberAgency as Agency | null;
     },
     enabled: !!user?.id,
   });

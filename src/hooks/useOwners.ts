@@ -29,6 +29,7 @@ export const useOwners = () => {
           *,
           management_type:management_types(id, name, percentage, type)
         `)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -114,10 +115,14 @@ export const useDeleteOwner = () => {
 
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name?: string }) => {
-      const { error } = await supabase.from("owners").delete().eq("id", id);
+      // Soft delete - just set deleted_at timestamp
+      const { error } = await supabase
+        .from("owners")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+        
       if (error) throw error;
 
-      // Log activity
       if (user) {
         await logActivityDirect(
           user.id,
@@ -130,6 +135,7 @@ export const useDeleteOwner = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["owners"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-owners"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

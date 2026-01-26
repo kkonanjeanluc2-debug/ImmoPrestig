@@ -1,6 +1,5 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { RecentPayments } from "@/components/dashboard/RecentPayments";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
@@ -10,7 +9,6 @@ import { SubscriptionQuotaCard } from "@/components/dashboard/SubscriptionQuotaC
 import { MyAssignedItems } from "@/components/dashboard/MyAssignedItems";
 import { ManagerPerformance } from "@/components/dashboard/ManagerPerformance";
 import { ManagerPerformanceChart } from "@/components/dashboard/ManagerPerformanceChart";
-import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { Building2, Users, Wallet, TrendingUp, Loader2, FileText, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperties } from "@/hooks/useProperties";
@@ -20,9 +18,8 @@ import { useState } from "react";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
-import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 const Index = () => {
@@ -34,7 +31,6 @@ const Index = () => {
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
   const { data: whatsappStats } = useWhatsAppLogsCount();
-  const { data: unitsSummary = {} } = usePropertyUnitsSummary();
 
   const handleGenerateReceipts = async () => {
     setIsGenerating(true);
@@ -84,8 +80,6 @@ const Index = () => {
     ? Math.round((occupiedProperties / totalProperties) * 100) 
     : 0;
 
-  const recentProperties = properties?.slice(0, 4) || [];
-
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -114,7 +108,6 @@ const Index = () => {
               )}
               Générer les quittances
             </Button>
-            <AddPropertyDialog />
           </div>
         </div>
 
@@ -170,57 +163,20 @@ const Index = () => {
 
         {/* Charts Section */}
         {!isLoading && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <RevenueChart payments={payments || []} />
-              <OccupancyChart properties={properties || []} />
-              <PropertyTypesChart properties={properties || []} />
-            </div>
-            <ManagerPerformanceChart />
-          </>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <RevenueChart payments={payments || []} />
+            <OccupancyChart properties={properties || []} />
+            <PropertyTypesChart properties={properties || []} />
+          </div>
         )}
+
+        {/* Manager Performance Chart */}
+        {!isLoading && <ManagerPerformanceChart />}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Properties Section */}
-          <div className="xl:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-display font-semibold text-foreground">
-                Biens récents
-              </h2>
-              <Link to="/properties">
-                <Button variant="ghost" className="text-navy hover:text-navy-dark">
-                  Voir tous les biens →
-                </Button>
-              </Link>
-            </div>
-            
-            {propertiesLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : recentProperties.length === 0 ? (
-              <div className="text-center py-12 bg-card rounded-xl border border-border/50">
-                <p className="text-muted-foreground">
-                  Aucun bien enregistré. Ajoutez votre premier bien !
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {recentProperties.map((property, index) => (
-                  <div key={property.id} style={{ animationDelay: `${index * 100}ms` }}>
-                    <PropertyCard 
-                      property={property}
-                      unitsSummary={unitsSummary[property.id]}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Right Column: My Assigned Items, Manager Performance, Quota, Payments & Activity */}
-          <div className="xl:col-span-1 space-y-6">
+          <div className="xl:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <MyAssignedItems />
             <ManagerPerformance />
             <SubscriptionQuotaCard />

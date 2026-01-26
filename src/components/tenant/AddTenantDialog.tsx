@@ -177,27 +177,27 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         status: 'active',
       });
 
-      // Update unit status to 'occupé' if a unit was selected
+      // Update unit status to 'loué' if a unit was selected
       if (unitId) {
         await updatePropertyUnit.mutateAsync({
           id: unitId,
-          status: 'occupé',
+          status: 'loué',
         });
         
         // Check if all units are now occupied
         const remainingAvailableUnits = availableUnits.filter(u => u.id !== unitId);
         if (remainingAvailableUnits.length === 0) {
-          // All units occupied, mark property as occupied
+          // All units occupied, mark property as rented
           await updateProperty.mutateAsync({
             id: values.property_id,
-            status: 'occupé',
+            status: 'loué',
           });
         }
       } else {
-        // No units, update property status to 'occupé'
+        // No units, update property status to 'loué'
         await updateProperty.mutateAsync({
           id: values.property_id,
-          status: 'occupé',
+          status: 'loué',
         });
       }
 

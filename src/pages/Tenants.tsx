@@ -10,6 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { 
   Search, 
   Users, 
@@ -30,14 +41,15 @@ import {
   Pencil,
   Eye,
   UserCheck,
-  DoorOpen
+  DoorOpen,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
+import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
 import { ImportTenantsDialog } from "@/components/tenant/ImportTenantsDialog";
 import { MergeTenantsDialog } from "@/components/tenant/MergeTenantsDialog";
@@ -45,6 +57,7 @@ import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
+import { useToast } from "@/hooks/use-toast";
 
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
@@ -65,10 +78,12 @@ interface TenantCardProps {
   tenant: TenantWithDetails;
   onEdit: (tenant: TenantWithDetails) => void;
   onView: (tenant: TenantWithDetails) => void;
+  onDelete: (tenant: TenantWithDetails) => void;
   canEdit: boolean;
+  isDeleting: boolean;
 }
 
-function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
+function TenantCard({ tenant, onEdit, onView, onDelete, canEdit, isDeleting }: TenantCardProps) {
   const [expanded, setExpanded] = useState(false);
   
   // Get active contract
@@ -149,15 +164,51 @@ function TenantCard({ tenant, onEdit, onView, canEdit }: TenantCardProps) {
                 </Button>
                 <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
                 {canEdit && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onEdit(tenant)}
-                    className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
-                  >
-                    <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                    <span className="hidden xs:inline">Modifier</span>
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEdit(tenant)}
+                      className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
+                    >
+                      <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span className="hidden xs:inline">Modifier</span>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          )}
+                          <span className="hidden xs:inline">Supprimer</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer ce locataire ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Êtes-vous sûr de vouloir supprimer <strong>{tenant.name}</strong> ? Cette action est irréversible et supprimera également tous les contrats et paiements associés.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDelete(tenant)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Supprimer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
                 )}
               </div>
             </div>
@@ -262,6 +313,8 @@ export default function Tenants() {
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { data: tenants, isLoading, error } = useTenants();
+  const deleteTenantMutation = useDeleteTenant();
+  const { toast } = useToast();
   const { canCreate, canEdit } = usePermissions();
   const { data: assignableUsers = [] } = useAssignableUsers();
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
@@ -273,6 +326,22 @@ export default function Tenants() {
 
   const handleViewTenant = (tenant: TenantWithDetails) => {
     navigate(`/tenants/${tenant.id}`);
+  };
+
+  const handleDeleteTenant = async (tenant: TenantWithDetails) => {
+    try {
+      await deleteTenantMutation.mutateAsync({ id: tenant.id, name: tenant.name });
+      toast({
+        title: "Locataire supprimé",
+        description: `${tenant.name} a été supprimé avec succès.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer le locataire.",
+      });
+    }
   };
 
 
@@ -433,7 +502,9 @@ export default function Tenants() {
                   tenant={tenant} 
                   onEdit={handleEditTenant}
                   onView={handleViewTenant}
+                  onDelete={handleDeleteTenant}
                   canEdit={canEdit}
+                  isDeleting={deleteTenantMutation.isPending}
                 />
               ))}
             </div>

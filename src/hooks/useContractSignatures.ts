@@ -1,0 +1,207 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+export interface ContractSignature {
+  id: string;
+  contract_id: string;
+  signer_type: "landlord" | "tenant";
+  signer_name: string;
+  signer_email?: string;
+  signature_data?: string;
+  signature_text?: string;
+  signature_type: "drawn" | "typed";
+  signed_at: string;
+  ip_address?: string;
+  user_agent?: string;
+  signature_token?: string;
+  token_expires_at?: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface CreateSignatureData {
+  contract_id: string;
+  signer_type: "landlord" | "tenant";
+  signer_name: string;
+  signer_email?: string;
+  signature_data?: string;
+  signature_text?: string;
+  signature_type: "drawn" | "typed";
+}
+
+export const useContractSignatures = (contractId?: string) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["contract-signatures", contractId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contract_signatures")
+        .select("*")
+        .eq("contract_id", contractId!)
+        .order("signed_at", { ascending: true });
+
+      if (error) throw error;
+      return data as ContractSignature[];
+    },
+    enabled: !!user && !!contractId,
+  });
+};
+
+export const useCreateSignature = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (data: CreateSignatureData) => {
+      if (!user) throw new Error("User not authenticated");
+
+      // Récupérer l'adresse IP et le user agent
+      const userAgent = navigator.userAgent;
+
+      const { data: signature, error } = await supabase
+        .from("contract_signatures")
+        .insert({
+          ...data,
+          user_id: user.id,
+          user_agent: userAgent,
+          signed_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Mettre à jour le statut de signature du contrat
+      const newStatus = data.signer_type === "landlord" ? "landlord_signed" : "fully_signed";
+      
+      await supabase
+        .from("contracts")
+        .update({ signature_status: newStatus })
+        .eq("id", data.contract_id);
+
+      return signature;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["contract-signatures", variables.contract_id] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    },
+  });
+};
+
+export const useCreateTenantSignatureRequest = () => {
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      contractId,
+      tenantName,
+      tenantEmail,
+    }: {
+      contractId: string;
+      tenantName: string;
+      tenantEmail: string;
+    }) => {
+      if (!user) throw new Error("User not authenticated");
+
+      // Créer un token de signature qui expire dans 7 jours
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      const { data, error } = await supabase
+        .from("contract_signatures")
+        .insert({
+          contract_id: contractId,
+          signer_type: "tenant",
+          signer_name: tenantName,
+          signer_email: tenantEmail,
+          signature_type: "typed", // Sera mis à jour lors de la signature
+          signature_token: token,
+          token_expires_at: expiresAt.toISOString(),
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { ...data, token };
+    },
+  });
+};
+
+export const useSignatureByToken = (token?: string) => {
+  return useQuery({
+    queryKey: ["signature-by-token", token],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contract_signatures")
+        .select(`
+          *,
+          contracts (
+            id,
+            start_date,
+            end_date,
+            rent_amount,
+            deposit,
+            properties (title, address),
+            tenants (name, email)
+          )
+        `)
+        .eq("signature_token", token!)
+        .gt("token_expires_at", new Date().toISOString())
+        .is("signature_data", null)
+        .is("signature_text", null)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!token,
+  });
+};
+
+export const useCompleteTenantSignature = () => {
+  return useMutation({
+    mutationFn: async ({
+      token,
+      signatureData,
+      signatureText,
+      signatureType,
+    }: {
+      token: string;
+      signatureData?: string;
+      signatureText?: string;
+      signatureType: "drawn" | "typed";
+    }) => {
+      const userAgent = navigator.userAgent;
+
+      const { data, error } = await supabase
+        .from("contract_signatures")
+        .update({
+          signature_data: signatureData,
+          signature_text: signatureText,
+          signature_type: signatureType,
+          signed_at: new Date().toISOString(),
+          user_agent: userAgent,
+        })
+        .eq("signature_token", token)
+        .gt("token_expires_at", new Date().toISOString())
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Mettre à jour le statut du contrat
+      if (data?.contract_id) {
+        await supabase
+          .from("contracts")
+          .update({ signature_status: "fully_signed" })
+          .eq("id", data.contract_id);
+      }
+
+      return data;
+    },
+  });
+};

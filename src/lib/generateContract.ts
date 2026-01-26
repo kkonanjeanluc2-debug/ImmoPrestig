@@ -403,8 +403,11 @@ export const printContractPDF = async (
   }
 };
 
-// Default contract template
-export const DEFAULT_CONTRACT_TEMPLATE = `# CONTRAT DE BAIL D'HABITATION
+// Default contract template - Conforme au Code de la Construction et de l'Habitat de Côte d'Ivoire
+// Loi n° 2019-576 du 26 juin 2019
+export const DEFAULT_CONTRACT_TEMPLATE = `# CONTRAT DE BAIL À USAGE D'HABITATION
+
+Conformément aux dispositions de la Loi n° 2019-576 du 26 juin 2019 instituant le Code de la Construction et de l'Habitat en République de Côte d'Ivoire.
 
 Entre les soussignés :
 
@@ -416,6 +419,8 @@ Email : {bailleur_email}
 
 Ci-après dénommé "Le Bailleur"
 
+D'une part,
+
 ## LE LOCATAIRE
 {locataire}
 Téléphone : {locataire_telephone}
@@ -423,53 +428,142 @@ Email : {locataire_email}
 
 Ci-après dénommé "Le Locataire"
 
-Il a été convenu ce qui suit :
+D'autre part,
 
-### Article 1 - OBJET DU CONTRAT
-Le Bailleur loue au Locataire, qui accepte, le bien immobilier suivant :
+Il a été convenu et arrêté ce qui suit :
+
+### CHAPITRE 1 : OBJET ET DÉSIGNATION DU BIEN
+
+### Article 1 - Objet du contrat
+Conformément à l'article 1er de la Loi n° 2019-576 du 26 juin 2019, le présent contrat de bail à usage d'habitation a pour objet la mise en location d'un immeuble ou local servant d'habitation, par lequel le Bailleur s'oblige à faire jouir le Locataire dudit bien pendant un certain temps et moyennant un loyer que celui-ci s'oblige à lui payer.
+
+### Article 2 - Désignation du bien loué
+Le Bailleur donne à bail au Locataire, qui accepte, le bien immobilier désigné ci-après :
 - Désignation : {bien}
-- Adresse : {bien_adresse}
-- Unité/Porte : {unite}
+- Adresse complète : {bien_adresse}
+- Unité/Porte (le cas échéant) : {unite}
 
-### Article 2 - DURÉE DU BAIL
-Le présent bail est consenti pour une durée déterminée, commençant le {date_debut} et se terminant le {date_fin}.
+### CHAPITRE 2 : DURÉE ET CONDITIONS
 
-### Article 3 - LOYER
-Le loyer mensuel est fixé à {loyer} ({loyer_lettres}), payable d'avance le premier jour de chaque mois.
+### Article 3 - Durée du bail
+Le présent bail est consenti et accepté pour une durée déterminée commençant le {date_debut} et se terminant le {date_fin}.
 
-### Article 4 - DÉPÔT DE GARANTIE
-Le Locataire verse au Bailleur un dépôt de garantie de {caution} ({caution_lettres}) à la signature du présent contrat.
-Ce dépôt sera restitué au Locataire dans un délai d'un mois suivant la remise des clés, déduction faite des sommes restant dues au Bailleur.
+Conformément aux dispositions légales, à l'expiration de cette durée, le bail pourra être renouvelé par accord exprès des parties ou tacitement reconduit selon les conditions prévues par la loi.
 
-### Article 5 - CHARGES
+### Article 4 - Loyer
+Le loyer mensuel est fixé à la somme de {loyer} ({loyer_lettres}), payable d'avance au plus tard le cinq (5) de chaque mois.
+
+Le loyer est payable au domicile du Bailleur ou à tout autre lieu désigné par celui-ci, ou par tout moyen de paiement convenu entre les parties (virement bancaire, mobile money, espèces contre reçu).
+
+Conformément à la réglementation en vigueur, toute modification du loyer doit faire l'objet d'un accord écrit entre les parties.
+
+### Article 5 - Dépôt de garantie (Caution)
+Conformément aux dispositions du Code de la Construction et de l'Habitat, le Locataire verse au Bailleur, à la signature du présent contrat, un dépôt de garantie d'un montant de {caution} ({caution_lettres}), correspondant à deux (2) mois de loyer maximum.
+
+Ce dépôt de garantie est destiné à couvrir les éventuelles dégradations constatées lors de l'état des lieux de sortie, ainsi que les loyers et charges impayés.
+
+Le dépôt de garantie sera restitué au Locataire dans un délai maximum de deux (2) mois suivant la remise des clés et après déduction, le cas échéant, des sommes restant dues au Bailleur.
+
+### Article 6 - Charges locatives
 Les charges locatives sont à la charge du Locataire et comprennent notamment :
-- L'eau et l'électricité
-- L'entretien courant du logement
-- Les menues réparations
+- La consommation d'eau et d'électricité
+- L'entretien courant du logement et de ses équipements
+- Les menues réparations d'entretien courant
+- L'enlèvement des ordures ménagères (le cas échéant)
 
-### Article 6 - OBLIGATIONS DU LOCATAIRE
-Le Locataire s'engage à :
-- Payer le loyer et les charges aux termes convenus
-- User paisiblement des locaux loués
-- Répondre des dégradations survenant pendant la durée du bail
-- Prendre à sa charge l'entretien courant du logement
-- Ne pas sous-louer sans l'accord écrit du Bailleur
+### CHAPITRE 3 : OBLIGATIONS DES PARTIES
 
-### Article 7 - OBLIGATIONS DU BAILLEUR
-Le Bailleur s'engage à :
-- Remettre au Locataire un logement décent
-- Assurer la jouissance paisible du logement
-- Entretenir les locaux en état de servir à l'usage prévu
-- Effectuer les réparations autres que locatives
+### Article 7 - Obligations du Bailleur
+Conformément aux articles 426 à 434 du Code de la Construction et de l'Habitat, le Bailleur s'oblige à :
 
-### Article 8 - RÉSILIATION
-En cas de non-paiement du loyer ou des charges, le Bailleur pourra demander la résiliation du bail après mise en demeure restée infructueuse pendant un délai de 15 jours.
+a) Délivrer au Locataire l'immeuble ou le local loué en bon état de réparation de toute espèce (Art. 426 et 427) ;
 
-### Article 9 - ÉTAT DES LIEUX
-Un état des lieux contradictoire sera établi à l'entrée et à la sortie du Locataire.
+b) Remettre au Locataire un logement décent ne comportant aucun risque d'atteinte à la sécurité physique, à la santé ou aux biens du Locataire (Art. 428) ;
 
-### Article 10 - ÉLECTION DE DOMICILE
-Pour l'exécution du présent contrat, les parties font élection de domicile à l'adresse du bien loué.
+c) Entretenir l'immeuble en état de servir à l'usage pour lequel il a été loué et effectuer à ses frais toutes les grosses réparations (Art. 431), notamment celles concernant :
+   - Les murs porteurs ou de soutènement
+   - Les voûtes et toitures
+   - Les poutres et planchers
+   - Les murs de clôture
+   - Les canalisations et fosses d'aisance
+   - Les escaliers et ascenseurs
+   - Le ravalement des façades
 
-Fait en deux exemplaires originaux, à {bailleur_adresse}, le {date_jour}.
+d) Faire jouir paisiblement le Locataire pendant la durée du bail (Art. 426) ;
+
+e) Garantir le Locataire contre tous vices ou défauts de l'immeuble qui en empêchent l'usage (Art. 428) ;
+
+f) Établir un état des lieux contradictoire en début et en fin de bail (Art. 427).
+
+### Article 8 - Obligations du Locataire
+Conformément aux articles 435 à 438 du Code de la Construction et de l'Habitat, le Locataire s'oblige à :
+
+a) Payer le loyer et les charges aux termes convenus (Art. 435) ;
+
+b) Utiliser l'immeuble en bon père de famille, conformément à la destination prévue au contrat (Art. 435) ;
+
+c) Ne pas changer la destination de l'immeuble ou du local sans l'accord écrit du Bailleur (Art. 436) ;
+
+d) Ne pas effectuer de travaux de transformation sans l'accord écrit du Bailleur (Art. 436 et 437) ;
+
+e) Répondre des dégradations et pertes survenues pendant la durée du bail, sauf cas de force majeure ;
+
+f) Effectuer les menues réparations d'entretien courant ;
+
+g) Ne pas sous-louer ni céder le bail sans l'autorisation expresse et écrite du Bailleur, conformément à l'article 6 de la loi sur le bail à usage d'habitation ;
+
+h) Restituer l'immeuble à l'expiration du bail dans l'état dans lequel il se trouvait au moment de la conclusion du contrat (Art. 438).
+
+### CHAPITRE 4 : RÉSILIATION DU CONTRAT
+
+### Article 9 - Résiliation du bail
+Conformément à l'article 442 du Code de la Construction et de l'Habitat, le présent contrat peut être légitimement résilié :
+
+a) En cas de force majeure ;
+
+b) Par accord commun des parties ;
+
+c) En cas de manquement à ses obligations par l'une des parties ;
+
+d) Au terme d'un préavis de trois (3) mois notifié par écrit au Bailleur par le Locataire pour motif légitime ;
+
+e) Au terme d'un congé de trois (3) mois notifié par écrit au Locataire par le Bailleur qui veut exercer son droit de reprendre l'immeuble pour l'occuper lui-même ou pour le faire occuper par un ascendant ou descendant ou allié jusqu'au troisième degré inclusivement.
+
+### Article 10 - Procédure de résiliation
+Toute demande de résiliation doit être écrite, motivée et accompagnée, le cas échéant, de pièces justificatives.
+
+Elle est transmise à la partie adverse par voie d'huissier de justice, par lettre recommandée avec avis de réception, par remise de courrier contre décharge ou par courrier électronique si les parties ont accepté ce mode de transmission.
+
+La partie qui veut contester la résiliation dispose d'un délai de trente (30) jours calendaires à compter de la réception de la lettre de demande de résiliation pour saisir la juridiction compétente.
+
+### Article 11 - Clause résolutoire
+En cas de non-paiement du loyer ou des charges aux termes convenus, ou de non-respect des obligations contractuelles, le Bailleur pourra, après mise en demeure restée infructueuse pendant un délai de quinze (15) jours, demander la résiliation du bail devant la juridiction compétente.
+
+### CHAPITRE 5 : DISPOSITIONS FINALES
+
+### Article 12 - État des lieux
+Conformément à l'article 427 du Code de la Construction et de l'Habitat, un état des lieux contradictoire sera établi :
+- À l'entrée du Locataire dans les lieux, en présence des deux parties ou de leurs représentants dûment mandatés ;
+- À la sortie du Locataire, selon les mêmes modalités.
+
+Tout désaccord sur l'état des lieux pourra être soumis à la juridiction compétente.
+
+### Article 13 - Élection de domicile
+Pour l'exécution du présent contrat et de ses suites, les parties font élection de domicile :
+- Le Bailleur : à l'adresse indiquée en tête du présent contrat
+- Le Locataire : au lieu du bien loué
+
+### Article 14 - Juridiction compétente
+En cas de litige relatif à l'exécution ou à l'interprétation du présent contrat, les parties s'engagent à rechercher une solution amiable. À défaut d'accord, le litige sera soumis aux tribunaux compétents de Côte d'Ivoire.
+
+### Article 15 - Dispositions diverses
+Le présent contrat est régi par les dispositions du Code de la Construction et de l'Habitat de Côte d'Ivoire (Loi n° 2019-576 du 26 juin 2019) et, pour tout ce qui n'y est pas prévu, par le droit commun des obligations.
+
+Toute clause du présent contrat contraire aux dispositions d'ordre public de la loi sur le bail à usage d'habitation est réputée non écrite.
+
+Le présent contrat est établi en deux (2) exemplaires originaux, un pour chaque partie.
+
+Fait à {bailleur_adresse}, le {date_jour}.
+
+Les parties déclarent avoir pris connaissance du présent contrat, l'avoir lu et approuvé dans son intégralité.
 `;

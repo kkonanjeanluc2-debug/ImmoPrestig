@@ -18,7 +18,8 @@ import {
   Eye,
   Download,
   Crown,
-  ScrollText
+  ScrollText,
+  Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -29,6 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCurrentUserRole, ROLE_LABELS, type AppRole } from "@/hooks/useUserRoles";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useAgency } from "@/hooks/useAgency";
+import { useTrashCount } from "@/hooks/useTrashCount";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,
@@ -74,6 +76,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { data: userRole } = useCurrentUserRole();
   const { data: agency } = useAgency();
   const { canInstall, isIOS, promptInstall } = usePWAInstall();
+  const { data: trashCount } = useTrashCount();
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -216,6 +219,35 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   </NavLink>
                 );
               })}
+              
+              {/* Trash link with counter */}
+              {(() => {
+                const showText = !collapsed || mobileOpen;
+                return (
+                  <button
+                    onClick={() => navigate("/tenants")}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group w-full",
+                      "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                    )}
+                  >
+                    <div className="relative">
+                      <Trash2 className={cn(
+                        "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                        !showText && "mx-auto"
+                      )} />
+                      {trashCount && trashCount.total > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                          {trashCount.total > 99 ? "99+" : trashCount.total}
+                        </span>
+                      )}
+                    </div>
+                    {showText && (
+                      <span className="font-medium text-sm">Corbeille</span>
+                    )}
+                  </button>
+                );
+              })()}
             </>
           )}
         </nav>

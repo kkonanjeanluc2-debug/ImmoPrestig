@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Dialog, 
   DialogContent, 
@@ -33,7 +35,7 @@ import {
   Star,
   Copy,
   Info,
-  Download
+  Eye
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -43,13 +45,36 @@ import {
   useDeleteContractTemplate,
   type ContractTemplate,
 } from "@/hooks/useContractTemplates";
-import { DEFAULT_CONTRACT_TEMPLATE } from "@/lib/generateContract";
+import { DEFAULT_CONTRACT_TEMPLATE, replaceContractVariables } from "@/lib/generateContract";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+// Exemple de données pour l'aperçu
+const SAMPLE_CONTRACT_DATA = {
+  tenantName: "Jean Dupont",
+  tenantEmail: "jean.dupont@email.com",
+  tenantPhone: "+221 77 123 45 67",
+  propertyTitle: "Appartement F3 - Résidence Les Palmiers",
+  propertyAddress: "123 Avenue Cheikh Anta Diop, Dakar",
+  unitNumber: "A-12",
+  rentAmount: 150000,
+  deposit: 300000,
+  startDate: new Date().toISOString(),
+  endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+  ownerName: "Agence Immobilière ABC",
+  agency: {
+    name: "Agence Immobilière ABC",
+    email: "contact@agence-abc.com",
+    phone: "+221 33 123 45 67",
+    address: "456 Rue de la République",
+    city: "Dakar",
+    country: "Sénégal",
+  },
+};
 
 const AVAILABLE_VARIABLES = [
   { variable: "{bailleur}", description: "Nom du bailleur/agence" },
@@ -70,6 +95,106 @@ const AVAILABLE_VARIABLES = [
   { variable: "{date_fin}", description: "Date de fin du contrat" },
   { variable: "{date_jour}", description: "Date du jour (signature)" },
 ];
+
+// Composant d'aperçu du contrat
+function ContractPreview({ content }: { content: string }) {
+  const previewContent = useMemo(() => {
+    if (!content) return "";
+    return replaceContractVariables(content, SAMPLE_CONTRACT_DATA);
+  }, [content]);
+
+  const renderPreviewContent = () => {
+    if (!previewContent) {
+      return (
+        <div className="text-center text-muted-foreground py-8">
+          <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Commencez à rédiger votre contrat pour voir l'aperçu</p>
+        </div>
+      );
+    }
+
+    const lines = previewContent.split("\n");
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine.startsWith("# ")) {
+        return (
+          <h1 key={index} className="text-xl font-bold text-primary mt-6 mb-3">
+            {trimmedLine.substring(2)}
+          </h1>
+        );
+      } else if (trimmedLine.startsWith("## ")) {
+        return (
+          <h2 key={index} className="text-lg font-semibold text-primary mt-5 mb-2">
+            {trimmedLine.substring(3)}
+          </h2>
+        );
+      } else if (trimmedLine.startsWith("### ")) {
+        return (
+          <h3 key={index} className="text-base font-medium mt-4 mb-2">
+            {trimmedLine.substring(4)}
+          </h3>
+        );
+      } else if (trimmedLine === "") {
+        return <div key={index} className="h-3" />;
+      } else {
+        return (
+          <p key={index} className="text-sm leading-relaxed mb-1">
+            {trimmedLine}
+          </p>
+        );
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+        <Info className="h-4 w-4 flex-shrink-0" />
+        <span>
+          Cet aperçu utilise des données d'exemple. Les vraies valeurs seront insérées lors de la génération du contrat.
+        </span>
+      </div>
+      <ScrollArea className="h-[400px] border rounded-lg">
+        <div className="p-6 bg-background">
+          {/* En-tête style document */}
+          <div className="border-b pb-4 mb-6">
+            <div className="text-center">
+              <h1 className="text-lg font-bold text-primary mb-1">
+                {SAMPLE_CONTRACT_DATA.agency?.name}
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                {SAMPLE_CONTRACT_DATA.agency?.address}, {SAMPLE_CONTRACT_DATA.agency?.city}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {SAMPLE_CONTRACT_DATA.agency?.phone} | {SAMPLE_CONTRACT_DATA.agency?.email}
+              </p>
+            </div>
+          </div>
+          
+          {/* Contenu du contrat */}
+          <div className="prose prose-sm max-w-none">
+            {renderPreviewContent()}
+          </div>
+          
+          {/* Pied de page signatures */}
+          <div className="mt-10 pt-6 border-t grid grid-cols-2 gap-8">
+            <div className="text-center">
+              <p className="text-sm font-medium mb-1">Le Bailleur</p>
+              <p className="text-xs text-muted-foreground mb-8">Signature précédée de "Lu et approuvé"</p>
+              <div className="border-b border-dashed" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium mb-1">Le Locataire</p>
+              <p className="text-xs text-muted-foreground mb-8">Signature précédée de "Lu et approuvé"</p>
+              <div className="border-b border-dashed" />
+            </div>
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
 
 export function ContractTemplateManager() {
   const { toast } = useToast();
@@ -397,21 +522,39 @@ export function ContractTemplateManager() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="content">Contenu du contrat</Label>
-              <p className="text-sm text-muted-foreground">
-                Utilisez # pour les titres principaux, ## pour les sous-titres, ### pour les petits titres
-              </p>
-              <Textarea
-                id="content"
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, content: e.target.value }))
-                }
-                placeholder="Contenu du modèle de contrat..."
-                className="min-h-[400px] font-mono text-sm"
-              />
-            </div>
+            {/* Editor and Preview Tabs */}
+            <Tabs defaultValue="editor" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="editor" className="gap-2">
+                  <Edit className="h-4 w-4" />
+                  Éditeur
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="gap-2">
+                  <Eye className="h-4 w-4" />
+                  Aperçu en temps réel
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="editor" className="space-y-2 mt-4">
+                <Label htmlFor="content">Contenu du contrat</Label>
+                <p className="text-sm text-muted-foreground">
+                  Utilisez # pour les titres principaux, ## pour les sous-titres, ### pour les petits titres
+                </p>
+                <Textarea
+                  id="content"
+                  value={formData.content}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, content: e.target.value }))
+                  }
+                  placeholder="Contenu du modèle de contrat..."
+                  className="min-h-[400px] font-mono text-sm"
+                />
+              </TabsContent>
+              
+              <TabsContent value="preview" className="mt-4">
+                <ContractPreview content={formData.content} />
+              </TabsContent>
+            </Tabs>
           </div>
 
           <DialogFooter>

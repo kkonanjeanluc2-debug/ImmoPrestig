@@ -31,6 +31,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const Trash = lazy(() => import("./pages/Trash"));
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,7 @@ const App = () => {
                 <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
                 <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
                 <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                 <Route path="/install" element={<Install />} />
                 <Route path="/pricing" element={<Pricing />} />

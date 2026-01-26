@@ -114,6 +114,11 @@ const formatDate = (dateStr: string, format: "short" | "long"): string => {
   return date.toLocaleDateString("fr-FR");
 };
 
+// Format number with spaces for PDF (avoids non-breaking space issues)
+const formatAmountForPDF = (amount: number): string => {
+  return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+};
+
 const replaceVariables = (
   template: string,
   data: ReceiptData,
@@ -125,7 +130,7 @@ const replaceVariables = (
   return template
     .replace(/{bailleur}/g, signerName)
     .replace(/{locataire}/g, data.tenantName)
-    .replace(/{montant}/g, `${data.amount.toLocaleString("fr-FR")} ${templates.currency}`)
+    .replace(/{montant}/g, `${formatAmountForPDF(data.amount)} ${templates.currency}`)
     .replace(/{periode}/g, data.period)
     .replace(/{bien}/g, data.propertyTitle)
     .replace(/{agence}/g, data.agency?.name || signerName)
@@ -282,7 +287,7 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text(`${data.amount.toLocaleString("fr-FR")} ${templates.currency}`, pageWidth / 2, yPos + 26, { align: "center" });
+  doc.text(`${formatAmountForPDF(data.amount)} ${templates.currency}`, pageWidth / 2, yPos + 26, { align: "center" });
   
   yPos += 50;
   

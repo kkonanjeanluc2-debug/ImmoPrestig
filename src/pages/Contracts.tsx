@@ -53,6 +53,7 @@ import {
   CheckCircle2,
   Clock,
   Download,
+  PenTool,
 } from "lucide-react";
 import { useContracts, useUpdateContract, useExpireContract } from "@/hooks/useContracts";
 import { useProperties } from "@/hooks/useProperties";
@@ -63,6 +64,7 @@ import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { GenerateContractDialog } from "@/components/contract/GenerateContractDialog";
+import { SignContractDialog } from "@/components/signature/SignContractDialog";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
   active: { label: "Actif", variant: "default", icon: <CheckCircle2 className="h-3 w-3" /> },
@@ -86,6 +88,8 @@ const Contracts = () => {
   const [renewDurationType, setRenewDurationType] = useState<"months" | "years">("months");
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [contractToGenerate, setContractToGenerate] = useState<any>(null);
+  const [signDialogOpen, setSignDialogOpen] = useState(false);
+  const [contractToSign, setContractToSign] = useState<any>(null);
 
   // Get property and tenant names for display
   const getPropertyName = (propertyId: string) => {
@@ -364,6 +368,18 @@ const Contracts = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {/* Sign Button */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setContractToSign(contract);
+                                setSignDialogOpen(true);
+                              }}
+                            >
+                              <PenTool className="h-4 w-4 mr-1" />
+                              Signer
+                            </Button>
                             {/* Generate PDF Button */}
                             <Button
                               variant="outline"
@@ -525,6 +541,26 @@ const Contracts = () => {
                 }
                 return undefined;
               })(),
+            }}
+          />
+        )}
+
+        {/* Sign Contract Dialog */}
+        {contractToSign && (
+          <SignContractDialog
+            open={signDialogOpen}
+            onOpenChange={(open) => {
+              setSignDialogOpen(open);
+              if (!open) setContractToSign(null);
+            }}
+            contractData={{
+              contractId: contractToSign.id,
+              tenantName: getTenantName(contractToSign.tenant_id),
+              tenantEmail: tenants?.find((t) => t.id === contractToSign.tenant_id)?.email,
+              propertyTitle: getPropertyName(contractToSign.property_id),
+              rentAmount: contractToSign.rent_amount,
+              startDate: contractToSign.start_date,
+              endDate: contractToSign.end_date,
             }}
           />
         )}

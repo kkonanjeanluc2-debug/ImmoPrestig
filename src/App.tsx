@@ -32,6 +32,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Trash = lazy(() => import("./pages/Trash"));
+const SignContract = lazy(() => import("./pages/SignContract"));
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,7 @@ const App = () => {
                 <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                 <Route path="/install" element={<Install />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/sign-contract" element={<SignContract />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

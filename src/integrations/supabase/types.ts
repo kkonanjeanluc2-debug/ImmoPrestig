@@ -319,6 +319,68 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_signatures: {
+        Row: {
+          contract_id: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          signature_data: string | null
+          signature_text: string | null
+          signature_token: string | null
+          signature_type: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          signer_type: string
+          token_expires_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          signature_data?: string | null
+          signature_text?: string | null
+          signature_token?: string | null
+          signature_type: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          signer_type: string
+          token_expires_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          signature_data?: string | null
+          signature_text?: string | null
+          signature_token?: string | null
+          signature_type?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          signer_type?: string
+          token_expires_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_templates: {
         Row: {
           content: string
@@ -357,6 +419,7 @@ export type Database = {
           id: string
           property_id: string
           rent_amount: number
+          signature_status: string | null
           start_date: string
           status: string
           tenant_id: string
@@ -371,6 +434,7 @@ export type Database = {
           id?: string
           property_id: string
           rent_amount: number
+          signature_status?: string | null
           start_date: string
           status?: string
           tenant_id: string
@@ -385,6 +449,7 @@ export type Database = {
           id?: string
           property_id?: string
           rent_amount?: number
+          signature_status?: string | null
           start_date?: string
           status?: string
           tenant_id?: string

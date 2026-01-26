@@ -50,6 +50,23 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
   }
 };
 
+// Format amount with regular spaces instead of non-breaking spaces for jsPDF compatibility
+const formatAmountForPDF = (amount: number): string => {
+  const parts = [];
+  let remaining = Math.floor(amount);
+  
+  while (remaining > 0) {
+    parts.unshift(remaining % 1000);
+    remaining = Math.floor(remaining / 1000);
+  }
+  
+  if (parts.length === 0) return "0";
+  
+  return parts.map((part, index) => 
+    index === 0 ? part.toString() : part.toString().padStart(3, '0')
+  ).join(' ');
+};
+
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return date.toLocaleDateString("fr-FR", {
@@ -113,9 +130,9 @@ export const replaceContractVariables = (
     "{bien}": data.propertyTitle,
     "{bien_adresse}": data.propertyAddress || "",
     "{unite}": data.unitNumber || "",
-    "{loyer}": `${data.rentAmount.toLocaleString("fr-FR")} FCFA`,
+    "{loyer}": `${formatAmountForPDF(data.rentAmount)} FCFA`,
     "{loyer_lettres}": numberToWords(data.rentAmount) + " francs CFA",
-    "{caution}": data.deposit ? `${data.deposit.toLocaleString("fr-FR")} FCFA` : "Néant",
+    "{caution}": data.deposit ? `${formatAmountForPDF(data.deposit)} FCFA` : "Néant",
     "{caution_lettres}": data.deposit ? numberToWords(data.deposit) + " francs CFA" : "néant",
     "{date_debut}": formatDate(data.startDate),
     "{date_fin}": formatDate(data.endDate),

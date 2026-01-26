@@ -345,20 +345,20 @@ export function ContractTemplateManager() {
   return (
     <>
       <Card>
-        <CardHeader className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <FileText className="h-5 w-5 flex-shrink-0" />
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
                 Modèles de contrats
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Gérez vos modèles de contrats de location
+              <CardDescription>
+                Gérez vos modèles de contrats de location. Ces modèles seront utilisés lors de la création de locataires.
               </CardDescription>
             </div>
-            <Button onClick={handleCreateNew} size="sm" className="whitespace-nowrap flex-shrink-0">
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Nouveau</span>
+            <Button onClick={handleCreateNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau modèle
             </Button>
           </div>
         </CardHeader>

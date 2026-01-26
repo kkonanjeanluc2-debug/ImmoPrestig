@@ -111,119 +111,117 @@ export function ManagementTypesSettings() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Percent className="h-5 w-5 flex-shrink-0" />
-                Types de gestion
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Configurez les types et pourcentages de gestion
-              </CardDescription>
-            </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => handleOpenDialog()} size="sm" className="whitespace-nowrap flex-shrink-0">
-                  <Plus className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Nouveau</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingType ? "Modifier le type de gestion" : "Nouveau type de gestion"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Définissez un type de gestion avec son pourcentage associé
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Catégorie</Label>
-                    <Select
-                      value={formData.type}
-                      onValueChange={(value: "gestion_locative" | "commission_vente") =>
-                        setFormData({ ...formData, type: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gestion_locative">
-                          <div className="flex items-center gap-2">
-                            <Home className="h-4 w-4" />
-                            Gestion locative
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="commission_vente">
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4" />
-                            Commission de vente
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nom</Label>
-                    <Input
-                      id="name"
-                      placeholder="Ex: Gestion Standard"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="percentage">Pourcentage (%)</Label>
-                    <Input
-                      id="percentage"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      placeholder="Ex: 8"
-                      value={formData.percentage}
-                      onChange={(e) => setFormData({ ...formData, percentage: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description (optionnel)</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Décrivez les services inclus dans ce type de gestion..."
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="is_default">Type par défaut</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Sera sélectionné automatiquement pour les nouveaux propriétaires
-                      </p>
-                    </div>
-                    <Switch
-                      id="is_default"
-                      checked={formData.is_default}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_default: checked })}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={handleCloseDialog}>
-                    Annuler
-                  </Button>
-                  <Button onClick={handleSubmit} disabled={!isFormValid || isSubmitting}>
-                    {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    {editingType ? "Enregistrer" : "Créer"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Percent className="h-5 w-5" />
+              Types de gestion
+            </CardTitle>
+            <CardDescription>
+              Configurez les types de gestion et leurs pourcentages pour les associer à vos propriétaires
+            </CardDescription>
           </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nouveau type
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingType ? "Modifier le type de gestion" : "Nouveau type de gestion"}
+                </DialogTitle>
+                <DialogDescription>
+                  Définissez un type de gestion avec son pourcentage associé
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="type">Catégorie</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value: "gestion_locative" | "commission_vente") =>
+                      setFormData({ ...formData, type: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gestion_locative">
+                        <div className="flex items-center gap-2">
+                          <Home className="h-4 w-4" />
+                          Gestion locative
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="commission_vente">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4" />
+                          Commission de vente
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nom</Label>
+                  <Input
+                    id="name"
+                    placeholder="Ex: Gestion Standard"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="percentage">Pourcentage (%)</Label>
+                  <Input
+                    id="percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    placeholder="Ex: 8"
+                    value={formData.percentage}
+                    onChange={(e) => setFormData({ ...formData, percentage: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (optionnel)</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Décrivez les services inclus dans ce type de gestion..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="is_default">Type par défaut</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Sera sélectionné automatiquement pour les nouveaux propriétaires
+                    </p>
+                  </div>
+                  <Switch
+                    id="is_default"
+                    checked={formData.is_default}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_default: checked })}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={handleCloseDialog}>
+                  Annuler
+                </Button>
+                <Button onClick={handleSubmit} disabled={!isFormValid || isSubmitting}>
+                  {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {editingType ? "Enregistrer" : "Créer"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Gestion locative section */}

@@ -209,14 +209,17 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
                       <Percent className="h-4 w-4" />
                       Type de gestion
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={(val) => field.onChange(val === "none" ? "" : val)} 
+                      value={field.value || "none"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un type de gestion" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Aucun</SelectItem>
+                        <SelectItem value="none">Aucun</SelectItem>
                         {managementTypes.map((type) => (
                           <SelectItem key={type.id} value={type.id}>
                             <div className="flex items-center justify-between gap-4">

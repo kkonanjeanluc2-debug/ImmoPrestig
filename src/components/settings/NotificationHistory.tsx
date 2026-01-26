@@ -114,37 +114,38 @@ export function NotificationHistory() {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Historique des notifications
+            <CardTitle className="flex items-center gap-2 flex-wrap">
+              <Bell className="h-5 w-5 flex-shrink-0" />
+              <span>Historique des notifications</span>
               {unreadCount > 0 && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary">
                   {unreadCount} non lu{unreadCount > 1 ? "es" : "e"}
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="mt-1">
               Consultez toutes vos notifications passées
             </CardDescription>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {unreadCount > 0 && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => markAllAsRead.mutate()}
                 disabled={markAllAsRead.isPending}
+                className="text-xs sm:text-sm"
               >
                 {markAllAsRead.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Check className="h-4 w-4 mr-1" />
                 )}
-                Tout marquer comme lu
+                <span className="hidden xs:inline">Tout marquer comme</span> lu
               </Button>
             )}
             {(notifications || []).length > 0 && (
@@ -153,14 +154,14 @@ export function NotificationHistory() {
                 size="sm"
                 onClick={() => clearAll.mutate()}
                 disabled={clearAll.isPending}
-                className="text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive text-xs sm:text-sm"
               >
                 {clearAll.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Trash2 className="h-4 w-4 mr-1" />
                 )}
-                Tout supprimer
+                <span className="hidden xs:inline">Tout</span> supprimer
               </Button>
             )}
           </div>

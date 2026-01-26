@@ -7,6 +7,8 @@ export type ActionType =
   | 'create' 
   | 'update' 
   | 'delete' 
+  | 'restore'
+  | 'permanent_delete'
   | 'login' 
   | 'logout'
   | 'payment_collected' 

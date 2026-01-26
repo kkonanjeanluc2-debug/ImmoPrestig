@@ -36,6 +36,7 @@ export const useTenants = () => {
           payments(*),
           unit:property_units(id, unit_number, rooms_count, rent_amount, status)
         `)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -137,60 +138,13 @@ export const useDeleteTenant = () => {
 
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name?: string }) => {
-      // First, get the tenant to find their property_id and unit_id
-      const { data: tenant, error: fetchError } = await supabase
+      // Soft delete - just set deleted_at timestamp
+      const { error } = await supabase
         .from("tenants")
-        .select("property_id, unit_id")
-        .eq("id", id)
-        .maybeSingle();
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
 
-      if (fetchError) throw fetchError;
-
-      const propertyId = tenant?.property_id;
-      const unitId = tenant?.unit_id;
-
-      // Delete the tenant (contracts and payments will need cascade or manual deletion)
-      const { error } = await supabase.from("tenants").delete().eq("id", id);
       if (error) throw error;
-
-      // If tenant had a unit, update its status to 'disponible'
-      if (unitId) {
-        const { error: unitError } = await supabase
-          .from("property_units")
-          .update({ status: "disponible" })
-          .eq("id", unitId);
-        
-        if (unitError) {
-          console.error("Error updating unit status:", unitError);
-        }
-
-        // Check if there are other occupied units for this property
-        if (propertyId) {
-          const { data: occupiedUnits, error: checkError } = await supabase
-            .from("property_units")
-            .select("id")
-            .eq("property_id", propertyId)
-            .eq("status", "occupé");
-
-          if (!checkError && (!occupiedUnits || occupiedUnits.length === 0)) {
-            // No more occupied units, set property to disponible
-            await supabase
-              .from("properties")
-              .update({ status: "disponible" })
-              .eq("id", propertyId);
-          }
-        }
-      } else if (propertyId) {
-        // If tenant had a property without unit, update property status to 'disponible'
-        const { error: updateError } = await supabase
-          .from("properties")
-          .update({ status: "disponible" })
-          .eq("id", propertyId);
-        
-        if (updateError) {
-          console.error("Error updating property status:", updateError);
-        }
-      }
 
       // Log activity
       if (user) {
@@ -205,8 +159,7 @@ export const useDeleteTenant = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      queryClient.invalidateQueries({ queryKey: ["property-units"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-tenants"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

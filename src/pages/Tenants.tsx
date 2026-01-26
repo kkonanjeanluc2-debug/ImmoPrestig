@@ -55,6 +55,7 @@ import { ImportTenantsDialog } from "@/components/tenant/ImportTenantsDialog";
 import { MergeTenantsDialog } from "@/components/tenant/MergeTenantsDialog";
 import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
+import { TenantTrashDialog } from "@/components/tenant/TenantTrashDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
 import { useToast } from "@/hooks/use-toast";
@@ -333,7 +334,7 @@ export default function Tenants() {
       await deleteTenantMutation.mutateAsync({ id: tenant.id, name: tenant.name });
       toast({
         title: "Locataire supprimé",
-        description: `${tenant.name} a été supprimé avec succès.`,
+        description: `${tenant.name} a été déplacé dans la corbeille.`,
       });
     } catch (error: any) {
       toast({
@@ -414,6 +415,7 @@ export default function Tenants() {
                 }},
               ]}
             />
+            <TenantTrashDialog />
             {canCreate && <ImportTenantsDialog />}
             {canEdit && <MergeTenantsDialog />}
             {canCreate && <AddTenantDialog />}

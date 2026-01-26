@@ -16,9 +16,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Download, Printer, FileText, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Download, Printer, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useContractTemplates, useDefaultContractTemplate } from "@/hooks/useContractTemplates";
+import { useContractSignatures } from "@/hooks/useContractSignatures";
 import { useAgency } from "@/hooks/useAgency";
 import {
   downloadContractPDF,
@@ -28,6 +30,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 interface ContractData {
+  contractId?: string;
   tenantName: string;
   tenantEmail?: string;
   tenantPhone?: string;
@@ -56,9 +59,16 @@ export function GenerateContractDialog({
   const { data: templates, isLoading: templatesLoading } = useContractTemplates();
   const { data: defaultTemplate } = useDefaultContractTemplate();
   const { data: agency } = useAgency();
+  const { data: signatures } = useContractSignatures(contractData.contractId);
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Check signature status
+  const landlordSignature = signatures?.find(s => s.signer_type === "landlord" && (s.signature_data || s.signature_text));
+  const tenantSignature = signatures?.find(s => s.signer_type === "tenant" && (s.signature_data || s.signature_text));
+  const hasSignatures = !!(landlordSignature || tenantSignature);
+  const isFullySigned = !!(landlordSignature && tenantSignature);
 
   const getSelectedTemplate = () => {
     if (selectedTemplateId && templates) {
@@ -71,6 +81,16 @@ export function GenerateContractDialog({
     const template = getSelectedTemplate();
     return template?.content || DEFAULT_CONTRACT_TEMPLATE;
   };
+
+  // Transform signatures for PDF
+  const pdfSignatures = signatures?.filter(s => s.signature_data || s.signature_text).map(s => ({
+    signerName: s.signer_name,
+    signerType: s.signer_type as "landlord" | "tenant",
+    signatureData: s.signature_data || undefined,
+    signatureText: s.signature_text || undefined,
+    signatureType: s.signature_type as "drawn" | "typed",
+    signedAt: s.signed_at,
+  }));
 
   const fullContractData = {
     ...contractData,
@@ -85,6 +105,7 @@ export function GenerateContractDialog({
           logo_url: agency.logo_url,
         }
       : null,
+    signatures: pdfSignatures,
   };
 
   const handleDownload = async () => {
@@ -180,6 +201,35 @@ export function GenerateContractDialog({
               </Alert>
             )}
           </div>
+
+          {/* Signature status */}
+          {contractData.contractId && (
+            <div className="space-y-2">
+              <Label>Statut des signatures</Label>
+              <div className="flex items-center gap-2">
+                {isFullySigned ? (
+                  <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Contrat signé par les deux parties
+                  </Badge>
+                ) : hasSignatures ? (
+                  <Badge variant="outline" className="gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Signature partielle
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="gap-1 text-muted-foreground">
+                    Aucune signature
+                  </Badge>
+                )}
+              </div>
+              {hasSignatures && (
+                <p className="text-xs text-muted-foreground">
+                  Les signatures seront intégrées dans le PDF avec horodatage.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Contract summary */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">

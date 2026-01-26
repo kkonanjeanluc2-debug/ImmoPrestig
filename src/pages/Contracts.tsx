@@ -524,6 +524,7 @@ const Contracts = () => {
               if (!open) setContractToGenerate(null);
             }}
             contractData={{
+              contractId: contractToGenerate.id,
               tenantName: getTenantName(contractToGenerate.tenant_id),
               tenantEmail: tenants?.find((t) => t.id === contractToGenerate.tenant_id)?.email,
               tenantPhone: tenants?.find((t) => t.id === contractToGenerate.tenant_id)?.phone || undefined,

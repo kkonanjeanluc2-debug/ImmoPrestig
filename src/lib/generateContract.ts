@@ -10,6 +10,15 @@ interface AgencyInfo {
   logo_url?: string | null;
 }
 
+interface SignatureInfo {
+  signerName: string;
+  signerType: "landlord" | "tenant";
+  signatureData?: string; // Base64 image
+  signatureText?: string;
+  signatureType: "drawn" | "typed";
+  signedAt: string;
+}
+
 interface ContractData {
   tenantName: string;
   tenantEmail?: string;
@@ -23,6 +32,7 @@ interface ContractData {
   endDate: string;
   agency?: AgencyInfo | null;
   ownerName?: string;
+  signatures?: SignatureInfo[];
 }
 
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -247,7 +257,7 @@ export const generateContractPDF = async (
   
   // Add signature section at the end
   yPos += 20;
-  if (yPos > pageHeight - 60) {
+  if (yPos > pageHeight - 100) {
     doc.addPage();
     yPos = margin;
   }
@@ -259,18 +269,110 @@ export const generateContractPDF = async (
   const signatureY = yPos;
   const colWidth = (pageWidth - margin * 2 - 20) / 2;
   
+  // Get signatures
+  const landlordSig = data.signatures?.find(s => s.signerType === "landlord");
+  const tenantSig = data.signatures?.find(s => s.signerType === "tenant");
+  
   // Left signature (Bailleur)
+  doc.setFont("helvetica", "bold");
   doc.text("Le Bailleur", margin, signatureY);
-  doc.text("Signature précédée de", margin, signatureY + 7);
-  doc.text('"Lu et approuvé"', margin, signatureY + 12);
-  doc.line(margin, signatureY + 40, margin + colWidth, signatureY + 40);
+  doc.setFont("helvetica", "normal");
+  
+  if (landlordSig) {
+    doc.text(landlordSig.signerName, margin, signatureY + 7);
+    
+    // Add signature image or text
+    if (landlordSig.signatureType === "drawn" && landlordSig.signatureData) {
+      try {
+        doc.addImage(landlordSig.signatureData, "PNG", margin, signatureY + 12, 60, 30);
+      } catch (e) {
+        // Fallback to text if image fails
+        doc.text("(Signature électronique)", margin, signatureY + 25);
+      }
+    } else if (landlordSig.signatureText) {
+      // Use italic for typed signature
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(16);
+      doc.text(landlordSig.signatureText, margin, signatureY + 25);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+    }
+    
+    // Timestamp
+    const landlordDate = new Date(landlordSig.signedAt);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Signé le ${landlordDate.toLocaleDateString("fr-FR")} à ${landlordDate.toLocaleTimeString("fr-FR")}`,
+      margin,
+      signatureY + 48
+    );
+    doc.setTextColor(...textColor);
+    doc.setFontSize(10);
+  } else {
+    doc.text("Signature précédée de", margin, signatureY + 7);
+    doc.text('"Lu et approuvé"', margin, signatureY + 12);
+    doc.line(margin, signatureY + 45, margin + colWidth, signatureY + 45);
+  }
   
   // Right signature (Locataire)
   const rightX = margin + colWidth + 20;
+  doc.setFont("helvetica", "bold");
   doc.text("Le Locataire", rightX, signatureY);
-  doc.text("Signature précédée de", rightX, signatureY + 7);
-  doc.text('"Lu et approuvé"', rightX, signatureY + 12);
-  doc.line(rightX, signatureY + 40, rightX + colWidth, signatureY + 40);
+  doc.setFont("helvetica", "normal");
+  
+  if (tenantSig) {
+    doc.text(tenantSig.signerName, rightX, signatureY + 7);
+    
+    // Add signature image or text
+    if (tenantSig.signatureType === "drawn" && tenantSig.signatureData) {
+      try {
+        doc.addImage(tenantSig.signatureData, "PNG", rightX, signatureY + 12, 60, 30);
+      } catch (e) {
+        doc.text("(Signature électronique)", rightX, signatureY + 25);
+      }
+    } else if (tenantSig.signatureText) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(16);
+      doc.text(tenantSig.signatureText, rightX, signatureY + 25);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+    }
+    
+    // Timestamp
+    const tenantDate = new Date(tenantSig.signedAt);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Signé le ${tenantDate.toLocaleDateString("fr-FR")} à ${tenantDate.toLocaleTimeString("fr-FR")}`,
+      rightX,
+      signatureY + 48
+    );
+    doc.setTextColor(...textColor);
+    doc.setFontSize(10);
+  } else {
+    doc.text("Signature précédée de", rightX, signatureY + 7);
+    doc.text('"Lu et approuvé"', rightX, signatureY + 12);
+    doc.line(rightX, signatureY + 45, rightX + colWidth, signatureY + 45);
+  }
+  
+  // Add electronic signature notice if any signature exists
+  if (landlordSig || tenantSig) {
+    yPos = signatureY + 60;
+    if (yPos > pageHeight - 30) {
+      doc.addPage();
+      yPos = margin;
+    }
+    
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      "Ce document a été signé électroniquement. Les signatures électroniques ont valeur légale conformément à la réglementation en vigueur.",
+      margin,
+      yPos,
+      { maxWidth: maxWidth }
+    );
+  }
   
   return doc;
 };

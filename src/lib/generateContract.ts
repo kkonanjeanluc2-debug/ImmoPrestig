@@ -146,43 +146,63 @@ export const generateContractPDF = async (
   
   let yPos = margin;
   
-  // Header with agency logo if available
-  if (data.agency?.logo_url) {
-    try {
-      const logoBase64 = await loadImageAsBase64(data.agency.logo_url);
-      if (logoBase64) {
-        doc.addImage(logoBase64, "PNG", margin, yPos, 25, 25);
-        yPos += 5;
+  // Header with agency/company info and logo
+  if (data.agency) {
+    const headerStartY = yPos;
+    let logoLoaded = false;
+    
+    // Try to load and display logo
+    if (data.agency.logo_url) {
+      try {
+        const logoBase64 = await loadImageAsBase64(data.agency.logo_url);
+        if (logoBase64) {
+          // Draw logo on the left
+          doc.addImage(logoBase64, "PNG", margin, yPos, 30, 30);
+          logoLoaded = true;
+        }
+      } catch (e) {
+        // Continue without logo
+        console.log("Could not load logo:", e);
       }
-    } catch (e) {
-      // Continue without logo
     }
-  }
-  
-  // Agency name header
-  if (data.agency?.name) {
-    doc.setFontSize(14);
+    
+    // Company info - positioned based on whether logo exists
+    const textStartX = logoLoaded ? margin + 35 : margin;
+    
+    // Company name
+    doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
-    const logoOffset = data.agency?.logo_url ? 50 : margin;
-    doc.text(data.agency.name, logoOffset, yPos + 10);
+    doc.text(data.agency.name, textStartX, yPos + 8);
     
-    if (data.agency.address || data.agency.city) {
-      doc.setFontSize(9);
+    // Address line
+    const addressParts = [data.agency.address, data.agency.city, data.agency.country].filter(Boolean);
+    if (addressParts.length > 0) {
+      doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...textColor);
-      const addressParts = [data.agency.address, data.agency.city, data.agency.country].filter(Boolean);
-      doc.text(addressParts.join(", "), logoOffset, yPos + 17);
+      doc.text(addressParts.join(", "), textStartX, yPos + 15);
     }
     
-    if (data.agency.phone || data.agency.email) {
+    // Contact info (phone and email)
+    const contactParts: string[] = [];
+    if (data.agency.phone) contactParts.push(`Tél: ${data.agency.phone}`);
+    if (data.agency.email) contactParts.push(`Email: ${data.agency.email}`);
+    
+    if (contactParts.length > 0) {
       doc.setFontSize(9);
-      const contact = [data.agency.phone, data.agency.email].filter(Boolean).join(" | ");
-      doc.text(contact, logoOffset, yPos + 23);
+      doc.setTextColor(100, 100, 100);
+      doc.text(contactParts.join(" | "), textStartX, yPos + 21);
     }
+    
+    // Draw a separator line under the header
+    yPos = headerStartY + 35;
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    
+    yPos += 10;
   }
-  
-  yPos = data.agency ? 55 : margin;
   
   // Title
   doc.setFontSize(18);

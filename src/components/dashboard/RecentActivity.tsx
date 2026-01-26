@@ -19,6 +19,7 @@ import {
   FileText,
   ScrollText,
   ArrowRight,
+  RotateCcw,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ const ACTION_CONFIG: Record<ActionType, { label: string; icon: React.ReactNode; 
   create: { label: "Création", icon: <Plus className="h-3 w-3" />, color: "bg-emerald-500/10 text-emerald-600" },
   update: { label: "Modification", icon: <Pencil className="h-3 w-3" />, color: "bg-blue-500/10 text-blue-600" },
   delete: { label: "Suppression", icon: <Trash2 className="h-3 w-3" />, color: "bg-destructive/10 text-destructive" },
+  restore: { label: "Restauration", icon: <RotateCcw className="h-3 w-3" />, color: "bg-emerald-500/10 text-emerald-600" },
+  permanent_delete: { label: "Suppression définitive", icon: <Trash2 className="h-3 w-3" />, color: "bg-destructive/10 text-destructive" },
   login: { label: "Connexion", icon: <User className="h-3 w-3" />, color: "bg-primary/10 text-primary" },
   logout: { label: "Déconnexion", icon: <User className="h-3 w-3" />, color: "bg-muted text-muted-foreground" },
   payment_collected: { label: "Encaissement", icon: <Wallet className="h-3 w-3" />, color: "bg-emerald-500/10 text-emerald-600" },

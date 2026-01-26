@@ -18,7 +18,8 @@ import {
   Bell,
   Upload,
   Clock,
-  User
+  User,
+  RotateCcw
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -27,6 +28,8 @@ const ACTION_CONFIG: Record<ActionType, { label: string; icon: React.ReactNode; 
   create: { label: "Création", icon: <Plus className="h-3 w-3" />, color: "bg-emerald/20 text-emerald border-emerald/30" },
   update: { label: "Modification", icon: <Pencil className="h-3 w-3" />, color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
   delete: { label: "Suppression", icon: <Trash2 className="h-3 w-3" />, color: "bg-destructive/20 text-destructive border-destructive/30" },
+  restore: { label: "Restauration", icon: <RotateCcw className="h-3 w-3" />, color: "bg-emerald/20 text-emerald border-emerald/30" },
+  permanent_delete: { label: "Suppression définitive", icon: <Trash2 className="h-3 w-3" />, color: "bg-destructive/20 text-destructive border-destructive/30" },
   login: { label: "Connexion", icon: <LogIn className="h-3 w-3" />, color: "bg-primary/20 text-primary border-primary/30" },
   logout: { label: "Déconnexion", icon: <LogOut className="h-3 w-3" />, color: "bg-muted-foreground/20 text-muted-foreground border-muted-foreground/30" },
   payment_collected: { label: "Paiement encaissé", icon: <Wallet className="h-3 w-3" />, color: "bg-emerald/20 text-emerald border-emerald/30" },

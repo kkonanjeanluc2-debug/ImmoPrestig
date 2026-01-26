@@ -18,6 +18,7 @@ import { useProperties, useDeleteProperty, Property } from "@/hooks/usePropertie
 import { useOwners } from "@/hooks/useOwners";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
+import { PropertyTrashDialog } from "@/components/property/PropertyTrashDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
@@ -129,6 +130,7 @@ const Properties = () => {
                 { key: 'status', label: 'Statut', format: (v) => v === 'disponible' ? 'Disponible' : v === 'occupé' ? 'Occupé' : 'En attente' },
               ]}
             />
+            <PropertyTrashDialog />
             {canCreate && <AddPropertyDialog />}
           </div>
         </div>

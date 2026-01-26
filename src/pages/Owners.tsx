@@ -33,6 +33,7 @@ import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
 import { ImportOwnersDialog } from "@/components/owner/ImportOwnersDialog";
 import { MergeOwnersDialog } from "@/components/owner/MergeOwnersDialog";
 import { OwnerPropertiesList } from "@/components/owner/OwnerPropertiesList";
+import { OwnerTrashDialog } from "@/components/owner/OwnerTrashDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -118,6 +119,7 @@ const Owners = () => {
           
           {/* Action buttons - scrollable on mobile */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap">
+            <OwnerTrashDialog />
             {canCreate && <ImportOwnersDialog />}
             {canEdit && <MergeOwnersDialog />}
             {canCreate && <AddOwnerDialog />}

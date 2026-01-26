@@ -555,6 +555,7 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          deleted_at: string | null
           email: string
           id: string
           management_type_id: string | null
@@ -567,6 +568,7 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          deleted_at?: string | null
           email: string
           id?: string
           management_type_id?: string | null
@@ -579,6 +581,7 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string
           id?: string
           management_type_id?: string | null
@@ -781,6 +784,7 @@ export type Database = {
           bathrooms: number | null
           bedrooms: number | null
           created_at: string
+          deleted_at: string | null
           description: string | null
           id: string
           image_url: string | null
@@ -802,6 +806,7 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -823,6 +828,7 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null

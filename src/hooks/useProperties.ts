@@ -17,6 +17,7 @@ export const useProperties = () => {
       const { data, error } = await supabase
         .from("properties")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -121,10 +122,14 @@ export const useDeleteProperty = () => {
 
   return useMutation({
     mutationFn: async ({ id, title }: { id: string; title?: string }) => {
-      const { error } = await supabase.from("properties").delete().eq("id", id);
+      // Soft delete - just set deleted_at timestamp
+      const { error } = await supabase
+        .from("properties")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+        
       if (error) throw error;
 
-      // Log activity
       if (user) {
         await logActivityDirect(
           user.id,
@@ -137,6 +142,7 @@ export const useDeleteProperty = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-properties"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

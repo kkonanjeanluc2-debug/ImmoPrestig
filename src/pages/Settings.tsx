@@ -94,119 +94,119 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <TabsList className="inline-flex w-max sm:flex sm:flex-wrap sm:w-full h-auto gap-1.5 sm:gap-2 bg-transparent p-0">
+          <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 pb-2">
+            <TabsList className="inline-flex h-auto gap-1 bg-transparent p-0 min-w-max">
               <TabsTrigger
                 value="agency"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Building2 className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Agence</span>
+                <Building2 className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Agence</span>
               </TabsTrigger>
               <TabsTrigger
                 value="management-types"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Percent className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Gestion</span>
+                <Percent className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Gestion</span>
               </TabsTrigger>
               <TabsTrigger
                 value="branding"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Paintbrush className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Couleurs</span>
+                <Paintbrush className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Couleurs</span>
               </TabsTrigger>
               <TabsTrigger
                 value="receipts"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <FileText className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Quittances</span>
+                <FileText className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Quittances</span>
               </TabsTrigger>
               <TabsTrigger
                 value="contracts"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <ScrollText className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Contrats</span>
+                <ScrollText className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Contrats</span>
               </TabsTrigger>
               <TabsTrigger
                 value="subscription"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <CreditCard className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Abonnement</span>
+                <CreditCard className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Abonnement</span>
               </TabsTrigger>
               <TabsTrigger
                 value="profile"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <User className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Profil</span>
+                <User className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Profil</span>
               </TabsTrigger>
               <TabsTrigger
                 value="team"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Users className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Équipe</span>
+                <Users className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Équipe</span>
               </TabsTrigger>
               <TabsTrigger
                 value="roles"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Users className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Rôles</span>
+                <Users className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Rôles</span>
               </TabsTrigger>
               <TabsTrigger
                 value="activity"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Clock className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Activité</span>
+                <Clock className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Activité</span>
               </TabsTrigger>
               <TabsTrigger
                 value="display"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Palette className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Affichage</span>
+                <Palette className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Affichage</span>
               </TabsTrigger>
               <TabsTrigger
                 value="notifications"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Bell className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Alertes</span>
+                <Bell className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Alertes</span>
               </TabsTrigger>
               <TabsTrigger
                 value="notification-history"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <History className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Historique</span>
+                <History className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Historique</span>
               </TabsTrigger>
               <TabsTrigger
                 value="whatsapp"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <MessageCircle className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">WhatsApp</span>
+                <MessageCircle className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">WhatsApp</span>
               </TabsTrigger>
               <TabsTrigger
                 value="automation"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Settings2 className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Auto</span>
+                <Settings2 className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Auto</span>
               </TabsTrigger>
               <TabsTrigger
                 value="security"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3 text-sm whitespace-nowrap"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2 px-3"
               >
-                <Shield className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Sécurité</span>
+                <Shield className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Sécurité</span>
               </TabsTrigger>
             </TabsList>
           </div>

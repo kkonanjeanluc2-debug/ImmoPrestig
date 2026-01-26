@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
               : "Rappel : Votre abonnement arrive à expiration";
 
           await resend.emails.send({
-            from: "ImmoGest <notifications@resend.dev>",
+            from: "ImmoPrestige <notifications@resend.dev>",
             to: [agency.email],
             subject: `${urgencyText} - ${plan.name}`,
             html: `
@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
                   <div class="content">
                     <p>Bonjour <strong>${agency.name}</strong>,</p>
                     
-                    <p>Nous vous informons que votre abonnement ImmoGest arrive à expiration.</p>
+                    <p>Nous vous informons que votre abonnement ImmoPrestige arrive à expiration.</p>
                     
                     <div class="info-box">
                       <p><strong>📦 Forfait :</strong> ${plan.name}</p>
@@ -200,10 +200,10 @@ Deno.serve(async (req) => {
                     
                     <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
                     
-                    <p>Cordialement,<br><strong>L'équipe ImmoGest</strong></p>
+                    <p>Cordialement,<br><strong>L'équipe ImmoPrestige</strong></p>
                   </div>
                   <div class="footer">
-                    <p>© ${new Date().getFullYear()} ImmoGest - Gestion immobilière simplifiée</p>
+                    <p>© ${new Date().getFullYear()} ImmoPrestige - Gestion immobilière simplifiée</p>
                   </div>
                 </div>
               </body>
@@ -223,8 +223,8 @@ Deno.serve(async (req) => {
       if (twilioAccountSid && twilioAuthToken && twilioPhoneNumber && agency.phone && daysRemaining <= 3) {
         try {
           const smsMessage = daysRemaining <= 1
-            ? `URGENT ImmoGest: Votre abonnement ${plan.name} expire DEMAIN! Renouvelez maintenant pour éviter l'interruption. Connectez-vous sur votre espace.`
-            : `ImmoGest: Votre abonnement ${plan.name} expire dans ${daysRemaining} jours (${endsAt.toLocaleDateString("fr-FR")}). Pensez à renouveler!`;
+            ? `URGENT ImmoPrestige: Votre abonnement ${plan.name} expire DEMAIN! Renouvelez maintenant pour éviter l'interruption. Connectez-vous sur votre espace.`
+            : `ImmoPrestige: Votre abonnement ${plan.name} expire dans ${daysRemaining} jours (${endsAt.toLocaleDateString("fr-FR")}). Pensez à renouveler!`;
 
           const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
           const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);

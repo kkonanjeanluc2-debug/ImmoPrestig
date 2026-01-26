@@ -64,7 +64,7 @@ const Pricing = () => {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Building2 className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-xl">ImmoGest</span>
+            <span className="font-bold text-xl">ImmoPrestige</span>
           </Link>
           <div className="flex items-center gap-4">
             {user ? (
@@ -308,7 +308,7 @@ const Pricing = () => {
             Prêt à simplifier votre gestion immobilière ?
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Rejoignez des centaines de propriétaires et agences qui font confiance à ImmoGest.
+            Rejoignez des centaines de propriétaires et agences qui font confiance à ImmoPrestige.
           </p>
           <Link to="/signup">
             <Button size="lg" className="px-8">
@@ -321,7 +321,7 @@ const Pricing = () => {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 ImmoGest. Tous droits réservés.</p>
+          <p>© 2025 ImmoPrestige. Tous droits réservés.</p>
         </div>
       </footer>
 

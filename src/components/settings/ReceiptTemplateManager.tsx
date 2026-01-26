@@ -509,24 +509,24 @@ export function ReceiptTemplateManager() {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
+      <CardHeader className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
               <FileText className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <CardTitle>Modèles de quittances</CardTitle>
-              <CardDescription>
-                Créez et gérez plusieurs modèles personnalisés pour vos quittances
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg">Modèles de quittances</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Créez et gérez vos modèles personnalisés
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <ReceiptTemplateImportExport templates={templates} />
-            <Button onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau modèle
+            <Button onClick={handleOpenCreate} size="sm" className="whitespace-nowrap">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Nouveau</span>
             </Button>
           </div>
         </div>

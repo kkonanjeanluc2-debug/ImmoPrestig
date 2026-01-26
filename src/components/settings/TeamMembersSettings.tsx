@@ -276,22 +276,22 @@ export function TeamMembersSettings() {
 
       {/* Team Members Card */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Users className="h-5 w-5 flex-shrink-0" />
                 Équipe
               </CardTitle>
-              <CardDescription>
-                Gérez les membres de votre agence et leurs permissions
+              <CardDescription className="text-xs sm:text-sm">
+                Gérez les membres et permissions
               </CardDescription>
             </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button disabled={!limits?.canAdd}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Ajouter
+                <Button disabled={!limits?.canAdd} size="sm" className="whitespace-nowrap flex-shrink-0">
+                  <UserPlus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Ajouter</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>

@@ -12,7 +12,7 @@ import {
   Menu,
   X,
   LogOut,
-  BarChart3,
+  
   Shield,
   UserCog,
   Eye,
@@ -48,7 +48,6 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
 
 const agencyNavigation = [
   { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
-  { name: "Dashboard avancé", href: "/dashboard", icon: BarChart3 },
   { name: "Biens immobiliers", href: "/properties", icon: Building2 },
   { name: "Locataires", href: "/tenants", icon: Users },
   { name: "Contrats", href: "/contracts", icon: ScrollText },

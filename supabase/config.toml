@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.send-commission-reports]
 verify_jwt = false
+
+[functions.cleanup-trash]
+verify_jwt = false

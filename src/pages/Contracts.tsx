@@ -72,6 +72,12 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   terminated: { label: "Résilié", variant: "secondary", icon: <AlertTriangle className="h-3 w-3" /> },
 };
 
+const signatureStatusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
+  pending: { label: "Non signé", variant: "outline", icon: <PenTool className="h-3 w-3" /> },
+  landlord_signed: { label: "Signé bailleur", variant: "secondary", icon: <Clock className="h-3 w-3" /> },
+  fully_signed: { label: "Signé", variant: "default", icon: <CheckCircle2 className="h-3 w-3" /> },
+};
+
 const Contracts = () => {
   const { data: contracts, isLoading: contractsLoading } = useContracts();
   const { data: properties } = useProperties();
@@ -296,13 +302,14 @@ const Contracts = () => {
                   <TableHead>Loyer</TableHead>
                   <TableHead>Jours restants</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Signature</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredContracts?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Aucun contrat trouvé
                     </TableCell>
                   </TableRow>
@@ -365,6 +372,17 @@ const Contracts = () => {
                             {status.icon}
                             {status.label}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const sigStatus = signatureStatusConfig[contract.signature_status || "pending"];
+                            return (
+                              <Badge variant={sigStatus.variant} className="gap-1">
+                                {sigStatus.icon}
+                                {sigStatus.label}
+                              </Badge>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">

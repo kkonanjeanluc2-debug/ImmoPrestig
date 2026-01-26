@@ -123,7 +123,7 @@ export const useExpireContract = () => {
           .from("property_units")
           .select("id")
           .eq("property_id", propertyId)
-          .eq("status", "occupé");
+          .eq("status", "loué");
 
         if (checkError) throw checkError;
 

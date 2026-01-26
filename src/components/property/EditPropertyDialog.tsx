@@ -214,7 +214,8 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="disponible">Disponible</SelectItem>
-                  <SelectItem value="occupé">Occupé</SelectItem>
+                  <SelectItem value="loué">Loué</SelectItem>
+                  <SelectItem value="vendu">Vendu</SelectItem>
                   <SelectItem value="en attente">En attente</SelectItem>
                 </SelectContent>
               </Select>

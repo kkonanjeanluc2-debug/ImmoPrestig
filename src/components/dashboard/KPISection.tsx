@@ -38,8 +38,8 @@ export function KPISection({ properties, payments, contracts, period, visibleWid
 
   // KPI 1: ROI par propriété (moyenne)
   const calculateROI = () => {
-    const occupiedProperties = properties.filter((p) => p.status === "occupé");
-    if (occupiedProperties.length === 0) return { value: "0%", subtitle: "Aucun bien occupé" };
+    const occupiedProperties = properties.filter((p) => p.status === "loué");
+    if (occupiedProperties.length === 0) return { value: "0%", subtitle: "Aucun bien loué" };
 
     const roiValues = occupiedProperties.map((property) => {
       const annualRent = Number(property.price) * 12;

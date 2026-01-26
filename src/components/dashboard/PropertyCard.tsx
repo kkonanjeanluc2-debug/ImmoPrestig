@@ -58,7 +58,8 @@ export function PropertyCard({
 
   const statusClasses: Record<string, string> = {
     disponible: "bg-emerald/10 text-emerald border-emerald/20",
-    occupé: "bg-navy/10 text-navy border-navy/20",
+    loué: "bg-navy/10 text-navy border-navy/20",
+    vendu: "bg-purple-500/10 text-purple-500 border-purple-500/20",
     "en attente": "bg-sand text-navy border-sand-dark/20",
   };
 
@@ -109,14 +110,14 @@ export function PropertyCard({
                   >
                     <DoorOpen className="h-3 w-3" />
                     {unitsSummary.available_units === 0 
-                      ? "Tout occupé" 
+                      ? "Tout loué" 
                       : `${unitsSummary.available_units}/${unitsSummary.total_units} dispo`}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
                     {unitsSummary.available_units === 0 
-                      ? `Toutes les ${unitsSummary.total_units} portes sont occupées`
+                      ? `Toutes les ${unitsSummary.total_units} portes sont louées`
                       : `${unitsSummary.available_units} porte${unitsSummary.available_units > 1 ? 's' : ''} disponible${unitsSummary.available_units > 1 ? 's' : ''} sur ${unitsSummary.total_units}`}
                   </p>
                 </TooltipContent>

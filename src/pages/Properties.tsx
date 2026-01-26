@@ -127,7 +127,7 @@ const Properties = () => {
                 { key: 'area', label: 'Surface (m²)', format: (v) => v ? Number(v).toString() : '' },
                 { key: 'bedrooms', label: 'Chambres', format: (v) => v ? v.toString() : '' },
                 { key: 'bathrooms', label: 'Salles de bain', format: (v) => v ? v.toString() : '' },
-                { key: 'status', label: 'Statut', format: (v) => v === 'disponible' ? 'Disponible' : v === 'occupé' ? 'Occupé' : 'En attente' },
+                { key: 'status', label: 'Statut', format: (v) => v === 'disponible' ? 'Disponible' : v === 'loué' ? 'Loué' : v === 'vendu' ? 'Vendu' : 'En attente' },
               ]}
             />
             <PropertyTrashDialog />
@@ -175,7 +175,8 @@ const Properties = () => {
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="disponible">Disponible</SelectItem>
-                <SelectItem value="occupé">Occupé</SelectItem>
+                <SelectItem value="loué">Loué</SelectItem>
+                <SelectItem value="vendu">Vendu</SelectItem>
                 <SelectItem value="en attente">En attente</SelectItem>
               </SelectContent>
             </Select>

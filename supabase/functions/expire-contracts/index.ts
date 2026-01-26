@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
         .from("property_units")
         .select("id")
         .eq("property_id", propertyId)
-        .eq("status", "occupé");
+        .eq("status", "loué");
 
       if (!checkError && (!occupiedUnits || occupiedUnits.length === 0)) {
         // No more occupied units, set property to disponible

@@ -126,7 +126,7 @@ export const UnitForm = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="disponible">Disponible</SelectItem>
-            <SelectItem value="occupé">Occupé</SelectItem>
+            <SelectItem value="loué">Loué</SelectItem>
             <SelectItem value="en attente">En attente</SelectItem>
           </SelectContent>
         </Select>

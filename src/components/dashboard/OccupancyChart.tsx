@@ -12,7 +12,7 @@ interface OccupancyChartProps {
 
 const chartConfig = {
   occupied: {
-    label: "Occupés",
+    label: "Loués",
     color: "hsl(var(--primary))",
   },
   available: {
@@ -36,7 +36,7 @@ export function OccupancyChart({ properties }: OccupancyChartProps) {
         types[type] = { total: 0, occupied: 0 };
       }
       types[type].total++;
-      if (property.status === "occupé") {
+      if (property.status === "loué") {
         types[type].occupied++;
       }
     });
@@ -59,7 +59,7 @@ export function OccupancyChart({ properties }: OccupancyChartProps) {
 
   const data = getOccupancyData();
   const totalProperties = properties.length;
-  const occupiedProperties = properties.filter((p) => p.status === "occupé").length;
+  const occupiedProperties = properties.filter((p) => p.status === "loué").length;
   const globalRate = totalProperties > 0 ? Math.round((occupiedProperties / totalProperties) * 100) : 0;
 
   const getBarColor = (rate: number) => {
@@ -79,7 +79,7 @@ export function OccupancyChart({ properties }: OccupancyChartProps) {
         </div>
         <p className="text-2xl font-bold text-foreground">{globalRate}%</p>
         <p className="text-xs text-muted-foreground">
-          {occupiedProperties} sur {totalProperties} bien{totalProperties > 1 ? "s" : ""} occupé{occupiedProperties > 1 ? "s" : ""}
+          {occupiedProperties} sur {totalProperties} bien{totalProperties > 1 ? "s" : ""} loué{occupiedProperties > 1 ? "s" : ""}
         </p>
       </CardHeader>
       <CardContent className="pt-0">

@@ -260,7 +260,7 @@ export function ImportTenantsDialog() {
           // Update property status
           await updateProperty.mutateAsync({
             id: tenant.propertyId,
-            status: "occupé",
+            status: "loué",
           });
         }
 

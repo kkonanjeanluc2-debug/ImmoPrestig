@@ -88,6 +88,7 @@ const Contracts = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [signatureFilter, setSignatureFilter] = useState("all");
   const [renewDialogOpen, setRenewDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [renewDuration, setRenewDuration] = useState("12");
@@ -116,7 +117,8 @@ const Contracts = () => {
       propertyName.includes(searchQuery.toLowerCase()) ||
       tenantName.includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || contract.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSignature = signatureFilter === "all" || (contract.signature_status || "pending") === signatureFilter;
+    return matchesSearch && matchesStatus && matchesSignature;
   });
 
   // Calculate days remaining
@@ -279,11 +281,22 @@ const Contracts = () => {
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover">
                   <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="active">Actifs</SelectItem>
                   <SelectItem value="expired">Expirés</SelectItem>
                   <SelectItem value="terminated">Résiliés</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={signatureFilter} onValueChange={setSignatureFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Signature" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="all">Toutes signatures</SelectItem>
+                  <SelectItem value="pending">Non signés</SelectItem>
+                  <SelectItem value="landlord_signed">Signés bailleur</SelectItem>
+                  <SelectItem value="fully_signed">Signés complet</SelectItem>
                 </SelectContent>
               </Select>
             </div>

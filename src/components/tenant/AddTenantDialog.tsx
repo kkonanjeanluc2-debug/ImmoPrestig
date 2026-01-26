@@ -8,6 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -27,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, Home, ArrowRight, DoorOpen } from "lucide-react";
+import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Tooltip,
@@ -40,7 +42,11 @@ import { useCreateContract } from "@/hooks/useContracts";
 import { useProperties, useUpdateProperty } from "@/hooks/useProperties";
 import { usePropertyUnits, useUpdatePropertyUnit } from "@/hooks/usePropertyUnits";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { useAgency } from "@/hooks/useAgency";
+import { useOwners } from "@/hooks/useOwners";
+import { useDefaultContractTemplate } from "@/hooks/useContractTemplates";
 import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
+import { downloadContractPDF, DEFAULT_CONTRACT_TEMPLATE } from "@/lib/generateContract";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -64,6 +70,21 @@ interface AddTenantDialogProps {
 export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdContractData, setCreatedContractData] = useState<{
+    tenantName: string;
+    tenantEmail?: string;
+    tenantPhone?: string;
+    propertyTitle: string;
+    propertyAddress?: string;
+    unitNumber?: string;
+    rentAmount: number;
+    deposit?: number;
+    startDate: string;
+    endDate: string;
+    ownerName?: string;
+  } | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const createTenant = useCreateTenant();
   const updateTenant = useUpdateTenant();
@@ -72,6 +93,9 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const updatePropertyUnit = useUpdatePropertyUnit();
   const { data: properties, isLoading: propertiesLoading, refetch: refetchProperties } = useProperties();
   const { data: propertyUnits = [] } = usePropertyUnits(selectedPropertyId || undefined);
+  const { data: owners } = useOwners();
+  const { data: agency } = useAgency();
+  const { data: defaultTemplate } = useDefaultContractTemplate();
   const limits = useSubscriptionLimits();
 
   // Filter only available properties and refetch when dialog opens
@@ -122,6 +146,8 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const onSubmit = async (values: FormValues) => {
     try {
       const unitId = values.unit_id && values.unit_id !== "none" ? values.unit_id : null;
+      const selectedProp = properties?.find(p => p.id === values.property_id);
+      const selectedUnit = unitId ? propertyUnits.find(u => u.id === unitId) : null;
       
       // Create tenant with unit_id if applicable
       const tenant = await createTenant.mutateAsync({
@@ -175,10 +201,33 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         });
       }
 
+      // Get owner name if property has an owner
+      let ownerName: string | undefined;
+      if (selectedProp?.owner_id) {
+        const owner = owners?.find(o => o.id === selectedProp.owner_id);
+        ownerName = owner?.name;
+      }
+
+      // Store contract data for PDF generation
+      setCreatedContractData({
+        tenantName: values.name,
+        tenantEmail: values.email || undefined,
+        tenantPhone: values.phone || undefined,
+        propertyTitle: selectedProp?.title || "",
+        propertyAddress: selectedProp?.address,
+        unitNumber: selectedUnit?.unit_number,
+        rentAmount: parseFloat(values.rent_amount),
+        deposit: values.deposit ? parseFloat(values.deposit) : undefined,
+        startDate: values.start_date,
+        endDate: values.end_date,
+        ownerName,
+      });
+
       toast.success("Locataire et contrat créés avec succès");
       form.reset();
       setSelectedPropertyId("");
       setOpen(false);
+      setShowSuccessDialog(true);
       onSuccess?.();
     } catch (error: any) {
       console.error("Error creating tenant:", error);
@@ -194,6 +243,38 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         toast.error("Erreur lors de la création du locataire");
       }
     }
+  };
+
+  const handleDownloadContract = async () => {
+    if (!createdContractData) return;
+    
+    setIsDownloading(true);
+    try {
+      const templateContent = defaultTemplate?.content || DEFAULT_CONTRACT_TEMPLATE;
+      await downloadContractPDF(templateContent, {
+        ...createdContractData,
+        agency: agency ? {
+          name: agency.name,
+          email: agency.email,
+          phone: agency.phone || undefined,
+          address: agency.address || undefined,
+          city: agency.city || undefined,
+          country: agency.country || undefined,
+          logo_url: agency.logo_url,
+        } : null,
+      });
+      toast.success("Contrat téléchargé avec succès");
+    } catch (error) {
+      console.error("Error downloading contract:", error);
+      toast.error("Erreur lors du téléchargement du contrat");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setShowSuccessDialog(false);
+    setCreatedContractData(null);
   };
 
   // Determine if we can add a tenant
@@ -535,6 +616,71 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
           </form>
         </Form>
       </DialogContent>
+
+      {/* Success Dialog with Download Option */}
+      <Dialog open={showSuccessDialog} onOpenChange={handleCloseSuccessDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald/10">
+                <CheckCircle2 className="h-6 w-6 text-emerald" />
+              </div>
+              <div>
+                <DialogTitle>Locataire créé avec succès !</DialogTitle>
+                <DialogDescription>
+                  Le contrat a été généré automatiquement.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {createdContractData && (
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+              <div className="flex items-center gap-2 font-medium">
+                <FileText className="h-4 w-4 text-primary" />
+                Résumé du contrat
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-muted-foreground">
+                <span>Locataire :</span>
+                <span className="font-medium text-foreground">{createdContractData.tenantName}</span>
+                <span>Bien :</span>
+                <span className="font-medium text-foreground">{createdContractData.propertyTitle}</span>
+                {createdContractData.unitNumber && (
+                  <>
+                    <span>Unité :</span>
+                    <span className="font-medium text-foreground">{createdContractData.unitNumber}</span>
+                  </>
+                )}
+                <span>Loyer :</span>
+                <span className="font-medium text-foreground">{createdContractData.rentAmount.toLocaleString("fr-FR")} FCFA</span>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleCloseSuccessDialog}>
+              Fermer
+            </Button>
+            <Button 
+              onClick={handleDownloadContract} 
+              disabled={isDownloading}
+              className="bg-emerald hover:bg-emerald/90"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Génération...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Télécharger le contrat
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

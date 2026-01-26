@@ -21,7 +21,7 @@ const TenantDetails = lazy(() => import("./pages/TenantDetails"));
 const Contracts = lazy(() => import("./pages/Contracts"));
 const Payments = lazy(() => import("./pages/Payments"));
 const Documents = lazy(() => import("./pages/Documents"));
-const AdvancedDashboard = lazy(() => import("./pages/AdvancedDashboard"));
+
 const Settings = lazy(() => import("./pages/Settings"));
 const Install = lazy(() => import("./pages/Install"));
 const Login = lazy(() => import("./pages/Login"));
@@ -71,7 +71,7 @@ const App = () => {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><AdvancedDashboard /></ProtectedRoute>} />
+                
                 <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
                 <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetails /></ProtectedRoute>} />
                 <Route path="/owners" element={<ProtectedRoute><Owners /></ProtectedRoute>} />

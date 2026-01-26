@@ -52,14 +52,17 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
+  Download,
 } from "lucide-react";
 import { useContracts, useUpdateContract, useExpireContract } from "@/hooks/useContracts";
 import { useProperties } from "@/hooks/useProperties";
 import { useTenants } from "@/hooks/useTenants";
+import { useOwners } from "@/hooks/useOwners";
 import { format, differenceInDays, addMonths, addYears } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
+import { GenerateContractDialog } from "@/components/contract/GenerateContractDialog";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
   active: { label: "Actif", variant: "default", icon: <CheckCircle2 className="h-3 w-3" /> },
@@ -71,6 +74,7 @@ const Contracts = () => {
   const { data: contracts, isLoading: contractsLoading } = useContracts();
   const { data: properties } = useProperties();
   const { data: tenants } = useTenants();
+  const { data: owners } = useOwners();
   const updateContract = useUpdateContract();
   const expireContract = useExpireContract();
 
@@ -80,6 +84,8 @@ const Contracts = () => {
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [renewDuration, setRenewDuration] = useState("12");
   const [renewDurationType, setRenewDurationType] = useState<"months" | "years">("months");
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [contractToGenerate, setContractToGenerate] = useState<any>(null);
 
   // Get property and tenant names for display
   const getPropertyName = (propertyId: string) => {
@@ -358,6 +364,18 @@ const Contracts = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {/* Generate PDF Button */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setContractToGenerate(contract);
+                                setGenerateDialogOpen(true);
+                              }}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              PDF
+                            </Button>
                             {/* Renew Button */}
                             <Dialog open={renewDialogOpen && selectedContract?.id === contract.id} onOpenChange={(open) => {
                               setRenewDialogOpen(open);
@@ -480,6 +498,36 @@ const Contracts = () => {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Generate Contract Dialog */}
+        {contractToGenerate && (
+          <GenerateContractDialog
+            open={generateDialogOpen}
+            onOpenChange={(open) => {
+              setGenerateDialogOpen(open);
+              if (!open) setContractToGenerate(null);
+            }}
+            contractData={{
+              tenantName: getTenantName(contractToGenerate.tenant_id),
+              tenantEmail: tenants?.find((t) => t.id === contractToGenerate.tenant_id)?.email,
+              tenantPhone: tenants?.find((t) => t.id === contractToGenerate.tenant_id)?.phone || undefined,
+              propertyTitle: getPropertyName(contractToGenerate.property_id),
+              propertyAddress: properties?.find((p) => p.id === contractToGenerate.property_id)?.address,
+              unitNumber: contractToGenerate.unit?.unit_number,
+              rentAmount: contractToGenerate.rent_amount,
+              deposit: contractToGenerate.deposit || undefined,
+              startDate: contractToGenerate.start_date,
+              endDate: contractToGenerate.end_date,
+              ownerName: (() => {
+                const property = properties?.find((p) => p.id === contractToGenerate.property_id);
+                if (property?.owner_id) {
+                  return owners?.find((o) => o.id === property.owner_id)?.name;
+                }
+                return undefined;
+              })(),
+            }}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

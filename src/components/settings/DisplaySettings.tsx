@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Palette, Sun, Moon, Monitor } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/useTheme";
 
 type ThemeMode = "light" | "dark" | "system";
 
@@ -22,39 +23,21 @@ const LANGUAGES = [
 
 export function DisplaySettings() {
   const { toast } = useToast();
-  const [theme, setTheme] = useState<ThemeMode>("system");
+  const { theme, setTheme: setAppTheme } = useTheme();
   const [currency, setCurrency] = useState("XOF");
   const [language, setLanguage] = useState("fr");
 
   useEffect(() => {
     // Load preferences from localStorage
-    const savedTheme = localStorage.getItem("theme") as ThemeMode | null;
     const savedCurrency = localStorage.getItem("currency");
     const savedLanguage = localStorage.getItem("language");
 
-    if (savedTheme) setTheme(savedTheme);
     if (savedCurrency) setCurrency(savedCurrency);
     if (savedLanguage) setLanguage(savedLanguage);
-
-    // Apply theme
-    applyTheme(savedTheme || "system");
   }, []);
 
-  const applyTheme = (mode: ThemeMode) => {
-    const root = document.documentElement;
-    
-    if (mode === "system") {
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", isDark);
-    } else {
-      root.classList.toggle("dark", mode === "dark");
-    }
-  };
-
   const handleThemeChange = (value: ThemeMode) => {
-    setTheme(value);
-    localStorage.setItem("theme", value);
-    applyTheme(value);
+    setAppTheme(value);
     
     toast({
       title: "Thème modifié",

@@ -29,6 +29,12 @@ import {
 } from "@/lib/generateContract";
 import { useToast } from "@/hooks/use-toast";
 
+interface ManagementTypeData {
+  name: string;
+  type: string;
+  percentage: number;
+}
+
 interface OwnerData {
   name: string;
   email?: string;
@@ -38,6 +44,7 @@ interface OwnerData {
   birth_place?: string;
   profession?: string;
   cni_number?: string;
+  management_type?: ManagementTypeData | null;
 }
 
 interface ContractData {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, Shield, TrendingUp, Users, ArrowRight } from "lucide-react";
+import { Shield, TrendingUp, Users, ArrowRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoImage from "@/assets/immoprestige-logo.png";
 
 interface WelcomeScreenProps {
   onComplete: () => void;
@@ -150,10 +151,10 @@ const WelcomeScreen = ({ onComplete, minDuration = 4000 }: WelcomeScreenProps) =
             >
               <div className="relative">
                 {/* Glow effect */}
-                <div className="absolute inset-0 w-24 h-24 bg-emerald/30 rounded-2xl blur-xl" />
-                {/* Icon container */}
+                <div className="absolute inset-0 w-28 h-28 bg-emerald/30 rounded-2xl blur-xl" />
+                {/* Logo container */}
                 <motion.div
-                  className="relative w-24 h-24 bg-gradient-to-br from-emerald to-emerald-dark rounded-2xl flex items-center justify-center shadow-2xl"
+                  className="relative w-28 h-28 rounded-2xl overflow-hidden shadow-2xl"
                   animate={{ 
                     boxShadow: [
                       "0 0 30px rgba(46, 204, 113, 0.3)",
@@ -163,7 +164,11 @@ const WelcomeScreen = ({ onComplete, minDuration = 4000 }: WelcomeScreenProps) =
                   }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <Building2 className="w-12 h-12 text-white" />
+                  <img 
+                    src={logoImage} 
+                    alt="ImmoPrestige Logo" 
+                    className="w-full h-full object-cover"
+                  />
                 </motion.div>
               </div>
             </motion.div>

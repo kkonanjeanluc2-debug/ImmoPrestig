@@ -8,6 +8,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
+import UpdatePrompt from "@/components/UpdatePrompt";
+import OfflineIndicator from "@/components/OfflineIndicator";
 import { Loader2 } from "lucide-react";
 
 // Lazy load pages for code splitting
@@ -60,6 +62,8 @@ const App = () => {
       <TooltipProvider>
         {showSplash && <WelcomeScreen onComplete={handleSplashComplete} minDuration={5000} />}
         <PWAInstallBanner />
+        <UpdatePrompt />
+        <OfflineIndicator />
         <Toaster />
         <Sonner />
         <BrowserRouter>

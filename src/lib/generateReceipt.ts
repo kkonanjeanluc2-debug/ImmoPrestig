@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { getReceiptTemplates, type ReceiptTemplates } from "@/components/settings/ReceiptSettings";
 import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
+import { formatAmountForPDF } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
   name: string;
@@ -114,21 +115,7 @@ const formatDate = (dateStr: string, format: "short" | "long"): string => {
   return date.toLocaleDateString("fr-FR");
 };
 
-// Format number with spaces for PDF (avoids non-breaking space issues)
-// Using regular ASCII space (char 32) for consistent rendering
-const formatAmountForPDF = (amount: number): string => {
-  const parts: string[] = [];
-  const str = Math.floor(amount).toString();
-  
-  // Split into groups of 3 from the right
-  for (let i = str.length; i > 0; i -= 3) {
-    const start = Math.max(0, i - 3);
-    parts.unshift(str.slice(start, i));
-  }
-  
-  // Join with a regular space character
-  return parts.join(" ");
-};
+// NOTE: formatAmountForPDF is imported from @/lib/pdfFormat to ensure consistent rendering.
 
 const replaceVariables = (
   template: string,

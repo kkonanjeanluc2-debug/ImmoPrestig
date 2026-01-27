@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { formatAmountForPDF } from "@/lib/pdfFormat";
 
 const STORAGE_KEY = "receipt_templates";
 
@@ -240,9 +241,10 @@ export function ReceiptSettings() {
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
       doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
-      doc.setFontSize(20);
+      doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
-      doc.text(`250 000 ${templates.currency}`, pageWidth / 2, yPos + 26, { align: "center" });
+      const amountText = `${formatAmountForPDF(250000)} ${templates.currency}`;
+      doc.text(amountText, pageWidth / 2, yPos + 26, { align: "center", charSpace: 0.5 });
       
       yPos += 50;
       
@@ -292,13 +294,13 @@ export function ReceiptSettings() {
       }
       
       // Declaration text
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...textColor);
       const declarationText = replaceVariablesForPreview(templates.declarationText);
       
       const splitDeclaration = doc.splitTextToSize(declarationText, pageWidth - 30);
-      doc.text(splitDeclaration, 15, yPos);
+      doc.text(splitDeclaration, 15, yPos, { lineHeightFactor: 1.5 });
       
       yPos += splitDeclaration.length * 5 + 20;
       
@@ -977,7 +979,7 @@ export function ReceiptSettings() {
                 <div className="bg-primary text-primary-foreground p-4 rounded-lg text-center mb-4">
                   <p className="text-sm">Montant du loyer reçu</p>
                   <p className="text-xl font-bold">
-                    250 000 {templates.currency}
+                    {formatAmountForPDF(250000)} {templates.currency}
                   </p>
                 </div>
 

@@ -58,6 +58,7 @@ import {
 } from "@/hooks/useReceiptTemplates";
 import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
+import { formatAmountForPDF } from "@/lib/pdfFormat";
 
 const DEFAULT_TEMPLATE_VALUES: ReceiptTemplateInsert = {
   name: "",
@@ -220,9 +221,10 @@ export function ReceiptTemplateManager() {
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
       doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
-      doc.setFontSize(20);
+      doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
-      doc.text(`${sampleData.amount.toLocaleString("fr-FR")} ${formData.currency_symbol}`, pageWidth / 2, yPos + 26, { align: "center" });
+      const amountText = `${formatAmountForPDF(sampleData.amount)} ${formData.currency_symbol}`;
+      doc.text(amountText, pageWidth / 2, yPos + 26, { align: "center", charSpace: 0.5 });
 
       yPos += 50;
 
@@ -236,17 +238,17 @@ export function ReceiptTemplateManager() {
       }
 
       // Declaration
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...textColor);
       const declarationText = formData.declaration_text
         .replace(/{bailleur}/g, sampleData.ownerName)
         .replace(/{locataire}/g, sampleData.tenantName)
-        .replace(/{montant}/g, `${sampleData.amount.toLocaleString("fr-FR")} ${formData.currency_symbol}`)
+        .replace(/{montant}/g, `${formatAmountForPDF(sampleData.amount)} ${formData.currency_symbol}`)
         .replace(/{periode}/g, sampleData.period)
         .replace(/{bien}/g, sampleData.propertyTitle);
       const splitDeclaration = doc.splitTextToSize(declarationText, pageWidth - 30);
-      doc.text(splitDeclaration, 15, yPos);
+      doc.text(splitDeclaration, 15, yPos, { lineHeightFactor: 1.5 });
       yPos += splitDeclaration.length * 5 + 20;
 
       // Signature

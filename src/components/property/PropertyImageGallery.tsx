@@ -1,4 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { Button } from "@/components/ui/button";
 import { Plus, X, Loader2, ChevronLeft, ChevronRight, ImageIcon, GripVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -9,28 +11,12 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  horizontalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
-interface PropertyImageGalleryProps {
-  propertyId: string;
-  mainImage?: string | null;
-  canEdit?: boolean;
+const THUMBNAIL_TYPE = "THUMBNAIL";
+
+interface DragItem {
+  id: string;
+  index: number;
 }
 
 interface SortableThumbnailProps {
@@ -39,6 +25,7 @@ interface SortableThumbnailProps {
   selectedIndex: number;
   onSelect: (index: number) => void;
   onDelete: (id: string) => void;
+  onMove: (dragIndex: number, hoverIndex: number) => void;
   canEdit: boolean;
   isMainImage: boolean;
 }
@@ -49,35 +36,58 @@ const SortableThumbnail = ({
   selectedIndex,
   onSelect,
   onDelete,
+  onMove,
   canEdit,
   isMainImage,
 }: SortableThumbnailProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: image.id, disabled: isMainImage || !canEdit });
+  const ref = useRef<HTMLDivElement>(null);
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 10 : 1,
-  };
+  const [{ isDragging }, drag, preview] = useDrag({
+    type: THUMBNAIL_TYPE,
+    item: { id: image.id, index },
+    canDrag: canEdit && !isMainImage,
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [, drop] = useDrop<DragItem>({
+    accept: THUMBNAIL_TYPE,
+    hover(item, monitor) {
+      if (!ref.current) return;
+      if (isMainImage) return;
+
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) return;
+
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
+      const clientOffset = monitor.getClientOffset();
+      if (!clientOffset) return;
+
+      const hoverClientX = clientOffset.x - hoverBoundingRect.left;
+
+      if (dragIndex < hoverIndex && hoverClientX < hoverMiddleX) return;
+      if (dragIndex > hoverIndex && hoverClientX > hoverMiddleX) return;
+
+      onMove(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+  });
+
+  preview(drop(ref));
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
+      ref={ref}
       className={cn(
         "relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all group/thumb",
         selectedIndex === index
           ? "border-primary ring-2 ring-primary/20"
           : "border-transparent hover:border-muted-foreground/30",
-        isDragging && "shadow-lg"
+        isDragging && "opacity-50 shadow-lg"
       )}
     >
       <button
@@ -94,8 +104,7 @@ const SortableThumbnail = ({
       {/* Drag Handle */}
       {canEdit && !isMainImage && (
         <div
-          {...attributes}
-          {...listeners}
+          ref={drag}
           className="absolute bottom-0 left-0 right-0 p-1 bg-black/50 text-white flex items-center justify-center cursor-grab active:cursor-grabbing opacity-0 group-hover/thumb:opacity-100 transition-opacity"
         >
           <GripVertical className="h-3 w-3" />
@@ -125,7 +134,13 @@ const SortableThumbnail = ({
   );
 };
 
-export const PropertyImageGallery = ({
+interface PropertyImageGalleryProps {
+  propertyId: string;
+  mainImage?: string | null;
+  canEdit?: boolean;
+}
+
+const PropertyImageGalleryInner = ({
   propertyId,
   mainImage,
   canEdit = false,
@@ -140,17 +155,6 @@ export const PropertyImageGallery = ({
   const [localImages, setLocalImages] = useState<typeof images | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
   // Use local state for optimistic updates during drag, otherwise use server data
   const galleryImages = localImages || images;
 
@@ -159,35 +163,27 @@ export const PropertyImageGallery = ({
     ? [{ id: "main", image_url: mainImage }, ...galleryImages]
     : galleryImages;
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleMove = useCallback((dragIndex: number, hoverIndex: number) => {
+    // Adjust indices to account for main image
+    const adjustedDragIndex = mainImage ? dragIndex - 1 : dragIndex;
+    const adjustedHoverIndex = mainImage ? hoverIndex - 1 : hoverIndex;
 
-    if (!over || active.id === over.id) {
-      setLocalImages(null);
-      return;
-    }
+    if (adjustedDragIndex < 0 || adjustedHoverIndex < 0) return;
 
-    // Don't allow dragging the main image
-    if (active.id === "main" || over.id === "main") {
-      setLocalImages(null);
-      return;
-    }
-
-    const oldIndex = galleryImages.findIndex((img) => img.id === active.id);
-    const newIndex = galleryImages.findIndex((img) => img.id === over.id);
-
-    if (oldIndex === -1 || newIndex === -1) {
-      setLocalImages(null);
-      return;
-    }
-
-    const newOrder = arrayMove(galleryImages, oldIndex, newIndex);
+    const currentImages = localImages || images;
+    const newOrder = [...currentImages];
+    const [removed] = newOrder.splice(adjustedDragIndex, 1);
+    newOrder.splice(adjustedHoverIndex, 0, removed);
     setLocalImages(newOrder as PropertyImage[]);
+  }, [localImages, images, mainImage]);
+
+  const handleDragEnd = async () => {
+    if (!localImages) return;
 
     try {
       await reorderImages.mutateAsync({
         propertyId,
-        images: newOrder.map((img, idx) => ({
+        images: localImages.map((img, idx) => ({
           id: img.id,
           display_order: idx,
         })),
@@ -312,33 +308,23 @@ export const PropertyImageGallery = ({
         </div>
       )}
 
-      {/* Thumbnails with Drag and Drop */}
+      {/* Thumbnails */}
       {allImages.length > 1 && (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={allImages.map((img) => img.id)}
-            strategy={horizontalListSortingStrategy}
-          >
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {allImages.map((img, index) => (
-                <SortableThumbnail
-                  key={img.id}
-                  image={img}
-                  index={index}
-                  selectedIndex={selectedIndex}
-                  onSelect={setSelectedIndex}
-                  onDelete={handleDeleteImage}
-                  canEdit={canEdit}
-                  isMainImage={img.id === "main"}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div className="flex gap-2 overflow-x-auto pb-2" onMouseUp={handleDragEnd}>
+          {allImages.map((img, index) => (
+            <SortableThumbnail
+              key={img.id}
+              image={img}
+              index={index}
+              selectedIndex={selectedIndex}
+              onSelect={setSelectedIndex}
+              onDelete={handleDeleteImage}
+              onMove={handleMove}
+              canEdit={canEdit}
+              isMainImage={img.id === "main"}
+            />
+          ))}
+        </div>
       )}
 
       {/* Hint for reordering */}
@@ -424,5 +410,13 @@ export const PropertyImageGallery = ({
         </DialogContent>
       </Dialog>
     </div>
+  );
+};
+
+export const PropertyImageGallery = (props: PropertyImageGalleryProps) => {
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <PropertyImageGalleryInner {...props} />
+    </DndProvider>
   );
 };

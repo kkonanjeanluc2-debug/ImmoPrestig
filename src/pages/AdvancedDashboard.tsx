@@ -1,3 +1,6 @@
+import { useCallback } from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { KPISection } from "@/components/dashboard/KPISection";
@@ -18,8 +21,6 @@ import { usePayments } from "@/hooks/usePayments";
 import { useTenants } from "@/hooks/useTenants";
 import { useContracts } from "@/hooks/useContracts";
 import { Building2, Users, Wallet, TrendingUp, Loader2 } from "lucide-react";
-import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { SortableContext, rectSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { ReactNode } from "react";
 
 const AdvancedDashboard = () => {
@@ -28,14 +29,6 @@ const AdvancedDashboard = () => {
   const { data: payments, isLoading: paymentsLoading } = usePayments();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: contracts, isLoading: contractsLoading } = useContracts();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
 
   const isLoading = propertiesLoading || paymentsLoading || tenantsLoading || contractsLoading;
 
@@ -59,14 +52,12 @@ const AdvancedDashboard = () => {
     ? Math.round((occupiedProperties / totalProperties) * 100)
     : 0;
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = preferences.widgetOrder.indexOf(active.id as WidgetId);
-      const newIndex = preferences.widgetOrder.indexOf(over.id as WidgetId);
-      updateOrder(arrayMove(preferences.widgetOrder, oldIndex, newIndex));
-    }
-  };
+  const handleMove = useCallback((dragIndex: number, hoverIndex: number) => {
+    const newOrder = [...preferences.widgetOrder];
+    const [removed] = newOrder.splice(dragIndex, 1);
+    newOrder.splice(hoverIndex, 0, removed);
+    updateOrder(newOrder);
+  }, [preferences.widgetOrder, updateOrder]);
 
   const renderWidget = (widgetId: WidgetId): ReactNode => {
     if (!isVisible(widgetId)) return null;
@@ -208,31 +199,27 @@ const AdvancedDashboard = () => {
             />
 
             {/* Draggable Charts Grid */}
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext items={sortedMainWidgets} strategy={rectSortingStrategy}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {sortedMainWidgets.map((widgetId) => (
-                    <DraggableWidget
-                      key={widgetId}
-                      id={widgetId}
-                      className={
-                        widgetId === "revenue-trend" || widgetId === "property-map"
-                          ? "col-span-full lg:col-span-2"
-                          : widgetId === "recent-payments"
-                          ? "md:col-span-2 lg:col-span-1"
-                          : ""
-                      }
-                    >
-                      {renderWidget(widgetId)}
-                    </DraggableWidget>
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
+            <DndProvider backend={HTML5Backend}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedMainWidgets.map((widgetId, index) => (
+                  <DraggableWidget
+                    key={widgetId}
+                    id={widgetId}
+                    index={index}
+                    onMove={handleMove}
+                    className={
+                      widgetId === "revenue-trend" || widgetId === "property-map"
+                        ? "col-span-full lg:col-span-2"
+                        : widgetId === "recent-payments"
+                        ? "md:col-span-2 lg:col-span-1"
+                        : ""
+                    }
+                  >
+                    {renderWidget(widgetId)}
+                  </DraggableWidget>
+                ))}
+              </div>
+            </DndProvider>
           </>
         )}
       </div>

@@ -1,7 +1,6 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
-  Building2, 
   Users, 
   Wallet, 
   FileText, 
@@ -12,15 +11,16 @@ import {
   Menu,
   X,
   LogOut,
-  
   Shield,
   UserCog,
   Eye,
   Download,
   Crown,
   ScrollText,
-  Trash2
+  Trash2,
+  Building2
 } from "lucide-react";
+import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -137,18 +137,19 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         <div className="flex h-16 items-center justify-between px-4 border-b border-navy-light">
           {(!collapsed || mobileOpen) && (
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-emerald flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="font-display text-xl text-primary-foreground font-semibold">
-                ImmoPrestige
-              </span>
+              <img 
+                src={immoPrestigeLogo} 
+                alt="ImmoPrestige" 
+                className="h-10 w-auto object-contain"
+              />
             </div>
           )}
           {collapsed && !mobileOpen && (
-            <div className="h-8 w-8 rounded-lg bg-emerald flex items-center justify-center mx-auto">
-              <Building2 className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <img 
+              src={immoPrestigeLogo} 
+              alt="ImmoPrestige" 
+              className="h-8 w-8 object-contain mx-auto"
+            />
           )}
           
           {/* Mobile Close Button */}

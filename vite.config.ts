@@ -70,15 +70,55 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        // Skip waiting and claim clients immediately for instant updates
+        skipWaiting: true,
+        clientsClaim: true,
+        // Clean old caches on update
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
+            // Cache API calls with NetworkFirst strategy
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
-              cacheName: "supabase-cache",
+              cacheName: "supabase-api-cache",
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
+              },
+              networkTimeoutSeconds: 10,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+              backgroundSync: {
+                name: "supabase-sync-queue",
+                options: {
+                  maxRetentionTime: 24 * 60, // 24 hours in minutes
+                },
+              },
+            },
+          },
+          {
+            // Cache images with CacheFirst strategy
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images-cache",
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
+          {
+            // Cache fonts
+            urlPattern: /\.(?:woff|woff2|ttf|eot)$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "fonts-cache",
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
             },
           },

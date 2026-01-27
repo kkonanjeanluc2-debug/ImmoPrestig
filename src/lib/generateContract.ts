@@ -19,6 +19,12 @@ interface SignatureInfo {
   signedAt: string;
 }
 
+interface ManagementTypeInfo {
+  name: string;
+  type: string;
+  percentage: number;
+}
+
 interface OwnerInfo {
   name: string;
   email?: string;
@@ -28,6 +34,7 @@ interface OwnerInfo {
   birth_place?: string;
   profession?: string;
   cni_number?: string;
+  management_type?: ManagementTypeInfo | null;
 }
 
 interface ContractData {
@@ -125,6 +132,22 @@ const numberToWords = (num: number): string => {
   return num.toLocaleString("fr-FR");
 };
 
+// Determine management type category based on the management type name
+const getManagementCategory = (managementTypeName?: string): "partagee" | "simple" | "professionnelle" => {
+  if (!managementTypeName) return "simple"; // Default to simple if no management type
+  
+  const lowerName = managementTypeName.toLowerCase();
+  
+  if (lowerName.includes("partagé") || lowerName.includes("partage") || lowerName.includes("partagee")) {
+    return "partagee";
+  }
+  if (lowerName.includes("professionnel") || lowerName.includes("professionnelle") || lowerName.includes("complete") || lowerName.includes("complète")) {
+    return "professionnelle";
+  }
+  // Default to simple for anything else (gestion simple, or any other type)
+  return "simple";
+};
+
 export const replaceContractVariables = (
   template: string,
   data: ContractData
@@ -135,23 +158,88 @@ export const replaceContractVariables = (
     year: "numeric",
   });
 
-  // Owner info - use owner data if available, otherwise fall back to agency or ownerName
-  const ownerDisplayName = data.owner?.name || data.agency?.name || data.ownerName || "Le bailleur";
-  const ownerAddress = data.owner?.address || (data.agency 
+  // Determine management category
+  const managementCategory = getManagementCategory(data.owner?.management_type?.name);
+  
+  // Determine what info to show based on management type
+  const showOwnerInfo = managementCategory === "simple" || managementCategory === "partagee";
+  const showAgencyInfo = managementCategory === "professionnelle" || managementCategory === "partagee";
+
+  // Owner info - only if showing owner info
+  const ownerDisplayName = showOwnerInfo ? (data.owner?.name || data.ownerName || "") : "";
+  const ownerAddress = showOwnerInfo ? (data.owner?.address || "") : "";
+  const ownerPhone = showOwnerInfo ? (data.owner?.phone || "") : "";
+  const ownerEmail = showOwnerInfo ? (data.owner?.email || "") : "";
+  const ownerBirthDate = showOwnerInfo && data.owner?.birth_date ? formatDate(data.owner.birth_date) : "";
+  const ownerBirthPlace = showOwnerInfo ? (data.owner?.birth_place || "") : "";
+  const ownerProfession = showOwnerInfo ? (data.owner?.profession || "") : "";
+  const ownerCni = showOwnerInfo ? (data.owner?.cni_number || "") : "";
+
+  // Agency info - only if showing agency info
+  const agencyName = showAgencyInfo ? (data.agency?.name || "") : "";
+  const agencyAddress = showAgencyInfo && data.agency 
     ? [data.agency.address, data.agency.city, data.agency.country].filter(Boolean).join(", ")
-    : "");
-  const ownerPhone = data.owner?.phone || data.agency?.phone || "";
-  const ownerEmail = data.owner?.email || data.agency?.email || "";
+    : "";
+  const agencyPhone = showAgencyInfo ? (data.agency?.phone || "") : "";
+  const agencyEmail = showAgencyInfo ? (data.agency?.email || "") : "";
+
+  // For bailleur fields, combine info based on management type
+  let bailleurDisplayName = "";
+  let bailleurAddress = "";
+  let bailleurPhone = "";
+  let bailleurEmail = "";
+  
+  if (managementCategory === "partagee") {
+    // Show owner name, agency manages
+    bailleurDisplayName = data.owner?.name || data.ownerName || "Le bailleur";
+    bailleurAddress = data.owner?.address || "";
+    bailleurPhone = data.owner?.phone || "";
+    bailleurEmail = data.owner?.email || "";
+  } else if (managementCategory === "simple") {
+    // Only owner info
+    bailleurDisplayName = data.owner?.name || data.ownerName || "Le bailleur";
+    bailleurAddress = data.owner?.address || "";
+    bailleurPhone = data.owner?.phone || "";
+    bailleurEmail = data.owner?.email || "";
+  } else {
+    // Professionnelle - only agency
+    bailleurDisplayName = data.agency?.name || "L'agence";
+    bailleurAddress = agencyAddress;
+    bailleurPhone = data.agency?.phone || "";
+    bailleurEmail = data.agency?.email || "";
+  }
 
   const replacements: Record<string, string> = {
-    "{bailleur}": ownerDisplayName,
-    "{bailleur_adresse}": ownerAddress,
-    "{bailleur_telephone}": ownerPhone,
-    "{bailleur_email}": ownerEmail,
-    "{bailleur_date_naissance}": data.owner?.birth_date ? formatDate(data.owner.birth_date) : "",
-    "{bailleur_lieu_naissance}": data.owner?.birth_place || "",
-    "{bailleur_profession}": data.owner?.profession || "",
-    "{bailleur_cni}": data.owner?.cni_number || "",
+    // Bailleur fields (main landlord section)
+    "{bailleur}": bailleurDisplayName,
+    "{bailleur_adresse}": bailleurAddress,
+    "{bailleur_telephone}": bailleurPhone,
+    "{bailleur_email}": bailleurEmail,
+    "{bailleur_date_naissance}": ownerBirthDate,
+    "{bailleur_lieu_naissance}": ownerBirthPlace,
+    "{bailleur_profession}": ownerProfession,
+    "{bailleur_cni}": ownerCni,
+    
+    // Proprietaire fields (owner-specific, shown in shared management)
+    "{proprietaire}": ownerDisplayName,
+    "{proprietaire_adresse}": ownerAddress,
+    "{proprietaire_telephone}": ownerPhone,
+    "{proprietaire_email}": ownerEmail,
+    "{proprietaire_date_naissance}": ownerBirthDate,
+    "{proprietaire_lieu_naissance}": ownerBirthPlace,
+    "{proprietaire_profession}": ownerProfession,
+    "{proprietaire_cni}": ownerCni,
+    
+    // Agence fields (agency-specific)
+    "{agence}": agencyName,
+    "{agence_adresse}": agencyAddress,
+    "{agence_telephone}": agencyPhone,
+    "{agence_email}": agencyEmail,
+    
+    // Type de gestion
+    "{type_gestion}": data.owner?.management_type?.name || "Gestion simple",
+    
+    // Tenant info
     "{locataire}": data.tenantName,
     "{locataire_email}": data.tenantEmail || "",
     "{locataire_telephone}": data.tenantPhone || "",
@@ -161,13 +249,19 @@ export const replaceContractVariables = (
     "{locataire_cni}": data.tenantCniNumber || "",
     "{contact_urgence_nom}": data.tenantEmergencyContact || "",
     "{contact_urgence_telephone}": data.tenantEmergencyPhone || "",
+    
+    // Property info
     "{bien}": data.propertyTitle,
     "{bien_adresse}": data.propertyAddress || "",
     "{unite}": data.unitNumber || "",
+    
+    // Financial info
     "{loyer}": `${formatAmountForPDF(data.rentAmount)} FCFA`,
     "{loyer_lettres}": numberToWords(data.rentAmount) + " francs CFA",
     "{caution}": data.deposit ? `${formatAmountForPDF(data.deposit)} FCFA` : "Néant",
     "{caution_lettres}": data.deposit ? numberToWords(data.deposit) + " francs CFA" : "néant",
+    
+    // Dates
     "{date_debut}": formatDate(data.startDate),
     "{date_fin}": formatDate(data.endDate),
     "{date_jour}": today,
@@ -476,9 +570,15 @@ export const printContractPDF = async (
 
 // Default contract template - Conforme au Code de la Construction et de l'Habitat de Côte d'Ivoire
 // Loi n° 2019-576 du 26 juin 2019
+// Les variables {bailleur_*} affichent les infos selon le type de gestion:
+// - Gestion simple: propriétaire uniquement
+// - Gestion partagée: propriétaire + agence mandatée
+// - Gestion professionnelle: agence uniquement
 export const DEFAULT_CONTRACT_TEMPLATE = `# CONTRAT DE BAIL À USAGE D'HABITATION
 
 Conformément aux dispositions de la Loi n° 2019-576 du 26 juin 2019 instituant le Code de la Construction et de l'Habitat en République de Côte d'Ivoire.
+
+Type de gestion : {type_gestion}
 
 Entre les soussignés :
 
@@ -490,6 +590,11 @@ Numéro CNI : {bailleur_cni}
 Adresse : {bailleur_adresse}
 Téléphone : {bailleur_telephone}
 Email : {bailleur_email}
+
+Représenté par l'agence : {agence}
+Adresse de l'agence : {agence_adresse}
+Téléphone : {agence_telephone}
+Email : {agence_email}
 
 Ci-après dénommé "Le Bailleur"
 

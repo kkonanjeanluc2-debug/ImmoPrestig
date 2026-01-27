@@ -593,6 +593,11 @@ const Contracts = () => {
                       birth_place: owner.birth_place || undefined,
                       profession: owner.profession || undefined,
                       cni_number: owner.cni_number || undefined,
+                      management_type: owner.management_type ? {
+                        name: owner.management_type.name,
+                        type: owner.management_type.type,
+                        percentage: owner.management_type.percentage,
+                      } : null,
                     };
                   }
                 }

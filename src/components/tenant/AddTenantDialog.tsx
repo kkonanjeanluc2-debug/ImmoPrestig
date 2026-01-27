@@ -53,6 +53,12 @@ const formSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
   email: z.string().trim().email("Email invalide").max(255).optional().or(z.literal("")),
   phone: z.string().trim().max(20).optional(),
+  birth_date: z.string().optional(),
+  birth_place: z.string().trim().max(100).optional(),
+  profession: z.string().trim().max(100).optional(),
+  cni_number: z.string().trim().max(50).optional(),
+  emergency_contact_name: z.string().trim().max(100).optional(),
+  emergency_contact_phone: z.string().trim().max(20).optional(),
   property_id: z.string().uuid("Veuillez sélectionner un bien"),
   unit_id: z.string().optional(),
   start_date: z.string().min(1, "La date de début est requise"),
@@ -75,6 +81,12 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     tenantName: string;
     tenantEmail?: string;
     tenantPhone?: string;
+    tenantBirthDate?: string;
+    tenantBirthPlace?: string;
+    tenantProfession?: string;
+    tenantCniNumber?: string;
+    tenantEmergencyContact?: string;
+    tenantEmergencyPhone?: string;
     propertyTitle: string;
     propertyAddress?: string;
     unitNumber?: string;
@@ -122,6 +134,12 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       name: "",
       email: "",
       phone: "",
+      birth_date: "",
+      birth_place: "",
+      profession: "",
+      cni_number: "",
+      emergency_contact_name: "",
+      emergency_contact_phone: "",
       property_id: "",
       unit_id: "",
       start_date: "",
@@ -155,6 +173,12 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         email: values.email || "",
         phone: values.phone || null,
         property_id: values.property_id,
+        birth_date: values.birth_date || null,
+        birth_place: values.birth_place || null,
+        profession: values.profession || null,
+        cni_number: values.cni_number || null,
+        emergency_contact_name: values.emergency_contact_name || null,
+        emergency_contact_phone: values.emergency_contact_phone || null,
       });
 
       // Update tenant with unit_id if needed
@@ -213,6 +237,12 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         tenantName: values.name,
         tenantEmail: values.email || undefined,
         tenantPhone: values.phone || undefined,
+        tenantBirthDate: values.birth_date || undefined,
+        tenantBirthPlace: values.birth_place || undefined,
+        tenantProfession: values.profession || undefined,
+        tenantCniNumber: values.cni_number || undefined,
+        tenantEmergencyContact: values.emergency_contact_name || undefined,
+        tenantEmergencyPhone: values.emergency_contact_phone || undefined,
         propertyTitle: selectedProp?.title || "",
         propertyAddress: selectedProp?.address,
         unitNumber: selectedUnit?.unit_number,
@@ -394,6 +424,101 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Additional Tenant Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="birth_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date de naissance</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="birth_place"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lieu de naissance</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Abidjan" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="profession"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Profession</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ingénieur, Commerçant..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cni_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Numéro CNI</FormLabel>
+                      <FormControl>
+                        <Input placeholder="CI-0123456789" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Emergency Contact */}
+              <div className="space-y-2 pt-2 border-t border-dashed">
+                <h4 className="text-sm font-medium text-muted-foreground">Contact d'urgence</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="emergency_contact_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nom du contact</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nom de la personne" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="emergency_contact_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Téléphone du contact</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+225 00 00 00 00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
 

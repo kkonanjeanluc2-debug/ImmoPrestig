@@ -1196,12 +1196,18 @@ export type Database = {
         Row: {
           assigned_to: string | null
           avatar_url: string | null
+          birth_date: string | null
+          birth_place: string | null
+          cni_number: string | null
           created_at: string
           deleted_at: string | null
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           id: string
           name: string
           phone: string | null
+          profession: string | null
           property_id: string | null
           unit_id: string | null
           updated_at: string
@@ -1210,12 +1216,18 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cni_number?: string | null
           created_at?: string
           deleted_at?: string | null
           email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           id?: string
           name: string
           phone?: string | null
+          profession?: string | null
           property_id?: string | null
           unit_id?: string | null
           updated_at?: string
@@ -1224,12 +1236,18 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cni_number?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           id?: string
           name?: string
           phone?: string | null
+          profession?: string | null
           property_id?: string | null
           unit_id?: string | null
           updated_at?: string

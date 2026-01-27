@@ -34,6 +34,12 @@ interface ContractData {
   tenantName: string;
   tenantEmail?: string;
   tenantPhone?: string;
+  tenantBirthDate?: string;
+  tenantBirthPlace?: string;
+  tenantProfession?: string;
+  tenantCniNumber?: string;
+  tenantEmergencyContact?: string;
+  tenantEmergencyPhone?: string;
   propertyTitle: string;
   propertyAddress?: string;
   unitNumber?: string;

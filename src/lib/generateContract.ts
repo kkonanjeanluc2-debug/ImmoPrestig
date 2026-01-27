@@ -23,6 +23,12 @@ interface ContractData {
   tenantName: string;
   tenantEmail?: string;
   tenantPhone?: string;
+  tenantBirthDate?: string;
+  tenantBirthPlace?: string;
+  tenantProfession?: string;
+  tenantCniNumber?: string;
+  tenantEmergencyContact?: string;
+  tenantEmergencyPhone?: string;
   propertyTitle: string;
   propertyAddress?: string;
   unitNumber?: string;
@@ -127,6 +133,12 @@ export const replaceContractVariables = (
     "{locataire}": data.tenantName,
     "{locataire_email}": data.tenantEmail || "",
     "{locataire_telephone}": data.tenantPhone || "",
+    "{locataire_date_naissance}": data.tenantBirthDate ? formatDate(data.tenantBirthDate) : "",
+    "{locataire_lieu_naissance}": data.tenantBirthPlace || "",
+    "{locataire_profession}": data.tenantProfession || "",
+    "{locataire_cni}": data.tenantCniNumber || "",
+    "{contact_urgence_nom}": data.tenantEmergencyContact || "",
+    "{contact_urgence_telephone}": data.tenantEmergencyPhone || "",
     "{bien}": data.propertyTitle,
     "{bien_adresse}": data.propertyAddress || "",
     "{unite}": data.unitNumber || "",
@@ -460,8 +472,14 @@ D'une part,
 
 ## LE LOCATAIRE
 {locataire}
+Né(e) le : {locataire_date_naissance} à {locataire_lieu_naissance}
+Profession : {locataire_profession}
+Numéro CNI : {locataire_cni}
 Téléphone : {locataire_telephone}
 Email : {locataire_email}
+
+Personne à contacter en cas d'urgence : {contact_urgence_nom}
+Téléphone d'urgence : {contact_urgence_telephone}
 
 Ci-après dénommé "Le Locataire"
 

@@ -1,8 +1,9 @@
 import { ReactNode, useState, useCallback } from "react";
 import { Sidebar } from "./Sidebar";
-import { Search, User, Moon, MoonStar } from "lucide-react";
+import { Search, User, Moon, MoonStar, Crown, UserCog, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLatePaymentNotifications } from "@/hooks/useLatePaymentNotifications";
 import { usePushNotificationTrigger } from "@/hooks/usePushNotificationTrigger";
@@ -10,12 +11,30 @@ import { useDoNotDisturb } from "@/hooks/useDoNotDisturb";
 import { useBrandColors } from "@/hooks/useBrandColors";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCurrentUserRole, ROLE_LABELS, AppRole } from "@/hooks/useUserRoles";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
+  super_admin: <Crown className="h-3 w-3" />,
+  admin: <Crown className="h-3 w-3" />,
+  gestionnaire: <UserCog className="h-3 w-3" />,
+  lecture_seule: <Eye className="h-3 w-3" />,
+};
+
+const ROLE_COLORS: Record<AppRole, string> = {
+  super_admin: "bg-purple-100 text-purple-700 border-purple-200",
+  admin: "bg-amber-100 text-amber-700 border-amber-200",
+  gestionnaire: "bg-blue-100 text-blue-700 border-blue-200",
+  lecture_seule: "bg-gray-100 text-gray-600 border-gray-200",
+};
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -26,10 +45,31 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [dndKey, setDndKey] = useState(0); // Force re-render on DND change
   const { getSchedule, saveSchedule, isInDNDPeriod } = useDoNotDisturb();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: userRole } = useCurrentUserRole();
+  
+  // Fetch user profile for display name
+  const { data: profile } = useQuery({
+    queryKey: ["user-profile", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
   
   const schedule = getSchedule();
   const isInPeriod = isInDNDPeriod();
   const isDNDActive = schedule.enabled && isInPeriod;
+  
+  const displayName = profile?.full_name || user?.email?.split("@")[0] || "Utilisateur";
+  const currentRole = userRole?.role || "lecture_seule";
   
   // Subscribe to real-time late payment notifications
   useLatePaymentNotifications();
@@ -128,12 +168,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NotificationCenter />
             <div className="h-6 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center flex-shrink-0">
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                 <User className="h-4 w-4 text-primary-foreground" />
               </div>
-              <div className="hidden md:block">
-                <p className="text-sm font-medium text-foreground">Jean Dupont</p>
-                <p className="text-xs text-muted-foreground">Administrateur</p>
+              <div className="hidden md:flex flex-col items-start gap-0.5">
+                <p className="text-sm font-medium text-foreground leading-none">
+                  {displayName}
+                </p>
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "text-[10px] px-1.5 py-0 h-4 font-medium flex items-center gap-1",
+                    ROLE_COLORS[currentRole]
+                  )}
+                >
+                  {ROLE_ICONS[currentRole]}
+                  {ROLE_LABELS[currentRole]}
+                </Badge>
               </div>
             </div>
           </div>

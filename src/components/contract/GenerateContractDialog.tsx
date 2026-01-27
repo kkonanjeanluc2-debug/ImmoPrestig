@@ -29,6 +29,17 @@ import {
 } from "@/lib/generateContract";
 import { useToast } from "@/hooks/use-toast";
 
+interface OwnerData {
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  birth_date?: string;
+  birth_place?: string;
+  profession?: string;
+  cni_number?: string;
+}
+
 interface ContractData {
   contractId?: string;
   tenantName: string;
@@ -48,6 +59,7 @@ interface ContractData {
   startDate: string;
   endDate: string;
   ownerName?: string;
+  owner?: OwnerData | null;
 }
 
 interface GenerateContractDialogProps {
@@ -111,6 +123,7 @@ export function GenerateContractDialog({
           logo_url: agency.logo_url,
         }
       : null,
+    owner: contractData.owner || null,
     signatures: pdfSignatures,
   };
 

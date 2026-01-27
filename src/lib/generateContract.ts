@@ -19,6 +19,17 @@ interface SignatureInfo {
   signedAt: string;
 }
 
+interface OwnerInfo {
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  birth_date?: string;
+  birth_place?: string;
+  profession?: string;
+  cni_number?: string;
+}
+
 interface ContractData {
   tenantName: string;
   tenantEmail?: string;
@@ -38,6 +49,7 @@ interface ContractData {
   endDate: string;
   agency?: AgencyInfo | null;
   ownerName?: string;
+  owner?: OwnerInfo | null;
   signatures?: SignatureInfo[];
 }
 
@@ -123,13 +135,23 @@ export const replaceContractVariables = (
     year: "numeric",
   });
 
+  // Owner info - use owner data if available, otherwise fall back to agency or ownerName
+  const ownerDisplayName = data.owner?.name || data.agency?.name || data.ownerName || "Le bailleur";
+  const ownerAddress = data.owner?.address || (data.agency 
+    ? [data.agency.address, data.agency.city, data.agency.country].filter(Boolean).join(", ")
+    : "");
+  const ownerPhone = data.owner?.phone || data.agency?.phone || "";
+  const ownerEmail = data.owner?.email || data.agency?.email || "";
+
   const replacements: Record<string, string> = {
-    "{bailleur}": data.agency?.name || data.ownerName || "Le bailleur",
-    "{bailleur_adresse}": data.agency 
-      ? [data.agency.address, data.agency.city, data.agency.country].filter(Boolean).join(", ")
-      : "",
-    "{bailleur_telephone}": data.agency?.phone || "",
-    "{bailleur_email}": data.agency?.email || "",
+    "{bailleur}": ownerDisplayName,
+    "{bailleur_adresse}": ownerAddress,
+    "{bailleur_telephone}": ownerPhone,
+    "{bailleur_email}": ownerEmail,
+    "{bailleur_date_naissance}": data.owner?.birth_date ? formatDate(data.owner.birth_date) : "",
+    "{bailleur_lieu_naissance}": data.owner?.birth_place || "",
+    "{bailleur_profession}": data.owner?.profession || "",
+    "{bailleur_cni}": data.owner?.cni_number || "",
     "{locataire}": data.tenantName,
     "{locataire_email}": data.tenantEmail || "",
     "{locataire_telephone}": data.tenantPhone || "",
@@ -462,6 +484,9 @@ Entre les soussignés :
 
 ## LE BAILLEUR
 {bailleur}
+Né(e) le : {bailleur_date_naissance} à {bailleur_lieu_naissance}
+Profession : {bailleur_profession}
+Numéro CNI : {bailleur_cni}
 Adresse : {bailleur_adresse}
 Téléphone : {bailleur_telephone}
 Email : {bailleur_email}

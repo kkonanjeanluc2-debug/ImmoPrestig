@@ -579,6 +579,25 @@ const Contracts = () => {
                 }
                 return undefined;
               })(),
+              owner: (() => {
+                const property = properties?.find((p) => p.id === contractToGenerate.property_id);
+                if (property?.owner_id) {
+                  const owner = owners?.find((o) => o.id === property.owner_id) as any;
+                  if (owner) {
+                    return {
+                      name: owner.name,
+                      email: owner.email || undefined,
+                      phone: owner.phone || undefined,
+                      address: owner.address || undefined,
+                      birth_date: owner.birth_date || undefined,
+                      birth_place: owner.birth_place || undefined,
+                      profession: owner.profession || undefined,
+                      cni_number: owner.cni_number || undefined,
+                    };
+                  }
+                }
+                return null;
+              })(),
             }}
           />
         )}

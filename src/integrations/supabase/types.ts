@@ -649,6 +649,9 @@ export type Database = {
       owners: {
         Row: {
           address: string | null
+          birth_date: string | null
+          birth_place: string | null
+          cni_number: string | null
           created_at: string
           deleted_at: string | null
           email: string
@@ -656,12 +659,16 @@ export type Database = {
           management_type_id: string | null
           name: string
           phone: string | null
+          profession: string | null
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cni_number?: string | null
           created_at?: string
           deleted_at?: string | null
           email: string
@@ -669,12 +676,16 @@ export type Database = {
           management_type_id?: string | null
           name: string
           phone?: string | null
+          profession?: string | null
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cni_number?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string
@@ -682,6 +693,7 @@ export type Database = {
           management_type_id?: string | null
           name?: string
           phone?: string | null
+          profession?: string | null
           status?: string
           updated_at?: string
           user_id?: string

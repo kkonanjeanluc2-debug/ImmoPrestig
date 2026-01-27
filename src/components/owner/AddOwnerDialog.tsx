@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -29,17 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Plus, Loader2, Percent, CalendarIcon, User, CreditCard } from "lucide-react";
+import { DateSelect } from "@/components/ui/date-select";
+import { Plus, Loader2, Percent, User, CreditCard } from "lucide-react";
 import { useCreateOwner } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 const ownerSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100, "Le nom doit contenir moins de 100 caractères"),
@@ -202,40 +195,16 @@ export function AddOwnerDialog() {
                   control={form.control}
                   name="birth_date"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem className="flex flex-col sm:col-span-2">
                       <FormLabel>Date de naissance</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd MMMM yyyy", { locale: fr })
-                              ) : (
-                                <span>Sélectionner une date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                            className={cn("p-3 pointer-events-auto")}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <FormControl>
+                        <DateSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          maxYear={new Date().getFullYear()}
+                          minYear={1900}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

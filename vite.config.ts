@@ -43,9 +43,9 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "ImmoPrestige - Gestion Immobilière Premium",
+        name: "ImmoPrestige",
         short_name: "ImmoPrestige",
-        description: "La solution premium de gestion immobilière - Propriétés, Locataires, Paiements",
+        description: "La solution premium de gestion immobilière",
         theme_color: "#1F3A93",
         background_color: "#ffffff",
         display: "standalone",

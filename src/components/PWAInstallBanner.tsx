@@ -75,7 +75,7 @@ export function PWAInstallBanner() {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <h3 className="font-display text-base font-semibold text-white">
-            Installer PropertyGrace
+            Installer ImmoPrestige
           </h3>
           {isIOS ? (
             <p className="text-xs text-white/70 mt-0.5 flex items-center gap-1 flex-wrap">

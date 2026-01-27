@@ -66,7 +66,7 @@ const Install = () => {
             </div>
             <CardTitle className="text-2xl">Application installée !</CardTitle>
             <CardDescription>
-              PropertyGrace est maintenant installé sur votre appareil.
+              ImmoPrestige est maintenant installé sur votre appareil.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -90,9 +90,9 @@ const Install = () => {
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
-              <img src="/pwa-192x192.png" alt="PropertyGrace" className="h-20 w-20 rounded-2xl shadow-lg" />
+              <img src="/pwa-192x192.png" alt="ImmoPrestige" className="h-20 w-20 rounded-2xl shadow-lg" />
             </div>
-            <CardTitle className="text-2xl">Installer PropertyGrace</CardTitle>
+            <CardTitle className="text-2xl">Installer ImmoPrestige</CardTitle>
             <CardDescription>
               Installez l'application sur votre téléphone pour un accès rapide et une expérience optimale.
             </CardDescription>

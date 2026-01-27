@@ -142,6 +142,9 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 alt="ImmoPrestige" 
                 className="h-10 w-auto object-contain"
               />
+              <span className="font-display text-xl text-primary-foreground font-semibold">
+                ImmoPrestige
+              </span>
             </div>
           )}
           {collapsed && !mobileOpen && (

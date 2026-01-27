@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import SplashScreen from "@/components/SplashScreen";
+import WelcomeScreen from "@/components/WelcomeScreen";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { Loader2 } from "lucide-react";
 
@@ -58,7 +58,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+        {showSplash && <WelcomeScreen onComplete={handleSplashComplete} minDuration={5000} />}
         <PWAInstallBanner />
         <Toaster />
         <Sonner />

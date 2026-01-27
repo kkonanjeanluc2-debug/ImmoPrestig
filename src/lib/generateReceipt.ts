@@ -115,8 +115,19 @@ const formatDate = (dateStr: string, format: "short" | "long"): string => {
 };
 
 // Format number with spaces for PDF (avoids non-breaking space issues)
+// Using regular ASCII space (char 32) for consistent rendering
 const formatAmountForPDF = (amount: number): string => {
-  return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const parts: string[] = [];
+  const str = Math.floor(amount).toString();
+  
+  // Split into groups of 3 from the right
+  for (let i = str.length; i > 0; i -= 3) {
+    const start = Math.max(0, i - 3);
+    parts.unshift(str.slice(start, i));
+  }
+  
+  // Join with a regular space character
+  return parts.join(" ");
 };
 
 const replaceVariables = (
@@ -285,9 +296,11 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
-  doc.setFontSize(20);
+  doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text(`${formatAmountForPDF(data.amount)} ${templates.currency}`, pageWidth / 2, yPos + 26, { align: "center" });
+  // Use character spacing for uniform display
+  const amountText = `${formatAmountForPDF(data.amount)} ${templates.currency}`;
+  doc.text(amountText, pageWidth / 2, yPos + 26, { align: "center", charSpace: 0.5 });
   
   yPos += 50;
   
@@ -331,13 +344,13 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   }
   
   // Declaration text
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   const declarationText = replaceVariables(templates.declarationText, data, templates);
   
   const splitDeclaration = doc.splitTextToSize(declarationText, pageWidth - 30);
-  doc.text(splitDeclaration, 15, yPos);
+  doc.text(splitDeclaration, 15, yPos, { lineHeightFactor: 1.5 });
   
   yPos += splitDeclaration.length * 5 + 20;
   

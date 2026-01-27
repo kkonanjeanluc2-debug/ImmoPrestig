@@ -370,7 +370,8 @@ export function ReceiptTemplateManager() {
     if (activeTab === "preview" && isDialogOpen) {
       generatePdfPreview();
     }
-  }, [activeTab, isDialogOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, isDialogOpen, formData]);
 
   // Cleanup PDF URL on unmount
   useEffect(() => {

@@ -13,12 +13,14 @@ export interface VenteParcelle {
   sale_date: string;
   total_price: number;
   payment_type: PaymentType;
+  payment_method: string | null;
   down_payment: number | null;
   monthly_payment: number | null;
   total_installments: number | null;
   paid_installments: number | null;
   status: string;
   notes: string | null;
+  sold_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -29,10 +31,12 @@ export interface VenteParcelleInsert {
   sale_date?: string;
   total_price: number;
   payment_type?: PaymentType;
+  payment_method?: string | null;
   down_payment?: number | null;
   monthly_payment?: number | null;
   total_installments?: number | null;
   notes?: string | null;
+  sold_by?: string | null;
 }
 
 export interface VenteParcelleUpdate extends Partial<VenteParcelleInsert> {

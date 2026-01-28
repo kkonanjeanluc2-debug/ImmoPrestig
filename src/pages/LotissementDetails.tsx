@@ -17,11 +17,14 @@ import {
   Calendar,
   Map,
   Wallet,
+  UserCheck,
+  Trophy,
 } from "lucide-react";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
 import { useVentesParcelles } from "@/hooks/useVentesParcelles";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { ParcellesList } from "@/components/lotissement/ParcellesList";
 import { ParcellesGrid } from "@/components/lotissement/ParcellesGrid";
 import { PlanMasse } from "@/components/lotissement/PlanMasse";
@@ -29,6 +32,8 @@ import { VentesList } from "@/components/lotissement/VentesList";
 import { EcheancesDashboard } from "@/components/lotissement/EcheancesDashboard";
 import { AddParcelleDialog } from "@/components/lotissement/AddParcelleDialog";
 import { AddBulkParcellesDialog } from "@/components/lotissement/AddBulkParcellesDialog";
+import { LotAssignmentSettings } from "@/components/lotissement/LotAssignmentSettings";
+import { SalesPerformanceChart } from "@/components/lotissement/SalesPerformanceChart";
 
 const LotissementDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +42,7 @@ const LotissementDetails = () => {
   const { data: parcelles, isLoading: loadingParcelles } = useParcelles(id);
   const { data: ventes } = useVentesParcelles(id);
   const { canCreate } = usePermissions();
+  const { isOwner } = useIsAgencyOwner();
 
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
@@ -165,20 +171,30 @@ const LotissementDetails = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="parcelles" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <TabsList>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <TabsList className="flex-wrap">
               <TabsTrigger value="parcelles" className="gap-2">
                 <Grid3X3 className="h-4 w-4" />
-                Parcelles
+                <span className="hidden sm:inline">Parcelles</span>
               </TabsTrigger>
               <TabsTrigger value="ventes" className="gap-2">
                 <TrendingUp className="h-4 w-4" />
-                Ventes
+                <span className="hidden sm:inline">Ventes</span>
               </TabsTrigger>
               <TabsTrigger value="echeances" className="gap-2">
                 <Wallet className="h-4 w-4" />
-                Échéances
+                <span className="hidden sm:inline">Échéances</span>
               </TabsTrigger>
+              <TabsTrigger value="performance" className="gap-2">
+                <Trophy className="h-4 w-4" />
+                <span className="hidden sm:inline">Performance</span>
+              </TabsTrigger>
+              {isOwner && (
+                <TabsTrigger value="affectations" className="gap-2">
+                  <UserCheck className="h-4 w-4" />
+                  <span className="hidden sm:inline">Affectations</span>
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <div className="flex items-center gap-2">
@@ -241,6 +257,19 @@ const LotissementDetails = () => {
           <TabsContent value="echeances">
             <EcheancesDashboard lotissementId={id} />
           </TabsContent>
+
+          <TabsContent value="performance">
+            <SalesPerformanceChart ventes={ventes || []} />
+          </TabsContent>
+
+          {isOwner && (
+            <TabsContent value="affectations">
+              <LotAssignmentSettings 
+                parcelles={parcelles || []} 
+                lotissementName={lotissement.name}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

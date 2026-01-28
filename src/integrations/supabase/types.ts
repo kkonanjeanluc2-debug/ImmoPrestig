@@ -863,6 +863,7 @@ export type Database = {
       parcelles: {
         Row: {
           area: number
+          assigned_to: string | null
           created_at: string
           height: number | null
           id: string
@@ -879,6 +880,7 @@ export type Database = {
         }
         Insert: {
           area: number
+          assigned_to?: string | null
           created_at?: string
           height?: number | null
           id?: string
@@ -895,6 +897,7 @@ export type Database = {
         }
         Update: {
           area?: number
+          assigned_to?: string | null
           created_at?: string
           height?: number | null
           id?: string
@@ -1527,8 +1530,10 @@ export type Database = {
           notes: string | null
           paid_installments: number | null
           parcelle_id: string
+          payment_method: string | null
           payment_type: Database["public"]["Enums"]["payment_type"]
           sale_date: string
+          sold_by: string | null
           status: string
           total_installments: number | null
           total_price: number
@@ -1544,8 +1549,10 @@ export type Database = {
           notes?: string | null
           paid_installments?: number | null
           parcelle_id: string
+          payment_method?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
           sale_date?: string
+          sold_by?: string | null
           status?: string
           total_installments?: number | null
           total_price: number
@@ -1561,8 +1568,10 @@ export type Database = {
           notes?: string | null
           paid_installments?: number | null
           parcelle_id?: string
+          payment_method?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
           sale_date?: string
+          sold_by?: string | null
           status?: string
           total_installments?: number | null
           total_price?: number
@@ -1627,6 +1636,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_parcelle: {
+        Args: {
+          _assigned_to: string
+          _parcelle_user_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       can_access_property: {
         Args: {
           _assigned_to: string
@@ -1641,6 +1658,10 @@ export type Database = {
           _tenant_user_id: string
           _user_id: string
         }
+        Returns: boolean
+      }
+      can_access_vente_parcelle: {
+        Args: { _sold_by: string; _user_id: string; _vente_user_id: string }
         Returns: boolean
       }
       can_agency_add_member: { Args: { p_agency_id: string }; Returns: boolean }

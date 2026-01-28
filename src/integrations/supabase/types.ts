@@ -1059,6 +1059,74 @@ export type Database = {
           },
         ]
       }
+      parcelle_prospects: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          email: string | null
+          first_contact_date: string | null
+          id: string
+          interest_level: Database["public"]["Enums"]["interest_level"]
+          last_contact_date: string | null
+          name: string
+          next_followup_date: string | null
+          notes: string | null
+          parcelle_id: string
+          phone: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["prospect_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string | null
+          first_contact_date?: string | null
+          id?: string
+          interest_level?: Database["public"]["Enums"]["interest_level"]
+          last_contact_date?: string | null
+          name: string
+          next_followup_date?: string | null
+          notes?: string | null
+          parcelle_id: string
+          phone?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["prospect_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string | null
+          first_contact_date?: string | null
+          id?: string
+          interest_level?: Database["public"]["Enums"]["interest_level"]
+          last_contact_date?: string | null
+          name?: string
+          next_followup_date?: string | null
+          notes?: string | null
+          parcelle_id?: string
+          phone?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["prospect_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcelle_prospects_parcelle_id_fkey"
+            columns: ["parcelle_id"]
+            isOneToOne: false
+            referencedRelation: "parcelles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parcelles: {
         Row: {
           area: number
@@ -1890,8 +1958,16 @@ export type Database = {
     Enums: {
       account_type: "agence" | "proprietaire"
       app_role: "admin" | "gestionnaire" | "lecture_seule" | "super_admin"
+      interest_level: "faible" | "moyen" | "eleve"
       payment_type: "comptant" | "echelonne"
       plot_status: "disponible" | "reserve" | "vendu"
+      prospect_status:
+        | "nouveau"
+        | "contacte"
+        | "interesse"
+        | "negociation"
+        | "perdu"
+        | "converti"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2021,8 +2097,17 @@ export const Constants = {
     Enums: {
       account_type: ["agence", "proprietaire"],
       app_role: ["admin", "gestionnaire", "lecture_seule", "super_admin"],
+      interest_level: ["faible", "moyen", "eleve"],
       payment_type: ["comptant", "echelonne"],
       plot_status: ["disponible", "reserve", "vendu"],
+      prospect_status: [
+        "nouveau",
+        "contacte",
+        "interesse",
+        "negociation",
+        "perdu",
+        "converti",
+      ],
     },
   },
 } as const

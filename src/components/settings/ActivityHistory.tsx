@@ -58,6 +58,7 @@ const ENTITY_CONFIG: Record<EntityType, { label: string; icon: React.ReactNode }
   lotissement_document: { label: "Document lotissement", icon: <FileText className="h-4 w-4" /> },
   demarche_administrative: { label: "Démarche admin.", icon: <FileSignature className="h-4 w-4" /> },
   parcelle_admin_status: { label: "Statut parcelle", icon: <Square className="h-4 w-4" /> },
+  prospect: { label: "Prospect", icon: <Users className="h-4 w-4" /> },
 };
 
 export function ActivityHistory() {

@@ -21,6 +21,7 @@ import {
   Trophy,
   FileText,
   ClipboardList,
+  UserPlus,
 } from "lucide-react";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
@@ -38,6 +39,7 @@ import { LotAssignmentSettings } from "@/components/lotissement/LotAssignmentSet
 import { SalesPerformanceChart } from "@/components/lotissement/SalesPerformanceChart";
 import { LotissementDocumentsTab } from "@/components/lotissement/LotissementDocumentsTab";
 import { DemarchesAdministrativesTab } from "@/components/lotissement/DemarchesAdministrativesTab";
+import { ProspectsTab } from "@/components/lotissement/ProspectsTab";
 
 const LotissementDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -197,6 +199,10 @@ const LotissementDetails = () => {
                 <ClipboardList className="h-4 w-4" />
                 <span className="hidden sm:inline">Démarches</span>
               </TabsTrigger>
+              <TabsTrigger value="prospects" className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Prospects</span>
+              </TabsTrigger>
               <TabsTrigger value="performance" className="gap-2">
                 <Trophy className="h-4 w-4" />
                 <span className="hidden sm:inline">Performance</span>
@@ -279,6 +285,13 @@ const LotissementDetails = () => {
 
           <TabsContent value="demarches">
             <DemarchesAdministrativesTab 
+              lotissementId={id || ""} 
+              lotissementName={lotissement.name} 
+            />
+          </TabsContent>
+
+          <TabsContent value="prospects">
+            <ProspectsTab 
               lotissementId={id || ""} 
               lotissementName={lotissement.name} 
             />

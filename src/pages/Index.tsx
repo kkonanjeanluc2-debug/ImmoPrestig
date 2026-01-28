@@ -117,7 +117,7 @@ const Index = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
             <StatCard
               title="Total des biens"
               value={totalProperties}
@@ -163,7 +163,7 @@ const Index = () => {
 
         {/* Charts Section */}
         {!isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <RevenueChart payments={payments || []} />
             <OccupancyChart properties={properties || []} />
             <PropertyTypesChart properties={properties || []} />
@@ -174,9 +174,8 @@ const Index = () => {
         {!isLoading && <ManagerPerformanceChart />}
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Right Column: My Assigned Items, Manager Performance, Quota, Payments & Activity */}
-          <div className="xl:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             <MyAssignedItems />
             <ManagerPerformance />
             <SubscriptionQuotaCard />

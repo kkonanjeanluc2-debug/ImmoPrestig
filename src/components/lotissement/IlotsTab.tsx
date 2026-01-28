@@ -129,7 +129,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
 
       {/* Main Card */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Layers className="h-5 w-5" />
@@ -140,7 +140,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
             </CardDescription>
           </div>
           {canCreate && (
-            <Button onClick={() => setShowAddDialog(true)}>
+            <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Nouvel îlot
             </Button>
@@ -162,8 +162,8 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
               )}
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
+            <div className="rounded-md border overflow-x-auto">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Îlot</TableHead>

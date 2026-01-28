@@ -130,25 +130,26 @@ const PropertyDetails = () => {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <WhatsAppButton
               message={generateMessage(property)}
               variant="outline"
+              size="sm"
               className="bg-emerald/10 border-emerald/30 hover:bg-emerald hover:text-white"
             >
-              <Share2 className="h-4 w-4 mr-2" />
-              Partager
+              <Share2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Partager</span>
             </WhatsAppButton>
             {canEdit && (
-              <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Modifier
+              <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+                <Pencil className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Modifier</span>
               </Button>
             )}
             {canDelete && (
-              <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Supprimer
+              <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+                <Trash2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Supprimer</span>
               </Button>
             )}
           </div>

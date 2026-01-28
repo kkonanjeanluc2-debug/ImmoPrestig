@@ -94,7 +94,8 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-15 h-auto gap-2 bg-transparent p-0">
+          <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex h-auto gap-1 bg-transparent p-0 min-w-max">
             <TabsTrigger
               value="agency"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
@@ -208,6 +209,7 @@ const Settings = () => {
               <span className="hidden sm:inline">Sécurité</span>
             </TabsTrigger>
           </TabsList>
+          </div>
 
           <TabsContent value="agency">
             <AgencySettings />

@@ -77,13 +77,13 @@ export function LotissementDocumentsTab({ lotissementId, lotissementName }: Loti
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
           Documents légaux
         </CardTitle>
         {canCreate && (
-          <Button onClick={() => setShowAddDialog(true)}>
+          <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Ajouter un document
           </Button>
@@ -97,7 +97,8 @@ export function LotissementDocumentsTab({ lotissementId, lotissementName }: Loti
             Aucun document légal enregistré
           </div>
         ) : (
-          <Table>
+          <div className="overflow-x-auto">
+          <Table className="min-w-[700px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Document</TableHead>
@@ -150,6 +151,7 @@ export function LotissementDocumentsTab({ lotissementId, lotissementName }: Loti
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </CardContent>
 

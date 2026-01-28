@@ -187,11 +187,11 @@ const TenantDetails = () => {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
-            <Button variant="outline" onClick={() => setWhatsappHistoryOpen(true)} className="text-green-600 border-green-600/30 hover:bg-green-50 dark:hover:bg-green-950">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              WhatsApp
+            <Button variant="outline" size="sm" onClick={() => setWhatsappHistoryOpen(true)} className="text-green-600 border-green-600/30 hover:bg-green-50 dark:hover:bg-green-950">
+              <MessageCircle className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">WhatsApp</span>
             </Button>
             <WhatsAppHistoryDialog
               open={whatsappHistoryOpen}
@@ -200,15 +200,15 @@ const TenantDetails = () => {
               tenantName={tenant.name}
             />
             {canEdit && (
-              <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Modifier
+              <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+                <Pencil className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Modifier</span>
               </Button>
             )}
             {canDelete && (
-              <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Supprimer
+              <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+                <Trash2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Supprimer</span>
               </Button>
             )}
           </div>

@@ -148,7 +148,7 @@ const Properties = () => {
           </div>
           <div className="flex flex-wrap gap-3">
             <Select value={transactionFilter} onValueChange={setTransactionFilter}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[120px] sm:w-[140px]">
                 <SelectValue placeholder="Transaction" />
               </SelectTrigger>
               <SelectContent>
@@ -158,7 +158,7 @@ const Properties = () => {
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[130px] sm:w-[160px]">
                 <SelectValue placeholder="Type de bien" />
               </SelectTrigger>
               <SelectContent>
@@ -169,7 +169,7 @@ const Properties = () => {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[130px] sm:w-[160px]">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
@@ -180,8 +180,9 @@ const Properties = () => {
                 <SelectItem value="en attente">En attente</SelectItem>
               </SelectContent>
             </Select>
+            {/* Additional filters hidden on mobile */}
             <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] sm:w-[180px] hidden md:flex">
                 <SelectValue placeholder="Propriétaire" />
               </SelectTrigger>
               <SelectContent>
@@ -199,9 +200,9 @@ const Properties = () => {
                 ))}
               </SelectContent>
             </Select>
-            {/* Availability Filter for multi-unit properties */}
+            {/* Availability Filter - hidden on mobile */}
             <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] sm:w-[180px] hidden lg:flex">
                 <SelectValue placeholder="Disponibilité" />
               </SelectTrigger>
               <SelectContent>
@@ -223,10 +224,10 @@ const Properties = () => {
                 </SelectItem>
               </SelectContent>
             </Select>
-            {/* Assigned Filter - Only for agency owner/admin */}
+            {/* Assigned Filter - Only for agency owner/admin, hidden on small screens */}
             {isAgencyOwner && (
               <Select value={assignedFilter} onValueChange={setAssignedFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[140px] sm:w-[180px] hidden lg:flex">
                   <SelectValue placeholder="Gestionnaire" />
                 </SelectTrigger>
                 <SelectContent>

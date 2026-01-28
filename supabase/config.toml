@@ -44,3 +44,9 @@ verify_jwt = false
 
 [functions.cleanup-trash]
 verify_jwt = false
+
+[functions.wave-checkout]
+verify_jwt = false
+
+[functions.wave-webhook]
+verify_jwt = false

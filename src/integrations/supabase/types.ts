@@ -1240,6 +1240,48 @@ export type Database = {
           },
         ]
       }
+      payment_provider_configs: {
+        Row: {
+          api_key_configured: boolean
+          created_at: string
+          display_name: string
+          id: string
+          is_enabled: boolean
+          is_sandbox: boolean
+          provider_name: string
+          settings: Json
+          supported_methods: string[]
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key_configured?: boolean
+          created_at?: string
+          display_name: string
+          id?: string
+          is_enabled?: boolean
+          is_sandbox?: boolean
+          provider_name: string
+          settings?: Json
+          supported_methods?: string[]
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key_configured?: boolean
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_enabled?: boolean
+          is_sandbox?: boolean
+          provider_name?: string
+          settings?: Json
+          supported_methods?: string[]
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           agency_id: string

@@ -55,6 +55,9 @@ const ENTITY_CONFIG: Record<EntityType, { label: string; icon: React.ReactNode }
   acquereur: { label: "Acquéreur", icon: <UserCheck className="h-4 w-4" /> },
   vente_parcelle: { label: "Vente parcelle", icon: <Receipt className="h-4 w-4" /> },
   echeance_parcelle: { label: "Échéance", icon: <Calendar className="h-4 w-4" /> },
+  lotissement_document: { label: "Document lotissement", icon: <FileText className="h-4 w-4" /> },
+  demarche_administrative: { label: "Démarche admin.", icon: <FileSignature className="h-4 w-4" /> },
+  parcelle_admin_status: { label: "Statut parcelle", icon: <Square className="h-4 w-4" /> },
 };
 
 export function ActivityHistory() {

@@ -3,6 +3,7 @@ import { useCurrentUserRole, AppRole } from "./useUserRoles";
 export interface Permissions {
   canCreate: boolean;
   canEdit: boolean;
+  canUpdate: boolean;
   canDelete: boolean;
   canManageUsers: boolean;
   isReadOnly: boolean;
@@ -14,6 +15,7 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">>
   super_admin: {
     canCreate: true,
     canEdit: true,
+    canUpdate: true,
     canDelete: true,
     canManageUsers: true,
     isReadOnly: false,
@@ -21,6 +23,7 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">>
   admin: {
     canCreate: true,
     canEdit: true,
+    canUpdate: true,
     canDelete: true,
     canManageUsers: true,
     isReadOnly: false,
@@ -28,6 +31,7 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">>
   gestionnaire: {
     canCreate: true,
     canEdit: true,
+    canUpdate: true,
     canDelete: true,
     canManageUsers: false,
     isReadOnly: false,
@@ -35,6 +39,7 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">>
   lecture_seule: {
     canCreate: false,
     canEdit: false,
+    canUpdate: false,
     canDelete: false,
     canManageUsers: false,
     isReadOnly: true,
@@ -48,6 +53,7 @@ export function usePermissions(): Permissions {
     return {
       canCreate: false,
       canEdit: false,
+      canUpdate: false,
       canDelete: false,
       canManageUsers: false,
       isReadOnly: true,

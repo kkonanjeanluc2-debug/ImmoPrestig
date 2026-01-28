@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { formatAmountForPDF } from "@/lib/pdfFormat";
+import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
   name: string;
@@ -264,7 +264,7 @@ export const generateFicheReservation = async (
   yPos += 6;
   doc.text(`Superficie : ${parcelle.area.toLocaleString("fr-FR")} m²`, margin, yPos);
   yPos += 6;
-  doc.text(`Prix : ${formatAmountForPDF(parcelle.price)} F CFA`, margin, yPos);
+  doc.text(`Prix : ${formatAmountWithCurrency(parcelle.price)}`, margin, yPos);
   
   yPos += 15;
 
@@ -445,10 +445,10 @@ export const generateContratVente = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   
-  let article2 = `La présente vente est consentie et acceptée moyennant le prix principal de ${formatAmountForPDF(vente.total_price)} Francs CFA (${numberToWords(vente.total_price)} francs CFA).`;
+  let article2 = `La présente vente est consentie et acceptée moyennant le prix principal de ${formatAmountWithCurrency(vente.total_price)} (${numberToWords(vente.total_price)} francs CFA).`;
   
   if (vente.payment_type === "echelonne") {
-    article2 += `\n\nCe montant sera payé selon les modalités suivantes :\n- Apport initial : ${formatAmountForPDF(vente.down_payment || 0)} F CFA\n- Mensualités : ${vente.total_installments} versements de ${formatAmountForPDF(vente.monthly_payment || 0)} F CFA`;
+    article2 += `\n\nCe montant sera payé selon les modalités suivantes :\n- Apport initial : ${formatAmountWithCurrency(vente.down_payment || 0)}\n- Mensualités : ${vente.total_installments} versements de ${formatAmountWithCurrency(vente.monthly_payment || 0)}`;
   } else {
     article2 += `\n\nCe montant est payable au comptant, en une seule fois, à la signature du présent contrat.`;
   }
@@ -659,7 +659,7 @@ export const generatePromesseVente = async (
   doc.setTextColor(...textColor);
   
   const calculatedDeposit = depositAmount > 0 ? depositAmount : Math.round(parcelle.price * depositPercentage / 100);
-  const article2 = `La vente sera consentie moyennant le prix de ${formatAmountForPDF(parcelle.price)} Francs CFA (${numberToWords(parcelle.price)} francs CFA).\n\nÀ titre de dépôt de garantie et en contrepartie de l'immobilisation du bien, le Bénéficiaire verse ce jour au Promettant la somme de ${formatAmountForPDF(calculatedDeposit)} Francs CFA (${numberToWords(calculatedDeposit)} francs CFA), représentant ${depositPercentage}% du prix de vente.\n\nCette somme sera imputée sur le prix de vente lors de la signature de l'acte définitif.`;
+  const article2 = `La vente sera consentie moyennant le prix de ${formatAmountWithCurrency(parcelle.price)} (${numberToWords(parcelle.price)} francs CFA).\n\nÀ titre de dépôt de garantie et en contrepartie de l'immobilisation du bien, le Bénéficiaire verse ce jour au Promettant la somme de ${formatAmountWithCurrency(calculatedDeposit)} (${numberToWords(calculatedDeposit)} francs CFA), représentant ${depositPercentage}% du prix de vente.\n\nCette somme sera imputée sur le prix de vente lors de la signature de l'acte définitif.`;
 
   const article2Lines = doc.splitTextToSize(article2, maxWidth);
   article2Lines.forEach((line: string) => {
@@ -839,7 +839,7 @@ export const generateAttestationPaiement = async (
   doc.text("Montant reçu", pageWidth / 2, yPos + 10, { align: "center" });
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text(`${formatAmountForPDF(echeance.paid_amount || echeance.amount)} F CFA`, pageWidth / 2, yPos + 22, { align: "center" });
+  doc.text(`${formatAmountWithCurrency(echeance.paid_amount || echeance.amount)}`, pageWidth / 2, yPos + 22, { align: "center" });
   
   yPos += 40;
 
@@ -894,8 +894,8 @@ export const generateAttestationPaiement = async (
   doc.setTextColor(...textColor);
   
   const recapDetails = [
-    ["Prix total", `${formatAmountForPDF(vente.total_price)} F CFA`],
-    ["Apport initial", `${formatAmountForPDF(vente.down_payment || 0)} F CFA`],
+    ["Prix total", formatAmountWithCurrency(vente.total_price)],
+    ["Apport initial", formatAmountWithCurrency(vente.down_payment || 0)],
   ];
   
   recapDetails.forEach(([label, value]) => {

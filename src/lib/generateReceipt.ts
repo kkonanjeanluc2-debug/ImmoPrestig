@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import { getReceiptTemplates, type ReceiptTemplates } from "@/components/settings/ReceiptSettings";
 import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
-import { formatAmountForPDF } from "@/lib/pdfFormat";
+import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
   name: string;
@@ -128,7 +128,7 @@ const replaceVariables = (
   return template
     .replace(/{bailleur}/g, signerName)
     .replace(/{locataire}/g, data.tenantName)
-    .replace(/{montant}/g, `${formatAmountForPDF(data.amount)} ${templates.currency}`)
+    .replace(/{montant}/g, formatAmountWithCurrency(data.amount))
     .replace(/{periode}/g, data.period)
     .replace(/{bien}/g, data.propertyTitle)
     .replace(/{agence}/g, data.agency?.name || signerName)
@@ -286,7 +286,7 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
   // Use character spacing for uniform display
-  const amountText = `${formatAmountForPDF(data.amount)} ${templates.currency}`;
+  const amountText = formatAmountWithCurrency(data.amount);
   doc.text(amountText, pageWidth / 2, yPos + 26, { align: "center", charSpace: 0.5 });
   
   yPos += 50;

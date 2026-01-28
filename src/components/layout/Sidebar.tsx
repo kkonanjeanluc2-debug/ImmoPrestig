@@ -46,15 +46,35 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
   lecture_seule: "bg-sand/20 text-sand border-sand/30",
 };
 
-const agencyNavigation = [
-  { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
-  { name: "Biens immobiliers", href: "/properties", icon: Building2 },
-  { name: "Locataires", href: "/tenants", icon: Users },
-  { name: "Contrats", href: "/contracts", icon: ScrollText },
-  { name: "Propriétaires", href: "/owners", icon: Home },
-  { name: "Paiements", href: "/payments", icon: Wallet },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Paramètres", href: "/settings", icon: Settings },
+// Grouped navigation items
+const navigationGroups = [
+  {
+    label: "Tableau de bord",
+    items: [
+      { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "Gestion immobilière",
+    items: [
+      { name: "Biens immobiliers", href: "/properties", icon: Building2 },
+      { name: "Locataires", href: "/tenants", icon: Users },
+      { name: "Propriétaires", href: "/owners", icon: Home },
+    ],
+  },
+  {
+    label: "Gestion financière",
+    items: [
+      { name: "Contrats", href: "/contracts", icon: ScrollText },
+      { name: "Paiements", href: "/payments", icon: Wallet },
+    ],
+  },
+  {
+    label: "Administration",
+    items: [
+      { name: "Documents", href: "/documents", icon: FileText },
+    ],
+  },
 ];
 
 const superAdminNavigation = [
@@ -198,30 +218,74 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             </>
           ) : (
             <>
-              {agencyNavigation.map((item) => {
-                const isActive = location.pathname === item.href;
+              {navigationGroups.map((group, groupIndex) => {
                 const showText = !collapsed || mobileOpen;
                 return (
+                  <div key={group.label} className={cn(groupIndex > 0 && "mt-4")}>
+                    {showText && (
+                      <p className="px-3 mb-2 text-xs font-semibold text-primary-foreground/40 uppercase tracking-wider">
+                        {group.label}
+                      </p>
+                    )}
+                    {!showText && groupIndex > 0 && (
+                      <div className="mx-3 mb-2 border-t border-navy-light" />
+                    )}
+                    {group.items.map((item) => {
+                      const isActive = location.pathname === item.href;
+                      return (
+                        <NavLink
+                          key={item.name}
+                          to={item.href}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                            isActive 
+                              ? "bg-emerald text-primary-foreground" 
+                              : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                          )}
+                        >
+                          <item.icon className={cn(
+                            "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                            !showText && "mx-auto"
+                          )} />
+                          {showText && (
+                            <span className="font-medium text-sm">{item.name}</span>
+                          )}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+              
+              {/* Separator before standalone items */}
+              <div className={cn("mt-4", (!collapsed || mobileOpen) ? "px-3" : "mx-3")}>
+                <div className="border-t border-navy-light" />
+              </div>
+              
+              {/* Settings */}
+              {(() => {
+                const showText = !collapsed || mobileOpen;
+                const isActive = location.pathname === "/settings";
+                return (
                   <NavLink
-                    key={item.name}
-                    to={item.href}
+                    to="/settings"
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group mt-2",
                       isActive 
                         ? "bg-emerald text-primary-foreground" 
                         : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
                     )}
                   >
-                    <item.icon className={cn(
+                    <Settings className={cn(
                       "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
                       !showText && "mx-auto"
                     )} />
                     {showText && (
-                      <span className="font-medium text-sm">{item.name}</span>
+                      <span className="font-medium text-sm">Paramètres</span>
                     )}
                   </NavLink>
                 );
-              })}
+              })()}
               
               {/* Trash link with counter */}
               {(() => {

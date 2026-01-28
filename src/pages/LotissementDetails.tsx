@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Calendar,
   Map,
+  Wallet,
 } from "lucide-react";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
@@ -25,6 +26,7 @@ import { ParcellesList } from "@/components/lotissement/ParcellesList";
 import { ParcellesGrid } from "@/components/lotissement/ParcellesGrid";
 import { PlanMasse } from "@/components/lotissement/PlanMasse";
 import { VentesList } from "@/components/lotissement/VentesList";
+import { EcheancesDashboard } from "@/components/lotissement/EcheancesDashboard";
 import { AddParcelleDialog } from "@/components/lotissement/AddParcelleDialog";
 import { AddBulkParcellesDialog } from "@/components/lotissement/AddBulkParcellesDialog";
 
@@ -173,6 +175,10 @@ const LotissementDetails = () => {
                 <TrendingUp className="h-4 w-4" />
                 Ventes
               </TabsTrigger>
+              <TabsTrigger value="echeances" className="gap-2">
+                <Wallet className="h-4 w-4" />
+                Échéances
+              </TabsTrigger>
             </TabsList>
 
             <div className="flex items-center gap-2">
@@ -230,6 +236,10 @@ const LotissementDetails = () => {
 
           <TabsContent value="ventes">
             <VentesList ventes={ventes || []} lotissementId={id || ""} />
+          </TabsContent>
+
+          <TabsContent value="echeances">
+            <EcheancesDashboard lotissementId={id} />
           </TabsContent>
         </Tabs>
       </div>

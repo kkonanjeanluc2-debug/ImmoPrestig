@@ -81,7 +81,7 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
 
   return (
     <>
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
         {parcelles.map((parcelle) => {
           const ilotName = getIlotName(parcelle.ilot_id);
           return (

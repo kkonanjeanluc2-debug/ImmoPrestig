@@ -236,8 +236,8 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
                   <p>Aucune échéance en retard</p>
                 </div>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
+                <div className="rounded-md border overflow-x-auto">
+                  <Table className="min-w-[650px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Acquéreur</TableHead>
@@ -265,8 +265,8 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
                   <p>Aucune échéance à venir dans les 30 prochains jours</p>
                 </div>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
+                <div className="rounded-md border overflow-x-auto">
+                  <Table className="min-w-[650px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Acquéreur</TableHead>

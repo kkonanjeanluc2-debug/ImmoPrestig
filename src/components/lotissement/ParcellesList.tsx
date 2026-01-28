@@ -84,17 +84,18 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   return (
     <>
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>N° Lot</TableHead>
-              <TableHead>Îlot</TableHead>
-              <TableHead>Superficie</TableHead>
-              <TableHead>Prix</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+        <div className="overflow-x-auto">
+          <Table className="min-w-[600px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>N° Lot</TableHead>
+                <TableHead>Îlot</TableHead>
+                <TableHead>Superficie</TableHead>
+                <TableHead>Prix</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
           <TableBody>
             {parcelles.map((parcelle) => {
               const ilotName = getIlotName(parcelle.ilot_id);
@@ -159,6 +160,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
             })}
           </TableBody>
         </Table>
+        </div>
       </Card>
 
       {editingParcelle && (

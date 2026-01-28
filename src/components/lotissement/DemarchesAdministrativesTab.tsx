@@ -131,13 +131,13 @@ export function DemarchesAdministrativesTab({ lotissementId, lotissementName }: 
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5" />
             Historique des démarches
           </CardTitle>
           {canCreate && (
-            <Button onClick={() => setShowAddDialog(true)}>
+            <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Nouvelle démarche
             </Button>
@@ -151,7 +151,8 @@ export function DemarchesAdministrativesTab({ lotissementId, lotissementName }: 
               Aucune démarche administrative enregistrée
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+            <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Démarche</TableHead>
@@ -215,6 +216,7 @@ export function DemarchesAdministrativesTab({ lotissementId, lotissementName }: 
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

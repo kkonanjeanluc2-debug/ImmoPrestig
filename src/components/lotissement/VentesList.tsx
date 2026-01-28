@@ -69,6 +69,7 @@ export function VentesList({ ventes, lotissementId }: VentesListProps) {
   return (
     <>
       <Card>
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -169,6 +170,7 @@ export function VentesList({ ventes, lotissementId }: VentesListProps) {
             })}
           </TableBody>
         </Table>
+        </div>
       </Card>
 
       {selectedVente && (

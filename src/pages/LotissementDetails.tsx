@@ -222,7 +222,7 @@ const LotissementDetails = () => {
         <Tabs defaultValue="parcelles" className="space-y-4">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <TabsList className="h-auto flex-wrap gap-1 p-1">
+              <TabsList className="h-auto flex-wrap gap-1 p-1 overflow-x-auto">
                 <TabsTrigger value="parcelles" className="gap-2">
                   <Grid3X3 className="h-4 w-4" />
                   <span className="hidden sm:inline">Parcelles</span>

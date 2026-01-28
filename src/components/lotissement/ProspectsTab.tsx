@@ -16,6 +16,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -49,15 +50,17 @@ import {
   Pencil,
   Trash2,
   CheckCircle2,
+  ShoppingCart,
 } from "lucide-react";
 import { format, isAfter, isBefore, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
-import { useLotissementProspects, useDeleteParcelleProspect, useUpdateParcelleProspect, ProspectStatus, InterestLevel } from "@/hooks/useParcelleProspects";
+import { useLotissementProspects, useDeleteParcelleProspect, useUpdateParcelleProspect, ProspectStatus, InterestLevel, ParcelleProspect } from "@/hooks/useParcelleProspects";
 import { useParcelles, Parcelle } from "@/hooks/useParcelles";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AddProspectDialog } from "./AddProspectDialog";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import { ConvertProspectDialog } from "./ConvertProspectDialog";
 
 interface ProspectsTabProps {
   lotissementId: string;
@@ -93,6 +96,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
   const [selectedParcelleId, setSelectedParcelleId] = useState<string | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [convertingProspect, setConvertingProspect] = useState<ParcelleProspect | null>(null);
 
   const availableParcelles = parcelles?.filter(p => p.status === "disponible") || [];
 
@@ -398,15 +402,25 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                           )}
                         </TableCell>
                         <TableCell>
-                          {(canEdit || canDelete) && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {canDelete && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {canEdit && prospect.status !== "converti" && prospect.status !== "perdu" && (
+                                <DropdownMenuItem
+                                  onClick={() => setConvertingProspect(prospect)}
+                                  className="text-emerald-600"
+                                >
+                                  <ShoppingCart className="h-4 w-4 mr-2" />
+                                  Convertir en vente
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete && (
+                                <>
+                                  <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     className="text-destructive"
                                     onClick={() => setDeletingId(prospect.id)}
@@ -414,10 +428,10 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Supprimer
                                   </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     );
@@ -459,6 +473,16 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Convert to Sale Dialog */}
+      {convertingProspect && (
+        <ConvertProspectDialog
+          prospect={convertingProspect}
+          parcelle={parcelles?.find(p => p.id === convertingProspect.parcelle_id)!}
+          open={!!convertingProspect}
+          onOpenChange={(open) => !open && setConvertingProspect(null)}
+        />
+      )}
     </div>
   );
 }

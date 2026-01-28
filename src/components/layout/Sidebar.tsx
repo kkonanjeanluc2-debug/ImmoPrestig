@@ -8,7 +8,6 @@ import {
   Home,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   Menu,
   X,
   LogOut,
@@ -32,11 +31,6 @@ import { useCurrentUserRole, ROLE_LABELS, type AppRole } from "@/hooks/useUserRo
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useAgency } from "@/hooks/useAgency";
 import { useTrashCount } from "@/hooks/useTrashCount";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,
@@ -52,44 +46,15 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
   lecture_seule: "bg-sand/20 text-sand border-sand/30",
 };
 
-// Grouped navigation items with icons for groups
-const navigationGroups = [
-  {
-    label: "Tableau de bord",
-    icon: LayoutDashboard,
-    defaultOpen: true,
-    items: [
-      { name: "Vue d'ensemble", href: "/", icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: "Gestion immobilière",
-    icon: Building2,
-    defaultOpen: true,
-    items: [
-      { name: "Biens immobiliers", href: "/properties", icon: Building2 },
-      { name: "Lotissements", href: "/lotissements", icon: Building2 },
-      { name: "Locataires", href: "/tenants", icon: Users },
-      { name: "Propriétaires", href: "/owners", icon: Home },
-    ],
-  },
-  {
-    label: "Finances",
-    icon: Wallet,
-    defaultOpen: true,
-    items: [
-      { name: "Contrats", href: "/contracts", icon: ScrollText },
-      { name: "Paiements", href: "/payments", icon: Wallet },
-    ],
-  },
-  {
-    label: "Administration",
-    icon: FileText,
-    defaultOpen: true,
-    items: [
-      { name: "Documents", href: "/documents", icon: FileText },
-    ],
-  },
+const navigation = [
+  { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
+  { name: "Biens", href: "/properties", icon: Building2 },
+  { name: "Lotissements", href: "/lotissements", icon: Building2 },
+  { name: "Locataires", href: "/tenants", icon: Users },
+  { name: "Propriétaires", href: "/owners", icon: Home },
+  { name: "Contrats", href: "/contracts", icon: ScrollText },
+  { name: "Paiements", href: "/payments", icon: Wallet },
+  { name: "Documents", href: "/documents", icon: FileText },
 ];
 
 const superAdminNavigation = [
@@ -104,14 +69,6 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    // Initialize with defaultOpen values
-    const initial: Record<string, boolean> = {};
-    navigationGroups.forEach(group => {
-      initial[group.label] = group.defaultOpen;
-    });
-    return initial;
-  });
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
@@ -119,15 +76,6 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { data: agency } = useAgency();
   const { canInstall, isIOS, promptInstall } = usePWAInstall();
   const { data: trashCount } = useTrashCount();
-
-  const toggleGroup = (label: string) => {
-    setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
-  };
-
-  // Check if any item in a group is active
-  const isGroupActive = (items: { href: string }[]) => {
-    return items.some(item => location.pathname === item.href);
-  };
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -250,88 +198,28 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             </>
           ) : (
             <>
-              {navigationGroups.map((group, groupIndex) => {
+              {navigation.map((item) => {
                 const showText = !collapsed || mobileOpen;
-                const isOpen = openGroups[group.label];
-                const hasActiveItem = isGroupActive(group.items);
-                const GroupIcon = group.icon;
-                
-                // When collapsed, just show the group icon or first item
-                if (!showText) {
-                  return (
-                    <div key={group.label} className={cn(groupIndex > 0 && "mt-2")}>
-                      {groupIndex > 0 && (
-                        <div className="mx-3 mb-2 border-t border-navy-light" />
-                      )}
-                      {group.items.map((item) => {
-                        const isActive = location.pathname === item.href;
-                        return (
-                          <NavLink
-                            key={item.name}
-                            to={item.href}
-                            title={item.name}
-                            className={cn(
-                              "flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                              isActive 
-                                ? "bg-emerald text-primary-foreground" 
-                                : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                            )}
-                          >
-                            <item.icon className="h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110" />
-                          </NavLink>
-                        );
-                      })}
-                    </div>
-                  );
-                }
-                
+                const isActive = location.pathname === item.href;
                 return (
-                  <Collapsible
-                    key={group.label}
-                    open={isOpen}
-                    onOpenChange={() => toggleGroup(group.label)}
-                    className={cn(groupIndex > 0 && "mt-2")}
+                  <NavLink
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                      isActive 
+                        ? "bg-emerald text-primary-foreground" 
+                        : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                    )}
                   >
-                    <CollapsibleTrigger asChild>
-                      <button
-                        className={cn(
-                          "flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                          hasActiveItem 
-                            ? "bg-navy-light text-primary-foreground" 
-                            : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <GroupIcon className="h-5 w-5 flex-shrink-0" />
-                          <span className="font-medium text-sm">{group.label}</span>
-                        </div>
-                        <ChevronDown className={cn(
-                          "h-4 w-4 transition-transform duration-200",
-                          isOpen && "rotate-180"
-                        )} />
-                      </button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-1 ml-4 pl-3 border-l border-navy-light space-y-1">
-                      {group.items.map((item) => {
-                        const isActive = location.pathname === item.href;
-                        return (
-                          <NavLink
-                            key={item.name}
-                            to={item.href}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
-                              isActive 
-                                ? "bg-emerald text-primary-foreground" 
-                                : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                            )}
-                          >
-                            <item.icon className="h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110" />
-                            <span className="font-medium text-sm">{item.name}</span>
-                          </NavLink>
-                        );
-                      })}
-                    </CollapsibleContent>
-                  </Collapsible>
+                    <item.icon className={cn(
+                      "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                      !showText && "mx-auto"
+                    )} />
+                    {showText && (
+                      <span className="font-medium text-sm">{item.name}</span>
+                    )}
+                  </NavLink>
                 );
               })}
               

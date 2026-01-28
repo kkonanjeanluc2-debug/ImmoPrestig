@@ -78,13 +78,31 @@ export function useAssignableUsers() {
   });
 }
 
-// Check if current user is the agency owner
+// Check if current user is the agency owner or admin
 export function useIsAgencyOwner() {
   const { user } = useAuth();
-  const { data: agency, isLoading } = useAgency();
+  const { data: agency, isLoading: agencyLoading } = useAgency();
+
+  const { data: isAdminMember, isLoading: adminLoading } = useQuery({
+    queryKey: ["is-admin-member", user?.id, agency?.id],
+    queryFn: async () => {
+      if (!user?.id || !agency?.id) return false;
+      
+      const { data } = await supabase
+        .from("agency_members")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("agency_id", agency.id)
+        .eq("status", "active")
+        .maybeSingle();
+      
+      return data?.role === "admin";
+    },
+    enabled: !!user?.id && !!agency?.id && agency?.user_id !== user?.id,
+  });
 
   return {
-    isOwner: agency?.user_id === user?.id,
-    isLoading,
+    isOwner: agency?.user_id === user?.id || isAdminMember === true,
+    isLoading: agencyLoading || adminLoading,
   };
 }

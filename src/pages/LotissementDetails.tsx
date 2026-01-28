@@ -22,6 +22,7 @@ import {
   FileText,
   ClipboardList,
   UserPlus,
+  Layers,
 } from "lucide-react";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
@@ -41,6 +42,7 @@ import { SalesPerformanceChart } from "@/components/lotissement/SalesPerformance
 import { LotissementDocumentsTab } from "@/components/lotissement/LotissementDocumentsTab";
 import { DemarchesAdministrativesTab } from "@/components/lotissement/DemarchesAdministrativesTab";
 import { ProspectsTab } from "@/components/lotissement/ProspectsTab";
+import { IlotsTab } from "@/components/lotissement/IlotsTab";
 
 const LotissementDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -225,6 +227,10 @@ const LotissementDetails = () => {
                   <Grid3X3 className="h-4 w-4" />
                   <span className="hidden sm:inline">Parcelles</span>
                 </TabsTrigger>
+                <TabsTrigger value="ilots" className="gap-2">
+                  <Layers className="h-4 w-4" />
+                  <span className="hidden sm:inline">Îlots</span>
+                </TabsTrigger>
                 <TabsTrigger value="ventes" className="gap-2">
                   <TrendingUp className="h-4 w-4" />
                   <span className="hidden sm:inline">Ventes</span>
@@ -342,6 +348,13 @@ const LotissementDetails = () => {
 
           <TabsContent value="performance">
             <SalesPerformanceChart ventes={ventes || []} />
+          </TabsContent>
+
+          <TabsContent value="ilots">
+            <IlotsTab 
+              lotissementId={id || ""} 
+              lotissementName={lotissement.name} 
+            />
           </TabsContent>
 
           {isOwner && (

@@ -31,7 +31,8 @@ export type EntityType =
   | 'lotissement_document'
   | 'demarche_administrative'
   | 'parcelle_admin_status'
-  | 'prospect';
+  | 'prospect'
+  | 'ilot';
 
 export interface ActivityLog {
   id: string;

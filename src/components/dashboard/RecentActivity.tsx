@@ -54,6 +54,7 @@ const ENTITY_ICONS: Record<EntityType, React.ReactNode> = {
   demarche_administrative: <ScrollText className="h-4 w-4 text-muted-foreground" />,
   parcelle_admin_status: <Building2 className="h-4 w-4 text-muted-foreground" />,
   prospect: <Users className="h-4 w-4 text-muted-foreground" />,
+  ilot: <Building2 className="h-4 w-4 text-muted-foreground" />,
 };
 
 export function RecentActivity() {

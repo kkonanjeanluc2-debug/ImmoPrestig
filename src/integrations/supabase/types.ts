@@ -762,6 +762,47 @@ export type Database = {
         }
         Relationships: []
       }
+      ilots: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          lotissement_id: string
+          name: string
+          total_area: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          lotissement_id: string
+          name: string
+          total_area?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          lotissement_id?: string
+          name?: string
+          total_area?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ilots_lotissement_id_fkey"
+            columns: ["lotissement_id"]
+            isOneToOne: false
+            referencedRelation: "lotissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lotissement_documents: {
         Row: {
           created_at: string
@@ -1134,6 +1175,7 @@ export type Database = {
           created_at: string
           height: number | null
           id: string
+          ilot_id: string | null
           lotissement_id: string
           notes: string | null
           plot_number: string
@@ -1151,6 +1193,7 @@ export type Database = {
           created_at?: string
           height?: number | null
           id?: string
+          ilot_id?: string | null
           lotissement_id: string
           notes?: string | null
           plot_number: string
@@ -1168,6 +1211,7 @@ export type Database = {
           created_at?: string
           height?: number | null
           id?: string
+          ilot_id?: string | null
           lotissement_id?: string
           notes?: string | null
           plot_number?: string
@@ -1180,6 +1224,13 @@ export type Database = {
           width?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "parcelles_ilot_id_fkey"
+            columns: ["ilot_id"]
+            isOneToOne: false
+            referencedRelation: "ilots"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "parcelles_lotissement_id_fkey"
             columns: ["lotissement_id"]

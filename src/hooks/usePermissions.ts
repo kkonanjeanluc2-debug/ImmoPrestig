@@ -30,9 +30,9 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">>
   },
   gestionnaire: {
     canCreate: true,
-    canEdit: true,
+    canEdit: false,
     canUpdate: true,
-    canDelete: true,
+    canDelete: false,
     canManageUsers: false,
     isReadOnly: false,
   },

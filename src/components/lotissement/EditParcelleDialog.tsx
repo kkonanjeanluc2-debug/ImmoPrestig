@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Parcelle, PlotStatus, useUpdateParcelle } from "@/hooks/useParcelles";
+import { useIlots } from "@/hooks/useIlots";
 import { toast } from "sonner";
 
 interface EditParcelleDialogProps {
@@ -34,11 +35,13 @@ export function EditParcelleDialog({
   existingNumbers 
 }: EditParcelleDialogProps) {
   const updateParcelle = useUpdateParcelle();
+  const { data: ilots } = useIlots(parcelle.lotissement_id);
   const [formData, setFormData] = useState({
     plot_number: "",
     area: "",
     price: "",
     status: "disponible" as PlotStatus,
+    ilot_id: "",
     notes: "",
   });
 
@@ -49,6 +52,7 @@ export function EditParcelleDialog({
         area: parcelle.area.toString(),
         price: parcelle.price.toString(),
         status: parcelle.status,
+        ilot_id: parcelle.ilot_id || "",
         notes: parcelle.notes || "",
       });
     }
@@ -78,6 +82,7 @@ export function EditParcelleDialog({
         area: parseFloat(formData.area),
         price: parseFloat(formData.price),
         status: formData.status,
+        ilot_id: formData.ilot_id || null,
         notes: formData.notes.trim() || null,
       });
 
@@ -136,22 +141,44 @@ export function EditParcelleDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Statut</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) => setFormData({ ...formData, status: value as PlotStatus })}
-              disabled={parcelle.status === "vendu"}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="disponible">Disponible</SelectItem>
-                <SelectItem value="reserve">Réservé</SelectItem>
-                <SelectItem value="vendu">Vendu</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value as PlotStatus })}
+                disabled={parcelle.status === "vendu"}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="disponible">Disponible</SelectItem>
+                  <SelectItem value="reserve">Réservé</SelectItem>
+                  <SelectItem value="vendu">Vendu</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ilot">Îlot</Label>
+              <Select
+                value={formData.ilot_id}
+                onValueChange={(value) => setFormData({ ...formData, ilot_id: value === "none" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Aucun îlot" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun îlot</SelectItem>
+                  {ilots?.map((ilot) => (
+                    <SelectItem key={ilot.id} value={ilot.id}>
+                      {ilot.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">

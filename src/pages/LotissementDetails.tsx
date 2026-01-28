@@ -177,69 +177,71 @@ const LotissementDetails = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="parcelles" className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <TabsList className="flex-wrap">
-              <TabsTrigger value="parcelles" className="gap-2">
-                <Grid3X3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Parcelles</span>
-              </TabsTrigger>
-              <TabsTrigger value="ventes" className="gap-2">
-                <TrendingUp className="h-4 w-4" />
-                <span className="hidden sm:inline">Ventes</span>
-              </TabsTrigger>
-              <TabsTrigger value="echeances" className="gap-2">
-                <Wallet className="h-4 w-4" />
-                <span className="hidden sm:inline">Échéances</span>
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="gap-2">
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Documents</span>
-              </TabsTrigger>
-              <TabsTrigger value="demarches" className="gap-2">
-                <ClipboardList className="h-4 w-4" />
-                <span className="hidden sm:inline">Démarches</span>
-              </TabsTrigger>
-              <TabsTrigger value="prospects" className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Prospects</span>
-              </TabsTrigger>
-              <TabsTrigger value="performance" className="gap-2">
-                <Trophy className="h-4 w-4" />
-                <span className="hidden sm:inline">Performance</span>
-              </TabsTrigger>
-              {isOwner && (
-                <TabsTrigger value="affectations" className="gap-2">
-                  <UserCheck className="h-4 w-4" />
-                  <span className="hidden sm:inline">Affectations</span>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <TabsList className="h-auto flex-wrap gap-1 p-1">
+                <TabsTrigger value="parcelles" className="gap-2">
+                  <Grid3X3 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Parcelles</span>
                 </TabsTrigger>
-              )}
-            </TabsList>
+                <TabsTrigger value="ventes" className="gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="hidden sm:inline">Ventes</span>
+                </TabsTrigger>
+                <TabsTrigger value="echeances" className="gap-2">
+                  <Wallet className="h-4 w-4" />
+                  <span className="hidden sm:inline">Échéances</span>
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Documents</span>
+                </TabsTrigger>
+                <TabsTrigger value="demarches" className="gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  <span className="hidden sm:inline">Démarches</span>
+                </TabsTrigger>
+                <TabsTrigger value="prospects" className="gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Prospects</span>
+                </TabsTrigger>
+                <TabsTrigger value="performance" className="gap-2">
+                  <Trophy className="h-4 w-4" />
+                  <span className="hidden sm:inline">Performance</span>
+                </TabsTrigger>
+                {isOwner && (
+                  <TabsTrigger value="affectations" className="gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    <span className="hidden sm:inline">Affectations</span>
+                  </TabsTrigger>
+                )}
+              </TabsList>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === "map" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("map")}
-                title="Plan de masse"
-              >
-                <Map className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-                title="Vue grille"
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-                title="Vue liste"
-              >
-                <List className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === "map" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("map")}
+                  title="Plan de masse"
+                >
+                  <Map className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("grid")}
+                  title="Vue grille"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("list")}
+                  title="Vue liste"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 

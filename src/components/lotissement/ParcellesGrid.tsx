@@ -150,6 +150,7 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
         />
       )}
 
+
       <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

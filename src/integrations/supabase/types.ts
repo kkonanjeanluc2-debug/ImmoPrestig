@@ -529,6 +529,90 @@ export type Database = {
           },
         ]
       }
+      demarches_administratives: {
+        Row: {
+          authority: string | null
+          contact_person: string | null
+          contact_phone: string | null
+          cost: number | null
+          created_at: string
+          description: string | null
+          documents_required: string[] | null
+          documents_submitted: string[] | null
+          end_date: string | null
+          id: string
+          lotissement_id: string
+          next_steps: string | null
+          parcelle_id: string | null
+          result: string | null
+          start_date: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          authority?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          documents_required?: string[] | null
+          documents_submitted?: string[] | null
+          end_date?: string | null
+          id?: string
+          lotissement_id: string
+          next_steps?: string | null
+          parcelle_id?: string | null
+          result?: string | null
+          start_date?: string
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          authority?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          documents_required?: string[] | null
+          documents_submitted?: string[] | null
+          end_date?: string | null
+          id?: string
+          lotissement_id?: string
+          next_steps?: string | null
+          parcelle_id?: string | null
+          result?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demarches_administratives_lotissement_id_fkey"
+            columns: ["lotissement_id"]
+            isOneToOne: false
+            referencedRelation: "lotissements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demarches_administratives_parcelle_id_fkey"
+            columns: ["parcelle_id"]
+            isOneToOne: false
+            referencedRelation: "parcelles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -677,6 +761,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      lotissement_documents: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          file_size: string | null
+          file_url: string | null
+          id: string
+          issued_by: string | null
+          issued_date: string | null
+          lotissement_id: string
+          name: string
+          notes: string | null
+          reference_number: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          file_size?: string | null
+          file_url?: string | null
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          lotissement_id: string
+          name: string
+          notes?: string | null
+          reference_number?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          file_size?: string | null
+          file_url?: string | null
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          lotissement_id?: string
+          name?: string
+          notes?: string | null
+          reference_number?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lotissement_documents_lotissement_id_fkey"
+            columns: ["lotissement_id"]
+            isOneToOne: false
+            referencedRelation: "lotissements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lotissements: {
         Row: {
@@ -856,6 +1002,59 @@ export type Database = {
             columns: ["management_type_id"]
             isOneToOne: false
             referencedRelation: "management_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parcelle_admin_status: {
+        Row: {
+          attestation_villageoise: boolean | null
+          bornage_effectue: boolean | null
+          certificat_propriete: boolean | null
+          created_at: string
+          id: string
+          notes: string | null
+          parcelle_id: string
+          status: string
+          titre_foncier_reference: string | null
+          titre_foncier_status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attestation_villageoise?: boolean | null
+          bornage_effectue?: boolean | null
+          certificat_propriete?: boolean | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          parcelle_id: string
+          status?: string
+          titre_foncier_reference?: string | null
+          titre_foncier_status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attestation_villageoise?: boolean | null
+          bornage_effectue?: boolean | null
+          certificat_propriete?: boolean | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          parcelle_id?: string
+          status?: string
+          titre_foncier_reference?: string | null
+          titre_foncier_status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcelle_admin_status_parcelle_id_fkey"
+            columns: ["parcelle_id"]
+            isOneToOne: true
+            referencedRelation: "parcelles"
             referencedColumns: ["id"]
           },
         ]

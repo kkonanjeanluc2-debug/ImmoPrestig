@@ -19,6 +19,8 @@ import {
   Wallet,
   UserCheck,
   Trophy,
+  FileText,
+  ClipboardList,
 } from "lucide-react";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
@@ -34,6 +36,8 @@ import { AddParcelleDialog } from "@/components/lotissement/AddParcelleDialog";
 import { AddBulkParcellesDialog } from "@/components/lotissement/AddBulkParcellesDialog";
 import { LotAssignmentSettings } from "@/components/lotissement/LotAssignmentSettings";
 import { SalesPerformanceChart } from "@/components/lotissement/SalesPerformanceChart";
+import { LotissementDocumentsTab } from "@/components/lotissement/LotissementDocumentsTab";
+import { DemarchesAdministrativesTab } from "@/components/lotissement/DemarchesAdministrativesTab";
 
 const LotissementDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -185,6 +189,14 @@ const LotissementDetails = () => {
                 <Wallet className="h-4 w-4" />
                 <span className="hidden sm:inline">Échéances</span>
               </TabsTrigger>
+              <TabsTrigger value="documents" className="gap-2">
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Documents</span>
+              </TabsTrigger>
+              <TabsTrigger value="demarches" className="gap-2">
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden sm:inline">Démarches</span>
+              </TabsTrigger>
               <TabsTrigger value="performance" className="gap-2">
                 <Trophy className="h-4 w-4" />
                 <span className="hidden sm:inline">Performance</span>
@@ -256,6 +268,20 @@ const LotissementDetails = () => {
 
           <TabsContent value="echeances">
             <EcheancesDashboard lotissementId={id} />
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <LotissementDocumentsTab 
+              lotissementId={id || ""} 
+              lotissementName={lotissement.name} 
+            />
+          </TabsContent>
+
+          <TabsContent value="demarches">
+            <DemarchesAdministrativesTab 
+              lotissementId={id || ""} 
+              lotissementName={lotissement.name} 
+            />
           </TabsContent>
 
           <TabsContent value="performance">

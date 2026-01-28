@@ -27,7 +27,10 @@ export type EntityType =
   | 'parcelle'
   | 'acquereur'
   | 'vente_parcelle'
-  | 'echeance_parcelle';
+  | 'echeance_parcelle'
+  | 'lotissement_document'
+  | 'demarche_administrative'
+  | 'parcelle_admin_status';
 
 export interface ActivityLog {
   id: string;

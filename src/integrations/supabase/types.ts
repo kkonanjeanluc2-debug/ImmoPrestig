@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      acquereurs: {
+        Row: {
+          address: string | null
+          birth_date: string | null
+          birth_place: string | null
+          cni_number: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          profession: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cni_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          profession?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cni_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          profession?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action_type: string
@@ -538,6 +583,62 @@ export type Database = {
           },
         ]
       }
+      echeances_parcelles: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_amount: number | null
+          paid_date: string | null
+          payment_method: string | null
+          receipt_number: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          vente_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_method?: string | null
+          receipt_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vente_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_method?: string | null
+          receipt_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "echeances_parcelles_vente_id_fkey"
+            columns: ["vente_id"]
+            isOneToOne: false
+            referencedRelation: "ventes_parcelles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_logs: {
         Row: {
           created_at: string
@@ -570,6 +671,54 @@ export type Database = {
           status?: string
           subject?: string
           tenant_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lotissements: {
+        Row: {
+          city: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          latitude: number | null
+          location: string
+          longitude: number | null
+          name: string
+          total_area: number | null
+          total_plots: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          name: string
+          total_area?: number | null
+          total_plots?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          name?: string
+          total_area?: number | null
+          total_plots?: number | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -704,6 +853,65 @@ export type Database = {
             columns: ["management_type_id"]
             isOneToOne: false
             referencedRelation: "management_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parcelles: {
+        Row: {
+          area: number
+          created_at: string
+          height: number | null
+          id: string
+          lotissement_id: string
+          notes: string | null
+          plot_number: string
+          position_x: number | null
+          position_y: number | null
+          price: number
+          status: Database["public"]["Enums"]["plot_status"]
+          updated_at: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          area: number
+          created_at?: string
+          height?: number | null
+          id?: string
+          lotissement_id: string
+          notes?: string | null
+          plot_number: string
+          position_x?: number | null
+          position_y?: number | null
+          price: number
+          status?: Database["public"]["Enums"]["plot_status"]
+          updated_at?: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          area?: number
+          created_at?: string
+          height?: number | null
+          id?: string
+          lotissement_id?: string
+          notes?: string | null
+          plot_number?: string
+          position_x?: number | null
+          position_y?: number | null
+          price?: number
+          status?: Database["public"]["Enums"]["plot_status"]
+          updated_at?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcelles_lotissement_id_fkey"
+            columns: ["lotissement_id"]
+            isOneToOne: false
+            referencedRelation: "lotissements"
             referencedColumns: ["id"]
           },
         ]
@@ -1306,6 +1514,75 @@ export type Database = {
         }
         Relationships: []
       }
+      ventes_parcelles: {
+        Row: {
+          acquereur_id: string
+          created_at: string
+          down_payment: number | null
+          id: string
+          monthly_payment: number | null
+          notes: string | null
+          paid_installments: number | null
+          parcelle_id: string
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          sale_date: string
+          status: string
+          total_installments: number | null
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acquereur_id: string
+          created_at?: string
+          down_payment?: number | null
+          id?: string
+          monthly_payment?: number | null
+          notes?: string | null
+          paid_installments?: number | null
+          parcelle_id: string
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          sale_date?: string
+          status?: string
+          total_installments?: number | null
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acquereur_id?: string
+          created_at?: string
+          down_payment?: number | null
+          id?: string
+          monthly_payment?: number | null
+          notes?: string | null
+          paid_installments?: number | null
+          parcelle_id?: string
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          sale_date?: string
+          status?: string
+          total_installments?: number | null
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ventes_parcelles_acquereur_id_fkey"
+            columns: ["acquereur_id"]
+            isOneToOne: false
+            referencedRelation: "acquereurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ventes_parcelles_parcelle_id_fkey"
+            columns: ["parcelle_id"]
+            isOneToOne: false
+            referencedRelation: "parcelles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_logs: {
         Row: {
           created_at: string
@@ -1390,6 +1667,8 @@ export type Database = {
     Enums: {
       account_type: "agence" | "proprietaire"
       app_role: "admin" | "gestionnaire" | "lecture_seule" | "super_admin"
+      payment_type: "comptant" | "echelonne"
+      plot_status: "disponible" | "reserve" | "vendu"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1519,6 +1798,8 @@ export const Constants = {
     Enums: {
       account_type: ["agence", "proprietaire"],
       app_role: ["admin", "gestionnaire", "lecture_seule", "super_admin"],
+      payment_type: ["comptant", "echelonne"],
+      plot_status: ["disponible", "reserve", "vendu"],
     },
   },
 } as const

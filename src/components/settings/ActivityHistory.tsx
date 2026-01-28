@@ -19,7 +19,12 @@ import {
   Upload,
   Clock,
   User,
-  RotateCcw
+  RotateCcw,
+  MapPin,
+  Square,
+  UserCheck,
+  Receipt,
+  Calendar,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -45,6 +50,11 @@ const ENTITY_CONFIG: Record<EntityType, { label: string; icon: React.ReactNode }
   document: { label: "Document", icon: <FileText className="h-4 w-4" /> },
   contract: { label: "Contrat", icon: <FileSignature className="h-4 w-4" /> },
   user: { label: "Utilisateur", icon: <User className="h-4 w-4" /> },
+  lotissement: { label: "Lotissement", icon: <MapPin className="h-4 w-4" /> },
+  parcelle: { label: "Parcelle", icon: <Square className="h-4 w-4" /> },
+  acquereur: { label: "Acquéreur", icon: <UserCheck className="h-4 w-4" /> },
+  vente_parcelle: { label: "Vente parcelle", icon: <Receipt className="h-4 w-4" /> },
+  echeance_parcelle: { label: "Échéance", icon: <Calendar className="h-4 w-4" /> },
 };
 
 export function ActivityHistory() {

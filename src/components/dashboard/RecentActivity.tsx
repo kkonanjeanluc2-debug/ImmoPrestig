@@ -45,6 +45,11 @@ const ENTITY_ICONS: Record<EntityType, React.ReactNode> = {
   document: <FileText className="h-4 w-4 text-muted-foreground" />,
   contract: <ScrollText className="h-4 w-4 text-muted-foreground" />,
   user: <User className="h-4 w-4 text-muted-foreground" />,
+  lotissement: <Building2 className="h-4 w-4 text-muted-foreground" />,
+  parcelle: <Building2 className="h-4 w-4 text-muted-foreground" />,
+  acquereur: <Users className="h-4 w-4 text-muted-foreground" />,
+  vente_parcelle: <Wallet className="h-4 w-4 text-muted-foreground" />,
+  echeance_parcelle: <Wallet className="h-4 w-4 text-muted-foreground" />,
 };
 
 export function RecentActivity() {

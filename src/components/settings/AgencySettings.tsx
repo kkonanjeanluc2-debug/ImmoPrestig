@@ -19,7 +19,8 @@ import {
   Save, 
   Loader2, 
   Camera,
-  FileText
+  FileText,
+  Percent
 } from "lucide-react";
 
 export function AgencySettings() {
@@ -37,6 +38,7 @@ export function AgencySettings() {
     city: "",
     country: "Côte d'Ivoire",
     siret: "",
+    reservation_deposit_percentage: "30",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -55,6 +57,7 @@ export function AgencySettings() {
         city: agency.city || "",
         country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
+        reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
       });
       setLogoUrl(agency.logo_url);
     }
@@ -72,6 +75,7 @@ export function AgencySettings() {
         city: agency.city || "",
         country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
+        reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
       });
       setLogoUrl(agency.logo_url);
     }
@@ -148,6 +152,7 @@ export function AgencySettings() {
             country: formData.country,
             siret: formData.siret || null,
             logo_url: logoUrl,
+            reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
           })
           .eq('user_id', user.id);
 
@@ -167,6 +172,7 @@ export function AgencySettings() {
             country: formData.country,
             siret: formData.siret || null,
             logo_url: logoUrl,
+            reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
           });
 
         if (error) throw error;
@@ -363,6 +369,28 @@ export function AgencySettings() {
             </div>
           </div>
         )}
+
+        {/* Reservation Deposit Percentage */}
+        <div className="space-y-2">
+          <Label htmlFor="reservation-deposit">Acompte de réservation (lotissements)</Label>
+          <p className="text-xs text-muted-foreground">
+            Pourcentage du prix requis pour réserver une parcelle
+          </p>
+          <div className="relative">
+            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="reservation-deposit"
+              type="number"
+              min="5"
+              max="100"
+              step="5"
+              value={formData.reservation_deposit_percentage}
+              onChange={(e) => handleChange("reservation_deposit_percentage", e.target.value)}
+              placeholder="30"
+              className="pl-10"
+            />
+          </div>
+        </div>
 
         {/* Save Button */}
         <div className="flex justify-end pt-4">

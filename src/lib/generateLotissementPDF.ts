@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
+import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
   name: string;
@@ -82,37 +82,6 @@ const formatDate = (dateStr: string): string => {
     month: "long",
     year: "numeric",
   });
-};
-
-const numberToWords = (num: number): string => {
-  const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
-  const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
-  const tens = ["", "dix", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingt", "quatre-vingt-dix"];
-  
-  if (num === 0) return "zéro";
-  if (num < 10) return units[num];
-  if (num < 20) return teens[num - 10];
-  if (num < 100) {
-    const t = Math.floor(num / 10);
-    const u = num % 10;
-    if (t === 7 || t === 9) {
-      return tens[t - 1] + "-" + teens[u];
-    }
-    return tens[t] + (u > 0 ? "-" + units[u] : "");
-  }
-  if (num < 1000) {
-    const h = Math.floor(num / 100);
-    const rest = num % 100;
-    const prefix = h === 1 ? "cent" : units[h] + " cent";
-    return prefix + (rest > 0 ? " " + numberToWords(rest) : "");
-  }
-  if (num < 1000000) {
-    const t = Math.floor(num / 1000);
-    const rest = num % 1000;
-    const prefix = t === 1 ? "mille" : numberToWords(t) + " mille";
-    return prefix + (rest > 0 ? " " + numberToWords(rest) : "");
-  }
-  return num.toLocaleString("fr-FR");
 };
 
 const addHeader = async (doc: jsPDF, agency: AgencyInfo | null, title: string): Promise<number> => {
@@ -445,7 +414,7 @@ export const generateContratVente = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   
-  let article2 = `La présente vente est consentie et acceptée moyennant le prix principal de ${formatAmountWithCurrency(vente.total_price)} (${numberToWords(vente.total_price)} francs CFA).`;
+  let article2 = `La presente vente est consentie et acceptee moyennant le prix principal de ${formatAmountWithCurrency(vente.total_price)} (${numberToWordsPDF(vente.total_price)} francs CFA).`;
   
   if (vente.payment_type === "echelonne") {
     article2 += `\n\nCe montant sera payé selon les modalités suivantes :\n- Apport initial : ${formatAmountWithCurrency(vente.down_payment || 0)}\n- Mensualités : ${vente.total_installments} versements de ${formatAmountWithCurrency(vente.monthly_payment || 0)}`;
@@ -659,7 +628,7 @@ export const generatePromesseVente = async (
   doc.setTextColor(...textColor);
   
   const calculatedDeposit = depositAmount > 0 ? depositAmount : Math.round(parcelle.price * depositPercentage / 100);
-  const article2 = `La vente sera consentie moyennant le prix de ${formatAmountWithCurrency(parcelle.price)} (${numberToWords(parcelle.price)} francs CFA).\n\nÀ titre de dépôt de garantie et en contrepartie de l'immobilisation du bien, le Bénéficiaire verse ce jour au Promettant la somme de ${formatAmountWithCurrency(calculatedDeposit)} (${numberToWords(calculatedDeposit)} francs CFA), représentant ${depositPercentage}% du prix de vente.\n\nCette somme sera imputée sur le prix de vente lors de la signature de l'acte définitif.`;
+  const article2 = `La vente sera consentie moyennant le prix de ${formatAmountWithCurrency(parcelle.price)} (${numberToWordsPDF(parcelle.price)} francs CFA).\n\nA titre de depot de garantie et en contrepartie de l'immobilisation du bien, le Beneficiaire verse ce jour au Promettant la somme de ${formatAmountWithCurrency(calculatedDeposit)} (${numberToWordsPDF(calculatedDeposit)} francs CFA), representant ${depositPercentage}% du prix de vente.\n\nCette somme sera imputee sur le prix de vente lors de la signature de l'acte definitif.`;
 
   const article2Lines = doc.splitTextToSize(article2, maxWidth);
   article2Lines.forEach((line: string) => {
@@ -847,7 +816,7 @@ export const generateAttestationPaiement = async (
   doc.setTextColor(...textColor);
   doc.setFontSize(10);
   doc.setFont("helvetica", "italic");
-  doc.text(`Soit : ${numberToWords(echeance.paid_amount || echeance.amount)} francs CFA`, margin, yPos);
+  doc.text(`Soit : ${numberToWordsPDF(echeance.paid_amount || echeance.amount)} francs CFA`, margin, yPos);
   
   yPos += 15;
 

@@ -40,6 +40,10 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
     phone: "",
     email: "",
     cni_number: "",
+    address: "",
+    birth_date: "",
+    birth_place: "",
+    profession: "",
   });
   const [paymentType, setPaymentType] = useState<PaymentType>("comptant");
   const [downPayment, setDownPayment] = useState("");
@@ -72,6 +76,10 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
           phone: newAcquereur.phone.trim() || null,
           email: newAcquereur.email.trim() || null,
           cni_number: newAcquereur.cni_number.trim() || null,
+          address: newAcquereur.address.trim() || null,
+          birth_date: newAcquereur.birth_date || null,
+          birth_place: newAcquereur.birth_place.trim() || null,
+          profession: newAcquereur.profession.trim() || null,
         });
         buyerId = created.id;
       } catch {
@@ -152,32 +160,81 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
                 </SelectContent>
               </Select>
             ) : (
-              <div className="grid grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="name">Nom complet *</Label>
-                  <Input
-                    id="name"
-                    value={newAcquereur.name}
-                    onChange={(e) => setNewAcquereur({ ...newAcquereur, name: e.target.value })}
-                    placeholder="Kouassi Jean"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input
-                    id="phone"
-                    value={newAcquereur.phone}
-                    onChange={(e) => setNewAcquereur({ ...newAcquereur, phone: e.target.value })}
-                    placeholder="+2250701020304"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cni">N° CNI</Label>
-                  <Input
-                    id="cni"
-                    value={newAcquereur.cni_number}
-                    onChange={(e) => setNewAcquereur({ ...newAcquereur, cni_number: e.target.value })}
-                  />
+              <div className="grid gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="name">Nom complet *</Label>
+                    <Input
+                      id="name"
+                      value={newAcquereur.name}
+                      onChange={(e) => setNewAcquereur({ ...newAcquereur, name: e.target.value })}
+                      placeholder="Kouassi Jean"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input
+                      id="phone"
+                      value={newAcquereur.phone}
+                      onChange={(e) => setNewAcquereur({ ...newAcquereur, phone: e.target.value })}
+                      placeholder="+2250701020304"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newAcquereur.email}
+                      onChange={(e) => setNewAcquereur({ ...newAcquereur, email: e.target.value })}
+                      placeholder="email@exemple.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cni">N° CNI</Label>
+                    <Input
+                      id="cni"
+                      value={newAcquereur.cni_number}
+                      onChange={(e) => setNewAcquereur({ ...newAcquereur, cni_number: e.target.value })}
+                      placeholder="CI00123456789"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profession">Profession</Label>
+                    <Input
+                      id="profession"
+                      value={newAcquereur.profession}
+                      onChange={(e) => setNewAcquereur({ ...newAcquereur, profession: e.target.value })}
+                      placeholder="Commerçant"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="birth_date">Date de naissance</Label>
+                    <Input
+                      id="birth_date"
+                      type="date"
+                      value={newAcquereur.birth_date}
+                      onChange={(e) => setNewAcquereur({ ...newAcquereur, birth_date: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="birth_place">Lieu de naissance</Label>
+                    <Input
+                      id="birth_place"
+                      value={newAcquereur.birth_place}
+                      onChange={(e) => setNewAcquereur({ ...newAcquereur, birth_place: e.target.value })}
+                      placeholder="Abidjan"
+                    />
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="address">Adresse</Label>
+                    <Input
+                      id="address"
+                      value={newAcquereur.address}
+                      onChange={(e) => setNewAcquereur({ ...newAcquereur, address: e.target.value })}
+                      placeholder="Cocody, Abidjan"
+                    />
+                  </div>
                 </div>
               </div>
             )}

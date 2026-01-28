@@ -16,10 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, User } from "lucide-react";
+import { Loader2, Plus, User, CreditCard, Banknote, Smartphone, Building2 } from "lucide-react";
 import { Parcelle } from "@/hooks/useParcelles";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useCreateVenteParcelle, PaymentType } from "@/hooks/useVentesParcelles";
+import { useAssignableUsers } from "@/hooks/useAssignableUsers";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 interface SellParcelleDialogProps {
@@ -29,7 +31,9 @@ interface SellParcelleDialogProps {
 }
 
 export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcelleDialogProps) {
+  const { user } = useAuth();
   const { data: acquereurs } = useAcquereurs();
+  const { data: assignableUsers } = useAssignableUsers();
   const createAcquereur = useCreateAcquereur();
   const createVente = useCreateVenteParcelle();
 
@@ -46,9 +50,11 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
     profession: "",
   });
   const [paymentType, setPaymentType] = useState<PaymentType>("comptant");
+  const [paymentMethod, setPaymentMethod] = useState<string>("especes");
   const [downPayment, setDownPayment] = useState("");
   const [totalInstallments, setTotalInstallments] = useState("12");
   const [salePrice, setSalePrice] = useState(parcelle.price.toString());
+  const [soldBy, setSoldBy] = useState<string>((parcelle as any).assigned_to || user?.id || "");
 
   const monthlyPayment = useMemo(() => {
     if (paymentType !== "echelonne") return 0;
@@ -99,9 +105,11 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
         acquereur_id: buyerId,
         total_price: parseFloat(salePrice),
         payment_type: paymentType,
+        payment_method: paymentMethod,
         down_payment: paymentType === "echelonne" ? parseFloat(downPayment) || 0 : null,
         monthly_payment: paymentType === "echelonne" ? monthlyPayment : null,
         total_installments: paymentType === "echelonne" ? parseInt(totalInstallments) : null,
+        sold_by: soldBy || null,
       });
 
       toast.success("Vente enregistrée avec succès");
@@ -254,7 +262,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
 
           {/* Payment Type */}
           <div className="space-y-4">
-            <Label>Mode de paiement</Label>
+            <Label>Type de paiement</Label>
             <RadioGroup
               value={paymentType}
               onValueChange={(v) => setPaymentType(v as PaymentType)}
@@ -307,6 +315,67 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
               </div>
             )}
           </div>
+
+          {/* Payment Method */}
+          <div className="space-y-2">
+            <Label>Moyen de paiement</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un moyen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="especes">
+                  <div className="flex items-center gap-2">
+                    <Banknote className="h-4 w-4" />
+                    Espèces
+                  </div>
+                </SelectItem>
+                <SelectItem value="virement">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Virement bancaire
+                  </div>
+                </SelectItem>
+                <SelectItem value="mobile_money">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    Mobile Money
+                  </div>
+                </SelectItem>
+                <SelectItem value="cheque">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Chèque
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Salesperson Assignment */}
+          {assignableUsers && assignableUsers.length > 0 && (
+            <div className="space-y-2">
+              <Label>Commercial responsable</Label>
+              <Select value={soldBy} onValueChange={setSoldBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un commercial" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assignableUsers.map((user) => (
+                    <SelectItem key={user.user_id} value={user.user_id}>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        {user.full_name || user.email} ({user.role})
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Cette vente sera comptabilisée pour ce commercial
+              </p>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

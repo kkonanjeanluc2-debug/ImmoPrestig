@@ -18,6 +18,7 @@ export interface Parcelle {
   width: number | null;
   height: number | null;
   notes: string | null;
+  assigned_to: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +34,7 @@ export interface ParcelleInsert {
   width?: number | null;
   height?: number | null;
   notes?: string | null;
+  assigned_to?: string | null;
 }
 
 export interface ParcelleUpdate extends Partial<ParcelleInsert> {

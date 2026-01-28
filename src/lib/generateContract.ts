@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { formatAmountWithCurrency } from "@/lib/pdfFormat";
+import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
   name: string;
@@ -83,37 +83,6 @@ const formatDate = (dateStr: string): string => {
     month: "long",
     year: "numeric",
   });
-};
-
-const numberToWords = (num: number): string => {
-  const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
-  const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
-  const tens = ["", "dix", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingt", "quatre-vingt-dix"];
-  
-  if (num === 0) return "zéro";
-  if (num < 10) return units[num];
-  if (num < 20) return teens[num - 10];
-  if (num < 100) {
-    const t = Math.floor(num / 10);
-    const u = num % 10;
-    if (t === 7 || t === 9) {
-      return tens[t - 1] + "-" + teens[u];
-    }
-    return tens[t] + (u > 0 ? "-" + units[u] : "");
-  }
-  if (num < 1000) {
-    const h = Math.floor(num / 100);
-    const rest = num % 100;
-    const prefix = h === 1 ? "cent" : units[h] + " cent";
-    return prefix + (rest > 0 ? " " + numberToWords(rest) : "");
-  }
-  if (num < 1000000) {
-    const t = Math.floor(num / 1000);
-    const rest = num % 1000;
-    const prefix = t === 1 ? "mille" : numberToWords(t) + " mille";
-    return prefix + (rest > 0 ? " " + numberToWords(rest) : "");
-  }
-  return num.toLocaleString("fr-FR");
 };
 
 // Determine management type category based on the management type name
@@ -241,9 +210,9 @@ export const replaceContractVariables = (
     
     // Financial info
     "{loyer}": formatAmountWithCurrency(data.rentAmount),
-    "{loyer_lettres}": numberToWords(data.rentAmount) + " francs CFA",
-    "{caution}": data.deposit ? formatAmountWithCurrency(data.deposit) : "Néant",
-    "{caution_lettres}": data.deposit ? numberToWords(data.deposit) + " francs CFA" : "néant",
+    "{loyer_lettres}": numberToWordsPDF(data.rentAmount) + " francs CFA",
+    "{caution}": data.deposit ? formatAmountWithCurrency(data.deposit) : "Neant",
+    "{caution_lettres}": data.deposit ? numberToWordsPDF(data.deposit) + " francs CFA" : "neant",
     
     // Dates
     "{date_debut}": formatDate(data.startDate),

@@ -18,12 +18,14 @@ import {
   CheckCircle2,
   Phone,
   MessageCircle,
+  Banknote,
 } from "lucide-react";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUpcomingEcheances, useOverdueEcheances, EcheanceWithDetails } from "@/hooks/useEcheancesParcelles";
 import { openWhatsApp } from "@/lib/whatsapp";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PayEcheanceDialog } from "./PayEcheanceDialog";
 
 interface EcheancesDashboardProps {
   lotissementId?: string;
@@ -32,6 +34,7 @@ interface EcheancesDashboardProps {
 export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
   const { data: upcomingEcheances, isLoading: loadingUpcoming } = useUpcomingEcheances();
   const { data: overdueEcheances, isLoading: loadingOverdue } = useOverdueEcheances();
+  const [payingEcheance, setPayingEcheance] = useState<EcheanceWithDetails | null>(null);
 
   // Filter by lotissement if provided
   const filteredUpcoming = lotissementId 
@@ -99,16 +102,27 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
       </TableCell>
       <TableCell>{getUrgencyBadge(echeance.due_date)}</TableCell>
       <TableCell>
-        {echeance.vente?.acquereur?.phone && (
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => handleWhatsApp(echeance.vente?.acquereur?.phone || null, echeance)}
-            title="Envoyer un rappel WhatsApp"
+            onClick={() => setPayingEcheance(echeance)}
+            title="Encaisser cette échéance"
+            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
           >
-            <MessageCircle className="h-4 w-4 text-green-600" />
+            <Banknote className="h-4 w-4" />
           </Button>
-        )}
+          {echeance.vente?.acquereur?.phone && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleWhatsApp(echeance.vente?.acquereur?.phone || null, echeance)}
+              title="Envoyer un rappel WhatsApp"
+            >
+              <MessageCircle className="h-4 w-4 text-green-600" />
+            </Button>
+          )}
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -275,6 +289,15 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Payment Dialog */}
+      {payingEcheance && (
+        <PayEcheanceDialog
+          echeance={payingEcheance}
+          open={!!payingEcheance}
+          onOpenChange={(open) => !open && setPayingEcheance(null)}
+        />
+      )}
     </div>
   );
 }

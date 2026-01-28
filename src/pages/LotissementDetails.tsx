@@ -15,6 +15,7 @@ import {
   Users,
   TrendingUp,
   Calendar,
+  Map,
 } from "lucide-react";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
@@ -22,6 +23,7 @@ import { useVentesParcelles } from "@/hooks/useVentesParcelles";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ParcellesList } from "@/components/lotissement/ParcellesList";
 import { ParcellesGrid } from "@/components/lotissement/ParcellesGrid";
+import { PlanMasse } from "@/components/lotissement/PlanMasse";
 import { VentesList } from "@/components/lotissement/VentesList";
 import { AddParcelleDialog } from "@/components/lotissement/AddParcelleDialog";
 import { AddBulkParcellesDialog } from "@/components/lotissement/AddBulkParcellesDialog";
@@ -34,7 +36,7 @@ const LotissementDetails = () => {
   const { data: ventes } = useVentesParcelles(id);
   const { canCreate } = usePermissions();
 
-  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
 
@@ -175,9 +177,18 @@ const LotissementDetails = () => {
 
             <div className="flex items-center gap-2">
               <Button
+                variant={viewMode === "map" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("map")}
+                title="Plan de masse"
+              >
+                <Map className="h-4 w-4" />
+              </Button>
+              <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("grid")}
+                title="Vue grille"
               >
                 <Grid3X3 className="h-4 w-4" />
               </Button>
@@ -185,6 +196,7 @@ const LotissementDetails = () => {
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("list")}
+                title="Vue liste"
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -198,6 +210,11 @@ const LotissementDetails = () => {
                   <Skeleton key={i} className="h-24" />
                 ))}
               </div>
+            ) : viewMode === "map" ? (
+              <PlanMasse 
+                parcelles={parcelles || []} 
+                lotissementName={lotissement.name}
+              />
             ) : viewMode === "grid" ? (
               <ParcellesGrid 
                 parcelles={parcelles || []} 

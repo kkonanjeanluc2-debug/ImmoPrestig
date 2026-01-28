@@ -66,6 +66,31 @@ export const useEcheancesParcelles = (venteId?: string) => {
   });
 };
 
+export const useEcheancesForLotissement = (lotissementId?: string) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["echeances-parcelles", "lotissement", lotissementId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_parcelles")
+        .select(`
+          *,
+          vente:ventes_parcelles!inner(
+            parcelle:parcelles!inner(
+              lotissement_id
+            )
+          )
+        `)
+        .eq("vente.parcelle.lotissement_id", lotissementId);
+
+      if (error) throw error;
+      return data as EcheanceParcelle[];
+    },
+    enabled: !!user && !!lotissementId,
+  });
+};
+
 export const useUpcomingEcheances = () => {
   const { user } = useAuth();
 

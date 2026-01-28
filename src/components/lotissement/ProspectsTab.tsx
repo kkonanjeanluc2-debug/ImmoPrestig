@@ -402,36 +402,42 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                           )}
                         </TableCell>
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {canEdit && prospect.status !== "converti" && prospect.status !== "perdu" && (
-                                <DropdownMenuItem
-                                  onClick={() => setConvertingProspect(prospect)}
-                                  className="text-emerald-600"
-                                >
-                                  <ShoppingCart className="h-4 w-4 mr-2" />
-                                  Convertir en vente
-                                </DropdownMenuItem>
-                              )}
-                              {canDelete && (
-                                <>
-                                  <DropdownMenuSeparator />
+                          {prospect.status === "converti" ? (
+                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                              Vendu
+                            </Badge>
+                          ) : (canEdit || canDelete) ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {canEdit && prospect.status !== "perdu" && (
                                   <DropdownMenuItem
-                                    className="text-destructive"
-                                    onClick={() => setDeletingId(prospect.id)}
+                                    onClick={() => setConvertingProspect(prospect)}
+                                    className="text-emerald-600"
                                   >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Supprimer
+                                    <ShoppingCart className="h-4 w-4 mr-2" />
+                                    Convertir en vente
                                   </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                )}
+                                {canDelete && (
+                                  <>
+                                    {canEdit && prospect.status !== "perdu" && <DropdownMenuSeparator />}
+                                    <DropdownMenuItem
+                                      className="text-destructive"
+                                      onClick={() => setDeletingId(prospect.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Supprimer
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : null}
                         </TableCell>
                       </TableRow>
                     );
@@ -475,10 +481,10 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
       </AlertDialog>
 
       {/* Convert to Sale Dialog */}
-      {convertingProspect && (
+      {convertingProspect && parcelles?.find(p => p.id === convertingProspect.parcelle_id) && (
         <ConvertProspectDialog
           prospect={convertingProspect}
-          parcelle={parcelles?.find(p => p.id === convertingProspect.parcelle_id)!}
+          parcelle={parcelles.find(p => p.id === convertingProspect.parcelle_id)!}
           open={!!convertingProspect}
           onOpenChange={(open) => !open && setConvertingProspect(null)}
         />

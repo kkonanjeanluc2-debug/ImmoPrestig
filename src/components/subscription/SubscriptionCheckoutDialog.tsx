@@ -18,12 +18,14 @@ interface SubscriptionCheckoutDialogProps {
   billingCycle: "monthly" | "yearly";
 }
 
+// Payment methods with provider information
 const paymentMethods = [
-  { id: "orange_money", name: "Orange Money", icon: Smartphone, color: "bg-orange-500", fedapayMode: "Orange CI" },
-  { id: "mtn_money", name: "MTN Money", icon: Smartphone, color: "bg-yellow-500", fedapayMode: "MTN CI" },
-  { id: "wave", name: "Wave", icon: Wallet, color: "bg-blue-500", fedapayMode: "Wave CI" },
-  { id: "moov", name: "Moov Money", icon: Smartphone, color: "bg-blue-600", fedapayMode: "Moov CI" },
-  { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-gray-600", fedapayMode: null },
+  { id: "orange_money", name: "Orange Money", icon: Smartphone, color: "bg-orange-500", fedapayMode: "Orange CI", provider: "fedapay" },
+  { id: "mtn_money", name: "MTN Money", icon: Smartphone, color: "bg-yellow-500", fedapayMode: "MTN CI", provider: "fedapay" },
+  { id: "wave", name: "Wave (via FedaPay)", icon: Wallet, color: "bg-blue-400", fedapayMode: "Wave CI", provider: "fedapay" },
+  { id: "wave_direct", name: "Wave Direct", icon: Wallet, color: "bg-blue-600", fedapayMode: null, provider: "wave_ci", description: "Paiement direct Wave" },
+  { id: "moov", name: "Moov Money", icon: Smartphone, color: "bg-blue-500", fedapayMode: "Moov CI", provider: "fedapay" },
+  { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-gray-600", fedapayMode: null, provider: "fedapay" },
 ];
 
 export function SubscriptionCheckoutDialog({
@@ -166,7 +168,12 @@ export function SubscriptionCheckoutDialog({
         return;
       }
 
-      const response = await supabase.functions.invoke("fedapay-checkout", {
+      // Determine which edge function to call based on payment method
+      const selectedMethodData = paymentMethods.find((m) => m.id === paymentMethod);
+      const isWaveDirect = selectedMethodData?.provider === "wave_ci";
+      const edgeFunctionName = isWaveDirect ? "wave-checkout" : "fedapay-checkout";
+
+      const response = await supabase.functions.invoke(edgeFunctionName, {
         body: {
           plan_id: plan.id,
           billing_cycle: billingCycle,
@@ -192,7 +199,7 @@ export function SubscriptionCheckoutDialog({
       }
 
       if (data.payment_url) {
-        // Redirect to FedaPay payment page
+        // Redirect to payment page (FedaPay or Wave)
         window.location.href = data.payment_url;
       } else {
         throw new Error("URL de paiement non reçue");
@@ -265,7 +272,15 @@ export function SubscriptionCheckoutDialog({
                         <div className={`h-8 w-8 rounded-full ${method.color} flex items-center justify-center`}>
                           <method.icon className="h-4 w-4 text-white" />
                         </div>
-                        <span className="font-medium">{method.name}</span>
+                        <div className="flex-1">
+                          <span className="font-medium">{method.name}</span>
+                          {(method as any).description && (
+                            <p className="text-xs text-muted-foreground">{(method as any).description}</p>
+                          )}
+                        </div>
+                        {method.provider === "wave_ci" && (
+                          <Badge variant="secondary" className="text-xs">Direct</Badge>
+                        )}
                       </Label>
                     ))}
                   </div>
@@ -301,15 +316,29 @@ export function SubscriptionCheckoutDialog({
           )}
 
           {/* Payment mode confirmation */}
-          {!isFree && selectedMethod?.fedapayMode && (
+          {!isFree && selectedMethod && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-              <p className="text-sm text-center">
-                <span className="text-muted-foreground">Mode préféré : </span>
-                <span className="font-semibold text-primary">{selectedMethod.fedapayMode}</span>
-              </p>
-              <p className="text-xs text-muted-foreground text-center mt-1">
-                Vous pourrez confirmer votre opérateur sur la page de paiement FedaPay
-              </p>
+              {selectedMethod.provider === "wave_ci" ? (
+                <>
+                  <p className="text-sm text-center">
+                    <span className="text-muted-foreground">Paiement via : </span>
+                    <span className="font-semibold text-primary">Wave Direct API</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground text-center mt-1">
+                    Vous serez redirigé vers l'application Wave pour confirmer le paiement
+                  </p>
+                </>
+              ) : selectedMethod.fedapayMode ? (
+                <>
+                  <p className="text-sm text-center">
+                    <span className="text-muted-foreground">Mode préféré : </span>
+                    <span className="font-semibold text-primary">{selectedMethod.fedapayMode}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground text-center mt-1">
+                    Vous pourrez confirmer votre opérateur sur la page de paiement FedaPay
+                  </p>
+                </>
+              ) : null}
             </div>
           )}
 

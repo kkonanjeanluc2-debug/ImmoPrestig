@@ -56,33 +56,46 @@ const LotissementDetails = () => {
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
 
-  // Calculate actual revenue: down_payments + paid echeances
+  // Calculate stats based on payment status
   const stats = useMemo(() => {
     const total = parcelles?.length || 0;
     const disponibles = parcelles?.filter(p => p.status === "disponible").length || 0;
-    const vendues = parcelles?.filter(p => p.status === "vendu").length || 0;
-    const reservees = parcelles?.filter(p => p.status === "reserve").length || 0;
     
-    // Calculate actual collected revenue
+    // Calculate revenue and count vendues/reservees based on payment status
     let totalRevenue = 0;
+    let vendues = 0;
+    let reservees = 0;
     
     if (ventes && ventes.length > 0) {
       ventes.forEach(vente => {
+        // Calculate total paid for this sale
+        let totalPaid = 0;
+        
         if (vente.payment_type === "comptant") {
-          // For cash payments, the full price is collected
+          // Cash payment = fully paid
+          totalPaid = vente.total_price;
           totalRevenue += vente.total_price;
+          vendues++;
         } else {
-          // For installment payments, add the down payment
-          totalRevenue += vente.down_payment || 0;
-        }
-      });
-    }
-    
-    // Add paid echeances amounts
-    if (echeances && echeances.length > 0) {
-      echeances.forEach(echeance => {
-        if (echeance.status === "paid" && echeance.paid_amount) {
-          totalRevenue += echeance.paid_amount;
+          // Installment payment - calculate actual paid amount
+          totalPaid = vente.down_payment || 0;
+          
+          // Add paid echeances for this vente
+          const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
+          venteEcheances.forEach(echeance => {
+            if (echeance.status === "paid" && echeance.paid_amount) {
+              totalPaid += echeance.paid_amount;
+            }
+          });
+          
+          totalRevenue += totalPaid;
+          
+          // Check if fully paid or partially paid
+          if (totalPaid >= vente.total_price) {
+            vendues++;
+          } else {
+            reservees++;
+          }
         }
       });
     }

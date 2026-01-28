@@ -18,8 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Pencil, Trash2, ShoppingCart } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers } from "lucide-react";
 import { Parcelle, useDeleteParcelle } from "@/hooks/useParcelles";
+import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
@@ -45,10 +46,16 @@ const STATUS_BG = {
 export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) {
   const { canEdit, canDelete } = usePermissions();
   const deleteParcelle = useDeleteParcelle();
+  const { data: ilots } = useIlots(lotissementId);
 
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
   const [sellingParcelle, setSellingParcelle] = useState<Parcelle | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const getIlotName = (ilotId: string | null) => {
+    if (!ilotId) return null;
+    return ilots?.find(i => i.id === ilotId)?.name || null;
+  };
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -75,62 +82,71 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
   return (
     <>
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-        {parcelles.map((parcelle) => (
-          <Card
-            key={parcelle.id}
-            className={`relative cursor-pointer hover:shadow-md transition-all border-2 ${STATUS_BG[parcelle.status]}`}
-          >
-            <CardContent className="p-3">
-              <div className="flex items-start justify-between">
-                <div className="font-bold text-lg">{parcelle.plot_number}</div>
-                {(canEdit || canDelete) && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-1">
-                        <MoreVertical className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {parcelle.status === "disponible" && (
-                        <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Vendre
-                        </DropdownMenuItem>
-                      )}
-                      {canEdit && (
-                        <DropdownMenuItem onClick={() => setEditingParcelle(parcelle)}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Modifier
-                        </DropdownMenuItem>
-                      )}
-                      {canDelete && parcelle.status !== "vendu" && (
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => setDeletingId(parcelle.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Supprimer
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+        {parcelles.map((parcelle) => {
+          const ilotName = getIlotName(parcelle.ilot_id);
+          return (
+            <Card
+              key={parcelle.id}
+              className={`relative cursor-pointer hover:shadow-md transition-all border-2 ${STATUS_BG[parcelle.status]}`}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-start justify-between">
+                  <div className="font-bold text-lg">{parcelle.plot_number}</div>
+                  {(canEdit || canDelete) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-1">
+                          <MoreVertical className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {parcelle.status === "disponible" && (
+                          <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Vendre
+                          </DropdownMenuItem>
+                        )}
+                        {canEdit && (
+                          <DropdownMenuItem onClick={() => setEditingParcelle(parcelle)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Modifier
+                          </DropdownMenuItem>
+                        )}
+                        {canDelete && parcelle.status !== "vendu" && (
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => setDeletingId(parcelle.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+                {ilotName && (
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 mt-0.5">
+                    <Layers className="h-2.5 w-2.5" />
+                    {ilotName}
+                  </p>
                 )}
-              </div>
-              <p className="text-xs text-muted-foreground">{parcelle.area} m²</p>
-              <p className="text-sm font-medium mt-1">
-                {parcelle.price.toLocaleString("fr-FR")} F
-              </p>
-              <Badge
-                variant="outline"
-                className={`mt-2 text-[10px] ${STATUS_STYLES[parcelle.status]}`}
-              >
-                {parcelle.status === "disponible" && "Dispo"}
-                {parcelle.status === "reserve" && "Réservé"}
-                {parcelle.status === "vendu" && "Vendu"}
-              </Badge>
-            </CardContent>
-          </Card>
-        ))}
+                <p className="text-xs text-muted-foreground">{parcelle.area} m²</p>
+                <p className="text-sm font-medium mt-1">
+                  {parcelle.price.toLocaleString("fr-FR")} F
+                </p>
+                <Badge
+                  variant="outline"
+                  className={`mt-2 text-[10px] ${STATUS_STYLES[parcelle.status]}`}
+                >
+                  {parcelle.status === "disponible" && "Dispo"}
+                  {parcelle.status === "reserve" && "Réservé"}
+                  {parcelle.status === "vendu" && "Vendu"}
+                </Badge>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {editingParcelle && (

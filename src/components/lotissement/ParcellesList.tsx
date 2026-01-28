@@ -26,8 +26,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Pencil, Trash2, ShoppingCart } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers } from "lucide-react";
 import { Parcelle, useDeleteParcelle } from "@/hooks/useParcelles";
+import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
@@ -47,10 +48,16 @@ const STATUS_STYLES = {
 export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) {
   const { canEdit, canDelete } = usePermissions();
   const deleteParcelle = useDeleteParcelle();
+  const { data: ilots } = useIlots(lotissementId);
 
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
   const [sellingParcelle, setSellingParcelle] = useState<Parcelle | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const getIlotName = (ilotId: string | null) => {
+    if (!ilotId) return null;
+    return ilots?.find(i => i.id === ilotId)?.name || null;
+  };
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -81,6 +88,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
           <TableHeader>
             <TableRow>
               <TableHead>N° Lot</TableHead>
+              <TableHead>Îlot</TableHead>
               <TableHead>Superficie</TableHead>
               <TableHead>Prix</TableHead>
               <TableHead>Statut</TableHead>
@@ -88,18 +96,30 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {parcelles.map((parcelle) => (
-              <TableRow key={parcelle.id}>
-                <TableCell className="font-medium">{parcelle.plot_number}</TableCell>
-                <TableCell>{parcelle.area.toLocaleString("fr-FR")} m²</TableCell>
-                <TableCell>{parcelle.price.toLocaleString("fr-FR")} F CFA</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={STATUS_STYLES[parcelle.status]}>
-                    {parcelle.status === "disponible" && "Disponible"}
-                    {parcelle.status === "reserve" && "Réservé"}
-                    {parcelle.status === "vendu" && "Vendu"}
-                  </Badge>
-                </TableCell>
+            {parcelles.map((parcelle) => {
+              const ilotName = getIlotName(parcelle.ilot_id);
+              return (
+                <TableRow key={parcelle.id}>
+                  <TableCell className="font-medium">{parcelle.plot_number}</TableCell>
+                  <TableCell>
+                    {ilotName ? (
+                      <Badge variant="outline" className="gap-1">
+                        <Layers className="h-3 w-3" />
+                        {ilotName}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{parcelle.area.toLocaleString("fr-FR")} m²</TableCell>
+                  <TableCell>{parcelle.price.toLocaleString("fr-FR")} F CFA</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={STATUS_STYLES[parcelle.status]}>
+                      {parcelle.status === "disponible" && "Disponible"}
+                      {parcelle.status === "reserve" && "Réservé"}
+                      {parcelle.status === "vendu" && "Vendu"}
+                    </Badge>
+                  </TableCell>
                 <TableCell className="text-right">
                   {(canEdit || canDelete) && (
                     <DropdownMenu>
@@ -135,7 +155,8 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   )}
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </Card>

@@ -9,6 +9,7 @@ export interface Parcelle {
   id: string;
   user_id: string;
   lotissement_id: string;
+  ilot_id: string | null;
   plot_number: string;
   area: number;
   price: number;
@@ -25,6 +26,7 @@ export interface Parcelle {
 
 export interface ParcelleInsert {
   lotissement_id: string;
+  ilot_id?: string | null;
   plot_number: string;
   area: number;
   price: number;
@@ -111,6 +113,7 @@ export const useCreateParcelle = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ilots"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
@@ -140,6 +143,7 @@ export const useUpdateParcelle = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ilots"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
@@ -165,6 +169,7 @@ export const useDeleteParcelle = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ilots"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });
@@ -201,6 +206,7 @@ export const useCreateBulkParcelles = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ilots"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

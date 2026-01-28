@@ -224,7 +224,7 @@ const Properties = () => {
               </SelectContent>
             </Select>
             {/* Assigned Filter - Only for agency owner/admin */}
-            {isAgencyOwner && assignableUsers.length > 1 && (
+            {isAgencyOwner && (
               <Select value={assignedFilter} onValueChange={setAssignedFilter}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Gestionnaire" />

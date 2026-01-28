@@ -212,7 +212,8 @@ export const generateFicheReservation = async (
   lotissement: LotissementInfo,
   acquereur: AcquereurInfo,
   agency: AgencyInfo | null,
-  reservationDate: string = new Date().toISOString()
+  reservationDate: string = new Date().toISOString(),
+  depositPercentage: number = 30
 ): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -325,7 +326,7 @@ export const generateFicheReservation = async (
   
   const conditions = [
     "1. La présente réservation est valable pour une durée de trente (30) jours à compter de la date de signature.",
-    "2. Le réservataire s'engage à verser un acompte de 30% du prix total dans les quinze (15) jours suivant la signature.",
+    `2. Le réservataire s'engage à verser un acompte de ${depositPercentage}% du prix total dans les quinze (15) jours suivant la signature.`,
     "3. En cas de non-respect des délais de paiement, la réservation sera annulée de plein droit.",
     "4. Les frais de notaire et d'enregistrement sont à la charge de l'acquéreur.",
     "5. La parcelle réservée ne peut faire l'objet d'aucune cession ou sous-location."
@@ -555,6 +556,218 @@ export const generateContratVente = async (
   doc.setFont("helvetica", "bold");
   doc.text("L'Acquéreur", margin, yPos);
   doc.text("Le Vendeur", margin + colWidth + 20, yPos);
+  
+  yPos += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text("(Signature précédée de \"Lu et approuvé\")", margin, yPos);
+  doc.text("(Signature et cachet)", margin + colWidth + 20, yPos);
+  
+  yPos += 25;
+  doc.setDrawColor(150, 150, 150);
+  doc.line(margin, yPos, margin + colWidth, yPos);
+  doc.line(margin + colWidth + 20, yPos, pageWidth - margin, yPos);
+
+  addFooter(doc, agency);
+  
+  return doc;
+};
+
+// ========================================
+// PROMESSE DE VENTE (PRE-SALE AGREEMENT)
+// ========================================
+export const generatePromesseVente = async (
+  parcelle: ParcelleInfo,
+  lotissement: LotissementInfo,
+  acquereur: AcquereurInfo,
+  agency: AgencyInfo | null,
+  reservationDate: string = new Date().toISOString(),
+  depositPercentage: number = 30,
+  depositAmount: number = 0
+): Promise<jsPDF> => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  const maxWidth = pageWidth - margin * 2;
+
+  let yPos = await addHeader(doc, agency, "PROMESSE DE VENTE");
+
+  // Reference number
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100, 100, 100);
+  const refNumber = `PV-${Date.now().toString(36).toUpperCase()}`;
+  doc.text(`Référence : ${refNumber}`, pageWidth - margin, yPos, { align: "right" });
+  doc.text(`Date : ${formatDate(reservationDate)}`, pageWidth - margin, yPos + 5, { align: "right" });
+  
+  yPos += 15;
+
+  // Préambule
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  
+  const preambule = `Entre les soussignés :\n\n${agency?.name || "Le Vendeur"}, ${agency?.address ? `sis à ${agency.address}` : ""} ${agency?.city || ""}, représenté par son responsable dûment habilité, ci-après dénommé « LE PROMETTANT »,\n\nD'une part,\n\nEt\n\nMonsieur/Madame ${acquereur.name}${acquereur.birth_date ? `, né(e) le ${formatDate(acquereur.birth_date)}` : ""}${acquereur.birth_place ? ` à ${acquereur.birth_place}` : ""}${acquereur.profession ? `, ${acquereur.profession}` : ""}${acquereur.cni_number ? `, CNI N° ${acquereur.cni_number}` : ""}, ci-après dénommé « LE BÉNÉFICIAIRE »,\n\nD'autre part,\n\nIl a été convenu ce qui suit :`;
+
+  const preambuleLines = doc.splitTextToSize(preambule, maxWidth);
+  preambuleLines.forEach((line: string) => {
+    if (yPos > pageHeight - 30) {
+      doc.addPage();
+      yPos = margin;
+    }
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // Article 1 - Objet de la promesse
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 1 : OBJET DE LA PROMESSE", margin, yPos);
+  yPos += 7;
+  
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article1 = `Le Promettant s'engage irrévocablement à vendre au Bénéficiaire, qui accepte, une parcelle de terrain nue située dans le lotissement « ${lotissement.name} » sis à ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}, désignée sous le numéro de lot ${parcelle.plot_number}, d'une superficie de ${parcelle.area.toLocaleString("fr-FR")} mètres carrés (${parcelle.area.toLocaleString("fr-FR")} m²).`;
+  
+  const article1Lines = doc.splitTextToSize(article1, maxWidth);
+  article1Lines.forEach((line: string) => {
+    if (yPos > pageHeight - 30) {
+      doc.addPage();
+      yPos = margin;
+    }
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // Article 2 - Prix
+  if (yPos > pageHeight - 60) {
+    doc.addPage();
+    yPos = margin;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 2 : PRIX ET CONDITIONS FINANCIÈRES", margin, yPos);
+  yPos += 7;
+  
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  
+  const calculatedDeposit = depositAmount > 0 ? depositAmount : Math.round(parcelle.price * depositPercentage / 100);
+  const article2 = `La vente sera consentie moyennant le prix de ${formatAmountForPDF(parcelle.price)} Francs CFA (${numberToWords(parcelle.price)} francs CFA).\n\nÀ titre de dépôt de garantie et en contrepartie de l'immobilisation du bien, le Bénéficiaire verse ce jour au Promettant la somme de ${formatAmountForPDF(calculatedDeposit)} Francs CFA (${numberToWords(calculatedDeposit)} francs CFA), représentant ${depositPercentage}% du prix de vente.\n\nCette somme sera imputée sur le prix de vente lors de la signature de l'acte définitif.`;
+
+  const article2Lines = doc.splitTextToSize(article2, maxWidth);
+  article2Lines.forEach((line: string) => {
+    if (yPos > pageHeight - 30) {
+      doc.addPage();
+      yPos = margin;
+    }
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // Article 3 - Durée de validité
+  if (yPos > pageHeight - 60) {
+    doc.addPage();
+    yPos = margin;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 3 : DURÉE DE VALIDITÉ", margin, yPos);
+  yPos += 7;
+  
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article3 = `La présente promesse de vente est consentie pour une durée de quatre-vingt-dix (90) jours à compter de ce jour.\n\nLe Bénéficiaire devra lever l'option et signer l'acte de vente définitif avant l'expiration de ce délai, faute de quoi la présente promesse sera caduque de plein droit.\n\nEn cas de non-réalisation de la vente du fait du Bénéficiaire, le dépôt de garantie restera acquis au Promettant à titre d'indemnité forfaitaire.`;
+  
+  const article3Lines = doc.splitTextToSize(article3, maxWidth);
+  article3Lines.forEach((line: string) => {
+    if (yPos > pageHeight - 30) {
+      doc.addPage();
+      yPos = margin;
+    }
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // Article 4 - Conditions suspensives
+  if (yPos > pageHeight - 70) {
+    doc.addPage();
+    yPos = margin;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 4 : CONDITIONS SUSPENSIVES", margin, yPos);
+  yPos += 7;
+  
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article4 = `La présente promesse est consentie sous les conditions suspensives suivantes :\n\n1. Obtention par le Bénéficiaire du financement nécessaire à l'acquisition, le cas échéant\n2. Régularité des titres de propriété du Promettant\n3. Absence de servitudes ou de charges non déclarées grevant le bien\n\nEn cas de non-réalisation d'une condition suspensive, les parties seront libérées de leurs engagements et le dépôt de garantie sera restitué au Bénéficiaire.`;
+  
+  const article4Lines = doc.splitTextToSize(article4, maxWidth);
+  article4Lines.forEach((line: string) => {
+    if (yPos > pageHeight - 30) {
+      doc.addPage();
+      yPos = margin;
+    }
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // Article 5 - Élection de domicile
+  if (yPos > pageHeight - 50) {
+    doc.addPage();
+    yPos = margin;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 5 : ÉLECTION DE DOMICILE ET LITIGES", margin, yPos);
+  yPos += 7;
+  
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article5 = `Pour l'exécution des présentes, les parties font élection de domicile en leur adresse respective ci-dessus indiquée.\n\nTout litige relatif à l'interprétation ou à l'exécution de la présente promesse sera soumis à la juridiction compétente d'Abidjan, Côte d'Ivoire, après échec d'une tentative de règlement amiable.`;
+  
+  const article5Lines = doc.splitTextToSize(article5, maxWidth);
+  article5Lines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 15;
+
+  // Date et lieu
+  doc.text(`Fait à ${lotissement.city || "Abidjan"}, le ${formatDate(reservationDate)}`, margin, yPos);
+  doc.text("En deux (2) exemplaires originaux.", margin, yPos + 6);
+
+  yPos += 25;
+
+  // Signatures
+  if (yPos > pageHeight - 50) {
+    doc.addPage();
+    yPos = margin;
+  }
+
+  const colWidth = (maxWidth - 20) / 2;
+  
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Le Bénéficiaire", margin, yPos);
+  doc.text("Le Promettant", margin + colWidth + 20, yPos);
   
   yPos += 5;
   doc.setFont("helvetica", "normal");

@@ -13,6 +13,7 @@ import {
   generateFicheReservation,
   generateContratVente,
   generateAttestationPaiement,
+  generatePromesseVente,
   downloadPDF,
 } from "@/lib/generateLotissementPDF";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
@@ -32,6 +33,8 @@ export function DocumentsParcelleDialog({
   const { data: agency } = useAgency();
   const { data: echeances } = useEcheancesParcelles(vente.id);
   const [generating, setGenerating] = useState<string | null>(null);
+
+  const depositPercentage = agency?.reservation_deposit_percentage ?? 30;
 
   const agencyInfo = agency
     ? {
@@ -77,10 +80,34 @@ export function DocumentsParcelleDialog({
         lotissementInfo,
         acquereurInfo,
         agencyInfo,
-        vente.sale_date
+        vente.sale_date,
+        depositPercentage
       );
       downloadPDF(doc, `fiche-reservation-${parcelleInfo.plot_number}.pdf`);
       toast.success("Fiche de réservation générée");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    } finally {
+      setGenerating(null);
+    }
+  };
+
+  const handleGeneratePromesseVente = async () => {
+    setGenerating("promesse");
+    try {
+      const depositAmount = vente.down_payment || Math.round(vente.total_price * depositPercentage / 100);
+      const doc = await generatePromesseVente(
+        parcelleInfo,
+        lotissementInfo,
+        acquereurInfo,
+        agencyInfo,
+        vente.sale_date,
+        depositPercentage,
+        depositAmount
+      );
+      downloadPDF(doc, `promesse-vente-${parcelleInfo.plot_number}.pdf`);
+      toast.success("Promesse de vente générée");
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Erreur lors de la génération du PDF");
@@ -184,6 +211,28 @@ export function DocumentsParcelleDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Promesse de vente - Only for reserved or sold parcels */}
+          <div className="flex items-center justify-between p-3 border rounded-lg bg-amber-50 dark:bg-amber-950/20">
+            <div>
+              <p className="font-medium text-sm">Promesse de vente</p>
+              <p className="text-xs text-muted-foreground">
+                Document juridique de pré-vente
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGeneratePromesseVente}
+              disabled={generating === "promesse"}
+            >
+              {generating === "promesse" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
           {/* Fiche de réservation */}
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <div>

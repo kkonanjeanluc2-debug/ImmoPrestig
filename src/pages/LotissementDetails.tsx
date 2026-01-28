@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
 import { useVentesParcelles } from "@/hooks/useVentesParcelles";
+import { useEcheancesForLotissement } from "@/hooks/useEcheancesParcelles";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { ParcellesList } from "@/components/lotissement/ParcellesList";
@@ -47,12 +48,47 @@ const LotissementDetails = () => {
   const { data: lotissement, isLoading: loadingLotissement } = useLotissement(id || "");
   const { data: parcelles, isLoading: loadingParcelles } = useParcelles(id);
   const { data: ventes } = useVentesParcelles(id);
+  const { data: echeances } = useEcheancesForLotissement(id);
   const { canCreate } = usePermissions();
   const { isOwner } = useIsAgencyOwner();
 
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
+
+  // Calculate actual revenue: down_payments + paid echeances
+  const stats = useMemo(() => {
+    const total = parcelles?.length || 0;
+    const disponibles = parcelles?.filter(p => p.status === "disponible").length || 0;
+    const vendues = parcelles?.filter(p => p.status === "vendu").length || 0;
+    const reservees = parcelles?.filter(p => p.status === "reserve").length || 0;
+    
+    // Calculate actual collected revenue
+    let totalRevenue = 0;
+    
+    if (ventes && ventes.length > 0) {
+      ventes.forEach(vente => {
+        if (vente.payment_type === "comptant") {
+          // For cash payments, the full price is collected
+          totalRevenue += vente.total_price;
+        } else {
+          // For installment payments, add the down payment
+          totalRevenue += vente.down_payment || 0;
+        }
+      });
+    }
+    
+    // Add paid echeances amounts
+    if (echeances && echeances.length > 0) {
+      echeances.forEach(echeance => {
+        if (echeance.status === "paid" && echeance.paid_amount) {
+          totalRevenue += echeance.paid_amount;
+        }
+      });
+    }
+    
+    return { total, disponibles, vendues, reservees, totalRevenue };
+  }, [parcelles, ventes, echeances]);
 
   if (loadingLotissement) {
     return (
@@ -87,14 +123,6 @@ const LotissementDetails = () => {
       </DashboardLayout>
     );
   }
-
-  const stats = {
-    total: parcelles?.length || 0,
-    disponibles: parcelles?.filter(p => p.status === "disponible").length || 0,
-    vendues: parcelles?.filter(p => p.status === "vendu").length || 0,
-    reservees: parcelles?.filter(p => p.status === "reserve").length || 0,
-    totalRevenue: parcelles?.filter(p => p.status === "vendu").reduce((sum, p) => sum + p.price, 0) || 0,
-  };
 
   return (
     <DashboardLayout>

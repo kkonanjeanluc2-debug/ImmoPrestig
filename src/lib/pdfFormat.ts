@@ -3,7 +3,8 @@
 
 /**
  * Formats an amount using regular ASCII spaces as thousand separators.
- * Avoids non‑breaking spaces that can render as odd glyphs in some PDF viewers.
+ * Avoids non-breaking spaces that can render as odd glyphs in some PDF viewers.
+ * Returns format: "1 500 000" (without currency suffix)
  */
 export const formatAmountForPDF = (amount: number): string => {
   const str = Math.floor(amount).toString();
@@ -15,4 +16,12 @@ export const formatAmountForPDF = (amount: number): string => {
   }
 
   return parts.join(" ");
+};
+
+/**
+ * Formats an amount with F CFA suffix for display in PDFs.
+ * Returns format: "1 500 000F CFA"
+ */
+export const formatAmountWithCurrency = (amount: number): string => {
+  return `${formatAmountForPDF(amount)}F CFA`;
 };

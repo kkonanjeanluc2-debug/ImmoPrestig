@@ -1,0 +1,267 @@
+import { useState, useMemo } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Plus, User } from "lucide-react";
+import { Parcelle } from "@/hooks/useParcelles";
+import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
+import { useCreateVenteParcelle, PaymentType } from "@/hooks/useVentesParcelles";
+import { toast } from "sonner";
+
+interface SellParcelleDialogProps {
+  parcelle: Parcelle;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcelleDialogProps) {
+  const { data: acquereurs } = useAcquereurs();
+  const createAcquereur = useCreateAcquereur();
+  const createVente = useCreateVenteParcelle();
+
+  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const [acquereurId, setAcquereurId] = useState("");
+  const [newAcquereur, setNewAcquereur] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    cni_number: "",
+  });
+  const [paymentType, setPaymentType] = useState<PaymentType>("comptant");
+  const [downPayment, setDownPayment] = useState("");
+  const [totalInstallments, setTotalInstallments] = useState("12");
+  const [salePrice, setSalePrice] = useState(parcelle.price.toString());
+
+  const monthlyPayment = useMemo(() => {
+    if (paymentType !== "echelonne") return 0;
+    const total = parseFloat(salePrice) || 0;
+    const down = parseFloat(downPayment) || 0;
+    const installments = parseInt(totalInstallments) || 1;
+    return Math.ceil((total - down) / installments);
+  }, [salePrice, downPayment, totalInstallments, paymentType]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let buyerId = acquereurId;
+
+    // Create new buyer if needed
+    if (mode === "new") {
+      if (!newAcquereur.name.trim()) {
+        toast.error("Le nom de l'acquéreur est obligatoire");
+        return;
+      }
+
+      try {
+        const created = await createAcquereur.mutateAsync({
+          name: newAcquereur.name.trim(),
+          phone: newAcquereur.phone.trim() || null,
+          email: newAcquereur.email.trim() || null,
+          cni_number: newAcquereur.cni_number.trim() || null,
+        });
+        buyerId = created.id;
+      } catch {
+        toast.error("Erreur lors de la création de l'acquéreur");
+        return;
+      }
+    }
+
+    if (!buyerId) {
+      toast.error("Veuillez sélectionner ou créer un acquéreur");
+      return;
+    }
+
+    try {
+      await createVente.mutateAsync({
+        parcelle_id: parcelle.id,
+        acquereur_id: buyerId,
+        total_price: parseFloat(salePrice),
+        payment_type: paymentType,
+        down_payment: paymentType === "echelonne" ? parseFloat(downPayment) || 0 : null,
+        monthly_payment: paymentType === "echelonne" ? monthlyPayment : null,
+        total_installments: paymentType === "echelonne" ? parseInt(totalInstallments) : null,
+      });
+
+      toast.success("Vente enregistrée avec succès");
+      onOpenChange(false);
+    } catch {
+      toast.error("Erreur lors de l'enregistrement de la vente");
+    }
+  };
+
+  const isLoading = createAcquereur.isPending || createVente.isPending;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Vendre la parcelle {parcelle.plot_number}</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Buyer Selection */}
+          <div className="space-y-4">
+            <Label>Acquéreur</Label>
+            <RadioGroup
+              value={mode}
+              onValueChange={(v) => setMode(v as "existing" | "new")}
+              className="flex gap-4"
+            >
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="existing" id="existing" />
+                <Label htmlFor="existing" className="cursor-pointer">
+                  Existant
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="new" id="new" />
+                <Label htmlFor="new" className="cursor-pointer">
+                  Nouveau
+                </Label>
+              </div>
+            </RadioGroup>
+
+            {mode === "existing" ? (
+              <Select value={acquereurId} onValueChange={setAcquereurId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un acquéreur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {acquereurs?.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        {a.name} {a.phone && `(${a.phone})`}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="name">Nom complet *</Label>
+                  <Input
+                    id="name"
+                    value={newAcquereur.name}
+                    onChange={(e) => setNewAcquereur({ ...newAcquereur, name: e.target.value })}
+                    placeholder="Kouassi Jean"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Téléphone</Label>
+                  <Input
+                    id="phone"
+                    value={newAcquereur.phone}
+                    onChange={(e) => setNewAcquereur({ ...newAcquereur, phone: e.target.value })}
+                    placeholder="+2250701020304"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cni">N° CNI</Label>
+                  <Input
+                    id="cni"
+                    value={newAcquereur.cni_number}
+                    onChange={(e) => setNewAcquereur({ ...newAcquereur, cni_number: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sale Price */}
+          <div className="space-y-2">
+            <Label htmlFor="salePrice">Prix de vente (F CFA)</Label>
+            <Input
+              id="salePrice"
+              type="number"
+              min="0"
+              value={salePrice}
+              onChange={(e) => setSalePrice(e.target.value)}
+            />
+          </div>
+
+          {/* Payment Type */}
+          <div className="space-y-4">
+            <Label>Mode de paiement</Label>
+            <RadioGroup
+              value={paymentType}
+              onValueChange={(v) => setPaymentType(v as PaymentType)}
+              className="flex gap-4"
+            >
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="comptant" id="comptant" />
+                <Label htmlFor="comptant" className="cursor-pointer">
+                  Comptant
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="echelonne" id="echelonne" />
+                <Label htmlFor="echelonne" className="cursor-pointer">
+                  Échelonné
+                </Label>
+              </div>
+            </RadioGroup>
+
+            {paymentType === "echelonne" && (
+              <div className="grid grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="space-y-2">
+                  <Label htmlFor="downPayment">Apport initial (F CFA)</Label>
+                  <Input
+                    id="downPayment"
+                    type="number"
+                    min="0"
+                    value={downPayment}
+                    onChange={(e) => setDownPayment(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="installments">Nombre de mensualités</Label>
+                  <Input
+                    id="installments"
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={totalInstallments}
+                    onChange={(e) => setTotalInstallments(e.target.value)}
+                  />
+                </div>
+                <div className="col-span-2 p-2 bg-primary/10 rounded text-center">
+                  <p className="text-sm text-muted-foreground">Mensualité</p>
+                  <p className="text-lg font-bold text-primary">
+                    {monthlyPayment.toLocaleString("fr-FR")} F CFA
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Confirmer la vente
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

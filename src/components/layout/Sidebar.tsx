@@ -68,6 +68,7 @@ const navigationGroups = [
     defaultOpen: true,
     items: [
       { name: "Biens immobiliers", href: "/properties", icon: Building2 },
+      { name: "Lotissements", href: "/lotissements", icon: Building2 },
       { name: "Locataires", href: "/tenants", icon: Users },
       { name: "Propriétaires", href: "/owners", icon: Home },
     ],

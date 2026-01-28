@@ -22,7 +22,12 @@ export type EntityType =
   | 'payment' 
   | 'document' 
   | 'contract'
-  | 'user';
+  | 'user'
+  | 'lotissement'
+  | 'parcelle'
+  | 'acquereur'
+  | 'vente_parcelle'
+  | 'echeance_parcelle';
 
 export interface ActivityLog {
   id: string;

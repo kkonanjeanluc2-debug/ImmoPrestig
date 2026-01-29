@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, AlertCircle } from "lucide-react";
-import { useCreateParcelle, PlotStatus } from "@/hooks/useParcelles";
+import { useCreateParcelle, PlotStatus, Parcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { toast } from "sonner";
 
@@ -25,13 +25,15 @@ interface AddParcelleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existingNumbers: string[];
+  existingParcelles?: Parcelle[];
 }
 
 export function AddParcelleDialog({ 
   lotissementId, 
   open, 
   onOpenChange, 
-  existingNumbers 
+  existingNumbers,
+  existingParcelles = []
 }: AddParcelleDialogProps) {
   const createParcelle = useCreateParcelle();
   const { data: ilots } = useIlots(lotissementId);
@@ -47,6 +49,25 @@ export function AddParcelleDialog({
   const isDuplicate = existingNumbers.some(
     n => n.toLowerCase() === formData.plot_number.trim().toLowerCase()
   );
+
+  // Check if adding to this îlot would exceed capacity
+  const ilotCapacityInfo = useMemo(() => {
+    if (!formData.ilot_id || !ilots) {
+      return { currentCount: 0, maxCount: null, wouldExceed: false };
+    }
+    
+    const selectedIlot = ilots.find(i => i.id === formData.ilot_id);
+    if (!selectedIlot) {
+      return { currentCount: 0, maxCount: null, wouldExceed: false };
+    }
+
+    const currentCount = existingParcelles.filter(p => p.ilot_id === formData.ilot_id).length;
+    const maxCount = selectedIlot.plots_count;
+    const wouldExceed = maxCount !== null && (currentCount + 1) > maxCount;
+    const remainingCapacity = maxCount !== null ? Math.max(0, maxCount - currentCount) : null;
+
+    return { currentCount, maxCount, wouldExceed, remainingCapacity };
+  }, [formData.ilot_id, ilots, existingParcelles]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,13 +187,35 @@ export function AddParcelleDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun îlot</SelectItem>
-                  {ilots?.map((ilot) => (
-                    <SelectItem key={ilot.id} value={ilot.id}>
-                      {ilot.name}
-                    </SelectItem>
-                  ))}
+                  {ilots?.map((ilot) => {
+                    const currentCount = existingParcelles.filter(p => p.ilot_id === ilot.id).length;
+                    const isFull = ilot.plots_count !== null && currentCount >= ilot.plots_count;
+                    return (
+                      <SelectItem key={ilot.id} value={ilot.id} disabled={isFull}>
+                        {ilot.name}
+                        {ilot.plots_count !== null && (
+                          <span className={`ml-2 text-xs ${isFull ? "text-destructive" : "text-muted-foreground"}`}>
+                            ({currentCount}/{ilot.plots_count})
+                          </span>
+                        )}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
+              {/* Warning if would exceed îlot capacity */}
+              {ilotCapacityInfo.wouldExceed && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  L'îlot est plein ({ilotCapacityInfo.currentCount}/{ilotCapacityInfo.maxCount} lots)
+                </p>
+              )}
+              {/* Info about current capacity */}
+              {formData.ilot_id && ilotCapacityInfo.maxCount !== null && !ilotCapacityInfo.wouldExceed && (
+                <p className="text-xs text-muted-foreground">
+                  Capacité : {ilotCapacityInfo.currentCount}/{ilotCapacityInfo.maxCount} lots
+                </p>
+              )}
             </div>
           </div>
 
@@ -180,7 +223,7 @@ export function AddParcelleDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={createParcelle.isPending || isDuplicate}>
+            <Button type="submit" disabled={createParcelle.isPending || isDuplicate || ilotCapacityInfo.wouldExceed}>
               {createParcelle.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Créer
             </Button>

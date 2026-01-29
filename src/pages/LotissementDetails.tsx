@@ -373,6 +373,7 @@ const LotissementDetails = () => {
         open={showAddParcelle}
         onOpenChange={setShowAddParcelle}
         existingNumbers={parcelles?.map(p => p.plot_number) || []}
+        existingParcelles={parcelles || []}
       />
 
       <AddBulkParcellesDialog
@@ -380,6 +381,7 @@ const LotissementDetails = () => {
         open={showBulkAdd}
         onOpenChange={setShowBulkAdd}
         existingNumbers={parcelles?.map(p => p.plot_number) || []}
+        existingParcelles={parcelles?.map(p => ({ ilot_id: p.ilot_id })) || []}
       />
     </DashboardLayout>
   );

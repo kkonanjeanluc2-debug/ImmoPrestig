@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -26,13 +26,58 @@ interface AddBulkParcellesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existingNumbers: string[];
+  existingParcelles?: { ilot_id: string | null }[];
+}
+
+// Helper function to extract the next number from existing plot numbers
+function getNextPlotNumber(existingNumbers: string[]): { prefix: string; nextNumber: number } {
+  if (existingNumbers.length === 0) {
+    return { prefix: "", nextNumber: 1 };
+  }
+
+  // Try to find the pattern: extract prefix and max number
+  const numbersWithPrefix: { prefix: string; number: number }[] = [];
+  
+  for (const plotNumber of existingNumbers) {
+    // Match patterns like "A1", "Lot-25", "B12", "123"
+    const match = plotNumber.match(/^([A-Za-z\-_]*?)(\d+)$/);
+    if (match) {
+      numbersWithPrefix.push({
+        prefix: match[1],
+        number: parseInt(match[2], 10),
+      });
+    }
+  }
+
+  if (numbersWithPrefix.length === 0) {
+    return { prefix: "", nextNumber: 1 };
+  }
+
+  // Find the most common prefix
+  const prefixCounts: Record<string, number> = {};
+  for (const item of numbersWithPrefix) {
+    prefixCounts[item.prefix] = (prefixCounts[item.prefix] || 0) + 1;
+  }
+  
+  const mostCommonPrefix = Object.entries(prefixCounts)
+    .sort((a, b) => b[1] - a[1])[0][0];
+
+  // Find the max number for that prefix
+  const maxNumber = Math.max(
+    ...numbersWithPrefix
+      .filter(item => item.prefix === mostCommonPrefix)
+      .map(item => item.number)
+  );
+
+  return { prefix: mostCommonPrefix, nextNumber: maxNumber + 1 };
 }
 
 export function AddBulkParcellesDialog({ 
   lotissementId, 
   open, 
   onOpenChange, 
-  existingNumbers 
+  existingNumbers,
+  existingParcelles = []
 }: AddBulkParcellesDialogProps) {
   const createBulkParcelles = useCreateBulkParcelles();
   const { data: ilots } = useIlots(lotissementId);
@@ -45,6 +90,18 @@ export function AddBulkParcellesDialog({
     price: "",
     ilot_id: "",
   });
+
+  // Auto-detect next plot number when dialog opens
+  useEffect(() => {
+    if (open && existingNumbers.length > 0) {
+      const { prefix, nextNumber } = getNextPlotNumber(existingNumbers);
+      setFormData(prev => ({
+        ...prev,
+        prefix,
+        startNumber: nextNumber.toString(),
+      }));
+    }
+  }, [open, existingNumbers]);
 
   // Calculate total area of the parcelles being created
   const totalArea = useMemo(() => {
@@ -70,6 +127,26 @@ export function AddBulkParcellesDialog({
     if (!formData.ilot_id || formData.ilot_id === "none") return true;
     return matchingIlots.some(i => i.id === formData.ilot_id);
   }, [formData.ilot_id, matchingIlots]);
+
+  // Calculate current parcelles count for selected îlot and check capacity
+  const ilotCapacityInfo = useMemo(() => {
+    if (!formData.ilot_id || formData.ilot_id === "none" || !ilots) {
+      return { currentCount: 0, maxCount: null, wouldExceed: false };
+    }
+    
+    const selectedIlot = ilots.find(i => i.id === formData.ilot_id);
+    if (!selectedIlot) {
+      return { currentCount: 0, maxCount: null, wouldExceed: false };
+    }
+
+    const currentCount = existingParcelles.filter(p => p.ilot_id === formData.ilot_id).length;
+    const maxCount = selectedIlot.plots_count;
+    const countToAdd = parseInt(formData.count) || 0;
+    const wouldExceed = maxCount !== null && (currentCount + countToAdd) > maxCount;
+    const remainingCapacity = maxCount !== null ? Math.max(0, maxCount - currentCount) : null;
+
+    return { currentCount, maxCount, wouldExceed, remainingCapacity };
+  }, [formData.ilot_id, formData.count, ilots, existingParcelles]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,6 +347,23 @@ export function AddBulkParcellesDialog({
                   La superficie de l'îlot ne correspond pas à la superficie totale des lots
                 </p>
               )}
+
+              {/* Warning if would exceed îlot capacity */}
+              {ilotCapacityInfo.wouldExceed && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Capacité dépassée ! L'îlot peut contenir {ilotCapacityInfo.maxCount} lots 
+                  ({ilotCapacityInfo.currentCount} existants, {ilotCapacityInfo.remainingCapacity} places restantes)
+                </p>
+              )}
+
+              {/* Info about current capacity */}
+              {formData.ilot_id && formData.ilot_id !== "none" && ilotCapacityInfo.maxCount !== null && !ilotCapacityInfo.wouldExceed && (
+                <p className="text-xs text-muted-foreground">
+                  Capacité de l'îlot : {ilotCapacityInfo.currentCount}/{ilotCapacityInfo.maxCount} lots 
+                  ({ilotCapacityInfo.remainingCapacity} places restantes)
+                </p>
+              )}
             </div>
           )}
 
@@ -277,7 +371,7 @@ export function AddBulkParcellesDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={createBulkParcelles.isPending}>
+            <Button type="submit" disabled={createBulkParcelles.isPending || ilotCapacityInfo.wouldExceed}>
               {createBulkParcelles.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Créer {formData.count} parcelles
             </Button>

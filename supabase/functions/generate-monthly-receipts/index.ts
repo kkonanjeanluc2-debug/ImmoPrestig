@@ -184,32 +184,19 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body to check for specific month or user filtering
-    let targetMonth: Date;
     let targetUserId: string | null = null;
     
     try {
       const body = await req.json();
-      // Allow specifying a specific month (for testing or manual runs)
-      if (body.month && body.year) {
-        targetMonth = new Date(body.year, body.month - 1, 1);
-      } else {
-        // Default: process the previous month
-        const now = new Date();
-        targetMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      }
       targetUserId = body.user_id || null;
     } catch {
-      // No body or invalid JSON - use previous month
-      const now = new Date();
-      targetMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      // No body or invalid JSON - continue without user filter
     }
 
-    const firstDayOfMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1);
-    const lastDayOfMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0);
+    console.log(`Processing receipts for all paid payments without receipts yet`);
 
-    console.log(`Processing receipts for ${firstDayOfMonth.toISOString().split("T")[0]} to ${lastDayOfMonth.toISOString().split("T")[0]}`);
-
-    // Build query for paid payments
+    // Build query for paid payments that haven't had receipts sent yet
+    // We find all paid payments regardless of month
     let query = supabase
       .from("payments")
       .select(`
@@ -233,8 +220,7 @@ Deno.serve(async (req) => {
         )
       `)
       .eq("status", "paid")
-      .gte("due_date", firstDayOfMonth.toISOString().split("T")[0])
-      .lte("due_date", lastDayOfMonth.toISOString().split("T")[0]);
+      .not("paid_date", "is", null);
 
     // Filter by user if specified
     if (targetUserId) {
@@ -369,7 +355,6 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: `Traitement terminé: ${results.sent} quittances envoyées, ${results.skipped} ignorées`,
-        period: `${getPaymentPeriod(firstDayOfMonth.toISOString())}`,
         results,
       }),
       {

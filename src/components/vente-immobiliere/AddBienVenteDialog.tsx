@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/select";
 import { useCreateBienVente } from "@/hooks/useBiensVente";
 import { toast } from "sonner";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, ImageIcon, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const PROPERTY_TYPES = [
   { value: "maison", label: "Maison" },
@@ -46,8 +47,62 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createBien = useCreateBienVente();
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Veuillez sélectionner une image valide");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dépasser 5 Mo");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `biens-vente/${fileName}`;
+
+      const { error } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(filePath);
+
+      setImageUrl(urlData.publicUrl);
+      setImagePreview(urlData.publicUrl);
+      toast.success("Image importée avec succès !");
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error("Erreur lors de l'import de l'image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    setImageUrl("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +123,7 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         description: description || null,
+        image_url: imageUrl || null,
       });
 
       toast.success("Bien ajouté avec succès");
@@ -88,6 +144,11 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
     setBedrooms("");
     setBathrooms("");
     setDescription("");
+    setImageUrl("");
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -196,6 +257,60 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
             </div>
 
             <div className="col-span-2">
+              <Label>Photo du bien</Label>
+              <div className="space-y-3 mt-2">
+                {imagePreview ? (
+                  <div className="relative rounded-lg overflow-hidden border border-border">
+                    <img 
+                      src={imagePreview} 
+                      alt="Aperçu" 
+                      className="w-full h-48 object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8"
+                      onClick={removeImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                  >
+                    {isUploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                        <p className="text-sm text-muted-foreground">Import en cours...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="p-3 rounded-full bg-primary/10">
+                          <ImageIcon className="h-8 w-8 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Cliquez pour importer une image</p>
+                          <p className="text-sm text-muted-foreground">ou glissez-déposez</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP (max 5 Mo)</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            <div className="col-span-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -211,7 +326,7 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={createBien.isPending}>
+            <Button type="submit" disabled={createBien.isPending || isUploading}>
               {createBien.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Ajouter
             </Button>

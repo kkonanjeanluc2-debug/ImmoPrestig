@@ -64,10 +64,25 @@ Deno.serve(async (req) => {
       console.log(`Deleted ${deletedOwners?.length || 0} owners from trash`);
     }
 
+    // Delete old lotissements from trash
+    const { data: deletedLotissements, error: lotissementsError } = await supabase
+      .from("lotissements")
+      .delete()
+      .lt("deleted_at", cutoffDate)
+      .not("deleted_at", "is", null)
+      .select("id, name");
+
+    if (lotissementsError) {
+      console.error("Error deleting lotissements:", lotissementsError);
+    } else {
+      console.log(`Deleted ${deletedLotissements?.length || 0} lotissements from trash`);
+    }
+
     const summary = {
       tenants: deletedTenants?.length || 0,
       properties: deletedProperties?.length || 0,
       owners: deletedOwners?.length || 0,
+      lotissements: deletedLotissements?.length || 0,
       cutoffDate,
     };
 

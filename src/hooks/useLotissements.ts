@@ -15,6 +15,7 @@ export interface Lotissement {
   image_url: string | null;
   latitude: number | null;
   longitude: number | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -44,6 +45,7 @@ export const useLotissements = () => {
       const { data, error } = await supabase
         .from("lotissements")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -134,6 +136,33 @@ export const useUpdateLotissement = () => {
   });
 };
 
+export const useSoftDeleteLotissement = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name?: string }) => {
+      const { error } = await supabase
+        .from("lotissements")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      if (user) {
+        await logActivityDirect(user.id, "delete", "lotissement", name || "Lotissement supprimé", id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+    },
+  });
+};
+
+// Keep the hard delete for permanent deletion
 export const useDeleteLotissement = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -148,11 +177,13 @@ export const useDeleteLotissement = () => {
       if (error) throw error;
 
       if (user) {
-        await logActivityDirect(user.id, "delete", "lotissement", name || "Lotissement supprimé", id);
+        await logActivityDirect(user.id, "permanent_delete", "lotissement", name || "Lotissement supprimé", id);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

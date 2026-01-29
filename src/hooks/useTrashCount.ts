@@ -6,6 +6,7 @@ export interface TrashCount {
   tenants: number;
   properties: number;
   owners: number;
+  lotissements: number;
   total: number;
 }
 
@@ -15,7 +16,7 @@ export const useTrashCount = () => {
   return useQuery({
     queryKey: ["trash-count", user?.id],
     queryFn: async (): Promise<TrashCount> => {
-      const [tenantsResult, propertiesResult, ownersResult] = await Promise.all([
+      const [tenantsResult, propertiesResult, ownersResult, lotissementsResult] = await Promise.all([
         supabase
           .from("tenants")
           .select("id", { count: "exact", head: true })
@@ -28,17 +29,23 @@ export const useTrashCount = () => {
           .from("owners")
           .select("id", { count: "exact", head: true })
           .not("deleted_at", "is", null),
+        supabase
+          .from("lotissements")
+          .select("id", { count: "exact", head: true })
+          .not("deleted_at", "is", null),
       ]);
 
       const tenants = tenantsResult.count ?? 0;
       const properties = propertiesResult.count ?? 0;
       const owners = ownersResult.count ?? 0;
+      const lotissements = lotissementsResult.count ?? 0;
 
       return {
         tenants,
         properties,
         owners,
-        total: tenants + properties + owners,
+        lotissements,
+        total: tenants + properties + owners + lotissements,
       };
     },
     enabled: !!user,

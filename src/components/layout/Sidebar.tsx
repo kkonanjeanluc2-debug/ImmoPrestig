@@ -54,7 +54,6 @@ const navigation = [
   { name: "Propriétaires", href: "/owners", icon: Home },
   { name: "Contrats", href: "/contracts", icon: ScrollText },
   { name: "Paiements", href: "/payments", icon: Wallet },
-  { name: "Documents", href: "/documents", icon: FileText },
 ];
 
 const superAdminNavigation = [

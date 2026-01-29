@@ -20,6 +20,7 @@ export interface Parcelle {
   height: number | null;
   notes: string | null;
   assigned_to: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -49,7 +50,7 @@ export const useParcelles = (lotissementId?: string) => {
   return useQuery({
     queryKey: ["parcelles", lotissementId],
     queryFn: async () => {
-      let query = supabase.from("parcelles").select("*");
+      let query = supabase.from("parcelles").select("*").is("deleted_at", null);
       
       if (lotissementId) {
         query = query.eq("lotissement_id", lotissementId);
@@ -149,6 +150,35 @@ export const useUpdateParcelle = () => {
   });
 };
 
+export const useSoftDeleteParcelle = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, plotNumber }: { id: string; plotNumber?: string }) => {
+      const { error } = await supabase
+        .from("parcelles")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      if (user) {
+        await logActivityDirect(user.id, "delete", "parcelle", `Lot ${plotNumber || "supprimé"}`, id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
+      queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ilots"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+    },
+  });
+};
+
+// Keep the hard delete for permanent deletion
 export const useDeleteParcelle = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -163,11 +193,13 @@ export const useDeleteParcelle = () => {
       if (error) throw error;
 
       if (user) {
-        await logActivityDirect(user.id, "delete", "parcelle", `Lot ${plotNumber || "supprimé"}`, id);
+        await logActivityDirect(user.id, "permanent_delete", "parcelle", `Lot ${plotNumber || "supprimé"}`, id);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
       queryClient.invalidateQueries({ queryKey: ["lotissements"] });
       queryClient.invalidateQueries({ queryKey: ["ilots"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });

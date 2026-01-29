@@ -765,6 +765,7 @@ export type Database = {
       ilots: {
         Row: {
           created_at: string
+          deleted_at: string | null
           description: string | null
           id: string
           lotissement_id: string
@@ -776,6 +777,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           lotissement_id: string
@@ -787,6 +789,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           lotissement_id?: string
@@ -1179,6 +1182,7 @@ export type Database = {
           area: number
           assigned_to: string | null
           created_at: string
+          deleted_at: string | null
           height: number | null
           id: string
           ilot_id: string | null
@@ -1197,6 +1201,7 @@ export type Database = {
           area: number
           assigned_to?: string | null
           created_at?: string
+          deleted_at?: string | null
           height?: number | null
           id?: string
           ilot_id?: string | null
@@ -1215,6 +1220,7 @@ export type Database = {
           area?: number
           assigned_to?: string | null
           created_at?: string
+          deleted_at?: string | null
           height?: number | null
           id?: string
           ilot_id?: string | null

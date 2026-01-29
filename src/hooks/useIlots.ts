@@ -11,6 +11,7 @@ export interface Ilot {
   description: string | null;
   total_area: number | null;
   plots_count: number | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -43,6 +44,7 @@ export const useIlots = (lotissementId?: string) => {
         .from("ilots")
         .select("*")
         .eq("lotissement_id", lotissementId)
+        .is("deleted_at", null)
         .order("name", { ascending: true });
 
       if (error) throw error;
@@ -63,6 +65,7 @@ export const useIlotsWithStats = (lotissementId?: string) => {
         .from("ilots")
         .select("*")
         .eq("lotissement_id", lotissementId)
+        .is("deleted_at", null)
         .order("name", { ascending: true });
 
       if (ilotsError) throw ilotsError;
@@ -154,6 +157,34 @@ export const useUpdateIlot = () => {
   });
 };
 
+export const useSoftDeleteIlot = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name?: string }) => {
+      const { error } = await supabase
+        .from("ilots")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      if (user) {
+        await logActivityDirect(user.id, "delete", "ilot", name || "Îlot supprimé", id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ilots"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-ilots"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
+      queryClient.invalidateQueries({ queryKey: ["parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+    },
+  });
+};
+
+// Keep the hard delete for permanent deletion
 export const useDeleteIlot = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -168,11 +199,13 @@ export const useDeleteIlot = () => {
       if (error) throw error;
 
       if (user) {
-        await logActivityDirect(user.id, "delete", "ilot", name || "Îlot supprimé", id);
+        await logActivityDirect(user.id, "permanent_delete", "ilot", name || "Îlot supprimé", id);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ilots"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-ilots"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
       queryClient.invalidateQueries({ queryKey: ["parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },

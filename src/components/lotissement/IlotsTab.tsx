@@ -37,7 +37,7 @@ import {
   CheckCircle2,
   ShoppingCart,
 } from "lucide-react";
-import { useIlotsWithStats, useDeleteIlot, IlotWithStats } from "@/hooks/useIlots";
+import { useIlotsWithStats, useSoftDeleteIlot, IlotWithStats } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddIlotDialog } from "./AddIlotDialog";
@@ -51,7 +51,7 @@ interface IlotsTabProps {
 
 export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
   const { data: ilots, isLoading } = useIlotsWithStats(lotissementId);
-  const deleteIlot = useDeleteIlot();
+  const deleteIlot = useSoftDeleteIlot();
   const { canCreate, canEdit, canDelete } = usePermissions();
 
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -62,7 +62,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
     if (!deletingIlot) return;
     try {
       await deleteIlot.mutateAsync({ id: deletingIlot.id, name: deletingIlot.name });
-      toast.success("Îlot supprimé avec succès");
+      toast.success("Îlot déplacé vers la corbeille");
       setDeletingIlot(null);
     } catch (error) {
       toast.error("Erreur lors de la suppression de l'îlot");

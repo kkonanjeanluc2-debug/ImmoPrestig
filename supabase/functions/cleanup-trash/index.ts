@@ -78,11 +78,41 @@ Deno.serve(async (req) => {
       console.log(`Deleted ${deletedLotissements?.length || 0} lotissements from trash`);
     }
 
+    // Delete old parcelles from trash
+    const { data: deletedParcelles, error: parcellesError } = await supabase
+      .from("parcelles")
+      .delete()
+      .lt("deleted_at", cutoffDate)
+      .not("deleted_at", "is", null)
+      .select("id, plot_number");
+
+    if (parcellesError) {
+      console.error("Error deleting parcelles:", parcellesError);
+    } else {
+      console.log(`Deleted ${deletedParcelles?.length || 0} parcelles from trash`);
+    }
+
+    // Delete old ilots from trash
+    const { data: deletedIlots, error: ilotsError } = await supabase
+      .from("ilots")
+      .delete()
+      .lt("deleted_at", cutoffDate)
+      .not("deleted_at", "is", null)
+      .select("id, name");
+
+    if (ilotsError) {
+      console.error("Error deleting ilots:", ilotsError);
+    } else {
+      console.log(`Deleted ${deletedIlots?.length || 0} ilots from trash`);
+    }
+
     const summary = {
       tenants: deletedTenants?.length || 0,
       properties: deletedProperties?.length || 0,
       owners: deletedOwners?.length || 0,
       lotissements: deletedLotissements?.length || 0,
+      parcelles: deletedParcelles?.length || 0,
+      ilots: deletedIlots?.length || 0,
       cutoffDate,
     };
 

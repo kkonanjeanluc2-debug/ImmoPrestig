@@ -49,11 +49,11 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
 const navigation = [
   { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
   { name: "Biens", href: "/properties", icon: Building2 },
-  { name: "Lotissements", href: "/lotissements", icon: Building2 },
   { name: "Locataires", href: "/tenants", icon: Users },
   { name: "Propriétaires", href: "/owners", icon: Home },
   { name: "Contrats", href: "/contracts", icon: ScrollText },
   { name: "Paiements", href: "/payments", icon: Wallet },
+  { name: "Lotissements", href: "/lotissements", icon: Building2 },
 ];
 
 const superAdminNavigation = [

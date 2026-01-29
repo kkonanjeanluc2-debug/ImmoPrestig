@@ -1,20 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBiensVente } from "@/hooks/useBiensVente";
 import { useVentesImmobilieres } from "@/hooks/useVentesImmobilieres";
-import { useOverdueEcheancesVentes, useUpcomingEcheancesVentes } from "@/hooks/useEcheancesVentes";
-import { Building2, TrendingUp, AlertTriangle, Calendar, Wallet } from "lucide-react";
+import { useOverdueEcheancesVentes, useUpcomingEcheancesVentes, useEcheancesVentes } from "@/hooks/useEcheancesVentes";
+import { Building2, TrendingUp, AlertTriangle, Calendar } from "lucide-react";
 import { formatCurrency } from "@/lib/pdfFormat";
 
 export function VentesDashboard() {
   const { data: biens } = useBiensVente();
   const { data: ventes } = useVentesImmobilieres();
+  const { data: allEcheances } = useEcheancesVentes();
   const { data: overdueEcheances } = useOverdueEcheancesVentes();
   const { data: upcomingEcheances } = useUpcomingEcheancesVentes();
 
   const biensDisponibles = biens?.filter((b) => b.status === "disponible").length || 0;
   const biensVendus = biens?.filter((b) => b.status === "vendu").length || 0;
   
-  const totalRevenue = ventes?.reduce((sum, v) => sum + v.total_price, 0) || 0;
+  // Calculate revenue from actual payments (down payments + paid installments)
+  const totalDownPayments = ventes?.reduce((sum, v) => sum + (v.down_payment || 0), 0) || 0;
+  const paidInstallments = allEcheances?.filter((e) => e.status === "paid").reduce((sum, e) => sum + (e.paid_amount || e.amount), 0) || 0;
+  const totalRevenue = totalDownPayments + paidInstallments;
+  
   const ventesEnCours = ventes?.filter((v) => v.status === "en_cours").length || 0;
   const ventesCompletes = ventes?.filter((v) => v.status === "complete").length || 0;
 

@@ -367,6 +367,75 @@ export type Database = {
         }
         Relationships: []
       }
+      biens_vente: {
+        Row: {
+          address: string
+          area: number | null
+          assigned_to: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          image_url: string | null
+          latitude: number | null
+          longitude: number | null
+          price: number
+          property_type: string
+          status: Database["public"]["Enums"]["property_sale_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          area?: number | null
+          assigned_to?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          price: number
+          property_type: string
+          status?: Database["public"]["Enums"]["property_sale_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          area?: number | null
+          assigned_to?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          price?: number
+          property_type?: string
+          status?: Database["public"]["Enums"]["property_sale_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contract_signatures: {
         Row: {
           contract_id: string
@@ -722,6 +791,62 @@ export type Database = {
             columns: ["vente_id"]
             isOneToOne: false
             referencedRelation: "ventes_parcelles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      echeances_ventes: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_amount: number | null
+          paid_date: string | null
+          payment_method: string | null
+          receipt_number: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          vente_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_method?: string | null
+          receipt_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vente_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_method?: string | null
+          receipt_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "echeances_ventes_vente_id_fkey"
+            columns: ["vente_id"]
+            isOneToOne: false
+            referencedRelation: "ventes_immobilieres"
             referencedColumns: ["id"]
           },
         ]
@@ -1895,6 +2020,81 @@ export type Database = {
         }
         Relationships: []
       }
+      ventes_immobilieres: {
+        Row: {
+          acquereur_id: string
+          bien_id: string
+          created_at: string
+          down_payment: number | null
+          id: string
+          monthly_payment: number | null
+          notes: string | null
+          paid_installments: number | null
+          payment_method: string | null
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          sale_date: string
+          sold_by: string | null
+          status: Database["public"]["Enums"]["sale_payment_status"]
+          total_installments: number | null
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acquereur_id: string
+          bien_id: string
+          created_at?: string
+          down_payment?: number | null
+          id?: string
+          monthly_payment?: number | null
+          notes?: string | null
+          paid_installments?: number | null
+          payment_method?: string | null
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          sale_date?: string
+          sold_by?: string | null
+          status?: Database["public"]["Enums"]["sale_payment_status"]
+          total_installments?: number | null
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acquereur_id?: string
+          bien_id?: string
+          created_at?: string
+          down_payment?: number | null
+          id?: string
+          monthly_payment?: number | null
+          notes?: string | null
+          paid_installments?: number | null
+          payment_method?: string | null
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          sale_date?: string
+          sold_by?: string | null
+          status?: Database["public"]["Enums"]["sale_payment_status"]
+          total_installments?: number | null
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ventes_immobilieres_acquereur_id_fkey"
+            columns: ["acquereur_id"]
+            isOneToOne: false
+            referencedRelation: "acquereurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ventes_immobilieres_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_vente"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ventes_parcelles: {
         Row: {
           acquereur_id: string
@@ -2069,6 +2269,7 @@ export type Database = {
       interest_level: "faible" | "moyen" | "eleve"
       payment_type: "comptant" | "echelonne"
       plot_status: "disponible" | "reserve" | "vendu"
+      property_sale_status: "disponible" | "reserve" | "vendu"
       prospect_status:
         | "nouveau"
         | "contacte"
@@ -2076,6 +2277,7 @@ export type Database = {
         | "negociation"
         | "perdu"
         | "converti"
+      sale_payment_status: "en_cours" | "complete" | "annule"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2208,6 +2410,7 @@ export const Constants = {
       interest_level: ["faible", "moyen", "eleve"],
       payment_type: ["comptant", "echelonne"],
       plot_status: ["disponible", "reserve", "vendu"],
+      property_sale_status: ["disponible", "reserve", "vendu"],
       prospect_status: [
         "nouveau",
         "contacte",
@@ -2216,6 +2419,7 @@ export const Constants = {
         "perdu",
         "converti",
       ],
+      sale_payment_status: ["en_cours", "complete", "annule"],
     },
   },
 } as const

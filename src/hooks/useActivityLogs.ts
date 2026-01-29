@@ -32,7 +32,10 @@ export type EntityType =
   | 'demarche_administrative'
   | 'parcelle_admin_status'
   | 'prospect'
-  | 'ilot';
+  | 'ilot'
+  | 'bien_vente'
+  | 'vente_immobiliere'
+  | 'echeance_vente';
 
 export interface ActivityLog {
   id: string;

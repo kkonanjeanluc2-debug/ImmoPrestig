@@ -70,3 +70,11 @@ export const numberToWordsPDF = (num: number): string => {
   const prefix = b === 1 ? "un milliard" : numberToWordsPDF(b) + " milliards";
   return prefix + (rest > 0 ? " " + numberToWordsPDF(rest) : "");
 };
+
+/**
+ * Formats currency for display (not PDF-specific).
+ * Returns format: "1 500 000 FCFA"
+ */
+export const formatCurrency = (amount: number): string => {
+  return `${formatAmountForPDF(amount)} FCFA`;
+};

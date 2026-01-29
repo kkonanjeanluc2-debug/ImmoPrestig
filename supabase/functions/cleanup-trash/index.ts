@@ -106,6 +106,20 @@ Deno.serve(async (req) => {
       console.log(`Deleted ${deletedIlots?.length || 0} ilots from trash`);
     }
 
+    // Delete old prospects from trash
+    const { data: deletedProspects, error: prospectsError } = await supabase
+      .from("parcelle_prospects")
+      .delete()
+      .lt("deleted_at", cutoffDate)
+      .not("deleted_at", "is", null)
+      .select("id, name");
+
+    if (prospectsError) {
+      console.error("Error deleting prospects:", prospectsError);
+    } else {
+      console.log(`Deleted ${deletedProspects?.length || 0} prospects from trash`);
+    }
+
     const summary = {
       tenants: deletedTenants?.length || 0,
       properties: deletedProperties?.length || 0,
@@ -113,6 +127,7 @@ Deno.serve(async (req) => {
       lotissements: deletedLotissements?.length || 0,
       parcelles: deletedParcelles?.length || 0,
       ilots: deletedIlots?.length || 0,
+      prospects: deletedProspects?.length || 0,
       cutoffDate,
     };
 

@@ -55,6 +55,7 @@ export const useParcelleProspects = (parcelleId?: string) => {
       let query = supabase
         .from("parcelle_prospects")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (parcelleId) {
@@ -92,6 +93,7 @@ export const useLotissementProspects = (lotissementId?: string) => {
         .from("parcelle_prospects")
         .select("*")
         .in("parcelle_id", parcelleIds)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -170,9 +172,10 @@ export const useDeleteParcelleProspect = () => {
 
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name?: string }) => {
+      // Soft delete - move to trash
       const { error } = await supabase
         .from("parcelle_prospects")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", id);
 
       if (error) throw error;
@@ -184,6 +187,7 @@ export const useDeleteParcelleProspect = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parcelle-prospects"] });
       queryClient.invalidateQueries({ queryKey: ["lotissement-prospects"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

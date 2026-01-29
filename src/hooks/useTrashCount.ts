@@ -9,6 +9,7 @@ export interface TrashCount {
   lotissements: number;
   parcelles: number;
   ilots: number;
+  prospects: number;
   total: number;
 }
 
@@ -24,7 +25,8 @@ export const useTrashCount = () => {
         ownersResult, 
         lotissementsResult,
         parcellesResult,
-        ilotsResult
+        ilotsResult,
+        prospectsResult
       ] = await Promise.all([
         supabase
           .from("tenants")
@@ -50,6 +52,10 @@ export const useTrashCount = () => {
           .from("ilots")
           .select("id", { count: "exact", head: true })
           .not("deleted_at", "is", null),
+        supabase
+          .from("parcelle_prospects")
+          .select("id", { count: "exact", head: true })
+          .not("deleted_at", "is", null),
       ]);
 
       const tenants = tenantsResult.count ?? 0;
@@ -58,6 +64,7 @@ export const useTrashCount = () => {
       const lotissements = lotissementsResult.count ?? 0;
       const parcelles = parcellesResult.count ?? 0;
       const ilots = ilotsResult.count ?? 0;
+      const prospects = prospectsResult.count ?? 0;
 
       return {
         tenants,
@@ -66,7 +73,8 @@ export const useTrashCount = () => {
         lotissements,
         parcelles,
         ilots,
-        total: tenants + properties + owners + lotissements + parcelles + ilots,
+        prospects,
+        total: tenants + properties + owners + lotissements + parcelles + ilots + prospects,
       };
     },
     enabled: !!user,

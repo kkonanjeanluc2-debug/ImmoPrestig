@@ -64,7 +64,7 @@ const gestionLocativeItems = [
 
 const otherNavigation = [
   { name: "Lotissements", href: "/lotissements", icon: Building2 },
-  { name: "Ventes Immo.", href: "/ventes-immobilieres", icon: HandCoins },
+  { name: "Ventes Immobilières", href: "/ventes-immobilieres", icon: HandCoins },
 ];
 
 const superAdminNavigation = [

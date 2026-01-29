@@ -130,7 +130,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
     const prospect = prospects?.find(p => p.id === deletingId);
     try {
       await deleteProspect.mutateAsync({ id: deletingId, name: prospect?.name });
-      toast.success("Prospect supprimé");
+      toast.success("Prospect déplacé vers la corbeille");
     } catch {
       toast.error("Erreur lors de la suppression");
     }

@@ -1114,6 +1114,7 @@ export type Database = {
           budget_max: number | null
           budget_min: number | null
           created_at: string
+          deleted_at: string | null
           email: string | null
           first_contact_date: string | null
           id: string
@@ -1133,6 +1134,7 @@ export type Database = {
           budget_max?: number | null
           budget_min?: number | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           first_contact_date?: string | null
           id?: string
@@ -1152,6 +1154,7 @@ export type Database = {
           budget_max?: number | null
           budget_min?: number | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           first_contact_date?: string | null
           id?: string

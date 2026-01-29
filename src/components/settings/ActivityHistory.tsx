@@ -60,6 +60,9 @@ const ENTITY_CONFIG: Record<EntityType, { label: string; icon: React.ReactNode }
   parcelle_admin_status: { label: "Statut parcelle", icon: <Square className="h-4 w-4" /> },
   prospect: { label: "Prospect", icon: <Users className="h-4 w-4" /> },
   ilot: { label: "Îlot", icon: <MapPin className="h-4 w-4" /> },
+  bien_vente: { label: "Bien à vendre", icon: <Building2 className="h-4 w-4" /> },
+  vente_immobiliere: { label: "Vente immo.", icon: <Receipt className="h-4 w-4" /> },
+  echeance_vente: { label: "Échéance vente", icon: <Calendar className="h-4 w-4" /> },
 };
 
 export function ActivityHistory() {

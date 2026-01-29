@@ -18,7 +18,8 @@ import {
   Crown,
   ScrollText,
   Trash2,
-  Building2
+  Building2,
+  HandCoins
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ const navigation = [
   { name: "Contrats", href: "/contracts", icon: ScrollText },
   { name: "Paiements", href: "/payments", icon: Wallet },
   { name: "Lotissements", href: "/lotissements", icon: Building2 },
+  { name: "Ventes Immo.", href: "/ventes-immobilieres", icon: HandCoins },
 ];
 
 const superAdminNavigation = [

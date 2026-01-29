@@ -35,6 +35,7 @@ const Trash = lazy(() => import("./pages/Trash"));
 const SignContract = lazy(() => import("./pages/SignContract"));
 const Lotissements = lazy(() => import("./pages/Lotissements"));
 const LotissementDetails = lazy(() => import("./pages/LotissementDetails"));
+const VentesImmobilieres = lazy(() => import("./pages/VentesImmobilieres"));
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const App = () => {
                 <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
                 <Route path="/lotissements" element={<ProtectedRoute><Lotissements /></ProtectedRoute>} />
                 <Route path="/lotissements/:id" element={<ProtectedRoute><LotissementDetails /></ProtectedRoute>} />
+                <Route path="/ventes-immobilieres" element={<ProtectedRoute><VentesImmobilieres /></ProtectedRoute>} />
                 <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                 <Route path="/install" element={<Install />} />
                 <Route path="/pricing" element={<Pricing />} />

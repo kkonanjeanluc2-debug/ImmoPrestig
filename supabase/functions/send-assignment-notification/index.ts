@@ -1,8 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +17,25 @@ interface AssignmentNotificationRequest {
   }>;
 }
 
-const handler = async (req: Request): Promise<Response> => {
+async function sendEmail(to: string[], subject: string, html: string, from: string) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({ from, to, subject, html }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to send email: ${errorText}`);
+  }
+
+  return await response.json();
+}
+
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -164,12 +180,12 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Send email
-    const emailResponse = await resend.emails.send({
-      from: `${agencyName} <noreply@lagrace.ci>`,
-      to: [assigneeProfile.email],
-      subject: `${icon} ${items.length > 1 ? `${items.length} ${typeLabel} affectés` : `Nouveau ${typeSingular} affecté`} - ${agencyName}`,
-      html: emailHtml,
-    });
+    const emailResponse = await sendEmail(
+      [assigneeProfile.email],
+      `${icon} ${items.length > 1 ? `${items.length} ${typeLabel} affectés` : `Nouveau ${typeSingular} affecté`} - ${agencyName}`,
+      emailHtml,
+      `${agencyName} <noreply@lagrace.ci>`
+    );
 
     console.log("Assignment notification sent:", emailResponse);
 
@@ -185,6 +201,4 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
-};
-
-serve(handler);
+});

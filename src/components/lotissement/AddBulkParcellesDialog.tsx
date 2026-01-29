@@ -215,6 +215,10 @@ export function AddBulkParcellesDialog({
   const previewNumbers = () => {
     const count = Math.min(parseInt(formData.count) || 0, 5);
     const startNumber = parseInt(formData.startNumber) || 1;
+    if (count === 0) {
+      // Show at least the starting number as preview
+      return formData.prefix ? `${formData.prefix}${startNumber}` : `${startNumber}`;
+    }
     const numbers = [];
     for (let i = 0; i < count; i++) {
       numbers.push(formData.prefix ? `${formData.prefix}${startNumber + i}` : `${startNumber + i}`);

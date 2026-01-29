@@ -22,8 +22,6 @@ const Tenants = lazy(() => import("./pages/Tenants"));
 const TenantDetails = lazy(() => import("./pages/TenantDetails"));
 const Contracts = lazy(() => import("./pages/Contracts"));
 const Payments = lazy(() => import("./pages/Payments"));
-const Documents = lazy(() => import("./pages/Documents"));
-
 const Settings = lazy(() => import("./pages/Settings"));
 const Install = lazy(() => import("./pages/Install"));
 const Login = lazy(() => import("./pages/Login"));
@@ -85,8 +83,7 @@ const App = () => {
                 <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
                 <Route path="/tenants/:id" element={<ProtectedRoute><TenantDetails /></ProtectedRoute>} />
                 <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-                <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
-                <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+<Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
                 <Route path="/lotissements" element={<ProtectedRoute><Lotissements /></ProtectedRoute>} />

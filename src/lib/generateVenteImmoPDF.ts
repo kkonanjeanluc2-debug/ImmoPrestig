@@ -38,6 +38,52 @@ interface AgencyData {
 }
 
 /**
+ * Adds agency header with logo and contact info
+ */
+const addAgencyHeader = (doc: jsPDF, agency: AgencyData, yPos: number): number => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  let currentY = yPos;
+
+  // Agency name (large, centered)
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(agency.name.toUpperCase(), pageWidth / 2, currentY, { align: "center" });
+  currentY += 7;
+
+  // Agency details (smaller, centered)
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+
+  if (agency.address) {
+    doc.text(agency.address, pageWidth / 2, currentY, { align: "center" });
+    currentY += 5;
+  }
+
+  const contactParts: string[] = [];
+  if (agency.phone) contactParts.push(`Tel: ${agency.phone}`);
+  if (agency.email) contactParts.push(`Email: ${agency.email}`);
+  if (contactParts.length > 0) {
+    doc.text(contactParts.join(" | "), pageWidth / 2, currentY, { align: "center" });
+    currentY += 5;
+  }
+
+  if (agency.siret) {
+    doc.text(`RCCM: ${agency.siret}`, pageWidth / 2, currentY, { align: "center" });
+    currentY += 5;
+  }
+
+  // Separator line
+  currentY += 3;
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.line(margin, currentY, pageWidth - margin, currentY);
+  currentY += 10;
+
+  return currentY;
+};
+
+/**
  * Generates a Promise de Vente (Sales Promise) PDF document
  */
 export const generatePromesseVenteImmo = (
@@ -48,18 +94,20 @@ export const generatePromesseVenteImmo = (
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
-  let yPos = 20;
+  
+  // Add agency header
+  let yPos = addAgencyHeader(doc, agency, 20);
 
-  // Header
+  // Document title
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.text("PROMESSE DE VENTE", pageWidth / 2, yPos, { align: "center" });
-  yPos += 15;
+  yPos += 12;
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text(`Ref: PV-${Date.now().toString(36).toUpperCase()}`, pageWidth / 2, yPos, { align: "center" });
-  yPos += 15;
+  yPos += 12;
 
   // Parties
   doc.setFontSize(12);
@@ -216,9 +264,11 @@ export const generateRecuVenteImmo = (
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
-  let yPos = 20;
+  
+  // Add agency header
+  let yPos = addAgencyHeader(doc, agency, 20);
 
-  // Header
+  // Document title
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.text("RECU DE PAIEMENT", pageWidth / 2, yPos, { align: "center" });
@@ -228,25 +278,10 @@ export const generateRecuVenteImmo = (
   doc.setFont("helvetica", "normal");
   if (echeance.receipt_number) {
     doc.text(`N : ${echeance.receipt_number}`, pageWidth / 2, yPos, { align: "center" });
-    yPos += 8;
+    yPos += 6;
   }
   doc.text(`Date : ${format(new Date(echeance.paid_date), "dd MMMM yyyy", { locale: fr })}`, pageWidth / 2, yPos, { align: "center" });
-  yPos += 15;
-
-  // Agency info
-  doc.setFont("helvetica", "bold");
-  doc.text(agency.name, margin, yPos);
-  yPos += 6;
-  doc.setFont("helvetica", "normal");
-  if (agency.address) {
-    doc.text(agency.address, margin, yPos);
-    yPos += 6;
-  }
-  if (agency.phone) {
-    doc.text(`Tel : ${agency.phone}`, margin, yPos);
-    yPos += 6;
-  }
-  yPos += 10;
+  yPos += 12;
 
   // Received from
   doc.setFont("helvetica", "bold");

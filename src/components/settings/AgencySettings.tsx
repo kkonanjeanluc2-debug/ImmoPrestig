@@ -39,6 +39,7 @@ export function AgencySettings() {
     country: "Côte d'Ivoire",
     siret: "",
     reservation_deposit_percentage: "30",
+    sale_commission_percentage: "5",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,6 +59,7 @@ export function AgencySettings() {
         country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
         reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
+        sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
       });
       setLogoUrl(agency.logo_url);
     }
@@ -76,6 +78,7 @@ export function AgencySettings() {
         country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
         reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
+        sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
       });
       setLogoUrl(agency.logo_url);
     }
@@ -153,6 +156,7 @@ export function AgencySettings() {
             siret: formData.siret || null,
             logo_url: logoUrl,
             reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
+            sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
           })
           .eq('user_id', user.id);
 
@@ -173,6 +177,7 @@ export function AgencySettings() {
             siret: formData.siret || null,
             logo_url: logoUrl,
             reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
+            sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
           });
 
         if (error) throw error;
@@ -390,6 +395,28 @@ export function AgencySettings() {
               className="pl-10"
             />
           </div>
+        </div>
+
+        {/* Sale Commission Percentage */}
+        <div className="space-y-2">
+          <Label htmlFor="sale-commission">Commission sur ventes immobilières (%)</Label>
+          <div className="relative">
+            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="sale-commission"
+              type="number"
+              min="1"
+              max="10"
+              step="0.5"
+              value={formData.sale_commission_percentage}
+              onChange={(e) => handleChange("sale_commission_percentage", e.target.value)}
+              placeholder="5"
+              className="pl-10"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Commission réglementée : 3% à 5% du prix de vente
+          </p>
         </div>
 
         {/* Save Button */}

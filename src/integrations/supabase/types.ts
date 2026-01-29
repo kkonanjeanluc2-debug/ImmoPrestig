@@ -110,6 +110,7 @@ export type Database = {
           phone: string | null
           primary_color: string | null
           reservation_deposit_percentage: number
+          sale_commission_percentage: number | null
           sidebar_color: string | null
           siret: string | null
           updated_at: string
@@ -133,6 +134,7 @@ export type Database = {
           phone?: string | null
           primary_color?: string | null
           reservation_deposit_percentage?: number
+          sale_commission_percentage?: number | null
           sidebar_color?: string | null
           siret?: string | null
           updated_at?: string
@@ -156,6 +158,7 @@ export type Database = {
           phone?: string | null
           primary_color?: string | null
           reservation_deposit_percentage?: number
+          sale_commission_percentage?: number | null
           sidebar_color?: string | null
           siret?: string | null
           updated_at?: string

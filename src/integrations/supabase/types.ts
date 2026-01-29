@@ -439,6 +439,41 @@ export type Database = {
         }
         Relationships: []
       }
+      biens_vente_images: {
+        Row: {
+          bien_id: string
+          created_at: string
+          display_order: number
+          id: string
+          image_url: string
+          user_id: string
+        }
+        Insert: {
+          bien_id: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url: string
+          user_id: string
+        }
+        Update: {
+          bien_id?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biens_vente_images_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_vente"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_signatures: {
         Row: {
           contract_id: string

@@ -92,16 +92,29 @@ export function AddBulkParcellesDialog({
   });
 
   // Auto-detect next plot number when dialog opens
+  // Serialize existingNumbers to avoid reference comparison issues
+  const existingNumbersKey = JSON.stringify(existingNumbers);
+  
   useEffect(() => {
-    if (open && existingNumbers.length > 0) {
-      const { prefix, nextNumber } = getNextPlotNumber(existingNumbers);
-      setFormData(prev => ({
-        ...prev,
-        prefix,
-        startNumber: nextNumber.toString(),
-      }));
+    if (open) {
+      if (existingNumbers.length > 0) {
+        const { prefix, nextNumber } = getNextPlotNumber(existingNumbers);
+        setFormData(prev => ({
+          ...prev,
+          prefix,
+          startNumber: nextNumber.toString(),
+        }));
+      } else {
+        // Reset to defaults if no existing parcelles
+        setFormData(prev => ({
+          ...prev,
+          prefix: "",
+          startNumber: "1",
+        }));
+      }
     }
-  }, [open, existingNumbers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, existingNumbersKey]);
 
   // Calculate total area of the parcelles being created
   const totalArea = useMemo(() => {

@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useVentesImmobilieres, useDeleteVenteImmobiliere } from "@/hooks/useVentesImmobilieres";
+import { useVentesImmobilieres, useDeleteVenteImmobiliere, VenteWithDetails } from "@/hooks/useVentesImmobilieres";
 import { formatCurrency } from "@/lib/pdfFormat";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
+import { DocumentsVenteDialog } from "./DocumentsVenteDialog";
 
 const STATUS_CONFIG = {
   en_cours: { label: "En cours", color: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
@@ -42,6 +43,7 @@ const STATUS_CONFIG = {
 
 export function VentesImmobilieresList() {
   const [search, setSearch] = useState("");
+  const [selectedVente, setSelectedVente] = useState<VenteWithDetails | null>(null);
   const { data: ventes, isLoading } = useVentesImmobilieres();
   const deleteVente = useDeleteVenteImmobiliere();
   const navigate = useNavigate();
@@ -177,7 +179,7 @@ export function VentesImmobilieresList() {
                               <Eye className="h-4 w-4 mr-2" />
                               Voir détails
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSelectedVente(vente)}>
                               <FileText className="h-4 w-4 mr-2" />
                               Documents
                             </DropdownMenuItem>
@@ -201,6 +203,14 @@ export function VentesImmobilieresList() {
           </div>
         )}
       </CardContent>
+
+      {selectedVente && (
+        <DocumentsVenteDialog
+          vente={selectedVente}
+          open={!!selectedVente}
+          onOpenChange={(open) => !open && setSelectedVente(null)}
+        />
+      )}
     </Card>
   );
 }

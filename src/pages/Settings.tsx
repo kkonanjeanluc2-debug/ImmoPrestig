@@ -94,122 +94,120 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-            <TabsList className="inline-flex h-auto gap-1 p-1 min-w-max">
-              <TabsTrigger
-                value="agency"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Building2 className="h-4 w-4" />
-                <span>Agence</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="management-types"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Percent className="h-4 w-4" />
-                <span>Gestion</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="branding"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Paintbrush className="h-4 w-4" />
-                <span>Couleurs</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="receipts"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <FileText className="h-4 w-4" />
-                <span>Quittances</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="contracts"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <ScrollText className="h-4 w-4" />
-                <span>Contrats</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="subscription"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <CreditCard className="h-4 w-4" />
-                <span>Abonnement</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="profile"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <User className="h-4 w-4" />
-                <span>Profil</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="team"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Users className="h-4 w-4" />
-                <span>Équipe</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="roles"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Users className="h-4 w-4" />
-                <span>Rôles</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="activity"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Clock className="h-4 w-4" />
-                <span>Activité</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="display"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Palette className="h-4 w-4" />
-                <span>Affichage</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="notifications"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Bell className="h-4 w-4" />
-                <span>Alertes</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="notification-history"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <History className="h-4 w-4" />
-                <span>Historique</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="whatsapp"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span>WhatsApp</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="automation"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Settings2 className="h-4 w-4" />
-                <span>Automatisations</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="security"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-              >
-                <Shield className="h-4 w-4" />
-                <span>Sécurité</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger
+              value="agency"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Building2 className="h-4 w-4" />
+              <span>Agence</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="management-types"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Percent className="h-4 w-4" />
+              <span>Gestion</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="branding"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Paintbrush className="h-4 w-4" />
+              <span>Couleurs</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="receipts"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Quittances</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="contracts"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <ScrollText className="h-4 w-4" />
+              <span>Contrats</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="subscription"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span>Abonnement</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="profile"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <User className="h-4 w-4" />
+              <span>Profil</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="team"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Users className="h-4 w-4" />
+              <span>Équipe</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="roles"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Users className="h-4 w-4" />
+              <span>Rôles</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="activity"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Clock className="h-4 w-4" />
+              <span>Activité</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="display"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Palette className="h-4 w-4" />
+              <span>Affichage</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="notifications"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Bell className="h-4 w-4" />
+              <span>Alertes</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="notification-history"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <History className="h-4 w-4" />
+              <span>Historique</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="whatsapp"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span>WhatsApp</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="automation"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Settings2 className="h-4 w-4" />
+              <span>Automatisations</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="security"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+            >
+              <Shield className="h-4 w-4" />
+              <span>Sécurité</span>
+            </TabsTrigger>
+          </TabsList>
 
           <TabsContent value="agency">
             <AgencySettings />

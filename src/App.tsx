@@ -37,6 +37,7 @@ const Lotissements = lazy(() => import("./pages/Lotissements"));
 const LotissementDetails = lazy(() => import("./pages/LotissementDetails"));
 const VentesImmobilieres = lazy(() => import("./pages/VentesImmobilieres"));
 const VenteImmobiliereDetails = lazy(() => import("./pages/VenteImmobiliereDetails"));
+const BienVenteDetails = lazy(() => import("./pages/BienVenteDetails"));
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ const App = () => {
                 <Route path="/lotissements" element={<ProtectedRoute><Lotissements /></ProtectedRoute>} />
                 <Route path="/lotissements/:id" element={<ProtectedRoute><LotissementDetails /></ProtectedRoute>} />
                 <Route path="/ventes-immobilieres" element={<ProtectedRoute><VentesImmobilieres /></ProtectedRoute>} />
+                <Route path="/ventes-immobilieres/:id" element={<ProtectedRoute><BienVenteDetails /></ProtectedRoute>} />
                 <Route path="/ventes-immobilieres/vente/:id" element={<ProtectedRoute><VenteImmobiliereDetails /></ProtectedRoute>} />
                 <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                 <Route path="/install" element={<Install />} />

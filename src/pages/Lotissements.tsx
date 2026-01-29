@@ -35,16 +35,21 @@ import {
 } from "lucide-react";
 import { useLotissements, useDeleteLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
+import { useVentesParcelles } from "@/hooks/useVentesParcelles";
+import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { AddLotissementDialog } from "@/components/lotissement/AddLotissementDialog";
 import { EditLotissementDialog } from "@/components/lotissement/EditLotissementDialog";
+import { LotissementsComparisonTable } from "@/components/lotissement/LotissementsComparisonTable";
 import type { Lotissement } from "@/hooks/useLotissements";
 
 const Lotissements = () => {
   const navigate = useNavigate();
   const { data: lotissements, isLoading } = useLotissements();
   const { data: allParcelles } = useParcelles();
+  const { data: allVentes } = useVentesParcelles();
+  const { data: allEcheances } = useEcheancesParcelles();
   const deleteLotissement = useDeleteLotissement();
   const { canCreate, canDelete, canEdit } = usePermissions();
 
@@ -288,6 +293,16 @@ const Lotissements = () => {
               );
             })}
           </div>
+        )}
+
+        {/* Tableau comparatif */}
+        {lotissements && lotissements.length > 1 && (
+          <LotissementsComparisonTable
+            lotissements={lotissements}
+            parcelles={allParcelles || []}
+            ventes={allVentes || []}
+            echeances={allEcheances || []}
+          />
         )}
       </div>
 

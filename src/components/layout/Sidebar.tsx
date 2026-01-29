@@ -3,11 +3,11 @@ import {
   LayoutDashboard, 
   Users, 
   Wallet, 
-  FileText, 
   Settings,
   Home,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Menu,
   X,
   LogOut,
@@ -19,7 +19,8 @@ import {
   ScrollText,
   Trash2,
   Building2,
-  HandCoins
+  HandCoins,
+  KeyRound
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,11 @@ import { useCurrentUserRole, ROLE_LABELS, type AppRole } from "@/hooks/useUserRo
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useAgency } from "@/hooks/useAgency";
 import { useTrashCount } from "@/hooks/useTrashCount";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,
@@ -47,13 +53,16 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
   lecture_seule: "bg-sand/20 text-sand border-sand/30",
 };
 
-const navigation = [
+const gestionLocativeItems = [
   { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
   { name: "Biens", href: "/properties", icon: Building2 },
   { name: "Locataires", href: "/tenants", icon: Users },
   { name: "Propriétaires", href: "/owners", icon: Home },
   { name: "Contrats", href: "/contracts", icon: ScrollText },
   { name: "Paiements", href: "/payments", icon: Wallet },
+];
+
+const otherNavigation = [
   { name: "Lotissements", href: "/lotissements", icon: Building2 },
   { name: "Ventes Immo.", href: "/ventes-immobilieres", icon: HandCoins },
 ];
@@ -197,10 +206,56 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 );
               })}
             </>
-          ) : (
-            <>
-              {navigation.map((item) => {
-                const showText = !collapsed || mobileOpen;
+          ) : (() => {
+            const showText = !collapsed || mobileOpen;
+            return (
+              <>
+              {/* Gestion Locative - Collapsible Group */}
+              <Collapsible defaultOpen className="space-y-1">
+                <CollapsibleTrigger className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full group",
+                  "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                )}>
+                  <KeyRound className={cn(
+                    "h-5 w-5 flex-shrink-0",
+                    !showText && "mx-auto"
+                  )} />
+                  {showText && (
+                    <>
+                      <span className="font-medium text-sm flex-1 text-left">Gestion locative</span>
+                      <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                    </>
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-3 space-y-1">
+                  {gestionLocativeItems.map((item) => {
+                    const isActive = location.pathname === item.href;
+                    return (
+                      <NavLink
+                        key={item.name}
+                        to={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
+                          isActive 
+                            ? "bg-emerald text-primary-foreground" 
+                            : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                        )}
+                      >
+                        <item.icon className={cn(
+                          "h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110",
+                          !showText && "mx-auto"
+                        )} />
+                        {showText && (
+                          <span className="font-medium text-sm">{item.name}</span>
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Other navigation items */}
+              {otherNavigation.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <NavLink
@@ -225,68 +280,57 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               })}
               
               {/* Separator before standalone items */}
-              <div className={cn("mt-4", (!collapsed || mobileOpen) ? "px-3" : "mx-3")}>
+              <div className={cn("mt-4", showText ? "px-3" : "mx-3")}>
                 <div className="border-t border-navy-light" />
               </div>
               
               {/* Settings */}
-              {(() => {
-                const showText = !collapsed || mobileOpen;
-                const isActive = location.pathname === "/settings";
-                return (
-                  <NavLink
-                    to="/settings"
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group mt-2",
-                      isActive 
-                        ? "bg-emerald text-primary-foreground" 
-                        : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                    )}
-                  >
-                    <Settings className={cn(
-                      "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
-                      !showText && "mx-auto"
-                    )} />
-                    {showText && (
-                      <span className="font-medium text-sm">Paramètres</span>
-                    )}
-                  </NavLink>
-                );
-              })()}
+              <NavLink
+                to="/settings"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group mt-2",
+                  location.pathname === "/settings"
+                    ? "bg-emerald text-primary-foreground" 
+                    : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                )}
+              >
+                <Settings className={cn(
+                  "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                  !showText && "mx-auto"
+                )} />
+                {showText && (
+                  <span className="font-medium text-sm">Paramètres</span>
+                )}
+              </NavLink>
               
               {/* Trash link with counter */}
-              {(() => {
-                const showText = !collapsed || mobileOpen;
-                const isActive = location.pathname === "/trash";
-                return (
-                  <NavLink
-                    to="/trash"
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                      isActive 
-                        ? "bg-emerald text-primary-foreground" 
-                        : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                    )}
-                  >
-                    <div className="relative">
-                      <Trash2 className={cn(
-                        "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
-                        !showText && "mx-auto"
-                      )} />
-                      {trashCount && trashCount.total > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
-                          {trashCount.total > 99 ? "99+" : trashCount.total}
-                        </span>
-                      )}
-                    </div>
-                    {showText && (
-                      <span className="font-medium text-sm">Corbeille</span>
-                    )}
-                  </NavLink>
-                );
-              })()}
-            </>
-          )}
+              <NavLink
+                to="/trash"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                  location.pathname === "/trash"
+                    ? "bg-emerald text-primary-foreground" 
+                    : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                )}
+              >
+                <div className="relative">
+                  <Trash2 className={cn(
+                    "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                    !showText && "mx-auto"
+                  )} />
+                  {trashCount && trashCount.total > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                      {trashCount.total > 99 ? "99+" : trashCount.total}
+                    </span>
+                  )}
+                </div>
+                {showText && (
+                  <span className="font-medium text-sm">Corbeille</span>
+                )}
+              </NavLink>
+              </>
+            );
+          })()}
         </nav>
 
         {/* Install PWA Button */}

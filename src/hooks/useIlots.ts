@@ -10,6 +10,7 @@ export interface Ilot {
   name: string;
   description: string | null;
   total_area: number | null;
+  plots_count: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +20,7 @@ export interface IlotInsert {
   name: string;
   description?: string | null;
   total_area?: number | null;
+  plots_count?: number | null;
 }
 
 export interface IlotUpdate extends Partial<IlotInsert> {

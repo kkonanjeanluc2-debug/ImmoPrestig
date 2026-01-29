@@ -21,6 +21,7 @@ const ilotSchema = z.object({
   name: z.string().min(1, "Le nom de l'îlot est requis").max(50, "Le nom doit faire moins de 50 caractères"),
   description: z.string().optional(),
   total_area: z.number().optional().nullable(),
+  plots_count: z.number().optional().nullable(),
 });
 
 type IlotFormData = z.infer<typeof ilotSchema>;
@@ -45,6 +46,7 @@ export function EditIlotDialog({ ilot, open, onOpenChange }: EditIlotDialogProps
       name: ilot.name,
       description: ilot.description || "",
       total_area: ilot.total_area,
+      plots_count: ilot.plots_count,
     },
   });
 
@@ -53,6 +55,7 @@ export function EditIlotDialog({ ilot, open, onOpenChange }: EditIlotDialogProps
       name: ilot.name,
       description: ilot.description || "",
       total_area: ilot.total_area,
+      plots_count: ilot.plots_count,
     });
   }, [ilot, reset]);
 
@@ -63,6 +66,7 @@ export function EditIlotDialog({ ilot, open, onOpenChange }: EditIlotDialogProps
         name: data.name,
         description: data.description || null,
         total_area: data.total_area || null,
+        plots_count: data.plots_count || null,
       });
 
       toast.success("Îlot modifié avec succès");
@@ -93,6 +97,16 @@ export function EditIlotDialog({ ilot, open, onOpenChange }: EditIlotDialogProps
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="plots_count">Nombre de lots</Label>
+            <Input
+              id="plots_count"
+              type="number"
+              placeholder="Ex: 10"
+              {...register("plots_count", { valueAsNumber: true })}
+            />
           </div>
 
           <div className="space-y-2">

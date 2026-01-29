@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -52,6 +52,21 @@ export function SellBienDialog({ bien, open, onOpenChange }: SellBienDialogProps
   const createVente = useCreateVenteImmobiliere();
 
   const depositPercentage = agency?.reservation_deposit_percentage || 30;
+
+  // Auto-calculate monthly payment when relevant values change
+  useEffect(() => {
+    if (paymentType === "echelonne" && totalInstallments) {
+      const total = parseFloat(totalPrice) || 0;
+      const down = parseFloat(downPayment) || 0;
+      const installments = parseInt(totalInstallments) || 1;
+      
+      if (total > 0 && installments > 0) {
+        const remaining = total - down;
+        const monthly = Math.round(remaining / installments);
+        setMonthlyPayment(monthly.toString());
+      }
+    }
+  }, [totalPrice, downPayment, totalInstallments, paymentType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

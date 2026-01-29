@@ -33,7 +33,7 @@ import {
   TrendingUp,
   Map,
 } from "lucide-react";
-import { useLotissements, useDeleteLotissement } from "@/hooks/useLotissements";
+import { useLotissements, useSoftDeleteLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
 import { useVentesParcelles } from "@/hooks/useVentesParcelles";
 import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
@@ -50,7 +50,7 @@ const Lotissements = () => {
   const { data: allParcelles } = useParcelles();
   const { data: allVentes } = useVentesParcelles();
   const { data: allEcheances } = useEcheancesParcelles();
-  const deleteLotissement = useDeleteLotissement();
+  const deleteLotissement = useSoftDeleteLotissement();
   const { canCreate, canDelete, canEdit } = usePermissions();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,7 +79,7 @@ const Lotissements = () => {
     const lotissement = lotissements?.find(l => l.id === deletingId);
     try {
       await deleteLotissement.mutateAsync({ id: deletingId, name: lotissement?.name });
-      toast.success("Lotissement supprimé avec succès");
+      toast.success("Lotissement déplacé vers la corbeille");
     } catch {
       toast.error("Erreur lors de la suppression");
     }
@@ -321,7 +321,7 @@ const Lotissements = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce lotissement ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action supprimera définitivement le lotissement et toutes ses parcelles associées.
+              Ce lotissement sera déplacé vers la corbeille. Vous pourrez le restaurer dans les 30 jours.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

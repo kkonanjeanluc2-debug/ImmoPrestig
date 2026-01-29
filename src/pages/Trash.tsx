@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2, RotateCcw, AlertTriangle, Users, Building2, Home, Clock, Map } from "lucide-react";
+import { Trash2, RotateCcw, AlertTriangle, Users, Building2, Home, Clock, Map, Grid3X3, Layers } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,6 +21,8 @@ import { useDeletedTenants, useRestoreTenant, usePermanentlyDeleteTenant } from 
 import { useDeletedProperties, useRestoreProperty, usePermanentlyDeleteProperty } from "@/hooks/useDeletedProperties";
 import { useDeletedOwners, useRestoreOwner, usePermanentlyDeleteOwner } from "@/hooks/useDeletedOwners";
 import { useDeletedLotissements, useRestoreLotissement, usePermanentlyDeleteLotissement } from "@/hooks/useDeletedLotissements";
+import { useDeletedParcelles, useRestoreParcelle, usePermanentlyDeleteParcelle } from "@/hooks/useDeletedParcelles";
+import { useDeletedIlots, useRestoreIlot, usePermanentlyDeleteIlot } from "@/hooks/useDeletedIlots";
 import { useTrashCount } from "@/hooks/useTrashCount";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays } from "date-fns";
@@ -30,7 +32,7 @@ const Trash = () => {
   const [confirmDelete, setConfirmDelete] = useState<{
     id: string;
     name: string;
-    type: "tenant" | "property" | "owner" | "lotissement";
+    type: "tenant" | "property" | "owner" | "lotissement" | "parcelle" | "ilot";
   } | null>(null);
 
   const { data: trashCount } = useTrashCount();
@@ -38,19 +40,25 @@ const Trash = () => {
   const { data: deletedProperties, isLoading: loadingProperties } = useDeletedProperties();
   const { data: deletedOwners, isLoading: loadingOwners } = useDeletedOwners();
   const { data: deletedLotissements, isLoading: loadingLotissements } = useDeletedLotissements();
+  const { data: deletedParcelles, isLoading: loadingParcelles } = useDeletedParcelles();
+  const { data: deletedIlots, isLoading: loadingIlots } = useDeletedIlots();
 
   const restoreTenant = useRestoreTenant();
   const restoreProperty = useRestoreProperty();
   const restoreOwner = useRestoreOwner();
   const restoreLotissement = useRestoreLotissement();
+  const restoreParcelle = useRestoreParcelle();
+  const restoreIlot = useRestoreIlot();
   const deleteTenant = usePermanentlyDeleteTenant();
   const deleteProperty = usePermanentlyDeleteProperty();
   const deleteOwner = usePermanentlyDeleteOwner();
   const deleteLotissement = usePermanentlyDeleteLotissement();
+  const deleteParcelle = usePermanentlyDeleteParcelle();
+  const deleteIlot = usePermanentlyDeleteIlot();
 
   const { toast } = useToast();
 
-  const handleRestore = async (id: string, name: string, type: "tenant" | "property" | "owner" | "lotissement") => {
+  const handleRestore = async (id: string, name: string, type: "tenant" | "property" | "owner" | "lotissement" | "parcelle" | "ilot") => {
     try {
       if (type === "tenant") {
         await restoreTenant.mutateAsync({ id, name });
@@ -58,8 +66,12 @@ const Trash = () => {
         await restoreProperty.mutateAsync({ id, title: name });
       } else if (type === "owner") {
         await restoreOwner.mutateAsync({ id, name });
-      } else {
+      } else if (type === "lotissement") {
         await restoreLotissement.mutateAsync({ id, name });
+      } else if (type === "parcelle") {
+        await restoreParcelle.mutateAsync({ id, plotNumber: name });
+      } else {
+        await restoreIlot.mutateAsync({ id, name });
       }
       toast({
         title: "Élément restauré",
@@ -84,8 +96,12 @@ const Trash = () => {
         await deleteProperty.mutateAsync({ id: confirmDelete.id, title: confirmDelete.name });
       } else if (confirmDelete.type === "owner") {
         await deleteOwner.mutateAsync({ id: confirmDelete.id, name: confirmDelete.name });
-      } else {
+      } else if (confirmDelete.type === "lotissement") {
         await deleteLotissement.mutateAsync({ id: confirmDelete.id, name: confirmDelete.name });
+      } else if (confirmDelete.type === "parcelle") {
+        await deleteParcelle.mutateAsync({ id: confirmDelete.id, plotNumber: confirmDelete.name });
+      } else {
+        await deleteIlot.mutateAsync({ id: confirmDelete.id, name: confirmDelete.name });
       }
       toast({
         title: "Supprimé définitivement",
@@ -107,8 +123,8 @@ const Trash = () => {
     return Math.max(0, 30 - daysElapsed);
   };
 
-  const isRestoring = restoreTenant.isPending || restoreProperty.isPending || restoreOwner.isPending || restoreLotissement.isPending;
-  const isDeleting = deleteTenant.isPending || deleteProperty.isPending || deleteOwner.isPending || deleteLotissement.isPending;
+  const isRestoring = restoreTenant.isPending || restoreProperty.isPending || restoreOwner.isPending || restoreLotissement.isPending || restoreParcelle.isPending || restoreIlot.isPending;
+  const isDeleting = deleteTenant.isPending || deleteProperty.isPending || deleteOwner.isPending || deleteLotissement.isPending || deleteParcelle.isPending || deleteIlot.isPending;
 
   return (
     <DashboardLayout>
@@ -142,7 +158,7 @@ const Trash = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="tenants" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+          <TabsList className="h-auto flex-wrap gap-1 p-1 w-full lg:w-auto">
             <TabsTrigger value="tenants" className="gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Locataires</span>
@@ -176,6 +192,24 @@ const Trash = () => {
               {trashCount && trashCount.lotissements > 0 && (
                 <Badge variant="secondary" className="ml-1">
                   {trashCount.lotissements}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="parcelles" className="gap-2">
+              <Grid3X3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Lots</span>
+              {trashCount && trashCount.parcelles > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {trashCount.parcelles}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="ilots" className="gap-2">
+              <Layers className="h-4 w-4" />
+              <span className="hidden sm:inline">Îlots</span>
+              {trashCount && trashCount.ilots > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {trashCount.ilots}
                 </Badge>
               )}
             </TabsTrigger>
@@ -486,6 +520,163 @@ const Trash = () => {
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <Trash2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
                       <p className="text-muted-foreground">Aucun lotissement dans la corbeille</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Parcelles Tab */}
+          <TabsContent value="parcelles">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Grid3X3 className="h-5 w-5" />
+                  Lots supprimés
+                </CardTitle>
+                <CardDescription>
+                  {deletedParcelles?.length || 0} lot{(deletedParcelles?.length || 0) > 1 ? "s" : ""} dans la corbeille
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="max-h-[500px]">
+                  {loadingParcelles ? (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-muted-foreground">Chargement...</p>
+                    </div>
+                  ) : deletedParcelles && deletedParcelles.length > 0 ? (
+                    <div className="space-y-3">
+                      {deletedParcelles.map((parcelle) => (
+                        <div
+                          key={parcelle.id}
+                          className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                        >
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <Grid3X3 className="h-5 w-5 text-muted-foreground mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">Lot {parcelle.plot_number}</h4>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {parcelle.lotissement?.name || "Lotissement inconnu"} • {parcelle.area} m² • {parcelle.price.toLocaleString("fr-FR")} F
+                              </p>
+                              {parcelle.deleted_at && (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <p className="text-xs text-muted-foreground">
+                                    Supprimé le {format(new Date(parcelle.deleted_at), "dd MMM yyyy", { locale: fr })}
+                                  </p>
+                                  <Badge variant="outline" className="text-xs">
+                                    {getDaysRemaining(parcelle.deleted_at)}j restants
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRestore(parcelle.id, `Lot ${parcelle.plot_number}`, "parcelle")}
+                              disabled={isRestoring}
+                              className="gap-1"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                              Restaurer
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setConfirmDelete({ id: parcelle.id, name: `Lot ${parcelle.plot_number}`, type: "parcelle" })}
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Trash2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                      <p className="text-muted-foreground">Aucun lot dans la corbeille</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Ilots Tab */}
+          <TabsContent value="ilots">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Layers className="h-5 w-5" />
+                  Îlots supprimés
+                </CardTitle>
+                <CardDescription>
+                  {deletedIlots?.length || 0} îlot{(deletedIlots?.length || 0) > 1 ? "s" : ""} dans la corbeille
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="max-h-[500px]">
+                  {loadingIlots ? (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-muted-foreground">Chargement...</p>
+                    </div>
+                  ) : deletedIlots && deletedIlots.length > 0 ? (
+                    <div className="space-y-3">
+                      {deletedIlots.map((ilot) => (
+                        <div
+                          key={ilot.id}
+                          className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                        >
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <Layers className="h-5 w-5 text-muted-foreground mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">{ilot.name}</h4>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {ilot.lotissement?.name || "Lotissement inconnu"}
+                                {ilot.plots_count && ` • ${ilot.plots_count} lots`}
+                              </p>
+                              {ilot.deleted_at && (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <p className="text-xs text-muted-foreground">
+                                    Supprimé le {format(new Date(ilot.deleted_at), "dd MMM yyyy", { locale: fr })}
+                                  </p>
+                                  <Badge variant="outline" className="text-xs">
+                                    {getDaysRemaining(ilot.deleted_at)}j restants
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRestore(ilot.id, ilot.name, "ilot")}
+                              disabled={isRestoring}
+                              className="gap-1"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                              Restaurer
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setConfirmDelete({ id: ilot.id, name: ilot.name, type: "ilot" })}
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Trash2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                      <p className="text-muted-foreground">Aucun îlot dans la corbeille</p>
                     </div>
                   )}
                 </ScrollArea>

@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers } from "lucide-react";
-import { Parcelle, useDeleteParcelle } from "@/hooks/useParcelles";
+import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
@@ -47,7 +47,7 @@ const STATUS_STYLES = {
 
 export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) {
   const { canEdit, canDelete } = usePermissions();
-  const deleteParcelle = useDeleteParcelle();
+  const deleteParcelle = useSoftDeleteParcelle();
   const { data: ilots } = useIlots(lotissementId);
 
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
@@ -64,7 +64,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
     const parcelle = parcelles.find(p => p.id === deletingId);
     try {
       await deleteParcelle.mutateAsync({ id: deletingId, plotNumber: parcelle?.plot_number });
-      toast.success("Parcelle supprimée avec succès");
+      toast.success("Lot déplacé vers la corbeille");
     } catch {
       toast.error("Erreur lors de la suppression");
     }

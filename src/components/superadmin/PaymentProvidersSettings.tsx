@@ -5,9 +5,10 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Settings, CheckCircle2, XCircle, Key, Webhook, CreditCard, Smartphone } from "lucide-react";
+import { Loader2, Settings, CheckCircle2, XCircle, Key, Webhook, CreditCard, Smartphone, Eye, EyeOff, Save } from "lucide-react";
 import { usePaymentProviders, useUpdatePaymentProvider } from "@/hooks/usePaymentProviders";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PROVIDER_ICONS: Record<string, React.ReactNode> = {
   fedapay: <CreditCard className="h-5 w-5" />,
@@ -45,13 +47,20 @@ const METHOD_LABELS: Record<string, string> = {
 
 export function PaymentProvidersSettings() {
   const { toast } = useToast();
-  const { data: providers, isLoading } = usePaymentProviders();
+  const { data: providers, isLoading, refetch } = usePaymentProviders();
   const updateProvider = useUpdatePaymentProvider();
   
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [webhookUrl, setWebhookUrl] = useState("");
   const [isSandbox, setIsSandbox] = useState(true);
+  
+  // API Keys state
+  const [publicKey, setPublicKey] = useState("");
+  const [secretKey, setSecretKey] = useState("");
+  const [showPublicKey, setShowPublicKey] = useState(false);
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [isSavingKeys, setIsSavingKeys] = useState(false);
 
   const handleToggleEnabled = async (providerId: string, currentValue: boolean) => {
     try {
@@ -78,7 +87,65 @@ export function PaymentProvidersSettings() {
       setSelectedProvider(providerId);
       setWebhookUrl(provider.webhook_url || "");
       setIsSandbox(provider.is_sandbox);
+      setPublicKey("");
+      setSecretKey("");
+      setShowPublicKey(false);
+      setShowSecretKey(false);
       setConfigDialogOpen(true);
+    }
+  };
+
+  const handleSaveKeys = async () => {
+    if (!selectedProvider) return;
+    
+    const provider = providers?.find(p => p.id === selectedProvider);
+    if (!provider) return;
+
+    if (!publicKey && !secretKey) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez entrer au moins une clé.",
+      });
+      return;
+    }
+
+    setIsSavingKeys(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Non authentifié");
+
+      const response = await supabase.functions.invoke("update-provider-keys", {
+        body: {
+          provider_name: provider.provider_name,
+          public_key: publicKey || undefined,
+          secret_key: secretKey || undefined,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Erreur lors de la mise à jour");
+      }
+
+      toast({
+        title: "Clés mises à jour",
+        description: response.data?.note || "Les clés API ont été configurées avec succès.",
+      });
+
+      // Refresh providers data
+      refetch();
+      
+      // Clear the fields
+      setPublicKey("");
+      setSecretKey("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de sauvegarder les clés.",
+      });
+    } finally {
+      setIsSavingKeys(false);
     }
   };
 
@@ -112,13 +179,19 @@ export function PaymentProvidersSettings() {
       case "fedapay":
         return {
           secretName: "FEDAPAY_SECRET_KEY",
-          description: "Configurez vos clés API FedaPay dans les secrets Supabase.",
+          publicKeyName: "FEDAPAY_PUBLIC_KEY",
+          publicKeyLabel: "Clé Publique",
+          secretKeyLabel: "Clé Secrète",
+          description: "Configurez vos clés API FedaPay.",
           docsUrl: "https://docs.fedapay.com/",
         };
       case "wave_ci":
         return {
-          secretName: "WAVE_API_KEY",
-          description: "Configurez votre clé API Wave CI dans les secrets Supabase.",
+          secretName: "WAVE_WEBHOOK_SECRET",
+          publicKeyName: "WAVE_API_KEY",
+          publicKeyLabel: "Clé API",
+          secretKeyLabel: "Secret Webhook",
+          description: "Configurez vos clés API Wave CI.",
           docsUrl: "https://docs.wave.com/",
         };
       default:
@@ -281,57 +354,187 @@ export function PaymentProvidersSettings() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Environment */}
-            <div className="space-y-2">
-              <Label>Environnement</Label>
-              <Select
-                value={isSandbox ? "sandbox" : "production"}
-                onValueChange={(v) => setIsSandbox(v === "sandbox")}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sandbox">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-orange-600 border-orange-300">
-                        Sandbox
-                      </Badge>
-                      Mode test
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="production">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default" className="bg-green-500">
-                        Production
-                      </Badge>
-                      Mode réel
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {isSandbox
-                  ? "Les paiements seront simulés (aucun argent réel)."
-                  : "⚠️ Les paiements seront réels ! Assurez-vous que tout est configuré correctement."}
-              </p>
-            </div>
+          <Tabs defaultValue="general" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="general">Général</TabsTrigger>
+              <TabsTrigger value="keys">Clés API</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="general" className="space-y-4 py-4">
+              {/* Environment */}
+              <div className="space-y-2">
+                <Label>Environnement</Label>
+                <Select
+                  value={isSandbox ? "sandbox" : "production"}
+                  onValueChange={(v) => setIsSandbox(v === "sandbox")}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sandbox">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-orange-600 border-orange-300">
+                          Sandbox
+                        </Badge>
+                        Mode test
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="production">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="bg-green-500">
+                          Production
+                        </Badge>
+                        Mode réel
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {isSandbox
+                    ? "Les paiements seront simulés (aucun argent réel)."
+                    : "⚠️ Les paiements seront réels ! Assurez-vous que tout est configuré correctement."}
+                </p>
+              </div>
 
-            {/* Webhook URL */}
-            <div className="space-y-2">
-              <Label htmlFor="webhook">URL du Webhook (optionnel)</Label>
-              <Input
-                id="webhook"
-                placeholder="https://..."
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                URL où les notifications de paiement seront envoyées.
-              </p>
-            </div>
-          </div>
+              {/* Webhook URL */}
+              <div className="space-y-2">
+                <Label htmlFor="webhook">URL du Webhook (optionnel)</Label>
+                <Input
+                  id="webhook"
+                  placeholder="https://..."
+                  value={webhookUrl}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  URL où les notifications de paiement seront envoyées.
+                </p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="keys" className="space-y-4 py-4">
+              {(() => {
+                const info = selectedProviderData ? getProviderInfo(selectedProviderData.provider_name) : null;
+                const settings = selectedProviderData?.settings as Record<string, any> | undefined;
+                
+                return (
+                  <>
+                    {/* Current status */}
+                    <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Key className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Statut actuel:</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          {settings?.public_key_configured ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-orange-600" />
+                          )}
+                          <span>{info?.publicKeyLabel || "Clé publique"}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {settings?.secret_key_configured ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-orange-600" />
+                          )}
+                          <span>{info?.secretKeyLabel || "Clé secrète"}</span>
+                        </div>
+                      </div>
+                      {settings?.keys_updated_at && (
+                        <p className="text-xs text-muted-foreground">
+                          Dernière mise à jour: {new Date(settings.keys_updated_at).toLocaleString("fr-FR")}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Public Key */}
+                    <div className="space-y-2">
+                      <Label htmlFor="public-key">{info?.publicKeyLabel || "Clé Publique"}</Label>
+                      <div className="relative">
+                        <Input
+                          id="public-key"
+                          type={showPublicKey ? "text" : "password"}
+                          placeholder={`Entrez votre ${info?.publicKeyLabel?.toLowerCase() || "clé publique"}...`}
+                          value={publicKey}
+                          onChange={(e) => setPublicKey(e.target.value)}
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowPublicKey(!showPublicKey)}
+                        >
+                          {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {info && (
+                        <p className="text-xs text-muted-foreground">
+                          Sera stockée comme: <code className="bg-muted px-1 rounded">{info.publicKeyName}</code>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Secret Key */}
+                    <div className="space-y-2">
+                      <Label htmlFor="secret-key">{info?.secretKeyLabel || "Clé Secrète"}</Label>
+                      <div className="relative">
+                        <Input
+                          id="secret-key"
+                          type={showSecretKey ? "text" : "password"}
+                          placeholder={`Entrez votre ${info?.secretKeyLabel?.toLowerCase() || "clé secrète"}...`}
+                          value={secretKey}
+                          onChange={(e) => setSecretKey(e.target.value)}
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowSecretKey(!showSecretKey)}
+                        >
+                          {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {info && (
+                        <p className="text-xs text-muted-foreground">
+                          Sera stockée comme: <code className="bg-muted px-1 rounded">{info.secretName}</code>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Save Keys Button */}
+                    <Button 
+                      onClick={handleSaveKeys} 
+                      disabled={isSavingKeys || (!publicKey && !secretKey)}
+                      className="w-full"
+                    >
+                      {isSavingKeys ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="mr-2 h-4 w-4" />
+                      )}
+                      Enregistrer les clés API
+                    </Button>
+
+                    {/* Warning */}
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        ⚠️ <strong>Important:</strong> Les clés sont enregistrées de manière sécurisée. 
+                        Pour des raisons de sécurité, les valeurs ne sont jamais affichées après l'enregistrement.
+                        Pour les modifier, entrez simplement de nouvelles valeurs.
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
+            </TabsContent>
+          </Tabs>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>

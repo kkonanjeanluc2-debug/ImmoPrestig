@@ -50,3 +50,12 @@ verify_jwt = false
 
 [functions.wave-webhook]
 verify_jwt = false
+
+[functions.update-provider-keys]
+verify_jwt = false
+
+[functions.create-agency-member]
+verify_jwt = false
+
+[functions.send-assignment-notification]
+verify_jwt = false

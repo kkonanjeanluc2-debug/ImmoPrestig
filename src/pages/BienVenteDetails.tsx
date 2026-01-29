@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBienVente } from "@/hooks/useBiensVente";
+import { useBienVente, useUpdateBienVente } from "@/hooks/useBiensVente";
 import { formatCurrency } from "@/lib/pdfFormat";
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { SellBienDialog } from "@/components/vente-immobiliere/SellBienDialog";
+import { BienVenteImageGallery } from "@/components/vente-immobiliere/BienVenteImageGallery";
 
 const STATUS_CONFIG = {
   disponible: { label: "Disponible", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
@@ -28,7 +29,13 @@ export default function BienVenteDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: bien, isLoading } = useBienVente(id || "");
+  const updateBien = useUpdateBienVente();
   const [sellDialogOpen, setSellDialogOpen] = useState(false);
+
+  const handleMainImageChange = async (url: string | null) => {
+    if (!bien) return;
+    await updateBien.mutateAsync({ id: bien.id, image_url: url });
+  };
 
   if (isLoading) {
     return (
@@ -150,6 +157,13 @@ export default function BienVenteDetails() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Image Gallery */}
+        <BienVenteImageGallery
+          bienId={bien.id}
+          mainImageUrl={bien.image_url}
+          onMainImageChange={handleMainImageChange}
+        />
 
         {/* Description */}
         {bien.description && (

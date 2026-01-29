@@ -769,6 +769,7 @@ export type Database = {
           id: string
           lotissement_id: string
           name: string
+          plots_count: number | null
           total_area: number | null
           updated_at: string
           user_id: string
@@ -779,6 +780,7 @@ export type Database = {
           id?: string
           lotissement_id: string
           name: string
+          plots_count?: number | null
           total_area?: number | null
           updated_at?: string
           user_id: string
@@ -789,6 +791,7 @@ export type Database = {
           id?: string
           lotissement_id?: string
           name?: string
+          plots_count?: number | null
           total_area?: number | null
           updated_at?: string
           user_id?: string

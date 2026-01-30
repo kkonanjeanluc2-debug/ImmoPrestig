@@ -61,31 +61,36 @@ const Pricing = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logoImage} alt="ImmoPrestige" className="h-12" />
-            <span className="font-bold text-xl">ImmoPrestige</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <DemoRequestButton 
-              variant="outline" 
-              size="sm"
-              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
-            />
-            {user ? (
-              <Link to="/">
-                <Button>Accéder au tableau de bord</Button>
-              </Link>
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="ghost">Se connecter</Button>
+        <div className="container mx-auto px-4 py-3 md:py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 shrink-0">
+              <img src={logoImage} alt="ImmoPrestige" className="h-10 md:h-12" />
+              <span className="font-bold text-lg md:text-xl">ImmoPrestige</span>
+            </Link>
+            
+            {/* Navigation */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+              <DemoRequestButton 
+                variant="outline" 
+                size="sm"
+                className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 text-xs sm:text-sm"
+              />
+              {user ? (
+                <Link to="/">
+                  <Button size="sm" className="text-xs sm:text-sm">Tableau de bord</Button>
                 </Link>
-                <Link to="/signup">
-                  <Button>Commencer gratuitement</Button>
-                </Link>
-              </>
-            )}
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Se connecter</Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button size="sm" className="text-xs sm:text-sm whitespace-nowrap">Commencer</Button>
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>

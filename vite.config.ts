@@ -42,40 +42,44 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
-      manifest: {
-        name: "ImmoPrestige",
-        short_name: "ImmoPrestige",
-        description: "La solution premium de gestion immobilière",
-        theme_color: "#1F3A93",
-        background_color: "#ffffff",
-        display: "standalone",
-        orientation: "portrait",
-        scope: "/",
-        start_url: "/",
-        icons: [
-          {
-            src: "/pwa-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any maskable",
-          },
-          {
-            src: "/pwa-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
-          },
-        ],
-      },
+      // Disable precaching of JS/CSS to ensure fresh content
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        // Don't precache JS/CSS files - they change frequently
+        globPatterns: ["**/*.{ico,png,svg,woff,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // Skip waiting and claim clients immediately for instant updates
         skipWaiting: true,
         clientsClaim: true,
         // Clean old caches on update
         cleanupOutdatedCaches: true,
+        // Navigation preload for faster page loads
+        navigationPreload: true,
         runtimeCaching: [
+          {
+            // HTML files - always get fresh
+            urlPattern: /\/$/,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "html-cache",
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60, // 1 hour
+              },
+              networkTimeoutSeconds: 3,
+            },
+          },
+          {
+            // JS and CSS files - use StaleWhileRevalidate for fast loads but fresh content
+            urlPattern: /\.(?:js|css)$/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "static-resources",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
+              },
+            },
+          },
           {
             // Cache API calls with NetworkFirst strategy
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
@@ -121,6 +125,31 @@ export default defineConfig(({ mode }) => ({
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
             },
+          },
+        ],
+      },
+      manifest: {
+        name: "ImmoPrestige",
+        short_name: "ImmoPrestige",
+        description: "La solution premium de gestion immobilière",
+        theme_color: "#1F3A93",
+        background_color: "#ffffff",
+        display: "standalone",
+        orientation: "portrait",
+        scope: "/",
+        start_url: "/",
+        icons: [
+          {
+            src: "/pwa-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+          {
+            src: "/pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
           },
         ],
       },

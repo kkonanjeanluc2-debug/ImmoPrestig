@@ -5,6 +5,8 @@ import { useProperties } from "@/hooks/useProperties";
 import { usePayments } from "@/hooks/usePayments";
 import { useTenants } from "@/hooks/useTenants";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
+import { useOwnerInterventions } from "@/hooks/usePropertyInterventions";
+import { useAgency } from "@/hooks/useAgency";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +30,8 @@ import {
   Receipt,
   Clock,
   Percent,
-  Wrench
+  Wrench,
+  FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -38,8 +41,9 @@ import { OwnerRevenueChart } from "@/components/owner/OwnerRevenueChart";
 import { InterventionsList } from "@/components/intervention/InterventionsList";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
+import { generateOwnerMonthlyReport } from "@/lib/generateOwnerMonthlyReport";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,13 +63,18 @@ const OwnerDetails = () => {
   const { data: payments = [] } = usePayments();
   const { data: tenants = [] } = useTenants();
   const { data: activityLogs = [] } = useActivityLogs();
+  const { data: agency } = useAgency();
   const deleteOwner = useDeleteOwner();
   const { canEdit, canDelete } = usePermissions();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   const owner = owners.find(o => o.id === id);
   const ownerProperties = properties.filter(p => p.owner_id === id);
+  
+  // Get interventions for this owner
+  const { data: ownerInterventions = [] } = useOwnerInterventions(id || "");
   
   // Get tenants from owner's properties for payment calculations
   const propertyIds = ownerProperties.map(p => p.id);
@@ -97,6 +106,106 @@ const OwnerDetails = () => {
       navigate("/owners");
     } catch (error) {
       toast.error("Erreur lors de la suppression");
+    }
+  };
+
+  const handleGenerateMonthlyReport = async () => {
+    if (!owner) return;
+    
+    setGeneratingPDF(true);
+    try {
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      const periodMonth = now.getMonth();
+      const periodYear = now.getFullYear();
+      const periodLabel = format(now, "MMMM yyyy", { locale: fr });
+
+      // Prepare tenant payments data
+      const tenantPayments = ownerTenants.map(tenant => {
+        const property = ownerProperties.find(p => p.id === tenant.property_id);
+        const tenantPaymentsThisMonth = payments.filter(p => 
+          p.tenant_id === tenant.id &&
+          p.due_date >= format(monthStart, "yyyy-MM-dd") &&
+          p.due_date <= format(monthEnd, "yyyy-MM-dd")
+        );
+
+        const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property?.price || 0);
+        const totalPaid = tenantPaymentsThisMonth
+          .filter(p => p.status === "paid")
+          .reduce((sum, p) => sum + p.amount, 0);
+
+        const hasLate = tenantPaymentsThisMonth.some(p => 
+          p.status === "pending" && new Date(p.due_date) < now
+        );
+
+        let status: "paid" | "pending" | "late" = "pending";
+        if (totalPaid >= totalDue && totalDue > 0) {
+          status = "paid";
+        } else if (hasLate) {
+          status = "late";
+        }
+
+        const paidPayment = tenantPaymentsThisMonth.find(p => p.status === "paid");
+
+        return {
+          tenantName: tenant.name,
+          propertyTitle: property?.title || "Bien inconnu",
+          rentAmount: totalDue,
+          paidAmount: totalPaid,
+          status,
+          paidDate: paidPayment?.paid_date || null,
+        };
+      }).filter(t => t.rentAmount > 0);
+
+      // Prepare interventions data - filter for current month
+      const monthlyInterventions = ownerInterventions
+        .filter(intervention => {
+          if (!intervention.start_date) return false;
+          const startDate = new Date(intervention.start_date);
+          return startDate >= monthStart && startDate <= monthEnd;
+        })
+        .map(intervention => {
+          const property = ownerProperties.find(p => p.id === intervention.property_id);
+          return {
+            title: intervention.title,
+            propertyTitle: property?.title || "Bien inconnu",
+            type: intervention.type,
+            cost: intervention.cost || 0,
+            status: intervention.status,
+          };
+        });
+
+      const commissionPercentage = owner.management_type?.percentage || 0;
+
+      await generateOwnerMonthlyReport({
+        ownerName: owner.name,
+        ownerEmail: owner.email,
+        ownerPhone: owner.phone || undefined,
+        period: periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1),
+        periodMonth,
+        periodYear,
+        agency: agency ? {
+          name: agency.name,
+          email: agency.email,
+          phone: agency.phone || undefined,
+          address: agency.address || undefined,
+          city: agency.city || undefined,
+          country: agency.country || undefined,
+          logo_url: agency.logo_url,
+        } : null,
+        tenantPayments,
+        interventions: monthlyInterventions,
+        commissionPercentage,
+        managementTypeName: owner.management_type?.name,
+      });
+
+      toast.success("Point mensuel généré avec succès");
+    } catch (error) {
+      console.error("Error generating monthly report:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
@@ -178,7 +287,19 @@ const OwnerDetails = () => {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleGenerateMonthlyReport}
+              disabled={generatingPDF}
+            >
+              {generatingPDF ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4 mr-2" />
+              )}
+              Point mensuel
+            </Button>
             {canEdit && (
               <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="h-4 w-4 mr-2" />

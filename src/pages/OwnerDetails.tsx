@@ -31,7 +31,8 @@ import {
   Clock,
   Percent,
   Wrench,
-  FileText
+  FileText,
+  Send
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -44,6 +45,7 @@ import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateOwnerMonthlyReport } from "@/lib/generateOwnerMonthlyReport";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +71,7 @@ const OwnerDetails = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const owner = owners.find(o => o.id === id);
   const ownerProperties = properties.filter(p => p.owner_id === id);
@@ -209,6 +212,99 @@ const OwnerDetails = () => {
     }
   };
 
+  const handleSendMonthlyReportByEmail = async () => {
+    if (!owner || !owner.email) {
+      toast.error("Ce propriétaire n'a pas d'adresse email");
+      return;
+    }
+    
+    setSendingEmail(true);
+    try {
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      const periodLabel = format(now, "MMMM yyyy", { locale: fr });
+
+      // Prepare tenant payments data
+      const tenantPayments = ownerTenants.map(tenant => {
+        const property = ownerProperties.find(p => p.id === tenant.property_id);
+        const tenantPaymentsThisMonth = payments.filter(p => 
+          p.tenant_id === tenant.id &&
+          p.due_date >= format(monthStart, "yyyy-MM-dd") &&
+          p.due_date <= format(monthEnd, "yyyy-MM-dd")
+        );
+
+        const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property?.price || 0);
+        const totalPaid = tenantPaymentsThisMonth
+          .filter(p => p.status === "paid")
+          .reduce((sum, p) => sum + p.amount, 0);
+
+        const hasLate = tenantPaymentsThisMonth.some(p => 
+          p.status === "pending" && new Date(p.due_date) < now
+        );
+
+        let status: "paid" | "pending" | "late" = "pending";
+        if (totalPaid >= totalDue && totalDue > 0) {
+          status = "paid";
+        } else if (hasLate) {
+          status = "late";
+        }
+
+        return {
+          tenantName: tenant.name,
+          propertyTitle: property?.title || "Bien inconnu",
+          rentAmount: totalDue,
+          paidAmount: totalPaid,
+          status,
+        };
+      }).filter(t => t.rentAmount > 0);
+
+      // Prepare interventions data
+      const monthlyInterventions = ownerInterventions
+        .filter(intervention => {
+          if (!intervention.start_date) return false;
+          const startDate = new Date(intervention.start_date);
+          return startDate >= monthStart && startDate <= monthEnd;
+        })
+        .map(intervention => {
+          const property = ownerProperties.find(p => p.id === intervention.property_id);
+          return {
+            title: intervention.title,
+            propertyTitle: property?.title || "Bien inconnu",
+            type: intervention.type,
+            cost: intervention.cost || 0,
+          };
+        });
+
+      const commissionPercentage = owner.management_type?.percentage || 0;
+
+      const { data, error } = await supabase.functions.invoke('send-owner-monthly-report', {
+        body: {
+          ownerName: owner.name,
+          ownerEmail: owner.email,
+          period: periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1),
+          agencyName: agency?.name || "Gestion Locative",
+          agencyEmail: agency?.email,
+          agencyPhone: agency?.phone,
+          agencyLogoUrl: agency?.logo_url,
+          tenantPayments,
+          interventions: monthlyInterventions,
+          commissionPercentage,
+          managementTypeName: owner.management_type?.name,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Point mensuel envoyé à ${owner.email}`);
+    } catch (error) {
+      console.error("Error sending monthly report email:", error);
+      toast.error("Erreur lors de l'envoi de l'email");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   if (ownersLoading) {
     return (
       <DashboardLayout>
@@ -299,6 +395,19 @@ const OwnerDetails = () => {
                 <FileText className="h-4 w-4 mr-2" />
               )}
               Point mensuel
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleSendMonthlyReportByEmail}
+              disabled={sendingEmail || !owner.email}
+              title={!owner.email ? "Aucun email configuré" : "Envoyer par email"}
+            >
+              {sendingEmail ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Envoyer par email
             </Button>
             {canEdit && (
               <Button variant="outline" onClick={() => setEditDialogOpen(true)}>

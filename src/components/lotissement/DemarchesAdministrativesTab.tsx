@@ -11,6 +11,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Plus,
   ClipboardList,
   Trash2,
@@ -20,6 +26,7 @@ import {
   XCircle,
   Pause,
   Building2,
+  MoreVertical,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -61,7 +68,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 export function DemarchesAdministrativesTab({ lotissementId, lotissementName }: DemarchesAdministrativesTabProps) {
   const { data: demarches, isLoading } = useDemarchesAdministratives(lotissementId);
   const deleteDemarche = useDeleteDemarcheAdministrative();
-  const { canCreate, canDelete } = usePermissions();
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   const handleDelete = async (id: string, title: string) => {
@@ -202,14 +209,31 @@ export function DemarchesAdministrativesTab({ lotissementId, lotissementName }: 
                         : "-"}
                     </TableCell>
                     <TableCell className="text-right">
-                      {canDelete && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(demarche.id, demarche.title)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                      {(canEdit || canDelete) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canEdit && (
+                              <DropdownMenuItem disabled>
+                                <Edit2 className="h-4 w-4 mr-2" />
+                                Modifier
+                              </DropdownMenuItem>
+                            )}
+                            {canDelete && (
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(demarche.id, demarche.title)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Supprimer
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </TableCell>
                   </TableRow>

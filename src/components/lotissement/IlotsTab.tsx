@@ -249,16 +249,13 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
                                   </DropdownMenuItem>
                                 )}
                                 {canDelete && (
-                                  <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      className="text-destructive"
-                                      onClick={() => setDeletingIlot(ilot)}
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Supprimer
-                                    </DropdownMenuItem>
-                                  </>
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => setDeletingIlot(ilot)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Supprimer
+                                  </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>

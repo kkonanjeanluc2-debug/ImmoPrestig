@@ -92,38 +92,36 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
               <CardContent className="p-3">
                 <div className="flex items-start justify-between">
                   <div className="font-bold text-lg">{parcelle.plot_number}</div>
-                  {(canEdit || canDelete) && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-1">
-                          <MoreVertical className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {parcelle.status === "disponible" && (
-                          <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            Vendre
-                          </DropdownMenuItem>
-                        )}
-                        {canEdit && (
-                          <DropdownMenuItem onClick={() => setEditingParcelle(parcelle)}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Modifier
-                          </DropdownMenuItem>
-                        )}
-                        {canDelete && parcelle.status !== "vendu" && (
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => setDeletingId(parcelle.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-1">
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {parcelle.status === "disponible" && (
+                        <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Vendre
+                        </DropdownMenuItem>
+                      )}
+                      {canEdit && (
+                        <DropdownMenuItem onClick={() => setEditingParcelle(parcelle)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Modifier
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && parcelle.status !== "vendu" && (
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => setDeletingId(parcelle.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 {ilotName && (
                   <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 mt-0.5">

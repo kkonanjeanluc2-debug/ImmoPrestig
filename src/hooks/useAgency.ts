@@ -23,6 +23,7 @@ export interface Agency {
   sidebar_color: string | null;
   whatsapp_property_template: string | null;
   reservation_deposit_percentage: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

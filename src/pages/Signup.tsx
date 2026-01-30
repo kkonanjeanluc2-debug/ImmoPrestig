@@ -124,19 +124,30 @@ const Signup = () => {
           console.error("Agency creation error:", agencyError);
           // Don't throw - user is created, agency can be added later
         } else if (agencyData) {
-          // Automatically subscribe to free plan
+          // Automatically subscribe to free plan for all new signups
+          // Users can upgrade to Starter, Pro, or Enterprise later from their dashboard
           const FREE_PLAN_ID = '43d89303-1bc8-4aa8-94e0-76de7d6c2c98';
-          const { error: subscriptionError } = await supabase
+          
+          // Check if a subscription already exists (shouldn't happen, but safety check)
+          const { data: existingSub } = await supabase
             .from('agency_subscriptions')
-            .insert({
-              agency_id: agencyData.id,
-              plan_id: FREE_PLAN_ID,
-              status: 'active',
-              billing_cycle: 'monthly',
-            });
+            .select('id')
+            .eq('agency_id', agencyData.id)
+            .maybeSingle();
+          
+          if (!existingSub) {
+            const { error: subscriptionError } = await supabase
+              .from('agency_subscriptions')
+              .insert({
+                agency_id: agencyData.id,
+                plan_id: FREE_PLAN_ID,
+                status: 'active',
+                billing_cycle: 'monthly',
+              });
 
-          if (subscriptionError) {
-            console.error("Subscription creation error:", subscriptionError);
+            if (subscriptionError) {
+              console.error("Subscription creation error:", subscriptionError);
+            }
           }
         }
       }

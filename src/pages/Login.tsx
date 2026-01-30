@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2, Mail, Lock, CreditCard, Eye, EyeOff } from "lucide-react";
-
+import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -129,6 +129,11 @@ const Login = () => {
               <CreditCard className="h-4 w-4" />
               Voir nos tarifs
             </Link>
+            <DemoRequestButton 
+              variant="outline" 
+              size="sm" 
+              className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+            />
           </CardFooter>
         </form>
       </Card>

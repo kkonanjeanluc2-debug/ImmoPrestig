@@ -62,7 +62,7 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
 };
 
 const gestionLocativeItems = [
-  { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
+  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
   { name: "Biens", href: "/properties", icon: Building2 },
   { name: "Locataires", href: "/tenants", icon: Users },
   { name: "Propriétaires", href: "/owners", icon: Home },

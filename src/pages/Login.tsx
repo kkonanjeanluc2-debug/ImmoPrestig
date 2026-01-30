@@ -18,7 +18,7 @@ const Login = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +123,7 @@ const Login = () => {
               </Link>
             </p>
             <Link 
-              to="/pricing" 
+              to="/" 
               className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               <CreditCard className="h-4 w-4" />

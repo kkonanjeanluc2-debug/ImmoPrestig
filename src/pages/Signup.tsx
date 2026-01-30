@@ -146,7 +146,7 @@ const Signup = () => {
         description: "Votre compte a été créé avec succès !",
       });
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -441,7 +441,7 @@ const Signup = () => {
               </Link>
             </p>
             <Link 
-              to="/pricing" 
+              to="/" 
               className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               <CreditCard className="h-4 w-4" />

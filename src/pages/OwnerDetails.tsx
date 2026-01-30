@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
   Mail, 
@@ -26,13 +27,15 @@ import {
   Map,
   Receipt,
   Clock,
-  Percent
+  Percent,
+  Wrench
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
 import { OwnerPropertiesList } from "@/components/owner/OwnerPropertiesList";
 import { OwnerRevenueChart } from "@/components/owner/OwnerRevenueChart";
+import { InterventionsList } from "@/components/intervention/InterventionsList";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -256,24 +259,43 @@ const OwnerDetails = () => {
             {/* Revenue Chart */}
             <OwnerRevenueChart payments={payments} tenantIds={ownerTenantIds} />
 
-            {/* Properties Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Biens immobiliers ({totalProperties})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {ownerProperties.length > 0 ? (
-                  <OwnerPropertiesList properties={ownerProperties} maxDisplay={10} />
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">
-                    Aucun bien associé à ce propriétaire
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            {/* Tabs for Properties and Interventions */}
+            <Tabs defaultValue="properties" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="properties" className="gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Biens ({totalProperties})
+                </TabsTrigger>
+                <TabsTrigger value="interventions" className="gap-2">
+                  <Wrench className="h-4 w-4" />
+                  Interventions
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="properties" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5" />
+                      Biens immobiliers ({totalProperties})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {ownerProperties.length > 0 ? (
+                      <OwnerPropertiesList properties={ownerProperties} maxDisplay={10} />
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">
+                        Aucun bien associé à ce propriétaire
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="interventions" className="mt-4">
+                <InterventionsList ownerId={id} showPropertyColumn={true} />
+              </TabsContent>
+            </Tabs>
 
             {/* Activity History */}
             <Card>

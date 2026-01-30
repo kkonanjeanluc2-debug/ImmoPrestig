@@ -9,6 +9,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
+import logoImage from "@/assets/immoprestige-logo.png";
 
 const planIcons: Record<string, React.ReactNode> = {
   "Gratuit": <Zap className="h-6 w-6" />,
@@ -61,10 +62,7 @@ const Pricing = () => {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-xl">ImmoPrestige</span>
+            <img src={logoImage} alt="ImmoPrestige" className="h-8" />
           </Link>
           <div className="flex items-center gap-4">
             {user ? (

@@ -1,4 +1,4 @@
-import { Check, Star, Zap, Building2, Crown } from "lucide-react";
+import { Check, Star, Zap, Building2, Crown, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import logoImage from "@/assets/immoprestige-logo.png";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const planIcons: Record<string, React.ReactNode> = {
   "Gratuit": <Zap className="h-6 w-6" />,
@@ -24,6 +25,7 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -62,35 +64,67 @@ const Pricing = () => {
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 md:py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 shrink-0">
               <img src={logoImage} alt="ImmoPrestige" className="h-10 md:h-12" />
               <span className="font-bold text-lg md:text-xl">ImmoPrestige</span>
             </Link>
             
-            {/* Navigation */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            {/* Desktop Navigation */}
+            <div className="hidden sm:flex items-center gap-3">
               <DemoRequestButton 
                 variant="outline" 
                 size="sm"
-                className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 text-xs sm:text-sm"
+                className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
               />
               {user ? (
                 <Link to="/dashboard">
-                  <Button size="sm" className="text-xs sm:text-sm">Tableau de bord</Button>
+                  <Button size="sm">Tableau de bord</Button>
                 </Link>
               ) : (
                 <>
                   <Link to="/login">
-                    <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Se connecter</Button>
+                    <Button variant="ghost" size="sm">Se connecter</Button>
                   </Link>
                   <Link to="/signup">
-                    <Button size="sm" className="text-xs sm:text-sm whitespace-nowrap">Commencer</Button>
+                    <Button size="sm">Commencer</Button>
                   </Link>
                 </>
               )}
             </div>
+
+            {/* Mobile Navigation */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild className="sm:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="top" className="pt-12">
+                <div className="flex flex-col gap-3">
+                  <DemoRequestButton 
+                    variant="outline" 
+                    className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                  />
+                  {user ? (
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full">Tableau de bord</Button>
+                    </Link>
+                  ) : (
+                    <>
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="ghost" className="w-full">Se connecter</Button>
+                      </Link>
+                      <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                        <Button className="w-full">Commencer</Button>
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>

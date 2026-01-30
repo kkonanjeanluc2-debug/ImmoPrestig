@@ -6,12 +6,14 @@ interface DemoRequestButtonProps {
   className?: string;
   variant?: "default" | "outline" | "ghost" | "secondary";
   size?: "default" | "sm" | "lg";
+  onClick?: () => void;
 }
 
 export function DemoRequestButton({ 
   className, 
   variant = "default",
-  size = "default" 
+  size = "default",
+  onClick
 }: DemoRequestButtonProps) {
   const { data: setting } = usePlatformSetting("whatsapp_demo_number");
   
@@ -38,6 +40,9 @@ export function DemoRequestButton({
     
     const url = `https://wa.me/${formattedPhone}?text=${message}`;
     window.open(url, "_blank");
+    
+    // Call the onClick callback if provided
+    onClick?.();
   };
 
   return (

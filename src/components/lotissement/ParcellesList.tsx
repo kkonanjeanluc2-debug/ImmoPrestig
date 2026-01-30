@@ -122,38 +122,36 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                     </Badge>
                   </TableCell>
                 <TableCell className="text-right">
-                  {(canEdit || canDelete) && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {parcelle.status === "disponible" && (
-                          <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            Vendre
-                          </DropdownMenuItem>
-                        )}
-                        {canEdit && (
-                          <DropdownMenuItem onClick={() => setEditingParcelle(parcelle)}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Modifier
-                          </DropdownMenuItem>
-                        )}
-                        {canDelete && parcelle.status !== "vendu" && (
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => setDeletingId(parcelle.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {parcelle.status === "disponible" && (
+                        <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Vendre
+                        </DropdownMenuItem>
+                      )}
+                      {canEdit && (
+                        <DropdownMenuItem onClick={() => setEditingParcelle(parcelle)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Modifier
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && parcelle.status !== "vendu" && (
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => setDeletingId(parcelle.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
               );

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
+import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import logoImage from "@/assets/immoprestige-logo.png";
 
 const planIcons: Record<string, React.ReactNode> = {
@@ -66,6 +67,11 @@ const Pricing = () => {
             <span className="font-bold text-xl">ImmoPrestige</span>
           </Link>
           <div className="flex items-center gap-4">
+            <DemoRequestButton 
+              variant="outline" 
+              size="sm"
+              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+            />
             {user ? (
               <Link to="/">
                 <Button>Accéder au tableau de bord</Button>

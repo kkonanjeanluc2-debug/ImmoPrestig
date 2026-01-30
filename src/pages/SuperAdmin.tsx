@@ -19,6 +19,7 @@ import { AgencySubscriptionsManager } from "@/components/superadmin/AgencySubscr
 import { TransactionsDashboard } from "@/components/superadmin/TransactionsDashboard";
 import { RevenueEvolutionChart } from "@/components/superadmin/RevenueEvolutionChart";
 import { PaymentProvidersSettings } from "@/components/superadmin/PaymentProvidersSettings";
+import { PlatformSettingsCard } from "@/components/superadmin/PlatformSettingsCard";
 import { AppRole, ROLE_LABELS } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -616,6 +617,7 @@ const SuperAdmin = () => {
 
           {/* Payment Providers Tab */}
           <TabsContent value="payments" className="space-y-6">
+            <PlatformSettingsCard />
             <PaymentProvidersSettings />
           </TabsContent>
 

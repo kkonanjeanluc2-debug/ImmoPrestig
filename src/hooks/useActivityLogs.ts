@@ -35,7 +35,8 @@ export type EntityType =
   | 'ilot'
   | 'bien_vente'
   | 'vente_immobiliere'
-  | 'echeance_vente';
+  | 'echeance_vente'
+  | 'intervention';
 
 export interface ActivityLog {
   id: string;

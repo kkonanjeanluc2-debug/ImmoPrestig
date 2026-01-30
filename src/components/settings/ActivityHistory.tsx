@@ -25,6 +25,7 @@ import {
   UserCheck,
   Receipt,
   Calendar,
+  Wrench,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -63,6 +64,7 @@ const ENTITY_CONFIG: Record<EntityType, { label: string; icon: React.ReactNode }
   bien_vente: { label: "Bien à vendre", icon: <Building2 className="h-4 w-4" /> },
   vente_immobiliere: { label: "Vente immo.", icon: <Receipt className="h-4 w-4" /> },
   echeance_vente: { label: "Échéance vente", icon: <Calendar className="h-4 w-4" /> },
+  intervention: { label: "Intervention", icon: <Wrench className="h-4 w-4" /> },
 };
 
 export function ActivityHistory() {

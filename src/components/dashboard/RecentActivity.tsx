@@ -58,6 +58,7 @@ const ENTITY_ICONS: Record<EntityType, React.ReactNode> = {
   bien_vente: <Building2 className="h-4 w-4 text-muted-foreground" />,
   vente_immobiliere: <Wallet className="h-4 w-4 text-muted-foreground" />,
   echeance_vente: <Wallet className="h-4 w-4 text-muted-foreground" />,
+  intervention: <Pencil className="h-4 w-4 text-muted-foreground" />,
 };
 
 export function RecentActivity() {

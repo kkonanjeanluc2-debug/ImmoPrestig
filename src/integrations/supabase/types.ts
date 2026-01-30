@@ -1774,6 +1774,71 @@ export type Database = {
           },
         ]
       }
+      property_interventions: {
+        Row: {
+          cost: number | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          priority: string
+          property_id: string
+          provider_name: string | null
+          provider_phone: string | null
+          start_date: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          property_id: string
+          provider_name?: string | null
+          provider_phone?: string | null
+          start_date?: string
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          property_id?: string
+          provider_name?: string | null
+          provider_phone?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_interventions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_units: {
         Row: {
           area: number | null

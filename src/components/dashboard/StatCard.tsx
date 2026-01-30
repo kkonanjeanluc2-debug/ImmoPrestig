@@ -31,20 +31,23 @@ export function StatCard({
   };
 
   return (
-    <div className="bg-card rounded-xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 border border-border/50 animate-fade-in">
-      <div className="flex items-start justify-between">
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-3xl font-display font-bold text-foreground">{value}</p>
-          {change && (
-            <p className={cn("text-sm font-medium", changeClasses[changeType])}>
-              {change}
-            </p>
-          )}
+    <div className="bg-card rounded-xl p-5 shadow-card hover:shadow-card-hover transition-all duration-300 border border-border/50 animate-fade-in flex flex-col h-full min-h-[140px]">
+      {/* Header row: Title + Icon */}
+      <div className="flex items-start justify-between gap-3 mb-auto">
+        <p className="text-sm font-medium text-muted-foreground leading-tight">{title}</p>
+        <div className={cn("p-2.5 rounded-xl flex-shrink-0", iconBgClasses[iconBg])}>
+          <Icon className="h-5 w-5" />
         </div>
-        <div className={cn("p-3 rounded-xl", iconBgClasses[iconBg])}>
-          <Icon className="h-6 w-6" />
-        </div>
+      </div>
+      
+      {/* Value and change */}
+      <div className="mt-3">
+        <p className="text-2xl sm:text-3xl font-display font-bold text-foreground truncate">{value}</p>
+        {change && (
+          <p className={cn("text-sm font-medium mt-1", changeClasses[changeType])}>
+            {change}
+          </p>
+        )}
       </div>
     </div>
   );

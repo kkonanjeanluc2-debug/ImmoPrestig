@@ -77,7 +77,7 @@ const Pricing = () => {
                 className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 text-xs sm:text-sm"
               />
               {user ? (
-                <Link to="/">
+                <Link to="/dashboard">
                   <Button size="sm" className="text-xs sm:text-sm">Tableau de bord</Button>
                 </Link>
               ) : (

@@ -6,10 +6,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Smartphone, CreditCard, Wallet } from "lucide-react";
+import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, AlertTriangle } from "lucide-react";
 import type { SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
+import { useAgencySubscription } from "@/hooks/useAgencySubscription";
 
 interface SubscriptionCheckoutDialogProps {
   open: boolean;
@@ -40,6 +42,9 @@ export function SubscriptionCheckoutDialog({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Get current subscription to detect plan change
+  const { data: currentSubscription } = useAgencySubscription();
 
   // Normalize phone number to international format for display
   const normalizeIvorianPhone = (phone: string): string | null => {
@@ -122,6 +127,12 @@ export function SubscriptionCheckoutDialog({
 
   const price = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
   const isFree = price === 0;
+  
+  // Detect if this is a plan change (upgrade/downgrade)
+  const isChangingPlan = currentSubscription && currentSubscription.plan_id !== plan.id;
+  const currentPlanName = currentSubscription?.plan?.name;
+  const isUpgrade = currentSubscription && plan.price_monthly > currentSubscription.plan.price_monthly;
+  const isDowngrade = currentSubscription && plan.price_monthly < currentSubscription.plan.price_monthly;
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat("fr-CI", {
@@ -218,17 +229,42 @@ export function SubscriptionCheckoutDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Souscrire au forfait {plan.name}</DialogTitle>
+          <DialogTitle>
+            {isChangingPlan 
+              ? `Changer vers le forfait ${plan.name}` 
+              : `Souscrire au forfait ${plan.name}`}
+          </DialogTitle>
           <DialogDescription>
             {isFree
               ? "Ce forfait est gratuit, aucun paiement requis."
-              : "Choisissez votre mode de paiement préféré."}
+              : isChangingPlan
+                ? "Votre nouveau forfait prendra effet immédiatement."
+                : "Choisissez votre mode de paiement préféré."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
+          {/* Plan Change Alert */}
+          {isChangingPlan && (
+            <Alert variant={isDowngrade ? "destructive" : "default"} className={isUpgrade ? "border-emerald bg-emerald/10" : ""}>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="ml-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline">{currentPlanName}</Badge>
+                  <ArrowRight className="h-3 w-3" />
+                  <Badge variant={isUpgrade ? "default" : "secondary"}>{plan.name}</Badge>
+                </div>
+                <p className="mt-2 text-sm">
+                  {isUpgrade 
+                    ? "Mise à niveau : vous aurez accès à plus de fonctionnalités dès le paiement validé."
+                    : "Rétrogradation : certaines fonctionnalités ne seront plus disponibles."}
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Plan Summary */}
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="flex justify-between items-center">
@@ -355,7 +391,9 @@ export function SubscriptionCheckoutDialog({
                 Traitement en cours...
               </>
             ) : isFree ? (
-              "Activer le forfait gratuit"
+              isChangingPlan ? "Changer vers ce forfait" : "Activer le forfait gratuit"
+            ) : isChangingPlan ? (
+              `Changer de forfait - ${formatPrice(price)} ${plan.currency}`
             ) : (
               `Payer ${formatPrice(price)} ${plan.currency}`
             )}

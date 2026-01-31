@@ -214,6 +214,10 @@ export function SubscriptionSettings() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {activePlans.map((plan) => {
               const isCurrentPlan = plan.id === currentPlanId;
+              const currentPlanPrice = subscription?.plan?.price_monthly || 0;
+              const isUpgrade = plan.price_monthly > currentPlanPrice;
+              const isDowngrade = plan.price_monthly < currentPlanPrice && currentPlanId;
+              
               return (
                 <div
                   key={plan.id}
@@ -240,22 +244,30 @@ export function SubscriptionSettings() {
                     ou {formatPrice(plan.price_yearly, plan.currency)}/an
                   </p>
                   {!isCurrentPlan && (
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 text-xs"
-                        onClick={() => handleUpgrade(plan, "monthly")}
-                      >
-                        Mensuel
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="flex-1 text-xs"
-                        onClick={() => handleUpgrade(plan, "yearly")}
-                      >
-                        Annuel
-                      </Button>
+                    <div className="space-y-2">
+                      {isUpgrade && (
+                        <p className="text-xs text-emerald font-medium text-center">↑ Mise à niveau</p>
+                      )}
+                      {isDowngrade && (
+                        <p className="text-xs text-amber-600 font-medium text-center">↓ Rétrogradation</p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs"
+                          onClick={() => handleUpgrade(plan, "monthly")}
+                        >
+                          Mensuel
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 text-xs"
+                          onClick={() => handleUpgrade(plan, "yearly")}
+                        >
+                          Annuel
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>

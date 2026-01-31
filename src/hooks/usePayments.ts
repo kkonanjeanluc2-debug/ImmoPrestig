@@ -39,27 +39,40 @@ export const useCreatePayment = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (payment: Omit<PaymentInsert, "user_id"> & { tenantName?: string }) => {
+    mutationFn: async (payment: Omit<PaymentInsert, "user_id"> & { tenantName?: string; payment_months?: string[] }) => {
       if (!user) throw new Error("User not authenticated");
       
-      const { tenantName, ...paymentData } = payment;
+      const { tenantName, payment_months, ...paymentData } = payment;
       
       const { data, error } = await supabase
         .from("payments")
-        .insert({ ...paymentData, user_id: user.id })
+        .insert({ 
+          ...paymentData, 
+          user_id: user.id,
+          payment_months: payment_months || null,
+        })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a duplicate month error
+        if (error.message?.includes("déjà été payé")) {
+          throw new Error(error.message);
+        }
+        throw error;
+      }
 
       // Log activity
+      const monthsLabel = payment_months && payment_months.length > 0 
+        ? ` (${payment_months.join(", ")})` 
+        : "";
       await logActivityDirect(
         user.id,
         "create",
         "payment",
-        tenantName ? `Paiement de ${tenantName}` : `Paiement de ${data.amount} FCFA`,
+        tenantName ? `Paiement de ${tenantName}${monthsLabel}` : `Paiement de ${data.amount} FCFA`,
         data.id,
-        { amount: data.amount, due_date: data.due_date, status: data.status }
+        { amount: data.amount, due_date: data.due_date, status: data.status, payment_months }
       );
 
       return data;

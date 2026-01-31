@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,6 +30,7 @@ import { Plus, Loader2 } from "lucide-react";
 import { useTenants } from "@/hooks/useTenants";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { toast } from "sonner";
+import { MonthYearSelector } from "./MonthYearSelector";
 
 const formSchema = z.object({
   tenant_id: z.string().uuid("Veuillez sélectionner un locataire"),
@@ -38,6 +39,7 @@ const formSchema = z.object({
   paid_date: z.string().optional(),
   status: z.enum(["pending", "paid", "late"]),
   method: z.string().optional(),
+  payment_months: z.array(z.string()).min(1, "Veuillez sélectionner au moins un mois"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -48,6 +50,7 @@ interface AddPaymentDialogProps {
 
 export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
   const [open, setOpen] = useState(false);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const createPayment = useCreatePayment();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
 
@@ -60,20 +63,24 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
     defaultValues: {
       tenant_id: "",
       amount: "",
-      due_date: "",
+      due_date: new Date().toISOString().split("T")[0],
       paid_date: "",
       status: "pending",
       method: "",
+      payment_months: [],
     },
   });
 
   const selectedTenantId = form.watch("tenant_id");
   const selectedTenant = tenants?.find(t => t.id === selectedTenantId);
   const activeContract = selectedTenant?.contracts?.find(c => c.status === 'active');
+  const baseRentAmount = activeContract?.rent_amount || 0;
 
   // Auto-fill rent amount when tenant is selected
   const handleTenantChange = (tenantId: string) => {
     form.setValue("tenant_id", tenantId);
+    setSelectedMonths([]);
+    form.setValue("payment_months", []);
     const tenant = tenants?.find(t => t.id === tenantId);
     const contract = tenant?.contracts?.find(c => c.status === 'active');
     if (contract?.rent_amount) {
@@ -81,7 +88,21 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
     }
   };
 
+  const handleMonthsChange = useCallback((months: string[]) => {
+    setSelectedMonths(months);
+    form.setValue("payment_months", months);
+  }, [form]);
+
+  const handleTotalChange = useCallback((total: number) => {
+    form.setValue("amount", total.toString());
+  }, [form]);
+
   const onSubmit = async (values: FormValues) => {
+    if (values.payment_months.length === 0) {
+      toast.error("Veuillez sélectionner au moins un mois");
+      return;
+    }
+
     try {
       await createPayment.mutateAsync({
         tenant_id: values.tenant_id,
@@ -91,27 +112,42 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
         paid_date: values.status === "paid" ? (values.paid_date || values.due_date) : null,
         status: values.status,
         method: values.method || null,
+        payment_months: values.payment_months,
+        tenantName: selectedTenant?.name,
       });
 
       toast.success("Paiement enregistré avec succès");
       form.reset();
+      setSelectedMonths([]);
       setOpen(false);
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating payment:", error);
-      toast.error("Erreur lors de l'enregistrement du paiement");
+      if (error.message?.includes("déjà été payé")) {
+        toast.error(error.message);
+      } else {
+        toast.error("Erreur lors de l'enregistrement du paiement");
+      }
+    }
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      form.reset();
+      setSelectedMonths([]);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-emerald hover:bg-emerald/90 w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Enregistrer un paiement
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Enregistrer un paiement</DialogTitle>
         </DialogHeader>
@@ -140,7 +176,7 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
                             <div className="flex flex-col">
                               <span>{tenant.name}</span>
                               <span className="text-xs text-muted-foreground">
-                                {tenant.property?.title || "Bien non assigné"}
+                                {tenant.property?.title || "Bien non assigné"} - {tenant.contracts?.find(c => c.status === 'active')?.rent_amount?.toLocaleString("fr-FR")} F CFA/mois
                               </span>
                             </div>
                           </SelectItem>
@@ -153,15 +189,35 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
               )}
             />
 
+            {/* Month selector - only show when tenant is selected */}
+            {selectedTenantId && (
+              <FormField
+                control={form.control}
+                name="payment_months"
+                render={() => (
+                  <FormItem>
+                    <MonthYearSelector
+                      tenantId={selectedTenantId}
+                      selectedMonths={selectedMonths}
+                      onSelectionChange={handleMonthsChange}
+                      baseRentAmount={baseRentAmount}
+                      onTotalChange={handleTotalChange}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Montant (F CFA) *</FormLabel>
+                    <FormLabel>Montant total (F CFA) *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="150000" {...field} />
+                      <Input type="number" placeholder="150000" {...field} readOnly className="bg-muted" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

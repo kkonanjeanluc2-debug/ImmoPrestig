@@ -42,7 +42,6 @@ import { toast } from "sonner";
 import { AddLotissementDialog } from "@/components/lotissement/AddLotissementDialog";
 import { EditLotissementDialog } from "@/components/lotissement/EditLotissementDialog";
 import { LotissementsComparisonTable } from "@/components/lotissement/LotissementsComparisonTable";
-import { FeatureGate } from "@/components/subscription/FeatureGate";
 import type { Lotissement } from "@/hooks/useLotissements";
 
 const Lotissements = () => {
@@ -94,7 +93,6 @@ const Lotissements = () => {
 
   return (
     <DashboardLayout>
-      <FeatureGate feature="lotissement">
       <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -337,7 +335,6 @@ const Lotissements = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      </FeatureGate>
     </DashboardLayout>
   );
 };

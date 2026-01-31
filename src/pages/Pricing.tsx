@@ -205,8 +205,9 @@ const Pricing = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {activePlans.map((plan) => {
-                const price = billingCycle === "monthly" ? plan.price_monthly : plan.price_yearly;
-                const savings = getYearlySavings(plan.price_monthly, plan.price_yearly);
+                // Calculate yearly price with discount: monthly * 12 * (1 - discount/100)
+                const calculatedYearlyPrice = Math.round(plan.price_monthly * 12 * (1 - yearlyDiscountPercent / 100));
+                const price = billingCycle === "monthly" ? plan.price_monthly : calculatedYearlyPrice;
                 const features = Array.isArray(plan.features) ? plan.features : [];
 
                 return (

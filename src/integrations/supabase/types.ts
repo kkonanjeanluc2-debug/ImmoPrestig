@@ -2153,6 +2153,77 @@ export type Database = {
         }
         Relationships: []
       }
+      vente_prospects: {
+        Row: {
+          bien_id: string
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          deleted_at: string | null
+          email: string | null
+          first_contact_date: string | null
+          id: string
+          interest_level: string
+          last_contact_date: string | null
+          name: string
+          next_followup_date: string | null
+          notes: string | null
+          phone: string | null
+          source: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bien_id: string
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          first_contact_date?: string | null
+          id?: string
+          interest_level?: string
+          last_contact_date?: string | null
+          name: string
+          next_followup_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bien_id?: string
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          first_contact_date?: string | null
+          id?: string
+          interest_level?: string
+          last_contact_date?: string | null
+          name?: string
+          next_followup_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vente_prospects_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_vente"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ventes_immobilieres: {
         Row: {
           acquereur_id: string

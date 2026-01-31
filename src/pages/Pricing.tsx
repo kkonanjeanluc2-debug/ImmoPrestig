@@ -249,9 +249,9 @@ const Pricing = () => {
                         <p className="text-sm text-muted-foreground mt-1">
                           {billingCycle === "monthly" ? "par mois" : "par an"}
                         </p>
-                        {billingCycle === "yearly" && savings > 0 && (
+                        {billingCycle === "yearly" && plan.price_monthly > 0 && (
                           <Badge variant="secondary" className="mt-2">
-                            Économisez {savings}%
+                            Économisez {yearlyDiscountPercent}%
                           </Badge>
                         )}
                       </div>

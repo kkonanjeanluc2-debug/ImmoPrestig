@@ -1557,6 +1557,7 @@ export type Database = {
           id: string
           method: string | null
           paid_date: string | null
+          payment_months: string[] | null
           status: string
           tenant_id: string
           updated_at: string
@@ -1570,6 +1571,7 @@ export type Database = {
           id?: string
           method?: string | null
           paid_date?: string | null
+          payment_months?: string[] | null
           status?: string
           tenant_id: string
           updated_at?: string
@@ -1583,6 +1585,7 @@ export type Database = {
           id?: string
           method?: string | null
           paid_date?: string | null
+          payment_months?: string[] | null
           status?: string
           tenant_id?: string
           updated_at?: string

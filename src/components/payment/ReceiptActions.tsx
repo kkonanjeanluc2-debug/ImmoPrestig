@@ -21,7 +21,7 @@ import { useCreateEmailLog } from "@/hooks/useEmailLogs";
 import { useLogWhatsAppMessage } from "@/hooks/useWhatsAppLogs";
 import { useAgency } from "@/hooks/useAgency";
 import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle } from "lucide-react";
-import { generateRentReceipt, generateRentReceiptBase64WithTemplate, getPaymentPeriod } from "@/lib/generateReceipt";
+import { generateRentReceipt, generateRentReceiptBase64WithTemplate, getPaymentPeriod, getPaymentPeriodsFromMonths } from "@/lib/generateReceipt";
 import { generateReceiptMessage, openWhatsApp, formatPhoneForWhatsApp } from "@/lib/whatsapp";
 import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
 import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
@@ -38,6 +38,7 @@ interface ReceiptActionsProps {
   paidDate: string;
   dueDate: string;
   method?: string;
+  paymentMonths?: string[] | null;
 }
 
 export function ReceiptActions({
@@ -52,6 +53,7 @@ export function ReceiptActions({
   paidDate,
   dueDate,
   method,
+  paymentMonths,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -68,7 +70,10 @@ export function ReceiptActions({
     setSelectedTemplate(template);
   }, []);
 
-  const period = getPaymentPeriod(dueDate);
+  // Use payment months if available, otherwise derive from due date
+  const period = paymentMonths && paymentMonths.length > 0
+    ? getPaymentPeriodsFromMonths(paymentMonths)
+    : getPaymentPeriod(dueDate);
 
   const getReceiptData = () => ({
     paymentId,
@@ -81,6 +86,7 @@ export function ReceiptActions({
     dueDate,
     period,
     method,
+    paymentMonths: paymentMonths || undefined,
     agency: agency ? {
       name: agency.name,
       email: agency.email,

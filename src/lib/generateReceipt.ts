@@ -26,6 +26,7 @@ interface ReceiptData {
   method?: string;
   ownerName?: string;
   agency?: AgencyInfo | null;
+  paymentMonths?: string[]; // New field for multi-month payments
 }
 
 interface ReceiptDataWithTemplate extends ReceiptData {
@@ -190,14 +191,22 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   
   let yPos = 70;
   
-  // Period box
-  doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 20, 3, 3, "F");
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Période : ${data.period}`, pageWidth / 2, yPos + 12, { align: "center" });
+  // Period box - show multiple months if applicable
+  const periodText = data.paymentMonths && data.paymentMonths.length > 1
+    ? `Périodes : ${data.paymentMonths.join(", ")}`
+    : `Période : ${data.period}`;
   
-  yPos += 35;
+  doc.setFillColor(...lightGray);
+  doc.roundedRect(15, yPos, pageWidth - 30, data.paymentMonths && data.paymentMonths.length > 2 ? 28 : 20, 3, 3, "F");
+  doc.setFontSize(data.paymentMonths && data.paymentMonths.length > 3 ? 10 : 12);
+  doc.setFont("helvetica", "bold");
+  
+  // Split text if too long
+  const splitPeriod = doc.splitTextToSize(periodText, pageWidth - 40);
+  const periodYOffset = splitPeriod.length > 1 ? 8 : 12;
+  doc.text(splitPeriod, pageWidth / 2, yPos + periodYOffset, { align: "center" });
+  
+  yPos += (data.paymentMonths && data.paymentMonths.length > 2 ? 38 : 35);
   
   // Two-column layout for Owner and Tenant
   const colWidth = (pageWidth - 40) / 2;
@@ -491,4 +500,15 @@ export const getPaymentPeriod = (dueDate: string): string => {
   const month = date.toLocaleDateString("fr-FR", { month: "long" });
   const year = date.getFullYear();
   return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
+};
+
+// Generate period string from payment months array
+export const getPaymentPeriodsFromMonths = (paymentMonths: string[] | null): string => {
+  if (!paymentMonths || paymentMonths.length === 0) {
+    return "";
+  }
+  if (paymentMonths.length === 1) {
+    return paymentMonths[0];
+  }
+  return paymentMonths.join(", ");
 };

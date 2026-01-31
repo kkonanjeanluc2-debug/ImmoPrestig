@@ -24,9 +24,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAgency } from "@/hooks/useAgency";
 import { Loader2, CheckCircle, Banknote, Mail, FileText, Percent } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { generateRentReceiptBase64WithTemplate, getPaymentPeriod } from "@/lib/generateReceipt";
+import { generateRentReceiptBase64WithTemplate, getPaymentPeriod, getPaymentPeriodsFromMonths } from "@/lib/generateReceipt";
 import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
 import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
+import { Badge } from "@/components/ui/badge";
 
 interface CollectPaymentDialogProps {
   paymentId: string;
@@ -40,6 +41,7 @@ interface CollectPaymentDialogProps {
   currentMethod?: string | null;
   commissionPercentage?: number;
   commissionAmount?: number;
+  paymentMonths?: string[] | null; // New field for multi-month
   onSuccess?: () => void;
 }
 
@@ -69,6 +71,7 @@ export function CollectPaymentDialog({
   currentMethod,
   commissionPercentage = 0,
   commissionAmount = 0,
+  paymentMonths,
   onSuccess,
 }: CollectPaymentDialogProps) {
   const [open, setOpen] = useState(false);
@@ -107,7 +110,11 @@ export function CollectPaymentDialog({
       if (sendReceipt && tenantEmail) {
         setIsSendingReceipt(true);
         try {
-          const period = getPaymentPeriod(dueDate);
+          // Use payment months if available, otherwise use due date
+          const period = paymentMonths && paymentMonths.length > 0
+            ? getPaymentPeriodsFromMonths(paymentMonths)
+            : getPaymentPeriod(dueDate);
+            
           const pdfBase64 = await generateRentReceiptBase64WithTemplate({
             paymentId,
             tenantName,
@@ -130,6 +137,7 @@ export function CollectPaymentDialog({
               logo_url: agency.logo_url,
             } : undefined,
             template: selectedTemplate,
+            paymentMonths: paymentMonths || undefined,
           });
 
           const { data, error } = await supabase.functions.invoke("send-receipt-email", {
@@ -212,6 +220,16 @@ export function CollectPaymentDialog({
                 {formatCurrency(amount)}
               </span>
             </div>
+            {paymentMonths && paymentMonths.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                <span className="text-sm text-muted-foreground">Mois :</span>
+                {paymentMonths.map((month) => (
+                  <Badge key={month} variant="secondary" className="text-xs">
+                    {month}
+                  </Badge>
+                ))}
+              </div>
+            )}
             {commissionPercentage > 0 && (
               <>
                 <Separator className="my-2" />

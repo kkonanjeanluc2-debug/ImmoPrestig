@@ -451,6 +451,17 @@ export default function Payments() {
                                       </span>
                                     )}
                                   </div>
+                                  {/* Display paid months */}
+                                  {(payment as any).payment_months && (payment as any).payment_months.length > 0 && (
+                                    <div className="flex flex-wrap items-center gap-1 mt-2">
+                                      <span className="text-xs text-muted-foreground">Mois :</span>
+                                      {(payment as any).payment_months.map((month: string) => (
+                                        <Badge key={month} variant="secondary" className="text-xs py-0">
+                                          {month}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center justify-between sm:justify-end gap-2 pl-11 sm:pl-0">
@@ -470,6 +481,7 @@ export default function Payments() {
                                     paidDate={payment.paid_date || payment.due_date}
                                     dueDate={payment.due_date}
                                     method={payment.method || undefined}
+                                    paymentMonths={(payment as any).payment_months || undefined}
                                   />
                                 )}
                                 {payment.status !== "paid" && canEdit && (
@@ -495,6 +507,7 @@ export default function Payments() {
                                       currentMethod={payment.method}
                                       commissionPercentage={commissionInfo.percentage}
                                       commissionAmount={commissionInfo.amount}
+                                      paymentMonths={(payment as any).payment_months || undefined}
                                     />
                                   </>
                                 )}

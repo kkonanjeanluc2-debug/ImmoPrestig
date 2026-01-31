@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, AlertTriangle } from "lucide-react";
+import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, AlertTriangle, Calculator, TrendingDown, TrendingUp } from "lucide-react";
 import type { SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
 import { useAgencySubscription } from "@/hooks/useAgencySubscription";
+import { calculateProration, formatProrationSummary, type ProrationResult } from "@/lib/prorationUtils";
 
 interface SubscriptionCheckoutDialogProps {
   open: boolean;
@@ -134,6 +135,34 @@ export function SubscriptionCheckoutDialog({
   const isUpgrade = currentSubscription && plan.price_monthly > currentSubscription.plan.price_monthly;
   const isDowngrade = currentSubscription && plan.price_monthly < currentSubscription.plan.price_monthly;
 
+  // Calculate proration for plan changes
+  const proration: ProrationResult | null = useMemo(() => {
+    if (!isChangingPlan || !currentSubscription || isFree) return null;
+    
+    const currentPlanPrice = currentSubscription.billing_cycle === "yearly" 
+      ? currentSubscription.plan.price_yearly 
+      : currentSubscription.plan.price_monthly;
+    const newPlanPrice = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+    
+    // Parse dates
+    const startDate = new Date(currentSubscription.starts_at);
+    const endDate = currentSubscription.ends_at ? new Date(currentSubscription.ends_at) : null;
+    
+    return calculateProration(
+      currentPlanPrice,
+      newPlanPrice,
+      startDate,
+      endDate,
+      currentSubscription.billing_cycle as "monthly" | "yearly"
+    );
+  }, [currentSubscription, plan, billingCycle, isChangingPlan, isFree]);
+
+  const prorationSummary = proration ? formatProrationSummary(proration) : null;
+  
+  // Final amount to charge (prorated if changing plan, full price otherwise)
+  const finalAmount = proration ? Math.max(0, proration.amountDue) : price;
+  const hasCredit = proration && proration.amountDue < 0;
+
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat("fr-CI", {
       style: "decimal",
@@ -191,6 +220,14 @@ export function SubscriptionCheckoutDialog({
           payment_method: paymentMethod,
           customer_phone: phoneNumber,
           return_url: window.location.origin + "/settings?tab=subscription",
+          // Send proration data for plan changes
+          proration: proration ? {
+            remaining_days: proration.remainingDays,
+            total_days: proration.totalDays,
+            current_plan_credit: proration.currentPlanCredit,
+            new_plan_prorata_cost: proration.newPlanProrataCost,
+            amount_due: proration.amountDue,
+          } : null,
         },
       });
 
@@ -249,7 +286,7 @@ export function SubscriptionCheckoutDialog({
           {/* Plan Change Alert */}
           {isChangingPlan && (
             <Alert variant={isDowngrade ? "destructive" : "default"} className={isUpgrade ? "border-emerald bg-emerald/10" : ""}>
-              <AlertTriangle className="h-4 w-4" />
+              {isUpgrade ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
               <AlertDescription className="ml-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline">{currentPlanName}</Badge>
@@ -265,6 +302,46 @@ export function SubscriptionCheckoutDialog({
             </Alert>
           )}
 
+          {/* Proration Details */}
+          {proration && prorationSummary && !isFree && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-primary" />
+                <span className="font-medium text-sm">Calcul au prorata</span>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Jours restants sur l'abonnement actuel</span>
+                  <span className="font-medium">{proration.remainingDays} jours ({proration.remainingPercentage.toFixed(0)}%)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Crédit forfait actuel</span>
+                  <span className="font-medium text-emerald">-{formatPrice(proration.currentPlanCredit)} XOF</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Coût nouveau forfait (prorata)</span>
+                  <span className="font-medium">+{formatPrice(proration.newPlanProrataCost)} XOF</span>
+                </div>
+                <hr className="my-2" />
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">
+                    {hasCredit ? "Crédit à votre compte" : "Montant à payer"}
+                  </span>
+                  <span className={`font-bold text-lg ${hasCredit ? "text-emerald" : "text-primary"}`}>
+                    {hasCredit ? `+${formatPrice(Math.abs(proration.amountDue))}` : formatPrice(proration.amountDue)} XOF
+                  </span>
+                </div>
+              </div>
+
+              {hasCredit && (
+                <p className="text-xs text-muted-foreground bg-emerald/10 p-2 rounded">
+                  Ce crédit sera automatiquement appliqué à votre prochaine facture.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Plan Summary */}
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="flex justify-between items-center">
@@ -275,10 +352,21 @@ export function SubscriptionCheckoutDialog({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold">
-                  {formatPrice(price)} <span className="text-sm font-normal">{plan.currency}</span>
-                </p>
-                {billingCycle === "yearly" && (
+                {proration ? (
+                  <>
+                    <p className="text-sm text-muted-foreground line-through">
+                      {formatPrice(price)} {plan.currency}
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {hasCredit ? "0" : formatPrice(finalAmount)} <span className="text-sm font-normal">{plan.currency}</span>
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-2xl font-bold">
+                    {formatPrice(price)} <span className="text-sm font-normal">{plan.currency}</span>
+                  </p>
+                )}
+                {billingCycle === "yearly" && !proration && (
                   <Badge variant="secondary" className="mt-1">
                     Économisez {Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)}%
                   </Badge>
@@ -384,6 +472,7 @@ export function SubscriptionCheckoutDialog({
             disabled={isLoading}
             className="w-full"
             size="lg"
+            variant={hasCredit ? "secondary" : "default"}
           >
             {isLoading ? (
               <>
@@ -392,6 +481,10 @@ export function SubscriptionCheckoutDialog({
               </>
             ) : isFree ? (
               isChangingPlan ? "Changer vers ce forfait" : "Activer le forfait gratuit"
+            ) : hasCredit ? (
+              "Confirmer le changement (crédit appliqué)"
+            ) : isChangingPlan && proration ? (
+              `Payer ${formatPrice(finalAmount)} ${plan.currency} (prorata)`
             ) : isChangingPlan ? (
               `Changer de forfait - ${formatPrice(price)} ${plan.currency}`
             ) : (

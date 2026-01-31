@@ -126,27 +126,37 @@ export function SubscriptionCheckoutDialog({
 
   // Calculate proration for plan changes - MUST be before any early returns to follow Rules of Hooks
   const proration: ProrationResult | null = useMemo(() => {
-    if (!plan || !currentSubscription || currentSubscription.plan_id === plan.id) return null;
-    
-    const price = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
-    if (price === 0) return null; // Free plan
-    
-    const currentPlanPrice = currentSubscription.billing_cycle === "yearly" 
-      ? currentSubscription.plan.price_yearly 
-      : currentSubscription.plan.price_monthly;
-    const newPlanPrice = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
-    
-    // Parse dates
-    const startDate = new Date(currentSubscription.starts_at);
-    const endDate = currentSubscription.ends_at ? new Date(currentSubscription.ends_at) : null;
-    
-    return calculateProration(
-      currentPlanPrice,
-      newPlanPrice,
-      startDate,
-      endDate,
-      currentSubscription.billing_cycle as "monthly" | "yearly"
-    );
+    try {
+      if (!plan || !currentSubscription || currentSubscription.plan_id === plan.id) return null;
+      if (!currentSubscription.plan) return null;
+
+      const selectedPlanPrice = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+      if (selectedPlanPrice === 0) return null; // Free plan
+
+      const currentPlanPrice = currentSubscription.billing_cycle === "yearly"
+        ? currentSubscription.plan.price_yearly
+        : currentSubscription.plan.price_monthly;
+
+      const newPlanPrice = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+
+      // Parse dates
+      const startDate = new Date(currentSubscription.starts_at);
+      const endDate = currentSubscription.ends_at ? new Date(currentSubscription.ends_at) : null;
+
+      if (Number.isNaN(startDate.getTime())) return null;
+      if (endDate && Number.isNaN(endDate.getTime())) return null;
+
+      return calculateProration(
+        currentPlanPrice,
+        newPlanPrice,
+        startDate,
+        endDate,
+        currentSubscription.billing_cycle as "monthly" | "yearly"
+      );
+    } catch (e) {
+      console.error("Proration calculation failed", e);
+      return null;
+    }
   }, [currentSubscription, plan, billingCycle]);
 
   if (!plan) return null;

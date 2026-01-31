@@ -12,6 +12,7 @@ import { SubscriptionCheckoutDialog } from "@/components/subscription/Subscripti
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import logoImage from "@/assets/immoprestige-logo.png";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 
 const planIcons: Record<string, React.ReactNode> = {
   "Gratuit": <Zap className="h-6 w-6" />,
@@ -22,6 +23,7 @@ const planIcons: Record<string, React.ReactNode> = {
 
 const Pricing = () => {
   const { data: plans, isLoading } = useSubscriptionPlans();
+  const { data: discountSetting } = usePlatformSetting("yearly_discount_percentage");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -29,6 +31,7 @@ const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const yearlyDiscountPercent = parseInt(discountSetting?.value || "20", 10);
   const activePlans = plans?.filter(plan => plan.is_active) || [];
 
   const formatPrice = (price: number) => {
@@ -169,7 +172,7 @@ const Pricing = () => {
             >
               Annuel
               <Badge variant="secondary" className="text-xs">
-                Économisez jusqu'à 20%
+                Économisez jusqu'à {yearlyDiscountPercent}%
               </Badge>
             </button>
           </div>

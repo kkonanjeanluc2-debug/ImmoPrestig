@@ -20,8 +20,7 @@ import {
   Trash2,
   Building2,
   HandCoins,
-  KeyRound,
-  Lock
+  KeyRound
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { cn } from "@/lib/utils";
@@ -40,12 +39,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,
@@ -94,7 +87,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { data: agency } = useAgency();
   const { canInstall, isIOS, promptInstall } = usePWAInstall();
   const { data: trashCount } = useTrashCount();
-  const { hasFeature, requiredPlanForFeature } = useFeatureAccess();
+  const { hasFeature } = useFeatureAccess();
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -263,66 +256,33 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Other navigation items */}
-              {otherNavigation.map((item) => {
-                const isActive = location.pathname === item.href;
-                const hasAccess = hasFeature(item.featureKey);
-                const requiredPlan = requiredPlanForFeature(item.featureKey);
-                
-                const navContent = (
-                  <div
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group cursor-pointer",
-                      !hasAccess 
-                        ? "text-primary-foreground/40 hover:bg-navy-light/50"
-                        : isActive 
+              {/* Other navigation items - only show if feature is available */}
+              {otherNavigation
+                .filter((item) => hasFeature(item.featureKey))
+                .map((item) => {
+                  const isActive = location.pathname === item.href;
+                  
+                  return (
+                    <NavLink
+                      key={item.name}
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                        isActive 
                           ? "bg-emerald text-primary-foreground" 
                           : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                    )}
-                    onClick={() => {
-                      if (hasAccess) {
-                        navigate(item.href);
-                      } else {
-                        navigate("/settings?tab=subscription");
-                      }
-                    }}
-                  >
-                    <item.icon className={cn(
-                      "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
-                      !showText && "mx-auto"
-                    )} />
-                    {showText && (
-                      <>
-                        <span className="font-medium text-sm flex-1">{item.name}</span>
-                        {!hasAccess && (
-                          <Lock className="h-3.5 w-3.5 text-primary-foreground/40" />
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-
-                if (!hasAccess && !showText) {
-                  return (
-                    <TooltipProvider key={item.name}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          {navContent}
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Forfait {requiredPlan} requis</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                      )}
+                    >
+                      <item.icon className={cn(
+                        "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                        !showText && "mx-auto"
+                      )} />
+                      {showText && (
+                        <span className="font-medium text-sm">{item.name}</span>
+                      )}
+                    </NavLink>
                   );
-                }
-
-                return (
-                  <div key={item.name}>
-                    {navContent}
-                  </div>
-                );
-              })}
+                })}
               
               {/* Separator before standalone items */}
               <div className={cn("mt-4", showText ? "px-3" : "mx-3")}>

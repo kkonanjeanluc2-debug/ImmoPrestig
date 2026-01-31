@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { FeatureProtectedRoute } from "@/components/auth/FeatureProtectedRoute";
 import { InactivityHandler } from "@/components/auth/InactivityHandler";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
@@ -92,11 +93,11 @@ const App = () => {
                 <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
-                <Route path="/lotissements" element={<ProtectedRoute><Lotissements /></ProtectedRoute>} />
-                <Route path="/lotissements/:id" element={<ProtectedRoute><LotissementDetails /></ProtectedRoute>} />
-                <Route path="/ventes-immobilieres" element={<ProtectedRoute><VentesImmobilieres /></ProtectedRoute>} />
-                <Route path="/ventes-immobilieres/:id" element={<ProtectedRoute><BienVenteDetails /></ProtectedRoute>} />
-                <Route path="/ventes-immobilieres/vente/:id" element={<ProtectedRoute><VenteImmobiliereDetails /></ProtectedRoute>} />
+                <Route path="/lotissements" element={<ProtectedRoute><FeatureProtectedRoute feature="lotissement"><Lotissements /></FeatureProtectedRoute></ProtectedRoute>} />
+                <Route path="/lotissements/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="lotissement"><LotissementDetails /></FeatureProtectedRoute></ProtectedRoute>} />
+                <Route path="/ventes-immobilieres" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><VentesImmobilieres /></FeatureProtectedRoute></ProtectedRoute>} />
+                <Route path="/ventes-immobilieres/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><BienVenteDetails /></FeatureProtectedRoute></ProtectedRoute>} />
+                <Route path="/ventes-immobilieres/vente/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><VenteImmobiliereDetails /></FeatureProtectedRoute></ProtectedRoute>} />
                 <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                 <Route path="/install" element={<Install />} />
                 <Route path="/sign-contract" element={<SignContract />} />

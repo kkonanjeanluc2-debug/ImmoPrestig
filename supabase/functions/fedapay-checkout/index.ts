@@ -5,12 +5,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface ProrationData {
+  remaining_days: number;
+  total_days: number;
+  current_plan_credit: number;
+  new_plan_prorata_cost: number;
+  amount_due: number;
+}
+
 interface CheckoutRequest {
   plan_id: string;
   billing_cycle: "monthly" | "yearly";
   payment_method: "orange_money" | "mtn_money" | "wave" | "moov" | "card";
   customer_phone?: string;
   return_url?: string;
+  proration?: ProrationData | null;
 }
 
 const fedapayModeByPaymentMethod: Record<CheckoutRequest["payment_method"], string | null> = {
@@ -71,7 +80,7 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: CheckoutRequest = await req.json();
-    const { plan_id, billing_cycle, payment_method, customer_phone, return_url } = body;
+    const { plan_id, billing_cycle, payment_method, customer_phone, return_url, proration } = body;
 
     if (!plan_id || !billing_cycle || !payment_method) {
       return new Response(
@@ -79,6 +88,14 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Check for existing subscription to validate proration
+    const { data: existingSubscription } = await supabase
+      .from("agency_subscriptions")
+      .select("*, plan:subscription_plans(*)")
+      .eq("agency_id", agency.id)
+      .eq("status", "active")
+      .single();
 
     // Get subscription plan
     const { data: plan, error: planError } = await supabase
@@ -95,8 +112,78 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Calculate amount based on billing cycle
-    const amount = billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+    // Calculate amount based on billing cycle and proration
+    const fullAmount = billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+    
+    // Determine final amount to charge
+    let amount = fullAmount;
+    let isProrated = false;
+    let creditAmount = 0;
+
+    // Apply proration if changing plan mid-cycle
+    if (proration && existingSubscription && existingSubscription.plan_id !== plan_id) {
+      isProrated = true;
+      
+      // If proration results in credit (downgrade), no payment needed
+      if (proration.amount_due <= 0) {
+        creditAmount = Math.abs(proration.amount_due);
+        
+        // Record credit and activate subscription immediately
+        const startsAt = new Date();
+        const endsAt = new Date(existingSubscription.ends_at || startsAt);
+        
+        // Update subscription to new plan (keep same end date)
+        const { error: subError } = await supabase
+          .from("agency_subscriptions")
+          .update({
+            plan_id: plan.id,
+            billing_cycle,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingSubscription.id);
+
+        if (subError) {
+          throw new Error(`Erreur changement abonnement: ${subError.message}`);
+        }
+
+        // Record the credit as a transaction
+        await supabase
+          .from("payment_transactions")
+          .insert({
+            agency_id: agency.id,
+            subscription_id: existingSubscription.id,
+            plan_id: plan.id,
+            amount: 0,
+            currency: "XOF",
+            payment_method,
+            billing_cycle,
+            customer_email: agency.email,
+            customer_phone: customer_phone || agency.phone,
+            customer_name: agency.name,
+            status: "completed",
+            completed_at: new Date().toISOString(),
+            metadata: {
+              proration: true,
+              credit_amount: creditAmount,
+              previous_plan_id: existingSubscription.plan_id,
+              remaining_days: proration.remaining_days,
+            },
+          });
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `Forfait changé avec un crédit de ${creditAmount} XOF`,
+            subscription_status: "active",
+            credit_amount: creditAmount,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Use prorated amount for upgrade
+      amount = Math.round(proration.amount_due);
+    }
 
     // If free plan, activate directly
     if (amount === 0) {
@@ -122,7 +209,7 @@ Deno.serve(async (req) => {
           subscription_status: "active" 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      )
     }
 
     // Get FedaPay credentials
@@ -154,6 +241,14 @@ Deno.serve(async (req) => {
         customer_phone: customer_phone || agency.phone,
         customer_name: agency.name,
         status: "pending",
+        metadata: isProrated ? {
+          proration: true,
+          original_amount: fullAmount,
+          prorated_amount: amount,
+          current_plan_credit: proration?.current_plan_credit,
+          remaining_days: proration?.remaining_days,
+          previous_plan_id: existingSubscription?.plan_id,
+        } : {},
       })
       .select()
       .single();
@@ -204,8 +299,12 @@ Deno.serve(async (req) => {
     const fedapayMode = fedapayModeByPaymentMethod[payment_method] ?? null;
 
     // Create FedaPay transaction
+    const description = isProrated 
+      ? `Changement forfait vers ${plan.name} (prorata ${proration?.remaining_days} jours)`
+      : `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`;
+
     const fedapayPayload = {
-      description: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`,
+      description,
       amount: Math.round(amount),
       currency: { iso: "XOF" },
       callback_url: return_url || `${supabaseUrl}/functions/v1/fedapay-webhook`,
@@ -224,6 +323,8 @@ Deno.serve(async (req) => {
         agency_id: agency.id,
         plan_id: plan.id,
         billing_cycle,
+        is_prorated: isProrated,
+        previous_plan_id: existingSubscription?.plan_id || null,
       },
     };
 

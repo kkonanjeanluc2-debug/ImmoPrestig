@@ -215,10 +215,15 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Montant total (F CFA) *</FormLabel>
+                    <FormLabel>Montant (F CFA) *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="150000" {...field} readOnly className="bg-muted" />
+                      <Input type="number" placeholder="150000" {...field} />
                     </FormControl>
+                    {selectedMonths.length > 0 && parseFloat(field.value) < baseRentAmount * selectedMonths.length && (
+                      <p className="text-xs text-amber-600">
+                        Paiement partiel ({((parseFloat(field.value) / (baseRentAmount * selectedMonths.length)) * 100).toFixed(0)}% du total)
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

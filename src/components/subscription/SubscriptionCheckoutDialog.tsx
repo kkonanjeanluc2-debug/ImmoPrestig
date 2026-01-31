@@ -124,20 +124,12 @@ export function SubscriptionCheckoutDialog({
   // Get selected payment method details
   const selectedMethod = paymentMethods.find((m) => m.id === paymentMethod);
 
-  if (!plan) return null;
-
-  const price = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
-  const isFree = price === 0;
-  
-  // Detect if this is a plan change (upgrade/downgrade)
-  const isChangingPlan = currentSubscription && currentSubscription.plan_id !== plan.id;
-  const currentPlanName = currentSubscription?.plan?.name;
-  const isUpgrade = currentSubscription && plan.price_monthly > currentSubscription.plan.price_monthly;
-  const isDowngrade = currentSubscription && plan.price_monthly < currentSubscription.plan.price_monthly;
-
-  // Calculate proration for plan changes
+  // Calculate proration for plan changes - MUST be before any early returns to follow Rules of Hooks
   const proration: ProrationResult | null = useMemo(() => {
-    if (!isChangingPlan || !currentSubscription || isFree) return null;
+    if (!plan || !currentSubscription || currentSubscription.plan_id === plan.id) return null;
+    
+    const price = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+    if (price === 0) return null; // Free plan
     
     const currentPlanPrice = currentSubscription.billing_cycle === "yearly" 
       ? currentSubscription.plan.price_yearly 
@@ -155,7 +147,18 @@ export function SubscriptionCheckoutDialog({
       endDate,
       currentSubscription.billing_cycle as "monthly" | "yearly"
     );
-  }, [currentSubscription, plan, billingCycle, isChangingPlan, isFree]);
+  }, [currentSubscription, plan, billingCycle]);
+
+  if (!plan) return null;
+
+  const price = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+  const isFree = price === 0;
+  
+  // Detect if this is a plan change (upgrade/downgrade)
+  const isChangingPlan = currentSubscription && currentSubscription.plan_id !== plan.id;
+  const currentPlanName = currentSubscription?.plan?.name;
+  const isUpgrade = currentSubscription && plan.price_monthly > currentSubscription.plan.price_monthly;
+  const isDowngrade = currentSubscription && plan.price_monthly < currentSubscription.plan.price_monthly;
 
   const prorationSummary = proration ? formatProrationSummary(proration) : null;
   

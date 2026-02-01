@@ -2,7 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
-const SUPABASE_URL = import.meta.env.https://kenpxabtubvybvecfhyu.supabase.co;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY =
   import.meta.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
     .eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlbnB4YWJ0dWJ2eWJ2ZWNmaHl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwOTgwMjIsImV4cCI6MjA4NDY3NDAyMn0

@@ -9,6 +9,8 @@ export interface AgencyStats {
   tenants_count: number;
   owners_count: number;
   lotissements_count: number;
+  biens_vente_count: number;
+  ventes_immobilieres_count: number;
   payments_count: number;
   total_revenue: number;
 }
@@ -104,6 +106,21 @@ export function useAllAgencies() {
 
       if (lotissementsError) throw lotissementsError;
 
+      // Get all biens_vente for stats
+      const { data: biensVente, error: biensVenteError } = await supabase
+        .from("biens_vente")
+        .select("user_id")
+        .is("deleted_at", null);
+
+      if (biensVenteError) throw biensVenteError;
+
+      // Get all ventes_immobilieres for stats
+      const { data: ventesImmobilieres, error: ventesImmobilieresError } = await supabase
+        .from("ventes_immobilieres")
+        .select("user_id, total_price, status");
+
+      if (ventesImmobilieresError) throw ventesImmobilieresError;
+
       // Get all payments for stats
       const { data: payments, error: paymentsError } = await supabase
         .from("payments")
@@ -126,9 +143,13 @@ export function useAllAgencies() {
           const agencyTenants = (tenants || []).filter(t => t.user_id === agency.user_id);
           const agencyOwners = (owners || []).filter(o => o.user_id === agency.user_id);
           const agencyLotissements = (lotissements || []).filter(l => l.user_id === agency.user_id);
+          const agencyBiensVente = (biensVente || []).filter(b => b.user_id === agency.user_id);
+          const agencyVentesImmo = (ventesImmobilieres || []).filter(v => v.user_id === agency.user_id);
           const agencyPayments = (payments || []).filter(p => p.user_id === agency.user_id);
           const paidPayments = agencyPayments.filter(p => p.status === 'paid');
-          const totalRevenue = paidPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+          const completedSales = agencyVentesImmo.filter(v => v.status === 'complete');
+          const totalRevenue = paidPayments.reduce((sum, p) => sum + Number(p.amount), 0) +
+            completedSales.reduce((sum, v) => sum + Number(v.total_price), 0);
 
           return {
             ...agency,
@@ -141,6 +162,8 @@ export function useAllAgencies() {
               tenants_count: agencyTenants.length,
               owners_count: agencyOwners.length,
               lotissements_count: agencyLotissements.length,
+              biens_vente_count: agencyBiensVente.length,
+              ventes_immobilieres_count: agencyVentesImmo.length,
               payments_count: agencyPayments.length,
               total_revenue: totalRevenue,
             },

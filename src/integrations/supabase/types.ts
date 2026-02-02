@@ -1967,6 +1967,79 @@ export type Database = {
         }
         Relationships: []
       }
+      reservations_vente: {
+        Row: {
+          acquereur_id: string
+          bien_id: string
+          converted_vente_id: string | null
+          created_at: string
+          deposit_amount: number
+          expiry_date: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          reservation_date: string
+          status: string
+          updated_at: string
+          user_id: string
+          validity_days: number
+        }
+        Insert: {
+          acquereur_id: string
+          bien_id: string
+          converted_vente_id?: string | null
+          created_at?: string
+          deposit_amount?: number
+          expiry_date: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          reservation_date?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          validity_days?: number
+        }
+        Update: {
+          acquereur_id?: string
+          bien_id?: string
+          converted_vente_id?: string | null
+          created_at?: string
+          deposit_amount?: number
+          expiry_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          reservation_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          validity_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_vente_acquereur_id_fkey"
+            columns: ["acquereur_id"]
+            isOneToOne: false
+            referencedRelation: "acquereurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_vente_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_vente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_vente_converted_vente_id_fkey"
+            columns: ["converted_vente_id"]
+            isOneToOne: false
+            referencedRelation: "ventes_immobilieres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string

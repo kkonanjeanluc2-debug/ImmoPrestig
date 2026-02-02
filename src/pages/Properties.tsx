@@ -168,7 +168,6 @@ const Properties = () => {
                 <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="disponible">Disponible</SelectItem>
                 <SelectItem value="loué">Loué</SelectItem>
-                <SelectItem value="vendu">Vendu</SelectItem>
                 <SelectItem value="en attente">En attente</SelectItem>
               </SelectContent>
             </Select>

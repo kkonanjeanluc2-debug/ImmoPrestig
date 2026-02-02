@@ -30,7 +30,8 @@ import { formatCurrency } from "@/lib/pdfFormat";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
-import { Calendar, Check, Clock, AlertTriangle, Loader2 } from "lucide-react";
+import { Calendar, Check, Clock, AlertTriangle, Loader2, Mail } from "lucide-react";
+import { SendVenteReminderDialog } from "./SendVenteReminderDialog";
 
 interface EcheancesVentesListProps {
   venteId?: string;
@@ -183,17 +184,37 @@ export function EcheancesVentesList({ venteId }: EcheancesVentesListProps) {
                       </TableCell>
                       <TableCell>{getStatusBadge(echeance)}</TableCell>
                       <TableCell className="text-right">
-                        {echeance.status === "pending" && (
-                          <Button size="sm" onClick={() => handlePayClick(echeance)}>
-                            <Check className="h-4 w-4 mr-2" />
-                            Encaisser
-                          </Button>
-                        )}
-                        {echeance.status === "paid" && echeance.paid_date && (
-                          <span className="text-sm text-muted-foreground">
-                            Payé le {format(new Date(echeance.paid_date), "dd/MM/yyyy")}
-                          </span>
-                        )}
+                        <div className="flex items-center justify-end gap-2">
+                          {echeance.status === "pending" && (
+                            <>
+                              <SendVenteReminderDialog
+                                echeanceId={echeance.id}
+                                acquereurName={echeance.vente?.acquereur?.name || "Client"}
+                                acquereurPhone={echeance.vente?.acquereur?.phone}
+                                acquereurEmail={echeance.vente?.acquereur?.email}
+                                bienTitle={echeance.vente?.bien?.title || "Bien"}
+                                amount={echeance.amount}
+                                dueDate={echeance.due_date}
+                                isLate={isPast(new Date(echeance.due_date)) && !isToday(new Date(echeance.due_date))}
+                                trigger={
+                                  <Button size="sm" variant="outline">
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Relancer
+                                  </Button>
+                                }
+                              />
+                              <Button size="sm" onClick={() => handlePayClick(echeance)}>
+                                <Check className="h-4 w-4 mr-2" />
+                                Encaisser
+                              </Button>
+                            </>
+                          )}
+                          {echeance.status === "paid" && echeance.paid_date && (
+                            <span className="text-sm text-muted-foreground">
+                              Payé le {format(new Date(echeance.paid_date), "dd/MM/yyyy")}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

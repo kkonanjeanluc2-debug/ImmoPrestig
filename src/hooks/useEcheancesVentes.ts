@@ -24,6 +24,7 @@ export interface EcheanceVenteWithDetails extends EcheanceVente {
     acquereur?: {
       name: string;
       phone: string | null;
+      email: string | null;
     };
     bien?: {
       title: string;
@@ -43,7 +44,7 @@ export const useEcheancesVentes = (venteId?: string) => {
         .select(`
           *,
           vente:ventes_immobilieres(
-            acquereur:acquereurs(name, phone),
+            acquereur:acquereurs(name, phone, email),
             bien:biens_vente(title, address)
           )
         `);
@@ -76,7 +77,7 @@ export const useUpcomingEcheancesVentes = () => {
         .select(`
           *,
           vente:ventes_immobilieres(
-            acquereur:acquereurs(name, phone),
+            acquereur:acquereurs(name, phone, email),
             bien:biens_vente(title, address)
           )
         `)
@@ -105,7 +106,7 @@ export const useOverdueEcheancesVentes = () => {
         .select(`
           *,
           vente:ventes_immobilieres(
-            acquereur:acquereurs(name, phone),
+            acquereur:acquereurs(name, phone, email),
             bien:biens_vente(title, address)
           )
         `)

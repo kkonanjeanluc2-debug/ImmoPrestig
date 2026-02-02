@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
   Mail, 
@@ -25,7 +26,8 @@ import {
   AlertCircle,
   Download,
   MessageCircle,
-  DoorOpen
+  DoorOpen,
+  ClipboardCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -39,6 +41,7 @@ import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog"
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
+import { TenantEtatsDesLieuxTab } from "@/components/etat-des-lieux/TenantEtatsDesLieuxTab";
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -270,10 +273,23 @@ const TenantDetails = () => {
           </Card>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Charts & Payments */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Main Content with Tabs */}
+        <Tabs defaultValue="payments" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex mb-6">
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
+              Paiements
+            </TabsTrigger>
+            <TabsTrigger value="etats-des-lieux" className="flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4" />
+              États des lieux
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="payments">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Charts & Payments */}
+              <div className="lg:col-span-2 space-y-6">
             {/* Payment Evolution Chart */}
             <TenantPaymentChart payments={tenant.payments || []} />
 
@@ -641,7 +657,13 @@ const TenantDetails = () => {
             </Card>
           </div>
         </div>
-      </div>
+      </TabsContent>
+
+      <TabsContent value="etats-des-lieux">
+        <TenantEtatsDesLieuxTab tenant={tenant} />
+      </TabsContent>
+    </Tabs>
+  </div>
 
       {/* Edit Dialog */}
       <EditTenantDialog

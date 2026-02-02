@@ -136,13 +136,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="h-4 w-px bg-border hidden sm:block" />
               <div className="flex items-center gap-1.5 text-accent">
                 <Clock className="h-4 w-4" />
-                <span className="text-sm font-semibold tabular-nums">
+                <span className="text-sm font-semibold tabular-nums animate-fade-in-out">
                   {format(currentTime, "HH")}
                   <span className="animate-pulse">:</span>
                   {format(currentTime, "mm")}
                   <span className="animate-pulse">:</span>
                   {format(currentTime, "ss")}
                 </span>
+                <span className="text-xs text-muted-foreground ml-1">GMT</span>
               </div>
             </div>
           </div>

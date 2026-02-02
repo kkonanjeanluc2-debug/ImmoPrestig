@@ -121,6 +121,13 @@ export function useAllAgencies() {
 
       if (ventesImmobilieresError) throw ventesImmobilieresError;
 
+      // Get all echeances_ventes for revenue calculation
+      const { data: echeancesVentes, error: echeancesVentesError } = await supabase
+        .from("echeances_ventes")
+        .select("user_id, paid_amount, status");
+
+      if (echeancesVentesError) throw echeancesVentesError;
+
       // Get all payments for stats
       const { data: payments, error: paymentsError } = await supabase
         .from("payments")
@@ -145,11 +152,15 @@ export function useAllAgencies() {
           const agencyLotissements = (lotissements || []).filter(l => l.user_id === agency.user_id);
           const agencyBiensVente = (biensVente || []).filter(b => b.user_id === agency.user_id);
           const agencyVentesImmo = (ventesImmobilieres || []).filter(v => v.user_id === agency.user_id);
+          const agencyEcheancesVentes = (echeancesVentes || []).filter(e => e.user_id === agency.user_id);
           const agencyPayments = (payments || []).filter(p => p.user_id === agency.user_id);
+          
+          // Calculate revenue: paid rent payments + paid sale installments
           const paidPayments = agencyPayments.filter(p => p.status === 'paid');
-          const completedSales = agencyVentesImmo.filter(v => v.status === 'complete');
-          const totalRevenue = paidPayments.reduce((sum, p) => sum + Number(p.amount), 0) +
-            completedSales.reduce((sum, v) => sum + Number(v.total_price), 0);
+          const paidEcheancesVentes = agencyEcheancesVentes.filter(e => e.status === 'paid');
+          const rentRevenue = paidPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+          const salesRevenue = paidEcheancesVentes.reduce((sum, e) => sum + Number(e.paid_amount || 0), 0);
+          const totalRevenue = rentRevenue + salesRevenue;
 
           return {
             ...agency,

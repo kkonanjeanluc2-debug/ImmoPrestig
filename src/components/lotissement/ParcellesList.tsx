@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -10,6 +10,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -45,6 +46,12 @@ const STATUS_STYLES = {
   vendu: "bg-blue-500/10 text-blue-600 border-blue-500/30",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  disponible: "Disponible",
+  reserve: "Réservé",
+  vendu: "Vendu",
+};
+
 export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) {
   const { canEdit, canDelete } = usePermissions();
   const deleteParcelle = useSoftDeleteParcelle();
@@ -53,11 +60,31 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
   const [sellingParcelle, setSellingParcelle] = useState<Parcelle | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const getIlotName = (ilotId: string | null) => {
     if (!ilotId) return null;
     return ilots?.find(i => i.id === ilotId)?.name || null;
   };
+
+  // Filter parcelles based on search query
+  const filteredParcelles = useMemo(() => {
+    if (!searchQuery.trim()) return parcelles;
+    
+    const query = searchQuery.toLowerCase();
+    return parcelles.filter((parcelle) => {
+      const ilotName = getIlotName(parcelle.ilot_id)?.toLowerCase() || "";
+      const statusLabel = STATUS_LABELS[parcelle.status]?.toLowerCase() || "";
+      
+      return (
+        parcelle.plot_number.toLowerCase().includes(query) ||
+        ilotName.includes(query) ||
+        statusLabel.includes(query) ||
+        parcelle.area.toString().includes(query) ||
+        parcelle.price.toString().includes(query)
+      );
+    });
+  }, [parcelles, searchQuery, ilots]);
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -84,24 +111,65 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   return (
     <>
       <Card>
-        <div className="overflow-x-auto">
-          <Table className="min-w-[600px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>N° Lot</TableHead>
-                <TableHead>Îlot</TableHead>
-                <TableHead>Superficie</TableHead>
-                <TableHead>Prix</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-          <TableBody>
-            {parcelles.map((parcelle) => {
-              const ilotName = getIlotName(parcelle.ilot_id);
-              return (
-                <TableRow key={parcelle.id}>
-                  <TableCell className="font-medium">{parcelle.plot_number}</TableCell>
+        {/* Search Bar */}
+        {parcelles.length > 0 && (
+          <div className="p-4 border-b">
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher une parcelle..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {filteredParcelles.length === 0 && searchQuery ? (
+          <CardContent className="py-12 text-center">
+            <Search className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
+            <p className="text-lg font-medium text-muted-foreground">Aucun résultat</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Aucune parcelle ne correspond à "{searchQuery}"
+            </p>
+            <Button 
+              variant="outline" 
+              className="mt-4" 
+              onClick={() => setSearchQuery("")}
+            >
+              Effacer la recherche
+            </Button>
+          </CardContent>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table className="min-w-[600px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>N° Lot</TableHead>
+                  <TableHead>Îlot</TableHead>
+                  <TableHead>Superficie</TableHead>
+                  <TableHead>Prix</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+            <TableBody>
+              {filteredParcelles.map((parcelle) => {
+                const ilotName = getIlotName(parcelle.ilot_id);
+                return (
+                  <TableRow key={parcelle.id}>
+                    <TableCell className="font-medium">{parcelle.plot_number}</TableCell>
                   <TableCell>
                     {ilotName ? (
                       <Badge variant="outline" className="gap-1">
@@ -156,9 +224,10 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
               </TableRow>
               );
             })}
-          </TableBody>
-        </Table>
-        </div>
+            </TableBody>
+          </Table>
+          </div>
+        )}
       </Card>
 
       {editingParcelle && (

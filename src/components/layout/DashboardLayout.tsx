@@ -1,7 +1,6 @@
-import { ReactNode, useState, useCallback } from "react";
+import { ReactNode, useState, useCallback, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
-import { Search, User, Moon, MoonStar, Crown, UserCog, Eye } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { User, Moon, MoonStar, Crown, UserCog, Eye, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -21,6 +20,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,
@@ -80,6 +81,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Apply brand colors from agency settings
   useBrandColors();
 
+  // Live date and time
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const toggleDND = useCallback(() => {
     const currentSchedule = getSchedule();
     const newEnabled = !currentSchedule.enabled;
@@ -111,13 +122,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Spacer for mobile menu button */}
           <div className="w-10 lg:hidden flex-shrink-0" />
           
-          <div className="flex items-center gap-2 sm:gap-4 flex-1 max-w-md lg:max-w-xl min-w-0">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Rechercher..." 
-                className="pl-8 sm:pl-10 bg-muted border-0 focus-visible:ring-1 focus-visible:ring-primary h-9 text-sm"
-              />
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-primary/5 to-accent/5 px-3 sm:px-4 py-2 rounded-lg border border-primary/10">
+              <div className="flex items-center gap-1.5 text-primary">
+                <Calendar className="h-4 w-4" />
+                <span className="text-sm font-medium hidden sm:inline">
+                  {format(currentTime, "EEEE d MMMM yyyy", { locale: fr })}
+                </span>
+                <span className="text-sm font-medium sm:hidden">
+                  {format(currentTime, "d MMM yyyy", { locale: fr })}
+                </span>
+              </div>
+              <div className="h-4 w-px bg-border hidden sm:block" />
+              <div className="flex items-center gap-1.5 text-accent">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm font-semibold tabular-nums">
+                  {format(currentTime, "HH")}
+                  <span className="animate-pulse">:</span>
+                  {format(currentTime, "mm")}
+                  <span className="animate-pulse">:</span>
+                  {format(currentTime, "ss")}
+                </span>
+              </div>
             </div>
           </div>
 

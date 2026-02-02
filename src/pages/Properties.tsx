@@ -40,7 +40,7 @@ const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [transactionFilter, setTransactionFilter] = useState("all");
+  
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
@@ -55,12 +55,14 @@ const Properties = () => {
   const deleteProperty = useDeleteProperty();
   const { data: unitsSummary = {} } = usePropertyUnitsSummary();
 
-  const filteredProperties = (properties || []).filter((property) => {
+  // Only show rental properties (location)
+  const rentalProperties = (properties || []).filter((property) => property.type === "location");
+  
+  const filteredProperties = rentalProperties.filter((property) => {
     const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          property.address.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === "all" || property.property_type === typeFilter;
     const matchesStatus = statusFilter === "all" || property.status === statusFilter;
-    const matchesTransaction = transactionFilter === "all" || property.type === transactionFilter;
     const matchesOwner = ownerFilter === "all" 
       ? true 
       : ownerFilter === "none" 
@@ -86,7 +88,7 @@ const Properties = () => {
             ? !hasUnits
             : true;
     
-    return matchesSearch && matchesType && matchesStatus && matchesTransaction && matchesOwner && matchesAssigned && matchesAvailability;
+    return matchesSearch && matchesType && matchesStatus && matchesOwner && matchesAssigned && matchesAvailability;
   });
 
   const handleDelete = async () => {
@@ -147,16 +149,6 @@ const Properties = () => {
             />
           </div>
           <div className="flex flex-wrap gap-3">
-            <Select value={transactionFilter} onValueChange={setTransactionFilter}>
-              <SelectTrigger className="w-[120px] sm:w-[140px]">
-                <SelectValue placeholder="Transaction" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="location">Location</SelectItem>
-                <SelectItem value="vente">Vente</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[130px] sm:w-[160px]">
                 <SelectValue placeholder="Type de bien" />

@@ -163,53 +163,36 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
           />
         )}
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Type de transaction *</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="location">Location</SelectItem>
-                  <SelectItem value="vente">Vente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="propertyType">Type de bien *</Label>
-              <Select
-                value={formData.property_type}
-                onValueChange={(value) => setFormData({ ...formData, property_type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="appartement">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4" />
-                      Appartement
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="maison">
-                    <div className="flex items-center gap-2">
-                      <Home className="h-4 w-4" />
-                      Maison
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="terrain">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Terrain
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="propertyType">Type de bien *</Label>
+            <Select
+              value={formData.property_type}
+              onValueChange={(value) => setFormData({ ...formData, property_type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="appartement">
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    Appartement
+                  </div>
+                </SelectItem>
+                <SelectItem value="maison">
+                  <div className="flex items-center gap-2">
+                    <Home className="h-4 w-4" />
+                    Maison
+                  </div>
+                </SelectItem>
+                <SelectItem value="terrain">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Terrain
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Owner Selector */}
@@ -260,9 +243,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">
-                {formData.type === "location" ? "Loyer mensuel (F CFA) *" : "Prix de vente (F CFA) *"}
-              </Label>
+              <Label htmlFor="price">Loyer mensuel (F CFA) *</Label>
               <Input
                 id="price"
                 type="number"

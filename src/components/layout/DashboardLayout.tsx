@@ -1,4 +1,5 @@
 import { ReactNode, useState, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Moon, MoonStar, Crown, UserCog, Eye, Calendar, Clock, User } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -49,7 +50,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const { data: userRole } = useCurrentUserRole();
-  
+  const navigate = useNavigate();
   // Fetch user profile for display name
   const { data: profile } = useQuery({
     queryKey: ["user-profile", user?.id],
@@ -195,7 +196,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NotificationCenter />
             <div className="h-6 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8 flex-shrink-0">
+              <Avatar 
+                className="h-8 w-8 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                onClick={() => navigate("/settings?tab=agency")}
+              >
                 {agency?.logo_url ? (
                   <AvatarImage src={agency.logo_url} alt={agency.name || "Logo agence"} />
                 ) : null}

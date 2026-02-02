@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
+import { formatAmountForPDF, formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
   name: string;
@@ -262,7 +262,7 @@ export const generatePVFamille = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
 
-  const landDesc = `La reunion a pour objet la gestion du terrain familial decrit comme suit :\n\nDescription : ${data.landDescription}\nSuperficie : ${data.landArea.toLocaleString("fr-FR")} m²\nLocalisation : ${data.landLocation}`;
+  const landDesc = `La reunion a pour objet la gestion du terrain familial decrit comme suit :\n\nDescription : ${data.landDescription}\nSuperficie : ${formatAmountForPDF(data.landArea)} m²\nLocalisation : ${data.landLocation}`;
 
   const landLines = doc.splitTextToSize(landDesc, maxWidth);
   landLines.forEach((line: string) => {
@@ -422,7 +422,7 @@ Il a ete convenu et arrete ce qui suit :`;
   const article1 = `Le Cedant cede au Cessionnaire, qui accepte, les droits coutumiers et/ou de propriete sur le terrain decrit comme suit :
 
 Description : ${data.landDescription}
-Superficie : ${data.landArea.toLocaleString("fr-FR")} m²
+Superficie : ${formatAmountForPDF(data.landArea)} m²
 Localisation : ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`;
 
   const article1Lines = doc.splitTextToSize(article1, maxWidth);

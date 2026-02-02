@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
+import { formatAmountForPDF, formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
   name: string;
@@ -231,7 +231,7 @@ export const generateFicheReservation = async (
   doc.setTextColor(...textColor);
   doc.text(`Numéro de lot : ${parcelle.plot_number}`, margin, yPos);
   yPos += 6;
-  doc.text(`Superficie : ${parcelle.area.toLocaleString("fr-FR")} m²`, margin, yPos);
+  doc.text(`Superficie : ${formatAmountForPDF(parcelle.area)} m²`, margin, yPos);
   yPos += 6;
   doc.text(`Prix : ${formatAmountWithCurrency(parcelle.price)}`, margin, yPos);
   
@@ -390,7 +390,7 @@ export const generateContratVente = async (
   
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article1 = `Le Vendeur cède à l'Acquéreur, qui accepte, une parcelle de terrain nue située dans le lotissement « ${lotissement.name} » sis à ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}, désignée sous le numéro de lot ${parcelle.plot_number}, d'une superficie de ${parcelle.area.toLocaleString("fr-FR")} mètres carrés (${parcelle.area.toLocaleString("fr-FR")} m²).`;
+  const article1 = `Le Vendeur cède à l'Acquéreur, qui accepte, une parcelle de terrain nue située dans le lotissement « ${lotissement.name} » sis à ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}, désignée sous le numéro de lot ${parcelle.plot_number}, d'une superficie de ${formatAmountForPDF(parcelle.area)} mètres carrés (${formatAmountForPDF(parcelle.area)} m²).`;
   
   const article1Lines = doc.splitTextToSize(article1, maxWidth);
   article1Lines.forEach((line: string) => {

@@ -143,7 +143,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="animate-pulse">:</span>
                   {format(currentTime, "ss")}
                 </span>
-                <span className="text-xs text-muted-foreground ml-1">GMT</span>
               </div>
             </div>
           </div>

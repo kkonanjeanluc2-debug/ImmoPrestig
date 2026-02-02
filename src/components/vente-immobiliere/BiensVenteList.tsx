@@ -153,7 +153,11 @@ export function BiensVenteList() {
           {filteredBiens?.map((bien) => {
             const statusConfig = STATUS_CONFIG[bien.status];
             return (
-              <Card key={bien.id} className="overflow-hidden group">
+              <Card 
+                key={bien.id} 
+                className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate(`/ventes-immobilieres/${bien.id}`)}
+              >
                 <div className="relative h-48 bg-muted">
                   {bien.image_url ? (
                     <img
@@ -184,23 +188,37 @@ export function BiensVenteList() {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/ventes-immobilieres/${bien.id}`)}>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/ventes-immobilieres/${bien.id}`);
+                        }}>
                           <Eye className="h-4 w-4 mr-2" />
                           Voir détails
                         </DropdownMenuItem>
                         {bien.status === "disponible" && (
                           <>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleReserve(bien)}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              handleReserve(bien);
+                            }}>
                               <Bookmark className="h-4 w-4 mr-2" />
                               Réserver
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleSell(bien)}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              handleSell(bien);
+                            }}>
                               <HandCoins className="h-4 w-4 mr-2" />
                               Vendre
                             </DropdownMenuItem>
@@ -209,7 +227,10 @@ export function BiensVenteList() {
                         {bien.status === "reserve" && (
                           <>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleSell(bien)}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              handleSell(bien);
+                            }}>
                               <HandCoins className="h-4 w-4 mr-2" />
                               Finaliser la vente
                             </DropdownMenuItem>
@@ -219,7 +240,10 @@ export function BiensVenteList() {
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleDelete(bien)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(bien);
+                              }}
                               className="text-destructive"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />

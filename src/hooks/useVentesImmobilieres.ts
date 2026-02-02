@@ -107,9 +107,18 @@ export const useCreateVenteImmobiliere = () => {
     mutationFn: async (vente: VenteImmobiliereInsert) => {
       if (!user) throw new Error("User not authenticated");
 
+      // For cash payments, automatically set status to complete
+      const status = vente.payment_type === "comptant" ? "complete" : "en_cours";
+      const paidInstallments = vente.payment_type === "comptant" ? (vente.total_installments || 0) : 0;
+
       const { data, error } = await supabase
         .from("ventes_immobilieres")
-        .insert({ ...vente, user_id: user.id })
+        .insert({ 
+          ...vente, 
+          user_id: user.id,
+          status,
+          paid_installments: paidInstallments
+        })
         .select()
         .single();
 

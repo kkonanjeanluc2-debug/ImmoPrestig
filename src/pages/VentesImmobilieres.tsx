@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { AddBienVenteDialog } from "@/components/vente-immobiliere/AddBienVenteDialog";
 import { BiensVenteList } from "@/components/vente-immobiliere/BiensVenteList";
 import { VentesImmobilieresList } from "@/components/vente-immobiliere/VentesImmobileresList";
-import { EcheancesVentesList } from "@/components/vente-immobiliere/EcheancesVentesList";
-import { UpcomingEcheancesVentesList } from "@/components/vente-immobiliere/UpcomingEcheancesVentesList";
+import { EcheancesVentesTabContent } from "@/components/vente-immobiliere/EcheancesVentesTabContent";
 import { VentesDashboard } from "@/components/vente-immobiliere/VentesDashboard";
 import { VenteProspectsTab } from "@/components/vente-immobiliere/VenteProspectsTab";
-import { Building2, Receipt, Calendar, Plus, Users, UserSearch, Bell } from "lucide-react";
+import { Building2, Receipt, Calendar, Plus, Users, UserSearch } from "lucide-react";
 import { useAcquereurs } from "@/hooks/useAcquereurs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -44,7 +43,7 @@ export default function VentesImmobilieres() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="biens" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Biens</span>
@@ -52,10 +51,6 @@ export default function VentesImmobilieres() {
             <TabsTrigger value="ventes" className="flex items-center gap-2">
               <Receipt className="h-4 w-4" />
               <span className="hidden sm:inline">Ventes</span>
-            </TabsTrigger>
-            <TabsTrigger value="a-venir" className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">À venir</span>
             </TabsTrigger>
             <TabsTrigger value="echeances" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -79,12 +74,8 @@ export default function VentesImmobilieres() {
             <VentesImmobilieresList />
           </TabsContent>
 
-          <TabsContent value="a-venir" className="mt-6">
-            <UpcomingEcheancesVentesList />
-          </TabsContent>
-
           <TabsContent value="echeances" className="mt-6">
-            <EcheancesVentesList />
+            <EcheancesVentesTabContent />
           </TabsContent>
 
           <TabsContent value="prospects" className="mt-6">

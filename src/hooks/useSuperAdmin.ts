@@ -7,6 +7,8 @@ import type { SuperAdminActionType } from "./useSuperAdminAudit";
 export interface AgencyStats {
   properties_count: number;
   tenants_count: number;
+  owners_count: number;
+  lotissements_count: number;
   payments_count: number;
   total_revenue: number;
 }
@@ -73,16 +75,34 @@ export function useAllAgencies() {
       // Get all properties for stats
       const { data: properties, error: propertiesError } = await supabase
         .from("properties")
-        .select("user_id");
+        .select("user_id")
+        .is("deleted_at", null);
 
       if (propertiesError) throw propertiesError;
 
       // Get all tenants for stats
       const { data: tenants, error: tenantsError } = await supabase
         .from("tenants")
-        .select("user_id");
+        .select("user_id")
+        .is("deleted_at", null);
 
       if (tenantsError) throw tenantsError;
+
+      // Get all owners for stats
+      const { data: owners, error: ownersError } = await supabase
+        .from("owners")
+        .select("user_id")
+        .is("deleted_at", null);
+
+      if (ownersError) throw ownersError;
+
+      // Get all lotissements for stats
+      const { data: lotissements, error: lotissementsError } = await supabase
+        .from("lotissements")
+        .select("user_id")
+        .is("deleted_at", null);
+
+      if (lotissementsError) throw lotissementsError;
 
       // Get all payments for stats
       const { data: payments, error: paymentsError } = await supabase
@@ -104,6 +124,8 @@ export function useAllAgencies() {
           // Calculate stats for this agency
           const agencyProperties = (properties || []).filter(p => p.user_id === agency.user_id);
           const agencyTenants = (tenants || []).filter(t => t.user_id === agency.user_id);
+          const agencyOwners = (owners || []).filter(o => o.user_id === agency.user_id);
+          const agencyLotissements = (lotissements || []).filter(l => l.user_id === agency.user_id);
           const agencyPayments = (payments || []).filter(p => p.user_id === agency.user_id);
           const paidPayments = agencyPayments.filter(p => p.status === 'paid');
           const totalRevenue = paidPayments.reduce((sum, p) => sum + Number(p.amount), 0);
@@ -117,6 +139,8 @@ export function useAllAgencies() {
             stats: {
               properties_count: agencyProperties.length,
               tenants_count: agencyTenants.length,
+              owners_count: agencyOwners.length,
+              lotissements_count: agencyLotissements.length,
               payments_count: agencyPayments.length,
               total_revenue: totalRevenue,
             },

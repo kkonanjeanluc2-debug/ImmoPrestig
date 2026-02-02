@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff, Home, CreditCard, TrendingUp, ClipboardList, Receipt, Wallet } from "lucide-react";
+import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff, Home, CreditCard, TrendingUp, ClipboardList, Receipt, Wallet, MapPin, UserCheck } from "lucide-react";
 import { useIsSuperAdmin, useAllAgencies, useDeleteAgency, useSuperAdminUpdateRole, useToggleAccountStatus, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 import { useLogSuperAdminAction, SuperAdminActionType } from "@/hooks/useSuperAdminAudit";
 import { AuditLogCard } from "@/components/superadmin/AuditLogCard";
@@ -440,10 +440,10 @@ const SuperAdmin = () => {
                       <TableHead>Type</TableHead>
                       <TableHead className="text-center">Biens</TableHead>
                       <TableHead className="text-center">Locataires</TableHead>
+                      <TableHead className="text-center">Propriétaires</TableHead>
+                      <TableHead className="text-center">Lotissements</TableHead>
                       <TableHead className="text-right">Revenus</TableHead>
                       <TableHead>Rôle</TableHead>
-                      <TableHead>Inscrit le</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -490,6 +490,12 @@ const SuperAdmin = () => {
                           </TableCell>
                           <TableCell className="text-center">
                             <span className="font-medium">{agency.stats?.tenants_count || 0}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="font-medium">{agency.stats?.owners_count || 0}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="font-medium">{agency.stats?.lotissements_count || 0}</span>
                           </TableCell>
                           <TableCell className="text-right">
                             <span className="font-medium text-green-600">

@@ -37,6 +37,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
+import { MonthlyReportPeriodDialog } from "@/components/owner/MonthlyReportPeriodDialog";
 import { OwnerPropertiesList } from "@/components/owner/OwnerPropertiesList";
 import { OwnerRevenueChart } from "@/components/owner/OwnerRevenueChart";
 import { InterventionsList } from "@/components/intervention/InterventionsList";
@@ -70,6 +71,7 @@ const OwnerDetails = () => {
   const { canEdit, canDelete } = usePermissions();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
 
@@ -112,17 +114,17 @@ const OwnerDetails = () => {
     }
   };
 
-  const handleGenerateMonthlyReport = async () => {
+  const handleGenerateMonthlyReport = async (month: number, year: number) => {
     if (!owner) return;
     
     setGeneratingPDF(true);
     try {
-      const now = new Date();
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
-      const periodMonth = now.getMonth();
-      const periodYear = now.getFullYear();
-      const periodLabel = format(now, "MMMM yyyy", { locale: fr });
+      const selectedDate = new Date(year, month, 1);
+      const monthStart = startOfMonth(selectedDate);
+      const monthEnd = endOfMonth(selectedDate);
+      const periodMonth = month;
+      const periodYear = year;
+      const periodLabel = format(selectedDate, "MMMM yyyy", { locale: fr });
 
       // Prepare tenant payments data
       const tenantPayments = ownerTenants.map(tenant => {
@@ -139,7 +141,7 @@ const OwnerDetails = () => {
           .reduce((sum, p) => sum + p.amount, 0);
 
         const hasLate = tenantPaymentsThisMonth.some(p => 
-          p.status === "pending" && new Date(p.due_date) < now
+          p.status === "pending" && new Date(p.due_date) < new Date()
         );
 
         let status: "paid" | "pending" | "late" = "pending";
@@ -161,7 +163,7 @@ const OwnerDetails = () => {
         };
       }).filter(t => t.rentAmount > 0);
 
-      // Prepare interventions data - filter for current month
+      // Prepare interventions data - filter for selected month
       const monthlyInterventions = ownerInterventions
         .filter(intervention => {
           if (!intervention.start_date) return false;
@@ -203,6 +205,7 @@ const OwnerDetails = () => {
         managementTypeName: owner.management_type?.name,
       });
 
+      setPeriodDialogOpen(false);
       toast.success("Point mensuel généré avec succès");
     } catch (error) {
       console.error("Error generating monthly report:", error);
@@ -386,14 +389,9 @@ const OwnerDetails = () => {
           <div className="flex flex-wrap gap-2">
             <Button 
               variant="outline" 
-              onClick={handleGenerateMonthlyReport}
-              disabled={generatingPDF}
+              onClick={() => setPeriodDialogOpen(true)}
             >
-              {generatingPDF ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4 mr-2" />
-              )}
+              <FileText className="h-4 w-4 mr-2" />
               Point mensuel
             </Button>
             <Button 
@@ -713,6 +711,14 @@ const OwnerDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Period Selection Dialog */}
+      <MonthlyReportPeriodDialog
+        open={periodDialogOpen}
+        onOpenChange={setPeriodDialogOpen}
+        onGenerate={handleGenerateMonthlyReport}
+        isLoading={generatingPDF}
+      />
 
       {/* Edit Dialog */}
       <EditOwnerDialog

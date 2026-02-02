@@ -151,12 +151,15 @@ export default function BienVenteDetails() {
             )}
             {bien.status === "reserve" && (
               <>
-                {reservation && (
-                  <Button variant="outline" onClick={handleDownloadContract}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Contrat de réservation
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  onClick={handleDownloadContract}
+                  disabled={!reservation}
+                  title={!reservation ? "Contrat non disponible pour les anciennes réservations" : undefined}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Contrat de réservation
+                </Button>
                 <Button onClick={() => setSellDialogOpen(true)}>
                   <HandCoins className="h-4 w-4 mr-2" />
                   Finaliser la vente

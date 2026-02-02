@@ -38,6 +38,21 @@ interface AgencyData {
 }
 
 /**
+ * Checks if we need a page break and adds one if necessary
+ * Returns the new Y position
+ */
+const checkPageBreak = (doc: jsPDF, yPos: number, neededSpace: number = 30): number => {
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  
+  if (yPos + neededSpace > pageHeight - margin) {
+    doc.addPage();
+    return margin + 10; // Reset to top margin with some padding
+  }
+  return yPos;
+};
+
+/**
  * Adds agency header with logo and contact info
  */
 const addAgencyHeader = (doc: jsPDF, agency: AgencyData, yPos: number): number => {
@@ -110,6 +125,7 @@ export const generatePromesseVenteImmo = (
   yPos += 12;
 
   // Parties
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("ENTRE LES SOUSSIGNES :", margin, yPos);
@@ -124,11 +140,12 @@ export const generatePromesseVenteImmo = (
     agency.address ? `Adresse : ${agency.address}` : null,
     agency.phone ? `Tel : ${agency.phone}` : null,
     `Email : ${agency.email}`,
-    agency.siret ? `SIRET : ${agency.siret}` : null,
+    agency.siret ? `RCCM : ${agency.siret}` : null,
     `Ci-apres denomme "LE VENDEUR"`,
   ].filter(Boolean) as string[];
 
   vendeurLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
@@ -153,12 +170,14 @@ export const generatePromesseVenteImmo = (
   ].filter(Boolean) as string[];
 
   acquereurLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
   yPos += 10;
 
   // Article 1 - Object
+  yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 1 - OBJET", margin, yPos);
   yPos += 8;
@@ -176,12 +195,14 @@ export const generatePromesseVenteImmo = (
   ].filter(Boolean) as string[];
 
   bienLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
   yPos += 8;
 
   // Article 2 - Prix
+  yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 2 - PRIX", margin, yPos);
   yPos += 8;
@@ -189,10 +210,12 @@ export const generatePromesseVenteImmo = (
   doc.setFont("helvetica", "normal");
   const prixText = `Le prix de vente est fixe a la somme de ${formatAmountWithCurrency(vente.total_price)} (${numberToWordsPDF(vente.total_price)} francs CFA).`;
   const prixLines = doc.splitTextToSize(prixText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, prixLines.length * 6 + 10);
   doc.text(prixLines, margin, yPos);
   yPos += prixLines.length * 6 + 5;
 
   // Article 3 - Modalites
+  yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 3 - MODALITES DE PAIEMENT", margin, yPos);
   yPos += 8;
@@ -212,6 +235,7 @@ export const generatePromesseVenteImmo = (
     ].filter(Boolean) as string[];
 
     modalitesLines.forEach((line) => {
+      yPos = checkPageBreak(doc, yPos, 10);
       doc.text(line, margin, yPos);
       yPos += 6;
     });
@@ -219,6 +243,7 @@ export const generatePromesseVenteImmo = (
   yPos += 8;
 
   // Article 4 - Validite
+  yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 4 - DUREE DE VALIDITE", margin, yPos);
   yPos += 8;
@@ -230,10 +255,12 @@ export const generatePromesseVenteImmo = (
 
   const validiteText = `Cette promesse de vente est valable pour une duree de ${validityDays} jours a compter de sa signature, soit jusqu'au ${format(dateExpiration, "dd MMMM yyyy", { locale: fr })}.`;
   const validiteLines = doc.splitTextToSize(validiteText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, validiteLines.length * 6 + 20);
   doc.text(validiteLines, margin, yPos);
   yPos += validiteLines.length * 6 + 15;
 
-  // Signatures
+  // Signatures - need space for signature block
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.text("Fait a _________________, le " + format(dateSignature, "dd MMMM yyyy", { locale: fr }), margin, yPos);
   yPos += 15;
@@ -384,6 +411,7 @@ export const generateContratReservationImmo = (
   yPos += 12;
 
   // Parties
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("ENTRE LES SOUSSIGNES :", margin, yPos);
@@ -403,6 +431,7 @@ export const generateContratReservationImmo = (
   ].filter(Boolean) as string[];
 
   vendeurLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
@@ -427,12 +456,14 @@ export const generateContratReservationImmo = (
   ].filter(Boolean) as string[];
 
   acquereurLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
   yPos += 10;
 
   // Article 1 - Object
+  yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 1 - OBJET DE LA RESERVATION", margin, yPos);
   yPos += 8;
@@ -450,12 +481,14 @@ export const generateContratReservationImmo = (
   ].filter(Boolean) as string[];
 
   bienLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
   yPos += 8;
 
   // Article 2 - Prix
+  yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 2 - PRIX DE VENTE", margin, yPos);
   yPos += 8;
@@ -463,10 +496,12 @@ export const generateContratReservationImmo = (
   doc.setFont("helvetica", "normal");
   const prixText = `Le prix de vente du bien est fixe a la somme de ${formatAmountWithCurrency(reservation.bien.price)} (${numberToWordsPDF(reservation.bien.price)} francs CFA).`;
   const prixLines = doc.splitTextToSize(prixText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, prixLines.length * 6 + 10);
   doc.text(prixLines, margin, yPos);
   yPos += prixLines.length * 6 + 5;
 
   // Article 3 - Depot de garantie
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 3 - DEPOT DE GARANTIE", margin, yPos);
   yPos += 8;
@@ -474,6 +509,7 @@ export const generateContratReservationImmo = (
   doc.setFont("helvetica", "normal");
   const depositText = `En contrepartie de cette reservation, le Reservataire verse ce jour au Reservant la somme de ${formatAmountWithCurrency(reservation.deposit_amount)} (${numberToWordsPDF(reservation.deposit_amount)} francs CFA) a titre de depot de garantie.`;
   const depositLines = doc.splitTextToSize(depositText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, depositLines.length * 6 + 10);
   doc.text(depositLines, margin, yPos);
   yPos += depositLines.length * 6 + 3;
 
@@ -484,6 +520,7 @@ export const generateContratReservationImmo = (
       cheque: "Cheque",
       mobile_money: "Mobile Money",
     };
+    yPos = checkPageBreak(doc, yPos, 15);
     doc.text(`Mode de paiement : ${methodLabels[reservation.payment_method] || reservation.payment_method}`, margin, yPos);
     yPos += 8;
   }
@@ -495,13 +532,16 @@ export const generateContratReservationImmo = (
     "- Acquis au Reservant en cas de desistement du Reservataire sans motif legitime",
   ];
 
+  yPos = checkPageBreak(doc, yPos, 30);
   conditionsDepot.forEach((line, index) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += index === 0 ? 7 : 5;
   });
   yPos += 5;
 
   // Article 4 - Duree
+  yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 4 - DUREE DE LA RESERVATION", margin, yPos);
   yPos += 8;
@@ -513,13 +553,16 @@ export const generateContratReservationImmo = (
 
   const dureeText = `La presente reservation est consentie pour une duree de ${validityDays} jours a compter de ce jour, soit jusqu'au ${format(dateExpiration, "dd MMMM yyyy", { locale: fr })} inclus.`;
   const dureeLines = doc.splitTextToSize(dureeText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, dureeLines.length * 6 + 15);
   doc.text(dureeLines, margin, yPos);
   yPos += dureeLines.length * 6 + 3;
 
+  yPos = checkPageBreak(doc, yPos, 15);
   doc.text("Passe ce delai, la reservation sera caduque de plein droit.", margin, yPos);
   yPos += 10;
 
   // Article 5 - Conditions
+  yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 5 - CONDITIONS PARTICULIERES", margin, yPos);
   yPos += 8;
@@ -527,6 +570,7 @@ export const generateContratReservationImmo = (
   doc.setFont("helvetica", "normal");
   if (reservation.notes) {
     const notesLines = doc.splitTextToSize(reservation.notes, pageWidth - 2 * margin);
+    yPos = checkPageBreak(doc, yPos, notesLines.length * 6 + 10);
     doc.text(notesLines, margin, yPos);
     yPos += notesLines.length * 6;
   } else {
@@ -535,7 +579,8 @@ export const generateContratReservationImmo = (
   }
   yPos += 10;
 
-  // Signatures
+  // Signatures - need space for signature block
+  yPos = checkPageBreak(doc, yPos, 60);
   doc.setFont("helvetica", "bold");
   doc.text("Fait a _________________, le " + format(dateReservation, "dd MMMM yyyy", { locale: fr }), margin, yPos);
   yPos += 3;
@@ -590,6 +635,7 @@ export const generateContratVenteImmo = (
   yPos += 12;
 
   // Parties
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("ENTRE LES SOUSSIGNES :", margin, yPos);
@@ -609,6 +655,7 @@ export const generateContratVenteImmo = (
   ].filter(Boolean) as string[];
 
   vendeurLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
@@ -633,12 +680,14 @@ export const generateContratVenteImmo = (
   ].filter(Boolean) as string[];
 
   acquereurLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
   yPos += 10;
 
   // Article 1 - Object
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 1 - OBJET DE LA VENTE", margin, yPos);
   yPos += 8;
@@ -646,6 +695,7 @@ export const generateContratVenteImmo = (
   doc.setFont("helvetica", "normal");
   const objetText = `Par le present contrat, le Vendeur cede a l'Acquereur, qui accepte, la pleine propriete du bien immobilier suivant :`;
   const objetLines = doc.splitTextToSize(objetText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, objetLines.length * 6 + 10);
   doc.text(objetLines, margin, yPos);
   yPos += objetLines.length * 6 + 3;
 
@@ -657,12 +707,14 @@ export const generateContratVenteImmo = (
   ].filter(Boolean) as string[];
 
   bienLines.forEach((line) => {
+    yPos = checkPageBreak(doc, yPos, 10);
     doc.text(line, margin, yPos);
     yPos += 6;
   });
   yPos += 8;
 
   // Article 2 - Prix
+  yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 2 - PRIX DE VENTE", margin, yPos);
   yPos += 8;
@@ -670,10 +722,12 @@ export const generateContratVenteImmo = (
   doc.setFont("helvetica", "normal");
   const prixText = `La presente vente est consentie et acceptee moyennant le prix de ${formatAmountWithCurrency(vente.total_price)} (${numberToWordsPDF(vente.total_price)} francs CFA).`;
   const prixLines = doc.splitTextToSize(prixText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, prixLines.length * 6 + 10);
   doc.text(prixLines, margin, yPos);
   yPos += prixLines.length * 6 + 5;
 
   // Article 3 - Modalites de paiement
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 3 - MODALITES DE PAIEMENT", margin, yPos);
   yPos += 8;
@@ -683,6 +737,7 @@ export const generateContratVenteImmo = (
   if (vente.payment_type === "comptant") {
     doc.text("Le paiement du prix est effectue comptant ce jour.", margin, yPos);
     yPos += 6;
+    yPos = checkPageBreak(doc, yPos, 15);
     doc.text("Le Vendeur reconnait avoir recu la totalite du prix et en delivre quittance.", margin, yPos);
     yPos += 10;
   } else {
@@ -698,16 +753,19 @@ export const generateContratVenteImmo = (
     ].filter(Boolean) as string[];
 
     modalitesLines.forEach((line) => {
+      yPos = checkPageBreak(doc, yPos, 10);
       doc.text(line, margin, yPos);
       yPos += 6;
     });
     yPos += 5;
     
+    yPos = checkPageBreak(doc, yPos, 15);
     doc.text("L'Acquereur s'engage a regler les echeances aux dates convenues.", margin, yPos);
     yPos += 10;
   }
 
   // Article 4 - Transfert de propriete
+  yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 4 - TRANSFERT DE PROPRIETE", margin, yPos);
   yPos += 8;
@@ -715,10 +773,12 @@ export const generateContratVenteImmo = (
   doc.setFont("helvetica", "normal");
   const transfertText = `Le transfert de propriete sera effectif a compter de la signature du present acte. L'Acquereur aura la jouissance du bien a compter de ce jour.`;
   const transfertLines = doc.splitTextToSize(transfertText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, transfertLines.length * 6 + 10);
   doc.text(transfertLines, margin, yPos);
   yPos += transfertLines.length * 6 + 5;
 
   // Article 5 - Garanties
+  yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 5 - GARANTIES", margin, yPos);
   yPos += 8;
@@ -726,10 +786,12 @@ export const generateContratVenteImmo = (
   doc.setFont("helvetica", "normal");
   const garantiesText = `Le Vendeur garantit l'Acquereur contre tout trouble de jouissance et toute eviction. Le bien est vendu libre de toute hypotheque ou charge.`;
   const garantiesLines = doc.splitTextToSize(garantiesText, pageWidth - 2 * margin);
+  yPos = checkPageBreak(doc, yPos, garantiesLines.length * 6 + 10);
   doc.text(garantiesLines, margin, yPos);
   yPos += garantiesLines.length * 6 + 5;
 
   // Article 6 - Frais
+  yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.text("ARTICLE 6 - FRAIS", margin, yPos);
   yPos += 8;
@@ -738,7 +800,8 @@ export const generateContratVenteImmo = (
   doc.text("Tous les frais afferents a la presente vente sont a la charge de l'Acquereur.", margin, yPos);
   yPos += 15;
 
-  // Signatures
+  // Signatures - need space for signature block
+  yPos = checkPageBreak(doc, yPos, 60);
   const dateVente = new Date(vente.sale_date);
   doc.setFont("helvetica", "bold");
   doc.text("Fait a _________________, le " + format(dateVente, "dd MMMM yyyy", { locale: fr }), margin, yPos);

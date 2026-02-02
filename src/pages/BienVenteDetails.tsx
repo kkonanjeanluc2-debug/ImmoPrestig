@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBienVente } from "@/hooks/useBiensVente";
+import { useReservationVenteByBien } from "@/hooks/useReservationsVente";
+import { useAgency } from "@/hooks/useAgency";
 import { formatCurrency } from "@/lib/pdfFormat";
+import { generateContratReservationImmo } from "@/lib/generateVenteImmoPDF";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   MapPin,
@@ -15,6 +21,10 @@ import {
   Building2,
   HandCoins,
   Bookmark,
+  FileText,
+  User,
+  Phone,
+  Calendar,
 } from "lucide-react";
 import { useState } from "react";
 import { SellBienDialog } from "@/components/vente-immobiliere/SellBienDialog";
@@ -30,8 +40,55 @@ export default function BienVenteDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: bien, isLoading } = useBienVente(id || "");
+  const { data: reservation } = useReservationVenteByBien(id || "");
+  const { data: agency } = useAgency();
   const [sellDialogOpen, setSellDialogOpen] = useState(false);
   const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
+
+  const handleDownloadContract = () => {
+    if (!reservation || !agency || !bien) {
+      toast.error("Données de réservation non disponibles");
+      return;
+    }
+
+    const doc = generateContratReservationImmo(
+      {
+        bien: {
+          title: bien.title,
+          address: bien.address,
+          city: bien.city,
+          property_type: bien.property_type,
+          area: bien.area,
+          price: bien.price,
+        },
+        acquereur: {
+          name: reservation.acquereur?.name || "",
+          address: reservation.acquereur?.address,
+          cni_number: reservation.acquereur?.cni_number,
+          phone: reservation.acquereur?.phone,
+          birth_date: reservation.acquereur?.birth_date,
+          birth_place: reservation.acquereur?.birth_place,
+          profession: reservation.acquereur?.profession,
+        },
+        deposit_amount: reservation.deposit_amount,
+        payment_method: reservation.payment_method,
+        reservation_date: reservation.reservation_date,
+        notes: reservation.notes,
+      },
+      {
+        name: agency.name,
+        address: agency.address,
+        phone: agency.phone,
+        email: agency.email,
+        siret: agency.siret,
+        logo_url: agency.logo_url,
+      },
+      reservation.validity_days
+    );
+
+    doc.save(`Contrat_Reservation_${bien.title.replace(/\s+/g, "_")}.pdf`);
+    toast.success("Contrat de réservation téléchargé");
+  };
 
   if (isLoading) {
     return (
@@ -93,10 +150,18 @@ export default function BienVenteDetails() {
               </>
             )}
             {bien.status === "reserve" && (
-              <Button onClick={() => setSellDialogOpen(true)}>
-                <HandCoins className="h-4 w-4 mr-2" />
-                Finaliser la vente
-              </Button>
+              <>
+                {reservation && (
+                  <Button variant="outline" onClick={handleDownloadContract}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Contrat de réservation
+                  </Button>
+                )}
+                <Button onClick={() => setSellDialogOpen(true)}>
+                  <HandCoins className="h-4 w-4 mr-2" />
+                  Finaliser la vente
+                </Button>
+              </>
             )}
             <Badge variant="outline" className={statusConfig.color}>
               {statusConfig.label}
@@ -174,6 +239,60 @@ export default function BienVenteDetails() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground whitespace-pre-wrap">{bien.description}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Reservation Info */}
+        {bien.status === "reserve" && reservation && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bookmark className="h-5 w-5" />
+                Réservation en cours
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{reservation.acquereur?.name}</p>
+                    {reservation.acquereur?.phone && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {reservation.acquereur.phone}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Acompte versé</span>
+                    <span className="font-medium">{formatCurrency(reservation.deposit_amount)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Date de réservation</span>
+                    <span className="font-medium">
+                      {format(new Date(reservation.reservation_date), "dd MMM yyyy", { locale: fr })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Expire le</span>
+                    <span className="font-medium flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {format(new Date(reservation.expiry_date), "dd MMM yyyy", { locale: fr })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {reservation.notes && (
+                <div className="pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">{reservation.notes}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

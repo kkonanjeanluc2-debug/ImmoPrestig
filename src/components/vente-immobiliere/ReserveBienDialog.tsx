@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useUpdateBienVente } from "@/hooks/useBiensVente";
+import { useCreateReservationVente } from "@/hooks/useReservationsVente";
 import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
 import { Loader2, UserPlus, FileText } from "lucide-react";
@@ -49,6 +50,7 @@ export function ReserveBienDialog({ bien, open, onOpenChange }: ReserveBienDialo
   const { data: agency } = useAgency();
   const createAcquereur = useCreateAcquereur();
   const updateBien = useUpdateBienVente();
+  const createReservation = useCreateReservationVente();
 
   const depositPercentage = agency?.reservation_deposit_percentage || 30;
 
@@ -94,6 +96,22 @@ export function ReserveBienDialog({ bien, open, onOpenChange }: ReserveBienDialo
     }
 
     try {
+      const reservationDate = new Date();
+      const expiryDate = new Date(reservationDate);
+      expiryDate.setDate(expiryDate.getDate() + parseInt(validityDays));
+
+      // Create reservation record
+      await createReservation.mutateAsync({
+        bien_id: bien.id,
+        acquereur_id: finalAcquereurId,
+        deposit_amount: parseFloat(depositAmount) || 0,
+        payment_method: paymentMethod || null,
+        reservation_date: reservationDate.toISOString().split("T")[0],
+        validity_days: parseInt(validityDays) || 30,
+        expiry_date: expiryDate.toISOString().split("T")[0],
+        notes: notes || null,
+      });
+
       // Update bien status to reserved
       await updateBien.mutateAsync({
         id: bien.id,
@@ -319,8 +337,8 @@ export function ReserveBienDialog({ bien, open, onOpenChange }: ReserveBienDialo
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={updateBien.isPending || createAcquereur.isPending}>
-              {(updateBien.isPending || createAcquereur.isPending) && (
+            <Button type="submit" disabled={updateBien.isPending || createAcquereur.isPending || createReservation.isPending}>
+              {(updateBien.isPending || createAcquereur.isPending || createReservation.isPending) && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               )}
               Réserver le bien

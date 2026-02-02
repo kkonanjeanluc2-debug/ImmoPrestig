@@ -14,9 +14,11 @@ import {
   Ruler,
   Building2,
   HandCoins,
+  Bookmark,
 } from "lucide-react";
 import { useState } from "react";
 import { SellBienDialog } from "@/components/vente-immobiliere/SellBienDialog";
+import { ReserveBienDialog } from "@/components/vente-immobiliere/ReserveBienDialog";
 
 const STATUS_CONFIG = {
   disponible: { label: "Disponible", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
@@ -29,6 +31,7 @@ export default function BienVenteDetails() {
   const navigate = useNavigate();
   const { data: bien, isLoading } = useBienVente(id || "");
   const [sellDialogOpen, setSellDialogOpen] = useState(false);
+  const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -78,9 +81,21 @@ export default function BienVenteDetails() {
           </div>
           <div className="flex items-center gap-2">
             {bien.status === "disponible" && (
+              <>
+                <Button variant="outline" onClick={() => setReserveDialogOpen(true)}>
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Réserver
+                </Button>
+                <Button onClick={() => setSellDialogOpen(true)}>
+                  <HandCoins className="h-4 w-4 mr-2" />
+                  Vendre
+                </Button>
+              </>
+            )}
+            {bien.status === "reserve" && (
               <Button onClick={() => setSellDialogOpen(true)}>
                 <HandCoins className="h-4 w-4 mr-2" />
-                Vendre ce bien
+                Finaliser la vente
               </Button>
             )}
             <Badge variant="outline" className={statusConfig.color}>
@@ -169,6 +184,14 @@ export default function BienVenteDetails() {
           bien={bien}
           open={sellDialogOpen}
           onOpenChange={setSellDialogOpen}
+        />
+      )}
+
+      {bien && (
+        <ReserveBienDialog
+          bien={bien}
+          open={reserveDialogOpen}
+          onOpenChange={setReserveDialogOpen}
         />
       )}
     </DashboardLayout>

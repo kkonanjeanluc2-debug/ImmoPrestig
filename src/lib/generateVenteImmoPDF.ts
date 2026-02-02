@@ -332,3 +332,234 @@ export const generateRecuVenteImmo = (
 
   return doc;
 };
+
+interface ReservationData {
+  bien: {
+    title: string;
+    address: string;
+    city?: string | null;
+    property_type: string;
+    area?: number | null;
+    price: number;
+  };
+  acquereur: {
+    name: string;
+    address?: string | null;
+    cni_number?: string | null;
+    phone?: string | null;
+    birth_date?: string | null;
+    birth_place?: string | null;
+    profession?: string | null;
+  };
+  deposit_amount: number;
+  payment_method?: string | null;
+  reservation_date: string;
+  notes?: string | null;
+}
+
+/**
+ * Generates a Reservation Contract PDF document
+ */
+export const generateContratReservationImmo = (
+  reservation: ReservationData,
+  agency: AgencyData,
+  validityDays: number = 30
+): jsPDF => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  
+  // Add agency header
+  let yPos = addAgencyHeader(doc, agency, 20);
+
+  // Document title
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("CONTRAT DE RESERVATION", pageWidth / 2, yPos, { align: "center" });
+  yPos += 12;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Ref: CR-${Date.now().toString(36).toUpperCase()}`, pageWidth / 2, yPos, { align: "center" });
+  yPos += 12;
+
+  // Parties
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("ENTRE LES SOUSSIGNES :", margin, yPos);
+  yPos += 10;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  
+  // Vendeur
+  const vendeurLines = [
+    `${agency.name}`,
+    agency.address ? `Adresse : ${agency.address}` : null,
+    agency.phone ? `Tel : ${agency.phone}` : null,
+    `Email : ${agency.email}`,
+    agency.siret ? `RCCM : ${agency.siret}` : null,
+    `Ci-apres denomme "LE RESERVANT"`,
+  ].filter(Boolean) as string[];
+
+  vendeurLines.forEach((line) => {
+    doc.text(line, margin, yPos);
+    yPos += 6;
+  });
+  yPos += 5;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("ET", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  
+  // Reservataire
+  const acquereurLines = [
+    `${reservation.acquereur.name}`,
+    reservation.acquereur.cni_number ? `CNI N : ${reservation.acquereur.cni_number}` : null,
+    reservation.acquereur.birth_date ? `Ne(e) le : ${format(new Date(reservation.acquereur.birth_date), "dd MMMM yyyy", { locale: fr })}` : null,
+    reservation.acquereur.birth_place ? `A : ${reservation.acquereur.birth_place}` : null,
+    reservation.acquereur.profession ? `Profession : ${reservation.acquereur.profession}` : null,
+    reservation.acquereur.address ? `Domicilie(e) a : ${reservation.acquereur.address}` : null,
+    reservation.acquereur.phone ? `Tel : ${reservation.acquereur.phone}` : null,
+    `Ci-apres denomme "LE RESERVATAIRE"`,
+  ].filter(Boolean) as string[];
+
+  acquereurLines.forEach((line) => {
+    doc.text(line, margin, yPos);
+    yPos += 6;
+  });
+  yPos += 10;
+
+  // Article 1 - Object
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 1 - OBJET DE LA RESERVATION", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  const objetText = `Le Reservant s'engage a reserver au profit du Reservataire le bien immobilier suivant :`;
+  doc.text(objetText, margin, yPos);
+  yPos += 8;
+
+  const bienLines = [
+    `- Designation : ${reservation.bien.title}`,
+    `- Type : ${reservation.bien.property_type.charAt(0).toUpperCase() + reservation.bien.property_type.slice(1)}`,
+    `- Adresse : ${reservation.bien.address}${reservation.bien.city ? `, ${reservation.bien.city}` : ""}`,
+    reservation.bien.area ? `- Superficie : ${reservation.bien.area} m2` : null,
+  ].filter(Boolean) as string[];
+
+  bienLines.forEach((line) => {
+    doc.text(line, margin, yPos);
+    yPos += 6;
+  });
+  yPos += 8;
+
+  // Article 2 - Prix
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 2 - PRIX DE VENTE", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  const prixText = `Le prix de vente du bien est fixe a la somme de ${formatAmountWithCurrency(reservation.bien.price)} (${numberToWordsPDF(reservation.bien.price)} francs CFA).`;
+  const prixLines = doc.splitTextToSize(prixText, pageWidth - 2 * margin);
+  doc.text(prixLines, margin, yPos);
+  yPos += prixLines.length * 6 + 5;
+
+  // Article 3 - Depot de garantie
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 3 - DEPOT DE GARANTIE", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  const depositText = `En contrepartie de cette reservation, le Reservataire verse ce jour au Reservant la somme de ${formatAmountWithCurrency(reservation.deposit_amount)} (${numberToWordsPDF(reservation.deposit_amount)} francs CFA) a titre de depot de garantie.`;
+  const depositLines = doc.splitTextToSize(depositText, pageWidth - 2 * margin);
+  doc.text(depositLines, margin, yPos);
+  yPos += depositLines.length * 6 + 3;
+
+  if (reservation.payment_method) {
+    const methodLabels: Record<string, string> = {
+      especes: "Especes",
+      virement: "Virement bancaire",
+      cheque: "Cheque",
+      mobile_money: "Mobile Money",
+    };
+    doc.text(`Mode de paiement : ${methodLabels[reservation.payment_method] || reservation.payment_method}`, margin, yPos);
+    yPos += 8;
+  }
+
+  const conditionsDepot = [
+    "Ce depot de garantie sera :",
+    "- Impute sur le prix de vente en cas de realisation de la vente",
+    "- Restitue au Reservataire en cas de non-realisation de la vente du fait du Reservant",
+    "- Acquis au Reservant en cas de desistement du Reservataire sans motif legitime",
+  ];
+
+  conditionsDepot.forEach((line, index) => {
+    doc.text(line, margin, yPos);
+    yPos += index === 0 ? 7 : 5;
+  });
+  yPos += 5;
+
+  // Article 4 - Duree
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 4 - DUREE DE LA RESERVATION", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  const dateReservation = new Date(reservation.reservation_date);
+  const dateExpiration = new Date(dateReservation);
+  dateExpiration.setDate(dateExpiration.getDate() + validityDays);
+
+  const dureeText = `La presente reservation est consentie pour une duree de ${validityDays} jours a compter de ce jour, soit jusqu'au ${format(dateExpiration, "dd MMMM yyyy", { locale: fr })} inclus.`;
+  const dureeLines = doc.splitTextToSize(dureeText, pageWidth - 2 * margin);
+  doc.text(dureeLines, margin, yPos);
+  yPos += dureeLines.length * 6 + 3;
+
+  doc.text("Passe ce delai, la reservation sera caduque de plein droit.", margin, yPos);
+  yPos += 10;
+
+  // Article 5 - Conditions
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 5 - CONDITIONS PARTICULIERES", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  if (reservation.notes) {
+    const notesLines = doc.splitTextToSize(reservation.notes, pageWidth - 2 * margin);
+    doc.text(notesLines, margin, yPos);
+    yPos += notesLines.length * 6;
+  } else {
+    doc.text("Neant", margin, yPos);
+    yPos += 6;
+  }
+  yPos += 10;
+
+  // Signatures
+  doc.setFont("helvetica", "bold");
+  doc.text("Fait a _________________, le " + format(dateReservation, "dd MMMM yyyy", { locale: fr }), margin, yPos);
+  yPos += 3;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("En deux exemplaires originaux", margin, yPos);
+  yPos += 15;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("LE RESERVANT", margin + 10, yPos);
+  doc.text("LE RESERVATAIRE", pageWidth - margin - 45, yPos);
+  yPos += 5;
+
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8);
+  doc.text("(Lu et approuve)", margin + 10, yPos);
+  doc.text("(Lu et approuve)", pageWidth - margin - 45, yPos);
+  yPos += 20;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("Signature :", margin + 10, yPos);
+  doc.text("Signature :", pageWidth - margin - 45, yPos);
+
+  return doc;
+};

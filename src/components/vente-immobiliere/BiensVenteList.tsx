@@ -15,9 +15,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useBiensVente, useDeleteBienVente, type BienVente } from "@/hooks/useBiensVente";
 import { SellBienDialog } from "./SellBienDialog";
+import { ReserveBienDialog } from "./ReserveBienDialog";
 import { formatCurrency } from "@/lib/pdfFormat";
 import { toast } from "sonner";
 import {
@@ -31,6 +33,7 @@ import {
   Bed,
   Bath,
   Ruler,
+  Bookmark,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -47,6 +50,7 @@ export function BiensVenteList() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedBien, setSelectedBien] = useState<BienVente | null>(null);
   const [sellDialogOpen, setSellDialogOpen] = useState(false);
+  const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
 
   const { data: biens, isLoading } = useBiensVente();
   const deleteBien = useDeleteBienVente();
@@ -74,6 +78,11 @@ export function BiensVenteList() {
   const handleSell = (bien: BienVente) => {
     setSelectedBien(bien);
     setSellDialogOpen(true);
+  };
+
+  const handleReserve = (bien: BienVente) => {
+    setSelectedBien(bien);
+    setReserveDialogOpen(true);
   };
 
   const propertyTypes = [...new Set(biens?.map((b) => b.property_type))];
@@ -185,19 +194,38 @@ export function BiensVenteList() {
                           Voir détails
                         </DropdownMenuItem>
                         {bien.status === "disponible" && (
-                          <DropdownMenuItem onClick={() => handleSell(bien)}>
-                            <HandCoins className="h-4 w-4 mr-2" />
-                            Vendre
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleReserve(bien)}>
+                              <Bookmark className="h-4 w-4 mr-2" />
+                              Réserver
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleSell(bien)}>
+                              <HandCoins className="h-4 w-4 mr-2" />
+                              Vendre
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {bien.status === "reserve" && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleSell(bien)}>
+                              <HandCoins className="h-4 w-4 mr-2" />
+                              Finaliser la vente
+                            </DropdownMenuItem>
+                          </>
                         )}
                         {canDelete && (
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(bien)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(bien)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
+                          </>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -244,6 +272,14 @@ export function BiensVenteList() {
           bien={selectedBien}
           open={sellDialogOpen}
           onOpenChange={setSellDialogOpen}
+        />
+      )}
+
+      {selectedBien && (
+        <ReserveBienDialog
+          bien={selectedBien}
+          open={reserveDialogOpen}
+          onOpenChange={setReserveDialogOpen}
         />
       )}
     </div>

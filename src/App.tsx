@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +12,7 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import UpdatePrompt from "@/components/UpdatePrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
 
 // Lazy load pages for code splitting
@@ -74,37 +75,39 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             <InactivityHandler />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/" element={<Pricing />} />
-                <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                
-                <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
-                <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetails /></ProtectedRoute>} />
-                <Route path="/owners" element={<ProtectedRoute><Owners /></ProtectedRoute>} />
-                <Route path="/owners/:id" element={<ProtectedRoute><OwnerDetails /></ProtectedRoute>} />
-                <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
-                <Route path="/tenants/:id" element={<ProtectedRoute><TenantDetails /></ProtectedRoute>} />
-                <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-                <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
-                <Route path="/lotissements" element={<ProtectedRoute><FeatureProtectedRoute feature="lotissement"><Lotissements /></FeatureProtectedRoute></ProtectedRoute>} />
-                <Route path="/lotissements/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="lotissement"><LotissementDetails /></FeatureProtectedRoute></ProtectedRoute>} />
-                <Route path="/ventes-immobilieres" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><VentesImmobilieres /></FeatureProtectedRoute></ProtectedRoute>} />
-                <Route path="/ventes-immobilieres/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><BienVenteDetails /></FeatureProtectedRoute></ProtectedRoute>} />
-                <Route path="/ventes-immobilieres/vente/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><VenteImmobiliereDetails /></FeatureProtectedRoute></ProtectedRoute>} />
-                <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
-                <Route path="/install" element={<Install />} />
-                <Route path="/sign-contract" element={<SignContract />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/" element={<Pricing />} />
+                  <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                  
+                  <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
+                  <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetails /></ProtectedRoute>} />
+                  <Route path="/owners" element={<ProtectedRoute><Owners /></ProtectedRoute>} />
+                  <Route path="/owners/:id" element={<ProtectedRoute><OwnerDetails /></ProtectedRoute>} />
+                  <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
+                  <Route path="/tenants/:id" element={<ProtectedRoute><TenantDetails /></ProtectedRoute>} />
+                  <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                  <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
+                  <Route path="/lotissements" element={<ProtectedRoute><FeatureProtectedRoute feature="lotissement"><Lotissements /></FeatureProtectedRoute></ProtectedRoute>} />
+                  <Route path="/lotissements/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="lotissement"><LotissementDetails /></FeatureProtectedRoute></ProtectedRoute>} />
+                  <Route path="/ventes-immobilieres" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><VentesImmobilieres /></FeatureProtectedRoute></ProtectedRoute>} />
+                  <Route path="/ventes-immobilieres/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><BienVenteDetails /></FeatureProtectedRoute></ProtectedRoute>} />
+                  <Route path="/ventes-immobilieres/vente/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><VenteImmobiliereDetails /></FeatureProtectedRoute></ProtectedRoute>} />
+                  <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
+                  <Route path="/install" element={<Install />} />
+                  <Route path="/sign-contract" element={<SignContract />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

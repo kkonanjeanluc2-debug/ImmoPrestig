@@ -23,6 +23,7 @@ import {
   ClipboardList,
   UserPlus,
   Layers,
+  FileSignature,
 } from "lucide-react";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
@@ -43,6 +44,7 @@ import { LotissementDocumentsTab } from "@/components/lotissement/LotissementDoc
 import { DemarchesAdministrativesTab } from "@/components/lotissement/DemarchesAdministrativesTab";
 import { ProspectsTab } from "@/components/lotissement/ProspectsTab";
 import { IlotsTab } from "@/components/lotissement/IlotsTab";
+import { GenerateLotissementDocumentDialog } from "@/components/lotissement/GenerateLotissementDocumentDialog";
 
 const LotissementDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -57,6 +59,7 @@ const LotissementDetails = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
+  const [showGenerateDocument, setShowGenerateDocument] = useState(false);
 
   // Calculate stats based on payment status
   const stats = useMemo(() => {
@@ -159,7 +162,11 @@ const LotissementDetails = () => {
             </div>
           </div>
           {canCreate && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => setShowGenerateDocument(true)}>
+                <FileSignature className="h-4 w-4 mr-2" />
+                Documents de lotissement
+              </Button>
               <Button variant="outline" onClick={() => setShowBulkAdd(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter en masse
@@ -383,6 +390,22 @@ const LotissementDetails = () => {
         existingNumbers={parcelles?.map(p => p.plot_number) || []}
         existingParcelles={parcelles?.map(p => ({ ilot_id: p.ilot_id })) || []}
       />
+
+      {lotissement && (
+        <GenerateLotissementDocumentDialog
+          lotissementId={id || ""}
+          lotissementName={lotissement.name}
+          lotissement={{
+            name: lotissement.name,
+            location: lotissement.location,
+            city: lotissement.city,
+            total_area: lotissement.total_area,
+            total_plots: lotissement.total_plots,
+          }}
+          open={showGenerateDocument}
+          onOpenChange={setShowGenerateDocument}
+        />
+      )}
     </DashboardLayout>
   );
 };

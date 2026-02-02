@@ -1,6 +1,7 @@
 import { ReactNode, useState, useCallback, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
-import { User, Moon, MoonStar, Crown, UserCog, Eye, Calendar, Clock } from "lucide-react";
+import { Moon, MoonStar, Crown, UserCog, Eye, Calendar, Clock, User } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -79,7 +80,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   usePushNotificationTrigger();
 
   // Apply brand colors from agency settings
-  useBrandColors();
+  const agency = useBrandColors();
 
   // Live date and time
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -194,9 +195,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NotificationCenter />
             <div className="h-6 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <User className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <Avatar className="h-8 w-8 flex-shrink-0">
+                {agency?.logo_url ? (
+                  <AvatarImage src={agency.logo_url} alt={agency.name || "Logo agence"} />
+                ) : null}
+                <AvatarFallback className="bg-primary">
+                  <User className="h-4 w-4 text-primary-foreground" />
+                </AvatarFallback>
+              </Avatar>
               <div className="hidden md:flex flex-col items-start gap-0.5">
                 <p className="text-sm font-medium text-foreground leading-none">
                   {displayName}

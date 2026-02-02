@@ -63,7 +63,29 @@ export const useVentesParcelles = (lotissementId?: string) => {
   return useQuery({
     queryKey: ["ventes-parcelles", lotissementId],
     queryFn: async () => {
-      let query = supabase
+      // When filtering by lotissement, use !inner join to properly filter
+      if (lotissementId) {
+        const { data, error } = await supabase
+          .from("ventes_parcelles")
+          .select(`
+            *,
+            parcelle:parcelles!inner(
+              plot_number,
+              area,
+              lotissement_id,
+              lotissement:lotissements(name)
+            ),
+            acquereur:acquereurs(name, phone)
+          `)
+          .eq("parcelle.lotissement_id", lotissementId)
+          .order("sale_date", { ascending: false });
+
+        if (error) throw error;
+        return data as VenteWithDetails[];
+      }
+      
+      // Without filter, get all ventes
+      const { data, error } = await supabase
         .from("ventes_parcelles")
         .select(`
           *,
@@ -73,13 +95,8 @@ export const useVentesParcelles = (lotissementId?: string) => {
             lotissement:lotissements(name)
           ),
           acquereur:acquereurs(name, phone)
-        `);
-      
-      if (lotissementId) {
-        query = query.eq("parcelle.lotissement_id", lotissementId);
-      }
-      
-      const { data, error } = await query.order("sale_date", { ascending: false });
+        `)
+        .order("sale_date", { ascending: false });
 
       if (error) throw error;
       return data as VenteWithDetails[];

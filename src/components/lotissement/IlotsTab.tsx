@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -36,6 +37,8 @@ import {
   Grid3X3,
   CheckCircle2,
   ShoppingCart,
+  Search,
+  X,
 } from "lucide-react";
 import { useIlotsWithStats, useSoftDeleteIlot, IlotWithStats } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -57,6 +60,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingIlot, setEditingIlot] = useState<IlotWithStats | null>(null);
   const [deletingIlot, setDeletingIlot] = useState<IlotWithStats | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleDelete = async () => {
     if (!deletingIlot) return;
@@ -69,7 +73,19 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
     }
   };
 
-  // Calculate totals
+  // Filter ilots based on search query
+  const filteredIlots = useMemo(() => {
+    if (!ilots) return [];
+    if (!searchQuery.trim()) return ilots;
+    
+    const query = searchQuery.toLowerCase();
+    return ilots.filter((ilot) => 
+      ilot.name.toLowerCase().includes(query) ||
+      ilot.description?.toLowerCase().includes(query)
+    );
+  }, [ilots, searchQuery]);
+
+  // Calculate totals from all ilots (not filtered)
   const totalParcelles = ilots?.reduce((sum, i) => sum + i.parcelles_count, 0) || 0;
   const totalVendues = ilots?.reduce((sum, i) => sum + i.parcelles_vendues, 0) || 0;
   const totalDisponibles = ilots?.reduce((sum, i) => sum + i.parcelles_disponibles, 0) || 0;
@@ -146,7 +162,29 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
             </Button>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Search Bar */}
+          {ilots && ilots.length > 0 && (
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un îlot..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
           {!ilots?.length ? (
             <div className="text-center py-12 text-muted-foreground">
               <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -160,6 +198,21 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
                   Créer le premier îlot
                 </Button>
               )}
+            </div>
+          ) : filteredIlots.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">Aucun résultat</p>
+              <p className="text-sm mt-1">
+                Aucun îlot ne correspond à "{searchQuery}"
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-4" 
+                onClick={() => setSearchQuery("")}
+              >
+                Effacer la recherche
+              </Button>
             </div>
           ) : (
             <div className="rounded-md border overflow-x-auto">
@@ -176,7 +229,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ilots.map((ilot) => {
+                  {filteredIlots.map((ilot) => {
                     const occupancyRate = ilot.parcelles_count > 0 
                       ? Math.round((ilot.parcelles_vendues / ilot.parcelles_count) * 100) 
                       : 0;

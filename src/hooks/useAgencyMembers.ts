@@ -158,6 +158,7 @@ export function useCreateAgencyMember() {
       queryClient.invalidateQueries({ queryKey: ["agency-members"] });
       queryClient.invalidateQueries({ queryKey: ["agency-member-count"] });
       queryClient.invalidateQueries({ queryKey: ["can-add-member"] });
+      queryClient.invalidateQueries({ queryKey: ["assignable-users"] });
     },
   });
 }
@@ -189,6 +190,7 @@ export function useUpdateAgencyMember() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agency-members"] });
+      queryClient.invalidateQueries({ queryKey: ["assignable-users"] });
     },
   });
 }
@@ -210,6 +212,7 @@ export function useDeleteAgencyMember() {
       queryClient.invalidateQueries({ queryKey: ["agency-members"] });
       queryClient.invalidateQueries({ queryKey: ["agency-member-count"] });
       queryClient.invalidateQueries({ queryKey: ["can-add-member"] });
+      queryClient.invalidateQueries({ queryKey: ["assignable-users"] });
     },
   });
 }

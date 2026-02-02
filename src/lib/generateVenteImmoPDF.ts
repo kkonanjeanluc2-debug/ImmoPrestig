@@ -563,3 +563,207 @@ export const generateContratReservationImmo = (
 
   return doc;
 };
+
+/**
+ * Generates a Sales Contract (Contrat de Vente) PDF document
+ */
+export const generateContratVenteImmo = (
+  vente: VenteImmobiliereData,
+  agency: AgencyData
+): jsPDF => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  
+  // Add agency header
+  let yPos = addAgencyHeader(doc, agency, 20);
+
+  // Document title
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("CONTRAT DE VENTE", pageWidth / 2, yPos, { align: "center" });
+  yPos += 12;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Ref: CV-${Date.now().toString(36).toUpperCase()}`, pageWidth / 2, yPos, { align: "center" });
+  yPos += 12;
+
+  // Parties
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("ENTRE LES SOUSSIGNES :", margin, yPos);
+  yPos += 10;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  
+  // Vendeur
+  const vendeurLines = [
+    `${agency.name}`,
+    agency.address ? `Adresse : ${agency.address}` : null,
+    agency.phone ? `Tel : ${agency.phone}` : null,
+    `Email : ${agency.email}`,
+    agency.siret ? `RCCM : ${agency.siret}` : null,
+    `Ci-apres denomme "LE VENDEUR"`,
+  ].filter(Boolean) as string[];
+
+  vendeurLines.forEach((line) => {
+    doc.text(line, margin, yPos);
+    yPos += 6;
+  });
+  yPos += 5;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("ET", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  
+  // Acquereur
+  const acquereurLines = [
+    `${vente.acquereur.name}`,
+    vente.acquereur.cni_number ? `CNI N : ${vente.acquereur.cni_number}` : null,
+    vente.acquereur.birth_date ? `Ne(e) le : ${format(new Date(vente.acquereur.birth_date), "dd MMMM yyyy", { locale: fr })}` : null,
+    vente.acquereur.birth_place ? `A : ${vente.acquereur.birth_place}` : null,
+    vente.acquereur.profession ? `Profession : ${vente.acquereur.profession}` : null,
+    vente.acquereur.address ? `Domicilie(e) a : ${vente.acquereur.address}` : null,
+    vente.acquereur.phone ? `Tel : ${vente.acquereur.phone}` : null,
+    `Ci-apres denomme "L'ACQUEREUR"`,
+  ].filter(Boolean) as string[];
+
+  acquereurLines.forEach((line) => {
+    doc.text(line, margin, yPos);
+    yPos += 6;
+  });
+  yPos += 10;
+
+  // Article 1 - Object
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 1 - OBJET DE LA VENTE", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  const objetText = `Par le present contrat, le Vendeur cede a l'Acquereur, qui accepte, la pleine propriete du bien immobilier suivant :`;
+  const objetLines = doc.splitTextToSize(objetText, pageWidth - 2 * margin);
+  doc.text(objetLines, margin, yPos);
+  yPos += objetLines.length * 6 + 3;
+
+  const bienLines = [
+    `- Designation : ${vente.bien.title}`,
+    `- Type : ${vente.bien.property_type.charAt(0).toUpperCase() + vente.bien.property_type.slice(1)}`,
+    `- Adresse : ${vente.bien.address}${vente.bien.city ? `, ${vente.bien.city}` : ""}`,
+    vente.bien.area ? `- Superficie : ${vente.bien.area} m2` : null,
+  ].filter(Boolean) as string[];
+
+  bienLines.forEach((line) => {
+    doc.text(line, margin, yPos);
+    yPos += 6;
+  });
+  yPos += 8;
+
+  // Article 2 - Prix
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 2 - PRIX DE VENTE", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  const prixText = `La presente vente est consentie et acceptee moyennant le prix de ${formatAmountWithCurrency(vente.total_price)} (${numberToWordsPDF(vente.total_price)} francs CFA).`;
+  const prixLines = doc.splitTextToSize(prixText, pageWidth - 2 * margin);
+  doc.text(prixLines, margin, yPos);
+  yPos += prixLines.length * 6 + 5;
+
+  // Article 3 - Modalites de paiement
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 3 - MODALITES DE PAIEMENT", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  
+  if (vente.payment_type === "comptant") {
+    doc.text("Le paiement du prix est effectue comptant ce jour.", margin, yPos);
+    yPos += 6;
+    doc.text("Le Vendeur reconnait avoir recu la totalite du prix et en delivre quittance.", margin, yPos);
+    yPos += 10;
+  } else {
+    const acompte = vente.down_payment || 0;
+    doc.text("Le paiement du prix est effectue comme suit :", margin, yPos);
+    yPos += 8;
+    
+    const modalitesLines = [
+      `- Acompte verse : ${formatAmountWithCurrency(acompte)}`,
+      `- Solde restant : ${formatAmountWithCurrency(vente.total_price - acompte)}`,
+      vente.monthly_payment ? `- Mensualite : ${formatAmountWithCurrency(vente.monthly_payment)}` : null,
+      vente.total_installments ? `- Nombre d'echeances : ${vente.total_installments}` : null,
+    ].filter(Boolean) as string[];
+
+    modalitesLines.forEach((line) => {
+      doc.text(line, margin, yPos);
+      yPos += 6;
+    });
+    yPos += 5;
+    
+    doc.text("L'Acquereur s'engage a regler les echeances aux dates convenues.", margin, yPos);
+    yPos += 10;
+  }
+
+  // Article 4 - Transfert de propriete
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 4 - TRANSFERT DE PROPRIETE", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  const transfertText = `Le transfert de propriete sera effectif a compter de la signature du present acte. L'Acquereur aura la jouissance du bien a compter de ce jour.`;
+  const transfertLines = doc.splitTextToSize(transfertText, pageWidth - 2 * margin);
+  doc.text(transfertLines, margin, yPos);
+  yPos += transfertLines.length * 6 + 5;
+
+  // Article 5 - Garanties
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 5 - GARANTIES", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  const garantiesText = `Le Vendeur garantit l'Acquereur contre tout trouble de jouissance et toute eviction. Le bien est vendu libre de toute hypotheque ou charge.`;
+  const garantiesLines = doc.splitTextToSize(garantiesText, pageWidth - 2 * margin);
+  doc.text(garantiesLines, margin, yPos);
+  yPos += garantiesLines.length * 6 + 5;
+
+  // Article 6 - Frais
+  doc.setFont("helvetica", "bold");
+  doc.text("ARTICLE 6 - FRAIS", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.text("Tous les frais afferents a la presente vente sont a la charge de l'Acquereur.", margin, yPos);
+  yPos += 15;
+
+  // Signatures
+  const dateVente = new Date(vente.sale_date);
+  doc.setFont("helvetica", "bold");
+  doc.text("Fait a _________________, le " + format(dateVente, "dd MMMM yyyy", { locale: fr }), margin, yPos);
+  yPos += 3;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("En deux exemplaires originaux", margin, yPos);
+  yPos += 15;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("LE VENDEUR", margin + 10, yPos);
+  doc.text("L'ACQUEREUR", pageWidth - margin - 40, yPos);
+  yPos += 5;
+
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8);
+  doc.text("(Lu et approuve)", margin + 10, yPos);
+  doc.text("(Lu et approuve)", pageWidth - margin - 40, yPos);
+  yPos += 20;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("Signature :", margin + 10, yPos);
+  doc.text("Signature :", pageWidth - margin - 40, yPos);
+
+  return doc;
+};

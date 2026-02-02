@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,20 +17,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useCreateVenteImmobiliere } from "@/hooks/useVentesImmobilieres";
+import { useUpdateReservationVente, type ReservationVente } from "@/hooks/useReservationsVente";
 import { useAgency } from "@/hooks/useAgency";
+import { formatCurrency } from "@/lib/pdfFormat";
 import { toast } from "sonner";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, Info } from "lucide-react";
 import type { BienVente } from "@/hooks/useBiensVente";
 
 interface SellBienDialogProps {
   bien: BienVente;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  reservation?: ReservationVente | null;
 }
 
-export function SellBienDialog({ bien, open, onOpenChange }: SellBienDialogProps) {
+export function SellBienDialog({ bien, open, onOpenChange, reservation }: SellBienDialogProps) {
   const [acquereurId, setAcquereurId] = useState("");
   const [showNewAcquereur, setShowNewAcquereur] = useState(false);
   const [newAcquereurName, setNewAcquereurName] = useState("");
@@ -50,8 +55,19 @@ export function SellBienDialog({ bien, open, onOpenChange }: SellBienDialogProps
   const { data: agency } = useAgency();
   const createAcquereur = useCreateAcquereur();
   const createVente = useCreateVenteImmobiliere();
+  const updateReservation = useUpdateReservationVente();
 
   const depositPercentage = agency?.reservation_deposit_percentage || 30;
+  const reservationDeposit = reservation?.deposit_amount || 0;
+
+  // Pre-fill from reservation when dialog opens
+  useEffect(() => {
+    if (open && reservation) {
+      setAcquereurId(reservation.acquereur_id);
+      setDownPayment(reservation.deposit_amount.toString());
+      setShowNewAcquereur(false);
+    }
+  }, [open, reservation]);
 
   // Auto-calculate monthly payment when relevant values change
   useEffect(() => {
@@ -101,7 +117,7 @@ export function SellBienDialog({ bien, open, onOpenChange }: SellBienDialogProps
     }
 
     try {
-      await createVente.mutateAsync({
+      const venteResult = await createVente.mutateAsync({
         bien_id: bien.id,
         acquereur_id: finalAcquereurId,
         total_price: parseFloat(totalPrice),
@@ -112,6 +128,15 @@ export function SellBienDialog({ bien, open, onOpenChange }: SellBienDialogProps
         total_installments: paymentType === "echelonne" && totalInstallments ? parseInt(totalInstallments) : null,
         notes: notes || null,
       });
+
+      // Update reservation status to converted if there was one
+      if (reservation) {
+        await updateReservation.mutateAsync({
+          id: reservation.id,
+          status: "converted",
+          converted_vente_id: venteResult.id,
+        });
+      }
 
       toast.success("Vente enregistrée avec succès");
       onOpenChange(false);
@@ -124,8 +149,26 @@ export function SellBienDialog({ bien, open, onOpenChange }: SellBienDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Vendre : {bien.title}</DialogTitle>
+          <DialogTitle>
+            {reservation ? "Finaliser la vente" : "Vendre"} : {bien.title}
+          </DialogTitle>
+          {reservation && (
+            <DialogDescription>
+              Conversion de la réservation en vente définitive
+            </DialogDescription>
+          )}
         </DialogHeader>
+
+        {reservation && reservationDeposit > 0 && (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Un acompte de <strong>{formatCurrency(reservationDeposit)}</strong> a déjà été versé lors de la réservation.
+              Ce montant sera automatiquement pris en compte dans le calcul.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Acquereur Section */}
           <div className="space-y-4">

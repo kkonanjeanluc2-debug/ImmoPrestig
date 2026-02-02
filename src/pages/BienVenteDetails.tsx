@@ -306,6 +306,7 @@ export default function BienVenteDetails() {
           bien={bien}
           open={sellDialogOpen}
           onOpenChange={setSellDialogOpen}
+          reservation={reservation}
         />
       )}
 

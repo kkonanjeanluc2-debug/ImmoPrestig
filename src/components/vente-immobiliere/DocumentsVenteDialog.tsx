@@ -7,9 +7,9 @@ import {
 } from "@/components/ui/dialog";
 import { VenteWithDetails } from "@/hooks/useVentesImmobilieres";
 import { useEcheancesVentes } from "@/hooks/useEcheancesVentes";
-import { generatePromesseVenteImmo, generateRecuVenteImmo } from "@/lib/generateVenteImmoPDF";
+import { generatePromesseVenteImmo, generateRecuVenteImmo, generateContratVenteImmo } from "@/lib/generateVenteImmoPDF";
 import { useAgency } from "@/hooks/useAgency";
-import { FileText, Receipt, Download } from "lucide-react";
+import { FileText, Receipt, Download, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -54,6 +54,33 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
     }
   };
 
+  const handleDownloadContratVente = () => {
+    if (!agency || !vente.bien || !vente.acquereur) {
+      toast.error("Informations manquantes pour générer le contrat");
+      return;
+    }
+
+    try {
+      const doc = generateContratVenteImmo(
+        {
+          bien: vente.bien,
+          acquereur: vente.acquereur,
+          sale_date: vente.sale_date,
+          total_price: vente.total_price,
+          payment_type: vente.payment_type,
+          down_payment: vente.down_payment,
+          monthly_payment: vente.monthly_payment,
+          total_installments: vente.total_installments,
+        },
+        agency
+      );
+      doc.save(`contrat-vente-${vente.bien.title}.pdf`);
+      toast.success("Contrat de vente téléchargé");
+    } catch (error) {
+      toast.error("Erreur lors de la génération du contrat");
+    }
+  };
+
   const handleDownloadRecu = (echeance: { amount: number; paid_date: string | null; payment_method?: string | null; receipt_number?: string | null }) => {
     if (!agency || !vente.bien || !vente.acquereur || !echeance.paid_date) {
       toast.error("Informations manquantes pour générer le reçu");
@@ -95,6 +122,23 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Contrat de vente */}
+          <div className="p-4 border rounded-lg space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <FileCheck className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Contrat de vente</p>
+                <p className="text-sm text-muted-foreground">Document officiel de cession du bien</p>
+              </div>
+            </div>
+            <Button className="w-full" onClick={handleDownloadContratVente}>
+              <Download className="h-4 w-4 mr-2" />
+              Télécharger
+            </Button>
+          </div>
+
           {/* Promesse de vente */}
           <div className="p-4 border rounded-lg space-y-3">
             <div className="flex items-center gap-3">
@@ -103,10 +147,10 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
               </div>
               <div className="flex-1">
                 <p className="font-medium">Promesse de vente</p>
-                <p className="text-sm text-muted-foreground">Document officiel de la transaction</p>
+                <p className="text-sm text-muted-foreground">Document préliminaire de la transaction</p>
               </div>
             </div>
-            <Button className="w-full" onClick={handleDownloadPromesse}>
+            <Button className="w-full" variant="outline" onClick={handleDownloadPromesse}>
               <Download className="h-4 w-4 mr-2" />
               Télécharger
             </Button>

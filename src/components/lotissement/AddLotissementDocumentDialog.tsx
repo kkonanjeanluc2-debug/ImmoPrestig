@@ -32,6 +32,13 @@ const documentTypes = [
   { value: "arrete_approbation", label: "Arrêté d'approbation" },
   { value: "plan_cadastral", label: "Plan cadastral" },
   { value: "certificat_conformite", label: "Certificat de conformité" },
+  { value: "pv_famille", label: "PV de famille" },
+  { value: "convention", label: "Convention" },
+  { value: "contrat_prefinancement", label: "Contrat de préfinancement" },
+  { value: "attestation_villageoise", label: "Attestation villageoise" },
+  { value: "lettre_attribution", label: "Lettre d'attribution" },
+  { value: "certificat_propriete", label: "Certificat de propriété coutumière" },
+  { value: "acd", label: "Arrêté de Concession Définitive (ACD)" },
   { value: "autre", label: "Autre document" },
 ];
 

@@ -39,6 +39,13 @@ const documentTypeLabels: Record<string, string> = {
   arrete_approbation: "Arrêté d'approbation",
   plan_cadastral: "Plan cadastral",
   certificat_conformite: "Certificat de conformité",
+  pv_famille: "PV de famille",
+  convention: "Convention",
+  contrat_prefinancement: "Contrat de préfinancement",
+  attestation_villageoise: "Attestation villageoise",
+  lettre_attribution: "Lettre d'attribution",
+  certificat_propriete: "Certificat de propriété coutumière",
+  acd: "Arrêté de Concession Définitive (ACD)",
   autre: "Autre document",
 };
 

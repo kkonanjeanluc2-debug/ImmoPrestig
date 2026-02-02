@@ -47,6 +47,7 @@ export interface BienVenteInsert {
 
 export interface BienVenteUpdate extends Partial<BienVenteInsert> {
   id: string;
+  status?: PropertySaleStatus;
 }
 
 export const useBiensVente = () => {

@@ -925,6 +925,113 @@ export type Database = {
         }
         Relationships: []
       }
+      etats_des_lieux: {
+        Row: {
+          contract_id: string | null
+          created_at: string
+          electricity_meter: number | null
+          gas_meter: number | null
+          general_comments: string | null
+          general_condition: string | null
+          id: string
+          inspection_date: string
+          keys_delivered: Json | null
+          landlord_signature: string | null
+          landlord_signed_at: string | null
+          photos: string[] | null
+          property_id: string | null
+          rooms: Json | null
+          status: string
+          tenant_id: string
+          tenant_signature: string | null
+          tenant_signed_at: string | null
+          type: string
+          unit_id: string | null
+          updated_at: string
+          user_id: string
+          water_meter: number | null
+        }
+        Insert: {
+          contract_id?: string | null
+          created_at?: string
+          electricity_meter?: number | null
+          gas_meter?: number | null
+          general_comments?: string | null
+          general_condition?: string | null
+          id?: string
+          inspection_date?: string
+          keys_delivered?: Json | null
+          landlord_signature?: string | null
+          landlord_signed_at?: string | null
+          photos?: string[] | null
+          property_id?: string | null
+          rooms?: Json | null
+          status?: string
+          tenant_id: string
+          tenant_signature?: string | null
+          tenant_signed_at?: string | null
+          type: string
+          unit_id?: string | null
+          updated_at?: string
+          user_id: string
+          water_meter?: number | null
+        }
+        Update: {
+          contract_id?: string | null
+          created_at?: string
+          electricity_meter?: number | null
+          gas_meter?: number | null
+          general_comments?: string | null
+          general_condition?: string | null
+          id?: string
+          inspection_date?: string
+          keys_delivered?: Json | null
+          landlord_signature?: string | null
+          landlord_signed_at?: string | null
+          photos?: string[] | null
+          property_id?: string | null
+          rooms?: Json | null
+          status?: string
+          tenant_id?: string
+          tenant_signature?: string | null
+          tenant_signed_at?: string | null
+          type?: string
+          unit_id?: string | null
+          updated_at?: string
+          user_id?: string
+          water_meter?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etats_des_lieux_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "etats_des_lieux_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "etats_des_lieux_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "etats_des_lieux_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "property_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ilots: {
         Row: {
           created_at: string

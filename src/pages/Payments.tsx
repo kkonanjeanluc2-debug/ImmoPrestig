@@ -76,7 +76,8 @@ export default function Payments() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "commissions">("payments");
-  const { canCreate, canEdit } = usePermissions();
+  const { canCreate, canEdit, role } = usePermissions();
+  const isLocataire = role === "locataire";
 
   const { data: payments, isLoading, error } = usePayments();
   const { data: owners = [] } = useOwners();
@@ -246,31 +247,33 @@ export default function Payments() {
           </TabsList>
 
           <TabsContent value="payments" className="mt-6 space-y-6">
-            {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {stats.map((stat) => (
-                <Card key={stat.title}>
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={cn("p-2 rounded-lg bg-muted", stat.color)}>
-                          <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </div>
-                        <div>
-                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">{stat.title}</p>
-                          <p className="text-base sm:text-xl font-bold text-foreground">
-                            {stat.value}
-                          </p>
-                          {stat.count && (
-                            <p className="text-xs text-muted-foreground">{stat.count}</p>
-                          )}
+            {/* Stats - Hidden for tenants */}
+            {!isLocataire && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {stats.map((stat) => (
+                  <Card key={stat.title}>
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("p-2 rounded-lg bg-muted", stat.color)}>
+                            <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                          </div>
+                          <div>
+                            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">{stat.title}</p>
+                            <p className="text-base sm:text-xl font-bold text-foreground">
+                              {stat.value}
+                            </p>
+                            {stat.count && (
+                              <p className="text-xs text-muted-foreground">{stat.count}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
             {/* Loading State */}
             {isLoading && (
@@ -288,60 +291,62 @@ export default function Payments() {
 
             {/* Main Content */}
             {!isLoading && !error && (
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* Calendar */}
-                <Card className="lg:col-span-1">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                      Calendrier des échéances
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-2 sm:p-4">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      locale={fr}
-                      className="w-full pointer-events-auto"
-                      modifiers={{
-                        hasPayment: (date) => {
-                          const dateStr = date.toISOString().split('T')[0];
-                          return !!paymentDates[dateStr];
-                        }
-                      }}
-                      modifiersClassNames={{
-                        hasPayment: "ring-2 ring-primary ring-offset-1"
-                      }}
-                    />
+              <div className={cn("grid gap-6", isLocataire ? "" : "lg:grid-cols-3")}>
+                {/* Calendar - Hidden for tenants */}
+                {!isLocataire && (
+                  <Card className="lg:col-span-1">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base font-semibold flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                        Calendrier des échéances
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-2 sm:p-4">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        locale={fr}
+                        className="w-full pointer-events-auto"
+                        modifiers={{
+                          hasPayment: (date) => {
+                            const dateStr = date.toISOString().split('T')[0];
+                            return !!paymentDates[dateStr];
+                          }
+                        }}
+                        modifiersClassNames={{
+                          hasPayment: "ring-2 ring-primary ring-offset-1"
+                        }}
+                      />
 
-                    {/* Legend */}
-                    <div className="mt-4 pt-4 border-t border-border space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Légende</p>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded bg-emerald/20" />
-                          <span className="text-muted-foreground">Payé</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded bg-amber-500/20" />
-                          <span className="text-muted-foreground">En attente</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded bg-red-500/20" />
-                          <span className="text-muted-foreground">En retard</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded bg-blue-500/20" />
-                          <span className="text-muted-foreground">À venir</span>
+                      {/* Legend */}
+                      <div className="mt-4 pt-4 border-t border-border space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Légende</p>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded bg-emerald/20" />
+                            <span className="text-muted-foreground">Payé</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded bg-amber-500/20" />
+                            <span className="text-muted-foreground">En attente</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded bg-red-500/20" />
+                            <span className="text-muted-foreground">En retard</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded bg-blue-500/20" />
+                            <span className="text-muted-foreground">À venir</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Payment List */}
-                <Card className="lg:col-span-2">
+                <Card className={isLocataire ? "" : "lg:col-span-2"}>
                   <CardHeader className="pb-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <CardTitle className="text-base font-semibold">

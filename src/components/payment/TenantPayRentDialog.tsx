@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, CreditCard, Smartphone } from "lucide-react";
+import { Loader2, CreditCard, Smartphone, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TenantPayRentDialogProps {
   paymentId: string;
@@ -22,16 +23,20 @@ interface TenantPayRentDialogProps {
   dueDate: string;
   propertyTitle: string;
   tenantPhone?: string | null;
+  agencyMobileMoneyProvider?: string | null;
 }
 
 type PaymentMethod = "orange_money" | "mtn_money" | "wave" | "moov";
 
-const paymentMethods: { value: PaymentMethod; label: string; color: string }[] = [
+// FedaPay supported methods
+const fedapayMethods: { value: PaymentMethod; label: string; color: string }[] = [
   { value: "orange_money", label: "Orange Money", color: "bg-orange-500" },
   { value: "mtn_money", label: "MTN Mobile Money", color: "bg-yellow-500" },
-  { value: "wave", label: "Wave", color: "bg-blue-500" },
   { value: "moov", label: "Moov Money", color: "bg-purple-500" },
 ];
+
+// Wave is handled separately
+const waveMethod = { value: "wave" as PaymentMethod, label: "Wave", color: "bg-blue-500" };
 
 export function TenantPayRentDialog({
   paymentId,
@@ -39,10 +44,18 @@ export function TenantPayRentDialog({
   dueDate,
   propertyTitle,
   tenantPhone,
+  agencyMobileMoneyProvider,
 }: TenantPayRentDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("orange_money");
+  
+  // Determine available payment methods based on agency's configured provider
+  const isWaveAgency = agencyMobileMoneyProvider === "wave";
+  const availableMethods = isWaveAgency ? [waveMethod] : fedapayMethods;
+  
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
+    isWaveAgency ? "wave" : "orange_money"
+  );
   const [phone, setPhone] = useState(tenantPhone || "");
 
   const dueMonth = new Date(dueDate).toLocaleDateString("fr-FR", {
@@ -58,13 +71,16 @@ export function TenantPayRentDialog({
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("tenant-pay-rent", {
-        body: {
-          payment_id: paymentId,
-          payment_method: selectedMethod,
-          customer_phone: phone,
-        },
-      });
+      // Use different edge function based on payment method
+      const functionName = selectedMethod === "wave" 
+        ? "tenant-pay-rent-wave" 
+        : "tenant-pay-rent";
+      
+      const body = selectedMethod === "wave"
+        ? { payment_id: paymentId, customer_phone: phone }
+        : { payment_id: paymentId, payment_method: selectedMethod, customer_phone: phone };
+
+      const { data, error } = await supabase.functions.invoke(functionName, { body });
 
       if (error) throw error;
 
@@ -139,12 +155,20 @@ export function TenantPayRentDialog({
           {/* Payment method selection */}
           <div className="space-y-2">
             <Label>Mode de paiement</Label>
+            {isWaveAgency && (
+              <Alert className="mb-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Cette agence accepte uniquement les paiements via Wave.
+                </AlertDescription>
+              </Alert>
+            )}
             <RadioGroup
               value={selectedMethod}
               onValueChange={(v) => setSelectedMethod(v as PaymentMethod)}
               className="grid grid-cols-2 gap-2"
             >
-              {paymentMethods.map((method) => (
+              {availableMethods.map((method) => (
                 <div key={method.value}>
                   <RadioGroupItem
                     value={method.value}

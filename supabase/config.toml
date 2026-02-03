@@ -68,3 +68,15 @@ verify_jwt = false
 
 [functions.revoke-tenant-portal-access]
 verify_jwt = false
+
+[functions.tenant-pay-rent]
+verify_jwt = false
+
+[functions.tenant-pay-rent-webhook]
+verify_jwt = false
+
+[functions.tenant-pay-rent-wave]
+verify_jwt = false
+
+[functions.tenant-pay-rent-wave-webhook]
+verify_jwt = false

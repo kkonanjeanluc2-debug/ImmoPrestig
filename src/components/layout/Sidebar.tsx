@@ -45,6 +45,7 @@ const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   admin: <Shield className="h-3 w-3" />,
   gestionnaire: <UserCog className="h-3 w-3" />,
   lecture_seule: <Eye className="h-3 w-3" />,
+  locataire: <Users className="h-3 w-3" />,
 };
 
 const ROLE_BADGE_COLORS: Record<AppRole, string> = {
@@ -52,15 +53,16 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
   admin: "bg-emerald/20 text-emerald border-emerald/30",
   gestionnaire: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   lecture_seule: "bg-sand/20 text-sand border-sand/30",
+  locataire: "bg-orange-500/20 text-orange-400 border-orange-500/30",
 };
 
 const gestionLocativeItems = [
-  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Biens", href: "/properties", icon: Building2 },
-  { name: "Locataires", href: "/tenants", icon: Users },
-  { name: "Propriétaires", href: "/owners", icon: Home },
-  { name: "Contrats", href: "/contracts", icon: ScrollText },
-  { name: "Paiements", href: "/payments", icon: Wallet },
+  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard, hiddenForTenant: true },
+  { name: "Biens", href: "/properties", icon: Building2, hiddenForTenant: true },
+  { name: "Locataires", href: "/tenants", icon: Users, hiddenForTenant: false },
+  { name: "Propriétaires", href: "/owners", icon: Home, hiddenForTenant: true },
+  { name: "Contrats", href: "/contracts", icon: ScrollText, hiddenForTenant: false },
+  { name: "Paiements", href: "/payments", icon: Wallet, hiddenForTenant: false },
 ];
 
 const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
@@ -230,29 +232,31 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   )}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pl-3 space-y-1">
-                  {gestionLocativeItems.map((item) => {
-                    const isActive = location.pathname === item.href;
-                    return (
-                      <NavLink
-                        key={item.name}
-                        to={item.href}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
-                          isActive 
-                            ? "bg-emerald text-primary-foreground" 
-                            : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                        )}
-                      >
-                        <item.icon className={cn(
-                          "h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110",
-                          !showText && "mx-auto"
-                        )} />
-                        {showText && (
-                          <span className="font-medium text-sm">{item.name}</span>
-                        )}
-                      </NavLink>
-                    );
-                  })}
+                  {gestionLocativeItems
+                    .filter((item) => !(userRole?.role === "locataire" && item.hiddenForTenant))
+                    .map((item) => {
+                      const isActive = location.pathname === item.href;
+                      return (
+                        <NavLink
+                          key={item.name}
+                          to={item.href}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
+                            isActive 
+                              ? "bg-emerald text-primary-foreground" 
+                              : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                          )}
+                        >
+                          <item.icon className={cn(
+                            "h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110",
+                            !showText && "mx-auto"
+                          )} />
+                          {showText && (
+                            <span className="font-medium text-sm">{item.name}</span>
+                          )}
+                        </NavLink>
+                      );
+                    })}
                 </CollapsibleContent>
               </Collapsible>
 

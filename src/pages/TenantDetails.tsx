@@ -44,6 +44,7 @@ import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
 import { TenantEtatsDesLieuxTab } from "@/components/etat-des-lieux/TenantEtatsDesLieuxTab";
+import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
 import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { toast } from "sonner";
@@ -323,10 +324,14 @@ const TenantDetails = () => {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="payments" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex mb-6">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex mb-6">
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <Wallet className="h-4 w-4" />
               Paiements
+            </TabsTrigger>
+            <TabsTrigger value="contracts" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Contrats
             </TabsTrigger>
             <TabsTrigger value="etats-des-lieux" className="flex items-center gap-2">
               <ClipboardCheck className="h-4 w-4" />
@@ -707,9 +712,13 @@ const TenantDetails = () => {
         </div>
       </TabsContent>
 
-      <TabsContent value="etats-des-lieux">
-        <TenantEtatsDesLieuxTab tenant={tenant} />
-      </TabsContent>
+          <TabsContent value="contracts">
+            <TenantContractsTab tenantId={tenant.id} tenantName={tenant.name} />
+          </TabsContent>
+
+          <TabsContent value="etats-des-lieux">
+            <TenantEtatsDesLieuxTab tenant={tenant} />
+          </TabsContent>
     </Tabs>
   </div>
 

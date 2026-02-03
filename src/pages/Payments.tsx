@@ -33,6 +33,7 @@ import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { ReceiptActions } from "@/components/payment/ReceiptActions";
 import { usePermissions } from "@/hooks/usePermissions";
 import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
+import { TenantReceiptDownload } from "@/components/payment/TenantReceiptDownload";
 
 const statusConfig = {
   paid: { 
@@ -307,14 +308,32 @@ export default function Payments() {
                               />
                             </>
                           )}
-                          {/* Tenant can pay their rent */}
-                          {payment.status !== "paid" && isLocataire && (
-                            <TenantPayRentDialog
-                              paymentId={payment.id}
-                              amount={Number(payment.amount)}
-                              dueDate={payment.due_date}
-                              propertyTitle={propertyTitle}
-                            />
+                          {/* Tenant actions */}
+                          {isLocataire && (
+                            <>
+                              {payment.status === "paid" && (
+                                <TenantReceiptDownload
+                                  paymentId={payment.id}
+                                  tenantName={tenantName}
+                                  tenantEmail={tenant?.email || null}
+                                  propertyTitle={propertyTitle}
+                                  propertyAddress={tenant?.property?.address}
+                                  amount={Number(payment.amount)}
+                                  paidDate={payment.paid_date || payment.due_date}
+                                  dueDate={payment.due_date}
+                                  method={payment.method || undefined}
+                                  paymentMonths={(payment as any).payment_months || undefined}
+                                />
+                              )}
+                              {payment.status !== "paid" && (
+                                <TenantPayRentDialog
+                                  paymentId={payment.id}
+                                  amount={Number(payment.amount)}
+                                  dueDate={payment.due_date}
+                                  propertyTitle={propertyTitle}
+                                />
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

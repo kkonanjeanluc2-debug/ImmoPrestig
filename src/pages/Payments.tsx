@@ -36,7 +36,6 @@ import { differenceInDays, isFuture, isPast } from "date-fns";
 import { usePayments } from "@/hooks/usePayments";
 import { useOwners } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
-import { useTenantAgency } from "@/hooks/useTenantAgency";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
@@ -84,11 +83,6 @@ export default function Payments() {
   const { data: payments, isLoading, error } = usePayments();
   const { data: owners = [] } = useOwners();
   const { data: properties = [] } = useProperties();
-  
-  // Get the agency owner's user_id from the first payment's tenant (for tenant portal view)
-  const firstPaymentTenant = payments?.[0]?.tenant as any;
-  const agencyOwnerId = firstPaymentTenant?.user_id;
-  const { data: tenantAgency } = useTenantAgency(isLocataire ? agencyOwnerId : null);
 
   // Helper to get commission info for a payment
   const getCommissionInfo = (payment: any) => {
@@ -506,9 +500,6 @@ export default function Payments() {
                                     dueDate={payment.due_date}
                                     propertyTitle={propertyTitle}
                                     tenantPhone={tenant?.phone}
-                                    agencyMobileMoneyNumber={tenantAgency?.mobile_money_number}
-                                    agencyMobileMoneyProvider={tenantAgency?.mobile_money_provider}
-                                    agencyName={tenantAgency?.name}
                                   />
                                 )}
                                 {payment.status !== "paid" && canEdit && !isLocataire && (

@@ -9,8 +9,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CreditCard, Smartphone, Copy, Check, Phone } from "lucide-react";
+import { Loader2, CreditCard, Smartphone } from "lucide-react";
 
 interface TenantPayRentDialogProps {
   paymentId: string;
@@ -18,53 +22,66 @@ interface TenantPayRentDialogProps {
   dueDate: string;
   propertyTitle: string;
   tenantPhone?: string | null;
-  agencyMobileMoneyNumber?: string | null;
-  agencyMobileMoneyProvider?: string | null;
-  agencyName?: string;
 }
 
-const providerLabels: Record<string, { label: string; color: string }> = {
-  orange_money: { label: "Orange Money", color: "bg-orange-500" },
-  mtn_money: { label: "MTN Mobile Money", color: "bg-yellow-500" },
-  wave: { label: "Wave", color: "bg-blue-500" },
-  moov: { label: "Moov Money", color: "bg-purple-500" },
-};
+type PaymentMethod = "orange_money" | "mtn_money" | "wave" | "moov";
+
+const paymentMethods: { value: PaymentMethod; label: string; color: string }[] = [
+  { value: "orange_money", label: "Orange Money", color: "bg-orange-500" },
+  { value: "mtn_money", label: "MTN Mobile Money", color: "bg-yellow-500" },
+  { value: "wave", label: "Wave", color: "bg-blue-500" },
+  { value: "moov", label: "Moov Money", color: "bg-purple-500" },
+];
 
 export function TenantPayRentDialog({
   paymentId,
   amount,
   dueDate,
   propertyTitle,
-  agencyMobileMoneyNumber,
-  agencyMobileMoneyProvider,
-  agencyName,
+  tenantPhone,
 }: TenantPayRentDialogProps) {
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("orange_money");
+  const [phone, setPhone] = useState(tenantPhone || "");
 
   const dueMonth = new Date(dueDate).toLocaleDateString("fr-FR", {
     month: "long",
     year: "numeric",
   });
 
-  const providerInfo = agencyMobileMoneyProvider
-    ? providerLabels[agencyMobileMoneyProvider]
-    : null;
+  const handlePayment = async () => {
+    if (!phone.trim()) {
+      toast.error("Veuillez entrer votre numéro de téléphone");
+      return;
+    }
 
-  const handleCopyNumber = async () => {
-    if (!agencyMobileMoneyNumber) return;
-    
+    setIsLoading(true);
     try {
-      await navigator.clipboard.writeText(agencyMobileMoneyNumber);
-      setCopied(true);
-      toast.success("Numéro copié !");
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Impossible de copier le numéro");
+      const { data, error } = await supabase.functions.invoke("tenant-pay-rent", {
+        body: {
+          payment_id: paymentId,
+          payment_method: selectedMethod,
+          customer_phone: phone,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.payment_url) {
+        toast.success("Redirection vers le paiement...");
+        window.open(data.payment_url, "_blank");
+        setOpen(false);
+      } else {
+        throw new Error(data?.error || "Erreur lors de l'initialisation du paiement");
+      }
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      toast.error(error.message || "Erreur lors du paiement");
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const hasPaymentConfig = agencyMobileMoneyNumber && agencyMobileMoneyProvider;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -81,7 +98,7 @@ export function TenantPayRentDialog({
             Payer mon loyer
           </DialogTitle>
           <DialogDescription>
-            Réglez votre loyer de {dueMonth} par transfert Mobile Money.
+            Réglez votre loyer de {dueMonth} en ligne via Mobile Money.
           </DialogDescription>
         </DialogHeader>
 
@@ -104,72 +121,65 @@ export function TenantPayRentDialog({
             </div>
           </div>
 
-          {hasPaymentConfig ? (
-            <>
-              {/* Agency payment info */}
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Effectuez un transfert {providerInfo?.label} vers le numéro suivant :
-                </p>
-                
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
-                  {/* Provider badge */}
-                  <div className="flex items-center gap-2">
-                    <div className={`h-3 w-3 rounded-full ${providerInfo?.color}`} />
-                    <span className="text-sm font-medium">{providerInfo?.label}</span>
-                  </div>
-                  
-                  {/* Phone number with copy */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-primary" />
-                      <span className="text-xl font-bold tracking-wide">
-                        {agencyMobileMoneyNumber}
-                      </span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyNumber}
-                      className="shrink-0"
-                    >
-                      {copied ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  
-                  {/* Agency name */}
-                  {agencyName && (
-                    <p className="text-sm text-muted-foreground">
-                      Destinataire : <span className="font-medium">{agencyName}</span>
-                    </p>
-                  )}
-                </div>
+          {/* Phone input */}
+          <div className="space-y-2">
+            <Label htmlFor="phone">Numéro de téléphone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="07 XX XX XX XX"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Le numéro associé à votre compte Mobile Money
+            </p>
+          </div>
 
-                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
-                    <strong>Important :</strong> Après votre transfert, conservez la confirmation. 
-                    Votre paiement sera marqué comme reçu une fois validé par l'agence.
-                  </p>
+          {/* Payment method selection */}
+          <div className="space-y-2">
+            <Label>Mode de paiement</Label>
+            <RadioGroup
+              value={selectedMethod}
+              onValueChange={(v) => setSelectedMethod(v as PaymentMethod)}
+              className="grid grid-cols-2 gap-2"
+            >
+              {paymentMethods.map((method) => (
+                <div key={method.value}>
+                  <RadioGroupItem
+                    value={method.value}
+                    id={method.value}
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor={method.value}
+                    className="flex items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer transition-colors"
+                  >
+                    <div className={`h-3 w-3 rounded-full ${method.color}`} />
+                    <span className="text-sm font-medium">{method.label}</span>
+                  </Label>
                 </div>
-              </div>
-            </>
-          ) : (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-              <p className="text-sm text-destructive">
-                L'agence n'a pas encore configuré ses informations de paiement Mobile Money. 
-                Veuillez contacter directement votre gestionnaire.
-              </p>
-            </div>
-          )}
+              ))}
+            </RadioGroup>
+          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Fermer
+            Annuler
+          </Button>
+          <Button onClick={handlePayment} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Traitement...
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Payer {amount.toLocaleString("fr-FR")} F
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

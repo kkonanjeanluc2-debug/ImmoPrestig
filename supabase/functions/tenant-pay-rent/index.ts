@@ -106,12 +106,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get agency info for the payment owner
-    const { data: agency } = await supabase
+    // Get agency info for the payment owner (including mobile money details)
+    const { data: agency, error: agencyError } = await supabase
       .from("agencies")
-      .select("id, name, email, phone")
+      .select("id, name, email, phone, mobile_money_number, mobile_money_provider")
       .eq("user_id", tenant.user_id)
       .single();
+
+    if (agencyError || !agency) {
+      return new Response(
+        JSON.stringify({ error: "Agence non trouvée" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify agency has configured mobile money
+    if (!agency.mobile_money_number || !agency.mobile_money_provider) {
+      return new Response(
+        JSON.stringify({ error: "L'agence n'a pas configuré de numéro Mobile Money pour recevoir les paiements" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Get FedaPay credentials
     const fedapaySecretKey = Deno.env.get("FEDAPAY_SECRET_KEY");
@@ -144,10 +159,19 @@ Deno.serve(async (req) => {
       return `+225${digits}`;
     };
 
-    const formattedPhone = formatIvorianPhone(customer_phone);
-    if (!formattedPhone) {
+    const formattedCustomerPhone = formatIvorianPhone(customer_phone);
+    if (!formattedCustomerPhone) {
       return new Response(
-        JSON.stringify({ error: "Numéro de téléphone invalide" }),
+        JSON.stringify({ error: "Numéro de téléphone du locataire invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Format agency's mobile money number
+    const formattedAgencyPhone = formatIvorianPhone(agency.mobile_money_number);
+    if (!formattedAgencyPhone) {
+      return new Response(
+        JSON.stringify({ error: "Le numéro Mobile Money de l'agence est invalide" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -157,26 +181,32 @@ Deno.serve(async (req) => {
     const dueDate = new Date(payment.due_date);
     const month = dueDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
 
-    const fedapayMode = fedapayModeByPaymentMethod[payment_method];
+    // Use the agency's configured mobile money provider
+    const agencyProviderMode = fedapayModeByPaymentMethod[agency.mobile_money_provider as keyof typeof fedapayModeByPaymentMethod];
+    // Use the customer's selected payment method for their side
+    const customerPaymentMode = fedapayModeByPaymentMethod[payment_method];
 
     const fedapayPayload = {
-      description: `Loyer ${month} - ${propertyTitle}`,
+      description: `Loyer ${month} - ${propertyTitle} - Paiement à ${agency.name}`,
       amount: Math.round(Number(payment.amount)),
       currency: { iso: "XOF" },
       callback_url: `${supabaseUrl}/functions/v1/tenant-pay-rent-webhook`,
-      mode: fedapayMode,
+      mode: customerPaymentMode,
       customer: {
         firstname: tenant.name.split(" ")[0] || tenant.name,
         lastname: tenant.name.split(" ").slice(1).join(" ") || "",
         email: tenant.email || "",
         phone_number: {
-          number: formattedPhone,
+          number: formattedCustomerPhone,
           country: "CI",
         },
       },
       metadata: {
         payment_id: payment.id,
         tenant_id: tenant.id,
+        agency_id: agency.id,
+        agency_phone: formattedAgencyPhone,
+        agency_provider: agency.mobile_money_provider,
         type: "rent_payment",
       },
     };

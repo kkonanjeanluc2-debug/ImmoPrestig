@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export type AccountType = "agence" | "proprietaire";
 
+export type MobileMoneyProvider = "orange_money" | "mtn_money" | "wave" | "moov";
+
 export interface Agency {
   id: string;
   user_id: string;
@@ -23,6 +25,8 @@ export interface Agency {
   sidebar_color: string | null;
   whatsapp_property_template: string | null;
   reservation_deposit_percentage: number;
+  mobile_money_number: string | null;
+  mobile_money_provider: MobileMoneyProvider | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

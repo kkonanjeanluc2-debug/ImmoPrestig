@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     // Get the tenant and verify ownership
     const { data: tenant, error: tenantError } = await supabaseAdmin
       .from("tenants")
-      .select("id, name, email, phone, user_id, has_portal_access")
+      .select("id, name, email, phone, user_id, has_portal_access, portal_user_id")
       .eq("id", tenant_id)
       .single();
 
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     }
 
     // Check if tenant already has portal access
-    if (tenant.has_portal_access && tenant.user_id) {
+    if (tenant.has_portal_access && tenant.portal_user_id) {
       return new Response(
         JSON.stringify({ error: "Ce locataire a déjà un accès portail" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -205,11 +205,11 @@ Deno.serve(async (req) => {
       console.error("Error setting user role:", roleError);
     }
 
-    // Update tenant with user_id and portal access
+    // Update tenant with portal_user_id and portal access (keep original user_id for ownership)
     const { error: updateError } = await supabaseAdmin
       .from("tenants")
       .update({
-        user_id: userId,
+        portal_user_id: userId,
         has_portal_access: true,
       })
       .eq("id", tenant_id);

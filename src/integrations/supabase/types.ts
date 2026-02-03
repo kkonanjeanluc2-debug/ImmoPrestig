@@ -106,6 +106,8 @@ export type Database = {
           latitude: number | null
           logo_url: string | null
           longitude: number | null
+          mobile_money_number: string | null
+          mobile_money_provider: string | null
           name: string
           phone: string | null
           primary_color: string | null
@@ -130,6 +132,8 @@ export type Database = {
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          mobile_money_number?: string | null
+          mobile_money_provider?: string | null
           name: string
           phone?: string | null
           primary_color?: string | null
@@ -154,6 +158,8 @@ export type Database = {
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          mobile_money_number?: string | null
+          mobile_money_provider?: string | null
           name?: string
           phone?: string | null
           primary_color?: string | null

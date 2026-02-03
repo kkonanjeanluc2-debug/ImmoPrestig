@@ -20,8 +20,11 @@ import {
   Loader2, 
   Camera,
   FileText,
-  Percent
+  Percent,
+  Smartphone
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MobileMoneyProvider } from "@/hooks/useAgency";
 
 export function AgencySettings() {
   const { user } = useAuth();
@@ -40,6 +43,8 @@ export function AgencySettings() {
     siret: "",
     reservation_deposit_percentage: "30",
     sale_commission_percentage: "5",
+    mobile_money_number: "",
+    mobile_money_provider: "" as MobileMoneyProvider | "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -60,6 +65,8 @@ export function AgencySettings() {
         siret: agency.siret || "",
         reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
         sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
+        mobile_money_number: agency.mobile_money_number || "",
+        mobile_money_provider: agency.mobile_money_provider || "",
       });
       setLogoUrl(agency.logo_url);
     }
@@ -79,6 +86,8 @@ export function AgencySettings() {
         siret: agency.siret || "",
         reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
         sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
+        mobile_money_number: agency.mobile_money_number || "",
+        mobile_money_provider: agency.mobile_money_provider || "",
       });
       setLogoUrl(agency.logo_url);
     }
@@ -157,6 +166,8 @@ export function AgencySettings() {
             logo_url: logoUrl,
             reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
             sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
+            mobile_money_number: formData.mobile_money_number || null,
+            mobile_money_provider: formData.mobile_money_provider || null,
           })
           .eq('user_id', user.id);
 
@@ -178,6 +189,8 @@ export function AgencySettings() {
             logo_url: logoUrl,
             reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
             sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
+            mobile_money_number: formData.mobile_money_number || null,
+            mobile_money_provider: formData.mobile_money_provider || null,
           });
 
         if (error) throw error;
@@ -417,6 +430,51 @@ export function AgencySettings() {
           <p className="text-xs text-muted-foreground">
             Commission réglementée : 3% à 5% du prix de vente
           </p>
+        </div>
+
+        {/* Mobile Money Settings for Rent Collection */}
+        <div className="space-y-4 border-t pt-6">
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5 text-primary" />
+            <h3 className="font-medium">Réception des loyers (Mobile Money)</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Configurez le numéro Mobile Money sur lequel vous recevrez les paiements de loyer des locataires.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="mobile-money-provider">Opérateur Mobile Money</Label>
+              <Select
+                value={formData.mobile_money_provider}
+                onValueChange={(value) => handleChange("mobile_money_provider", value)}
+              >
+                <SelectTrigger id="mobile-money-provider">
+                  <SelectValue placeholder="Sélectionner l'opérateur" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="orange_money">Orange Money</SelectItem>
+                  <SelectItem value="mtn_money">MTN Mobile Money</SelectItem>
+                  <SelectItem value="wave">Wave</SelectItem>
+                  <SelectItem value="moov">Moov Money</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mobile-money-number">Numéro Mobile Money</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="mobile-money-number"
+                  type="tel"
+                  value={formData.mobile_money_number}
+                  onChange={(e) => handleChange("mobile_money_number", e.target.value)}
+                  placeholder="07 XX XX XX XX"
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Save Button */}

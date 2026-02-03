@@ -181,9 +181,10 @@ export function PaymentProvidersSettings() {
           secretName: "FEDAPAY_SECRET_KEY",
           publicKeyName: "FEDAPAY_PUBLIC_KEY",
           publicKeyLabel: "Clé Publique",
-          secretKeyLabel: "Clé Secrète",
+          secretKeyLabel: "Clé Secrète (API + Webhook)",
           description: "Configurez vos clés API FedaPay.",
           docsUrl: "https://docs.fedapay.com/",
+          webhookInfo: "Cette clé secrète est également utilisée pour vérifier les signatures des webhooks de paiement.",
         };
       case "wave_ci":
         return {
@@ -193,6 +194,7 @@ export function PaymentProvidersSettings() {
           secretKeyLabel: "Secret Webhook",
           description: "Configurez vos clés API Wave CI.",
           docsUrl: "https://docs.wave.com/",
+          webhookInfo: "Ce secret est utilisé pour vérifier l'authenticité des notifications webhook.",
         };
       default:
         return null;
@@ -502,9 +504,17 @@ export function PaymentProvidersSettings() {
                         </Button>
                       </div>
                       {info && (
-                        <p className="text-xs text-muted-foreground">
-                          Sera stockée comme: <code className="bg-muted px-1 rounded">{info.secretName}</code>
-                        </p>
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">
+                            Sera stockée comme: <code className="bg-muted px-1 rounded">{info.secretName}</code>
+                          </p>
+                          {info.webhookInfo && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                              <Webhook className="h-3 w-3" />
+                              {info.webhookInfo}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
 

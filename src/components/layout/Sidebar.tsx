@@ -293,50 +293,54 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 <div className="border-t border-navy-light" />
               </div>
               
-              {/* Settings */}
-              <NavLink
-                to="/settings"
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group mt-2",
-                  location.pathname === "/settings"
-                    ? "bg-emerald text-primary-foreground" 
-                    : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                )}
-              >
-                <Settings className={cn(
-                  "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
-                  !showText && "mx-auto"
-                )} />
-                {showText && (
-                  <span className="font-medium text-sm">Paramètres</span>
-                )}
-              </NavLink>
-              
-              {/* Trash link with counter */}
-              <NavLink
-                to="/trash"
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                  location.pathname === "/trash"
-                    ? "bg-emerald text-primary-foreground" 
-                    : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                )}
-              >
-                <div className="relative">
-                  <Trash2 className={cn(
+              {/* Settings - hidden for tenants */}
+              {userRole?.role !== "locataire" && (
+                <NavLink
+                  to="/settings"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group mt-2",
+                    location.pathname === "/settings"
+                      ? "bg-emerald text-primary-foreground" 
+                      : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                  )}
+                >
+                  <Settings className={cn(
                     "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
                     !showText && "mx-auto"
                   )} />
-                  {trashCount && trashCount.total > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
-                      {trashCount.total > 99 ? "99+" : trashCount.total}
-                    </span>
+                  {showText && (
+                    <span className="font-medium text-sm">Paramètres</span>
                   )}
-                </div>
-                {showText && (
-                  <span className="font-medium text-sm">Corbeille</span>
-                )}
-              </NavLink>
+                </NavLink>
+              )}
+              
+              {/* Trash link with counter - hidden for tenants */}
+              {userRole?.role !== "locataire" && (
+                <NavLink
+                  to="/trash"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                    location.pathname === "/trash"
+                      ? "bg-emerald text-primary-foreground" 
+                      : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                  )}
+                >
+                  <div className="relative">
+                    <Trash2 className={cn(
+                      "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                      !showText && "mx-auto"
+                    )} />
+                    {trashCount && trashCount.total > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                        {trashCount.total > 99 ? "99+" : trashCount.total}
+                      </span>
+                    )}
+                  </div>
+                  {showText && (
+                    <span className="font-medium text-sm">Corbeille</span>
+                  )}
+                </NavLink>
+              )}
               </>
             );
           })()}

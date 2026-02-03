@@ -253,6 +253,7 @@ function ContractCard({ contract, tenantName, isLocataire, onSign }: ContractCar
           birth_place: contract.property.owner.birth_place,
           profession: contract.property.owner.profession,
           cni_number: contract.property.owner.cni_number,
+          management_type: contract.property.owner.management_type || null,
         } : null,
         signatures: pdfSignatures,
       };

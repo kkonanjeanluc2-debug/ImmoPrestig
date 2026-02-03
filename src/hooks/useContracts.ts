@@ -17,7 +17,21 @@ export const useContracts = () => {
         .from("contracts")
         .select(`
           *,
-          property:properties(*),
+          property:properties(
+            *,
+            owner:owners(
+              id,
+              name,
+              email,
+              phone,
+              address,
+              birth_date,
+              birth_place,
+              profession,
+              cni_number,
+              management_type:management_types(name, type, percentage)
+            )
+          ),
           tenant:tenants(*),
           unit:property_units(*)
         `)

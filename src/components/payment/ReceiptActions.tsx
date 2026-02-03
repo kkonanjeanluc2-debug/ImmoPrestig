@@ -39,6 +39,7 @@ interface ReceiptActionsProps {
   dueDate: string;
   method?: string;
   paymentMonths?: string[] | null;
+  isTenantView?: boolean;
 }
 
 export function ReceiptActions({
@@ -54,6 +55,7 @@ export function ReceiptActions({
   dueDate,
   method,
   paymentMonths,
+  isTenantView = false,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -215,6 +217,16 @@ export function ReceiptActions({
       description: "Le message a été pré-rempli dans WhatsApp.",
     });
   };
+
+  // Simplified view for tenants - just download button
+  if (isTenantView) {
+    return (
+      <Button size="sm" variant="outline" className="text-xs" onClick={handleDownload} disabled={isDownloading}>
+        {isDownloading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
+        Quittance
+      </Button>
+    );
+  }
 
   return (
     <>

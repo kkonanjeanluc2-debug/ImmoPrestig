@@ -40,6 +40,7 @@ import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { ReceiptActions } from "@/components/payment/ReceiptActions";
+import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { CommissionReportCard } from "@/components/commission/CommissionReportCard";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -492,7 +493,16 @@ export default function Payments() {
                                     isTenantView={isLocataire}
                                   />
                                 )}
-                                {payment.status !== "paid" && canEdit && (
+                                {payment.status !== "paid" && isLocataire && (
+                                  <TenantPayRentDialog
+                                    paymentId={payment.id}
+                                    amount={Number(payment.amount)}
+                                    dueDate={payment.due_date}
+                                    propertyTitle={propertyTitle}
+                                    tenantPhone={tenant?.phone}
+                                  />
+                                )}
+                                {payment.status !== "paid" && canEdit && !isLocataire && (
                                   <>
                                     <SendReminderDialog
                                       paymentId={payment.id}

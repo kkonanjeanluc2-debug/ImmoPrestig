@@ -240,10 +240,12 @@ export default function Payments() {
               <Wallet className="h-4 w-4" />
               Paiements
             </TabsTrigger>
-            <TabsTrigger value="commissions" className="flex items-center gap-2">
-              <Percent className="h-4 w-4" />
-              Commissions
-            </TabsTrigger>
+            {!isLocataire && (
+              <TabsTrigger value="commissions" className="flex items-center gap-2">
+                <Percent className="h-4 w-4" />
+                Commissions
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="payments" className="mt-6 space-y-6">

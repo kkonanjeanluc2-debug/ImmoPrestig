@@ -40,7 +40,6 @@ import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { WhatsAppHistoryDialog } from "@/components/tenant/WhatsAppHistoryDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
-import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -82,7 +81,7 @@ const TenantDetails = () => {
   const { data: activityLogs = [] } = useActivityLogs();
   const { data: agency } = useAgency();
   const deleteTenant = useDeleteTenant();
-  const { canEdit, canDelete, role } = usePermissions();
+  const { canEdit, canDelete } = usePermissions();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [whatsappHistoryOpen, setWhatsappHistoryOpen] = useState(false);
@@ -461,41 +460,27 @@ const TenantDetails = () => {
                             )}
                             {(payment.status === 'pending' || payment.status === 'late') && (
                               <>
-                                {/* Show pay button for tenant portal users */}
-                                {role === 'locataire' && (
-                                  <TenantPayRentDialog
-                                    paymentId={payment.id}
-                                    amount={Number(payment.amount)}
-                                    dueDate={payment.due_date}
-                                    propertyTitle={tenant.property?.title || "Bien immobilier"}
-                                  />
-                                )}
-                                {/* Show collect/reminder for agency users */}
-                                {role !== 'locataire' && (
-                                  <>
-                                    <CollectPaymentDialog
-                                      paymentId={payment.id}
-                                      tenantName={tenant.name}
-                                      tenantEmail={tenant.email}
-                                      amount={Number(payment.amount)}
-                                      dueDate={payment.due_date}
-                                      propertyTitle={tenant.property?.title || "Bien immobilier"}
-                                      propertyAddress={tenant.property?.address}
-                                      currentMethod={payment.method}
-                                    />
-                                    <SendReminderDialog
-                                      paymentId={payment.id}
-                                      tenantId={tenant.id}
-                                      tenantName={tenant.name}
-                                      tenantEmail={tenant.email}
-                                      tenantPhone={tenant.phone}
-                                      propertyTitle={tenant.property?.title || "Bien non assigné"}
-                                      amount={Number(payment.amount)}
-                                      dueDate={payment.due_date}
-                                      status={payment.status}
-                                    />
-                                  </>
-                                )}
+                                <CollectPaymentDialog
+                                  paymentId={payment.id}
+                                  tenantName={tenant.name}
+                                  tenantEmail={tenant.email}
+                                  amount={Number(payment.amount)}
+                                  dueDate={payment.due_date}
+                                  propertyTitle={tenant.property?.title || "Bien immobilier"}
+                                  propertyAddress={tenant.property?.address}
+                                  currentMethod={payment.method}
+                                />
+                                <SendReminderDialog
+                                  paymentId={payment.id}
+                                  tenantId={tenant.id}
+                                  tenantName={tenant.name}
+                                  tenantEmail={tenant.email}
+                                  tenantPhone={tenant.phone}
+                                  propertyTitle={tenant.property?.title || "Bien non assigné"}
+                                  amount={Number(payment.amount)}
+                                  dueDate={payment.due_date}
+                                  status={payment.status}
+                                />
                               </>
                             )}
                           </div>

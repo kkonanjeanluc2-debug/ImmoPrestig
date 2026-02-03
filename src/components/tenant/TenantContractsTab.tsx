@@ -22,13 +22,16 @@ import {
   Calendar,
   Wallet,
   Loader2,
+  Download,
 } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
 import { useContractSignatures, useCreateSignature } from "@/hooks/useContractSignatures";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
+import { useAgency } from "@/hooks/useAgency";
 import { useToast } from "@/hooks/use-toast";
 import { SignatureTypeSelector } from "@/components/signature/SignatureTypeSelector";
+import { downloadContractPDF, DEFAULT_CONTRACT_TEMPLATE } from "@/lib/generateContract";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -185,6 +188,9 @@ interface ContractCardProps {
 
 function ContractCard({ contract, tenantName, isLocataire, onSign }: ContractCardProps) {
   const { data: signatures = [], isLoading: signaturesLoading } = useContractSignatures(contract.id);
+  const { data: agency } = useAgency();
+  const { toast } = useToast();
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const landlordSignature = signatures.find(
     (s) => s.signer_type === "landlord" && (s.signature_data || s.signature_text)
@@ -197,6 +203,76 @@ function ContractCard({ contract, tenantName, isLocataire, onSign }: ContractCar
   );
 
   const canTenantSign = isLocataire && landlordSignature && !tenantSignature;
+  const isFullySigned = !!(landlordSignature && tenantSignature);
+
+  const handleDownloadContract = async () => {
+    setIsDownloading(true);
+    try {
+      // Transform signatures for PDF
+      const pdfSignatures = signatures
+        .filter(s => s.signature_data || s.signature_text)
+        .map(s => ({
+          signerName: s.signer_name,
+          signerType: s.signer_type as "landlord" | "tenant",
+          signatureData: s.signature_data || undefined,
+          signatureText: s.signature_text || undefined,
+          signatureType: s.signature_type as "drawn" | "typed",
+          signedAt: s.signed_at,
+        }));
+
+      const contractData = {
+        tenantName: tenantName,
+        tenantEmail: contract.tenant?.email,
+        tenantPhone: contract.tenant?.phone,
+        tenantBirthDate: contract.tenant?.birth_date,
+        tenantBirthPlace: contract.tenant?.birth_place,
+        tenantProfession: contract.tenant?.profession,
+        tenantCniNumber: contract.tenant?.cni_number,
+        propertyTitle: contract.property?.title || "Bien",
+        propertyAddress: contract.property?.address,
+        unitNumber: contract.unit?.unit_number,
+        rentAmount: Number(contract.rent_amount),
+        deposit: contract.deposit ? Number(contract.deposit) : undefined,
+        startDate: contract.start_date,
+        endDate: contract.end_date,
+        agency: agency ? {
+          name: agency.name,
+          email: agency.email,
+          phone: agency.phone || undefined,
+          address: agency.address || undefined,
+          city: agency.city || undefined,
+          country: agency.country || undefined,
+          logo_url: agency.logo_url,
+        } : null,
+        owner: contract.property?.owner ? {
+          name: contract.property.owner.name,
+          email: contract.property.owner.email,
+          phone: contract.property.owner.phone,
+          address: contract.property.owner.address,
+          birth_date: contract.property.owner.birth_date,
+          birth_place: contract.property.owner.birth_place,
+          profession: contract.property.owner.profession,
+          cni_number: contract.property.owner.cni_number,
+        } : null,
+        signatures: pdfSignatures,
+      };
+
+      await downloadContractPDF(DEFAULT_CONTRACT_TEMPLATE, contractData);
+      toast({
+        title: "Contrat téléchargé",
+        description: "Votre contrat signé a été téléchargé avec succès.",
+      });
+    } catch (error) {
+      console.error("Error downloading contract:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger le contrat.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const statusConfig = {
     active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
@@ -293,12 +369,22 @@ function ContractCard({ contract, tenantName, isLocataire, onSign }: ContractCar
         </Alert>
       )}
 
-      {/* Fully signed status */}
-      {landlordSignature && tenantSignature && (
+      {/* Fully signed status with download button */}
+      {isFullySigned && (
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-700">
-            Le contrat a été signé par les deux parties.
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-green-700">Le contrat a été signé par les deux parties.</span>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleDownloadContract}
+              disabled={isDownloading}
+              className="ml-4 border-green-300 text-green-700 hover:bg-green-100"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isDownloading ? "Téléchargement..." : "Télécharger"}
+            </Button>
           </AlertDescription>
         </Alert>
       )}

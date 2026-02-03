@@ -2243,6 +2243,7 @@ export type Database = {
           email: string
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
+          has_portal_access: boolean
           id: string
           name: string
           phone: string | null
@@ -2263,6 +2264,7 @@ export type Database = {
           email: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          has_portal_access?: boolean
           id?: string
           name: string
           phone?: string | null
@@ -2283,6 +2285,7 @@ export type Database = {
           email?: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          has_portal_access?: boolean
           id?: string
           name?: string
           phone?: string | null
@@ -2624,7 +2627,15 @@ export type Database = {
         Returns: boolean
       }
       can_agency_add_member: { Args: { p_agency_id: string }; Returns: boolean }
+      can_agency_add_tenant_portal: {
+        Args: { p_agency_id: string }
+        Returns: boolean
+      }
       get_agency_member_count: {
+        Args: { p_agency_id: string }
+        Returns: number
+      }
+      get_agency_tenant_portal_count: {
         Args: { p_agency_id: string }
         Returns: number
       }
@@ -2649,7 +2660,12 @@ export type Database = {
     }
     Enums: {
       account_type: "agence" | "proprietaire"
-      app_role: "admin" | "gestionnaire" | "lecture_seule" | "super_admin"
+      app_role:
+        | "admin"
+        | "gestionnaire"
+        | "lecture_seule"
+        | "super_admin"
+        | "locataire"
       interest_level: "faible" | "moyen" | "eleve"
       payment_type: "comptant" | "echelonne"
       plot_status: "disponible" | "reserve" | "vendu"
@@ -2790,7 +2806,13 @@ export const Constants = {
   public: {
     Enums: {
       account_type: ["agence", "proprietaire"],
-      app_role: ["admin", "gestionnaire", "lecture_seule", "super_admin"],
+      app_role: [
+        "admin",
+        "gestionnaire",
+        "lecture_seule",
+        "super_admin",
+        "locataire",
+      ],
       interest_level: ["faible", "moyen", "eleve"],
       payment_type: ["comptant", "echelonne"],
       plot_status: ["disponible", "reserve", "vendu"],

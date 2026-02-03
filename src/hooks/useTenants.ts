@@ -19,6 +19,8 @@ export type TenantWithDetails = Tenant & {
     rent_amount: number;
     status: string;
   } | null;
+  has_portal_access?: boolean;
+  assigned_to?: string | null;
 };
 
 export const useTenants = () => {

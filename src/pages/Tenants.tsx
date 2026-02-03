@@ -42,7 +42,10 @@ import {
   Eye,
   UserCheck,
   DoorOpen,
-  Trash2
+  Trash2,
+  KeyRound,
+  ShieldCheck,
+  ShieldX
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
@@ -56,9 +59,11 @@ import { MergeTenantsDialog } from "@/components/tenant/MergeTenantsDialog";
 import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
 import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { TenantTrashDialog } from "@/components/tenant/TenantTrashDialog";
+import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
 import { useToast } from "@/hooks/use-toast";
+import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
@@ -80,18 +85,23 @@ interface TenantCardProps {
   onEdit: (tenant: TenantWithDetails) => void;
   onView: (tenant: TenantWithDetails) => void;
   onDelete: (tenant: TenantWithDetails) => void;
+  onCreateAccess: (tenant: TenantWithDetails) => void;
+  onRevokeAccess: (tenant: TenantWithDetails) => void;
   canEdit: boolean;
   isDeleting: boolean;
+  isRevokingAccess: boolean;
+  isAgencyOwner: boolean;
 }
 
-function TenantCard({ tenant, onEdit, onView, onDelete, canEdit, isDeleting }: TenantCardProps) {
+function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevokeAccess, canEdit, isDeleting, isRevokingAccess, isAgencyOwner }: TenantCardProps) {
   const [expanded, setExpanded] = useState(false);
   
   // Get active contract
   const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
   const contractStatus = activeContract?.status as keyof typeof contractStatusConfig || 'expired';
   const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
-  const assignedTo = (tenant as any).assigned_to;
+  const assignedTo = tenant.assigned_to;
+  const hasPortalAccess = tenant.has_portal_access;
 
   return (
     <Card className="overflow-hidden">
@@ -114,6 +124,29 @@ function TenantCard({ tenant, onEdit, onView, onDelete, canEdit, isDeleting }: T
                   {statusConfig.label}
                 </Badge>
                 {assignedTo && <AssignmentBadge userId={assignedTo} />}
+                {isAgencyOwner && (
+                  <Badge 
+                    variant={hasPortalAccess ? "default" : "secondary"}
+                    className={cn(
+                      "text-[10px] sm:text-xs flex items-center gap-1",
+                      hasPortalAccess 
+                        ? "bg-emerald/10 text-emerald border-emerald/20" 
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {hasPortalAccess ? (
+                      <>
+                        <ShieldCheck className="h-3 w-3" />
+                        <span className="hidden sm:inline">Accès actif</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldX className="h-3 w-3" />
+                        <span className="hidden sm:inline">Sans accès</span>
+                      </>
+                    )}
+                  </Badge>
+                )}
               </div>
 
               {/* Contact */}
@@ -164,6 +197,54 @@ function TenantCard({ tenant, onEdit, onView, onDelete, canEdit, isDeleting }: T
                   <span className="hidden xs:inline">Détails</span>
                 </Button>
                 <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
+                
+                {/* Portal Access Buttons - Only for agency owner */}
+                {isAgencyOwner && (
+                  hasPortalAccess ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                          disabled={isRevokingAccess}
+                        >
+                          {isRevokingAccess ? (
+                            <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
+                          ) : (
+                            <ShieldX className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          )}
+                          <span className="hidden sm:inline">Révoquer</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Révoquer l'accès portail ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Le locataire <strong>{tenant.name}</strong> ne pourra plus se connecter au portail locataire.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onRevokeAccess(tenant)}>
+                            Révoquer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCreateAccess(tenant)}
+                      className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 text-emerald hover:text-emerald hover:bg-emerald/10"
+                    >
+                      <KeyRound className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span className="hidden sm:inline">Créer accès</span>
+                    </Button>
+                  )
+                )}
+                
                 {canEdit && (
                   <>
                     <Button
@@ -313,8 +394,11 @@ export default function Tenants() {
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [accessDialogTenant, setAccessDialogTenant] = useState<TenantWithDetails | null>(null);
+  const [accessDialogOpen, setAccessDialogOpen] = useState(false);
   const { data: tenants, isLoading, error } = useTenants();
   const deleteTenantMutation = useDeleteTenant();
+  const revokeAccessMutation = useRevokeTenantPortalAccess();
   const { toast } = useToast();
   const { canCreate, canEdit } = usePermissions();
   const { data: assignableUsers = [] } = useAssignableUsers();
@@ -345,13 +429,34 @@ export default function Tenants() {
     }
   };
 
+  const handleCreateAccess = (tenant: TenantWithDetails) => {
+    setAccessDialogTenant(tenant);
+    setAccessDialogOpen(true);
+  };
+
+  const handleRevokeAccess = async (tenant: TenantWithDetails) => {
+    try {
+      await revokeAccessMutation.mutateAsync(tenant.id);
+      toast({
+        title: "Accès révoqué",
+        description: `L'accès portail de ${tenant.name} a été désactivé.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de révoquer l'accès.",
+      });
+    }
+  };
+
 
   const filteredTenants = (tenants || []).filter(tenant => {
     const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.property?.title?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const assignedTo = (tenant as any).assigned_to;
+    const assignedTo = tenant.assigned_to;
     const matchesAssigned = assignedFilter === "all"
       ? true
       : assignedFilter === "unassigned"
@@ -505,8 +610,12 @@ export default function Tenants() {
                   onEdit={handleEditTenant}
                   onView={handleViewTenant}
                   onDelete={handleDeleteTenant}
+                  onCreateAccess={handleCreateAccess}
+                  onRevokeAccess={handleRevokeAccess}
                   canEdit={canEdit}
                   isDeleting={deleteTenantMutation.isPending}
+                  isRevokingAccess={revokeAccessMutation.isPending}
+                  isAgencyOwner={isAgencyOwner}
                 />
               ))}
             </div>
@@ -531,6 +640,19 @@ export default function Tenants() {
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
         />
+
+        {/* Portal Access Dialog */}
+        {accessDialogTenant && (
+          <TenantPortalAccessDialog
+            open={accessDialogOpen}
+            onOpenChange={setAccessDialogOpen}
+            tenant={{
+              id: accessDialogTenant.id,
+              name: accessDialogTenant.name,
+              email: accessDialogTenant.email,
+            }}
+          />
+        )}
 
       </div>
     </DashboardLayout>

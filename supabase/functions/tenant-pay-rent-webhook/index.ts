@@ -2,8 +2,55 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-fedapay-signature",
 };
+
+// Verify FedaPay webhook signature
+async function verifyFedaPaySignature(
+  payload: string,
+  signature: string | null,
+  secretKey: string
+): Promise<boolean> {
+  if (!signature) {
+    console.warn("No signature provided in webhook request");
+    return false;
+  }
+
+  try {
+    // FedaPay uses HMAC-SHA256 for signature
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secretKey),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    const signatureBytes = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      encoder.encode(payload)
+    );
+
+    const expectedSignature = Array.from(new Uint8Array(signatureBytes))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // FedaPay signature format may include prefix like "sha256="
+    const cleanSignature = signature.replace(/^sha256=/, "").toLowerCase();
+    const isValid = expectedSignature.toLowerCase() === cleanSignature;
+
+    if (!isValid) {
+      console.warn("Signature mismatch:", { expected: expectedSignature, received: cleanSignature });
+    }
+
+    return isValid;
+  } catch (error) {
+    console.error("Error verifying signature:", error);
+    return false;
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,9 +60,29 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const fedapaySecretKey = Deno.env.get("FEDAPAY_SECRET_KEY");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body = await req.json();
+    // Get raw body for signature verification
+    const rawBody = await req.text();
+    const signature = req.headers.get("X-FedaPay-Signature") || req.headers.get("x-fedapay-signature");
+
+    // Verify signature if secret key is configured
+    if (fedapaySecretKey) {
+      const isValid = await verifyFedaPaySignature(rawBody, signature, fedapaySecretKey);
+      if (!isValid) {
+        console.error("Invalid FedaPay webhook signature");
+        return new Response(
+          JSON.stringify({ error: "Invalid signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log("FedaPay webhook signature verified successfully");
+    } else {
+      console.warn("FEDAPAY_SECRET_KEY not configured, skipping signature verification");
+    }
+
+    const body = JSON.parse(rawBody);
     console.log("Tenant rent webhook received:", JSON.stringify(body));
 
     // FedaPay sends event in 'entity' field

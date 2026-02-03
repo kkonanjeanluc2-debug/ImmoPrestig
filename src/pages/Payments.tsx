@@ -489,6 +489,7 @@ export default function Payments() {
                                     dueDate={payment.due_date}
                                     method={payment.method || undefined}
                                     paymentMonths={(payment as any).payment_months || undefined}
+                                    isTenantView={isLocataire}
                                   />
                                 )}
                                 {payment.status !== "paid" && canEdit && (

@@ -4,6 +4,7 @@ import { TenantWithDetails } from "@/hooks/useTenants";
 import { AddEtatDesLieuxDialog } from "./AddEtatDesLieuxDialog";
 import { EtatsDesLieuxList } from "./EtatsDesLieuxList";
 import { ClipboardCheck } from "lucide-react";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 interface TenantEtatsDesLieuxTabProps {
   tenant: TenantWithDetails;
@@ -11,8 +12,10 @@ interface TenantEtatsDesLieuxTabProps {
 
 export function TenantEtatsDesLieuxTab({ tenant }: TenantEtatsDesLieuxTabProps) {
   const { data: etats = [], isLoading } = useEtatsDesLieux(tenant.id);
+  const { data: userRole } = useCurrentUserRole();
 
   const hasEntryEtat = etats.some(e => e.type === "entree");
+  const isLocataire = userRole?.role === "locataire";
 
   return (
     <Card>
@@ -21,7 +24,9 @@ export function TenantEtatsDesLieuxTab({ tenant }: TenantEtatsDesLieuxTabProps) 
           <ClipboardCheck className="h-5 w-5" />
           États des lieux
         </CardTitle>
-        <AddEtatDesLieuxDialog tenant={tenant} existingEntryEtat={hasEntryEtat} />
+        {!isLocataire && (
+          <AddEtatDesLieuxDialog tenant={tenant} existingEntryEtat={hasEntryEtat} />
+        )}
       </CardHeader>
       <CardContent>
         <EtatsDesLieuxList etats={etats} isLoading={isLoading} />

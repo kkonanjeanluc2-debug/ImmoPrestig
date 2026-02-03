@@ -73,8 +73,23 @@ export const useCreateSignature = () => {
 
       if (error) throw error;
 
-      // Mettre à jour le statut de signature du contrat
-      const newStatus = data.signer_type === "landlord" ? "landlord_signed" : "fully_signed";
+      // Récupérer le statut actuel du contrat pour déterminer le nouveau statut
+      const { data: contractData } = await supabase
+        .from("contracts")
+        .select("signature_status")
+        .eq("id", data.contract_id)
+        .single();
+
+      const currentStatus = contractData?.signature_status || "pending";
+      let newStatus: string;
+
+      if (data.signer_type === "landlord") {
+        // Le bailleur signe
+        newStatus = currentStatus === "tenant_signed" ? "fully_signed" : "landlord_signed";
+      } else {
+        // Le locataire signe
+        newStatus = currentStatus === "landlord_signed" ? "fully_signed" : "tenant_signed";
+      }
       
       await supabase
         .from("contracts")
@@ -193,11 +208,22 @@ export const useCompleteTenantSignature = () => {
 
       if (error) throw error;
 
-      // Mettre à jour le statut du contrat
+      // Mettre à jour le statut du contrat en fonction de la signature du bailleur
       if (data?.contract_id) {
+        // Récupérer le statut actuel
+        const { data: contractData } = await supabase
+          .from("contracts")
+          .select("signature_status")
+          .eq("id", data.contract_id)
+          .single();
+
+        const currentStatus = contractData?.signature_status || "pending";
+        // Si le bailleur a déjà signé, passer à fully_signed, sinon tenant_signed
+        const newStatus = currentStatus === "landlord_signed" ? "fully_signed" : "tenant_signed";
+
         await supabase
           .from("contracts")
-          .update({ signature_status: "fully_signed" })
+          .update({ signature_status: newStatus })
           .eq("id", data.contract_id);
       }
 

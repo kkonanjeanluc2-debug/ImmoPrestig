@@ -75,6 +75,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 const signatureStatusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
   pending: { label: "Non signé", variant: "outline", icon: <PenTool className="h-3 w-3" /> },
   landlord_signed: { label: "Signé bailleur", variant: "secondary", icon: <Clock className="h-3 w-3" /> },
+  tenant_signed: { label: "Signé locataire", variant: "secondary", icon: <Clock className="h-3 w-3" /> },
   fully_signed: { label: "Signé", variant: "default", icon: <CheckCircle2 className="h-3 w-3" /> },
 };
 

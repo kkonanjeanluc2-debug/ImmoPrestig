@@ -62,3 +62,9 @@ verify_jwt = false
 
 [functions.send-owner-monthly-report]
 verify_jwt = false
+
+[functions.create-tenant-portal-access]
+verify_jwt = false
+
+[functions.revoke-tenant-portal-access]
+verify_jwt = false

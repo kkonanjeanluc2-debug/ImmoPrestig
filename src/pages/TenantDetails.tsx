@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
   Mail, 
@@ -25,7 +26,10 @@ import {
   AlertCircle,
   Download,
   MessageCircle,
-  DoorOpen
+  DoorOpen,
+  ClipboardCheck,
+  KeyRound,
+  ShieldOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -39,6 +43,10 @@ import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog"
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
+import { TenantEtatsDesLieuxTab } from "@/components/etat-des-lieux/TenantEtatsDesLieuxTab";
+import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
+import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";
+import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -78,6 +86,9 @@ const TenantDetails = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [whatsappHistoryOpen, setWhatsappHistoryOpen] = useState(false);
   const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null);
+  const [portalAccessDialogOpen, setPortalAccessDialogOpen] = useState(false);
+  const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
+  const revokeAccess = useRevokeTenantPortalAccess();
 
   const tenant = tenants.find(t => t.id === id) as TenantWithDetails | undefined;
   
@@ -110,6 +121,17 @@ const TenantDetails = () => {
       navigate("/tenants");
     } catch (error) {
       toast.error("Erreur lors de la suppression");
+    }
+  };
+
+  const handleRevokeAccess = async () => {
+    if (!tenant) return;
+    try {
+      await revokeAccess.mutateAsync(tenant.id);
+      toast.success("Accès portail révoqué avec succès");
+      setRevokeDialogOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la révocation");
     }
   };
 
@@ -172,13 +194,19 @@ const TenantDetails = () => {
                 </span>
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
                     {tenant.name}
                   </h1>
                   <Badge variant="outline" className={cn("w-fit", statusConfig.className)}>
                     {statusConfig.label}
                   </Badge>
+                  {tenant.has_portal_access && (
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                      <KeyRound className="h-3 w-3 mr-1" />
+                      Accès portail
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-muted-foreground flex items-center gap-1.5 mt-1">
                   <Mail className="h-4 w-4" />
@@ -199,6 +227,30 @@ const TenantDetails = () => {
               tenantId={tenant.id}
               tenantName={tenant.name}
             />
+            {/* Portal Access Button */}
+            {canEdit && (
+              tenant.has_portal_access ? (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setRevokeDialogOpen(true)}
+                  className="text-amber-600 border-amber-600/30 hover:bg-amber-50 dark:hover:bg-amber-950"
+                >
+                  <ShieldOff className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Révoquer accès</span>
+                </Button>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPortalAccessDialogOpen(true)}
+                  className="text-primary"
+                >
+                  <KeyRound className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Créer accès</span>
+                </Button>
+              )
+            )}
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="h-4 w-4 sm:mr-2" />
@@ -270,10 +322,27 @@ const TenantDetails = () => {
           </Card>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Charts & Payments */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Main Content with Tabs */}
+        <Tabs defaultValue="payments" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex mb-6">
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
+              Paiements
+            </TabsTrigger>
+            <TabsTrigger value="contracts" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Contrats
+            </TabsTrigger>
+            <TabsTrigger value="etats-des-lieux" className="flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4" />
+              États des lieux
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="payments">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Charts & Payments */}
+              <div className="lg:col-span-2 space-y-6">
             {/* Payment Evolution Chart */}
             <TenantPaymentChart payments={tenant.payments || []} />
 
@@ -641,7 +710,17 @@ const TenantDetails = () => {
             </Card>
           </div>
         </div>
-      </div>
+      </TabsContent>
+
+          <TabsContent value="contracts">
+            <TenantContractsTab tenantId={tenant.id} tenantName={tenant.name} />
+          </TabsContent>
+
+          <TabsContent value="etats-des-lieux">
+            <TenantEtatsDesLieuxTab tenant={tenant} />
+          </TabsContent>
+    </Tabs>
+  </div>
 
       {/* Edit Dialog */}
       <EditTenantDialog
@@ -675,6 +754,36 @@ const TenantDetails = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Revoke Access Dialog */}
+      <AlertDialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Révoquer l'accès portail ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir révoquer l'accès portail de "{tenant.name}" ? 
+              Le locataire ne pourra plus se connecter pour consulter ses informations.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRevokeAccess}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+              disabled={revokeAccess.isPending}
+            >
+              {revokeAccess.isPending ? "Révocation..." : "Révoquer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Portal Access Dialog */}
+      <TenantPortalAccessDialog
+        open={portalAccessDialogOpen}
+        onOpenChange={setPortalAccessDialogOpen}
+        tenant={{ id: tenant.id, name: tenant.name, email: tenant.email }}
+      />
     </DashboardLayout>
   );
 };

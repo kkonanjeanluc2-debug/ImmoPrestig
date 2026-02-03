@@ -62,7 +62,6 @@ const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   admin: <Crown className="h-4 w-4 text-amber-600" />,
   gestionnaire: <UserCog className="h-4 w-4 text-blue-600" />,
   lecture_seule: <Eye className="h-4 w-4 text-gray-600" />,
-  locataire: <Users className="h-4 w-4 text-orange-600" />,
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
@@ -70,7 +69,6 @@ const ROLE_COLORS: Record<AppRole, string> = {
   admin: "bg-amber-100 text-amber-800 border-amber-300",
   gestionnaire: "bg-blue-100 text-blue-800 border-blue-300",
   lecture_seule: "bg-gray-100 text-gray-800 border-gray-300",
-  locataire: "bg-orange-100 text-orange-800 border-orange-300",
 };
 
 const STATUS_LABELS: Record<string, string> = {

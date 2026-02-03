@@ -433,7 +433,7 @@ export function AssignmentsSettings() {
                       </div>
                       <div className="sm:w-48 pl-8 sm:pl-0">
                         <AssignUserSelect
-                          value={tenant.assigned_to}
+                          value={(tenant as any).assigned_to}
                           onValueChange={(value) => handleTenantAssignment(tenant.id, value)}
                           placeholder="Non assigné"
                         />

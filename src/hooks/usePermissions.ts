@@ -44,14 +44,6 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">>
     canManageUsers: false,
     isReadOnly: true,
   },
-  locataire: {
-    canCreate: false,
-    canEdit: false,
-    canUpdate: false,
-    canDelete: false,
-    canManageUsers: false,
-    isReadOnly: true,
-  },
 };
 
 export function usePermissions(): Permissions {

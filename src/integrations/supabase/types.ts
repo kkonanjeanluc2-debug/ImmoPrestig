@@ -925,113 +925,6 @@ export type Database = {
         }
         Relationships: []
       }
-      etats_des_lieux: {
-        Row: {
-          contract_id: string | null
-          created_at: string
-          electricity_meter: number | null
-          gas_meter: number | null
-          general_comments: string | null
-          general_condition: string | null
-          id: string
-          inspection_date: string
-          keys_delivered: Json | null
-          landlord_signature: string | null
-          landlord_signed_at: string | null
-          photos: string[] | null
-          property_id: string | null
-          rooms: Json | null
-          status: string
-          tenant_id: string
-          tenant_signature: string | null
-          tenant_signed_at: string | null
-          type: string
-          unit_id: string | null
-          updated_at: string
-          user_id: string
-          water_meter: number | null
-        }
-        Insert: {
-          contract_id?: string | null
-          created_at?: string
-          electricity_meter?: number | null
-          gas_meter?: number | null
-          general_comments?: string | null
-          general_condition?: string | null
-          id?: string
-          inspection_date?: string
-          keys_delivered?: Json | null
-          landlord_signature?: string | null
-          landlord_signed_at?: string | null
-          photos?: string[] | null
-          property_id?: string | null
-          rooms?: Json | null
-          status?: string
-          tenant_id: string
-          tenant_signature?: string | null
-          tenant_signed_at?: string | null
-          type: string
-          unit_id?: string | null
-          updated_at?: string
-          user_id: string
-          water_meter?: number | null
-        }
-        Update: {
-          contract_id?: string | null
-          created_at?: string
-          electricity_meter?: number | null
-          gas_meter?: number | null
-          general_comments?: string | null
-          general_condition?: string | null
-          id?: string
-          inspection_date?: string
-          keys_delivered?: Json | null
-          landlord_signature?: string | null
-          landlord_signed_at?: string | null
-          photos?: string[] | null
-          property_id?: string | null
-          rooms?: Json | null
-          status?: string
-          tenant_id?: string
-          tenant_signature?: string | null
-          tenant_signed_at?: string | null
-          type?: string
-          unit_id?: string | null
-          updated_at?: string
-          user_id?: string
-          water_meter?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "etats_des_lieux_contract_id_fkey"
-            columns: ["contract_id"]
-            isOneToOne: false
-            referencedRelation: "contracts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "etats_des_lieux_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "etats_des_lieux_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "etats_des_lieux_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "property_units"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       ilots: {
         Row: {
           created_at: string
@@ -2243,11 +2136,9 @@ export type Database = {
           email: string
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
-          has_portal_access: boolean
           id: string
           name: string
           phone: string | null
-          portal_user_id: string | null
           profession: string | null
           property_id: string | null
           unit_id: string | null
@@ -2265,11 +2156,9 @@ export type Database = {
           email: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
-          has_portal_access?: boolean
           id?: string
           name: string
           phone?: string | null
-          portal_user_id?: string | null
           profession?: string | null
           property_id?: string | null
           unit_id?: string | null
@@ -2287,11 +2176,9 @@ export type Database = {
           email?: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
-          has_portal_access?: boolean
           id?: string
           name?: string
           phone?: string | null
-          portal_user_id?: string | null
           profession?: string | null
           property_id?: string | null
           unit_id?: string | null
@@ -2630,15 +2517,7 @@ export type Database = {
         Returns: boolean
       }
       can_agency_add_member: { Args: { p_agency_id: string }; Returns: boolean }
-      can_agency_add_tenant_portal: {
-        Args: { p_agency_id: string }
-        Returns: boolean
-      }
       get_agency_member_count: {
-        Args: { p_agency_id: string }
-        Returns: number
-      }
-      get_agency_tenant_portal_count: {
         Args: { p_agency_id: string }
         Returns: number
       }
@@ -2663,12 +2542,7 @@ export type Database = {
     }
     Enums: {
       account_type: "agence" | "proprietaire"
-      app_role:
-        | "admin"
-        | "gestionnaire"
-        | "lecture_seule"
-        | "super_admin"
-        | "locataire"
+      app_role: "admin" | "gestionnaire" | "lecture_seule" | "super_admin"
       interest_level: "faible" | "moyen" | "eleve"
       payment_type: "comptant" | "echelonne"
       plot_status: "disponible" | "reserve" | "vendu"
@@ -2809,13 +2683,7 @@ export const Constants = {
   public: {
     Enums: {
       account_type: ["agence", "proprietaire"],
-      app_role: [
-        "admin",
-        "gestionnaire",
-        "lecture_seule",
-        "super_admin",
-        "locataire",
-      ],
+      app_role: ["admin", "gestionnaire", "lecture_seule", "super_admin"],
       interest_level: ["faible", "moyen", "eleve"],
       payment_type: ["comptant", "echelonne"],
       plot_status: ["disponible", "reserve", "vendu"],

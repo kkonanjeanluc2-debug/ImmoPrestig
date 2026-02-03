@@ -2247,6 +2247,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          portal_user_id: string | null
           profession: string | null
           property_id: string | null
           unit_id: string | null
@@ -2268,6 +2269,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          portal_user_id?: string | null
           profession?: string | null
           property_id?: string | null
           unit_id?: string | null
@@ -2289,6 +2291,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          portal_user_id?: string | null
           profession?: string | null
           property_id?: string | null
           unit_id?: string | null

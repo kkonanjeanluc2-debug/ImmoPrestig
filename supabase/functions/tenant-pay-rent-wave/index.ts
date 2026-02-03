@@ -112,21 +112,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify agency has configured Wave as their mobile money provider
-    if (agency.mobile_money_provider !== "wave") {
-      return new Response(
-        JSON.stringify({ error: "L'agence n'utilise pas Wave pour recevoir les paiements" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!agency.mobile_money_number) {
-      return new Response(
-        JSON.stringify({ error: "L'agence n'a pas configuré de numéro Wave pour recevoir les paiements" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // Get Wave API key
     const waveApiKey = Deno.env.get("WAVE_API_KEY");
     if (!waveApiKey) {

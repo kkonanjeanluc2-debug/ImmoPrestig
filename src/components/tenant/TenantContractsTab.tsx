@@ -198,9 +198,9 @@ function ContractCard({ contract, tenantName, isLocataire, onSign }: ContractCar
   const tenantSignature = signatures.find(
     (s) => s.signer_type === "tenant" && (s.signature_data || s.signature_text)
   );
-  const pendingTenantRequest = signatures.find(
-    (s) => s.signer_type === "tenant" && !s.signature_data && !s.signature_text
-  );
+
+  // For tenants: they can sign directly if landlord has signed and they haven't
+  // No need for invitation - direct signing is allowed
 
   const canTenantSign = isLocataire && landlordSignature && !tenantSignature;
   const isFullySigned = !!(landlordSignature && tenantSignature);
@@ -347,9 +347,7 @@ function ContractCard({ contract, tenantName, isLocataire, onSign }: ContractCar
               <p className="text-xs text-muted-foreground truncate">
                 {tenantSignature
                   ? `Signé le ${format(new Date(tenantSignature.signed_at), "dd/MM/yyyy à HH:mm", { locale: fr })}`
-                  : pendingTenantRequest
-                  ? "Invitation envoyée"
-                  : "En attente"}
+                  : "En attente de signature"}
               </p>
             </div>
           </div>

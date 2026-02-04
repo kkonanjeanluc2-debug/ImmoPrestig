@@ -85,11 +85,12 @@ const Contracts = () => {
   const { data: properties } = useProperties();
   const { data: tenants } = useTenants();
   const { data: owners } = useOwners();
-  const { data: userRole } = useCurrentUserRole();
+  const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const updateContract = useUpdateContract();
   const expireContract = useExpireContract();
   
   const isLocataire = userRole?.role === "locataire";
+  const canManageContracts = !roleLoading && !isLocataire;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -448,7 +449,7 @@ const Contracts = () => {
                               PDF
                             </Button>
                             {/* Renew Button - Hidden for tenants */}
-                            {!isLocataire && (
+                            {canManageContracts && (
                             <Dialog open={renewDialogOpen && selectedContract?.id === contract.id} onOpenChange={(open) => {
                               setRenewDialogOpen(open);
                               if (!open) setSelectedContract(null);
@@ -530,7 +531,7 @@ const Contracts = () => {
                             )}
 
                             {/* Terminate Button - Hidden for tenants */}
-                            {!isLocataire && contract.status === "active" && (
+                            {canManageContracts && contract.status === "active" && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="destructive" size="sm">

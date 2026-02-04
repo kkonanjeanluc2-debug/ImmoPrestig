@@ -23,8 +23,9 @@ import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 const Settings = () => {
   const { isSuperAdmin } = useIsSuperAdmin();
-  const { hasFeature } = useFeatureAccess();
+  const { hasFeature, planName } = useFeatureAccess();
   const hasVentesImmobilieres = hasFeature("ventes_immobilieres");
+  const isFreePlan = planName === "Gratuit";
   const [activeTab, setActiveTab] = useState(isSuperAdmin ? "profile" : "agency");
 
   // Super Admin: simplified settings
@@ -119,20 +120,24 @@ const Settings = () => {
               <Paintbrush className="h-4 w-4" />
               <span>Couleurs</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="receipts"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <FileText className="h-4 w-4" />
-              <span>Quittances</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="contracts"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <ScrollText className="h-4 w-4" />
-              <span>Contrats</span>
-            </TabsTrigger>
+            {!isFreePlan && (
+              <TabsTrigger
+                value="receipts"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <FileText className="h-4 w-4" />
+                <span>Quittances</span>
+              </TabsTrigger>
+            )}
+            {!isFreePlan && (
+              <TabsTrigger
+                value="contracts"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <ScrollText className="h-4 w-4" />
+                <span>Contrats</span>
+              </TabsTrigger>
+            )}
             {hasVentesImmobilieres && (
               <TabsTrigger
                 value="sale-contracts"
@@ -191,20 +196,24 @@ const Settings = () => {
               <History className="h-4 w-4" />
               <span>Historique</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="whatsapp"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span>WhatsApp</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="automation"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <Settings2 className="h-4 w-4" />
-              <span>Automatisations</span>
-            </TabsTrigger>
+            {!isFreePlan && (
+              <TabsTrigger
+                value="whatsapp"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>WhatsApp</span>
+              </TabsTrigger>
+            )}
+            {!isFreePlan && (
+              <TabsTrigger
+                value="automation"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Settings2 className="h-4 w-4" />
+                <span>Automatisations</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger
               value="security"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -226,13 +235,17 @@ const Settings = () => {
             <BrandingSettings />
           </TabsContent>
 
-          <TabsContent value="receipts">
-            <ReceiptTemplateManager />
-          </TabsContent>
+          {!isFreePlan && (
+            <TabsContent value="receipts">
+              <ReceiptTemplateManager />
+            </TabsContent>
+          )}
 
-          <TabsContent value="contracts">
-            <ContractTemplateManager />
-          </TabsContent>
+          {!isFreePlan && (
+            <TabsContent value="contracts">
+              <ContractTemplateManager />
+            </TabsContent>
+          )}
 
           {hasVentesImmobilieres && (
             <TabsContent value="sale-contracts">
@@ -268,13 +281,17 @@ const Settings = () => {
             <NotificationHistory />
           </TabsContent>
 
-          <TabsContent value="whatsapp">
-            <WhatsAppSettings />
-          </TabsContent>
+          {!isFreePlan && (
+            <TabsContent value="whatsapp">
+              <WhatsAppSettings />
+            </TabsContent>
+          )}
 
-          <TabsContent value="automation">
-            <AutomationSettings />
-          </TabsContent>
+          {!isFreePlan && (
+            <TabsContent value="automation">
+              <AutomationSettings />
+            </TabsContent>
+          )}
 
           <TabsContent value="security">
             <SecuritySettings />

@@ -59,6 +59,7 @@ import { useContracts, useUpdateContract, useExpireContract } from "@/hooks/useC
 import { useProperties } from "@/hooks/useProperties";
 import { useTenants } from "@/hooks/useTenants";
 import { useOwners } from "@/hooks/useOwners";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { format, differenceInDays, addMonths, addYears } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -84,8 +85,11 @@ const Contracts = () => {
   const { data: properties } = useProperties();
   const { data: tenants } = useTenants();
   const { data: owners } = useOwners();
+  const { data: userRole } = useCurrentUserRole();
   const updateContract = useUpdateContract();
   const expireContract = useExpireContract();
+  
+  const isLocataire = userRole?.role === "locataire";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -443,7 +447,8 @@ const Contracts = () => {
                               <Download className="h-4 w-4 mr-1" />
                               PDF
                             </Button>
-                            {/* Renew Button */}
+                            {/* Renew Button - Hidden for tenants */}
+                            {!isLocataire && (
                             <Dialog open={renewDialogOpen && selectedContract?.id === contract.id} onOpenChange={(open) => {
                               setRenewDialogOpen(open);
                               if (!open) setSelectedContract(null);
@@ -522,9 +527,10 @@ const Contracts = () => {
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>
+                            )}
 
-                            {/* Terminate Button */}
-                            {contract.status === "active" && (
+                            {/* Terminate Button - Hidden for tenants */}
+                            {!isLocataire && contract.status === "active" && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="destructive" size="sm">

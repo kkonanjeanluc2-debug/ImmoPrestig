@@ -13,10 +13,12 @@ import { Building2, Receipt, Calendar, Plus, Users, UserSearch } from "lucide-re
 import { useAcquereurs } from "@/hooks/useAcquereurs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/usePermissions";
+
 export default function VentesImmobilieres() {
   const [activeTab, setActiveTab] = useState("biens");
   const { data: acquereurs } = useAcquereurs();
-  const { canCreate } = usePermissions();
+  const { canCreate, role } = usePermissions();
+  const isLocataire = role === "locataire";
 
   return (
     <DashboardLayout>
@@ -102,9 +104,9 @@ export default function VentesImmobilieres() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {acquereurs?.map((acq) => (
-                      <AcquereurDetailsDialog key={acq.id} acquereur={acq}>
-                        <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                    {acquereurs?.map((acq) => {
+                      const cardContent = (
+                        <Card className={`p-4 transition-colors ${!isLocataire ? 'cursor-pointer hover:bg-muted/50' : ''}`}>
                           <div className="flex items-start gap-3">
                             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                               <Users className="h-5 w-5 text-primary" />
@@ -120,8 +122,18 @@ export default function VentesImmobilieres() {
                             </div>
                           </div>
                         </Card>
-                      </AcquereurDetailsDialog>
-                    ))}
+                      );
+
+                      if (isLocataire) {
+                        return <div key={acq.id}>{cardContent}</div>;
+                      }
+
+                      return (
+                        <AcquereurDetailsDialog key={acq.id} acquereur={acq}>
+                          {cardContent}
+                        </AcquereurDetailsDialog>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>

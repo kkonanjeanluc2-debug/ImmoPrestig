@@ -11,6 +11,7 @@ export interface ManagementType {
   percentage: number;
   type: "gestion_locative" | "commission_vente";
   is_default: boolean;
+  contract_template_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -21,6 +22,7 @@ export interface ManagementTypeInput {
   percentage: number;
   type: "gestion_locative" | "commission_vente";
   is_default?: boolean;
+  contract_template_id?: string | null;
 }
 
 export function useManagementTypes() {
@@ -70,6 +72,7 @@ export function useCreateManagementType() {
           percentage: input.percentage,
           type: input.type,
           is_default: input.is_default || false,
+          contract_template_id: input.contract_template_id || null,
         })
         .select()
         .single();
@@ -114,6 +117,7 @@ export function useUpdateManagementType() {
           percentage: input.percentage,
           type: input.type,
           is_default: input.is_default || false,
+          contract_template_id: input.contract_template_id || null,
         })
         .eq("id", id)
         .select()

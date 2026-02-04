@@ -235,16 +235,16 @@ export function ManagementTypesSettings() {
                   <div className="space-y-2">
                     <Label htmlFor="contract_template">Modèle de contrat</Label>
                     <Select
-                      value={formData.contract_template_id}
+                      value={formData.contract_template_id || "none"}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, contract_template_id: value })
+                        setFormData({ ...formData, contract_template_id: value === "none" ? "" : value })
                       }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un modèle (optionnel)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Aucun modèle</SelectItem>
+                        <SelectItem value="none">Aucun modèle</SelectItem>
                         {contractTemplates.map((template) => (
                           <SelectItem key={template.id} value={template.id}>
                             <div className="flex items-center gap-2">

@@ -29,9 +29,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateSelect } from "@/components/ui/date-select";
-import { Plus, Loader2, Percent, User, CreditCard } from "lucide-react";
+import { Plus, Loader2, Percent, User, CreditCard, FileText } from "lucide-react";
 import { useCreateOwner } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";
+import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { toast } from "sonner";
 
 const ownerSchema = z.object({
@@ -41,6 +42,7 @@ const ownerSchema = z.object({
   address: z.string().trim().max(500, "L'adresse doit contenir moins de 500 caractères").optional().or(z.literal("")),
   status: z.enum(["actif", "inactif"]),
   management_type_id: z.string().optional().or(z.literal("")),
+  default_contract_template_id: z.string().optional().or(z.literal("")),
   birth_date: z.date().optional(),
   birth_place: z.string().trim().max(100, "Le lieu de naissance doit contenir moins de 100 caractères").optional().or(z.literal("")),
   profession: z.string().trim().max(100, "La profession doit contenir moins de 100 caractères").optional().or(z.literal("")),
@@ -53,6 +55,7 @@ export function AddOwnerDialog() {
   const [open, setOpen] = useState(false);
   const createOwner = useCreateOwner();
   const { data: managementTypes = [] } = useManagementTypes();
+  const { data: contractTemplates = [] } = useContractTemplates();
 
   // Get default management type
   const defaultManagementType = managementTypes.find((t) => t.is_default);
@@ -66,6 +69,7 @@ export function AddOwnerDialog() {
       address: "",
       status: "actif",
       management_type_id: "",
+      default_contract_template_id: "",
       birth_date: undefined,
       birth_place: "",
       profession: "",
@@ -89,6 +93,7 @@ export function AddOwnerDialog() {
         address: data.address || null,
         status: data.status,
         management_type_id: data.management_type_id || null,
+        default_contract_template_id: data.default_contract_template_id || null,
         birth_date: data.birth_date ? format(data.birth_date, "yyyy-MM-dd") : null,
         birth_place: data.birth_place || null,
         profession: data.profession || null,
@@ -314,6 +319,44 @@ export function AddOwnerDialog() {
                     </Select>
                     <FormDescription>
                       Pourcentage de commission applicable pour ce propriétaire
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {contractTemplates.length > 0 && (
+              <FormField
+                control={form.control}
+                name="default_contract_template_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Modèle de contrat par défaut
+                    </FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                      value={field.value || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un modèle de contrat" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Aucun (utiliser le modèle par défaut)</SelectItem>
+                        {contractTemplates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                            {template.is_default && " (par défaut)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Ce modèle sera utilisé pour générer les contrats des locataires de ce propriétaire
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

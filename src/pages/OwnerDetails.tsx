@@ -32,13 +32,15 @@ import {
   Percent,
   Wrench,
   FileText,
-  Send
+  Send,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
 import { MonthlyReportPeriodDialog } from "@/components/owner/MonthlyReportPeriodDialog";
 import { OwnerPropertiesList } from "@/components/owner/OwnerPropertiesList";
+import { OwnerTenantsList } from "@/components/owner/OwnerTenantsList";
 import { OwnerRevenueChart } from "@/components/owner/OwnerRevenueChart";
 import { InterventionsList } from "@/components/intervention/InterventionsList";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -487,12 +489,16 @@ const OwnerDetails = () => {
             {/* Revenue Chart */}
             <OwnerRevenueChart payments={payments} tenantIds={ownerTenantIds} />
 
-            {/* Tabs for Properties and Interventions */}
+            {/* Tabs for Properties, Tenants and Interventions */}
             <Tabs defaultValue="properties" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="properties" className="gap-2">
                   <Building2 className="h-4 w-4" />
                   Biens ({totalProperties})
+                </TabsTrigger>
+                <TabsTrigger value="tenants" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  Locataires ({ownerTenants.length})
                 </TabsTrigger>
                 <TabsTrigger value="interventions" className="gap-2">
                   <Wrench className="h-4 w-4" />
@@ -518,6 +524,10 @@ const OwnerDetails = () => {
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="tenants" className="mt-4">
+                <OwnerTenantsList tenants={ownerTenants} properties={ownerProperties} />
               </TabsContent>
               
               <TabsContent value="interventions" className="mt-4">

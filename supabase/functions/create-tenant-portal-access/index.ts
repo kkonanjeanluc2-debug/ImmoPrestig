@@ -177,9 +177,27 @@ Deno.serve(async (req) => {
     let userId: string;
 
     if (existingUsers && existingUsers.length > 0) {
-      // User already exists
+      // User already exists - update their password
       userId = existingUsers[0].user_id;
-      console.log("User already exists:", userId);
+      console.log("User already exists, updating password:", userId);
+      
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: tenant.name,
+          is_tenant: true,
+        },
+      });
+
+      if (updateError) {
+        console.error("Error updating user password:", updateError);
+        return new Response(
+          JSON.stringify({ error: `Erreur lors de la mise à jour du mot de passe: ${updateError.message}` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log("Password updated successfully for user:", userId);
     } else {
       // Create new user
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({

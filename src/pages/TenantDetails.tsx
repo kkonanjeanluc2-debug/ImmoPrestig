@@ -31,6 +31,8 @@ import {
   KeyRound,
   ShieldOff
 } from "lucide-react";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EditTenantDialog } from "@/components/tenant/EditTenantDialog";
@@ -77,6 +79,8 @@ const paymentStatusConfig = {
 const TenantDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
   const { data: activityLogs = [] } = useActivityLogs();
   const { data: agency } = useAgency();
@@ -90,7 +94,17 @@ const TenantDetails = () => {
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
   const revokeAccess = useRevokeTenantPortalAccess();
 
-  const tenant = tenants.find(t => t.id === id) as TenantWithDetails | undefined;
+  const isLocataire = userRole?.role === "locataire";
+
+  // For tenants: find their own tenant record using portal_user_id
+  const ownTenant = isLocataire 
+    ? tenants.find(t => t.portal_user_id === user?.id) as TenantWithDetails | undefined
+    : null;
+
+  // Use own tenant for locataires, otherwise use id from URL
+  const tenant = isLocataire 
+    ? ownTenant 
+    : tenants.find(t => t.id === id) as TenantWithDetails | undefined;
   
   // Get active contract
   const activeContract = tenant?.contracts?.find(c => c.status === 'active') || tenant?.contracts?.[0];
@@ -135,7 +149,7 @@ const TenantDetails = () => {
     }
   };
 
-  if (tenantsLoading) {
+  if (tenantsLoading || roleLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-24">
@@ -143,6 +157,12 @@ const TenantDetails = () => {
         </div>
       </DashboardLayout>
     );
+  }
+
+  // For tenants: if they try to access another tenant's page, redirect to their own
+  if (isLocataire && id && ownTenant && id !== ownTenant.id) {
+    navigate(`/tenants/${ownTenant.id}`, { replace: true });
+    return null;
   }
 
   if (!tenant) {
@@ -184,9 +204,11 @@ const TenantDetails = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={() => navigate("/tenants")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
+            {!isLocataire && (
+              <Button variant="outline" size="icon" onClick={() => navigate("/tenants")}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
             <div className="flex items-center gap-4">
               <div className="h-14 w-14 rounded-full bg-navy flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-xl">
@@ -201,7 +223,7 @@ const TenantDetails = () => {
                   <Badge variant="outline" className={cn("w-fit", statusConfig.className)}>
                     {statusConfig.label}
                   </Badge>
-                  {tenant.has_portal_access && (
+                  {!isLocataire && tenant.has_portal_access && (
                     <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                       <KeyRound className="h-3 w-3 mr-1" />
                       Accès portail
@@ -215,55 +237,58 @@ const TenantDetails = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
-            <Button variant="outline" size="sm" onClick={() => setWhatsappHistoryOpen(true)} className="text-green-600 border-green-600/30 hover:bg-green-50 dark:hover:bg-green-950">
-              <MessageCircle className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">WhatsApp</span>
-            </Button>
-            <WhatsAppHistoryDialog
-              open={whatsappHistoryOpen}
-              onOpenChange={setWhatsappHistoryOpen}
-              tenantId={tenant.id}
-              tenantName={tenant.name}
-            />
-            {/* Portal Access Button */}
-            {canEdit && (
-              tenant.has_portal_access ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setRevokeDialogOpen(true)}
-                  className="text-amber-600 border-amber-600/30 hover:bg-amber-50 dark:hover:bg-amber-950"
-                >
-                  <ShieldOff className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Révoquer accès</span>
-                </Button>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setPortalAccessDialogOpen(true)}
-                  className="text-primary"
-                >
-                  <KeyRound className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Créer accès</span>
-                </Button>
-              )
-            )}
-            {canEdit && (
-              <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
-                <Pencil className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Modifier</span>
+          {/* Admin-only action buttons */}
+          {!isLocataire && (
+            <div className="flex flex-wrap gap-2">
+              <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
+              <Button variant="outline" size="sm" onClick={() => setWhatsappHistoryOpen(true)} className="text-green-600 border-green-600/30 hover:bg-green-50 dark:hover:bg-green-950">
+                <MessageCircle className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">WhatsApp</span>
               </Button>
-            )}
-            {canDelete && (
-              <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Supprimer</span>
-              </Button>
-            )}
-          </div>
+              <WhatsAppHistoryDialog
+                open={whatsappHistoryOpen}
+                onOpenChange={setWhatsappHistoryOpen}
+                tenantId={tenant.id}
+                tenantName={tenant.name}
+              />
+              {/* Portal Access Button */}
+              {canEdit && (
+                tenant.has_portal_access ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setRevokeDialogOpen(true)}
+                    className="text-amber-600 border-amber-600/30 hover:bg-amber-50 dark:hover:bg-amber-950"
+                  >
+                    <ShieldOff className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Révoquer accès</span>
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setPortalAccessDialogOpen(true)}
+                    className="text-primary"
+                  >
+                    <KeyRound className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Créer accès</span>
+                  </Button>
+                )
+              )}
+              {canEdit && (
+                <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+                  <Pencil className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Modifier</span>
+                </Button>
+              )}
+              {canDelete && (
+                <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+                  <Trash2 className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Supprimer</span>
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -458,7 +483,8 @@ const TenantDetails = () => {
                                 )}
                               </Button>
                             )}
-                            {(payment.status === 'pending' || payment.status === 'late') && (
+                            {/* Admin-only actions for pending/late payments */}
+                            {!isLocataire && (payment.status === 'pending' || payment.status === 'late') && (
                               <>
                                 <CollectPaymentDialog
                                   paymentId={payment.id}
@@ -496,52 +522,54 @@ const TenantDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Activity History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Historique d'activité
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {tenantActivityLogs.length > 0 ? (
-                  <div className="space-y-3">
-                    {tenantActivityLogs.map((log) => (
-                      <div key={log.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                        <div className={cn(
-                          "p-1.5 rounded-full",
-                          log.action_type === "create" && "bg-emerald/20 text-emerald",
-                          log.action_type === "update" && "bg-primary/20 text-primary",
-                          log.action_type === "delete" && "bg-destructive/20 text-destructive",
-                          log.action_type === "payment_collected" && "bg-emerald/20 text-emerald"
-                        )}>
-                          {log.action_type === "create" && <FileText className="h-3 w-3" />}
-                          {log.action_type === "update" && <Pencil className="h-3 w-3" />}
-                          {log.action_type === "delete" && <Trash2 className="h-3 w-3" />}
-                          {log.action_type === "payment_collected" && <CheckCircle className="h-3 w-3" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">
-                            {getActionLabel(log.action_type)} - {getEntityLabel(log.entity_type)}
+            {/* Activity History - Admin only */}
+            {!isLocataire && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Historique d'activité
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {tenantActivityLogs.length > 0 ? (
+                    <div className="space-y-3">
+                      {tenantActivityLogs.map((log) => (
+                        <div key={log.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                          <div className={cn(
+                            "p-1.5 rounded-full",
+                            log.action_type === "create" && "bg-emerald/20 text-emerald",
+                            log.action_type === "update" && "bg-primary/20 text-primary",
+                            log.action_type === "delete" && "bg-destructive/20 text-destructive",
+                            log.action_type === "payment_collected" && "bg-emerald/20 text-emerald"
+                          )}>
+                            {log.action_type === "create" && <FileText className="h-3 w-3" />}
+                            {log.action_type === "update" && <Pencil className="h-3 w-3" />}
+                            {log.action_type === "delete" && <Trash2 className="h-3 w-3" />}
+                            {log.action_type === "payment_collected" && <CheckCircle className="h-3 w-3" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">
+                              {getActionLabel(log.action_type)} - {getEntityLabel(log.entity_type)}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {log.entity_name}
+                            </p>
+                          </div>
+                          <p className="text-xs text-muted-foreground whitespace-nowrap">
+                            {format(new Date(log.created_at), "dd MMM yyyy", { locale: fr })}
                           </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {log.entity_name}
-                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground whitespace-nowrap">
-                          {format(new Date(log.created_at), "dd MMM yyyy", { locale: fr })}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">
-                    Aucune activité enregistrée
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">
+                      Aucune activité enregistrée
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Column - Info */}
@@ -625,14 +653,17 @@ const TenantDetails = () => {
                       </div>
                     </div>
                   )}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => navigate(`/properties/${tenant.property?.id}`)}
-                  >
-                    Voir le bien
-                  </Button>
+                  {/* Hide "View property" button for tenants */}
+                  {!isLocataire && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => navigate(`/properties/${tenant.property?.id}`)}
+                    >
+                      Voir le bien
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}

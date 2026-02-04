@@ -29,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2 } from "lucide-react";
+import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Tooltip,
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCreateTenant, useUpdateTenant } from "@/hooks/useTenants";
 import { useCreateContract } from "@/hooks/useContracts";
+import { useCreatePayment } from "@/hooks/usePayments";
 import { useProperties, useUpdateProperty } from "@/hooks/useProperties";
 import { usePropertyUnits, useUpdatePropertyUnit } from "@/hooks/usePropertyUnits";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
@@ -65,6 +66,7 @@ const formSchema = z.object({
   end_date: z.string().min(1, "La date de fin est requise"),
   rent_amount: z.string().min(1, "Le montant du loyer est requis"),
   deposit: z.string().optional(),
+  advance_months: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -95,12 +97,14 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     startDate: string;
     endDate: string;
     ownerName?: string;
+    advanceMonths?: number;
   } | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   
   const createTenant = useCreateTenant();
   const updateTenant = useUpdateTenant();
   const createContract = useCreateContract();
+  const createPayment = useCreatePayment();
   const updateProperty = useUpdateProperty();
   const updatePropertyUnit = useUpdatePropertyUnit();
   const { data: properties, isLoading: propertiesLoading, refetch: refetchProperties } = useProperties();
@@ -146,6 +150,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       end_date: "",
       rent_amount: "",
       deposit: "",
+      advance_months: "0",
     },
   });
 
@@ -190,7 +195,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       }
 
       // Create associated contract with unit_id
-      await createContract.mutateAsync({
+      const contract = await createContract.mutateAsync({
         tenant_id: tenant.id,
         property_id: values.property_id,
         unit_id: unitId,
@@ -200,6 +205,34 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         deposit: values.deposit ? parseFloat(values.deposit) : null,
         status: 'active',
       });
+
+      // Create advance payment if advance_months > 0
+      const advanceMonths = parseInt(values.advance_months || "0", 10);
+      if (advanceMonths > 0) {
+        const startDate = new Date(values.start_date);
+        const rentAmount = parseFloat(values.rent_amount);
+        const totalAdvanceAmount = rentAmount * advanceMonths;
+        
+        // Generate payment_months array (e.g., ["2026-02", "2026-03", ...])
+        const paymentMonthsArray: string[] = [];
+        for (let i = 0; i < advanceMonths; i++) {
+          const monthDate = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+          paymentMonthsArray.push(`${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`);
+        }
+
+        // Create advance payment as paid
+        await createPayment.mutateAsync({
+          tenant_id: tenant.id,
+          contract_id: contract.id,
+          amount: totalAdvanceAmount,
+          due_date: values.start_date,
+          paid_date: new Date().toISOString().split('T')[0],
+          status: 'paid',
+          method: 'especes',
+          payment_months: paymentMonthsArray,
+          tenantName: values.name,
+        });
+      }
 
       // Update unit status to 'loué' if a unit was selected
       if (unitId) {
@@ -251,6 +284,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         startDate: values.start_date,
         endDate: values.end_date,
         ownerName,
+        advanceMonths,
       });
 
       toast.success("Locataire et contrat créés avec succès");
@@ -712,6 +746,43 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                   )}
                 />
               </div>
+
+              {/* Advance Months Payment */}
+              <FormField
+                control={form.control}
+                name="advance_months"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Mois de loyer payés d'avance
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || "0"}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background border z-50">
+                        <SelectItem value="0">Aucun</SelectItem>
+                        <SelectItem value="1">1 mois</SelectItem>
+                        <SelectItem value="2">2 mois</SelectItem>
+                        <SelectItem value="3">3 mois</SelectItem>
+                        <SelectItem value="4">4 mois</SelectItem>
+                        <SelectItem value="5">5 mois</SelectItem>
+                        <SelectItem value="6">6 mois</SelectItem>
+                        <SelectItem value="12">12 mois (1 an)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {parseInt(field.value || "0", 10) > 0 && form.watch("rent_amount") && (
+                      <p className="text-xs text-emerald font-medium mt-1">
+                        Total avance : {(parseFloat(form.watch("rent_amount") || "0") * parseInt(field.value || "0", 10)).toLocaleString("fr-FR")} F CFA
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -778,6 +849,14 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                 )}
                 <span>Loyer :</span>
                 <span className="font-medium text-foreground">{createdContractData.rentAmount.toLocaleString("fr-FR")} FCFA</span>
+                {createdContractData.advanceMonths && createdContractData.advanceMonths > 0 && (
+                  <>
+                    <span>Avance payée :</span>
+                    <span className="font-medium text-emerald">
+                      {createdContractData.advanceMonths} mois ({(createdContractData.rentAmount * createdContractData.advanceMonths).toLocaleString("fr-FR")} FCFA)
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           )}

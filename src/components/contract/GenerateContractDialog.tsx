@@ -112,8 +112,14 @@ export function GenerateContractDialog({
       setHasSetOwnerTemplate(false);
     }
   }, [open, contractData.owner?.default_contract_template?.id, hasSetOwnerTemplate]);
+
+  const getSelectedTemplate = () => {
     if (selectedTemplateId && templates) {
       return templates.find((t) => t.id === selectedTemplateId);
+    }
+    // Use owner's default template if available
+    if (contractData.owner?.default_contract_template?.id && templates) {
+      return templates.find((t) => t.id === contractData.owner?.default_contract_template?.id);
     }
     return defaultTemplate;
   };

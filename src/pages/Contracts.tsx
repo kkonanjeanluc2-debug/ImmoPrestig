@@ -209,6 +209,164 @@ const Contracts = () => {
     );
   }
 
+  // For tenants, show a simplified view
+  if (isLocataire) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          {/* Header for tenants */}
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">
+              Mes Contrats
+            </h1>
+            <p className="text-muted-foreground">
+              {contracts?.length || 0} contrat{(contracts?.length || 0) > 1 ? "s" : ""}
+            </p>
+          </div>
+
+          {/* Contracts List for tenants */}
+          <div className="space-y-4">
+            {contracts?.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Aucun contrat trouvé</p>
+                </CardContent>
+              </Card>
+            ) : (
+              contracts?.map((contract) => {
+                const status = statusConfig[contract.status] || statusConfig.active;
+                const sigStatus = signatureStatusConfig[contract.signature_status || "pending"];
+                
+                return (
+                  <Card key={contract.id}>
+                    <CardContent className="p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-semibold text-lg">
+                              {getPropertyName(contract.property_id)}
+                            </span>
+                            {contract.unit && (
+                              <Badge variant="outline" className="text-xs">
+                                {contract.unit.unit_number}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {format(new Date(contract.start_date), "dd MMM yyyy", { locale: fr })}
+                              {" → "}
+                              {format(new Date(contract.end_date), "dd MMM yyyy", { locale: fr })}
+                            </span>
+                            <span className="font-medium text-foreground">
+                              {contract.rent_amount?.toLocaleString()} FCFA/mois
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant={status.variant} className="gap-1">
+                              {status.icon}
+                              {status.label}
+                            </Badge>
+                            <Badge variant={sigStatus.variant} className="gap-1">
+                              {sigStatus.icon}
+                              {sigStatus.label}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setContractToSign(contract);
+                              setSignDialogOpen(true);
+                            }}
+                          >
+                            <PenTool className="h-4 w-4 mr-1" />
+                            Signer
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setContractToGenerate(contract);
+                              setGenerateDialogOpen(true);
+                            }}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            PDF
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+          {/* Sign Dialog for tenant */}
+          {contractToSign && (
+            <SignContractDialog
+              open={signDialogOpen}
+              onOpenChange={(open) => {
+                setSignDialogOpen(open);
+                if (!open) setContractToSign(null);
+              }}
+              contractData={{
+                contractId: contractToSign.id,
+                tenantName: getTenantName(contractToSign.tenant_id),
+                tenantEmail: contractToSign.tenant?.email,
+                tenantHasPortalAccess: contractToSign.tenant?.has_portal_access,
+                propertyTitle: getPropertyName(contractToSign.property_id),
+                rentAmount: contractToSign.rent_amount,
+                startDate: contractToSign.start_date,
+                endDate: contractToSign.end_date,
+              }}
+            />
+          )}
+
+          {/* Generate PDF Dialog for tenant */}
+          {contractToGenerate && (
+            <GenerateContractDialog
+              open={generateDialogOpen}
+              onOpenChange={(open) => {
+                setGenerateDialogOpen(open);
+                if (!open) setContractToGenerate(null);
+              }}
+              contractData={{
+                contractId: contractToGenerate.id,
+                tenantName: getTenantName(contractToGenerate.tenant_id),
+                tenantEmail: contractToGenerate.tenant?.email,
+                propertyTitle: getPropertyName(contractToGenerate.property_id),
+                propertyAddress: contractToGenerate.property?.address,
+                unitNumber: contractToGenerate.unit?.unit_number,
+                rentAmount: contractToGenerate.rent_amount,
+                deposit: contractToGenerate.deposit || undefined,
+                startDate: contractToGenerate.start_date,
+                endDate: contractToGenerate.end_date,
+                owner: contractToGenerate.property?.owner ? {
+                  name: contractToGenerate.property.owner.name,
+                  email: contractToGenerate.property.owner.email || undefined,
+                  phone: contractToGenerate.property.owner.phone || undefined,
+                  address: contractToGenerate.property.owner.address || undefined,
+                  birth_date: contractToGenerate.property.owner.birth_date || undefined,
+                  birth_place: contractToGenerate.property.owner.birth_place || undefined,
+                  profession: contractToGenerate.property.owner.profession || undefined,
+                  cni_number: contractToGenerate.property.owner.cni_number || undefined,
+                  management_type: contractToGenerate.property.owner.management_type || null,
+                } : null,
+              }}
+            />
+          )}
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">

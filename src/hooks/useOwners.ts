@@ -15,6 +15,10 @@ export interface OwnerWithManagementType extends Owner {
     percentage: number;
     type: string;
   } | null;
+  default_contract_template?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 export const useOwners = () => {
@@ -27,7 +31,8 @@ export const useOwners = () => {
         .from("owners")
         .select(`
           *,
-          management_type:management_types(id, name, percentage, type)
+          management_type:management_types(id, name, percentage, type),
+          default_contract_template:contract_templates(id, name)
         `)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });

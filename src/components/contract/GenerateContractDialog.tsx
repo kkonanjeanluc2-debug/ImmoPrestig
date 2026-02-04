@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,11 @@ interface ManagementTypeData {
   percentage: number;
 }
 
+interface DefaultContractTemplateData {
+  id: string;
+  name: string;
+}
+
 interface OwnerData {
   name: string;
   email?: string;
@@ -45,6 +50,7 @@ interface OwnerData {
   profession?: string;
   cni_number?: string;
   management_type?: ManagementTypeData | null;
+  default_contract_template?: DefaultContractTemplateData | null;
 }
 
 interface ContractData {
@@ -87,6 +93,7 @@ export function GenerateContractDialog({
   const { data: signatures } = useContractSignatures(contractData.contractId);
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [hasSetOwnerTemplate, setHasSetOwnerTemplate] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Check signature status
@@ -95,7 +102,16 @@ export function GenerateContractDialog({
   const hasSignatures = !!(landlordSignature || tenantSignature);
   const isFullySigned = !!(landlordSignature && tenantSignature);
 
-  const getSelectedTemplate = () => {
+  // Set owner's default template when dialog opens
+  useEffect(() => {
+    if (open && !hasSetOwnerTemplate && contractData.owner?.default_contract_template?.id) {
+      setSelectedTemplateId(contractData.owner.default_contract_template.id);
+      setHasSetOwnerTemplate(true);
+    }
+    if (!open) {
+      setHasSetOwnerTemplate(false);
+    }
+  }, [open, contractData.owner?.default_contract_template?.id, hasSetOwnerTemplate]);
     if (selectedTemplateId && templates) {
       return templates.find((t) => t.id === selectedTemplateId);
     }
@@ -194,28 +210,38 @@ export function GenerateContractDialog({
             {templatesLoading ? (
               <div className="h-10 bg-muted animate-pulse rounded-md" />
             ) : hasTemplates ? (
-              <Select
-                value={selectedTemplateId}
-                onValueChange={setSelectedTemplateId}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      defaultTemplate
-                        ? `${defaultTemplate.name} (par défaut)`
-                        : "Sélectionner un modèle"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.name}
-                      {template.is_default && " (par défaut)"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                {contractData.owner?.default_contract_template && (
+                  <p className="text-xs text-muted-foreground">
+                    Modèle par défaut du propriétaire : {contractData.owner.default_contract_template.name}
+                  </p>
+                )}
+                <Select
+                  value={selectedTemplateId}
+                  onValueChange={setSelectedTemplateId}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        contractData.owner?.default_contract_template
+                          ? `${contractData.owner.default_contract_template.name} (propriétaire)`
+                          : defaultTemplate
+                            ? `${defaultTemplate.name} (par défaut)`
+                            : "Sélectionner un modèle"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                        {template.is_default && " (par défaut)"}
+                        {contractData.owner?.default_contract_template?.id === template.id && " (propriétaire)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             ) : (
               <Alert>
                 <AlertCircle className="h-4 w-4" />

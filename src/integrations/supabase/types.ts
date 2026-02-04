@@ -1277,6 +1277,7 @@ export type Database = {
           birth_place: string | null
           cni_number: string | null
           created_at: string
+          default_contract_template_id: string | null
           deleted_at: string | null
           email: string
           id: string
@@ -1294,6 +1295,7 @@ export type Database = {
           birth_place?: string | null
           cni_number?: string | null
           created_at?: string
+          default_contract_template_id?: string | null
           deleted_at?: string | null
           email: string
           id?: string
@@ -1311,6 +1313,7 @@ export type Database = {
           birth_place?: string | null
           cni_number?: string | null
           created_at?: string
+          default_contract_template_id?: string | null
           deleted_at?: string | null
           email?: string
           id?: string
@@ -1323,6 +1326,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "owners_default_contract_template_id_fkey"
+            columns: ["default_contract_template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "owners_management_type_id_fkey"
             columns: ["management_type_id"]

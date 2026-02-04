@@ -18,30 +18,41 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Non autorisé" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Verify the calling user
+    // Create client with user's auth header to validate token
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify the calling user using getClaims
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user: callingUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
     
-    if (authError || !callingUser) {
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error("Claims error:", claimsError);
       return new Response(
         JSON.stringify({ error: "Token invalide" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const callingUserId = claimsData.claims.sub as string;
+    console.log("Authenticated user:", callingUserId);
+
+    // Create admin client for privileged operations
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
     const body: CreateTenantAccessRequest = await req.json();
     const { tenant_id, password } = body;
@@ -53,7 +64,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("Creating portal access for tenant:", tenant_id, "by user:", callingUser.id);
+    console.log("Creating portal access for tenant:", tenant_id, "by user:", callingUserId);
 
     // Get the tenant and verify ownership
     const { data: tenant, error: tenantError } = await supabaseAdmin
@@ -74,7 +85,7 @@ Deno.serve(async (req) => {
     const { data: agency, error: agencyError } = await supabaseAdmin
       .from("agencies")
       .select("id, user_id")
-      .eq("user_id", callingUser.id)
+      .eq("user_id", callingUserId)
       .maybeSingle();
 
     // Also check if user is an admin member
@@ -83,7 +94,7 @@ Deno.serve(async (req) => {
       const { data: membership } = await supabaseAdmin
         .from("agency_members")
         .select("agency_id, role")
-        .eq("user_id", callingUser.id)
+        .eq("user_id", callingUserId)
         .eq("role", "admin")
         .eq("status", "active")
         .maybeSingle();
@@ -100,9 +111,9 @@ Deno.serve(async (req) => {
       .eq("id", tenant_id)
       .single();
 
-    if (tenantOwner?.user_id !== callingUser.id && !isAdmin) {
+    if (tenantOwner?.user_id !== callingUserId && !isAdmin) {
       // Check if calling user is super_admin
-      const { data: isSuperAdmin } = await supabaseAdmin.rpc("is_super_admin", { _user_id: callingUser.id });
+      const { data: isSuperAdmin } = await supabaseAdmin.rpc("is_super_admin", { _user_id: callingUserId });
       
       if (!isSuperAdmin) {
         return new Response(
@@ -136,7 +147,7 @@ Deno.serve(async (req) => {
       const { data: memberAgency } = await supabaseAdmin
         .from("agency_members")
         .select("agency_id")
-        .eq("user_id", callingUser.id)
+        .eq("user_id", callingUserId)
         .eq("status", "active")
         .maybeSingle();
       

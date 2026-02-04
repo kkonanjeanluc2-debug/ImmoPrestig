@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,7 @@ import {
   useCreateTenantSignatureRequest 
 } from "@/hooks/useContractSignatures";
 import { useAgency } from "@/hooks/useAgency";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ContractData {
@@ -59,10 +60,14 @@ export function SignContractDialog({
 }: SignContractDialogProps) {
   const { toast } = useToast();
   const { data: agency } = useAgency();
+  const { data: userRole } = useCurrentUserRole();
   const { data: signatures, isLoading } = useContractSignatures(contractData.contractId);
   const createSignature = useCreateSignature();
   const createTenantRequest = useCreateTenantSignatureRequest();
 
+  const isLocataire = userRole?.role === "locataire";
+
+  // For tenants, start directly with sign step if landlord has signed
   const [step, setStep] = useState<"overview" | "sign" | "invite">("overview");
   const [tenantEmail, setTenantEmail] = useState(contractData.tenantEmail || "");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -75,6 +80,13 @@ export function SignContractDialog({
   const landlordSignature = signatures?.find(s => s.signer_type === "landlord" && (s.signature_data || s.signature_text));
   const tenantSignature = signatures?.find(s => s.signer_type === "tenant" && (s.signature_data || s.signature_text));
   const pendingTenantRequest = signatures?.find(s => s.signer_type === "tenant" && !s.signature_data && !s.signature_text);
+
+  // Redirect tenant directly to sign step when dialog opens
+  useEffect(() => {
+    if (isLocataire && landlordSignature && !tenantSignature && open) {
+      setStep("sign");
+    }
+  }, [isLocataire, landlordSignature, tenantSignature, open]);
 
   const handleLandlordSign = async () => {
     if (!signatureData) {
@@ -102,6 +114,42 @@ export function SignContractDialog({
         description: "Votre signature a été enregistrée avec horodatage.",
       });
       setStep("overview");
+      setSignatureData(null);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer la signature.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTenantSign = async () => {
+    if (!signatureData) {
+      toast({
+        title: "Signature requise",
+        description: "Veuillez signer avant de continuer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createSignature.mutateAsync({
+        contract_id: contractData.contractId,
+        signer_type: "tenant",
+        signer_name: contractData.tenantName,
+        signer_email: contractData.tenantEmail,
+        signature_data: signatureData.signatureData,
+        signature_text: signatureData.signatureText,
+        signature_type: signatureData.type,
+      });
+
+      toast({
+        title: "Contrat signé",
+        description: "Votre signature a été enregistrée avec succès.",
+      });
+      onOpenChange(false);
       setSignatureData(null);
     } catch (error) {
       toast({
@@ -351,23 +399,57 @@ export function SignContractDialog({
         {step === "sign" && (
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label>Signature du Bailleur</Label>
+              <Label>{isLocataire ? "Votre signature" : "Signature du Bailleur"}</Label>
               <p className="text-sm text-muted-foreground">
                 Signez en dessinant ou en tapant votre nom. La signature sera horodatée automatiquement.
               </p>
             </div>
 
+            {/* Contract summary for tenant */}
+            {isLocataire && (
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Détails du contrat
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <span className="text-muted-foreground">Bien :</span>
+                  <span className="font-medium">{contractData.propertyTitle}</span>
+                  <span className="text-muted-foreground">Loyer :</span>
+                  <span className="font-medium">{contractData.rentAmount.toLocaleString("fr-FR")} FCFA</span>
+                  <span className="text-muted-foreground">Période :</span>
+                  <span className="font-medium">
+                    {new Date(contractData.startDate).toLocaleDateString("fr-FR")} - {new Date(contractData.endDate).toLocaleDateString("fr-FR")}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <SignatureTypeSelector
-              signerName={agency?.name || "Le Bailleur"}
+              signerName={isLocataire ? contractData.tenantName : (agency?.name || "Le Bailleur")}
               onSignatureComplete={setSignatureData}
             />
 
+            {isLocataire && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  En signant ce document, vous confirmez avoir lu et accepté les termes du contrat de location. Cette signature électronique a une valeur juridique.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setStep("overview")}>
-                Retour
+              {!isLocataire && (
+                <Button variant="outline" onClick={() => setStep("overview")}>
+                  Retour
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                {isLocataire ? "Annuler" : "Fermer"}
               </Button>
               <Button 
-                onClick={handleLandlordSign} 
+                onClick={isLocataire ? handleTenantSign : handleLandlordSign} 
                 disabled={!signatureData || createSignature.isPending}
               >
                 {createSignature.isPending ? "Signature en cours..." : "Valider ma signature"}

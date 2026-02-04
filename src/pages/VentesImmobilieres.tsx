@@ -8,6 +8,7 @@ import { VentesImmobilieresList } from "@/components/vente-immobiliere/VentesImm
 import { EcheancesVentesTabContent } from "@/components/vente-immobiliere/EcheancesVentesTabContent";
 import { VentesDashboard } from "@/components/vente-immobiliere/VentesDashboard";
 import { VenteProspectsTab } from "@/components/vente-immobiliere/VenteProspectsTab";
+import { AcquereurDetailsDialog } from "@/components/vente-immobiliere/AcquereurDetailsDialog";
 import { Building2, Receipt, Calendar, Plus, Users, UserSearch } from "lucide-react";
 import { useAcquereurs } from "@/hooks/useAcquereurs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,22 +103,24 @@ export default function VentesImmobilieres() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {acquereurs?.map((acq) => (
-                      <Card key={acq.id} className="p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Users className="h-5 w-5 text-primary" />
+                      <AcquereurDetailsDialog key={acq.id} acquereur={acq}>
+                        <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                          <div className="flex items-start gap-3">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Users className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{acq.name}</p>
+                              {acq.phone && (
+                                <p className="text-sm text-muted-foreground">{acq.phone}</p>
+                              )}
+                              {acq.email && (
+                                <p className="text-sm text-muted-foreground truncate">{acq.email}</p>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{acq.name}</p>
-                            {acq.phone && (
-                              <p className="text-sm text-muted-foreground">{acq.phone}</p>
-                            )}
-                            {acq.email && (
-                              <p className="text-sm text-muted-foreground truncate">{acq.email}</p>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
+                        </Card>
+                      </AcquereurDetailsDialog>
                     ))}
                   </div>
                 )}

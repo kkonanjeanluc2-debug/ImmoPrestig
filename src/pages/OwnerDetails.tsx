@@ -4,7 +4,6 @@ import { useOwners, useDeleteOwner } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { usePayments } from "@/hooks/usePayments";
 import { useTenants } from "@/hooks/useTenants";
-import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useOwnerInterventions } from "@/hooks/usePropertyInterventions";
 import { useAgency } from "@/hooks/useAgency";
 import { Button } from "@/components/ui/button";
@@ -67,7 +66,6 @@ const OwnerDetails = () => {
   const { data: properties = [] } = useProperties();
   const { data: payments = [] } = usePayments();
   const { data: tenants = [] } = useTenants();
-  const { data: activityLogs = [] } = useActivityLogs();
   const { data: agency } = useAgency();
   const deleteOwner = useDeleteOwner();
   const { canEdit, canDelete } = usePermissions();
@@ -90,11 +88,6 @@ const OwnerDetails = () => {
   const ownerTenants = tenants.filter(t => t.property_id && propertyIds.includes(t.property_id));
   const ownerTenantIds = ownerTenants.map(t => t.id);
 
-  // Activity logs related to this owner
-  const ownerActivityLogs = activityLogs.filter(log => 
-    (log.entity_type === "owner" && log.entity_id === id) ||
-    (log.entity_type === "property" && propertyIds.includes(log.entity_id || ""))
-  ).slice(0, 10);
 
   // Calculate statistics
   const totalProperties = ownerProperties.length;
@@ -334,26 +327,6 @@ const OwnerDetails = () => {
     );
   }
 
-  const getActionLabel = (actionType: string) => {
-    const labels: Record<string, string> = {
-      create: "Création",
-      update: "Modification",
-      delete: "Suppression",
-    };
-    return labels[actionType] || actionType;
-  };
-
-  const getEntityLabel = (entityType: string) => {
-    const labels: Record<string, string> = {
-      owner: "Propriétaire",
-      property: "Bien",
-      tenant: "Locataire",
-      payment: "Paiement",
-      document: "Document",
-    };
-    return labels[entityType] || entityType;
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -534,51 +507,6 @@ const OwnerDetails = () => {
                 <InterventionsList ownerId={id} showPropertyColumn={true} />
               </TabsContent>
             </Tabs>
-
-            {/* Activity History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Historique d'activité
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {ownerActivityLogs.length > 0 ? (
-                  <div className="space-y-3">
-                    {ownerActivityLogs.map((log) => (
-                      <div key={log.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                        <div className={cn(
-                          "p-1.5 rounded-full",
-                          log.action_type === "create" && "bg-emerald/20 text-emerald",
-                          log.action_type === "update" && "bg-primary/20 text-primary",
-                          log.action_type === "delete" && "bg-destructive/20 text-destructive"
-                        )}>
-                          {log.action_type === "create" && <Building2 className="h-3 w-3" />}
-                          {log.action_type === "update" && <Pencil className="h-3 w-3" />}
-                          {log.action_type === "delete" && <Trash2 className="h-3 w-3" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">
-                            {getActionLabel(log.action_type)} - {getEntityLabel(log.entity_type)}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {log.entity_name}
-                          </p>
-                        </div>
-                        <p className="text-xs text-muted-foreground whitespace-nowrap">
-                          {format(new Date(log.created_at), "dd MMM yyyy", { locale: fr })}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">
-                    Aucune activité enregistrée
-                  </p>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right Column - Info */}

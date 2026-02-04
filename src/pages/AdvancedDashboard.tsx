@@ -10,7 +10,6 @@ import { PropertyPerformanceChart } from "@/components/dashboard/PropertyPerform
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
 import { RecentPayments } from "@/components/dashboard/RecentPayments";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { PropertyMap } from "@/components/dashboard/PropertyMap";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DraggableWidget } from "@/components/dashboard/DraggableWidget";
@@ -135,9 +134,6 @@ const AdvancedDashboard = () => {
       case "recent-payments":
         return <RecentPayments />;
 
-      case "recent-activity":
-        return <RecentActivity />;
-
       case "property-map":
         return <PropertyMap properties={properties || []} />;
 
@@ -155,7 +151,7 @@ const AdvancedDashboard = () => {
   };
 
   // Filter and sort widgets for main grid
-  const mainWidgets: WidgetId[] = ["property-map", "revenue-trend", "commission-evolution", "late-analysis", "property-performance", "occupancy", "property-types", "recent-payments", "recent-activity"];
+  const mainWidgets: WidgetId[] = ["property-map", "revenue-trend", "commission-evolution", "late-analysis", "property-performance", "occupancy", "property-types", "recent-payments"];
   const sortedMainWidgets = preferences.widgetOrder.filter((id) => mainWidgets.includes(id) && isVisible(id));
 
   return (

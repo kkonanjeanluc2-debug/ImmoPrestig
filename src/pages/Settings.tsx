@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -14,13 +14,17 @@ import { AgencySettings } from "@/components/settings/AgencySettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
 import { ContractTemplateManager } from "@/components/settings/ContractTemplateManager";
+import { SaleContractTemplateManager } from "@/components/settings/SaleContractTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
 import { useIsSuperAdmin } from "@/hooks/useSuperAdmin";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 const Settings = () => {
   const { isSuperAdmin } = useIsSuperAdmin();
+  const { hasFeature } = useFeatureAccess();
+  const hasVentesImmobilieres = hasFeature("ventes_immobilieres");
   const [activeTab, setActiveTab] = useState(isSuperAdmin ? "profile" : "agency");
 
   // Super Admin: simplified settings
@@ -129,6 +133,15 @@ const Settings = () => {
               <ScrollText className="h-4 w-4" />
               <span>Contrats</span>
             </TabsTrigger>
+            {hasVentesImmobilieres && (
+              <TabsTrigger
+                value="sale-contracts"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Home className="h-4 w-4" />
+                <span>Contrats de vente</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger
               value="subscription"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -220,6 +233,12 @@ const Settings = () => {
           <TabsContent value="contracts">
             <ContractTemplateManager />
           </TabsContent>
+
+          {hasVentesImmobilieres && (
+            <TabsContent value="sale-contracts">
+              <SaleContractTemplateManager />
+            </TabsContent>
+          )}
 
           <TabsContent value="subscription">
             <SubscriptionSettings />

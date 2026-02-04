@@ -22,12 +22,12 @@ export const useSaleContractTemplates = () => {
     queryKey: ["sale-contract-templates", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("sale_contract_templates")
+        .from("sale_contract_templates" as any)
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as SaleContractTemplate[];
+      return data as unknown as SaleContractTemplate[];
     },
     enabled: !!user,
   });
@@ -40,13 +40,13 @@ export const useDefaultSaleContractTemplate = () => {
     queryKey: ["sale-contract-template-default", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("sale_contract_templates")
+        .from("sale_contract_templates" as any)
         .select("*")
         .eq("is_default", true)
         .maybeSingle();
 
       if (error) throw error;
-      return data as SaleContractTemplate | null;
+      return data as unknown as SaleContractTemplate | null;
     },
     enabled: !!user,
   });
@@ -63,19 +63,19 @@ export const useCreateSaleContractTemplate = () => {
       // If this template is set as default, unset others first
       if (template.is_default) {
         await supabase
-          .from("sale_contract_templates")
+          .from("sale_contract_templates" as any)
           .update({ is_default: false })
           .eq("user_id", user.id);
       }
 
       const { data, error } = await supabase
-        .from("sale_contract_templates")
+        .from("sale_contract_templates" as any)
         .insert({ ...template, user_id: user.id })
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as SaleContractTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sale-contract-templates"] });
@@ -95,21 +95,21 @@ export const useUpdateSaleContractTemplate = () => {
       // If this template is set as default, unset others first
       if (updates.is_default) {
         await supabase
-          .from("sale_contract_templates")
+          .from("sale_contract_templates" as any)
           .update({ is_default: false })
           .eq("user_id", user.id)
           .neq("id", id);
       }
 
       const { data, error } = await supabase
-        .from("sale_contract_templates")
+        .from("sale_contract_templates" as any)
         .update(updates)
         .eq("id", id)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as SaleContractTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sale-contract-templates"] });
@@ -124,7 +124,7 @@ export const useDeleteSaleContractTemplate = () => {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from("sale_contract_templates")
+        .from("sale_contract_templates" as any)
         .delete()
         .eq("id", id);
 

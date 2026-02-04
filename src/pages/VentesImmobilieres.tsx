@@ -17,7 +17,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 export default function VentesImmobilieres() {
   const [activeTab, setActiveTab] = useState("biens");
   const { data: acquereurs } = useAcquereurs();
-  const { canCreate, role } = usePermissions();
+  const { canCreate, role, isLoading: isLoadingPermissions } = usePermissions();
   const isLocataire = role === "locataire";
 
   return (
@@ -105,8 +105,9 @@ export default function VentesImmobilieres() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {acquereurs?.map((acq) => {
+                      const canClick = !isLocataire && !isLoadingPermissions;
                       const cardContent = (
-                        <Card className={`p-4 transition-colors ${!isLocataire ? 'cursor-pointer hover:bg-muted/50' : ''}`}>
+                        <Card className={`p-4 transition-colors ${canClick ? 'cursor-pointer hover:bg-muted/50' : ''}`}>
                           <div className="flex items-start gap-3">
                             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                               <Users className="h-5 w-5 text-primary" />
@@ -124,7 +125,7 @@ export default function VentesImmobilieres() {
                         </Card>
                       );
 
-                      if (isLocataire) {
+                      if (!canClick) {
                         return <div key={acq.id}>{cardContent}</div>;
                       }
 

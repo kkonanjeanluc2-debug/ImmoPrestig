@@ -90,6 +90,7 @@ const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [signatureFilter, setSignatureFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("all");
   const [renewDialogOpen, setRenewDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [renewDuration, setRenewDuration] = useState("12");
@@ -119,7 +120,12 @@ const Contracts = () => {
       tenantName.includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || contract.status === statusFilter;
     const matchesSignature = signatureFilter === "all" || (contract.signature_status || "pending") === signatureFilter;
-    return matchesSearch && matchesStatus && matchesSignature;
+    
+    // Filter by owner
+    const property = properties?.find((p) => p.id === contract.property_id);
+    const matchesOwner = ownerFilter === "all" || property?.owner_id === ownerFilter;
+    
+    return matchesSearch && matchesStatus && matchesSignature && matchesOwner;
   });
 
   // Calculate days remaining
@@ -298,6 +304,19 @@ const Contracts = () => {
                   <SelectItem value="pending">Non signés</SelectItem>
                   <SelectItem value="landlord_signed">Signés bailleur</SelectItem>
                   <SelectItem value="fully_signed">Signés complet</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Propriétaire" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="all">Tous les propriétaires</SelectItem>
+                  {owners?.map((owner) => (
+                    <SelectItem key={owner.id} value={owner.id}>
+                      {owner.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

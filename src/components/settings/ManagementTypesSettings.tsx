@@ -9,12 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Percent, Home, Building2, Loader2, Star, FileText, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, Percent, Home, Building2, Loader2, Star } from "lucide-react";
 import { useManagementTypes, useCreateManagementType, useUpdateManagementType, useDeleteManagementType, ManagementType, ManagementTypeInput } from "@/hooks/useManagementTypes";
-import { useContractTemplates } from "@/hooks/useContractTemplates";
-import { useAgency } from "@/hooks/useAgency";
-import { downloadManagementTypeContractPDF } from "@/lib/generateManagementTypeContractPDF";
-import { toast } from "sonner";
 
 const TYPE_LABELS = {
   gestion_locative: "Gestion locative",
@@ -32,7 +28,6 @@ interface FormData {
   percentage: string;
   type: "gestion_locative" | "commission_vente";
   is_default: boolean;
-  contract_template_id: string;
 }
 
 const defaultFormData: FormData = {
@@ -41,13 +36,10 @@ const defaultFormData: FormData = {
   percentage: "",
   type: "gestion_locative",
   is_default: false,
-  contract_template_id: "",
 };
 
 export function ManagementTypesSettings() {
   const { data: managementTypes = [], isLoading } = useManagementTypes();
-  const { data: contractTemplates = [] } = useContractTemplates();
-  const { data: agency } = useAgency();
   const createMutation = useCreateManagementType();
   const updateMutation = useUpdateManagementType();
   const deleteMutation = useDeleteManagementType();
@@ -55,7 +47,6 @@ export function ManagementTypesSettings() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingType, setEditingType] = useState<ManagementType | null>(null);
   const [formData, setFormData] = useState<FormData>(defaultFormData);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const handleOpenDialog = (type?: ManagementType) => {
     if (type) {
@@ -66,7 +57,6 @@ export function ManagementTypesSettings() {
         percentage: type.percentage.toString(),
         type: type.type as "gestion_locative" | "commission_vente",
         is_default: type.is_default,
-        contract_template_id: type.contract_template_id || "",
       });
     } else {
       setEditingType(null);
@@ -88,7 +78,6 @@ export function ManagementTypesSettings() {
       percentage: parseFloat(formData.percentage) || 0,
       type: formData.type,
       is_default: formData.is_default,
-      contract_template_id: formData.contract_template_id || null,
     };
 
     if (editingType) {
@@ -101,39 +90,6 @@ export function ManagementTypesSettings() {
 
   const handleDelete = async (id: string) => {
     await deleteMutation.mutateAsync(id);
-  };
-
-  const handleDownloadPDF = async (type: ManagementType) => {
-    if (!type.contract_template_id) {
-      toast.error("Aucun modèle de contrat associé à ce type de gestion");
-      return;
-    }
-
-    const template = contractTemplates.find(t => t.id === type.contract_template_id);
-    if (!template) {
-      toast.error("Modèle de contrat introuvable");
-      return;
-    }
-
-    setDownloadingId(type.id);
-    try {
-      await downloadManagementTypeContractPDF(
-        template.content,
-        {
-          name: type.name,
-          percentage: type.percentage,
-          type: type.type,
-          description: type.description,
-        },
-        agency
-      );
-      toast.success("PDF téléchargé avec succès");
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      toast.error("Erreur lors du téléchargement du PDF");
-    } finally {
-      setDownloadingId(null);
-    }
   };
 
   const gestionTypes = managementTypes.filter((t) => t.type === "gestion_locative");
@@ -173,7 +129,7 @@ export function ManagementTypesSettings() {
                   Nouveau type
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
+              <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
                     {editingType ? "Modifier le type de gestion" : "Nouveau type de gestion"}
@@ -182,7 +138,7 @@ export function ManagementTypesSettings() {
                     Définissez un type de gestion avec son pourcentage associé
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="type">Catégorie</Label>
                     <Select
@@ -231,36 +187,6 @@ export function ManagementTypesSettings() {
                       value={formData.percentage}
                       onChange={(e) => setFormData({ ...formData, percentage: e.target.value })}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contract_template">Modèle de contrat</Label>
-                    <Select
-                      value={formData.contract_template_id || "none"}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, contract_template_id: value === "none" ? "" : value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un modèle (optionnel)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Aucun modèle</SelectItem>
-                        {contractTemplates.map((template) => (
-                          <SelectItem key={template.id} value={template.id}>
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4" />
-                              {template.name}
-                              {template.is_default && (
-                                <Badge variant="secondary" className="ml-1 text-xs">Défaut</Badge>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Le modèle de contrat sera utilisé pour générer les baux des propriétaires avec ce type de gestion
-                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description">Description (optionnel)</Label>
@@ -316,12 +242,9 @@ export function ManagementTypesSettings() {
                   <ManagementTypeCard
                     key={type.id}
                     type={type}
-                    contractTemplates={contractTemplates}
                     onEdit={() => handleOpenDialog(type)}
                     onDelete={() => handleDelete(type.id)}
-                    onDownloadPDF={() => handleDownloadPDF(type)}
                     isDeleting={deleteMutation.isPending}
-                    isDownloading={downloadingId === type.id}
                   />
                 ))}
               </div>
@@ -344,12 +267,9 @@ export function ManagementTypesSettings() {
                   <ManagementTypeCard
                     key={type.id}
                     type={type}
-                    contractTemplates={contractTemplates}
                     onEdit={() => handleOpenDialog(type)}
                     onDelete={() => handleDelete(type.id)}
-                    onDownloadPDF={() => handleDownloadPDF(type)}
                     isDeleting={deleteMutation.isPending}
-                    isDownloading={downloadingId === type.id}
                   />
                 ))}
               </div>
@@ -363,101 +283,71 @@ export function ManagementTypesSettings() {
 
 interface ManagementTypeCardProps {
   type: ManagementType;
-  contractTemplates: { id: string; name: string; is_default: boolean }[];
   onEdit: () => void;
   onDelete: () => void;
-  onDownloadPDF: () => void;
   isDeleting: boolean;
-  isDownloading: boolean;
 }
 
-function ManagementTypeCard({ type, contractTemplates, onEdit, onDelete, onDownloadPDF, isDeleting, isDownloading }: ManagementTypeCardProps) {
+function ManagementTypeCard({ type, onEdit, onDelete, isDeleting }: ManagementTypeCardProps) {
   const Icon = TYPE_ICONS[type.type as keyof typeof TYPE_ICONS];
-  const linkedTemplate = contractTemplates.find(t => t.id === type.contract_template_id);
 
   return (
-    <div className="flex flex-col gap-3 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary flex-shrink-0">
-            <Icon className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium truncate">{type.name}</span>
-              {type.is_default && (
-                <Badge variant="secondary" className="text-xs flex-shrink-0">
-                  <Star className="h-3 w-3 mr-1" />
-                  Défaut
-                </Badge>
-              )}
-            </div>
-            {type.description && (
-              <p className="text-sm text-muted-foreground line-clamp-1">{type.description}</p>
-            )}
-          </div>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary flex-shrink-0">
+          <Icon className="h-5 w-5" />
         </div>
-        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
-          <Badge variant="outline" className="text-base sm:text-lg font-semibold px-2 sm:px-3 py-1">
-            {type.percentage}%
-          </Badge>
-          <div className="flex items-center gap-1">
-            {linkedTemplate && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-primary" 
-                onClick={onDownloadPDF}
-                disabled={isDownloading}
-                title="Télécharger le modèle de contrat"
-              >
-                {isDownloading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-              </Button>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium truncate">{type.name}</span>
+            {type.is_default && (
+              <Badge variant="secondary" className="text-xs flex-shrink-0">
+                <Star className="h-3 w-3 mr-1" />
+                Défaut
+              </Badge>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Supprimer ce type de gestion ?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Cette action est irréversible. Les propriétaires associés à ce type perdront leur configuration.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={onDelete}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    disabled={isDeleting}
-                  >
-                    {isDeleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    Supprimer
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
+          {type.description && (
+            <p className="text-sm text-muted-foreground line-clamp-1">{type.description}</p>
+          )}
         </div>
       </div>
-      
-      {/* Contract template info */}
-      {linkedTemplate && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground pl-13 sm:pl-[52px]">
-          <FileText className="h-3.5 w-3.5" />
-          <span>Modèle : {linkedTemplate.name}</span>
+      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
+        <Badge variant="outline" className="text-base sm:text-lg font-semibold px-2 sm:px-3 py-1">
+          {type.percentage}%
+        </Badge>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer ce type de gestion ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irréversible. Les propriétaires associés à ce type perdront leur configuration.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={onDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={isDeleting}
+                >
+                  {isDeleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
-      )}
+      </div>
     </div>
   );
 }

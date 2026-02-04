@@ -1200,7 +1200,6 @@ export type Database = {
       }
       management_types: {
         Row: {
-          contract_template_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -1212,7 +1211,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          contract_template_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1224,7 +1222,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          contract_template_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1235,15 +1232,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "management_types_contract_template_id_fkey"
-            columns: ["contract_template_id"]
-            isOneToOne: false
-            referencedRelation: "contract_templates"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       notifications: {
         Row: {

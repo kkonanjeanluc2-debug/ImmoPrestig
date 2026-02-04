@@ -639,6 +639,7 @@ const Contracts = () => {
               contractId: contractToSign.id,
               tenantName: getTenantName(contractToSign.tenant_id),
               tenantEmail: tenants?.find((t) => t.id === contractToSign.tenant_id)?.email,
+              tenantHasPortalAccess: tenants?.find((t) => t.id === contractToSign.tenant_id)?.has_portal_access,
               propertyTitle: getPropertyName(contractToSign.property_id),
               rentAmount: contractToSign.rent_amount,
               startDate: contractToSign.start_date,

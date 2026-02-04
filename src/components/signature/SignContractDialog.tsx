@@ -21,7 +21,9 @@ import {
   User,
   Building,
   Mail,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SignatureTypeSelector } from "./SignatureTypeSelector";
@@ -31,11 +33,13 @@ import {
   useCreateTenantSignatureRequest 
 } from "@/hooks/useContractSignatures";
 import { useAgency } from "@/hooks/useAgency";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContractData {
   contractId: string;
   tenantName: string;
   tenantEmail?: string;
+  tenantHasPortalAccess?: boolean;
   propertyTitle: string;
   rentAmount: number;
   startDate: string;
@@ -61,6 +65,7 @@ export function SignContractDialog({
 
   const [step, setStep] = useState<"overview" | "sign" | "invite">("overview");
   const [tenantEmail, setTenantEmail] = useState(contractData.tenantEmail || "");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [signatureData, setSignatureData] = useState<{
     type: "drawn" | "typed";
     signatureData?: string;
@@ -117,6 +122,7 @@ export function SignContractDialog({
       return;
     }
 
+    setIsSendingEmail(true);
     try {
       const result = await createTenantRequest.mutateAsync({
         contractId: contractData.contractId,
@@ -127,19 +133,60 @@ export function SignContractDialog({
       // Construire le lien de signature
       const signatureLink = `${window.location.origin}/sign-contract?token=${result.token}`;
       
-      // Copier le lien dans le presse-papier
-      await navigator.clipboard.writeText(signatureLink);
-
-      toast({
-        title: "Demande créée",
-        description: "Le lien de signature a été copié dans votre presse-papier. Envoyez-le au locataire par email.",
+      // Envoyer l'email automatiquement
+      const { error: emailError } = await supabase.functions.invoke("send-signature-invite", {
+        body: {
+          contractId: contractData.contractId,
+          tenantName: contractData.tenantName,
+          tenantEmail,
+          signatureToken: result.token,
+          signatureLink,
+          propertyTitle: contractData.propertyTitle,
+          rentAmount: contractData.rentAmount,
+          startDate: contractData.startDate,
+          endDate: contractData.endDate,
+          agencyName: agency?.name || "L'agence",
+          agencyEmail: agency?.email,
+          hasPortalAccess: contractData.tenantHasPortalAccess,
+        },
       });
+
+      if (emailError) {
+        console.error("Email send error:", emailError);
+        // Email failed, but signature request was created - copy link as fallback
+        await navigator.clipboard.writeText(signatureLink);
+        toast({
+          title: "Demande créée",
+          description: "L'email n'a pas pu être envoyé, mais le lien de signature a été copié dans votre presse-papier.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Invitation envoyée ✉️",
+          description: `Un email d'invitation à signer a été envoyé à ${tenantEmail}.`,
+        });
+      }
+      
       setStep("overview");
     } catch (error) {
+      console.error("Error creating signature request:", error);
       toast({
         title: "Erreur",
         description: "Impossible de créer la demande de signature.",
         variant: "destructive",
+      });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (pendingTenantRequest?.signature_token) {
+      const signatureLink = `${window.location.origin}/sign-contract?token=${pendingTenantRequest.signature_token}`;
+      await navigator.clipboard.writeText(signatureLink);
+      toast({
+        title: "Lien copié",
+        description: "Le lien de signature a été copié dans votre presse-papier.",
       });
     }
   };
@@ -252,10 +299,20 @@ export function SignContractDialog({
                     </p>
                   </div>
                 ) : pendingTenantRequest ? (
-                  <Badge variant="outline" className="gap-1">
-                    <Mail className="h-3 w-3" />
-                    En attente
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="gap-1">
+                      <Mail className="h-3 w-3" />
+                      Invité
+                    </Badge>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleCopyLink}
+                      title="Copier le lien"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ) : (
                   <Button 
                     onClick={() => setStep("invite")} 
@@ -333,10 +390,19 @@ export function SignContractDialog({
                 />
               </div>
 
+              {contractData.tenantHasPortalAccess && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <User className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-700">
+                    Ce locataire a accès à son espace personnel. Il pourra également signer le contrat depuis son portail locataire.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Alert>
                 <Mail className="h-4 w-4" />
                 <AlertDescription>
-                  Un lien de signature sécurisé sera généré. Vous devrez l'envoyer manuellement au locataire par email ou WhatsApp. Le lien expire dans 7 jours.
+                  Un email d'invitation avec le lien de signature sera envoyé automatiquement au locataire. Le lien expire dans 7 jours.
                 </AlertDescription>
               </Alert>
             </div>
@@ -347,9 +413,19 @@ export function SignContractDialog({
               </Button>
               <Button 
                 onClick={handleSendToTenant}
-                disabled={!tenantEmail || createTenantRequest.isPending}
+                disabled={!tenantEmail || isSendingEmail}
               >
-                {createTenantRequest.isPending ? "Création..." : "Générer le lien"}
+                {isSendingEmail ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Envoyer l'invitation
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </div>

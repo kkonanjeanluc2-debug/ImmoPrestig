@@ -1,7 +1,6 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentPayments } from "@/components/dashboard/RecentPayments";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
@@ -178,9 +177,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             <MyAssignedItems />
             <ManagerPerformance />
-            <SubscriptionQuotaCard />
             <RecentPayments />
-            <RecentActivity />
           </div>
         </div>
       </div>

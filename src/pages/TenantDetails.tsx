@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
-import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,7 +81,6 @@ const TenantDetails = () => {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
-  const { data: activityLogs = [] } = useActivityLogs();
   const { data: agency } = useAgency();
   const deleteTenant = useDeleteTenant();
   const { canEdit, canDelete } = usePermissions();
@@ -111,11 +109,6 @@ const TenantDetails = () => {
   const contractStatus = activeContract?.status as keyof typeof contractStatusConfig || 'expired';
   const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
 
-  // Activity logs related to this tenant
-  const tenantActivityLogs = activityLogs.filter(log => 
-    (log.entity_type === "tenant" && log.entity_id === id) ||
-    (log.entity_type === "payment" && tenant?.payments?.some(p => p.id === log.entity_id))
-  ).slice(0, 10);
 
   // Calculate statistics
   const totalPayments = tenant?.payments?.length || 0;
@@ -178,25 +171,6 @@ const TenantDetails = () => {
       </DashboardLayout>
     );
   }
-
-  const getActionLabel = (actionType: string) => {
-    const labels: Record<string, string> = {
-      create: "Création",
-      update: "Modification",
-      delete: "Suppression",
-      payment_collected: "Paiement encaissé",
-    };
-    return labels[actionType] || actionType;
-  };
-
-  const getEntityLabel = (entityType: string) => {
-    const labels: Record<string, string> = {
-      tenant: "Locataire",
-      payment: "Paiement",
-      contract: "Contrat",
-    };
-    return labels[entityType] || entityType;
-  };
 
   return (
     <DashboardLayout>
@@ -521,55 +495,6 @@ const TenantDetails = () => {
                 )}
               </CardContent>
             </Card>
-
-            {/* Activity History - Admin only */}
-            {!isLocataire && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5" />
-                    Historique d'activité
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {tenantActivityLogs.length > 0 ? (
-                    <div className="space-y-3">
-                      {tenantActivityLogs.map((log) => (
-                        <div key={log.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                          <div className={cn(
-                            "p-1.5 rounded-full",
-                            log.action_type === "create" && "bg-emerald/20 text-emerald",
-                            log.action_type === "update" && "bg-primary/20 text-primary",
-                            log.action_type === "delete" && "bg-destructive/20 text-destructive",
-                            log.action_type === "payment_collected" && "bg-emerald/20 text-emerald"
-                          )}>
-                            {log.action_type === "create" && <FileText className="h-3 w-3" />}
-                            {log.action_type === "update" && <Pencil className="h-3 w-3" />}
-                            {log.action_type === "delete" && <Trash2 className="h-3 w-3" />}
-                            {log.action_type === "payment_collected" && <CheckCircle className="h-3 w-3" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">
-                              {getActionLabel(log.action_type)} - {getEntityLabel(log.entity_type)}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {log.entity_name}
-                            </p>
-                          </div>
-                          <p className="text-xs text-muted-foreground whitespace-nowrap">
-                            {format(new Date(log.created_at), "dd MMM yyyy", { locale: fr })}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      Aucune activité enregistrée
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Right Column - Info */}

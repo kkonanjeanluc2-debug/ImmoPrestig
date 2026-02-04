@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, Clock, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -9,7 +9,6 @@ import { NotificationHistory } from "@/components/settings/NotificationHistory";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { RolesSettings } from "@/components/settings/RolesSettings";
 import { TeamSettings } from "@/components/settings/TeamSettings";
-import { ActivityHistory } from "@/components/settings/ActivityHistory";
 import { WhatsAppSettings } from "@/components/settings/WhatsAppSettings";
 import { AgencySettings } from "@/components/settings/AgencySettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
@@ -159,13 +158,6 @@ const Settings = () => {
               <span>Rôles</span>
             </TabsTrigger>
             <TabsTrigger
-              value="activity"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <Clock className="h-4 w-4" />
-              <span>Activité</span>
-            </TabsTrigger>
-            <TabsTrigger
               value="display"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
             >
@@ -243,10 +235,6 @@ const Settings = () => {
 
           <TabsContent value="roles">
             <RolesSettings />
-          </TabsContent>
-
-          <TabsContent value="activity">
-            <ActivityHistory />
           </TabsContent>
 
           <TabsContent value="display">

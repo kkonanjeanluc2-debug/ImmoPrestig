@@ -432,36 +432,56 @@ export function AgencySettings() {
           </p>
         </div>
 
-        {/* Mobile Money Settings for Rent Collection */}
+        {/* Online Rent Payment Settings */}
         <div className="space-y-4 border-t pt-6">
           <div className="flex items-center gap-2">
             <Smartphone className="h-5 w-5 text-primary" />
-            <h3 className="font-medium">Réception des loyers (Mobile Money)</h3>
+            <h3 className="font-medium">Paiement des loyers en ligne</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Configurez le numéro Mobile Money sur lequel vous recevrez les paiements de loyer des locataires.
+            Configurez le numéro sur lequel vous recevrez les loyers payés en ligne par vos locataires.
+            Les paiements sont traités via Wave Direct ou KKiaPay.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="mobile-money-provider">Opérateur Mobile Money</Label>
+              <Label htmlFor="mobile-money-provider">Agrégateur de paiement</Label>
               <Select
                 value={formData.mobile_money_provider}
                 onValueChange={(value) => handleChange("mobile_money_provider", value)}
               >
                 <SelectTrigger id="mobile-money-provider">
-                  <SelectValue placeholder="Sélectionner l'opérateur" />
+                  <SelectValue placeholder="Sélectionner l'agrégateur" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="orange_money">Orange Money</SelectItem>
-                  <SelectItem value="mtn_money">MTN Mobile Money</SelectItem>
-                  <SelectItem value="wave">Wave</SelectItem>
-                  <SelectItem value="moov">Moov Money</SelectItem>
+                  <SelectItem value="wave">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-primary/80" />
+                      <span>Wave Direct</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="kkiapay">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-primary" />
+                      <span>KKiaPay (Mobile Money & Carte)</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                {formData.mobile_money_provider === "wave" 
+                  ? "Les paiements seront envoyés directement sur votre compte Wave."
+                  : formData.mobile_money_provider === "kkiapay"
+                  ? "Supporte Orange Money, MTN, Moov, Wave et cartes bancaires."
+                  : "Choisissez l'agrégateur pour recevoir les paiements."}
+              </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="mobile-money-number">Numéro Mobile Money</Label>
+              <Label htmlFor="mobile-money-number">
+                {formData.mobile_money_provider === "wave" 
+                  ? "Numéro Wave" 
+                  : "Numéro de réception"}
+              </Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -473,8 +493,17 @@ export function AgencySettings() {
                   className="pl-10"
                 />
               </div>
+              <p className="text-xs text-muted-foreground">
+                Ce numéro recevra les loyers payés en ligne.
+              </p>
             </div>
           </div>
+
+          {!formData.mobile_money_provider && (
+            <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+              <strong className="text-foreground">Note :</strong> Configurez un agrégateur pour permettre à vos locataires de payer leurs loyers en ligne.
+            </div>
+          )}
         </div>
 
         {/* Save Button */}

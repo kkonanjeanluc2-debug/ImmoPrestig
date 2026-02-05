@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export type AccountType = "agence" | "proprietaire";
 
-export type MobileMoneyProvider = "orange_money" | "mtn_money" | "wave" | "moov";
+export type MobileMoneyProvider = "wave" | "kkiapay";
 
 export interface Agency {
   id: string;

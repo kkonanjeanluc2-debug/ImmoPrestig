@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -13,6 +14,7 @@ import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, Calculator, Trendi
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import type { SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
 import { useAgencySubscription } from "@/hooks/useAgencySubscription";
+import { useAgency } from "@/hooks/useAgency";
 import { calculateProration, formatProrationSummary, type ProrationResult } from "@/lib/prorationUtils";
 
 interface SubscriptionCheckoutDialogProps {
@@ -47,9 +49,39 @@ export function SubscriptionCheckoutDialog({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: agency } = useAgency();
   
   // Get current subscription to detect plan change
   const { data: currentSubscription } = useAgencySubscription();
+
+  // Function to poll and check if subscription was updated by webhook
+  const pollSubscriptionUpdate = async (expectedPlanId: string, maxAttempts = 10) => {
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+      
+      // Refetch subscription
+      await queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+      await queryClient.invalidateQueries({ queryKey: ["agency-payment-history"] });
+      
+      if (agency?.id) {
+        const { data: updatedSub } = await supabase
+          .from("agency_subscriptions")
+          .select("plan_id")
+          .eq("agency_id", agency.id)
+          .single();
+        
+        if (updatedSub?.plan_id === expectedPlanId) {
+          toast({
+            title: "Forfait activé !",
+            description: "Votre nouveau forfait a été activé avec succès.",
+          });
+          return true;
+        }
+      }
+    }
+    return false;
+  };
 
   // Normalize phone number to international format for display
   const normalizeIvorianPhone = (phone: string): string | null => {
@@ -308,6 +340,8 @@ export function SubscriptionCheckoutDialog({
 
        // KKiaPay Widget
        if (provider === "kkiapay" && data?.success && data?.public_key) {
+         const expectedPlanId = plan.id;
+         
          const cleanup = () => {
            try {
              removeKkiapayListener("success");
@@ -317,12 +351,19 @@ export function SubscriptionCheckoutDialog({
            }
          };
 
-         addKkiapayListener("success", () => {
+         addKkiapayListener("success", async () => {
            cleanup();
            toast({
-             title: "Paiement initié",
-             description: "Merci ! Votre paiement a été pris en compte.",
+             title: "Paiement reçu",
+             description: "Activation de votre forfait en cours...",
            });
+           
+           // Poll to check when the webhook has processed the payment
+           await pollSubscriptionUpdate(expectedPlanId);
+           
+           // Invalidate queries to refresh UI
+           queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+           queryClient.invalidateQueries({ queryKey: ["agency-payment-history"] });
          });
 
          addKkiapayListener("failed", () => {

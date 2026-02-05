@@ -25,17 +25,12 @@ interface TenantPayRentDialogProps {
   tenantPhone?: string | null;
 }
 
-type PaymentMethod = "orange_money" | "mtn_money" | "wave" | "moov" | "pawapay_mtn" | "pawapay_orange" | "kkiapay";
+type PaymentMethod = "wave" | "kkiapay";
 
-// All available payment methods
-const allPaymentMethods: { value: PaymentMethod; label: string; color: string; provider?: string }[] = [
-  { value: "orange_money", label: "Orange Money", color: "bg-orange-500", provider: "fedapay" },
-  { value: "mtn_money", label: "MTN Mobile Money", color: "bg-yellow-500", provider: "fedapay" },
-  { value: "wave", label: "Wave", color: "bg-blue-500", provider: "wave" },
-  { value: "moov", label: "Moov Money", color: "bg-purple-500", provider: "fedapay" },
-  { value: "pawapay_mtn", label: "MTN (PawaPay)", color: "bg-yellow-600", provider: "pawapay" },
-  { value: "pawapay_orange", label: "Orange (PawaPay)", color: "bg-orange-600", provider: "pawapay" },
-  { value: "kkiapay", label: "KKiaPay", color: "bg-red-500", provider: "kkiapay" },
+// Available payment methods - Wave Direct and KKiaPay only
+const allPaymentMethods: { value: PaymentMethod; label: string; color: string; provider: string; description?: string }[] = [
+  { value: "wave", label: "Wave Direct", color: "bg-blue-600", provider: "wave", description: "Paiement direct Wave" },
+  { value: "kkiapay", label: "KKiaPay", color: "bg-primary", provider: "kkiapay", description: "Mobile Money & Carte" },
 ];
 
 export function TenantPayRentDialog({
@@ -47,7 +42,7 @@ export function TenantPayRentDialog({
 }: Omit<TenantPayRentDialogProps, 'agencyMobileMoneyProvider'>) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("orange_money");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
   const [phone, setPhone] = useState(tenantPhone || "");
 
   const dueMonth = new Date(dueDate).toLocaleDateString("fr-FR", {

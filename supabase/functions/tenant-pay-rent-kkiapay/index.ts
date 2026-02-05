@@ -31,21 +31,22 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    // Use the user's token to authenticate
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    // Get the authenticated user
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
     
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: "Token invalide" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const portalUserId = claimsData.claims.sub;
+    const portalUserId = user.id;
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify this is a tenant with portal access
@@ -117,7 +118,7 @@ Deno.serve(async (req) => {
         payment_id: payment_id,
         public_key: KKIAPAY_PUBLIC_KEY,
         amount: amount,
-        name: customer_name,
+        name: customer_name || tenant.name,
         phone: customer_phone,
         email: customer_email || "",
         sandbox: isSandbox,

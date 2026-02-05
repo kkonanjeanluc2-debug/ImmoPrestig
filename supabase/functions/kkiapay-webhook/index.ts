@@ -1,5 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,12 +22,23 @@ Deno.serve(async (req) => {
 
     console.log("KKiaPay webhook received:", payload);
 
-    // Verify signature if secret is configured
+    // Verify signature if secret is configured (optional)
     const signature = req.headers.get("x-kkiapay-signature");
     if (KKIAPAY_SECRET && signature) {
-      const computedSignature = createHmac("sha256", KKIAPAY_SECRET)
-        .update(body)
-        .digest("hex");
+      // Use Web Crypto API for HMAC
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(KKIAPAY_SECRET);
+      const key = await crypto.subtle.importKey(
+        "raw",
+        keyData,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+      const computedSignature = Array.from(new Uint8Array(signatureBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
       
       if (signature !== computedSignature) {
         console.error("Invalid KKiaPay webhook signature");

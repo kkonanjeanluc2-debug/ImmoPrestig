@@ -351,20 +351,46 @@ export function SubscriptionCheckoutDialog({
            }
          };
 
-         addKkiapayListener("success", async () => {
-           cleanup();
-           toast({
-             title: "Paiement reçu",
-             description: "Activation de votre forfait en cours...",
-           });
-           
-           // Poll to check when the webhook has processed the payment
-           await pollSubscriptionUpdate(expectedPlanId);
-           
-           // Invalidate queries to refresh UI
-           queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
-           queryClient.invalidateQueries({ queryKey: ["agency-payment-history"] });
-         });
+          addKkiapayListener("success", async (response: { transactionId: string }) => {
+            cleanup();
+            toast({
+              title: "Paiement reçu",
+              description: "Activation de votre forfait en cours...",
+            });
+            
+            // Verify payment and activate subscription directly
+            try {
+              const verifyResponse = await supabase.functions.invoke("kkiapay-verify", {
+                body: {
+                  transaction_id: data.transaction_id,
+                  kkiapay_transaction_id: response.transactionId,
+                },
+              });
+
+              if (verifyResponse.error) {
+                console.error("Verification error:", verifyResponse.error);
+                toast({
+                  variant: "destructive",
+                  title: "Erreur d'activation",
+                  description: "Le paiement a été reçu mais l'activation a échoué. Contactez le support.",
+                });
+              } else {
+                toast({
+                  title: "Forfait activé !",
+                  description: "Votre nouveau forfait a été activé avec succès.",
+                });
+              }
+            } catch (error) {
+              console.error("Verification call failed:", error);
+              // Fallback: poll for webhook-based activation
+              await pollSubscriptionUpdate(expectedPlanId);
+            }
+            
+            // Invalidate queries to refresh UI
+            queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+            queryClient.invalidateQueries({ queryKey: ["agency-payment-history"] });
+            queryClient.invalidateQueries({ queryKey: ["all-transactions"] });
+          });
 
          addKkiapayListener("failed", () => {
            cleanup();

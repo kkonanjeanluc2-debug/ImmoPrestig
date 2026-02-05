@@ -29,11 +29,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const PROVIDER_ICONS: Record<string, React.ReactNode> = {
   fedapay: <CreditCard className="h-5 w-5" />,
   wave_ci: <Smartphone className="h-5 w-5" />,
+  pawapay: <Smartphone className="h-5 w-5" />,
 };
 
 const PROVIDER_COLORS: Record<string, string> = {
   fedapay: "bg-green-500",
   wave_ci: "bg-blue-500",
+  pawapay: "bg-purple-500",
 };
 
 const METHOD_LABELS: Record<string, string> = {
@@ -196,6 +198,16 @@ export function PaymentProvidersSettings() {
           docsUrl: "https://docs.wave.com/",
           webhookInfo: "Ce secret est utilisé pour vérifier l'authenticité des notifications webhook.",
         };
+      case "pawapay":
+        return {
+          secretName: "PAWAPAY_WEBHOOK_SECRET",
+          publicKeyName: "PAWAPAY_API_TOKEN",
+          publicKeyLabel: "API Token",
+          secretKeyLabel: "Secret Webhook",
+          description: "Configurez vos clés API PawaPay.",
+          docsUrl: "https://docs.pawapay.io/",
+          webhookInfo: "Ce secret est utilisé pour vérifier les signatures des webhooks PawaPay.",
+        };
       default:
         return null;
     }
@@ -338,6 +350,8 @@ export function PaymentProvidersSettings() {
                 <li><code className="bg-background px-1 rounded">FEDAPAY_PUBLIC_KEY</code> - Clé publique FedaPay</li>
                 <li><code className="bg-background px-1 rounded">WAVE_API_KEY</code> - Clé API Wave CI</li>
                 <li><code className="bg-background px-1 rounded">WAVE_WEBHOOK_SECRET</code> - Secret webhook Wave CI</li>
+                <li><code className="bg-background px-1 rounded">PAWAPAY_API_TOKEN</code> - Token API PawaPay</li>
+                <li><code className="bg-background px-1 rounded">PAWAPAY_WEBHOOK_SECRET</code> - Secret webhook PawaPay</li>
               </ul>
             </div>
           </div>

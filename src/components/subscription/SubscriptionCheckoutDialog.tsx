@@ -28,7 +28,9 @@ const paymentMethods = [
   { id: "wave", name: "Wave (via FedaPay)", icon: Wallet, color: "bg-blue-400", fedapayMode: "Wave CI", provider: "fedapay" },
   { id: "wave_direct", name: "Wave Direct", icon: Wallet, color: "bg-blue-600", fedapayMode: null, provider: "wave_ci", description: "Paiement direct Wave" },
   { id: "moov", name: "Moov Money", icon: Smartphone, color: "bg-blue-500", fedapayMode: "Moov CI", provider: "fedapay" },
-  { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-gray-600", fedapayMode: null, provider: "fedapay" },
+  { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-muted-foreground", fedapayMode: null, provider: "fedapay" },
+  { id: "pawapay_mtn", name: "MTN (PawaPay)", icon: Smartphone, color: "bg-yellow-600", fedapayMode: null, provider: "pawapay", description: "Via PawaPay" },
+  { id: "pawapay_orange", name: "Orange (PawaPay)", icon: Smartphone, color: "bg-orange-600", fedapayMode: null, provider: "pawapay", description: "Via PawaPay" },
 ];
 
 export function SubscriptionCheckoutDialog({
@@ -223,17 +225,22 @@ export function SubscriptionCheckoutDialog({
 
       // Determine which edge function to call based on payment method
       const selectedMethodData = paymentMethods.find((m) => m.id === paymentMethod);
-      const isWaveDirect = selectedMethodData?.provider === "wave_ci";
-      const edgeFunctionName = isWaveDirect ? "wave-checkout" : "fedapay-checkout";
-
-      const response = await supabase.functions.invoke(edgeFunctionName, {
-        body: {
+      const provider = selectedMethodData?.provider;
+      
+      let edgeFunctionName: string;
+      let requestBody: Record<string, unknown>;
+      
+      if (provider === "pawapay") {
+        edgeFunctionName = "pawapay-checkout";
+        // Extract actual payment method from pawapay_mtn -> mtn_money
+        const actualMethod = paymentMethod.replace("pawapay_", "") + "_money";
+        requestBody = {
           plan_id: plan.id,
           billing_cycle: billingCycle,
-          payment_method: paymentMethod,
+          payment_method: actualMethod === "orange_money" ? "orange_money" : actualMethod === "mtn_money" ? "mtn_money" : paymentMethod.replace("pawapay_", ""),
           customer_phone: phoneNumber,
+          country_code: "CI",
           return_url: window.location.origin + "/settings?tab=subscription",
-          // Send proration data for plan changes
           proration: proration ? {
             remaining_days: proration.remainingDays,
             total_days: proration.totalDays,
@@ -241,7 +248,35 @@ export function SubscriptionCheckoutDialog({
             new_plan_prorata_cost: proration.newPlanProrataCost,
             amount_due: proration.amountDue,
           } : null,
-        },
+        };
+      } else if (provider === "wave_ci") {
+        edgeFunctionName = "wave-checkout";
+        requestBody = {
+          plan_id: plan.id,
+          billing_cycle: billingCycle,
+          customer_phone: phoneNumber,
+          return_url: window.location.origin + "/settings?tab=subscription",
+        };
+      } else {
+        edgeFunctionName = "fedapay-checkout";
+        requestBody = {
+          plan_id: plan.id,
+          billing_cycle: billingCycle,
+          payment_method: paymentMethod,
+          customer_phone: phoneNumber,
+          return_url: window.location.origin + "/settings?tab=subscription",
+          proration: proration ? {
+            remaining_days: proration.remainingDays,
+            total_days: proration.totalDays,
+            current_plan_credit: proration.currentPlanCredit,
+            new_plan_prorata_cost: proration.newPlanProrataCost,
+            amount_due: proration.amountDue,
+          } : null,
+        };
+      }
+
+      const response = await supabase.functions.invoke(edgeFunctionName, {
+        body: requestBody,
       });
 
       if (response.error) {
@@ -259,9 +294,26 @@ export function SubscriptionCheckoutDialog({
         return;
       }
 
+      // Handle PawaPay USSD push (no redirect URL)
+      if (data.provider === "pawapay" && data.success && !data.payment_url) {
+        toast({
+          title: "Notification envoyée",
+          description: data.message || "Veuillez confirmer le paiement sur votre téléphone.",
+        });
+        onOpenChange(false);
+        return;
+      }
+
       if (data.payment_url) {
         // Redirect to payment page (FedaPay or Wave)
         window.location.href = data.payment_url;
+      } else if (data.success) {
+        // Handle cases where payment is initiated but no redirect needed
+        toast({
+          title: "Paiement initié",
+          description: data.message || "Veuillez suivre les instructions sur votre téléphone.",
+        });
+        onOpenChange(false);
       } else {
         throw new Error("URL de paiement non reçue");
       }

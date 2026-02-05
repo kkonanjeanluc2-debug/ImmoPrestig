@@ -323,7 +323,6 @@ export function SubscriptionCheckoutDialog({
              title: "Paiement initié",
              description: "Merci ! Votre paiement a été pris en compte.",
            });
-           onOpenChange(false);
          });
 
          addKkiapayListener("failed", () => {
@@ -335,18 +334,24 @@ export function SubscriptionCheckoutDialog({
            });
          });
 
-          openKkiapayWidget({
-            amount: data.amount,
-            api_key: data.public_key,
-            sandbox: !!data.sandbox,
-            phone: data.phone,
-            name: data.name,
-            email: data.email,
-            reason: data.reason,
-            // IMPORTANT: ne pas passer `callback` (redirection) ici.
-            // On s'appuie sur les listeners + webhooks côté backend.
-            data: data.data,
-          });
+         // IMPORTANT: Fermer le dialog et arrêter le loading AVANT d'ouvrir le widget
+         // Sinon le widget KKiaPay est bloqué par le modal
+         setIsLoading(false);
+         onOpenChange(false);
+
+         // Petit délai pour laisser le dialog se fermer
+         setTimeout(() => {
+           openKkiapayWidget({
+             amount: data.amount,
+             api_key: data.public_key,
+             sandbox: !!data.sandbox,
+             phone: data.phone,
+             name: data.name,
+             email: data.email,
+             reason: data.reason,
+             data: data.data,
+           });
+         }, 100);
 
          return;
        }

@@ -1,12 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
+import { validateAuth, corsHeaders, unauthorizedResponse } from "../_shared/auth.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 interface TenantData {
   id: string;
@@ -179,24 +175,23 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Validate authentication
+    const auth = await validateAuth(req);
+    if (!auth.authenticated) {
+      return unauthorizedResponse(auth.error);
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Parse request body to check for specific month or user filtering
-    let targetUserId: string | null = null;
-    
-    try {
-      const body = await req.json();
-      targetUserId = body.user_id || null;
-    } catch {
-      // No body or invalid JSON - continue without user filter
-    }
+    // Use authenticated user's ID - ignore any user_id from body for security
+    const targetUserId = auth.userId!;
 
-    console.log(`Processing receipts for all paid payments without receipts yet`);
+    console.log(`Processing receipts for user ${targetUserId} - paid payments without receipts yet`);
 
     // Build query for paid payments that haven't had receipts sent yet
-    // We find all paid payments regardless of month
+    // Filter by authenticated user for security
     let query = supabase
       .from("payments")
       .select(`
@@ -220,12 +215,8 @@ Deno.serve(async (req) => {
         )
       `)
       .eq("status", "paid")
-      .not("paid_date", "is", null);
-
-    // Filter by user if specified
-    if (targetUserId) {
-      query = query.eq("user_id", targetUserId);
-    }
+      .not("paid_date", "is", null)
+      .eq("user_id", targetUserId); // Always filter by authenticated user
 
     const { data: payments, error: paymentsError } = await query;
 

@@ -134,10 +134,11 @@ export function CommissionReportCard() {
       doc.rect(15, y - 4, pageWidth - 30, 8, "F");
       
       doc.text("Propriétaire", 17, y);
-      doc.text("Type", 60, y);
-      doc.text("%", 100, y);
-      doc.text("Loyers", 115, y);
-      doc.text("Commission", 150, y);
+      doc.text("Type", 55, y);
+      doc.text("%", 90, y);
+      doc.text("Loyers", 105, y);
+      doc.text("Commission", 135, y);
+      doc.text("Gain", 175, y);
       y += 8;
 
       // Table rows
@@ -148,21 +149,25 @@ export function CommissionReportCard() {
           y = 20;
         }
         
-        doc.text(owner.ownerName.substring(0, 20), 17, y);
-        doc.text(owner.managementTypeName.substring(0, 15), 60, y);
-        doc.text(owner.commissionPercentage + "%", 100, y);
-        doc.text(formatAmountForPDF(owner.totalRent), 115, y);
-        doc.text(formatAmountForPDF(owner.totalCommission), 150, y);
+        const ownerGain = owner.totalRent - owner.totalCommission;
+        doc.text(owner.ownerName.substring(0, 18), 17, y);
+        doc.text(owner.managementTypeName.substring(0, 12), 55, y);
+        doc.text(owner.commissionPercentage + "%", 90, y);
+        doc.text(formatAmountForPDF(owner.totalRent), 105, y);
+        doc.text(formatAmountForPDF(owner.totalCommission), 135, y);
+        doc.text(formatAmountForPDF(ownerGain), 175, y);
         y += 7;
       }
 
       // Total row
+      const totalOwnerGain = report.totalRent - report.totalCommission;
       doc.setFillColor(230, 230, 230);
       doc.rect(15, y - 3, pageWidth - 30, 8, "F");
       doc.setFont("helvetica", "bold");
       doc.text("TOTAL", 17, y + 2);
-      doc.text(formatAmountForPDF(report.totalRent), 115, y + 2);
-      doc.text(formatAmountForPDF(report.totalCommission), 150, y + 2);
+      doc.text(formatAmountForPDF(report.totalRent), 105, y + 2);
+      doc.text(formatAmountForPDF(report.totalCommission), 135, y + 2);
+      doc.text(formatAmountForPDF(totalOwnerGain), 175, y + 2);
       y += 15;
 
       // Detail section
@@ -368,26 +373,33 @@ export function CommissionReportCard() {
                       <TableHead className="text-center">%</TableHead>
                       <TableHead className="text-right">Loyers</TableHead>
                       <TableHead className="text-right">Commission</TableHead>
+                      <TableHead className="text-right">Gain propriétaire</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {report.byOwner.map((owner) => (
-                      <TableRow key={owner.ownerId}>
-                        <TableCell className="font-medium">{owner.ownerName}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{owner.managementTypeName}</Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="secondary">{owner.commissionPercentage}%</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(owner.totalRent)}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-emerald">
-                          {formatCurrency(owner.totalCommission)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {report.byOwner.map((owner) => {
+                      const ownerGain = owner.totalRent - owner.totalCommission;
+                      return (
+                        <TableRow key={owner.ownerId}>
+                          <TableCell className="font-medium">{owner.ownerName}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{owner.managementTypeName}</Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="secondary">{owner.commissionPercentage}%</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(owner.totalRent)}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-emerald">
+                            {formatCurrency(owner.totalCommission)}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-primary">
+                            {formatCurrency(ownerGain)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                     {/* Total row */}
                     <TableRow className="bg-muted/50 font-bold border-t-2">
                       <TableCell className="font-bold">TOTAL</TableCell>
@@ -398,6 +410,9 @@ export function CommissionReportCard() {
                       </TableCell>
                       <TableCell className="text-right font-bold text-emerald">
                         {formatCurrency(report.totalCommission)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-primary">
+                        {formatCurrency(report.totalRent - report.totalCommission)}
                       </TableCell>
                     </TableRow>
                   </TableBody>

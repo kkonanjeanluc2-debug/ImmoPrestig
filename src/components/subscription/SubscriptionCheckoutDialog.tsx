@@ -340,7 +340,21 @@ export function SubscriptionCheckoutDialog({
 
        // KKiaPay Widget
        if (provider === "kkiapay" && data?.success && data?.public_key) {
+         // IMPORTANT: Capture les valeurs dans des variables locales pour le closure
+         const transactionId = data.transaction_id;
          const expectedPlanId = plan.id;
+         const widgetConfig = {
+           amount: data.amount,
+           api_key: data.public_key,
+           sandbox: !!data.sandbox,
+           phone: data.phone,
+           name: data.name,
+           email: data.email,
+           reason: data.reason,
+           data: data.data,
+         };
+         
+         console.log("KKiaPay setup - transaction_id:", transactionId);
          
          const cleanup = () => {
            try {
@@ -351,62 +365,68 @@ export function SubscriptionCheckoutDialog({
            }
          };
 
-          addKkiapayListener("success", async (response: { transactionId: string }) => {
-            cleanup();
-            toast({
-              title: "Paiement reçu",
-              description: "Activation de votre forfait en cours...",
-            });
-            
-            // Verify payment and activate subscription directly
-            try {
-              const verifyResponse = await supabase.functions.invoke("kkiapay-verify", {
-                body: {
-                  transaction_id: data.transaction_id,
-                  kkiapay_transaction_id: response.transactionId,
-                },
-              });
+         addKkiapayListener("success", async (response: { transactionId: string }) => {
+           cleanup();
+           console.log("KKiaPay success callback - kkiapay_transaction_id:", response.transactionId, "our transaction_id:", transactionId);
+           
+           toast({
+             title: "Paiement reçu",
+             description: "Activation de votre forfait en cours...",
+           });
+           
+           // Verify payment and activate subscription directly
+           try {
+             console.log("Calling kkiapay-verify with:", { transaction_id: transactionId, kkiapay_transaction_id: response.transactionId });
+             
+             const verifyResponse = await supabase.functions.invoke("kkiapay-verify", {
+               body: {
+                 transaction_id: transactionId,
+                 kkiapay_transaction_id: response.transactionId,
+               },
+             });
 
-              if (verifyResponse.error) {
-                console.error("Verification error:", verifyResponse.error);
-                toast({
-                  variant: "destructive",
-                  title: "Erreur d'activation",
-                  description: "Le paiement a été reçu mais l'activation a échoué. Contactez le support.",
-                });
-              } else {
-                toast({
-                  title: "Forfait activé !",
-                  description: "Votre nouveau forfait a été activé avec succès.",
-                });
-              }
-            } catch (error) {
-              console.error("Verification call failed:", error);
-              // Fallback: poll for webhook-based activation
-              await pollSubscriptionUpdate(expectedPlanId);
-            }
-            
-            // Invalidate queries to refresh UI
-            queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
-            queryClient.invalidateQueries({ queryKey: ["agency-payment-history"] });
-            queryClient.invalidateQueries({ queryKey: ["all-transactions"] });
-          });
+             console.log("kkiapay-verify response:", verifyResponse);
 
-          addKkiapayListener("failed", (response: any) => {
-            cleanup();
-            console.error("KKiaPay failed:", response);
+             if (verifyResponse.error) {
+               console.error("Verification error:", verifyResponse.error);
+               toast({
+                 variant: "destructive",
+                 title: "Erreur d'activation",
+                 description: "Le paiement a été reçu mais l'activation a échoué. Contactez le support.",
+               });
+             } else {
+               toast({
+                 title: "Forfait activé !",
+                 description: "Votre nouveau forfait a été activé avec succès.",
+               });
+             }
+           } catch (error) {
+             console.error("Verification call failed:", error);
+             // Fallback: poll for webhook-based activation
+             await pollSubscriptionUpdate(expectedPlanId);
+           }
+           
+           // Invalidate queries to refresh UI
+           queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+           queryClient.invalidateQueries({ queryKey: ["agency-payment-history"] });
+           queryClient.invalidateQueries({ queryKey: ["all-transactions"] });
+         });
 
-            const reason =
-              response?.reason ||
-              response?.message ||
-              "Le paiement KKiaPay n'a pas abouti (refus de la banque ou solde insuffisant).";
+         addKkiapayListener("failed", (response: any) => {
+           cleanup();
+           console.error("KKiaPay failed:", response);
 
-            toast({
-              variant: "destructive",
-              title: "Paiement échoué",
-              description: reason,
-            });
-          });
+           const reason =
+             response?.reason ||
+             response?.message ||
+             "Le paiement KKiaPay n'a pas abouti (refus de la banque ou solde insuffisant).";
+
+           toast({
+             variant: "destructive",
+             title: "Paiement échoué",
+             description: reason,
+           });
+         });
 
          // IMPORTANT: Fermer le dialog et arrêter le loading AVANT d'ouvrir le widget
          // Sinon le widget KKiaPay est bloqué par le modal
@@ -415,16 +435,8 @@ export function SubscriptionCheckoutDialog({
 
          // Petit délai pour laisser le dialog se fermer
          setTimeout(() => {
-           openKkiapayWidget({
-             amount: data.amount,
-             api_key: data.public_key,
-             sandbox: !!data.sandbox,
-             phone: data.phone,
-             name: data.name,
-             email: data.email,
-             reason: data.reason,
-             data: data.data,
-           });
+           console.log("Opening KKiaPay widget with config:", widgetConfig);
+           openKkiapayWidget(widgetConfig);
          }, 100);
 
          return;

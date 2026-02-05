@@ -335,17 +335,18 @@ export function SubscriptionCheckoutDialog({
            });
          });
 
-         openKkiapayWidget({
-           amount: data.amount,
-           api_key: data.public_key,
-           sandbox: !!data.sandbox,
-           phone: data.phone,
-           name: data.name,
-           email: data.email,
-           reason: data.reason,
-           callback: data.callback_url,
-           data: data.data,
-         });
+          openKkiapayWidget({
+            amount: data.amount,
+            api_key: data.public_key,
+            sandbox: !!data.sandbox,
+            phone: data.phone,
+            name: data.name,
+            email: data.email,
+            reason: data.reason,
+            // IMPORTANT: ne pas passer `callback` (redirection) ici.
+            // On s'appuie sur les listeners + webhooks côté backend.
+            data: data.data,
+          });
 
          return;
        }

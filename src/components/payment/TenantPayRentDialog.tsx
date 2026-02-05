@@ -128,7 +128,8 @@ export function TenantPayRentDialog({
           name: data.name,
           email: data.email,
           reason: data.reason,
-          callback: data.callback_url,
+          // IMPORTANT: ne pas passer `callback` (redirection) ici.
+          // On s'appuie sur les listeners + webhooks côté backend.
           data: data.data,
         });
 

@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, AlertTriangle, Calculator, TrendingDown, TrendingUp } from "lucide-react";
+import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, Calculator, TrendingDown, TrendingUp } from "lucide-react";
+import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import type { SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
 import { useAgencySubscription } from "@/hooks/useAgencySubscription";
 import { calculateProration, formatProrationSummary, type ProrationResult } from "@/lib/prorationUtils";
@@ -286,59 +287,103 @@ export function SubscriptionCheckoutDialog({
         };
       }
 
-      const response = await supabase.functions.invoke(edgeFunctionName, {
-        body: requestBody,
-      });
+       const response = await supabase.functions.invoke(edgeFunctionName, {
+         body: requestBody,
+       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
+       if (response.error) {
+         throw new Error(response.error.message);
+       }
 
-      const data = response.data;
+       const data = response.data;
 
-      if (data.success && isFree) {
-        toast({
-          title: "Forfait activé !",
-          description: `Votre forfait ${plan.name} a été activé avec succès.`,
-        });
-        onOpenChange(false);
-        return;
-      }
+       if (data.success && isFree) {
+         toast({
+           title: "Forfait activé !",
+           description: `Votre forfait ${plan.name} a été activé avec succès.`,
+         });
+         onOpenChange(false);
+         return;
+       }
 
-      // Handle PawaPay USSD push (no redirect URL)
-      if (data.provider === "pawapay" && data.success && !data.payment_url) {
-        toast({
-          title: "Notification envoyée",
-          description: data.message || "Veuillez confirmer le paiement sur votre téléphone.",
-        });
-        onOpenChange(false);
-        return;
-      }
+       // KKiaPay Widget
+       if (provider === "kkiapay" && data?.success && data?.public_key) {
+         const cleanup = () => {
+           try {
+             removeKkiapayListener("success");
+             removeKkiapayListener("failed");
+           } catch {
+             // ignore
+           }
+         };
 
-      if (data.payment_url) {
-        // Redirect to payment page (FedaPay or Wave)
-        window.location.href = data.payment_url;
-      } else if (data.success) {
-        // Handle cases where payment is initiated but no redirect needed
-        toast({
-          title: "Paiement initié",
-          description: data.message || "Veuillez suivre les instructions sur votre téléphone.",
-        });
-        onOpenChange(false);
-      } else {
-        throw new Error("URL de paiement non reçue");
-      }
-    } catch (error: any) {
-      console.error("Checkout error:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur de paiement",
-        description: error.message || "Une erreur est survenue lors du paiement",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+         addKkiapayListener("success", () => {
+           cleanup();
+           toast({
+             title: "Paiement initié",
+             description: "Merci ! Votre paiement a été pris en compte.",
+           });
+           onOpenChange(false);
+         });
+
+         addKkiapayListener("failed", () => {
+           cleanup();
+           toast({
+             variant: "destructive",
+             title: "Paiement échoué",
+             description: "Le paiement KKiaPay n'a pas abouti.",
+           });
+         });
+
+         openKkiapayWidget({
+           amount: data.amount,
+           api_key: data.public_key,
+           sandbox: !!data.sandbox,
+           phone: data.phone,
+           name: data.name,
+           email: data.email,
+           reason: data.reason,
+           callback: data.callback_url,
+           data: data.data,
+         });
+
+         return;
+       }
+
+       // Handle PawaPay USSD push (no redirect URL)
+       if (data.provider === "pawapay" && data.success && !data.payment_url) {
+         toast({
+           title: "Notification envoyée",
+           description: data.message || "Veuillez confirmer le paiement sur votre téléphone.",
+         });
+         onOpenChange(false);
+         return;
+       }
+
+       if (data.payment_url) {
+         // Redirect to payment page (FedaPay or Wave)
+         window.location.href = data.payment_url;
+       } else if (data.success) {
+         // Handle cases where payment is initiated but no redirect needed
+         toast({
+           title: "Paiement initié",
+           description: data.message || "Veuillez suivre les instructions sur votre téléphone.",
+         });
+         onOpenChange(false);
+       } else {
+         throw new Error("URL de paiement non reçue");
+       }
+     } catch (error: any) {
+       console.error("Checkout error:", error);
+       toast({
+         variant: "destructive",
+         title: "Erreur de paiement",
+         description: error.message || "Une erreur est survenue lors du paiement",
+       });
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

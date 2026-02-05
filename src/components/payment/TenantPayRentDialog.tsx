@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
+import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import { toast } from "sonner";
 import { Loader2, CreditCard, Smartphone } from "lucide-react";
 
@@ -96,6 +97,43 @@ export function TenantPayRentDialog({
       const { data, error } = await supabase.functions.invoke(functionName, { body });
 
       if (error) throw error;
+
+      // KKiaPay Widget
+      if (provider === "kkiapay" && data?.success && data?.public_key) {
+        const cleanup = () => {
+          try {
+            removeKkiapayListener("success");
+            removeKkiapayListener("failed");
+          } catch {
+            // ignore
+          }
+        };
+
+        addKkiapayListener("success", () => {
+          cleanup();
+          toast.success("Merci ! Votre paiement a été pris en compte.");
+          setOpen(false);
+        });
+
+        addKkiapayListener("failed", () => {
+          cleanup();
+          toast.error("Le paiement KKiaPay n'a pas abouti.");
+        });
+
+        openKkiapayWidget({
+          amount: data.amount,
+          api_key: data.public_key,
+          sandbox: !!data.sandbox,
+          phone: data.phone,
+          name: data.name,
+          email: data.email,
+          reason: data.reason,
+          callback: data.callback_url,
+          data: data.data,
+        });
+
+        return;
+      }
 
       // Handle PawaPay USSD push (no redirect URL)
       if (data?.provider === "pawapay" && data?.success) {

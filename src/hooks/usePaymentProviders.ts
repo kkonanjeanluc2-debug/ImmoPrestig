@@ -87,6 +87,12 @@ export function useEnabledPaymentProviders() {
             display_name: "PawaPay",
             supported_methods: ["mtn_money", "orange_money", "moov", "airtel"],
             settings: {}
+          },
+          {
+            provider_name: "kkiapay",
+            display_name: "KKiaPay",
+            supported_methods: ["mtn_money", "orange_money", "moov", "wave", "card"],
+            settings: {}
           }
         ];
       }

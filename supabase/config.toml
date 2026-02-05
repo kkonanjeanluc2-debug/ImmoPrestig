@@ -80,3 +80,12 @@ verify_jwt = false
 
 [functions.tenant-pay-rent-wave-webhook]
 verify_jwt = false
+
+[functions.pawapay-checkout]
+verify_jwt = false
+
+[functions.pawapay-webhook]
+verify_jwt = false
+
+[functions.tenant-pay-rent-pawapay]
+verify_jwt = false

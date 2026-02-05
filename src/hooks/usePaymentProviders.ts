@@ -74,13 +74,21 @@ export function useEnabledPaymentProviders() {
 
       if (error) {
         console.warn("Could not fetch payment providers:", error);
-        // Return default FedaPay if can't fetch
-        return [{
-          provider_name: "fedapay",
-          display_name: "FedaPay",
-          supported_methods: ["orange_money", "mtn_money", "wave", "moov", "card"],
-          settings: {}
-        }];
+        // Return default providers if can't fetch
+        return [
+          {
+            provider_name: "fedapay",
+            display_name: "FedaPay",
+            supported_methods: ["orange_money", "mtn_money", "wave", "moov", "card"],
+            settings: {}
+          },
+          {
+            provider_name: "pawapay",
+            display_name: "PawaPay",
+            supported_methods: ["mtn_money", "orange_money", "moov", "airtel"],
+            settings: {}
+          }
+        ];
       }
       return data;
     },

@@ -24,14 +24,16 @@ interface TenantPayRentDialogProps {
   tenantPhone?: string | null;
 }
 
-type PaymentMethod = "orange_money" | "mtn_money" | "wave" | "moov";
+type PaymentMethod = "orange_money" | "mtn_money" | "wave" | "moov" | "pawapay_mtn" | "pawapay_orange";
 
 // All available payment methods
-const allPaymentMethods: { value: PaymentMethod; label: string; color: string }[] = [
-  { value: "orange_money", label: "Orange Money", color: "bg-orange-500" },
-  { value: "mtn_money", label: "MTN Mobile Money", color: "bg-yellow-500" },
-  { value: "wave", label: "Wave", color: "bg-blue-500" },
-  { value: "moov", label: "Moov Money", color: "bg-purple-500" },
+const allPaymentMethods: { value: PaymentMethod; label: string; color: string; provider?: string }[] = [
+  { value: "orange_money", label: "Orange Money", color: "bg-orange-500", provider: "fedapay" },
+  { value: "mtn_money", label: "MTN Mobile Money", color: "bg-yellow-500", provider: "fedapay" },
+  { value: "wave", label: "Wave", color: "bg-blue-500", provider: "wave" },
+  { value: "moov", label: "Moov Money", color: "bg-purple-500", provider: "fedapay" },
+  { value: "pawapay_mtn", label: "MTN (PawaPay)", color: "bg-yellow-600", provider: "pawapay" },
+  { value: "pawapay_orange", label: "Orange (PawaPay)", color: "bg-orange-600", provider: "pawapay" },
 ];
 
 export function TenantPayRentDialog({
@@ -59,22 +61,46 @@ export function TenantPayRentDialog({
 
     setIsLoading(true);
     try {
-      // Use different edge function based on payment method
-      const functionName = selectedMethod === "wave" 
-        ? "tenant-pay-rent-wave" 
-        : "tenant-pay-rent";
+      const selectedMethodData = allPaymentMethods.find(m => m.value === selectedMethod);
+      const provider = selectedMethodData?.provider;
       
-      const body = selectedMethod === "wave"
-        ? { payment_id: paymentId, customer_phone: phone }
-        : { payment_id: paymentId, payment_method: selectedMethod, customer_phone: phone };
+      let functionName: string;
+      let body: Record<string, unknown>;
+      
+      if (provider === "pawapay") {
+        functionName = "tenant-pay-rent-pawapay";
+        const actualMethod = selectedMethod.replace("pawapay_", "") + "_money";
+        body = { 
+          payment_id: paymentId, 
+          customer_phone: phone,
+          payment_method: actualMethod,
+          country_code: "CI"
+        };
+      } else if (selectedMethod === "wave") {
+        functionName = "tenant-pay-rent-wave";
+        body = { payment_id: paymentId, customer_phone: phone };
+      } else {
+        functionName = "tenant-pay-rent";
+        body = { payment_id: paymentId, payment_method: selectedMethod, customer_phone: phone };
+      }
 
       const { data, error } = await supabase.functions.invoke(functionName, { body });
 
       if (error) throw error;
 
+      // Handle PawaPay USSD push (no redirect URL)
+      if (data?.provider === "pawapay" && data?.success) {
+        toast.success(data.message || "Notification envoyée sur votre téléphone");
+        setOpen(false);
+        return;
+      }
+
       if (data?.payment_url) {
         toast.success("Redirection vers le paiement...");
         window.open(data.payment_url, "_blank");
+        setOpen(false);
+      } else if (data?.success) {
+        toast.success(data.message || "Paiement initié avec succès");
         setOpen(false);
       } else {
         throw new Error(data?.error || "Erreur lors de l'initialisation du paiement");

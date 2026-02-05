@@ -200,13 +200,14 @@ export function PaymentProvidersSettings() {
         };
       case "pawapay":
         return {
-          secretName: "PAWAPAY_WEBHOOK_SECRET",
-          publicKeyName: "PAWAPAY_API_TOKEN",
-          publicKeyLabel: "API Token",
-          secretKeyLabel: "Secret Webhook",
-          description: "Configurez vos clés API PawaPay.",
+          secretName: "PAWAPAY_API_TOKEN",
+          publicKeyName: null,
+          publicKeyLabel: null,
+          secretKeyLabel: "API Token",
+          description: "Configurez votre jeton API PawaPay.",
           docsUrl: "https://docs.pawapay.io/",
-          webhookInfo: "Ce secret est utilisé pour vérifier les signatures des webhooks PawaPay.",
+          webhookInfo: null,
+          singleKey: true,
         };
       default:
         return null;
@@ -351,7 +352,6 @@ export function PaymentProvidersSettings() {
                 <li><code className="bg-background px-1 rounded">WAVE_API_KEY</code> - Clé API Wave CI</li>
                 <li><code className="bg-background px-1 rounded">WAVE_WEBHOOK_SECRET</code> - Secret webhook Wave CI</li>
                 <li><code className="bg-background px-1 rounded">PAWAPAY_API_TOKEN</code> - Token API PawaPay</li>
-                <li><code className="bg-background px-1 rounded">PAWAPAY_WEBHOOK_SECRET</code> - Secret webhook PawaPay</li>
               </ul>
             </div>
           </div>
@@ -441,15 +441,17 @@ export function PaymentProvidersSettings() {
                         <Key className="h-4 w-4 text-muted-foreground" />
                         <span className="text-muted-foreground">Statut actuel:</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          {settings?.public_key_configured ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-orange-600" />
-                          )}
-                          <span>{info?.publicKeyLabel || "Clé publique"}</span>
-                        </div>
+                      <div className={`grid ${info?.singleKey ? 'grid-cols-1' : 'grid-cols-2'} gap-2 text-sm`}>
+                        {!info?.singleKey && (
+                          <div className="flex items-center gap-2">
+                            {settings?.public_key_configured ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-orange-600" />
+                            )}
+                            <span>{info?.publicKeyLabel || "Clé publique"}</span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-2">
                           {settings?.secret_key_configured ? (
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -466,34 +468,36 @@ export function PaymentProvidersSettings() {
                       )}
                     </div>
 
-                    {/* Public Key */}
-                    <div className="space-y-2">
-                      <Label htmlFor="public-key">{info?.publicKeyLabel || "Clé Publique"}</Label>
-                      <div className="relative">
-                        <Input
-                          id="public-key"
-                          type={showPublicKey ? "text" : "password"}
-                          placeholder={`Entrez votre ${info?.publicKeyLabel?.toLowerCase() || "clé publique"}...`}
-                          value={publicKey}
-                          onChange={(e) => setPublicKey(e.target.value)}
-                          className="pr-10"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full px-3"
-                          onClick={() => setShowPublicKey(!showPublicKey)}
-                        >
-                          {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
+                    {/* Public Key - Only show if not singleKey */}
+                    {!info?.singleKey && (
+                      <div className="space-y-2">
+                        <Label htmlFor="public-key">{info?.publicKeyLabel || "Clé Publique"}</Label>
+                        <div className="relative">
+                          <Input
+                            id="public-key"
+                            type={showPublicKey ? "text" : "password"}
+                            placeholder={`Entrez votre ${info?.publicKeyLabel?.toLowerCase() || "clé publique"}...`}
+                            value={publicKey}
+                            onChange={(e) => setPublicKey(e.target.value)}
+                            className="pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3"
+                            onClick={() => setShowPublicKey(!showPublicKey)}
+                          >
+                            {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        {info && info.publicKeyName && (
+                          <p className="text-xs text-muted-foreground">
+                            Sera stockée comme: <code className="bg-muted px-1 rounded">{info.publicKeyName}</code>
+                          </p>
+                        )}
                       </div>
-                      {info && (
-                        <p className="text-xs text-muted-foreground">
-                          Sera stockée comme: <code className="bg-muted px-1 rounded">{info.publicKeyName}</code>
-                        </p>
-                      )}
-                    </div>
+                    )}
 
                     {/* Secret Key */}
                     <div className="space-y-2">

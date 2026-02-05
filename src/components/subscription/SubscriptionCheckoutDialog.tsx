@@ -392,14 +392,21 @@ export function SubscriptionCheckoutDialog({
             queryClient.invalidateQueries({ queryKey: ["all-transactions"] });
           });
 
-         addKkiapayListener("failed", () => {
-           cleanup();
-           toast({
-             variant: "destructive",
-             title: "Paiement échoué",
-             description: "Le paiement KKiaPay n'a pas abouti.",
-           });
-         });
+          addKkiapayListener("failed", (response: any) => {
+            cleanup();
+            console.error("KKiaPay failed:", response);
+
+            const reason =
+              response?.reason ||
+              response?.message ||
+              "Le paiement KKiaPay n'a pas abouti (refus de la banque ou solde insuffisant).";
+
+            toast({
+              variant: "destructive",
+              title: "Paiement échoué",
+              description: reason,
+            });
+          });
 
          // IMPORTANT: Fermer le dialog et arrêter le loading AVANT d'ouvrir le widget
          // Sinon le widget KKiaPay est bloqué par le modal

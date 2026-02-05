@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
     }
 
     // Define secret names based on provider
-    const secretNames: Record<string, { public: string | null; secret: string }> = {
+    const secretNames: Record<string, { public: string | null; secret: string; extra?: string }> = {
       fedapay: {
         public: "FEDAPAY_PUBLIC_KEY",
         secret: "FEDAPAY_SECRET_KEY",
@@ -87,6 +87,11 @@ Deno.serve(async (req) => {
       pawapay: {
         public: null, // PawaPay only has one API token
         secret: "PAWAPAY_API_TOKEN",
+      },
+      kkiapay: {
+        public: "KKIAPAY_PUBLIC_KEY",
+        secret: "KKIAPAY_PRIVATE_KEY",
+        extra: "KKIAPAY_SECRET",
       },
     };
 

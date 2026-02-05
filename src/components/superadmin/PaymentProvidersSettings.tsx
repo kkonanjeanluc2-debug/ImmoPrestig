@@ -30,12 +30,14 @@ const PROVIDER_ICONS: Record<string, React.ReactNode> = {
   fedapay: <CreditCard className="h-5 w-5" />,
   wave_ci: <Smartphone className="h-5 w-5" />,
   pawapay: <Smartphone className="h-5 w-5" />,
+  kkiapay: <CreditCard className="h-5 w-5" />,
 };
 
 const PROVIDER_COLORS: Record<string, string> = {
   fedapay: "bg-green-500",
   wave_ci: "bg-blue-500",
   pawapay: "bg-purple-500",
+  kkiapay: "bg-red-500",
 };
 
 const METHOD_LABELS: Record<string, string> = {
@@ -209,6 +211,19 @@ export function PaymentProvidersSettings() {
           webhookInfo: null,
           singleKey: true,
         };
+      case "kkiapay":
+        return {
+          secretName: "KKIAPAY_PRIVATE_KEY",
+          publicKeyName: "KKIAPAY_PUBLIC_KEY",
+          publicKeyLabel: "Public Api Key",
+          secretKeyLabel: "Private Api Key",
+          extraSecretName: "KKIAPAY_SECRET",
+          extraSecretLabel: "Secret (Webhook)",
+          description: "Configurez vos clés API KKiaPay.",
+          docsUrl: "https://docs.kkiapay.me/",
+          webhookInfo: "Le secret est utilisé pour vérifier les signatures des webhooks.",
+          hasThreeKeys: true,
+        };
       default:
         return null;
     }
@@ -352,6 +367,9 @@ export function PaymentProvidersSettings() {
                 <li><code className="bg-background px-1 rounded">WAVE_API_KEY</code> - Clé API Wave CI</li>
                 <li><code className="bg-background px-1 rounded">WAVE_WEBHOOK_SECRET</code> - Secret webhook Wave CI</li>
                 <li><code className="bg-background px-1 rounded">PAWAPAY_API_TOKEN</code> - Token API PawaPay</li>
+                <li><code className="bg-background px-1 rounded">KKIAPAY_PUBLIC_KEY</code> - Clé publique KKiaPay</li>
+                <li><code className="bg-background px-1 rounded">KKIAPAY_PRIVATE_KEY</code> - Clé privée KKiaPay</li>
+                <li><code className="bg-background px-1 rounded">KKIAPAY_SECRET</code> - Secret webhook KKiaPay</li>
               </ul>
             </div>
           </div>

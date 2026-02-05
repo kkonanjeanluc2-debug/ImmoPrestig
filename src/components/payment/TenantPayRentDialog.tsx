@@ -24,7 +24,7 @@ interface TenantPayRentDialogProps {
   tenantPhone?: string | null;
 }
 
-type PaymentMethod = "orange_money" | "mtn_money" | "wave" | "moov" | "pawapay_mtn" | "pawapay_orange";
+type PaymentMethod = "orange_money" | "mtn_money" | "wave" | "moov" | "pawapay_mtn" | "pawapay_orange" | "kkiapay";
 
 // All available payment methods
 const allPaymentMethods: { value: PaymentMethod; label: string; color: string; provider?: string }[] = [
@@ -34,6 +34,7 @@ const allPaymentMethods: { value: PaymentMethod; label: string; color: string; p
   { value: "moov", label: "Moov Money", color: "bg-purple-500", provider: "fedapay" },
   { value: "pawapay_mtn", label: "MTN (PawaPay)", color: "bg-yellow-600", provider: "pawapay" },
   { value: "pawapay_orange", label: "Orange (PawaPay)", color: "bg-orange-600", provider: "pawapay" },
+  { value: "kkiapay", label: "KKiaPay", color: "bg-red-500", provider: "kkiapay" },
 ];
 
 export function TenantPayRentDialog({
@@ -67,7 +68,15 @@ export function TenantPayRentDialog({
       let functionName: string;
       let body: Record<string, unknown>;
       
-      if (provider === "pawapay") {
+      if (provider === "kkiapay") {
+        functionName = "tenant-pay-rent-kkiapay";
+        body = { 
+          payment_id: paymentId, 
+          amount: amount,
+          customer_name: "",
+          customer_phone: phone,
+        };
+      } else if (provider === "pawapay") {
         functionName = "tenant-pay-rent-pawapay";
         const actualMethod = selectedMethod.replace("pawapay_", "") + "_money";
         body = { 

@@ -31,6 +31,7 @@ const paymentMethods = [
   { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-muted-foreground", fedapayMode: null, provider: "fedapay" },
   { id: "pawapay_mtn", name: "MTN (PawaPay)", icon: Smartphone, color: "bg-yellow-600", fedapayMode: null, provider: "pawapay", description: "Via PawaPay" },
   { id: "pawapay_orange", name: "Orange (PawaPay)", icon: Smartphone, color: "bg-orange-600", fedapayMode: null, provider: "pawapay", description: "Via PawaPay" },
+  { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-red-500", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
 ];
 
 export function SubscriptionCheckoutDialog({
@@ -230,7 +231,17 @@ export function SubscriptionCheckoutDialog({
       let edgeFunctionName: string;
       let requestBody: Record<string, unknown>;
       
-      if (provider === "pawapay") {
+      if (provider === "kkiapay") {
+        edgeFunctionName = "kkiapay-checkout";
+        requestBody = {
+          plan_id: plan.id,
+          billing_cycle: billingCycle,
+          payment_method: paymentMethod,
+          customer_name: "", // Will be filled from user profile
+          customer_email: "", // Will be filled from session
+          customer_phone: phoneNumber,
+        };
+      } else if (provider === "pawapay") {
         edgeFunctionName = "pawapay-checkout";
         // Extract actual payment method from pawapay_mtn -> mtn_money
         const actualMethod = paymentMethod.replace("pawapay_", "") + "_money";

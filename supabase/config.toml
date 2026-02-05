@@ -89,3 +89,15 @@ verify_jwt = false
 
 [functions.tenant-pay-rent-pawapay]
 verify_jwt = false
+
+[functions.kkiapay-checkout]
+verify_jwt = false
+
+[functions.kkiapay-webhook]
+verify_jwt = false
+
+[functions.tenant-pay-rent-kkiapay]
+verify_jwt = false
+
+[functions.tenant-pay-rent-kkiapay-webhook]
+verify_jwt = false

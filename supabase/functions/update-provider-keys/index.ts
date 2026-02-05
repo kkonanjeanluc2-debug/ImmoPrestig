@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +9,7 @@ interface UpdateKeysPayload {
   provider_name: string;
   public_key?: string;
   secret_key?: string;
+  webhook_secret?: string;
 }
 
 Deno.serve(async (req) => {
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
     }
 
     const payload: UpdateKeysPayload = await req.json();
-    const { provider_name, public_key, secret_key } = payload;
+    const { provider_name, public_key, secret_key, webhook_secret } = payload;
 
     if (!provider_name) {
       return new Response(
@@ -108,7 +109,7 @@ Deno.serve(async (req) => {
     // For now, we'll store a hash/indicator in the database and use the keys passed
     
     const updates: Record<string, any> = {
-      api_key_configured: !!(public_key || secret_key),
+      api_key_configured: !!(public_key || secret_key || webhook_secret),
       updated_at: new Date().toISOString(),
     };
 
@@ -130,8 +131,9 @@ Deno.serve(async (req) => {
     
     updates.settings = {
       ...currentSettings,
-      public_key_configured: !!public_key,
-      secret_key_configured: !!secret_key,
+      public_key_configured: public_key ? true : currentSettings.public_key_configured,
+      secret_key_configured: secret_key ? true : currentSettings.secret_key_configured,
+      webhook_secret_configured: webhook_secret ? true : currentSettings.webhook_secret_configured,
       keys_updated_at: new Date().toISOString(),
       keys_updated_by: userId,
     };
@@ -158,6 +160,7 @@ Deno.serve(async (req) => {
         provider_name,
         public_key_updated: !!public_key,
         secret_key_updated: !!secret_key,
+        webhook_secret_updated: !!webhook_secret,
       },
     });
 

@@ -62,8 +62,10 @@ export function PaymentProvidersSettings() {
   // API Keys state
   const [publicKey, setPublicKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
   const [showPublicKey, setShowPublicKey] = useState(false);
   const [showSecretKey, setShowSecretKey] = useState(false);
+  const [showWebhookSecret, setShowWebhookSecret] = useState(false);
   const [isSavingKeys, setIsSavingKeys] = useState(false);
 
   const handleToggleEnabled = async (providerId: string, currentValue: boolean) => {
@@ -93,8 +95,10 @@ export function PaymentProvidersSettings() {
       setIsSandbox(provider.is_sandbox);
       setPublicKey("");
       setSecretKey("");
+      setWebhookSecret("");
       setShowPublicKey(false);
       setShowSecretKey(false);
+      setShowWebhookSecret(false);
       setConfigDialogOpen(true);
     }
   };
@@ -105,7 +109,7 @@ export function PaymentProvidersSettings() {
     const provider = providers?.find(p => p.id === selectedProvider);
     if (!provider) return;
 
-    if (!publicKey && !secretKey) {
+    if (!publicKey && !secretKey && !webhookSecret) {
       toast({
         variant: "destructive",
         title: "Erreur",
@@ -124,6 +128,7 @@ export function PaymentProvidersSettings() {
           provider_name: provider.provider_name,
           public_key: publicKey || undefined,
           secret_key: secretKey || undefined,
+          webhook_secret: webhookSecret || undefined,
         },
       });
 
@@ -142,6 +147,7 @@ export function PaymentProvidersSettings() {
       // Clear the fields
       setPublicKey("");
       setSecretKey("");
+      setWebhookSecret("");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -459,7 +465,7 @@ export function PaymentProvidersSettings() {
                         <Key className="h-4 w-4 text-muted-foreground" />
                         <span className="text-muted-foreground">Statut actuel:</span>
                       </div>
-                      <div className={`grid ${info?.singleKey ? 'grid-cols-1' : 'grid-cols-2'} gap-2 text-sm`}>
+                      <div className={`grid ${info?.singleKey ? 'grid-cols-1' : info?.hasThreeKeys ? 'grid-cols-3' : 'grid-cols-2'} gap-2 text-sm`}>
                         {!info?.singleKey && (
                           <div className="flex items-center gap-2">
                             {settings?.public_key_configured ? (
@@ -478,6 +484,16 @@ export function PaymentProvidersSettings() {
                           )}
                           <span>{info?.secretKeyLabel || "Clé secrète"}</span>
                         </div>
+                        {info?.hasThreeKeys && (
+                          <div className="flex items-center gap-2">
+                            {settings?.webhook_secret_configured ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-orange-600" />
+                            )}
+                            <span>{info?.extraSecretLabel || "Secret"}</span>
+                          </div>
+                        )}
                       </div>
                       {settings?.keys_updated_at && (
                         <p className="text-xs text-muted-foreground">
@@ -554,10 +570,47 @@ export function PaymentProvidersSettings() {
                       )}
                     </div>
 
+                    {/* Webhook Secret - Only for providers with hasThreeKeys (KKiaPay) */}
+                    {info?.hasThreeKeys && (
+                      <div className="space-y-2">
+                        <Label htmlFor="webhook-secret">{info?.extraSecretLabel || "Secret (Webhook)"}</Label>
+                        <div className="relative">
+                          <Input
+                            id="webhook-secret"
+                            type={showWebhookSecret ? "text" : "password"}
+                            placeholder={`Entrez votre ${info?.extraSecretLabel?.toLowerCase() || "secret webhook"}...`}
+                            value={webhookSecret}
+                            onChange={(e) => setWebhookSecret(e.target.value)}
+                            className="pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3"
+                            onClick={() => setShowWebhookSecret(!showWebhookSecret)}
+                          >
+                            {showWebhookSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        {info.extraSecretName && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">
+                              Sera stockée comme: <code className="bg-muted px-1 rounded">{info.extraSecretName}</code>
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                              <Webhook className="h-3 w-3" />
+                              Utilisé pour vérifier les signatures des webhooks.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Save Keys Button */}
                     <Button 
                       onClick={handleSaveKeys} 
-                      disabled={isSavingKeys || (!publicKey && !secretKey)}
+                      disabled={isSavingKeys || (!publicKey && !secretKey && !webhookSecret)}
                       className="w-full"
                     >
                       {isSavingKeys ? (

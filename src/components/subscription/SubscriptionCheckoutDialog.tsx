@@ -417,14 +417,15 @@ export function SubscriptionCheckoutDialog({
             console.error("KKiaPay failed:", response);
 
             // Extract reason message - response.reason can be an object {code, message} or a string
+            // IMPORTANT: message can be null, so check explicitly for truthy string
             let reason = "Le paiement KKiaPay n'a pas abouti (refus de la banque ou solde insuffisant).";
-            if (typeof response?.reason === "string") {
+            if (typeof response?.reason === "string" && response.reason) {
               reason = response.reason;
-            } else if (response?.reason?.message) {
+            } else if (typeof response?.reason?.message === "string" && response.reason.message) {
               reason = response.reason.message;
-            } else if (response?.reason?.code) {
+            } else if (typeof response?.reason?.code === "string" && response.reason.code) {
               reason = `Erreur: ${response.reason.code}`;
-            } else if (typeof response?.message === "string") {
+            } else if (typeof response?.message === "string" && response.message) {
               reason = response.message;
             }
 

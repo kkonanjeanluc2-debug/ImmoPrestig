@@ -143,7 +143,7 @@ export function CommissionReportCard() {
       // Table rows
       doc.setFont("helvetica", "normal");
       for (const owner of report.byOwner) {
-        if (y > 270) {
+        if (y > 260) {
           doc.addPage();
           y = 20;
         }
@@ -156,7 +156,14 @@ export function CommissionReportCard() {
         y += 7;
       }
 
-      y += 10;
+      // Total row
+      doc.setFillColor(230, 230, 230);
+      doc.rect(15, y - 3, pageWidth - 30, 8, "F");
+      doc.setFont("helvetica", "bold");
+      doc.text("TOTAL", 17, y + 2);
+      doc.text(formatAmountForPDF(report.totalRent), 115, y + 2);
+      doc.text(formatAmountForPDF(report.totalCommission), 150, y + 2);
+      y += 15;
 
       // Detail section
       if (report.commissions.length > 0) {
@@ -381,6 +388,18 @@ export function CommissionReportCard() {
                         </TableCell>
                       </TableRow>
                     ))}
+                    {/* Total row */}
+                    <TableRow className="bg-muted/50 font-bold border-t-2">
+                      <TableCell className="font-bold">TOTAL</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right font-bold">
+                        {formatCurrency(report.totalRent)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-emerald">
+                        {formatCurrency(report.totalCommission)}
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </div>

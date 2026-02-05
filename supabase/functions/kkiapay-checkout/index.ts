@@ -92,13 +92,11 @@ Deno.serve(async (req) => {
       amount = Math.round(plan.price_monthly * 12 * (1 - discount / 100));
     }
 
-    // Get KKiaPay configuration
+    // Get KKiaPay configuration (Widget JS)
     const KKIAPAY_PUBLIC_KEY = Deno.env.get("KKIAPAY_PUBLIC_KEY");
-    const KKIAPAY_PRIVATE_KEY = Deno.env.get("KKIAPAY_PRIVATE_KEY");
-    const KKIAPAY_SECRET = Deno.env.get("KKIAPAY_SECRET");
 
-    if (!KKIAPAY_PUBLIC_KEY || !KKIAPAY_PRIVATE_KEY) {
-      console.error("KKiaPay API keys not configured");
+    if (!KKIAPAY_PUBLIC_KEY) {
+      console.error("KKiaPay public key not configured");
       return new Response(
         JSON.stringify({ error: "Configuration KKiaPay manquante" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -113,30 +111,27 @@ Deno.serve(async (req) => {
       .single();
 
     const isSandbox = providerConfig?.is_sandbox ?? true;
-    const kkiapayUrl = isSandbox 
-      ? "https://api-sandbox.kkiapay.me/api/v1/payments/request" 
-      : "https://api.kkiapay.me/api/v1/payments/request";
 
     // Create transaction record
     const { data: transaction, error: txError } = await adminClient
       .from("payment_transactions")
       .insert({
         agency_id: agency.id,
-        plan_id: plan_id,
-        amount: amount,
+        plan_id,
+        amount,
         currency: "XOF",
-        payment_method: payment_method,
-        billing_cycle: billing_cycle,
-        customer_email: customer_email,
-        customer_phone: customer_phone,
-        customer_name: customer_name,
+        payment_method,
+        billing_cycle,
+        customer_email,
+        customer_phone,
+        customer_name,
         status: "pending",
         metadata: { provider: "kkiapay" },
       })
       .select()
       .single();
 
-    if (txError) {
+    if (txError || !transaction) {
       console.error("Error creating transaction:", txError);
       return new Response(
         JSON.stringify({ error: "Erreur création transaction" }),
@@ -144,96 +139,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get the callback URL
-    const callbackUrl = `${supabaseUrl}/functions/v1/kkiapay-webhook`;
-
-    // Create KKiaPay payment request
-    const kkiapayPayload = {
-      amount: amount,
-      reason: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`,
-      data: {
-        transaction_id: transaction.id,
-        agency_id: agency.id,
-        plan_id: plan_id,
-        billing_cycle: billing_cycle,
-      },
-      callback: callbackUrl,
-      name: customer_name,
-      email: customer_email,
-      phone: customer_phone,
-      sandbox: isSandbox,
-    };
-
-    const response = await fetch(kkiapayUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-KEY": KKIAPAY_PRIVATE_KEY,
-      },
-      body: JSON.stringify(kkiapayPayload),
-    });
-
-    const responseText = await response.text();
-    console.log("KKiaPay response:", responseText);
-
-    if (!response.ok) {
-      console.error("KKiaPay API error:", responseText);
-      await adminClient
-        .from("payment_transactions")
-        .update({ status: "failed", error_message: responseText })
-        .eq("id", transaction.id);
-
-      return new Response(
-        JSON.stringify({ error: "Erreur KKiaPay", details: responseText }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    let kkiapayResponse;
-    try {
-      kkiapayResponse = JSON.parse(responseText);
-    } catch {
-      // KKiaPay might return a payment URL directly or different format
-      // For widget integration, we return the public key and transaction info
-      return new Response(
-        JSON.stringify({
-          success: true,
-          transaction_id: transaction.id,
-          public_key: KKIAPAY_PUBLIC_KEY,
-          amount: amount,
-          name: customer_name,
-          email: customer_email,
-          phone: customer_phone,
-          sandbox: isSandbox,
-          reason: `Abonnement ${plan.name}`,
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Update transaction with KKiaPay reference
-    if (kkiapayResponse.transactionId || kkiapayResponse.transaction_id) {
-      await adminClient
-        .from("payment_transactions")
-        .update({
-          fedapay_transaction_id: kkiapayResponse.transactionId || kkiapayResponse.transaction_id,
-          fedapay_reference: kkiapayResponse.reference,
-        })
-        .eq("id", transaction.id);
-    }
-
+    // For KKiaPay, we use the JS Widget on the frontend.
     return new Response(
       JSON.stringify({
         success: true,
+        provider: "kkiapay",
         transaction_id: transaction.id,
         public_key: KKIAPAY_PUBLIC_KEY,
-        amount: amount,
+        amount,
         name: customer_name,
         email: customer_email,
         phone: customer_phone,
         sandbox: isSandbox,
-        reason: `Abonnement ${plan.name}`,
-        kkiapay_response: kkiapayResponse,
+        reason: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`,
+        callback_url: `${supabaseUrl}/functions/v1/kkiapay-webhook`,
+        data: {
+          transaction_id: transaction.id,
+          agency_id: agency.id,
+          plan_id,
+          billing_cycle,
+        },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

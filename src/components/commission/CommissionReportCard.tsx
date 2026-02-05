@@ -23,6 +23,7 @@ import { useAgency } from "@/hooks/useAgency";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import jsPDF from "jspdf";
+import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
 
 export function CommissionReportCard() {
   const [dateRange, setDateRange] = useState<"month" | "quarter" | "year" | "custom">("month");
@@ -65,7 +66,7 @@ export function CommissionReportCard() {
   const report = useCommissions(startDate, endDate);
 
   const formatCurrency = (value: number) =>
-    value.toLocaleString("fr-FR") + " F CFA";
+    formatAmountForPDF(value) + " F CFA";
 
   const generatePDF = async () => {
     setIsGeneratingPDF(true);
@@ -150,8 +151,8 @@ export function CommissionReportCard() {
         doc.text(owner.ownerName.substring(0, 20), 17, y);
         doc.text(owner.managementTypeName.substring(0, 15), 60, y);
         doc.text(owner.commissionPercentage + "%", 100, y);
-        doc.text(formatCurrency(owner.totalRent), 115, y);
-        doc.text(formatCurrency(owner.totalCommission), 150, y);
+        doc.text(formatAmountForPDF(owner.totalRent), 115, y);
+        doc.text(formatAmountForPDF(owner.totalCommission), 150, y);
         y += 7;
       }
 
@@ -188,8 +189,8 @@ export function CommissionReportCard() {
           doc.text(format(new Date(commission.paymentDate), "dd/MM/yy"), 17, y);
           doc.text(commission.tenantName.substring(0, 18), 40, y);
           doc.text(commission.propertyTitle.substring(0, 18), 80, y);
-          doc.text(commission.rentAmount.toLocaleString("fr-FR"), 120, y);
-          doc.text(commission.commissionAmount.toLocaleString("fr-FR"), 150, y);
+          doc.text(formatAmountForPDF(commission.rentAmount), 120, y);
+          doc.text(formatAmountForPDF(commission.commissionAmount), 150, y);
           y += 6;
         }
       }

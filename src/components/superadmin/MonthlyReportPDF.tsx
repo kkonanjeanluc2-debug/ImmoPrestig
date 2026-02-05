@@ -14,6 +14,11 @@ import { FileDown, Loader2, Calendar } from "lucide-react";
 import { useAllTransactions } from "@/hooks/useTransactions";
 import { useAllAgencies } from "@/hooks/useSuperAdmin";
 import { toast } from "sonner";
+import { formatAmountForPDF } from "@/lib/pdfFormat";
+
+// Format amount for PDF (uses centralized function for consistent rendering)
+const formatPDFAmount = (value: number, currency: string = "XOF") =>
+  `${formatAmountForPDF(value)} ${currency}`;
 
 // Generate last 12 months options
 function getMonthOptions() {
@@ -162,10 +167,10 @@ export function MonthlyReportPDF() {
       doc.setFont("helvetica", "normal");
 
       const revenueData = [
-        ["Revenus du mois", `${monthlyRevenue.toLocaleString("fr-FR")} XOF`],
-        ["Mois précédent", `${prevMonthRevenue.toLocaleString("fr-FR")} XOF`],
+        ["Revenus du mois", formatPDFAmount(monthlyRevenue)],
+        ["Mois précédent", formatPDFAmount(prevMonthRevenue)],
         ["Croissance", `${growthRate}%`],
-        ["Panier moyen", `${avgTransaction.toLocaleString("fr-FR")} XOF`],
+        ["Panier moyen", formatPDFAmount(avgTransaction)],
       ];
 
       revenueData.forEach(([label, value]) => {
@@ -230,12 +235,12 @@ export function MonthlyReportPDF() {
 
       Object.entries(byMethod)
         .sort((a, b) => b[1] - a[1])
-        .forEach(([method, amount]) => {
+        .forEach(([method, amountVal]) => {
           const label = methodLabels[method] || method;
           doc.setFont("helvetica", "normal");
           doc.text(label, margin, y);
           doc.setFont("helvetica", "bold");
-          doc.text(`${amount.toLocaleString("fr-FR")} XOF`, pageWidth - margin, y, { align: "right" });
+          doc.text(formatPDFAmount(amountVal), pageWidth - margin, y, { align: "right" });
           y += 8;
         });
 
@@ -265,11 +270,11 @@ export function MonthlyReportPDF() {
 
       Object.entries(byPlan)
         .sort((a, b) => b[1] - a[1])
-        .forEach(([plan, amount]) => {
+        .forEach(([plan, planAmount]) => {
           doc.setFont("helvetica", "normal");
           doc.text(plan, margin, y);
           doc.setFont("helvetica", "bold");
-          doc.text(`${amount.toLocaleString("fr-FR")} XOF`, pageWidth - margin, y, { align: "right" });
+          doc.text(formatPDFAmount(planAmount), pageWidth - margin, y, { align: "right" });
           y += 8;
         });
 

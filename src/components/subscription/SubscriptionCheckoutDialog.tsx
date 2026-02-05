@@ -24,17 +24,10 @@ interface SubscriptionCheckoutDialogProps {
   billingCycle: "monthly" | "yearly";
 }
 
-// Payment methods with provider information
+// Payment methods - Wave Direct and KKiaPay only
 const paymentMethods = [
-  { id: "orange_money", name: "Orange Money", icon: Smartphone, color: "bg-orange-500", fedapayMode: "Orange CI", provider: "fedapay" },
-  { id: "mtn_money", name: "MTN Money", icon: Smartphone, color: "bg-yellow-500", fedapayMode: "MTN CI", provider: "fedapay" },
-  { id: "wave", name: "Wave (via FedaPay)", icon: Wallet, color: "bg-blue-400", fedapayMode: "Wave CI", provider: "fedapay" },
   { id: "wave_direct", name: "Wave Direct", icon: Wallet, color: "bg-blue-600", fedapayMode: null, provider: "wave_ci", description: "Paiement direct Wave" },
-  { id: "moov", name: "Moov Money", icon: Smartphone, color: "bg-blue-500", fedapayMode: "Moov CI", provider: "fedapay" },
-  { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-muted-foreground", fedapayMode: null, provider: "fedapay" },
-  { id: "pawapay_mtn", name: "MTN (PawaPay)", icon: Smartphone, color: "bg-yellow-600", fedapayMode: null, provider: "pawapay", description: "Via PawaPay" },
-  { id: "pawapay_orange", name: "Orange (PawaPay)", icon: Smartphone, color: "bg-orange-600", fedapayMode: null, provider: "pawapay", description: "Via PawaPay" },
-  { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-red-500", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
+  { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-primary", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
 ];
 
 export function SubscriptionCheckoutDialog({
@@ -43,7 +36,7 @@ export function SubscriptionCheckoutDialog({
   plan,
   billingCycle,
 }: SubscriptionCheckoutDialogProps) {
-  const [paymentMethod, setPaymentMethod] = useState<string>("orange_money");
+  const [paymentMethod, setPaymentMethod] = useState<string>("kkiapay");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

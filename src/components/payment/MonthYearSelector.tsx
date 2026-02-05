@@ -82,12 +82,21 @@ export function MonthYearSelector({
     }
   };
 
+  // Format used for display and selection: "Janvier 2026"
   const getMonthKey = (monthIndex: number) => {
     return `${MONTHS[monthIndex]} ${year}`;
   };
 
+  // Format used in database for advance payments: "2026-01"
+  const getMonthKeyISO = (monthIndex: number) => {
+    return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+  };
+
+  // Check if month is paid - support both formats ("Janvier 2026" and "2026-01")
   const isMonthPaid = (monthIndex: number) => {
-    return paidMonths.includes(getMonthKey(monthIndex));
+    const displayFormat = getMonthKey(monthIndex);
+    const isoFormat = getMonthKeyISO(monthIndex);
+    return paidMonths.includes(displayFormat) || paidMonths.includes(isoFormat);
   };
 
   const isMonthSelected = (monthIndex: number) => {

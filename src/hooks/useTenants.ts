@@ -140,7 +140,54 @@ export const useDeleteTenant = () => {
 
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name?: string }) => {
-      // Soft delete - just set deleted_at timestamp
+      // First, get the tenant's active contract to release property/unit
+      const { data: contracts, error: contractsError } = await supabase
+        .from("contracts")
+        .select("id, property_id, unit_id, status")
+        .eq("tenant_id", id)
+        .eq("status", "active");
+
+      if (contractsError) throw contractsError;
+
+      // Release property/unit for each active contract
+      for (const contract of contracts || []) {
+        // Update contract status to terminated
+        await supabase
+          .from("contracts")
+          .update({ status: "terminated" })
+          .eq("id", contract.id);
+
+        // If contract has a unit, release the unit
+        if (contract.unit_id) {
+          await supabase
+            .from("property_units")
+            .update({ status: "disponible" })
+            .eq("id", contract.unit_id);
+
+          // Check if there are other occupied units for this property
+          const { data: occupiedUnits } = await supabase
+            .from("property_units")
+            .select("id")
+            .eq("property_id", contract.property_id)
+            .eq("status", "loué");
+
+          // Only set property to disponible if no other units are occupied
+          if (!occupiedUnits || occupiedUnits.length === 0) {
+            await supabase
+              .from("properties")
+              .update({ status: "disponible" })
+              .eq("id", contract.property_id);
+          }
+        } else {
+          // No unit - release property directly
+          await supabase
+            .from("properties")
+            .update({ status: "disponible" })
+            .eq("id", contract.property_id);
+        }
+      }
+
+      // Soft delete - set deleted_at timestamp
       const { error } = await supabase
         .from("tenants")
         .update({ deleted_at: new Date().toISOString() })
@@ -163,6 +210,9 @@ export const useDeleteTenant = () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["deleted-tenants"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
     },
   });
 };

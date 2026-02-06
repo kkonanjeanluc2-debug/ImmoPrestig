@@ -50,6 +50,11 @@ function getDefaultPermissions(role: string) {
     can_view_reports: true,
     can_export_data: true,
     can_send_reminders: true,
+    can_access_settings: true,
+    can_manage_team: true,
+    can_manage_automations: true,
+    can_manage_branding: true,
+    can_manage_templates: true,
   };
 
   const gestionnairePermissions = {
@@ -87,6 +92,11 @@ function getDefaultPermissions(role: string) {
     can_view_reports: false,
     can_export_data: false,
     can_send_reminders: true,
+    can_access_settings: false,
+    can_manage_team: false,
+    can_manage_automations: false,
+    can_manage_branding: false,
+    can_manage_templates: false,
   };
 
   const lectureSeulePermissions = {
@@ -124,6 +134,11 @@ function getDefaultPermissions(role: string) {
     can_view_reports: false,
     can_export_data: false,
     can_send_reminders: false,
+    can_access_settings: false,
+    can_manage_team: false,
+    can_manage_automations: false,
+    can_manage_branding: false,
+    can_manage_templates: false,
   };
 
   switch (role) {

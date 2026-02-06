@@ -287,7 +287,10 @@ export function useMemberPermissions(memberId: string | undefined) {
         .maybeSingle();
 
       if (error) throw error;
-      return data as MemberPermissions | null;
+
+      // Defensive normalization: depending on PostgREST headers, data can be an object or an array.
+      const normalized = Array.isArray(data) ? (data[0] ?? null) : data;
+      return normalized as MemberPermissions | null;
     },
     enabled: !!memberId,
   });
@@ -322,15 +325,19 @@ export function useCurrentMemberPermissions() {
 
       if (permError) throw permError;
 
+      const normalizedPermissions = Array.isArray(permissions)
+        ? (permissions[0] ?? null)
+        : permissions;
+
       // If no custom permissions, return defaults based on role
-      if (!permissions) {
+      if (!normalizedPermissions) {
         return {
           ...DEFAULT_PERMISSIONS[membership.role] || DEFAULT_PERMISSIONS.lecture_seule,
           member_id: membership.id,
         } as Partial<MemberPermissions>;
       }
 
-      return permissions as MemberPermissions;
+      return normalizedPermissions as MemberPermissions;
     },
     enabled: !!user?.id,
   });

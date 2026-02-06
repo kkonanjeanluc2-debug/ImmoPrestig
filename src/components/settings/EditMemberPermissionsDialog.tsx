@@ -61,15 +61,26 @@ export function EditMemberPermissionsDialog({
 
   // Initialize permissions when member or existing permissions change
   useEffect(() => {
-    if (member) {
-      if (existingPermissions) {
-        setPermissions(existingPermissions);
-      } else {
-        // Use default permissions for the role
-        setPermissions(DEFAULT_PERMISSIONS[member.role] || DEFAULT_PERMISSIONS.gestionnaire);
-      }
-      setHasChanges(false);
+    if (!member) return;
+
+    const roleDefaults = DEFAULT_PERMISSIONS[member.role] || DEFAULT_PERMISSIONS.gestionnaire;
+
+    // Defensive: in case the hook returns an array (or null), normalize and always merge with defaults
+    const normalizedExisting = Array.isArray(existingPermissions)
+      ? (existingPermissions[0] ?? null)
+      : existingPermissions;
+
+    if (normalizedExisting) {
+      setPermissions({
+        ...roleDefaults,
+        ...normalizedExisting,
+      });
+    } else {
+      // Use default permissions for the role
+      setPermissions(roleDefaults);
     }
+
+    setHasChanges(false);
   }, [member, existingPermissions]);
 
   const handlePermissionChange = (key: PermissionKey, value: boolean) => {
@@ -127,7 +138,7 @@ export function EditMemberPermissionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-2xl h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />

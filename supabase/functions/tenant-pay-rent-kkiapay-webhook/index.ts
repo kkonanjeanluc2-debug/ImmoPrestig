@@ -103,6 +103,21 @@ Deno.serve(async (req) => {
 
       console.log(`Rent payment marked as paid: ${paymentId}`);
 
+      // Record the online payment for the account tab
+      const paymentMethod = payload.source || payload.paymentMethod || "mobile_money";
+      await adminClient.from("online_rent_payments").insert({
+        user_id: payment.user_id,
+        payment_id: paymentId,
+        tenant_id: payment.tenant_id,
+        amount: payment.amount,
+        kkiapay_transaction_id: transactionReference,
+        payment_method: paymentMethod,
+        status: "received",
+        paid_at: now.toISOString(),
+      });
+
+      console.log(`Online payment recorded for account tracking`);
+
       // Create notification for agency owner
       await adminClient.from("notifications").insert({
         user_id: payment.user_id,

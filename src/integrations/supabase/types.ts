@@ -1281,6 +1281,63 @@ export type Database = {
         }
         Relationships: []
       }
+      online_rent_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kkiapay_transaction_id: string | null
+          paid_at: string
+          payment_id: string | null
+          payment_method: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          kkiapay_transaction_id?: string | null
+          paid_at?: string
+          payment_id?: string | null
+          payment_method?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kkiapay_transaction_id?: string | null
+          paid_at?: string
+          payment_id?: string | null
+          payment_method?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_rent_payments_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_rent_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       owners: {
         Row: {
           address: string | null
@@ -2649,6 +2706,51 @@ export type Database = {
           payment_id?: string | null
           recipient_phone?: string
           tenant_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawal_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kkiapay_payout_id: string | null
+          notes: string | null
+          payment_method: string
+          processed_at: string | null
+          recipient_name: string | null
+          recipient_phone: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          kkiapay_payout_id?: string | null
+          notes?: string | null
+          payment_method?: string
+          processed_at?: string | null
+          recipient_name?: string | null
+          recipient_phone: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kkiapay_payout_id?: string | null
+          notes?: string | null
+          payment_method?: string
+          processed_at?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

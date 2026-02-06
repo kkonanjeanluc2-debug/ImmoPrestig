@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/hooks/useAgency";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { Loader2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +10,23 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+// Routes interdites aux locataires
+const TENANT_FORBIDDEN_ROUTES = [
+  "/dashboard",
+  "/properties",
+  "/owners",
+  "/settings",
+  "/trash",
+  "/super-admin",
+];
+
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading, signOut } = useAuth();
   const { data: agency, isLoading: agencyLoading } = useAgency();
+  const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const location = useLocation();
 
-  if (loading || agencyLoading) {
+  if (loading || agencyLoading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -24,6 +36,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Rediriger les locataires vers /payments s'ils accèdent à une route interdite
+  const isTenant = userRole?.role === "locataire";
+  if (isTenant) {
+    const currentPath = location.pathname;
+    const isForbidden = TENANT_FORBIDDEN_ROUTES.some(
+      (route) => currentPath === route || currentPath.startsWith(route + "/")
+    );
+    if (isForbidden) {
+      return <Navigate to="/payments" replace />;
+    }
   }
 
   // Check if the agency account is deactivated

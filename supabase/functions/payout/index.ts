@@ -7,12 +7,14 @@ interface PayoutRequest {
   reason: string;
 }
 
-interface KkiapayPayoutResponse {
-  status?: string;
-  transactionId?: string;
-  message?: string;
-  [key: string]: unknown;
-}
+/**
+ * IMPORTANT: KKiaPay does NOT provide a direct payout/disbursement API for merchants.
+ * Payouts can only be done via:
+ * 1. KKiaPay Dashboard ("Request an instant payment" button)
+ * 2. Automatic scheduled payouts (period/level based)
+ * 
+ * This endpoint records the payout request for manual processing via the dashboard.
+ */
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -55,19 +57,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get KKiaPay API credentials
-    const privateKey = Deno.env.get("KKIAPAY_PRIVATE_KEY");
-    const publicKey = Deno.env.get("KKIAPAY_PUBLIC_KEY");
-    const secretKey = Deno.env.get("KKIAPAY_SECRET");
-
-    if (!privateKey || !publicKey || !secretKey) {
-      console.error("KKiaPay API keys not configured");
-      return new Response(
-        JSON.stringify({ success: false, error: "Configuration KKiaPay manquante. Contactez l'administrateur." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // Create Supabase admin client
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -75,13 +64,15 @@ Deno.serve(async (req) => {
     );
 
     // Get user's agency
-    const { data: agency, error: agencyError } = await supabaseAdmin
+    const { data: agency } = await supabaseAdmin
       .from("agencies")
       .select("id")
       .eq("user_id", userId)
       .single();
 
-    if (agencyError) {
+    let agencyId = agency?.id;
+
+    if (!agencyId) {
       // Try to find agency via agency_members
       const { data: member } = await supabaseAdmin
         .from("agency_members")
@@ -90,33 +81,25 @@ Deno.serve(async (req) => {
         .eq("status", "active")
         .single();
       
-      if (!member) {
-        return new Response(
-          JSON.stringify({ success: false, error: "Agence non trouvée." }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      agencyId = member?.agency_id;
     }
-
-    const agencyId = agency?.id;
 
     // Format phone number (add country code if needed)
     const formatPhoneNumber = (phone: string): string => {
       let cleaned = phone.replace(/[\s\-\(\)]/g, "");
-      // Remove leading zeros and add country code for Ivory Coast
       if (cleaned.startsWith("0")) {
         cleaned = "225" + cleaned.substring(1);
       } else if (!cleaned.startsWith("225") && !cleaned.startsWith("+225")) {
         cleaned = "225" + cleaned;
       }
-      // Remove + prefix if present
       cleaned = cleaned.replace(/^\+/, "");
       return cleaned;
     };
 
     const formattedPhone = formatPhoneNumber(phoneNumber);
 
-    // Create payout record in database (pending status)
+    // Create payout record in database with "processing" status
+    // This will be processed manually via KKiaPay Dashboard
     const { data: payout, error: insertError } = await supabaseAdmin
       .from("payouts")
       .insert({
@@ -125,88 +108,34 @@ Deno.serve(async (req) => {
         amount: amount,
         phone_number: formattedPhone,
         reason: reason,
-        status: "pending",
+        status: "processing",
       })
       .select()
       .single();
 
     if (insertError) {
-      console.error("Error inserting payout record:", insertError);
+      console.error("[Payout] Error inserting payout record:", insertError);
       return new Response(
         JSON.stringify({ success: false, error: "Erreur lors de la création de la demande." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`[Payout] Initiating payout: ${amount} FCFA to ${formattedPhone} - Reason: ${reason}`);
-
-    // Call KKiaPay payout API
-    // Based on documentation: https://docs.kkiapay.me
-    const kkiapayResponse = await fetch("https://api.kkiapay.me/api/v1/payments/request", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-PRIVATE-KEY": privateKey,
-        "X-PUBLIC-KEY": publicKey,
-        "X-SECRET-KEY": secretKey,
-      },
-      body: JSON.stringify({
-        phoneNumber: formattedPhone,
-        amount: amount,
-        reason: reason,
-        type: "payout",
-      }),
-    });
-
-    const kkiapayData: KkiapayPayoutResponse = await kkiapayResponse.json();
-
-    console.log(`[Payout] KKiaPay response:`, JSON.stringify(kkiapayData));
-
-    if (!kkiapayResponse.ok) {
-      // Update payout record with error
-      await supabaseAdmin
-        .from("payouts")
-        .update({
-          status: "failed",
-          error_message: kkiapayData.message || `Erreur HTTP ${kkiapayResponse.status}`,
-          kkiapay_response: kkiapayData,
-        })
-        .eq("id", payout.id);
-
-      console.error(`[Payout] KKiaPay API error: ${kkiapayResponse.status}`, kkiapayData);
-
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: kkiapayData.message || "Erreur lors de la communication avec KKiaPay.",
-          details: kkiapayData
-        }),
-        { status: kkiapayResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Update payout record with success
-    await supabaseAdmin
-      .from("payouts")
-      .update({
-        status: "completed",
-        kkiapay_transaction_id: kkiapayData.transactionId || null,
-        kkiapay_response: kkiapayData,
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", payout.id);
+    console.log(`[Payout] Payout request recorded: ${amount} FCFA to ${formattedPhone} - Reason: ${reason}`);
 
     // Create notification for user
     await supabaseAdmin.from("notifications").insert({
       user_id: userId,
-      title: "Reversement effectué",
-      message: `Reversement de ${amount.toLocaleString("fr-FR")} F CFA vers ${phoneNumber} effectué avec succès.`,
-      type: "success",
+      title: "Demande de reversement enregistrée",
+      message: `Votre demande de reversement de ${amount.toLocaleString("fr-FR")} F CFA vers ${phoneNumber} a été enregistrée. Le transfert sera effectué via le tableau de bord KKiaPay.`,
+      type: "info",
       entity_type: "payout",
       entity_id: payout.id,
     });
 
-    console.log(`[Payout] Payout successful: ${payout.id}`);
+    // Note: KKiaPay does not provide a direct payout API for merchants
+    // The payout must be processed manually via the KKiaPay dashboard
+    // or through their scheduled payout system
 
     return new Response(
       JSON.stringify({
@@ -216,9 +145,8 @@ Deno.serve(async (req) => {
           amount: amount,
           phoneNumber: formattedPhone,
           reason: reason,
-          status: "completed",
-          transactionId: kkiapayData.transactionId,
-          kkiapayResponse: kkiapayData,
+          status: "processing",
+          message: "Demande enregistrée. Le reversement sera traité via le tableau de bord KKiaPay.",
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

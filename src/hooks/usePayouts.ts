@@ -73,8 +73,8 @@ export function useCreatePayout() {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
 
       toast.success(
-        `Reversement de ${data.data?.amount?.toLocaleString("fr-FR")} F CFA effectué!`,
-        { description: `Vers ${data.data?.phoneNumber}` }
+        `Demande de reversement enregistrée`,
+        { description: `${data.data?.amount?.toLocaleString("fr-FR")} F CFA vers ${data.data?.phoneNumber}. Traitement via KKiaPay Dashboard.` }
       );
     },
     onError: (error: Error) => {

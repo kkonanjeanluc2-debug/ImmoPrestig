@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import { toast } from "sonner";
 import { Loader2, CreditCard, Smartphone } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface TenantPayRentDialogProps {
   paymentId: string;
@@ -44,11 +45,35 @@ export function TenantPayRentDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
   const [phone, setPhone] = useState(tenantPhone || "");
+  const queryClient = useQueryClient();
 
   const dueMonth = new Date(dueDate).toLocaleDateString("fr-FR", {
     month: "long",
     year: "numeric",
   });
+
+  // Function to update payment status to paid
+  const updatePaymentToPaid = async () => {
+    try {
+      const { error } = await supabase
+        .from("payments")
+        .update({
+          status: "paid",
+          paid_date: new Date().toISOString().split("T")[0],
+          method: selectedMethod,
+        })
+        .eq("id", paymentId);
+
+      if (error) {
+        console.error("Error updating payment:", error);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error("Failed to update payment:", e);
+      return false;
+    }
+  };
 
   const handlePayment = async () => {
     if (!phone.trim()) {
@@ -104,13 +129,25 @@ export function TenantPayRentDialog({
           }
         };
 
-        addKkiapayListener("success", () => {
+        addKkiapayListener("success", async (response: any) => {
           cleanup();
-          toast.success("Merci ! Votre paiement a été pris en compte.");
+          console.log("KKiaPay success callback:", response);
+          
+          // Update payment status to paid
+          const updated = await updatePaymentToPaid();
+          
+          if (updated) {
+            toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");
+            // Invalidate queries to refresh the payments list
+            queryClient.invalidateQueries({ queryKey: ["payments"] });
+          } else {
+            toast.success("Paiement reçu. Votre quittance sera disponible sous peu.");
+          }
         });
 
-        addKkiapayListener("failed", () => {
+        addKkiapayListener("failed", (response: any) => {
           cleanup();
+          console.log("KKiaPay failed callback:", response);
           toast.error("Le paiement KKiaPay n'a pas abouti.");
         });
 

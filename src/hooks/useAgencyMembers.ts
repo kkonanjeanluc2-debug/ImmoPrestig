@@ -37,7 +37,7 @@ export function useAgencyMembers() {
     queryFn: async () => {
       if (!agency?.id) return [];
 
-      // Get members
+      // Get members with a single query using join-like approach
       const { data: members, error: membersError } = await supabase
         .from("agency_members")
         .select("*")
@@ -47,20 +47,26 @@ export function useAgencyMembers() {
       if (membersError) throw membersError;
       if (!members || members.length === 0) return [];
 
+      console.log("Agency members fetched:", members);
+
       // Get profiles separately for these user IDs
       const userIds = members.map(m => m.user_id);
+      console.log("Fetching profiles for user IDs:", userIds);
+      
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("user_id, email, full_name, avatar_url")
         .in("user_id", userIds);
 
+      console.log("Profiles fetched:", profiles);
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
       }
 
       // Merge data
-      return members.map((member) => {
+      const result = members.map((member) => {
         const profile = profiles?.find(p => p.user_id === member.user_id);
+        console.log(`Member ${member.user_id} matched profile:`, profile);
         return {
           ...member,
           status: member.status as "pending" | "active" | "inactive",
@@ -71,6 +77,9 @@ export function useAgencyMembers() {
           } : undefined,
         } as AgencyMember;
       });
+      
+      console.log("Final members with profiles:", result);
+      return result;
     },
     enabled: !!agency?.id,
   });

@@ -32,10 +32,9 @@ import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
-import { differenceInDays, isFuture, isPast, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-import { DateRange } from "react-day-picker";
+import { differenceInDays, isFuture, isPast } from "date-fns";
 import { usePayments } from "@/hooks/usePayments";
-import { DateRangeFilter } from "@/components/payment/DateRangeFilter";
+import { MonthFilter } from "@/components/payment/MonthFilter";
 import { useOwners } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
@@ -79,7 +78,7 @@ export default function Payments() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "commissions" | "account">("payments");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [monthFilter, setMonthFilter] = useState<{ month: number; year: number } | undefined>(undefined);
   const { canCreate, canEdit, role } = usePermissions();
   const isLocataire = role === "locataire";
 
@@ -122,24 +121,17 @@ export default function Payments() {
       tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       propertyTitle.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Filter by date range
-    let matchesDateRange = true;
-    if (dateRange?.from) {
+    // Filter by month
+    let matchesMonth = true;
+    if (monthFilter) {
       const dueDate = new Date(payment.due_date);
       const paidDate = payment.paid_date ? new Date(payment.paid_date) : null;
       const dateToCheck = paidDate || dueDate;
-      
-      if (dateRange.to) {
-        matchesDateRange = isWithinInterval(dateToCheck, {
-          start: startOfDay(dateRange.from),
-          end: endOfDay(dateRange.to)
-        });
-      } else {
-        matchesDateRange = dateToCheck >= startOfDay(dateRange.from);
-      }
+      matchesMonth = dateToCheck.getMonth() === monthFilter.month && 
+                     dateToCheck.getFullYear() === monthFilter.year;
     }
     
-    if (!matchesDateRange) return false;
+    if (!matchesMonth) return false;
     
     // Handle "due_soon" filter for payments due within 7 days
     if (statusFilter === "due_soon") {
@@ -393,9 +385,9 @@ export default function Payments() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                           />
                         </div>
-                        <DateRangeFilter
-                          dateRange={dateRange}
-                          onDateRangeChange={setDateRange}
+                        <MonthFilter
+                          selectedMonth={monthFilter}
+                          onMonthChange={setMonthFilter}
                         />
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                           <SelectTrigger className="h-9 w-full sm:w-36">

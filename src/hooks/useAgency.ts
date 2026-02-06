@@ -4,7 +4,16 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export type AccountType = "agence" | "proprietaire";
 
-export type MobileMoneyProvider = "wave" | "kkiapay";
+// Les opérateurs de paiement supportés par KKiaPay
+export type MobileMoneyProvider = "wave" | "orange_money" | "mtn_money" | "moov" | "card";
+
+export const PAYMENT_OPERATORS = [
+  { value: "wave" as const, label: "Wave", color: "bg-blue-500" },
+  { value: "orange_money" as const, label: "Orange Money", color: "bg-orange-500" },
+  { value: "mtn_money" as const, label: "MTN Mobile Money", color: "bg-yellow-500" },
+  { value: "moov" as const, label: "Moov Money", color: "bg-cyan-500" },
+  { value: "card" as const, label: "Carte bancaire", color: "bg-purple-500" },
+];
 
 export interface Agency {
   id: string;

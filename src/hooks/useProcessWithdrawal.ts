@@ -19,16 +19,16 @@ export function useProcessWithdrawal() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["withdrawal-requests"] });
       queryClient.invalidateQueries({ queryKey: ["online-rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
       
-      if (data.status === "processing") {
-        toast.info("Reversement en cours de traitement par KKiaPay");
-      } else {
-        toast.success("Reversement effectué avec succès!");
-      }
+      toast.success(
+        `Demande soumise! ${data.details?.amount?.toLocaleString("fr-FR")} F CFA vers ${data.details?.recipient}`,
+        { description: "Sera traitée dans les plus brefs délais" }
+      );
     },
     onError: (error: Error) => {
       console.error("Error processing withdrawal:", error);
-      toast.error(error.message || "Erreur lors du reversement");
+      toast.error(error.message || "Erreur lors de la soumission");
     },
   });
 }

@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowDownToLine, Loader2, Zap } from "lucide-react";
 import { useCreateWithdrawalRequest } from "@/hooks/useWithdrawalRequests";
 import { useAgency, PAYMENT_OPERATORS } from "@/hooks/useAgency";
-import { useProcessWithdrawal } from "@/hooks/useProcessWithdrawal";
+import { useCreatePayout } from "@/hooks/usePayouts";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface RequestWithdrawalDialogProps {
@@ -40,7 +40,7 @@ export function RequestWithdrawalDialog({ availableBalance }: RequestWithdrawalD
 
   const { data: agency } = useAgency();
   const createRequest = useCreateWithdrawalRequest();
-  const processWithdrawal = useProcessWithdrawal();
+  const createPayout = useCreatePayout();
 
   // Pre-fill with agency's mobile money number if available
   const handleOpen = (isOpen: boolean) => {
@@ -62,18 +62,22 @@ export function RequestWithdrawalDialog({ availableBalance }: RequestWithdrawalD
     }
 
     try {
-      // Create the withdrawal request
-      const result = await createRequest.mutateAsync({
-        amount: numAmount,
-        recipient_phone: recipientPhone,
-        recipient_name: recipientName || undefined,
-        payment_method: paymentMethod,
-        notes: notes || undefined,
-      });
-
-      // If immediate processing is enabled, trigger the payout
-      if (processImmediately && result?.id) {
-        await processWithdrawal.mutateAsync(result.id);
+      if (processImmediately) {
+        // Use the direct KKiaPay payout API
+        await createPayout.mutateAsync({
+          amount: numAmount,
+          phoneNumber: recipientPhone,
+          reason: notes || `Reversement ${getMethodName(paymentMethod)} - ${recipientName || "Agence"}`,
+        });
+      } else {
+        // Create a withdrawal request for manual processing
+        await createRequest.mutateAsync({
+          amount: numAmount,
+          recipient_phone: recipientPhone,
+          recipient_name: recipientName || undefined,
+          payment_method: paymentMethod,
+          notes: notes || undefined,
+        });
       }
 
       setOpen(false);
@@ -87,7 +91,18 @@ export function RequestWithdrawalDialog({ availableBalance }: RequestWithdrawalD
     }
   };
 
-  const isProcessing = createRequest.isPending || processWithdrawal.isPending;
+  const getMethodName = (method: string): string => {
+    const methods: Record<string, string> = {
+      "wave": "Wave",
+      "orange_money": "Orange Money",
+      "mtn_money": "MTN Mobile Money",
+      "moov": "Moov Money",
+      "card": "Carte bancaire"
+    };
+    return methods[method] || method;
+  };
+
+  const isProcessing = createRequest.isPending || createPayout.isPending;
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString("fr-FR") + " F CFA";

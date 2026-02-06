@@ -1799,6 +1799,62 @@ export type Database = {
           },
         ]
       }
+      payouts: {
+        Row: {
+          agency_id: string | null
+          amount: number
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          kkiapay_response: Json | null
+          kkiapay_transaction_id: string | null
+          phone_number: string
+          reason: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agency_id?: string | null
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          kkiapay_response?: Json | null
+          kkiapay_transaction_id?: string | null
+          phone_number: string
+          reason: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agency_id?: string | null
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          kkiapay_response?: Json | null
+          kkiapay_transaction_id?: string | null
+          phone_number?: string
+          reason?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           created_at: string

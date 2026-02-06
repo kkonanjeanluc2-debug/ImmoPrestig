@@ -52,27 +52,43 @@ export function TenantPayRentDialog({
     year: "numeric",
   });
 
-  // Function to update payment status to paid
-  const updatePaymentToPaid = async () => {
+  // Vérifie (côté backend) et marque le paiement comme payé
+  const verifyAndFinalizeKkiapayPayment = async (transactionId?: string) => {
+    if (!transactionId) return false;
+
     try {
-      const { error } = await supabase
-        .from("payments")
-        .update({
-          status: "paid",
-          paid_date: new Date().toISOString().split("T")[0],
-          method: selectedMethod,
-        })
-        .eq("id", paymentId);
+      const { data, error } = await supabase.functions.invoke("tenant-pay-rent-kkiapay-verify", {
+        body: {
+          payment_id: paymentId,
+          transaction_id: String(transactionId),
+        },
+      });
 
       if (error) {
-        console.error("Error updating payment:", error);
+        console.error("Error verifying KKiaPay payment:", error);
         return false;
       }
-      return true;
+
+      return !!data?.verified;
     } catch (e) {
-      console.error("Failed to update payment:", e);
+      console.error("Failed to verify KKiaPay payment:", e);
       return false;
     }
+  };
+
+  const waitForPaymentToBePaid = async () => {
+    for (let i = 0; i < 10; i++) {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("status")
+        .eq("id", paymentId)
+        .single();
+
+      if (!error && data?.status === "paid") return true;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+
+    return false;
   };
 
   const handlePayment = async () => {
@@ -132,16 +148,27 @@ export function TenantPayRentDialog({
         addKkiapayListener("success", async (response: any) => {
           cleanup();
           console.log("KKiaPay success callback:", response);
-          
-          // Update payment status to paid
-          const updated = await updatePaymentToPaid();
-          
-          if (updated) {
+
+          const transactionId =
+            response?.transactionId ??
+            response?.transaction_id ??
+            response?.reference ??
+            response?.data?.transactionId;
+
+          // Vérification & finalisation côté backend (pas bloquée par les permissions du portail)
+          const verified = await verifyAndFinalizeKkiapayPayment(transactionId);
+
+          // Attendre la propagation du statut avant de rafraîchir l'UI
+          const paid = verified ? await waitForPaymentToBePaid() : false;
+
+          if (paid) {
             toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");
-            // Invalidate queries to refresh the payments list
+            queryClient.invalidateQueries({ queryKey: ["payments"] });
+          } else if (verified) {
+            toast.success("Paiement confirmé. Votre quittance sera disponible sous peu.");
             queryClient.invalidateQueries({ queryKey: ["payments"] });
           } else {
-            toast.success("Paiement reçu. Votre quittance sera disponible sous peu.");
+            toast.success("Paiement reçu. Vérification en cours…");
           }
         });
 

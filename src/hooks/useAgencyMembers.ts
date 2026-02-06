@@ -45,15 +45,18 @@ export function useAgencyMembers() {
         .order("created_at", { ascending: false });
 
       if (membersError) throw membersError;
-
       if (!members || members.length === 0) return [];
 
-      // Get profiles for these members
+      // Get profiles separately for these user IDs
       const userIds = members.map(m => m.user_id);
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("user_id, email, full_name, avatar_url")
         .in("user_id", userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+      }
 
       // Merge data
       return members.map((member) => {

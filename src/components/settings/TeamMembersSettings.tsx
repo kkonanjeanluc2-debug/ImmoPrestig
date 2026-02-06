@@ -45,7 +45,8 @@ import {
   Infinity,
   Mail,
   Shield,
-  Settings2
+  Settings2,
+  Pencil
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,6 +61,7 @@ import {
 } from "@/hooks/useAgencyMembers";
 import { AppRole, ROLE_LABELS, ROLE_DESCRIPTIONS } from "@/hooks/useUserRoles";
 import { EditMemberPermissionsDialog } from "./EditMemberPermissionsDialog";
+import { EditMemberDialog } from "./EditMemberDialog";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-4 w-4 text-purple-600" />,
@@ -102,6 +104,7 @@ export function TeamMembersSettings() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
   const [memberToEditPermissions, setMemberToEditPermissions] = useState<AgencyMember | null>(null);
+  const [memberToEdit, setMemberToEdit] = useState<AgencyMember | null>(null);
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AppRole>>({});
   
   // Form state
@@ -505,6 +508,15 @@ export function TeamMembersSettings() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => setMemberToEdit(member)}
+                      title="Modifier le membre"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setMemberToEditPermissions(member)}
                       title="Gérer les permissions"
                     >
@@ -554,6 +566,13 @@ export function TeamMembersSettings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Member Dialog */}
+      <EditMemberDialog
+        open={!!memberToEdit}
+        onOpenChange={(open) => !open && setMemberToEdit(null)}
+        member={memberToEdit}
+      />
 
       {/* Edit Permissions Dialog */}
       <EditMemberPermissionsDialog

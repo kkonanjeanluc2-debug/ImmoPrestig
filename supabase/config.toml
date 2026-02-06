@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.tenant-pay-rent-kkiapay-webhook]
 verify_jwt = false
+
+[functions.payout]
+verify_jwt = false

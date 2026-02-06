@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAgency, AccountType } from "@/hooks/useAgency";
+import { useAgency, AccountType, MobileMoneyProvider, PAYMENT_OPERATORS } from "@/hooks/useAgency";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,7 +24,6 @@ import {
   Smartphone
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MobileMoneyProvider } from "@/hooks/useAgency";
 
 export function AgencySettings() {
   const { user } = useAuth();
@@ -439,48 +438,37 @@ export function AgencySettings() {
             <h3 className="font-medium">Paiement des loyers en ligne</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Configurez le numéro sur lequel vous recevrez les loyers payés en ligne par vos locataires.
-            Les paiements sont traités via Wave Direct ou KKiaPay.
+            Configurez le mode de paiement et le numéro sur lequel vous recevrez les loyers payés en ligne par vos locataires via KKiaPay.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="mobile-money-provider">Agrégateur de paiement</Label>
+              <Label htmlFor="mobile-money-provider">Moyen de paiement préféré</Label>
               <Select
                 value={formData.mobile_money_provider}
                 onValueChange={(value) => handleChange("mobile_money_provider", value)}
               >
                 <SelectTrigger id="mobile-money-provider">
-                  <SelectValue placeholder="Sélectionner l'agrégateur" />
+                  <SelectValue placeholder="Sélectionner l'opérateur" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="wave">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-primary/80" />
-                      <span>Wave Direct</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="kkiapay">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-primary" />
-                      <span>KKiaPay (Mobile Money & Carte)</span>
-                    </div>
-                  </SelectItem>
+                  {PAYMENT_OPERATORS.map((operator) => (
+                    <SelectItem key={operator.value} value={operator.value}>
+                      <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 rounded-full ${operator.color}`} />
+                        <span>{operator.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {formData.mobile_money_provider === "wave" 
-                  ? "Les paiements seront envoyés directement sur votre compte Wave."
-                  : formData.mobile_money_provider === "kkiapay"
-                  ? "Supporte Orange Money, MTN, Moov, Wave et cartes bancaires."
-                  : "Choisissez l'agrégateur pour recevoir les paiements."}
+                Tous les paiements sont traités via KKiaPay.
               </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="mobile-money-number">
-                {formData.mobile_money_provider === "wave" 
-                  ? "Numéro Wave" 
-                  : "Numéro de réception"}
+                Numéro de réception
               </Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -501,7 +489,7 @@ export function AgencySettings() {
 
           {!formData.mobile_money_provider && (
             <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
-              <strong className="text-foreground">Note :</strong> Configurez un agrégateur pour permettre à vos locataires de payer leurs loyers en ligne.
+              <strong className="text-foreground">Note :</strong> Configurez un moyen de paiement pour permettre à vos locataires de payer leurs loyers en ligne.
             </div>
           )}
         </div>

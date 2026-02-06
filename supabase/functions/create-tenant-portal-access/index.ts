@@ -1,9 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders, unauthorizedResponse, validateAuth } from "../_shared/auth.ts";
 
 interface CreateTenantAccessRequest {
   tenant_id: string;
@@ -18,37 +14,13 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    
-    // Get the authorization header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Non autorisé" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+
+    const auth = await validateAuth(req);
+    if (!auth.authenticated || !auth.userId) {
+      return unauthorizedResponse("Token invalide");
     }
 
-    // Extract token and validate
-    const token = authHeader.replace("Bearer ", "");
-    
-    // Create client with user's auth header to validate token
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Verify the calling user using getUser with explicit token
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
-    
-    if (userError || !user) {
-      console.error("User error:", userError);
-      return new Response(
-        JSON.stringify({ error: "Token invalide" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const callingUserId = user.id;
+    const callingUserId = auth.userId;
     console.log("Authenticated user:", callingUserId);
 
     // Create admin client for privileged operations

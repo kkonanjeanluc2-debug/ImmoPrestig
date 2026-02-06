@@ -44,7 +44,7 @@ export function MonthYearSelector({
           .from("payments")
           .select("payment_months")
           .eq("tenant_id", tenantId)
-          .neq("status", "cancelled");
+          .eq("status", "paid"); // Only consider actually paid payments
 
         if (error) throw error;
 

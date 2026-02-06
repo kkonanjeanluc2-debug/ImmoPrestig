@@ -1,4 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole, AppRole } from "./useUserRoles";
+import { MemberPermissions, DEFAULT_PERMISSIONS, PermissionKey } from "./useMemberPermissions";
 
 export interface Permissions {
   canCreate: boolean;
@@ -9,9 +13,12 @@ export interface Permissions {
   isReadOnly: boolean;
   isLoading: boolean;
   role: AppRole | null;
+  // Granular permissions
+  custom: Partial<MemberPermissions> | null;
+  hasPermission: (key: PermissionKey) => boolean;
 }
 
-const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">> = {
+const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role" | "custom" | "hasPermission">> = {
   super_admin: {
     canCreate: true,
     canEdit: true,
@@ -55,7 +62,49 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role">>
 };
 
 export function usePermissions(): Permissions {
-  const { data: userRole, isLoading } = useCurrentUserRole();
+  const { user } = useAuth();
+  const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
+
+  // Fetch custom permissions if user is a member
+  const { data: customPermissions, isLoading: permLoading } = useQuery({
+    queryKey: ["my-member-permissions", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+
+      // First get the user's agency membership
+      const { data: membership, error: membershipError } = await supabase
+        .from("agency_members")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (membershipError) throw membershipError;
+      if (!membership) return null;
+
+      // Then get their custom permissions
+      const { data: permissions, error: permError } = await supabase
+        .from("member_permissions")
+        .select("*")
+        .eq("member_id", membership.id)
+        .maybeSingle();
+
+      if (permError) throw permError;
+
+      // If no custom permissions exist, return defaults based on role
+      if (!permissions) {
+        return {
+          ...DEFAULT_PERMISSIONS[membership.role] || DEFAULT_PERMISSIONS.lecture_seule,
+          _isDefault: true,
+        } as Partial<MemberPermissions> & { _isDefault?: boolean };
+      }
+
+      return permissions as MemberPermissions;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isLoading = roleLoading || permLoading;
 
   if (isLoading) {
     return {
@@ -67,15 +116,40 @@ export function usePermissions(): Permissions {
       isReadOnly: true,
       isLoading: true,
       role: null,
+      custom: null,
+      hasPermission: () => false,
     };
   }
 
   const role = userRole?.role || "lecture_seule";
-  const permissions = ROLE_PERMISSIONS[role];
+  const basePermissions = ROLE_PERMISSIONS[role];
+
+  // Helper to check a specific permission
+  const hasPermission = (key: PermissionKey): boolean => {
+    // Super admin and admin always have all permissions
+    if (role === "super_admin" || role === "admin") {
+      return true;
+    }
+
+    // If custom permissions exist, use them
+    if (customPermissions && key in customPermissions) {
+      return !!customPermissions[key];
+    }
+
+    // Fall back to default permissions for the role
+    const defaults = DEFAULT_PERMISSIONS[role];
+    if (defaults && key in defaults) {
+      return !!defaults[key];
+    }
+
+    return false;
+  };
 
   return {
-    ...permissions,
+    ...basePermissions,
     isLoading: false,
     role,
+    custom: customPermissions || null,
+    hasPermission,
   };
 }

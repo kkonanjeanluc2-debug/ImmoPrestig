@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { kkiapay } from "npm:@kkiapay-org/nodejs-sdk";
 import { corsHeaders, validateAuth, unauthorizedResponse } from "../_shared/auth.ts";
 

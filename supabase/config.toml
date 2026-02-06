@@ -99,5 +99,8 @@ verify_jwt = false
 [functions.tenant-pay-rent-kkiapay]
 verify_jwt = false
 
+[functions.tenant-pay-rent-kkiapay-verify]
+verify_jwt = false
+
 [functions.tenant-pay-rent-kkiapay-webhook]
 verify_jwt = false

@@ -32,8 +32,10 @@ import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
-import { differenceInDays, isFuture, isPast } from "date-fns";
+import { differenceInDays, isFuture, isPast, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { DateRange } from "react-day-picker";
 import { usePayments } from "@/hooks/usePayments";
+import { DateRangeFilter } from "@/components/payment/DateRangeFilter";
 import { useOwners } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
@@ -77,6 +79,7 @@ export default function Payments() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "commissions" | "account">("payments");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { canCreate, canEdit, role } = usePermissions();
   const isLocataire = role === "locataire";
 
@@ -118,6 +121,25 @@ export default function Payments() {
     const matchesSearch = 
       tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       propertyTitle.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Filter by date range
+    let matchesDateRange = true;
+    if (dateRange?.from) {
+      const dueDate = new Date(payment.due_date);
+      const paidDate = payment.paid_date ? new Date(payment.paid_date) : null;
+      const dateToCheck = paidDate || dueDate;
+      
+      if (dateRange.to) {
+        matchesDateRange = isWithinInterval(dateToCheck, {
+          start: startOfDay(dateRange.from),
+          end: endOfDay(dateRange.to)
+        });
+      } else {
+        matchesDateRange = dateToCheck >= startOfDay(dateRange.from);
+      }
+    }
+    
+    if (!matchesDateRange) return false;
     
     // Handle "due_soon" filter for payments due within 7 days
     if (statusFilter === "due_soon") {
@@ -361,7 +383,7 @@ export default function Payments() {
                       <CardTitle className="text-base font-semibold">
                         Historique des paiements
                       </CardTitle>
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-wrap">
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
@@ -371,6 +393,10 @@ export default function Payments() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                           />
                         </div>
+                        <DateRangeFilter
+                          dateRange={dateRange}
+                          onDateRangeChange={setDateRange}
+                        />
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                           <SelectTrigger className="h-9 w-full sm:w-36">
                             <Filter className="h-4 w-4 mr-2" />

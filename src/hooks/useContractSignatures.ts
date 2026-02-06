@@ -150,28 +150,25 @@ export const useSignatureByToken = (token?: string) => {
   return useQuery({
     queryKey: ["signature-by-token", token],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contract_signatures")
-        .select(`
-          *,
-          contracts (
-            id,
-            start_date,
-            end_date,
-            rent_amount,
-            deposit,
-            properties (title, address),
-            tenants (name, email)
-          )
-        `)
-        .eq("signature_token", token!)
-        .gt("token_expires_at", new Date().toISOString())
-        .is("signature_data", null)
-        .is("signature_text", null)
-        .maybeSingle();
+      // Use edge function for secure token-based access (no RLS bypass needed)
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-signature-by-token?token=${encodeURIComponent(token!)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
 
-      if (error) throw error;
-      return data;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erreur lors de la récupération de la signature");
+      }
+
+      const result = await response.json();
+      return result.data;
     },
     enabled: !!token,
   });
@@ -190,44 +187,31 @@ export const useCompleteTenantSignature = () => {
       signatureText?: string;
       signatureType: "drawn" | "typed";
     }) => {
-      const userAgent = navigator.userAgent;
+      // Use edge function for secure token-based signature completion
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/complete-tenant-signature`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            token,
+            signatureData,
+            signatureText,
+            signatureType,
+          }),
+        }
+      );
 
-      const { data, error } = await supabase
-        .from("contract_signatures")
-        .update({
-          signature_data: signatureData,
-          signature_text: signatureText,
-          signature_type: signatureType,
-          signed_at: new Date().toISOString(),
-          user_agent: userAgent,
-        })
-        .eq("signature_token", token)
-        .gt("token_expires_at", new Date().toISOString())
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Mettre à jour le statut du contrat en fonction de la signature du bailleur
-      if (data?.contract_id) {
-        // Récupérer le statut actuel
-        const { data: contractData } = await supabase
-          .from("contracts")
-          .select("signature_status")
-          .eq("id", data.contract_id)
-          .single();
-
-        const currentStatus = contractData?.signature_status || "pending";
-        // Si le bailleur a déjà signé, passer à fully_signed, sinon tenant_signed
-        const newStatus = currentStatus === "landlord_signed" ? "fully_signed" : "tenant_signed";
-
-        await supabase
-          .from("contracts")
-          .update({ signature_status: newStatus })
-          .eq("id", data.contract_id);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erreur lors de l'enregistrement de la signature");
       }
 
-      return data;
+      const result = await response.json();
+      return result.data;
     },
   });
 };

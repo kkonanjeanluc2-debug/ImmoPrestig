@@ -107,3 +107,9 @@ verify_jwt = false
 
 [functions.payout]
 verify_jwt = false
+
+[functions.get-signature-by-token]
+verify_jwt = false
+
+[functions.complete-tenant-signature]
+verify_jwt = false

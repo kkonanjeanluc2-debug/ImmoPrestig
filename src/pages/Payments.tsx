@@ -42,9 +42,9 @@ import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { ReceiptActions } from "@/components/payment/ReceiptActions";
 import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { CommissionReportCard } from "@/components/commission/CommissionReportCard";
+import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
-
 const statusConfig = {
   paid: { 
     label: "Payé", 
@@ -76,7 +76,7 @@ export default function Payments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [activeTab, setActiveTab] = useState<"payments" | "commissions">("payments");
+  const [activeTab, setActiveTab] = useState<"payments" | "commissions" | "account">("payments");
   const { canCreate, canEdit, role } = usePermissions();
   const isLocataire = role === "locataire";
 
@@ -235,17 +235,23 @@ export default function Payments() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "payments" | "commissions")}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "payments" | "commissions" | "account")}>
           <TabsList>
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <Wallet className="h-4 w-4" />
               Paiements
             </TabsTrigger>
             {!isLocataire && (
-              <TabsTrigger value="commissions" className="flex items-center gap-2">
-                <Percent className="h-4 w-4" />
-                Commissions
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="commissions" className="flex items-center gap-2">
+                  <Percent className="h-4 w-4" />
+                  Commissions
+                </TabsTrigger>
+                <TabsTrigger value="account" className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Compte
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
@@ -553,6 +559,10 @@ export default function Payments() {
 
           <TabsContent value="commissions" className="mt-6">
             <CommissionReportCard />
+          </TabsContent>
+
+          <TabsContent value="account" className="mt-6">
+            <AccountTab />
           </TabsContent>
         </Tabs>
       </div>

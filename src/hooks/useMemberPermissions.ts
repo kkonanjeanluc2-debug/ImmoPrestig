@@ -48,6 +48,12 @@ export interface MemberPermissions {
   can_view_reports: boolean;
   can_export_data: boolean;
   can_send_reminders: boolean;
+  // Settings management
+  can_access_settings: boolean;
+  can_manage_team: boolean;
+  can_manage_automations: boolean;
+  can_manage_branding: boolean;
+  can_manage_templates: boolean;
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -80,16 +86,21 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_lotissements: "Créer des lotissements",
   can_edit_lotissements: "Modifier les lotissements",
   can_delete_lotissements: "Supprimer les lotissements",
-  can_view_ventes: "Voir les ventes",
-  can_create_ventes: "Créer des ventes",
-  can_edit_ventes: "Modifier les ventes",
-  can_delete_ventes: "Supprimer les ventes",
+  can_view_ventes: "Voir les ventes immobilières",
+  can_create_ventes: "Créer des ventes immobilières",
+  can_edit_ventes: "Modifier les ventes immobilières",
+  can_delete_ventes: "Supprimer les ventes immobilières",
   can_view_documents: "Voir les documents",
   can_create_documents: "Créer des documents",
   can_delete_documents: "Supprimer les documents",
   can_view_reports: "Voir les rapports",
   can_export_data: "Exporter les données",
   can_send_reminders: "Envoyer des rappels",
+  can_access_settings: "Accéder aux paramètres",
+  can_manage_team: "Gérer l'équipe",
+  can_manage_automations: "Gérer les automatisations",
+  can_manage_branding: "Gérer le branding",
+  can_manage_templates: "Gérer les modèles",
 };
 
 export const PERMISSION_GROUPS = {
@@ -124,6 +135,10 @@ export const PERMISSION_GROUPS = {
   documents: {
     label: "Documents",
     permissions: ["can_view_documents", "can_create_documents", "can_delete_documents"] as PermissionKey[],
+  },
+  settings: {
+    label: "Paramètres",
+    permissions: ["can_access_settings", "can_manage_team", "can_manage_automations", "can_manage_branding", "can_manage_templates"] as PermissionKey[],
   },
   other: {
     label: "Autres",
@@ -168,6 +183,11 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_reports: true,
     can_export_data: true,
     can_send_reminders: true,
+    can_access_settings: true,
+    can_manage_team: true,
+    can_manage_automations: true,
+    can_manage_branding: true,
+    can_manage_templates: true,
   },
   gestionnaire: {
     can_view_properties: true,
@@ -204,6 +224,11 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_reports: false,
     can_export_data: false,
     can_send_reminders: true,
+    can_access_settings: false,
+    can_manage_team: false,
+    can_manage_automations: false,
+    can_manage_branding: false,
+    can_manage_templates: false,
   },
   lecture_seule: {
     can_view_properties: true,
@@ -240,6 +265,11 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_reports: false,
     can_export_data: false,
     can_send_reminders: false,
+    can_access_settings: false,
+    can_manage_team: false,
+    can_manage_automations: false,
+    can_manage_branding: false,
+    can_manage_templates: false,
   },
 };
 

@@ -1247,6 +1247,7 @@ export type Database = {
       }
       member_permissions: {
         Row: {
+          can_access_settings: boolean
           can_create_contracts: boolean
           can_create_documents: boolean
           can_create_lotissements: boolean
@@ -1271,6 +1272,10 @@ export type Database = {
           can_edit_tenants: boolean
           can_edit_ventes: boolean
           can_export_data: boolean
+          can_manage_automations: boolean
+          can_manage_branding: boolean
+          can_manage_team: boolean
+          can_manage_templates: boolean
           can_send_reminders: boolean
           can_view_contracts: boolean
           can_view_documents: boolean
@@ -1287,6 +1292,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          can_access_settings?: boolean
           can_create_contracts?: boolean
           can_create_documents?: boolean
           can_create_lotissements?: boolean
@@ -1311,6 +1317,10 @@ export type Database = {
           can_edit_tenants?: boolean
           can_edit_ventes?: boolean
           can_export_data?: boolean
+          can_manage_automations?: boolean
+          can_manage_branding?: boolean
+          can_manage_team?: boolean
+          can_manage_templates?: boolean
           can_send_reminders?: boolean
           can_view_contracts?: boolean
           can_view_documents?: boolean
@@ -1327,6 +1337,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          can_access_settings?: boolean
           can_create_contracts?: boolean
           can_create_documents?: boolean
           can_create_lotissements?: boolean
@@ -1351,6 +1362,10 @@ export type Database = {
           can_edit_tenants?: boolean
           can_edit_ventes?: boolean
           can_export_data?: boolean
+          can_manage_automations?: boolean
+          can_manage_branding?: boolean
+          can_manage_team?: boolean
+          can_manage_templates?: boolean
           can_send_reminders?: boolean
           can_view_contracts?: boolean
           can_view_documents?: boolean

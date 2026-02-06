@@ -13,6 +13,130 @@ interface CreateMemberRequest {
   role: string;
 }
 
+// Default permissions for each role
+function getDefaultPermissions(role: string) {
+  const adminPermissions = {
+    can_view_properties: true,
+    can_create_properties: true,
+    can_edit_properties: true,
+    can_delete_properties: true,
+    can_view_tenants: true,
+    can_create_tenants: true,
+    can_edit_tenants: true,
+    can_delete_tenants: true,
+    can_view_payments: true,
+    can_create_payments: true,
+    can_edit_payments: true,
+    can_delete_payments: true,
+    can_view_owners: true,
+    can_create_owners: true,
+    can_edit_owners: true,
+    can_delete_owners: true,
+    can_view_contracts: true,
+    can_create_contracts: true,
+    can_edit_contracts: true,
+    can_delete_contracts: true,
+    can_view_lotissements: true,
+    can_create_lotissements: true,
+    can_edit_lotissements: true,
+    can_delete_lotissements: true,
+    can_view_ventes: true,
+    can_create_ventes: true,
+    can_edit_ventes: true,
+    can_delete_ventes: true,
+    can_view_documents: true,
+    can_create_documents: true,
+    can_delete_documents: true,
+    can_view_reports: true,
+    can_export_data: true,
+    can_send_reminders: true,
+  };
+
+  const gestionnairePermissions = {
+    can_view_properties: true,
+    can_create_properties: true,
+    can_edit_properties: false,
+    can_delete_properties: false,
+    can_view_tenants: true,
+    can_create_tenants: true,
+    can_edit_tenants: false,
+    can_delete_tenants: false,
+    can_view_payments: true,
+    can_create_payments: true,
+    can_edit_payments: false,
+    can_delete_payments: false,
+    can_view_owners: true,
+    can_create_owners: true,
+    can_edit_owners: false,
+    can_delete_owners: false,
+    can_view_contracts: true,
+    can_create_contracts: true,
+    can_edit_contracts: false,
+    can_delete_contracts: false,
+    can_view_lotissements: true,
+    can_create_lotissements: true,
+    can_edit_lotissements: false,
+    can_delete_lotissements: false,
+    can_view_ventes: true,
+    can_create_ventes: true,
+    can_edit_ventes: false,
+    can_delete_ventes: false,
+    can_view_documents: true,
+    can_create_documents: true,
+    can_delete_documents: false,
+    can_view_reports: false,
+    can_export_data: false,
+    can_send_reminders: true,
+  };
+
+  const lectureSeulePermissions = {
+    can_view_properties: true,
+    can_create_properties: false,
+    can_edit_properties: false,
+    can_delete_properties: false,
+    can_view_tenants: true,
+    can_create_tenants: false,
+    can_edit_tenants: false,
+    can_delete_tenants: false,
+    can_view_payments: true,
+    can_create_payments: false,
+    can_edit_payments: false,
+    can_delete_payments: false,
+    can_view_owners: true,
+    can_create_owners: false,
+    can_edit_owners: false,
+    can_delete_owners: false,
+    can_view_contracts: true,
+    can_create_contracts: false,
+    can_edit_contracts: false,
+    can_delete_contracts: false,
+    can_view_lotissements: true,
+    can_create_lotissements: false,
+    can_edit_lotissements: false,
+    can_delete_lotissements: false,
+    can_view_ventes: true,
+    can_create_ventes: false,
+    can_edit_ventes: false,
+    can_delete_ventes: false,
+    can_view_documents: true,
+    can_create_documents: false,
+    can_delete_documents: false,
+    can_view_reports: false,
+    can_export_data: false,
+    can_send_reminders: false,
+  };
+
+  switch (role) {
+    case "admin":
+      return adminPermissions;
+    case "gestionnaire":
+      return gestionnairePermissions;
+    case "lecture_seule":
+    default:
+      return lectureSeulePermissions;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -166,6 +290,29 @@ Deno.serve(async (req) => {
 
     if (roleError) {
       console.error("Error setting user role:", roleError);
+    }
+
+    // Get the member ID we just created
+    const { data: newMember } = await supabaseAdmin
+      .from("agency_members")
+      .select("id")
+      .eq("agency_id", agency_id)
+      .eq("user_id", userId)
+      .single();
+
+    // Create default permissions for the member
+    if (newMember) {
+      const defaultPermissions = getDefaultPermissions(role);
+      const { error: permError } = await supabaseAdmin
+        .from("member_permissions")
+        .insert({
+          member_id: newMember.id,
+          ...defaultPermissions,
+        });
+
+      if (permError) {
+        console.error("Error creating member permissions:", permError);
+      }
     }
 
     console.log("Member added successfully:", userId);

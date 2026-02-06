@@ -1245,6 +1245,137 @@ export type Database = {
           },
         ]
       }
+      member_permissions: {
+        Row: {
+          can_create_contracts: boolean
+          can_create_documents: boolean
+          can_create_lotissements: boolean
+          can_create_owners: boolean
+          can_create_payments: boolean
+          can_create_properties: boolean
+          can_create_tenants: boolean
+          can_create_ventes: boolean
+          can_delete_contracts: boolean
+          can_delete_documents: boolean
+          can_delete_lotissements: boolean
+          can_delete_owners: boolean
+          can_delete_payments: boolean
+          can_delete_properties: boolean
+          can_delete_tenants: boolean
+          can_delete_ventes: boolean
+          can_edit_contracts: boolean
+          can_edit_lotissements: boolean
+          can_edit_owners: boolean
+          can_edit_payments: boolean
+          can_edit_properties: boolean
+          can_edit_tenants: boolean
+          can_edit_ventes: boolean
+          can_export_data: boolean
+          can_send_reminders: boolean
+          can_view_contracts: boolean
+          can_view_documents: boolean
+          can_view_lotissements: boolean
+          can_view_owners: boolean
+          can_view_payments: boolean
+          can_view_properties: boolean
+          can_view_reports: boolean
+          can_view_tenants: boolean
+          can_view_ventes: boolean
+          created_at: string
+          id: string
+          member_id: string
+          updated_at: string
+        }
+        Insert: {
+          can_create_contracts?: boolean
+          can_create_documents?: boolean
+          can_create_lotissements?: boolean
+          can_create_owners?: boolean
+          can_create_payments?: boolean
+          can_create_properties?: boolean
+          can_create_tenants?: boolean
+          can_create_ventes?: boolean
+          can_delete_contracts?: boolean
+          can_delete_documents?: boolean
+          can_delete_lotissements?: boolean
+          can_delete_owners?: boolean
+          can_delete_payments?: boolean
+          can_delete_properties?: boolean
+          can_delete_tenants?: boolean
+          can_delete_ventes?: boolean
+          can_edit_contracts?: boolean
+          can_edit_lotissements?: boolean
+          can_edit_owners?: boolean
+          can_edit_payments?: boolean
+          can_edit_properties?: boolean
+          can_edit_tenants?: boolean
+          can_edit_ventes?: boolean
+          can_export_data?: boolean
+          can_send_reminders?: boolean
+          can_view_contracts?: boolean
+          can_view_documents?: boolean
+          can_view_lotissements?: boolean
+          can_view_owners?: boolean
+          can_view_payments?: boolean
+          can_view_properties?: boolean
+          can_view_reports?: boolean
+          can_view_tenants?: boolean
+          can_view_ventes?: boolean
+          created_at?: string
+          id?: string
+          member_id: string
+          updated_at?: string
+        }
+        Update: {
+          can_create_contracts?: boolean
+          can_create_documents?: boolean
+          can_create_lotissements?: boolean
+          can_create_owners?: boolean
+          can_create_payments?: boolean
+          can_create_properties?: boolean
+          can_create_tenants?: boolean
+          can_create_ventes?: boolean
+          can_delete_contracts?: boolean
+          can_delete_documents?: boolean
+          can_delete_lotissements?: boolean
+          can_delete_owners?: boolean
+          can_delete_payments?: boolean
+          can_delete_properties?: boolean
+          can_delete_tenants?: boolean
+          can_delete_ventes?: boolean
+          can_edit_contracts?: boolean
+          can_edit_lotissements?: boolean
+          can_edit_owners?: boolean
+          can_edit_payments?: boolean
+          can_edit_properties?: boolean
+          can_edit_tenants?: boolean
+          can_edit_ventes?: boolean
+          can_export_data?: boolean
+          can_send_reminders?: boolean
+          can_view_contracts?: boolean
+          can_view_documents?: boolean
+          can_view_lotissements?: boolean
+          can_view_owners?: boolean
+          can_view_payments?: boolean
+          can_view_properties?: boolean
+          can_view_reports?: boolean
+          can_view_tenants?: boolean
+          can_view_ventes?: boolean
+          created_at?: string
+          id?: string
+          member_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_permissions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "agency_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

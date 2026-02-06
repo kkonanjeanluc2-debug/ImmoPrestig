@@ -43,7 +43,9 @@ import {
   Check,
   AlertTriangle,
   Infinity,
-  Mail
+  Mail,
+  Shield,
+  Settings2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,8 +56,10 @@ import {
   useCreateAgencyMember,
   useUpdateAgencyMember,
   useDeleteAgencyMember,
+  AgencyMember,
 } from "@/hooks/useAgencyMembers";
 import { AppRole, ROLE_LABELS, ROLE_DESCRIPTIONS } from "@/hooks/useUserRoles";
+import { EditMemberPermissionsDialog } from "./EditMemberPermissionsDialog";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-4 w-4 text-purple-600" />,
@@ -97,6 +101,7 @@ export function TeamMembersSettings() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
+  const [memberToEditPermissions, setMemberToEditPermissions] = useState<AgencyMember | null>(null);
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AppRole>>({});
   
   // Form state
@@ -500,6 +505,15 @@ export function TeamMembersSettings() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => setMemberToEditPermissions(member)}
+                      title="Gérer les permissions"
+                    >
+                      <Settings2 className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="text-destructive hover:text-destructive"
                       onClick={() => setMemberToDelete(member.id)}
                     >
@@ -540,6 +554,13 @@ export function TeamMembersSettings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Permissions Dialog */}
+      <EditMemberPermissionsDialog
+        open={!!memberToEditPermissions}
+        onOpenChange={(open) => !open && setMemberToEditPermissions(null)}
+        member={memberToEditPermissions}
+      />
     </div>
   );
 }

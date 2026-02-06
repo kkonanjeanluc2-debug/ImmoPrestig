@@ -19,9 +19,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowDownToLine, Loader2 } from "lucide-react";
+import { ArrowDownToLine, Loader2, Zap } from "lucide-react";
 import { useCreateWithdrawalRequest } from "@/hooks/useWithdrawalRequests";
 import { useAgency, PAYMENT_OPERATORS } from "@/hooks/useAgency";
+import { useProcessWithdrawal } from "@/hooks/useProcessWithdrawal";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RequestWithdrawalDialogProps {
   availableBalance: number;
@@ -34,9 +36,11 @@ export function RequestWithdrawalDialog({ availableBalance }: RequestWithdrawalD
   const [recipientName, setRecipientName] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("wave");
   const [notes, setNotes] = useState("");
+  const [processImmediately, setProcessImmediately] = useState(true);
 
   const { data: agency } = useAgency();
   const createRequest = useCreateWithdrawalRequest();
+  const processWithdrawal = useProcessWithdrawal();
 
   // Pre-fill with agency's mobile money number if available
   const handleOpen = (isOpen: boolean) => {
@@ -57,20 +61,33 @@ export function RequestWithdrawalDialog({ availableBalance }: RequestWithdrawalD
       return;
     }
 
-    await createRequest.mutateAsync({
-      amount: numAmount,
-      recipient_phone: recipientPhone,
-      recipient_name: recipientName || undefined,
-      payment_method: paymentMethod,
-      notes: notes || undefined,
-    });
+    try {
+      // Create the withdrawal request
+      const result = await createRequest.mutateAsync({
+        amount: numAmount,
+        recipient_phone: recipientPhone,
+        recipient_name: recipientName || undefined,
+        payment_method: paymentMethod,
+        notes: notes || undefined,
+      });
 
-    setOpen(false);
-    setAmount("");
-    setRecipientPhone("");
-    setRecipientName("");
-    setNotes("");
+      // If immediate processing is enabled, trigger the payout
+      if (processImmediately && result?.id) {
+        await processWithdrawal.mutateAsync(result.id);
+      }
+
+      setOpen(false);
+      setAmount("");
+      setRecipientPhone("");
+      setRecipientName("");
+      setNotes("");
+    } catch (error) {
+      // Error is handled by the mutation hooks
+      console.error("Withdrawal error:", error);
+    }
   };
+
+  const isProcessing = createRequest.isPending || processWithdrawal.isPending;
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString("fr-FR") + " F CFA";
@@ -164,27 +181,43 @@ export function RequestWithdrawalDialog({ availableBalance }: RequestWithdrawalD
             />
           </div>
 
+          <div className="flex items-center space-x-2 py-2">
+            <Checkbox
+              id="process_immediately"
+              checked={processImmediately}
+              onCheckedChange={(checked) => setProcessImmediately(checked === true)}
+            />
+            <Label 
+              htmlFor="process_immediately" 
+              className="text-sm cursor-pointer flex items-center gap-2"
+            >
+              <Zap className="h-4 w-4 text-amber-500" />
+              Traiter immédiatement via KKiaPay
+            </Label>
+          </div>
+
           <DialogFooter>
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
+              disabled={isProcessing}
             >
               Annuler
             </Button>
             <Button
               type="submit"
               disabled={
-                createRequest.isPending ||
+                isProcessing ||
                 Number(amount) <= 0 ||
                 Number(amount) > availableBalance ||
                 !recipientPhone
               }
             >
-              {createRequest.isPending && (
+              {isProcessing && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Soumettre la demande
+              {processImmediately ? "Envoyer le reversement" : "Soumettre la demande"}
             </Button>
           </DialogFooter>
         </form>

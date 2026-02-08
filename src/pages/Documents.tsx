@@ -191,7 +191,9 @@ export default function Documents() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const { canCreate, canDelete } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_documents");
+  const canDelete = hasPermission("can_delete_documents");
 
   const { data: documents, isLoading, error } = useDocuments();
   const deleteDocument = useDeleteDocument();

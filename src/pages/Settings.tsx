@@ -20,12 +20,21 @@ import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
 import { useIsSuperAdmin } from "@/hooks/useSuperAdmin";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const Settings = () => {
   const { isSuperAdmin } = useIsSuperAdmin();
   const { hasFeature, planName } = useFeatureAccess();
+  const { hasPermission, role } = usePermissions();
   const hasVentesImmobilieres = hasFeature("ventes_immobilieres");
   const isFreePlan = planName === "Gratuit";
+  
+  // Permission checks
+  const canManageTeam = hasPermission("can_manage_team");
+  const canManageAutomations = hasPermission("can_manage_automations");
+  const canManageBranding = hasPermission("can_manage_branding");
+  const canManageTemplates = hasPermission("can_manage_templates");
+  const isAdmin = role === "admin" || role === "super_admin";
   const [activeTab, setActiveTab] = useState(isSuperAdmin ? "profile" : "agency");
 
   // Super Admin: simplified settings
@@ -113,14 +122,16 @@ const Settings = () => {
               <Percent className="h-4 w-4" />
               <span>Gestion</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="branding"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <Paintbrush className="h-4 w-4" />
-              <span>Couleurs</span>
-            </TabsTrigger>
-            {!isFreePlan && (
+            {canManageBranding && (
+              <TabsTrigger
+                value="branding"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Paintbrush className="h-4 w-4" />
+                <span>Couleurs</span>
+              </TabsTrigger>
+            )}
+            {!isFreePlan && canManageTemplates && (
               <TabsTrigger
                 value="receipts"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -129,7 +140,7 @@ const Settings = () => {
                 <span>Quittances</span>
               </TabsTrigger>
             )}
-            {!isFreePlan && (
+            {!isFreePlan && canManageTemplates && (
               <TabsTrigger
                 value="contracts"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -161,20 +172,24 @@ const Settings = () => {
               <User className="h-4 w-4" />
               <span>Profil</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="team"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <Users className="h-4 w-4" />
-              <span>Équipe</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="roles"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <Users className="h-4 w-4" />
-              <span>Rôles</span>
-            </TabsTrigger>
+            {canManageTeam && (
+              <TabsTrigger
+                value="team"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Users className="h-4 w-4" />
+                <span>Équipe</span>
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger
+                value="roles"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Users className="h-4 w-4" />
+                <span>Rôles</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger
               value="display"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -205,7 +220,7 @@ const Settings = () => {
                 <span>WhatsApp</span>
               </TabsTrigger>
             )}
-            {!isFreePlan && (
+            {!isFreePlan && canManageAutomations && (
               <TabsTrigger
                 value="automation"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"

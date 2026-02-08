@@ -79,7 +79,9 @@ export default function Payments() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "commissions" | "account">("payments");
   const [monthFilter, setMonthFilter] = useState<{ month: number; year: number } | undefined>(undefined);
-  const { canCreate, canEdit, role } = usePermissions();
+  const { hasPermission, role } = usePermissions();
+  const canCreate = hasPermission("can_create_payments");
+  const canEdit = hasPermission("can_edit_payments");
   const isLocataire = role === "locataire";
   const isGestionnaire = role === "gestionnaire";
   const showAdvancedTabs = !isLocataire && !isGestionnaire;

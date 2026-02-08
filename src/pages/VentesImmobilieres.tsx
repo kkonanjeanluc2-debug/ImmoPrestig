@@ -17,7 +17,8 @@ import { usePermissions } from "@/hooks/usePermissions";
 export default function VentesImmobilieres() {
   const [activeTab, setActiveTab] = useState("biens");
   const { data: acquereurs } = useAcquereurs();
-  const { canCreate, role, isLoading: isLoadingPermissions } = usePermissions();
+  const { hasPermission, role, isLoading: isLoadingPermissions } = usePermissions();
+  const canCreate = hasPermission("can_create_ventes");
   const isLocataire = role === "locataire";
 
   return (

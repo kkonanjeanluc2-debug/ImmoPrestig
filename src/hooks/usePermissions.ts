@@ -96,10 +96,11 @@ export function usePermissions(): Permissions {
         return {
           ...DEFAULT_PERMISSIONS[membership.role] || DEFAULT_PERMISSIONS.lecture_seule,
           _isDefault: true,
-        } as Partial<MemberPermissions> & { _isDefault?: boolean };
+          _role: membership.role,
+        } as Partial<MemberPermissions> & { _isDefault?: boolean; _role?: string };
       }
 
-      return permissions as MemberPermissions;
+      return { ...permissions, _role: membership.role } as MemberPermissions & { _role?: string };
     },
     enabled: !!user?.id,
   });
@@ -131,6 +132,8 @@ export function usePermissions(): Permissions {
       return true;
     }
 
+    // Agency owners have all permissions via the admin check above
+
     // If custom permissions exist, use them
     if (customPermissions && key in customPermissions) {
       return !!customPermissions[key];
@@ -145,8 +148,42 @@ export function usePermissions(): Permissions {
     return false;
   };
 
+  // Compute canCreate, canEdit, canDelete based on custom permissions if available
+  // These are general flags - pages should use hasPermission for specific actions
+  let canCreate = basePermissions.canCreate;
+  let canEdit = basePermissions.canEdit;
+  let canDelete = basePermissions.canDelete;
+
+  // For non-admin roles, check if ANY create/edit/delete permission is enabled
+  if (role !== "super_admin" && role !== "admin") {
+    if (customPermissions) {
+      const createKeys: PermissionKey[] = [
+        "can_create_properties", "can_create_tenants", "can_create_payments",
+        "can_create_owners", "can_create_contracts", "can_create_lotissements",
+        "can_create_ventes", "can_create_documents"
+      ];
+      const editKeys: PermissionKey[] = [
+        "can_edit_properties", "can_edit_tenants", "can_edit_payments",
+        "can_edit_owners", "can_edit_contracts", "can_edit_lotissements",
+        "can_edit_ventes"
+      ];
+      const deleteKeys: PermissionKey[] = [
+        "can_delete_properties", "can_delete_tenants", "can_delete_payments",
+        "can_delete_owners", "can_delete_contracts", "can_delete_lotissements",
+        "can_delete_ventes", "can_delete_documents"
+      ];
+
+      canCreate = createKeys.some(k => customPermissions[k] === true);
+      canEdit = editKeys.some(k => customPermissions[k] === true);
+      canDelete = deleteKeys.some(k => customPermissions[k] === true);
+    }
+  }
+
   return {
     ...basePermissions,
+    canCreate,
+    canEdit,
+    canDelete,
     isLoading: false,
     role,
     custom: customPermissions || null,

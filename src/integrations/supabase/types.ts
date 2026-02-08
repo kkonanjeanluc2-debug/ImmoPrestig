@@ -3004,6 +3004,14 @@ export type Database = {
         Args: { p_agency_id: string }
         Returns: boolean
       }
+      can_gestionnaire_access_property: {
+        Args: {
+          _agency_owner_id: string
+          _gestionnaire_id: string
+          _property_id: string
+        }
+        Returns: boolean
+      }
       get_agency_member_count: {
         Args: { p_agency_id: string }
         Returns: number

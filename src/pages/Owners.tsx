@@ -46,7 +46,10 @@ const Owners = () => {
   const { data: owners, isLoading, error } = useOwners();
   const { data: properties } = useProperties();
   const deleteOwner = useDeleteOwner();
-  const { canCreate, canEdit, canDelete } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_owners");
+  const canEdit = hasPermission("can_edit_owners");
+  const canDelete = hasPermission("can_delete_owners");
 
   const filteredOwners = (owners || []).filter(owner =>
     owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

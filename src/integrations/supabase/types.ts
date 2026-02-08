@@ -2986,6 +2986,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_access_tenant_v2: {
+        Args: {
+          _assigned_to: string
+          _property_id: string
+          _tenant_user_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       can_access_vente_parcelle: {
         Args: { _sold_by: string; _user_id: string; _vente_user_id: string }
         Returns: boolean

@@ -101,8 +101,12 @@ export function useIsAgencyOwner() {
     enabled: !!user?.id && !!agency?.id && agency?.user_id !== user?.id,
   });
 
+  const isOwner = agency?.user_id === user?.id;
+  const isAdmin = isAdminMember === true;
+
   return {
-    isOwner: agency?.user_id === user?.id || isAdminMember === true,
+    isOwner: isOwner || isAdmin,
+    isAdmin: isOwner || isAdmin,
     isLoading: agencyLoading || adminLoading,
   };
 }

@@ -9,18 +9,20 @@ import { EcheancesVentesTabContent } from "@/components/vente-immobiliere/Echean
 import { VentesDashboard } from "@/components/vente-immobiliere/VentesDashboard";
 import { VenteProspectsTab } from "@/components/vente-immobiliere/VenteProspectsTab";
 import { AcquereurDetailsDialog } from "@/components/vente-immobiliere/AcquereurDetailsDialog";
-import { Building2, Receipt, Calendar, Plus, Users, UserSearch } from "lucide-react";
+import { BiensVenteAssignmentsTab } from "@/components/vente-immobiliere/BiensVenteAssignmentsTab";
+import { Building2, Receipt, Calendar, Plus, Users, UserSearch, UserCheck } from "lucide-react";
 import { useAcquereurs } from "@/hooks/useAcquereurs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
 export default function VentesImmobilieres() {
   const [activeTab, setActiveTab] = useState("biens");
   const { data: acquereurs } = useAcquereurs();
   const { hasPermission, role, isLoading: isLoadingPermissions } = usePermissions();
+  const { isAdmin } = useIsAgencyOwner();
   const canCreate = hasPermission("can_create_ventes");
   const isLocataire = role === "locataire";
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -47,7 +49,7 @@ export default function VentesImmobilieres() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className={`grid w-full lg:w-auto lg:inline-grid ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="biens" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Biens</span>
@@ -68,6 +70,12 @@ export default function VentesImmobilieres() {
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Acquéreurs</span>
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="affectations" className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Affectations</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="biens" className="mt-6">
@@ -141,6 +149,12 @@ export default function VentesImmobilieres() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="affectations" className="mt-6">
+              <BiensVenteAssignmentsTab />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </DashboardLayout>

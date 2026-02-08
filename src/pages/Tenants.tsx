@@ -96,9 +96,24 @@ interface TenantCardProps {
 function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevokeAccess, canEdit, isDeleting, isRevokingAccess, isAgencyOwner }: TenantCardProps) {
   const [expanded, setExpanded] = useState(false);
   
-  // Get active contract
+  // Get active contract - prioritize active contracts
   const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
-  const contractStatus = activeContract?.status as keyof typeof contractStatusConfig || 'expired';
+  
+  // Determine contract status based on actual contract data
+  const getContractStatus = () => {
+    if (!activeContract) return 'expired';
+    if (activeContract.status === 'active') {
+      // Check if ending soon (within 30 days)
+      const endDate = new Date(activeContract.end_date);
+      const today = new Date();
+      const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysUntilEnd <= 30 && daysUntilEnd > 0) return 'ending_soon';
+      return 'active';
+    }
+    return activeContract.status as keyof typeof contractStatusConfig || 'expired';
+  };
+  
+  const contractStatus = getContractStatus();
   const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
   const assignedTo = tenant.assigned_to;
   const hasPortalAccess = tenant.has_portal_access;
@@ -452,6 +467,10 @@ export default function Tenants() {
 
 
   const filteredTenants = (tenants || []).filter(tenant => {
+    // Filter out tenants with no active contracts (all contracts expired)
+    const hasActiveContract = tenant.contracts?.some(c => c.status === 'active');
+    if (!hasActiveContract) return false;
+
     const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.property?.title?.toLowerCase().includes(searchQuery.toLowerCase());

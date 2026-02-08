@@ -156,7 +156,7 @@ const Settings = () => {
                 <span>Contrats</span>
               </TabsTrigger>
             )}
-            {hasVentesImmobilieres && (
+            {hasVentesImmobilieres && !isGestionnaire && (
               <TabsTrigger
                 value="sale-contracts"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -224,7 +224,7 @@ const Settings = () => {
                 <span>Historique</span>
               </TabsTrigger>
             )}
-            {!isFreePlan && (
+            {!isFreePlan && !isGestionnaire && (
               <TabsTrigger
                 value="whatsapp"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -279,7 +279,7 @@ const Settings = () => {
             </TabsContent>
           )}
 
-          {hasVentesImmobilieres && (
+          {hasVentesImmobilieres && !isGestionnaire && (
             <TabsContent value="sale-contracts">
               <SaleContractTemplateManager />
             </TabsContent>
@@ -319,7 +319,7 @@ const Settings = () => {
             </TabsContent>
           )}
 
-          {!isFreePlan && (
+          {!isFreePlan && !isGestionnaire && (
             <TabsContent value="whatsapp">
               <WhatsAppSettings />
             </TabsContent>

@@ -15,7 +15,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateIlot, Ilot } from "@/hooks/useIlots";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
+import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";
 
 const ilotSchema = z.object({
   name: z.string().min(1, "Le nom de l'îlot est requis").max(50, "Le nom doit faire moins de 50 caractères"),
@@ -34,6 +36,9 @@ interface EditIlotDialogProps {
 
 export function EditIlotDialog({ ilot, open, onOpenChange }: EditIlotDialogProps) {
   const updateIlot = useUpdateIlot();
+  const { role } = usePermissions();
+  const isAdmin = role === "admin" || role === "super_admin";
+  const [assignedTo, setAssignedTo] = useState<string | null>(ilot.assigned_to);
 
   const {
     register,
@@ -57,6 +62,7 @@ export function EditIlotDialog({ ilot, open, onOpenChange }: EditIlotDialogProps
       total_area: ilot.total_area,
       plots_count: ilot.plots_count,
     });
+    setAssignedTo(ilot.assigned_to);
   }, [ilot, reset]);
 
   const onSubmit = async (data: IlotFormData) => {
@@ -67,6 +73,7 @@ export function EditIlotDialog({ ilot, open, onOpenChange }: EditIlotDialogProps
         description: data.description || null,
         total_area: data.total_area || null,
         plots_count: data.plots_count || null,
+        assigned_to: assignedTo,
       });
 
       toast.success("Îlot modifié avec succès");
@@ -127,6 +134,17 @@ export function EditIlotDialog({ ilot, open, onOpenChange }: EditIlotDialogProps
               {...register("description")}
             />
           </div>
+
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label>Assigné à</Label>
+              <AssignUserSelect
+                value={assignedTo}
+                onValueChange={setAssignedTo}
+                placeholder="Assigner à un gestionnaire"
+              />
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

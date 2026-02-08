@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logActivityDirect } from "@/lib/activityLogger";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 export type PlotStatus = "disponible" | "reserve" | "vendu";
 
@@ -87,14 +88,19 @@ export const useParcelle = (id: string) => {
 export const useCreateParcelle = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { data: userRoleData } = useCurrentUserRole();
 
   return useMutation({
     mutationFn: async (parcelle: ParcelleInsert) => {
       if (!user) throw new Error("User not authenticated");
 
+      // Auto-assign to the current user if they are a gestionnaire
+      const isGestionnaire = userRoleData?.role === "gestionnaire";
+      const assignedTo = isGestionnaire ? user.id : parcelle.assigned_to;
+
       const { data, error } = await supabase
         .from("parcelles")
-        .insert({ ...parcelle, user_id: user.id })
+        .insert({ ...parcelle, user_id: user.id, assigned_to: assignedTo })
         .select()
         .single();
 
@@ -210,12 +216,21 @@ export const useDeleteParcelle = () => {
 export const useCreateBulkParcelles = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { data: userRoleData } = useCurrentUserRole();
 
   return useMutation({
     mutationFn: async (parcelles: ParcelleInsert[]) => {
       if (!user) throw new Error("User not authenticated");
 
-      const parcellesWithUserId = parcelles.map(p => ({ ...p, user_id: user.id }));
+      // Auto-assign to the current user if they are a gestionnaire
+      const isGestionnaire = userRoleData?.role === "gestionnaire";
+      const assignedTo = isGestionnaire ? user.id : undefined;
+      
+      const parcellesWithUserId = parcelles.map(p => ({ 
+        ...p, 
+        user_id: user.id,
+        assigned_to: assignedTo || p.assigned_to
+      }));
 
       const { data, error } = await supabase
         .from("parcelles")

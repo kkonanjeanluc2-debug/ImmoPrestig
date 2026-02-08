@@ -20,6 +20,8 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Parcelle, PlotStatus, useUpdateParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
+import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";
 
 interface EditParcelleDialogProps {
   parcelle: Parcelle;
@@ -36,6 +38,9 @@ export function EditParcelleDialog({
 }: EditParcelleDialogProps) {
   const updateParcelle = useUpdateParcelle();
   const { data: ilots } = useIlots(parcelle.lotissement_id);
+  const { role } = usePermissions();
+  const isAdmin = role === "admin" || role === "super_admin";
+  
   const [formData, setFormData] = useState({
     plot_number: "",
     area: "",
@@ -43,6 +48,7 @@ export function EditParcelleDialog({
     status: "disponible" as PlotStatus,
     ilot_id: "",
     notes: "",
+    assigned_to: null as string | null,
   });
 
   useEffect(() => {
@@ -54,6 +60,7 @@ export function EditParcelleDialog({
         status: parcelle.status,
         ilot_id: parcelle.ilot_id || "",
         notes: parcelle.notes || "",
+        assigned_to: parcelle.assigned_to,
       });
     }
   }, [parcelle]);
@@ -84,6 +91,7 @@ export function EditParcelleDialog({
         status: formData.status,
         ilot_id: formData.ilot_id || null,
         notes: formData.notes.trim() || null,
+        assigned_to: formData.assigned_to,
       });
 
       toast.success("Parcelle modifiée avec succès");
@@ -190,6 +198,17 @@ export function EditParcelleDialog({
               rows={2}
             />
           </div>
+
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label>Assigné à</Label>
+              <AssignUserSelect
+                value={formData.assigned_to}
+                onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                placeholder="Assigner à un gestionnaire"
+              />
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

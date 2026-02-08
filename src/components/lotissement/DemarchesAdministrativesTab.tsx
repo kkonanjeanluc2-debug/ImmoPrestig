@@ -68,7 +68,10 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 export function DemarchesAdministrativesTab({ lotissementId, lotissementName }: DemarchesAdministrativesTabProps) {
   const { data: demarches, isLoading } = useDemarchesAdministratives(lotissementId);
   const deleteDemarche = useDeleteDemarcheAdministrative();
-  const { canCreate, canEdit, canDelete } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_lotissements");
+  const canEdit = hasPermission("can_edit_lotissements");
+  const canDelete = hasPermission("can_delete_lotissements");
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   const handleDelete = async (id: string, title: string) => {

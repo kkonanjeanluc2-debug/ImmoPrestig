@@ -55,7 +55,10 @@ interface IlotsTabProps {
 export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
   const { data: ilots, isLoading } = useIlotsWithStats(lotissementId);
   const deleteIlot = useSoftDeleteIlot();
-  const { canCreate, canEdit, canDelete } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_lotissements");
+  const canEdit = hasPermission("can_edit_lotissements");
+  const canDelete = hasPermission("can_delete_lotissements");
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingIlot, setEditingIlot] = useState<IlotWithStats | null>(null);

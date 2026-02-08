@@ -59,7 +59,9 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 export function LotissementDocumentsTab({ lotissementId, lotissementName }: LotissementDocumentsTabProps) {
   const { data: documents, isLoading } = useLotissementDocuments(lotissementId);
   const deleteDocument = useDeleteLotissementDocument();
-  const { canCreate, canDelete } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_lotissements");
+  const canDelete = hasPermission("can_delete_lotissements");
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   const handleDelete = async (id: string, name: string) => {

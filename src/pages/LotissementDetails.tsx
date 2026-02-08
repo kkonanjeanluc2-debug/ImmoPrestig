@@ -53,8 +53,9 @@ const LotissementDetails = () => {
   const { data: parcelles, isLoading: loadingParcelles } = useParcelles(id);
   const { data: ventes } = useVentesParcelles(id);
   const { data: echeances } = useEcheancesForLotissement(id);
-  const { canCreate } = usePermissions();
+  const { hasPermission } = usePermissions();
   const { isOwner } = useIsAgencyOwner();
+  const canCreateLotissement = hasPermission("can_create_lotissements");
 
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
@@ -161,7 +162,7 @@ const LotissementDetails = () => {
               </p>
             </div>
           </div>
-          {canCreate && (
+          {canCreateLotissement && (
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => setShowGenerateDocument(true)}>
                 <FileSignature className="h-4 w-4 mr-2" />

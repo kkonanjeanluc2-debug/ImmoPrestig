@@ -1040,6 +1040,7 @@ export type Database = {
       }
       ilots: {
         Row: {
+          assigned_to: string | null
           created_at: string
           deleted_at: string | null
           description: string | null
@@ -1052,6 +1053,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -1064,6 +1066,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -1626,6 +1629,7 @@ export type Database = {
       }
       parcelle_prospects: {
         Row: {
+          assigned_to: string | null
           budget_max: number | null
           budget_min: number | null
           created_at: string
@@ -1646,6 +1650,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           budget_max?: number | null
           budget_min?: number | null
           created_at?: string
@@ -1666,6 +1671,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           budget_max?: number | null
           budget_min?: number | null
           created_at?: string

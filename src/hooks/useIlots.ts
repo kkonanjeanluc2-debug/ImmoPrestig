@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logActivityDirect } from "@/lib/activityLogger";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 export interface Ilot {
   id: string;
@@ -11,6 +12,7 @@ export interface Ilot {
   description: string | null;
   total_area: number | null;
   plots_count: number | null;
+  assigned_to: string | null;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
@@ -22,6 +24,7 @@ export interface IlotInsert {
   description?: string | null;
   total_area?: number | null;
   plots_count?: number | null;
+  assigned_to?: string | null;
 }
 
 export interface IlotUpdate extends Partial<IlotInsert> {
@@ -98,14 +101,19 @@ export const useIlotsWithStats = (lotissementId?: string) => {
 export const useCreateIlot = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { data: userRoleData } = useCurrentUserRole();
 
   return useMutation({
     mutationFn: async (ilot: IlotInsert) => {
       if (!user) throw new Error("User not authenticated");
 
+      // Auto-assign to the current user if they are a gestionnaire
+      const isGestionnaire = userRoleData?.role === "gestionnaire";
+      const assignedTo = isGestionnaire ? user.id : undefined;
+
       const { data, error } = await supabase
         .from("ilots")
-        .insert({ ...ilot, user_id: user.id })
+        .insert({ ...ilot, user_id: user.id, assigned_to: assignedTo })
         .select()
         .single();
 

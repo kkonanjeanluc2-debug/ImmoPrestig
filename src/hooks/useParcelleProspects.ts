@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logActivityDirect } from "@/lib/activityLogger";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 export type InterestLevel = "faible" | "moyen" | "eleve";
 export type ProspectStatus = "nouveau" | "contacte" | "interesse" | "negociation" | "perdu" | "converti";
@@ -22,6 +23,7 @@ export interface ParcelleProspect {
   source: string | null;
   budget_min: number | null;
   budget_max: number | null;
+  assigned_to: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -111,9 +113,12 @@ export const useCreateParcelleProspect = () => {
     mutationFn: async (prospect: ParcelleProspectInsert) => {
       if (!user) throw new Error("User not authenticated");
 
+      // The prospect is ALWAYS assigned to the creator
+      const assignedTo = user.id;
+
       const { data, error } = await supabase
         .from("parcelle_prospects")
-        .insert({ ...prospect, user_id: user.id })
+        .insert({ ...prospect, user_id: user.id, assigned_to: assignedTo })
         .select()
         .single();
 

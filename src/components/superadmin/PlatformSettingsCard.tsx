@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { usePlatformSettings, useUpdatePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
-import { Settings, Save, Loader2, MessageCircle, Percent } from "lucide-react";
+import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
 export function PlatformSettingsCard() {
@@ -14,6 +15,7 @@ export function PlatformSettingsCard() {
   
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [yearlyDiscount, setYearlyDiscount] = useState("20");
+  const [onlineRentPaymentEnabled, setOnlineRentPaymentEnabled] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -25,6 +27,10 @@ export function PlatformSettingsCard() {
       const discountSetting = settings.find(s => s.key === "yearly_discount_percentage");
       if (discountSetting?.value) {
         setYearlyDiscount(discountSetting.value);
+      }
+      const onlinePaymentSetting = settings.find(s => s.key === "online_rent_payment_enabled");
+      if (onlinePaymentSetting?.value !== undefined) {
+        setOnlineRentPaymentEnabled(onlinePaymentSetting.value === "true");
       }
     }
   }, [settings]);
@@ -40,6 +46,11 @@ export function PlatformSettingsCard() {
           key: "yearly_discount_percentage",
           value: yearlyDiscount,
           description: "Pourcentage de réduction affiché pour les abonnements annuels",
+        }),
+        upsertSetting.mutateAsync({
+          key: "online_rent_payment_enabled",
+          value: String(onlineRentPaymentEnabled),
+          description: "Activer ou désactiver le paiement de loyers en ligne pour tous les locataires",
         }),
       ]);
       setHasChanges(false);
@@ -61,6 +72,11 @@ export function PlatformSettingsCard() {
       setYearlyDiscount(value);
       setHasChanges(true);
     }
+  };
+
+  const handleOnlinePaymentToggle = (checked: boolean) => {
+    setOnlineRentPaymentEnabled(checked);
+    setHasChanges(true);
   };
 
   if (isLoading) {
@@ -124,6 +140,23 @@ export function PlatformSettingsCard() {
             <p className="text-xs text-muted-foreground">
               Pourcentage affiché sur la page des tarifs pour les abonnements annuels (ex: "Économisez jusqu'à 20%")
             </p>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="online-rent-payment" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-primary" />
+                Paiement de loyers en ligne
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Permettre aux locataires de payer leur loyer en ligne via le portail locataire
+              </p>
+            </div>
+            <Switch
+              id="online-rent-payment"
+              checked={onlineRentPaymentEnabled}
+              onCheckedChange={handleOnlinePaymentToggle}
+            />
           </div>
         </div>
 

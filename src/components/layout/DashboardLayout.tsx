@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole, ROLE_LABELS, AppRole } from "@/hooks/useUserRoles";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAgency } from "@/hooks/useAgency";
 import {
   Tooltip,
   TooltipContent,
@@ -75,6 +76,40 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Utilisateur";
   const currentRole = userRole?.role || "lecture_seule";
+  const isLocataire = currentRole === "locataire";
+
+  // Fetch tenant's agency info when logged in as tenant
+  const { data: tenantAgency } = useQuery({
+    queryKey: ["tenant-agency", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      // Find the tenant record for this portal user
+      const { data: tenant, error: tenantError } = await supabase
+        .from("tenants")
+        .select("user_id")
+        .eq("portal_user_id", user.id)
+        .eq("has_portal_access", true)
+        .maybeSingle();
+      
+      if (tenantError || !tenant) return null;
+      
+      // Fetch the agency owned by the tenant's user_id
+      const { data: agencyData, error: agencyError } = await supabase
+        .from("agencies")
+        .select("id, name, logo_url")
+        .eq("user_id", tenant.user_id)
+        .maybeSingle();
+      
+      if (agencyError) return null;
+      return agencyData;
+    },
+    enabled: !!user?.id && isLocataire,
+  });
+  
+  // Use tenant's agency or the user's own agency
+  const { data: ownAgency } = useAgency();
+  const displayAgency = isLocataire ? tenantAgency : ownAgency;
   
   // Subscribe to real-time late payment notifications
   useLatePaymentNotifications();
@@ -197,12 +232,37 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             
             <NotificationCenter />
             <div className="h-6 w-px bg-border hidden sm:block" />
+            
+            {/* Agency info for tenants */}
+            {isLocataire && displayAgency && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-sidebar/10 rounded-lg border border-sidebar/20">
+                <Avatar className="h-8 w-8 flex-shrink-0">
+                  {displayAgency.logo_url ? (
+                    <AvatarImage src={displayAgency.logo_url} alt={displayAgency.name || "Logo agence"} />
+                  ) : null}
+                  <AvatarFallback className="bg-sidebar text-sidebar-foreground text-xs">
+                    {displayAgency.name?.charAt(0)?.toUpperCase() || "A"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden sm:flex flex-col items-start">
+                  <p className="text-sm font-semibold text-foreground leading-none">
+                    {displayAgency.name || "Mon agence"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Agence</p>
+                </div>
+              </div>
+            )}
+            
+            {/* User info */}
             <div className="flex items-center gap-2">
               <Avatar 
-                className="h-8 w-8 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
-                onClick={() => navigate("/settings?tab=agency")}
+                className={cn(
+                  "h-8 w-8 flex-shrink-0 transition-all",
+                  !isLocataire && "cursor-pointer hover:ring-2 hover:ring-primary/50"
+                )}
+                onClick={() => !isLocataire && navigate("/settings?tab=agency")}
               >
-                {agency?.logo_url ? (
+                {!isLocataire && agency?.logo_url ? (
                   <AvatarImage src={agency.logo_url} alt={agency.name || "Logo agence"} />
                 ) : null}
                 <AvatarFallback className="bg-primary">

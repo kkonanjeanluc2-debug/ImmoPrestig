@@ -99,25 +99,25 @@ const Settings = () => {
   // Regular users: full settings
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
             Paramètres
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             Gérez votre compte et vos préférences
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex flex-wrap h-auto gap-1 p-1">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 overflow-x-auto">
             {!isGestionnaire && (
               <TabsTrigger
                 value="agency"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+                className="flex items-center gap-1.5 sm:gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm"
               >
-                <Building2 className="h-4 w-4" />
-                <span>Agence</span>
+                <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Agence</span>
               </TabsTrigger>
             )}
             {!isGestionnaire && (

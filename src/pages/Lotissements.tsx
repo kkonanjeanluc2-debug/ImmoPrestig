@@ -98,74 +98,74 @@ const Lotissements = () => {
     <DashboardLayout>
       <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground flex items-center gap-2">
-              <Map className="h-7 w-7 text-primary" />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground flex items-center gap-2">
+              <Map className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               Lotissements
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Gérez vos projets de lotissement et parcelles
             </p>
           </div>
           {canCreate && (
-            <Button onClick={() => setShowAddDialog(true)} className="gap-2">
+            <Button onClick={() => setShowAddDialog(true)} className="gap-2 w-full sm:w-auto" size="sm">
               <Plus className="h-4 w-4" />
-              Nouveau lotissement
+              <span>Nouveau lotissement</span>
             </Button>
           )}
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Map className="h-5 w-5 text-primary" />
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                  <Map className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{lotissements?.length || 0}</p>
-                  <p className="text-sm text-muted-foreground">Lotissements</p>
+                  <p className="text-lg sm:text-2xl font-bold">{lotissements?.length || 0}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Lotissements</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <Building2 className="h-5 w-5 text-blue-500" />
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-blue-500/10 rounded-lg">
+                  <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{totalParcelles}</p>
-                  <p className="text-sm text-muted-foreground">Parcelles</p>
+                  <p className="text-lg sm:text-2xl font-bold">{totalParcelles}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Parcelles</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-emerald-500" />
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-emerald-500/10 rounded-lg">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{totalVendues}</p>
-                  <p className="text-sm text-muted-foreground">Vendues</p>
+                  <p className="text-lg sm:text-2xl font-bold">{totalVendues}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Vendues</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 rounded-lg">
-                  <MapPin className="h-5 w-5 text-amber-500" />
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-amber-500/10 rounded-lg">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{totalDisponibles}</p>
-                  <p className="text-sm text-muted-foreground">Disponibles</p>
+                  <p className="text-lg sm:text-2xl font-bold">{totalDisponibles}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Disponibles</p>
                 </div>
               </div>
             </CardContent>

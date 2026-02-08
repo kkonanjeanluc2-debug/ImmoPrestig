@@ -363,92 +363,94 @@ const OwnerDetails = () => {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button 
-              variant="outline" 
+              variant="outline"
+              size="sm" 
               onClick={() => setPeriodDialogOpen(true)}
             >
-              <FileText className="h-4 w-4 mr-2" />
-              Point mensuel
+              <FileText className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Point mensuel</span>
             </Button>
             <Button 
-              variant="outline" 
+              variant="outline"
+              size="sm" 
               onClick={handleSendMonthlyReportByEmail}
               disabled={sendingEmail || !owner.email}
               title={!owner.email ? "Aucun email configuré" : "Envoyer par email"}
             >
               {sendingEmail ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
               ) : (
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="h-4 w-4 sm:mr-2" />
               )}
-              Envoyer par email
+              <span className="hidden sm:inline">Envoyer</span>
             </Button>
             {canEdit && (
-              <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Modifier
+              <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+                <Pencil className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Modifier</span>
               </Button>
             )}
             {canDelete && (
-              <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Supprimer
+              <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+                <Trash2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Supprimer</span>
               </Button>
             )}
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Building2 className="h-5 w-5 text-primary" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                  <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{totalProperties}</p>
-                  <p className="text-xs text-muted-foreground">Biens</p>
+                  <p className="text-lg sm:text-2xl font-bold">{totalProperties}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Biens</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald/10 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-emerald" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-emerald/10 rounded-lg">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-emerald" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-emerald">
+                  <p className="text-sm sm:text-2xl font-bold text-emerald truncate">
                     {monthlyRevenue.toLocaleString('fr-FR')}
                   </p>
-                  <p className="text-xs text-muted-foreground">F CFA/mois</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">F CFA/mois</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-navy/10 rounded-lg">
-                  <Home className="h-5 w-5 text-navy" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-navy/10 rounded-lg">
+                  <Home className="h-4 w-4 sm:h-5 sm:w-5 text-navy" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{occupancyRate.toFixed(0)}%</p>
-                  <p className="text-xs text-muted-foreground">Taux d'occupation</p>
+                  <p className="text-lg sm:text-2xl font-bold">{occupancyRate.toFixed(0)}%</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Occupation</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-sand/50 rounded-lg">
-                  <Receipt className="h-5 w-5 text-navy" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-sand/50 rounded-lg">
+                  <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-navy" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{locationProperties.length}</p>
-                  <p className="text-xs text-muted-foreground">En location</p>
+                  <p className="text-lg sm:text-2xl font-bold">{locationProperties.length}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">En location</p>
                 </div>
               </div>
             </CardContent>

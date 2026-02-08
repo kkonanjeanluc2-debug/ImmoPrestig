@@ -376,10 +376,10 @@ const Contracts = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">
               Gestion des Contrats
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {contracts?.length || 0} contrat{(contracts?.length || 0) > 1 ? "s" : ""} au total
             </p>
           </div>
@@ -391,48 +391,48 @@ const Contracts = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contrats</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{contracts?.length || 0}</div>
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{contracts?.length || 0}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Actifs</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium">Actifs</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold text-green-600">
                 {contracts?.filter((c) => c.status === "active").length || 0}
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Expirés</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium">Expirés</CardTitle>
               <XCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold text-red-600">
                 {contracts?.filter((c) => c.status === "expired").length || 0}
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Expire bientôt</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium">Expire bientôt</CardTitle>
               <Clock className="h-4 w-4 text-orange-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold text-orange-600">
                 {contracts?.filter((c) => c.status === "active" && getDaysRemaining(c.end_date) <= 30 && getDaysRemaining(c.end_date) > 0).length || 0}
               </div>
-              <p className="text-xs text-muted-foreground">Dans les 30 jours</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Dans les 30 jours</p>
             </CardContent>
           </Card>
         </div>

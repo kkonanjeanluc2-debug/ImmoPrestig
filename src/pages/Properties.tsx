@@ -127,10 +127,10 @@ const Properties = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
               Biens immobiliers
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Gérez l'ensemble de votre patrimoine immobilier
             </p>
           </div>
@@ -156,12 +156,12 @@ const Properties = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col lg:flex-row gap-4 p-4 bg-card rounded-xl border border-border/50 shadow-card">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-3 p-3 sm:p-4 bg-card rounded-xl border border-border/50 shadow-card">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Rechercher par nom ou adresse..." 
-              className="pl-10"
+              placeholder="Rechercher..." 
+              className="pl-10 w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

@@ -58,12 +58,12 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
 };
 
 const gestionLocativeItems = [
-  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard, hiddenForTenant: true },
-  { name: "Biens", href: "/properties", icon: Building2, hiddenForTenant: true },
-  { name: "Locataires", href: "/tenants", icon: Users, hiddenForTenant: false },
-  { name: "Propriétaires", href: "/owners", icon: Home, hiddenForTenant: true },
-  { name: "Contrats", href: "/contracts", icon: ScrollText, hiddenForTenant: false },
-  { name: "Paiements", href: "/payments", icon: Wallet, hiddenForTenant: false },
+  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard, hiddenForTenant: true, hiddenForGestionnaire: false },
+  { name: "Biens", href: "/properties", icon: Building2, hiddenForTenant: true, hiddenForGestionnaire: false },
+  { name: "Locataires", href: "/tenants", icon: Users, hiddenForTenant: false, hiddenForGestionnaire: false },
+  { name: "Propriétaires", href: "/owners", icon: Home, hiddenForTenant: true, hiddenForGestionnaire: false },
+  { name: "Contrats", href: "/contracts", icon: ScrollText, hiddenForTenant: false, hiddenForGestionnaire: true },
+  { name: "Paiements", href: "/payments", icon: Wallet, hiddenForTenant: false, hiddenForGestionnaire: false },
 ];
 
 const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
@@ -237,6 +237,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 <CollapsibleContent className="pl-3 space-y-1">
                   {gestionLocativeItems
                     .filter((item) => !(userRole?.role === "locataire" && item.hiddenForTenant))
+                    .filter((item) => !(userRole?.role === "gestionnaire" && item.hiddenForGestionnaire))
                     .map((item) => {
                       const isActive = location.pathname === item.href;
                       return (

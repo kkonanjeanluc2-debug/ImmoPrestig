@@ -26,10 +26,12 @@ import {
   User,
   Phone,
   Calendar,
+  Pencil,
 } from "lucide-react";
 import { useState } from "react";
 import { SellBienDialog } from "@/components/vente-immobiliere/SellBienDialog";
 import { ReserveBienDialog } from "@/components/vente-immobiliere/ReserveBienDialog";
+import { EditBienVenteDialog } from "@/components/vente-immobiliere/EditBienVenteDialog";
 
 const STATUS_CONFIG = {
   disponible: { label: "Disponible", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
@@ -47,6 +49,7 @@ export default function BienVenteDetails() {
   const canEdit = hasPermission("can_edit_biens_vente");
   const [sellDialogOpen, setSellDialogOpen] = useState(false);
   const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleDownloadContract = () => {
     if (!reservation || !agency || !bien) {
@@ -140,6 +143,12 @@ export default function BienVenteDetails() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {canEdit && bien.status !== "vendu" && (
+              <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Modifier
+              </Button>
+            )}
             {bien.status === "disponible" && canEdit && (
               <>
                 <Button variant="outline" onClick={() => setReserveDialogOpen(true)}>
@@ -318,6 +327,14 @@ export default function BienVenteDetails() {
           bien={bien}
           open={reserveDialogOpen}
           onOpenChange={setReserveDialogOpen}
+        />
+      )}
+
+      {bien && (
+        <EditBienVenteDialog
+          bien={bien}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
         />
       )}
     </DashboardLayout>

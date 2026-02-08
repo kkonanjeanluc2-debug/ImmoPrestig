@@ -35,6 +35,8 @@ import { useAgency } from "@/hooks/useAgency";
 import { useTrashCount } from "@/hooks/useTrashCount";
 import { useFeatureAccess, FeatureKey } from "@/hooks/useFeatureAccess";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Collapsible,
   CollapsibleContent,
@@ -87,12 +89,46 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: userRole } = useCurrentUserRole();
-  const { data: agency } = useAgency();
+  const { data: ownAgency } = useAgency();
   const { canInstall, isIOS, promptInstall } = usePWAInstall();
   const { data: trashCount } = useTrashCount();
   const { hasFeature } = useFeatureAccess();
   const { hasPermission } = usePermissions();
   const canAccessSettings = hasPermission("can_access_settings");
+  
+  const isLocataire = userRole?.role === "locataire";
+  
+  // Fetch tenant's agency info when logged in as tenant
+  const { data: tenantAgency } = useQuery({
+    queryKey: ["tenant-agency-sidebar", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      // Find the tenant record for this portal user
+      const { data: tenant, error: tenantError } = await supabase
+        .from("tenants")
+        .select("user_id")
+        .eq("portal_user_id", user.id)
+        .eq("has_portal_access", true)
+        .maybeSingle();
+      
+      if (tenantError || !tenant) return null;
+      
+      // Fetch the agency owned by the tenant's user_id
+      const { data: agencyData, error: agencyError } = await supabase
+        .from("agencies")
+        .select("id, name, logo_url, account_type")
+        .eq("user_id", tenant.user_id)
+        .maybeSingle();
+      
+      if (agencyError) return null;
+      return agencyData;
+    },
+    enabled: !!user?.id && isLocataire,
+  });
+  
+  // Use tenant's agency or the user's own agency
+  const agency = isLocataire ? tenantAgency : ownAgency;
 
   const handleInstallClick = async () => {
     if (isIOS) {

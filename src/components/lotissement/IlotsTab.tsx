@@ -28,6 +28,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   Plus, 
   Layers, 
@@ -39,9 +44,11 @@ import {
   ShoppingCart,
   Search,
   X,
+  User,
 } from "lucide-react";
 import { useIlotsWithStats, useSoftDeleteIlot, IlotWithStats } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddIlotDialog } from "./AddIlotDialog";
 import { EditIlotDialog } from "./EditIlotDialog";
@@ -55,10 +62,15 @@ interface IlotsTabProps {
 export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
   const { data: ilots, isLoading } = useIlotsWithStats(lotissementId);
   const deleteIlot = useSoftDeleteIlot();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_ilots");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
+  const isAdmin = role !== "gestionnaire";
+
+  // Fetch profiles for assigned users
+  const assignedUserIds = ilots?.map(i => i.assigned_to) || [];
+  const { data: userProfilesMap } = useUserProfiles(assignedUserIds);
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingIlot, setEditingIlot] = useState<IlotWithStats | null>(null);
@@ -228,6 +240,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
                     <TableHead className="text-center">Disponibles</TableHead>
                     <TableHead className="text-center">Vendues</TableHead>
                     <TableHead className="text-center">Taux occupation</TableHead>
+                    {isAdmin && <TableHead>Gestionnaire</TableHead>}
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -289,6 +302,27 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
                             <span className="text-sm font-medium">{occupancyRate}%</span>
                           </div>
                         </TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            {ilot.assigned_to && userProfilesMap?.get(ilot.assigned_to) ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center gap-1 text-sm">
+                                    <User className="h-3 w-3 text-muted-foreground" />
+                                    <span className="truncate max-w-[100px]">
+                                      {userProfilesMap.get(ilot.assigned_to)}
+                                    </span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {userProfilesMap.get(ilot.assigned_to)}
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
+                        )}
                         <TableCell>
                           {(canEdit || canDelete) && (
                             <DropdownMenu>

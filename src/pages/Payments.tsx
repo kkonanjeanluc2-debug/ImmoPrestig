@@ -81,6 +81,8 @@ export default function Payments() {
   const [monthFilter, setMonthFilter] = useState<{ month: number; year: number } | undefined>(undefined);
   const { canCreate, canEdit, role } = usePermissions();
   const isLocataire = role === "locataire";
+  const isGestionnaire = role === "gestionnaire";
+  const showAdvancedTabs = !isLocataire && !isGestionnaire;
 
   const { data: payments, isLoading, error } = usePayments();
   const { data: owners = [] } = useOwners();
@@ -255,7 +257,7 @@ export default function Payments() {
               <Wallet className="h-4 w-4" />
               Paiements
             </TabsTrigger>
-            {!isLocataire && (
+            {showAdvancedTabs && (
               <>
                 <TabsTrigger value="commissions" className="flex items-center gap-2">
                   <Percent className="h-4 w-4" />

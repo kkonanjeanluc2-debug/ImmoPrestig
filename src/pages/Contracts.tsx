@@ -60,6 +60,7 @@ import { useProperties } from "@/hooks/useProperties";
 import { useTenants } from "@/hooks/useTenants";
 import { useOwners } from "@/hooks/useOwners";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
+import { usePermissions } from "@/hooks/usePermissions";
 import { format, differenceInDays, addMonths, addYears } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -86,11 +87,13 @@ const Contracts = () => {
   const { data: tenants } = useTenants();
   const { data: owners } = useOwners();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
+  const { hasPermission } = usePermissions();
   const updateContract = useUpdateContract();
   const expireContract = useExpireContract();
   
   const isLocataire = userRole?.role === "locataire";
-  const canManageContracts = !roleLoading && !isLocataire;
+  const canEditContracts = hasPermission("can_edit_contracts");
+  const canManageContracts = !roleLoading && !isLocataire && canEditContracts;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

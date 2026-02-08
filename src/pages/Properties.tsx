@@ -48,7 +48,10 @@ const Properties = () => {
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
-  const { canCreate, canEdit, canDelete } = usePermissions();
+  const { hasPermission, role } = usePermissions();
+  const canCreate = hasPermission("can_create_properties");
+  const canEdit = hasPermission("can_edit_properties");
+  const canDelete = hasPermission("can_delete_properties");
   
   const { data: properties, isLoading, error } = useProperties();
   const { data: owners = [] } = useOwners();

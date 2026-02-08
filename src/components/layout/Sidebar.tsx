@@ -34,6 +34,7 @@ import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useAgency } from "@/hooks/useAgency";
 import { useTrashCount } from "@/hooks/useTrashCount";
 import { useFeatureAccess, FeatureKey } from "@/hooks/useFeatureAccess";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   Collapsible,
   CollapsibleContent,
@@ -90,6 +91,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { canInstall, isIOS, promptInstall } = usePWAInstall();
   const { data: trashCount } = useTrashCount();
   const { hasFeature } = useFeatureAccess();
+  const { hasPermission } = usePermissions();
+  const canAccessSettings = hasPermission("can_access_settings");
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -293,8 +296,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 <div className="border-t border-navy-light" />
               </div>
               
-              {/* Settings - hidden for tenants */}
-              {userRole?.role !== "locataire" && (
+              {/* Settings - show based on permission */}
+              {canAccessSettings && (
                 <NavLink
                   to="/settings"
                   className={cn(

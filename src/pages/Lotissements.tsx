@@ -51,7 +51,10 @@ const Lotissements = () => {
   const { data: allVentes } = useVentesParcelles();
   const { data: allEcheances } = useEcheancesParcelles();
   const deleteLotissement = useSoftDeleteLotissement();
-  const { canCreate, canDelete, canEdit } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_lotissements");
+  const canEdit = hasPermission("can_edit_lotissements");
+  const canDelete = hasPermission("can_delete_lotissements");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);

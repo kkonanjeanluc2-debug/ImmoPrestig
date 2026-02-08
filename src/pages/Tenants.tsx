@@ -415,7 +415,10 @@ export default function Tenants() {
   const deleteTenantMutation = useDeleteTenant();
   const revokeAccessMutation = useRevokeTenantPortalAccess();
   const { toast } = useToast();
-  const { canCreate, canEdit } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_tenants");
+  const canEdit = hasPermission("can_edit_tenants");
+  const canDelete = hasPermission("can_delete_tenants");
   const { data: assignableUsers = [] } = useAssignableUsers();
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
 

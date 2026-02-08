@@ -13,7 +13,7 @@ import { useCreateVenteProspect } from "@/hooks/useVenteProspects";
 import { useBiensVente } from "@/hooks/useBiensVente";
 
 const formSchema = z.object({
-  bien_id: z.string().min(1, "Sélectionnez un bien"),
+  bien_id: z.string().optional(),
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   phone: z.string().optional(),
   email: z.string().email("Email invalide").optional().or(z.literal("")),
@@ -56,7 +56,7 @@ export function AddVenteProspectDialog({ children, defaultBienId }: AddVentePros
   const onSubmit = async (data: FormData) => {
     try {
       await createProspect.mutateAsync({
-        bien_id: data.bien_id,
+        bien_id: data.bien_id || null,
         name: data.name,
         phone: data.phone || null,
         email: data.email || null,
@@ -92,14 +92,15 @@ export function AddVenteProspectDialog({ children, defaultBienId }: AddVentePros
               name="bien_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bien concerné *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <FormLabel>Bien concerné (optionnel)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un bien" />
+                        <SelectValue placeholder="Sélectionner un bien (ou laisser vide)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="">Aucun bien pour le moment</SelectItem>
                       {availableBiens.map((bien) => (
                         <SelectItem key={bien.id} value={bien.id}>
                           {bien.title} - {bien.address}
@@ -107,6 +108,9 @@ export function AddVenteProspectDialog({ children, defaultBienId }: AddVentePros
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Vous pourrez associer un bien plus tard
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

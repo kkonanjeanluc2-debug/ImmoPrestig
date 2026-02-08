@@ -54,6 +54,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) {
   const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_parcelles");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
   const deleteParcelle = useSoftDeleteParcelle();

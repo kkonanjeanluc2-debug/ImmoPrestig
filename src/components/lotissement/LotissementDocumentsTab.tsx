@@ -60,7 +60,7 @@ export function LotissementDocumentsTab({ lotissementId, lotissementName }: Loti
   const { data: documents, isLoading } = useLotissementDocuments(lotissementId);
   const deleteDocument = useDeleteLotissementDocument();
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission("can_create_lotissements");
+  const canCreate = hasPermission("can_create_lotissement_documents");
   const canDelete = hasPermission("can_delete_lotissements");
   const [showAddDialog, setShowAddDialog] = useState(false);
 

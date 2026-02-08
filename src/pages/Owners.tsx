@@ -27,6 +27,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOwners, useDeleteOwner, Owner } from "@/hooks/useOwners";
 import { useProperties, Property } from "@/hooks/useProperties";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { toast } from "sonner";
 import { AddOwnerDialog } from "@/components/owner/AddOwnerDialog";
 import { EditOwnerDialog } from "@/components/owner/EditOwnerDialog";
@@ -43,6 +45,8 @@ const Owners = () => {
   const [editingOwner, setEditingOwner] = useState<Owner | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [expandedOwners, setExpandedOwners] = useState<Set<string>>(new Set());
+  const { user } = useAuth();
+  const { data: currentUserRole } = useCurrentUserRole();
   const { data: owners, isLoading, error } = useOwners();
   const { data: properties } = useProperties();
   const deleteOwner = useDeleteOwner();
@@ -50,14 +54,21 @@ const Owners = () => {
   const canCreate = hasPermission("can_create_owners");
   const canEdit = hasPermission("can_edit_owners");
   const canDelete = hasPermission("can_delete_owners");
+  
+  const isGestionnaire = currentUserRole?.role === "gestionnaire";
 
   const filteredOwners = (owners || []).filter(owner =>
     owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     owner.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Filter properties for gestionnaires - only show assigned properties
+  const filteredProperties = isGestionnaire && user
+    ? (properties || []).filter(p => p.assigned_to === user.id)
+    : (properties || []);
+
   // Group properties by owner
-  const propertiesByOwner = (properties || []).reduce((acc, property) => {
+  const propertiesByOwner = filteredProperties.reduce((acc, property) => {
     if (property.owner_id) {
       if (!acc[property.owner_id]) {
         acc[property.owner_id] = [];

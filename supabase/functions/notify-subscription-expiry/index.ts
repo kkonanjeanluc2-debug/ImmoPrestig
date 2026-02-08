@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
               : "Rappel : Votre abonnement arrive à expiration";
 
           await resend.emails.send({
-            from: "ImmoPrestige <notifications@resend.dev>",
+            from: "ImmoPrestige <noreply@immoprestigeci.com>",
             to: [agency.email],
             subject: `${urgencyText} - ${plan.name}`,
             html: `

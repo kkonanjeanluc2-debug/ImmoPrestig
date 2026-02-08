@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
           `;
 
           const emailResponse = await resend.emails.send({
-            from: "Gestion Immobilière <onboarding@resend.dev>",
+            from: "Gestion Immobilière <noreply@immoprestigeci.com>",
             to: [tenant.email],
             subject: `⏰ Rappel : Paiement de ${formattedAmount} F CFA dû le ${formattedDate}`,
             html: emailHtml,

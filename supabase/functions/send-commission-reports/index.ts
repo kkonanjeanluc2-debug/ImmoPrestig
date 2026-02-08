@@ -388,7 +388,7 @@ Deno.serve(async (req) => {
       try {
         const fromName = agency?.name || "Gestion Locative";
         const emailResponse = await resend.emails.send({
-          from: `${fromName} <onboarding@resend.dev>`,
+          from: `${fromName} <noreply@immoprestigeci.com>`,
           to: [owner.email],
           subject: `📊 Rapport de commissions - ${period}`,
           html: generateCommissionReportHtml(

@@ -290,7 +290,7 @@ Deno.serve(async (req) => {
         // Send the receipt email
         const fromName = agency?.name || "Gestion Locative";
         const emailResponse = await resend.emails.send({
-          from: `${fromName} <onboarding@resend.dev>`,
+          from: `${fromName} <noreply@immoprestigeci.com>`,
           to: [tenant.email],
           subject: `✅ Quittance de loyer - ${period} - ${propertyTitle}`,
           html: generateReceiptHtml(

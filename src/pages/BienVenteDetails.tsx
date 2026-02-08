@@ -129,58 +129,61 @@ export default function BienVenteDetails() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/ventes-immobilieres")}>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/ventes-immobilieres")} className="shrink-0 mt-1">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold">{bien.title}</h1>
-              <p className="text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {bien.address}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-bold truncate">{bien.title}</h1>
+                <Badge variant="outline" className={`${statusConfig.color} shrink-0`}>
+                  {statusConfig.label}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground flex items-center gap-1 text-sm mt-1 truncate">
+                <MapPin className="h-4 w-4 shrink-0" />
+                <span className="truncate">{bien.address}</span>
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {canEdit && bien.status !== "vendu" && (
-              <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Modifier
+              <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+                <Pencil className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Modifier</span>
               </Button>
             )}
             {bien.status === "disponible" && canEdit && (
               <>
-                <Button variant="outline" onClick={() => setReserveDialogOpen(true)}>
-                  <Bookmark className="h-4 w-4 mr-2" />
-                  Réserver
+                <Button variant="outline" size="sm" onClick={() => setReserveDialogOpen(true)}>
+                  <Bookmark className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Réserver</span>
                 </Button>
-                <Button onClick={() => setSellDialogOpen(true)}>
-                  <HandCoins className="h-4 w-4 mr-2" />
-                  Vendre
+                <Button size="sm" onClick={() => setSellDialogOpen(true)}>
+                  <HandCoins className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Vendre</span>
                 </Button>
               </>
             )}
             {bien.status === "reserve" && canEdit && (
               <>
                 <Button 
-                  variant="outline" 
+                  variant="outline"
+                  size="sm"
                   onClick={handleDownloadContract}
                   disabled={!reservation}
                   title={!reservation ? "Contrat non disponible pour les anciennes réservations" : undefined}
                 >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Contrat de réservation
+                  <FileText className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Contrat</span>
                 </Button>
-                <Button onClick={() => setSellDialogOpen(true)}>
-                  <HandCoins className="h-4 w-4 mr-2" />
-                  Finaliser la vente
+                <Button size="sm" onClick={() => setSellDialogOpen(true)}>
+                  <HandCoins className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Finaliser</span>
                 </Button>
               </>
             )}
-            <Badge variant="outline" className={statusConfig.color}>
-              {statusConfig.label}
-            </Badge>
           </div>
         </div>
 

@@ -9,7 +9,7 @@ export type ProspectStatus = "nouveau" | "contacte" | "interesse" | "negociation
 export interface VenteProspect {
   id: string;
   user_id: string;
-  bien_id: string;
+  bien_id: string | null;
   name: string;
   phone: string | null;
   email: string | null;
@@ -28,7 +28,7 @@ export interface VenteProspect {
 }
 
 export interface VenteProspectInsert {
-  bien_id: string;
+  bien_id?: string | null;
   name: string;
   phone?: string | null;
   email?: string | null;

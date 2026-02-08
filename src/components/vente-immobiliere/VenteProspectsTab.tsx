@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Users, Plus, Search, Phone, Mail, MoreHorizontal, Trash2, Calendar, Building2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Users, Plus, Search, Phone, Mail, MoreHorizontal, Trash2, Calendar, Building2, Link } from "lucide-react";
 import { useAllVenteProspects, useDeleteVenteProspect, useUpdateVenteProspect, type ProspectStatus, type InterestLevel } from "@/hooks/useVenteProspects";
+import { useBiensVente } from "@/hooks/useBiensVente";
 import { AddVenteProspectDialog } from "./AddVenteProspectDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
@@ -45,12 +47,17 @@ const interestColors: Record<InterestLevel, string> = {
 
 export function VenteProspectsTab() {
   const { data: prospects, isLoading } = useAllVenteProspects();
+  const { data: biens } = useBiensVente();
   const deleteProspect = useDeleteVenteProspect();
   const updateProspect = useUpdateVenteProspect();
-  const { canCreate, canDelete } = usePermissions();
+  const { canCreate, canDelete, hasPermission } = usePermissions();
+  const canEdit = hasPermission("can_edit_ventes");
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [assignBienDialogOpen, setAssignBienDialogOpen] = useState(false);
+  const [selectedProspect, setSelectedProspect] = useState<any>(null);
+  const [selectedBienId, setSelectedBienId] = useState<string>("");
 
   const filteredProspects = prospects?.filter((prospect) => {
     const matchesSearch = 
@@ -80,6 +87,21 @@ export function VenteProspectsTab() {
       toast.error("Erreur lors de la mise à jour");
     }
   };
+
+  const handleAssignBien = async () => {
+    if (!selectedProspect || !selectedBienId) return;
+    try {
+      await updateProspect.mutateAsync({ id: selectedProspect.id, bien_id: selectedBienId });
+      toast.success("Bien associé au prospect");
+      setAssignBienDialogOpen(false);
+      setSelectedProspect(null);
+      setSelectedBienId("");
+    } catch (error) {
+      toast.error("Erreur lors de l'association");
+    }
+  };
+
+  const availableBiens = biens?.filter(b => b.status !== 'vendu') || [];
 
   if (isLoading) {
     return (
@@ -179,6 +201,22 @@ export function VenteProspectsTab() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {/* Assign bien option for prospects without a bien */}
+                        {!(prospect as any).bien && canEdit && (
+                          <>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedProspect(prospect);
+                                setSelectedBienId("");
+                                setAssignBienDialogOpen(true);
+                              }}
+                            >
+                              <Link className="h-4 w-4 mr-2" />
+                              Associer un bien
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
                         <DropdownMenuItem 
                           onClick={() => handleStatusChange(prospect.id, "contacte")}
                           disabled={prospect.status === "contacte"}
@@ -210,13 +248,16 @@ export function VenteProspectsTab() {
                           Marquer comme perdu
                         </DropdownMenuItem>
                         {canDelete && (
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => handleDelete(prospect.id, prospect.name)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-destructive"
+                              onClick={() => handleDelete(prospect.id, prospect.name)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
+                          </>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -231,7 +272,7 @@ export function VenteProspectsTab() {
                     </Badge>
                   </div>
 
-                  {(prospect as any).bien && (
+                  {(prospect as any).bien ? (
                     <div className="mt-3 p-2 bg-muted rounded-md">
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Building2 className="h-3 w-3" />
@@ -240,6 +281,27 @@ export function VenteProspectsTab() {
                       <p className="text-xs font-medium">
                         {new Intl.NumberFormat("fr-FR").format((prospect as any).bien.price)} F CFA
                       </p>
+                    </div>
+                  ) : (
+                    <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-md">
+                      <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                        <Building2 className="h-3 w-3" />
+                        Aucun bien associé
+                      </p>
+                      {canEdit && (
+                        <Button 
+                          variant="link" 
+                          size="sm" 
+                          className="h-auto p-0 text-xs text-orange-600 dark:text-orange-400"
+                          onClick={() => {
+                            setSelectedProspect(prospect);
+                            setSelectedBienId("");
+                            setAssignBienDialogOpen(true);
+                          }}
+                        >
+                          Associer un bien →
+                        </Button>
+                      )}
                     </div>
                   )}
 
@@ -263,6 +325,40 @@ export function VenteProspectsTab() {
           </div>
         )}
       </CardContent>
+
+      {/* Dialog pour associer un bien à un prospect */}
+      <Dialog open={assignBienDialogOpen} onOpenChange={setAssignBienDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Associer un bien au prospect</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez un bien à associer à <strong>{selectedProspect?.name}</strong>
+            </p>
+            <Select value={selectedBienId} onValueChange={setSelectedBienId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un bien" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableBiens.map((bien) => (
+                  <SelectItem key={bien.id} value={bien.id}>
+                    {bien.title} - {bien.address}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setAssignBienDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleAssignBien} disabled={!selectedBienId || updateProspect.isPending}>
+                {updateProspect.isPending ? "Association..." : "Associer"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -2657,7 +2657,7 @@ export type Database = {
       }
       vente_prospects: {
         Row: {
-          bien_id: string
+          bien_id: string | null
           budget_max: number | null
           budget_min: number | null
           created_at: string
@@ -2677,7 +2677,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          bien_id: string
+          bien_id?: string | null
           budget_max?: number | null
           budget_min?: number | null
           created_at?: string
@@ -2697,7 +2697,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          bien_id?: string
+          bien_id?: string | null
           budget_max?: number | null
           budget_min?: number | null
           created_at?: string

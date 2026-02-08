@@ -221,7 +221,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_edit_properties: false,
     can_delete_properties: false,
     can_view_tenants: true,
-    can_create_tenants: true,
+    can_create_tenants: false,
     can_edit_tenants: false,
     can_delete_tenants: false,
     can_view_payments: true,

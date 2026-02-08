@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBienVente } from "@/hooks/useBiensVente";
 import { useReservationVenteByBien } from "@/hooks/useReservationsVente";
 import { useAgency } from "@/hooks/useAgency";
+import { usePermissions } from "@/hooks/usePermissions";
 import { formatCurrency } from "@/lib/pdfFormat";
 import { generateContratReservationImmo } from "@/lib/generateVenteImmoPDF";
 import { format } from "date-fns";
@@ -42,6 +43,8 @@ export default function BienVenteDetails() {
   const { data: bien, isLoading } = useBienVente(id || "");
   const { data: reservation } = useReservationVenteByBien(id || "");
   const { data: agency } = useAgency();
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission("can_edit_biens_vente");
   const [sellDialogOpen, setSellDialogOpen] = useState(false);
   const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
 
@@ -137,7 +140,7 @@ export default function BienVenteDetails() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {bien.status === "disponible" && (
+            {bien.status === "disponible" && canEdit && (
               <>
                 <Button variant="outline" onClick={() => setReserveDialogOpen(true)}>
                   <Bookmark className="h-4 w-4 mr-2" />
@@ -149,7 +152,7 @@ export default function BienVenteDetails() {
                 </Button>
               </>
             )}
-            {bien.status === "reserve" && (
+            {bien.status === "reserve" && canEdit && (
               <>
                 <Button 
                   variant="outline" 

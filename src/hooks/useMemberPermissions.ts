@@ -46,6 +46,10 @@ export interface MemberPermissions {
   can_create_ventes: boolean;
   can_edit_ventes: boolean;
   can_delete_ventes: boolean;
+  // Biens vente sub-entities
+  can_create_biens_vente: boolean;
+  can_edit_biens_vente: boolean;
+  can_create_vente_prospects: boolean;
   // Documents
   can_view_documents: boolean;
   can_create_documents: boolean;
@@ -101,6 +105,9 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_ventes: "Créer des ventes immobilières",
   can_edit_ventes: "Modifier les ventes immobilières",
   can_delete_ventes: "Supprimer les ventes immobilières",
+  can_create_biens_vente: "Ajouter des biens à vendre",
+  can_edit_biens_vente: "Modifier des biens à vendre",
+  can_create_vente_prospects: "Ajouter des prospects vente",
   can_view_documents: "Voir les documents",
   can_create_documents: "Créer des documents",
   can_delete_documents: "Supprimer les documents",
@@ -141,7 +148,7 @@ export const PERMISSION_GROUPS = {
   },
   ventes: {
     label: "Ventes immobilières",
-    permissions: ["can_view_ventes", "can_create_ventes", "can_edit_ventes", "can_delete_ventes"] as PermissionKey[],
+    permissions: ["can_view_ventes", "can_create_ventes", "can_edit_ventes", "can_delete_ventes", "can_create_biens_vente", "can_edit_biens_vente", "can_create_vente_prospects"] as PermissionKey[],
   },
   documents: {
     label: "Documents",
@@ -193,6 +200,9 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_ventes: true,
     can_edit_ventes: true,
     can_delete_ventes: true,
+    can_create_biens_vente: true,
+    can_edit_biens_vente: true,
+    can_create_vente_prospects: true,
     can_view_documents: true,
     can_create_documents: true,
     can_delete_documents: true,
@@ -239,6 +249,9 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_ventes: true,
     can_edit_ventes: false,
     can_delete_ventes: false,
+    can_create_biens_vente: false,
+    can_edit_biens_vente: false,
+    can_create_vente_prospects: false,
     can_view_documents: true,
     can_create_documents: true,
     can_delete_documents: false,
@@ -285,6 +298,9 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_ventes: false,
     can_edit_ventes: false,
     can_delete_ventes: false,
+    can_create_biens_vente: false,
+    can_edit_biens_vente: false,
+    can_create_vente_prospects: false,
     can_view_documents: true,
     can_create_documents: false,
     can_delete_documents: false,

@@ -21,7 +21,7 @@ export default function VentesImmobilieres() {
   const { data: acquereurs } = useAcquereurs();
   const { hasPermission, role, isLoading: isLoadingPermissions } = usePermissions();
   const { isAdmin } = useIsAgencyOwner();
-  const canCreate = hasPermission("can_create_ventes");
+  const canCreateBien = hasPermission("can_create_biens_vente");
   const isLocataire = role === "locataire";
   return (
     <DashboardLayout>
@@ -34,7 +34,7 @@ export default function VentesImmobilieres() {
               Gérez vos biens à vendre, ventes et paiements échelonnés
             </p>
           </div>
-          {canCreate && (
+          {canCreateBien && (
             <AddBienVenteDialog>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />

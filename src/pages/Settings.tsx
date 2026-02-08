@@ -28,6 +28,7 @@ const Settings = () => {
   const { hasPermission, role } = usePermissions();
   const hasVentesImmobilieres = hasFeature("ventes_immobilieres");
   const isFreePlan = planName === "Gratuit";
+  const isGestionnaire = role === "gestionnaire";
   
   // Permission checks
   const canManageTeam = hasPermission("can_manage_team");
@@ -35,7 +36,9 @@ const Settings = () => {
   const canManageBranding = hasPermission("can_manage_branding");
   const canManageTemplates = hasPermission("can_manage_templates");
   const isAdmin = role === "admin" || role === "super_admin";
-  const [activeTab, setActiveTab] = useState(isSuperAdmin ? "profile" : "agency");
+  
+  // Default tab: gestionnaires go to profile, others to agency
+  const [activeTab, setActiveTab] = useState(isSuperAdmin ? "profile" : (isGestionnaire ? "profile" : "agency"));
 
   // Super Admin: simplified settings
   if (isSuperAdmin) {
@@ -108,20 +111,24 @@ const Settings = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-1 p-1">
-            <TabsTrigger
-              value="agency"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <Building2 className="h-4 w-4" />
-              <span>Agence</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="management-types"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <Percent className="h-4 w-4" />
-              <span>Gestion</span>
-            </TabsTrigger>
+            {!isGestionnaire && (
+              <TabsTrigger
+                value="agency"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Building2 className="h-4 w-4" />
+                <span>Agence</span>
+              </TabsTrigger>
+            )}
+            {!isGestionnaire && (
+              <TabsTrigger
+                value="management-types"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Percent className="h-4 w-4" />
+                <span>Gestion</span>
+              </TabsTrigger>
+            )}
             {canManageBranding && (
               <TabsTrigger
                 value="branding"
@@ -158,13 +165,15 @@ const Settings = () => {
                 <span>Contrats de vente</span>
               </TabsTrigger>
             )}
-            <TabsTrigger
-              value="subscription"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <CreditCard className="h-4 w-4" />
-              <span>Abonnement</span>
-            </TabsTrigger>
+            {!isGestionnaire && (
+              <TabsTrigger
+                value="subscription"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>Abonnement</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger
               value="profile"
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -197,20 +206,24 @@ const Settings = () => {
               <Palette className="h-4 w-4" />
               <span>Affichage</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="notifications"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <Bell className="h-4 w-4" />
-              <span>Alertes</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="notification-history"
-              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
-            >
-              <History className="h-4 w-4" />
-              <span>Historique</span>
-            </TabsTrigger>
+            {!isGestionnaire && (
+              <TabsTrigger
+                value="notifications"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Bell className="h-4 w-4" />
+                <span>Alertes</span>
+              </TabsTrigger>
+            )}
+            {!isGestionnaire && (
+              <TabsTrigger
+                value="notification-history"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <History className="h-4 w-4" />
+                <span>Historique</span>
+              </TabsTrigger>
+            )}
             {!isFreePlan && (
               <TabsTrigger
                 value="whatsapp"
@@ -238,13 +251,17 @@ const Settings = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="agency">
-            <AgencySettings />
-          </TabsContent>
+          {!isGestionnaire && (
+            <TabsContent value="agency">
+              <AgencySettings />
+            </TabsContent>
+          )}
 
-          <TabsContent value="management-types">
-            <ManagementTypesSettings />
-          </TabsContent>
+          {!isGestionnaire && (
+            <TabsContent value="management-types">
+              <ManagementTypesSettings />
+            </TabsContent>
+          )}
 
           <TabsContent value="branding">
             <BrandingSettings />
@@ -268,9 +285,11 @@ const Settings = () => {
             </TabsContent>
           )}
 
-          <TabsContent value="subscription">
-            <SubscriptionSettings />
-          </TabsContent>
+          {!isGestionnaire && (
+            <TabsContent value="subscription">
+              <SubscriptionSettings />
+            </TabsContent>
+          )}
 
           <TabsContent value="profile">
             <ProfileSettings />
@@ -288,13 +307,17 @@ const Settings = () => {
             <DisplaySettings />
           </TabsContent>
 
-          <TabsContent value="notifications">
-            <NotificationSettings />
-          </TabsContent>
+          {!isGestionnaire && (
+            <TabsContent value="notifications">
+              <NotificationSettings />
+            </TabsContent>
+          )}
 
-          <TabsContent value="notification-history">
-            <NotificationHistory />
-          </TabsContent>
+          {!isGestionnaire && (
+            <TabsContent value="notification-history">
+              <NotificationHistory />
+            </TabsContent>
+          )}
 
           {!isFreePlan && (
             <TabsContent value="whatsapp">

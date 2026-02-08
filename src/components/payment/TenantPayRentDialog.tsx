@@ -15,8 +15,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import { toast } from "sonner";
-import { Loader2, CreditCard, Smartphone } from "lucide-react";
+import { Loader2, CreditCard, Smartphone, AlertCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 
 interface TenantPayRentDialogProps {
   paymentId: string;
@@ -46,6 +47,10 @@ export function TenantPayRentDialog({
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
   const [phone, setPhone] = useState(tenantPhone || "");
   const queryClient = useQueryClient();
+  
+  // Check if online rent payment is enabled
+  const { data: onlinePaymentSetting, isLoading: isLoadingSetting } = usePlatformSetting("online_rent_payment_enabled");
+  const isOnlinePaymentEnabled = onlinePaymentSetting?.value !== "false";
 
   const dueMonth = new Date(dueDate).toLocaleDateString("fr-FR", {
     month: "long",
@@ -225,10 +230,20 @@ export function TenantPayRentDialog({
     }
   };
 
+  // If online payment is disabled, show disabled button with tooltip
+  if (!isOnlinePaymentEnabled && !isLoadingSetting) {
+    return (
+      <Button size="sm" className="text-xs" disabled title="Le paiement en ligne est temporairement indisponible">
+        <CreditCard className="h-3 w-3 mr-1" />
+        Payer
+      </Button>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="text-xs">
+        <Button size="sm" className="text-xs" disabled={isLoadingSetting}>
           <CreditCard className="h-3 w-3 mr-1" />
           Payer
         </Button>

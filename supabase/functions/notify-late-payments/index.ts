@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
 
       try {
         const emailResponse = await resend.emails.send({
-          from: "Gestion Immobilière <onboarding@resend.dev>",
+          from: "Gestion Immobilière <noreply@immoprestigeci.com>",
           to: [tenant.email],
           subject: `Rappel: Paiement en retard - ${propertyTitle}`,
           html: `

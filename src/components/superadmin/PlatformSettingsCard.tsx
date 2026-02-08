@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { usePlatformSettings, useUpdatePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
-import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard } from "lucide-react";
+import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 export function PlatformSettingsCard() {
@@ -16,6 +16,7 @@ export function PlatformSettingsCard() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [yearlyDiscount, setYearlyDiscount] = useState("20");
   const [onlineRentPaymentEnabled, setOnlineRentPaymentEnabled] = useState(true);
+  const [onlineRentAccountEnabled, setOnlineRentAccountEnabled] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -31,6 +32,10 @@ export function PlatformSettingsCard() {
       const onlinePaymentSetting = settings.find(s => s.key === "online_rent_payment_enabled");
       if (onlinePaymentSetting?.value !== undefined) {
         setOnlineRentPaymentEnabled(onlinePaymentSetting.value === "true");
+      }
+      const onlineAccountSetting = settings.find(s => s.key === "online_rent_account_enabled");
+      if (onlineAccountSetting?.value !== undefined) {
+        setOnlineRentAccountEnabled(onlineAccountSetting.value === "true");
       }
     }
   }, [settings]);
@@ -51,6 +56,11 @@ export function PlatformSettingsCard() {
           key: "online_rent_payment_enabled",
           value: String(onlineRentPaymentEnabled),
           description: "Activer ou désactiver le paiement de loyers en ligne pour tous les locataires",
+        }),
+        upsertSetting.mutateAsync({
+          key: "online_rent_account_enabled",
+          value: String(onlineRentAccountEnabled),
+          description: "Activer ou désactiver l'onglet Compte pour le suivi des fonds en ligne",
         }),
       ]);
       setHasChanges(false);
@@ -76,6 +86,11 @@ export function PlatformSettingsCard() {
 
   const handleOnlinePaymentToggle = (checked: boolean) => {
     setOnlineRentPaymentEnabled(checked);
+    setHasChanges(true);
+  };
+
+  const handleOnlineAccountToggle = (checked: boolean) => {
+    setOnlineRentAccountEnabled(checked);
     setHasChanges(true);
   };
 
@@ -156,6 +171,23 @@ export function PlatformSettingsCard() {
               id="online-rent-payment"
               checked={onlineRentPaymentEnabled}
               onCheckedChange={handleOnlinePaymentToggle}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="online-rent-account" className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-primary" />
+                Onglet Compte (fonds en ligne)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Afficher l'onglet Compte pour le suivi des fonds encaissés en ligne et les demandes de reversement
+              </p>
+            </div>
+            <Switch
+              id="online-rent-account"
+              checked={onlineRentAccountEnabled}
+              onCheckedChange={handleOnlineAccountToggle}
             />
           </div>
         </div>

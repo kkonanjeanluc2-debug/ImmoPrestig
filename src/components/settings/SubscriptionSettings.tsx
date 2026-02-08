@@ -179,19 +179,19 @@ export function SubscriptionSettings() {
               <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-primary">
-                    {subscription.plan.max_properties === 999999 ? "∞" : subscription.plan.max_properties || 0}
+                    {subscription.plan.max_properties === null || subscription.plan.max_properties === 999999 ? "∞" : subscription.plan.max_properties}
                   </p>
                   <p className="text-xs text-muted-foreground">Biens max</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-primary">
-                    {subscription.plan.max_tenants === 999999 ? "∞" : subscription.plan.max_tenants || 0}
+                    {subscription.plan.max_tenants === null || subscription.plan.max_tenants === 999999 ? "∞" : subscription.plan.max_tenants}
                   </p>
                   <p className="text-xs text-muted-foreground">Locataires max</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-primary">
-                    {subscription.plan.max_users === 999999 ? "∞" : subscription.plan.max_users || 1}
+                    {subscription.plan.max_users === null || subscription.plan.max_users === 999999 ? "∞" : subscription.plan.max_users}
                   </p>
                   <p className="text-xs text-muted-foreground">Utilisateurs max</p>
                 </div>

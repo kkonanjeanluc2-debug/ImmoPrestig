@@ -15,12 +15,12 @@ export type FeatureKey =
 
 // Map feature keys to strings that appear in subscription_plans.features
 const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
-  ventes_immobilieres: ["Ventes immobilières", "Toutes les fonctionnalités"],
-  lotissement: ["Lotissement", "Toutes les fonctionnalités"],
-  rappels_sms: ["Rappels SMS & Email", "Rappels SMS", "Toutes les fonctionnalités"],
-  rappels_automatiques: ["Rappels automatiques", "Rappels SMS & Email", "Toutes les fonctionnalités"],
-  quittances_personnalisees: ["Quittances personnalisées", "Toutes les fonctionnalités"],
-  rapports_avances: ["Rapports avancés", "Toutes les fonctionnalités"],
+  ventes_immobilieres: ["Ventes immobilières", "ventes immobilieres", "Toutes les fonctionnalités"],
+  lotissement: ["Lotissement", "lotissement", "Toutes les fonctionnalités"],
+  rappels_sms: ["Rappels SMS & Email", "Rappels SMS", "rappels sms", "Rappels Whatsapp & Email", "Toutes les fonctionnalités"],
+  rappels_automatiques: ["Rappels automatiques", "Rappels SMS & Email", "Rappels Whatsapp & Email", "Planification des automatisations", "Toutes les fonctionnalités"],
+  quittances_personnalisees: ["Quittances personnalisées", "quittances personnalisees", "Toutes les fonctionnalités"],
+  rapports_avances: ["Rapports avancés", "rapports avances", "Toutes les fonctionnalités"],
   support_prioritaire: ["Support prioritaire", "Support dédié", "Toutes les fonctionnalités"],
   support_dedie: ["Support dédié", "Toutes les fonctionnalités"],
   formation_personnalisee: ["Formation personnalisée", "Toutes les fonctionnalités"],

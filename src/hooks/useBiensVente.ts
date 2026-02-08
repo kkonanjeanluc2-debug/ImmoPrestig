@@ -96,9 +96,16 @@ export const useCreateBienVente = () => {
     mutationFn: async (bien: BienVenteInsert) => {
       if (!user) throw new Error("User not authenticated");
 
+      // Auto-assign to the creator if not explicitly set
+      const insertData = {
+        ...bien,
+        user_id: user.id,
+        assigned_to: bien.assigned_to ?? user.id,
+      };
+
       const { data, error } = await supabase
         .from("biens_vente")
-        .insert({ ...bien, user_id: user.id })
+        .insert(insertData)
         .select()
         .single();
 

@@ -254,20 +254,20 @@ export default function Payments() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "payments" | "commissions" | "account")}>
-          <TabsList>
-            <TabsTrigger value="payments" className="flex items-center gap-2">
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="payments" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Wallet className="h-4 w-4" />
-              Paiements
+              <span className="hidden sm:inline">Paiements</span>
             </TabsTrigger>
             {showAdvancedTabs && (
               <>
-                <TabsTrigger value="commissions" className="flex items-center gap-2">
+                <TabsTrigger value="commissions" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
                   <Percent className="h-4 w-4" />
-                  Commissions
+                  <span className="hidden sm:inline">Commissions</span>
                 </TabsTrigger>
-                <TabsTrigger value="account" className="flex items-center gap-2">
+                <TabsTrigger value="account" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
                   <TrendingUp className="h-4 w-4" />
-                  Compte
+                  <span className="hidden sm:inline">Compte</span>
                 </TabsTrigger>
               </>
             )}

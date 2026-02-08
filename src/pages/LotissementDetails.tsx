@@ -148,80 +148,80 @@ const LotissementDetails = () => {
     <DashboardLayout>
       <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/lotissements")}>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-2 sm:gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/lotissements")} className="shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-display font-bold text-foreground truncate">
                 {lotissement.name}
               </h1>
-              <p className="text-muted-foreground flex items-center gap-1 mt-1">
-                <MapPin className="h-4 w-4" />
-                {lotissement.location}, {lotissement.city}
+              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1 truncate">
+                <MapPin className="h-4 w-4 shrink-0" />
+                <span className="truncate">{lotissement.location}, {lotissement.city}</span>
               </p>
             </div>
           </div>
           {canCreateParcelle && (
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => setShowGenerateDocument(true)}>
-                <FileSignature className="h-4 w-4 mr-2" />
-                Documents de lotissement
+              <Button variant="outline" size="sm" onClick={() => setShowGenerateDocument(true)}>
+                <FileSignature className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Documents</span>
               </Button>
-              <Button variant="outline" onClick={() => setShowBulkAdd(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter en masse
+              <Button variant="outline" size="sm" onClick={() => setShowBulkAdd(true)}>
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">En masse</span>
               </Button>
-              <Button onClick={() => setShowAddParcelle(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle parcelle
+              <Button size="sm" onClick={() => setShowAddParcelle(true)}>
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Nouvelle parcelle</span>
               </Button>
             </div>
           )}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
           <Card>
-            <CardContent className="pt-4">
+            <CardContent className="p-3 sm:pt-4">
               <div className="text-center">
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total parcelles</p>
+                <p className="text-lg sm:text-2xl font-bold">{stats.total}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total parcelles</p>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
+            <CardContent className="p-3 sm:pt-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-emerald-600">{stats.disponibles}</p>
-                <p className="text-sm text-muted-foreground">Disponibles</p>
+                <p className="text-lg sm:text-2xl font-bold text-emerald-600">{stats.disponibles}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Disponibles</p>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
+            <CardContent className="p-3 sm:pt-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-amber-600">{stats.reservees}</p>
-                <p className="text-sm text-muted-foreground">Réservées</p>
+                <p className="text-lg sm:text-2xl font-bold text-amber-600">{stats.reservees}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Réservées</p>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
+            <CardContent className="p-3 sm:pt-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">{stats.vendues}</p>
-                <p className="text-sm text-muted-foreground">Vendues</p>
+                <p className="text-lg sm:text-2xl font-bold text-blue-600">{stats.vendues}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Vendues</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="col-span-2 md:col-span-1">
-            <CardContent className="pt-4">
+          <Card className="col-span-2 sm:col-span-1">
+            <CardContent className="p-3 sm:pt-4">
               <div className="text-center">
-                <p className="text-xl font-bold text-primary">
+                <p className="text-sm sm:text-xl font-bold text-primary truncate">
                   {stats.totalRevenue.toLocaleString("fr-FR")} F
                 </p>
-                <p className="text-sm text-muted-foreground">Revenus</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Revenus</p>
               </div>
             </CardContent>
           </Card>

@@ -29,16 +29,16 @@ export default function VentesImmobilieres() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold font-display">Ventes Immobilières</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold font-display">Ventes Immobilières</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Gérez vos biens à vendre, ventes et paiements échelonnés
             </p>
           </div>
           {canCreateBien && (
             <AddBienVenteDialog>
-              <Button>
+              <Button size="sm" className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter un bien
+                <span className="sm:inline">Ajouter un bien</span>
               </Button>
             </AddBienVenteDialog>
           )}
@@ -49,29 +49,29 @@ export default function VentesImmobilieres() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className={`grid w-full lg:w-auto lg:inline-grid ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
-            <TabsTrigger value="biens" className="flex items-center gap-2">
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 overflow-x-auto">
+            <TabsTrigger value="biens" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Biens</span>
             </TabsTrigger>
-            <TabsTrigger value="ventes" className="flex items-center gap-2">
+            <TabsTrigger value="ventes" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Receipt className="h-4 w-4" />
               <span className="hidden sm:inline">Ventes</span>
             </TabsTrigger>
-            <TabsTrigger value="echeances" className="flex items-center gap-2">
+            <TabsTrigger value="echeances" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Échéances</span>
             </TabsTrigger>
-            <TabsTrigger value="prospects" className="flex items-center gap-2">
+            <TabsTrigger value="prospects" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <UserSearch className="h-4 w-4" />
               <span className="hidden sm:inline">Prospects</span>
             </TabsTrigger>
-            <TabsTrigger value="acquereurs" className="flex items-center gap-2">
+            <TabsTrigger value="acquereurs" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Acquéreurs</span>
             </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="affectations" className="flex items-center gap-2">
+              <TabsTrigger value="affectations" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
                 <UserCheck className="h-4 w-4" />
                 <span className="hidden sm:inline">Affectations</span>
               </TabsTrigger>

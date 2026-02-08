@@ -115,18 +115,18 @@ const PropertyDetails = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={() => navigate("/properties")}>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <Button variant="outline" size="icon" onClick={() => navigate("/properties")} className="shrink-0 mt-1">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <h1 className="text-3xl font-display font-bold text-foreground">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground truncate">
                 {property.title}
               </h1>
-              <p className="flex items-center gap-1.5 text-muted-foreground mt-1">
-                <MapPin className="h-4 w-4" />
-                {property.address}
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1 truncate">
+                <MapPin className="h-4 w-4 shrink-0" />
+                <span className="truncate">{property.address}</span>
               </p>
             </div>
           </div>

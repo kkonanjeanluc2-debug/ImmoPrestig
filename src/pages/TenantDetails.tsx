@@ -266,55 +266,55 @@ const TenantDetails = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald/10 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-emerald" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-emerald/10 rounded-lg">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-emerald" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-emerald">{paidPayments}</p>
-                  <p className="text-xs text-muted-foreground">Paiements réglés</p>
+                  <p className="text-lg sm:text-2xl font-bold text-emerald">{paidPayments}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Paiements réglés</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-destructive/10 rounded-lg">
-                  <XCircle className="h-5 w-5 text-destructive" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-destructive/10 rounded-lg">
+                  <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-destructive">{latePayments}</p>
-                  <p className="text-xs text-muted-foreground">Paiements en retard</p>
+                  <p className="text-lg sm:text-2xl font-bold text-destructive">{latePayments}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">En retard</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 rounded-lg">
-                  <Clock className="h-5 w-5 text-amber-500" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-amber-500/10 rounded-lg">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-amber-500">{pendingPayments}</p>
-                  <p className="text-xs text-muted-foreground">En attente</p>
+                  <p className="text-lg sm:text-2xl font-bold text-amber-500">{pendingPayments}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">En attente</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Wallet className="h-5 w-5 text-primary" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                  <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{paymentRate}%</p>
-                  <p className="text-xs text-muted-foreground">Taux de paiement</p>
+                  <p className="text-lg sm:text-2xl font-bold">{paymentRate}%</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Taux paiement</p>
                 </div>
               </div>
             </CardContent>
@@ -323,18 +323,18 @@ const TenantDetails = () => {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="payments" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex mb-6">
-            <TabsTrigger value="payments" className="flex items-center gap-2">
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 mb-6">
+            <TabsTrigger value="payments" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Wallet className="h-4 w-4" />
-              Paiements
+              <span className="hidden sm:inline">Paiements</span>
             </TabsTrigger>
-            <TabsTrigger value="contracts" className="flex items-center gap-2">
+            <TabsTrigger value="contracts" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <FileText className="h-4 w-4" />
-              Contrats
+              <span className="hidden sm:inline">Contrats</span>
             </TabsTrigger>
-            <TabsTrigger value="etats-des-lieux" className="flex items-center gap-2">
+            <TabsTrigger value="etats-des-lieux" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <ClipboardCheck className="h-4 w-4" />
-              États des lieux
+              <span className="hidden sm:inline">États des lieux</span>
             </TabsTrigger>
           </TabsList>
 

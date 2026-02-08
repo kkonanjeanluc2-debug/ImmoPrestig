@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBiensVente, useDeleteBienVente, type BienVente } from "@/hooks/useBiensVente";
 import { SellBienDialog } from "./SellBienDialog";
 import { ReserveBienDialog } from "./ReserveBienDialog";
@@ -34,9 +35,12 @@ import {
   Bath,
   Ruler,
   Bookmark,
+  User,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
+import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
 const STATUS_CONFIG = {
   disponible: { label: "Disponible", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
@@ -55,7 +59,12 @@ export function BiensVenteList() {
   const { data: biens, isLoading } = useBiensVente();
   const deleteBien = useDeleteBienVente();
   const navigate = useNavigate();
-  const { canDelete } = usePermissions();
+  const { canDelete, role } = usePermissions();
+  const { isAdmin } = useIsAgencyOwner();
+
+  // Get all assigned_to user ids for profile lookup
+  const assignedUserIds = biens?.map(b => b.assigned_to).filter(Boolean) || [];
+  const { data: profilesMap } = useUserProfiles(assignedUserIds);
 
   const filteredBiens = biens?.filter((bien) => {
     const matchesSearch =
@@ -280,9 +289,28 @@ export function BiensVenteList() {
                     <span className="text-lg font-bold text-primary">
                       {formatCurrency(bien.price)}
                     </span>
-                    <Badge variant="secondary">
-                      {bien.property_type.charAt(0).toUpperCase() + bien.property_type.slice(1)}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {isAdmin && bien.assigned_to && profilesMap?.get(bien.assigned_to) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs gap-1">
+                                <User className="h-3 w-3" />
+                                <span className="truncate max-w-[60px]">
+                                  {profilesMap.get(bien.assigned_to)}
+                                </span>
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Gestionnaire: {profilesMap.get(bien.assigned_to)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      <Badge variant="secondary">
+                        {bien.property_type.charAt(0).toUpperCase() + bien.property_type.slice(1)}
+                      </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Plus, Search, Phone, Mail, MoreHorizontal, Trash2, Calendar, Building2, Link } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Users, Plus, Search, Phone, Mail, MoreHorizontal, Trash2, Calendar, Building2, Link, User } from "lucide-react";
 import { useAllVenteProspects, useDeleteVenteProspect, useUpdateVenteProspect, type ProspectStatus, type InterestLevel } from "@/hooks/useVenteProspects";
 import { useBiensVente } from "@/hooks/useBiensVente";
 import { AddVenteProspectDialog } from "./AddVenteProspectDialog";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
+import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -52,12 +55,17 @@ export function VenteProspectsTab() {
   const updateProspect = useUpdateVenteProspect();
   const { canCreate, canDelete, hasPermission } = usePermissions();
   const canEdit = hasPermission("can_edit_ventes");
+  const { isAdmin } = useIsAgencyOwner();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [assignBienDialogOpen, setAssignBienDialogOpen] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState<any>(null);
   const [selectedBienId, setSelectedBienId] = useState<string>("");
+
+  // Get user_id from prospects for profile lookup
+  const userIds = prospects?.map(p => p.user_id).filter(Boolean) || [];
+  const { data: profilesMap } = useUserProfiles(userIds);
 
   const filteredProspects = prospects?.filter((prospect) => {
     const matchesSearch = 
@@ -319,6 +327,27 @@ export function VenteProspectsTab() {
                       {prospect.budget_max ? `${new Intl.NumberFormat("fr-FR").format(prospect.budget_max)} F CFA` : "?"}
                     </p>
                   ) : null}
+
+                  {/* Display manager name for admins */}
+                  {isAdmin && prospect.user_id && profilesMap?.get(prospect.user_id) && (
+                    <div className="mt-2 pt-2 border-t">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <User className="h-3 w-3" />
+                              <span className="truncate max-w-[100px]">
+                                {profilesMap.get(prospect.user_id)}
+                              </span>
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Créé par: {profilesMap.get(prospect.user_id)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

@@ -44,7 +44,9 @@ const STATUS_BG = {
 };
 
 export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) {
-  const { canEdit, canDelete } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission("can_edit_lotissements");
+  const canDelete = hasPermission("can_delete_lotissements");
   const deleteParcelle = useSoftDeleteParcelle();
   const { data: ilots } = useIlots(lotissementId);
 

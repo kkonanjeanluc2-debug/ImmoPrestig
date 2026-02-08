@@ -298,7 +298,7 @@ export function AgencySubscriptionsManager() {
                 <SelectContent>
                   <SelectItem value="monthly">Mensuel</SelectItem>
                   <SelectItem value="yearly">Annuel (économisez ~17%)</SelectItem>
-                  <SelectItem value="lifetime">Abonnement à vie (gratuit, sans expiration)</SelectItem>
+                  <SelectItem value="lifetime">Abonnement à vie</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -310,7 +310,7 @@ export function AgencySubscriptionsManager() {
                   <span>Forfait {getPlanById(selectedPlanId)?.name}</span>
                   <span className="font-medium">
                     {selectedBillingCycle === "lifetime" ? (
-                      <span className="text-primary font-semibold">Gratuit à vie</span>
+                      <span className="text-primary font-semibold">Abonné à vie</span>
                     ) : (
                       <>
                         {formatPrice(

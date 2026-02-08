@@ -1251,6 +1251,7 @@ export type Database = {
       member_permissions: {
         Row: {
           can_access_settings: boolean
+          can_create_biens_vente: boolean | null
           can_create_contracts: boolean
           can_create_demarches: boolean | null
           can_create_documents: boolean
@@ -1263,6 +1264,7 @@ export type Database = {
           can_create_payments: boolean
           can_create_properties: boolean
           can_create_tenants: boolean
+          can_create_vente_prospects: boolean | null
           can_create_ventes: boolean
           can_delete_contracts: boolean
           can_delete_documents: boolean
@@ -1272,6 +1274,7 @@ export type Database = {
           can_delete_properties: boolean
           can_delete_tenants: boolean
           can_delete_ventes: boolean
+          can_edit_biens_vente: boolean | null
           can_edit_contracts: boolean
           can_edit_lotissements: boolean
           can_edit_owners: boolean
@@ -1301,6 +1304,7 @@ export type Database = {
         }
         Insert: {
           can_access_settings?: boolean
+          can_create_biens_vente?: boolean | null
           can_create_contracts?: boolean
           can_create_demarches?: boolean | null
           can_create_documents?: boolean
@@ -1313,6 +1317,7 @@ export type Database = {
           can_create_payments?: boolean
           can_create_properties?: boolean
           can_create_tenants?: boolean
+          can_create_vente_prospects?: boolean | null
           can_create_ventes?: boolean
           can_delete_contracts?: boolean
           can_delete_documents?: boolean
@@ -1322,6 +1327,7 @@ export type Database = {
           can_delete_properties?: boolean
           can_delete_tenants?: boolean
           can_delete_ventes?: boolean
+          can_edit_biens_vente?: boolean | null
           can_edit_contracts?: boolean
           can_edit_lotissements?: boolean
           can_edit_owners?: boolean
@@ -1351,6 +1357,7 @@ export type Database = {
         }
         Update: {
           can_access_settings?: boolean
+          can_create_biens_vente?: boolean | null
           can_create_contracts?: boolean
           can_create_demarches?: boolean | null
           can_create_documents?: boolean
@@ -1363,6 +1370,7 @@ export type Database = {
           can_create_payments?: boolean
           can_create_properties?: boolean
           can_create_tenants?: boolean
+          can_create_vente_prospects?: boolean | null
           can_create_ventes?: boolean
           can_delete_contracts?: boolean
           can_delete_documents?: boolean
@@ -1372,6 +1380,7 @@ export type Database = {
           can_delete_properties?: boolean
           can_delete_tenants?: boolean
           can_delete_ventes?: boolean
+          can_edit_biens_vente?: boolean | null
           can_edit_contracts?: boolean
           can_edit_lotissements?: boolean
           can_edit_owners?: boolean

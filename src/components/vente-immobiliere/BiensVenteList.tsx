@@ -59,8 +59,10 @@ export function BiensVenteList() {
   const { data: biens, isLoading } = useBiensVente();
   const deleteBien = useDeleteBienVente();
   const navigate = useNavigate();
-  const { canDelete, role } = usePermissions();
+  const { hasPermission, role } = usePermissions();
   const { isAdmin } = useIsAgencyOwner();
+  const canDelete = hasPermission("can_delete_ventes");
+  const canEdit = hasPermission("can_edit_biens_vente");
 
   // Get all assigned_to user ids for profile lookup
   const assignedUserIds = biens?.map(b => b.assigned_to).filter(Boolean) || [];
@@ -214,7 +216,7 @@ export function BiensVenteList() {
                           <Eye className="h-4 w-4 mr-2" />
                           Voir détails
                         </DropdownMenuItem>
-                        {bien.status === "disponible" && (
+                        {bien.status === "disponible" && canEdit && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={(e) => {
@@ -233,7 +235,7 @@ export function BiensVenteList() {
                             </DropdownMenuItem>
                           </>
                         )}
-                        {bien.status === "reserve" && (
+                        {bien.status === "reserve" && canEdit && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={(e) => {

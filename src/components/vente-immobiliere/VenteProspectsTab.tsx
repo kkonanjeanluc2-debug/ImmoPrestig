@@ -53,7 +53,8 @@ export function VenteProspectsTab() {
   const { data: biens } = useBiensVente();
   const deleteProspect = useDeleteVenteProspect();
   const updateProspect = useUpdateVenteProspect();
-  const { canCreate, canDelete, hasPermission } = usePermissions();
+  const { canDelete, hasPermission } = usePermissions();
+  const canCreateProspect = hasPermission("can_create_vente_prospects");
   const canEdit = hasPermission("can_edit_ventes");
   const { isAdmin } = useIsAgencyOwner();
   
@@ -131,7 +132,7 @@ export function VenteProspectsTab() {
             <Users className="h-5 w-5" />
             Prospects ({filteredProspects?.length || 0})
           </CardTitle>
-          {canCreate && (
+          {canCreateProspect && (
             <AddVenteProspectDialog>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -169,7 +170,7 @@ export function VenteProspectsTab() {
           <div className="text-center py-12">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">Aucun prospect trouvé</p>
-            {canCreate && (
+            {canCreateProspect && (
               <p className="text-sm text-muted-foreground mt-1">
                 Ajoutez des prospects intéressés par vos biens
               </p>

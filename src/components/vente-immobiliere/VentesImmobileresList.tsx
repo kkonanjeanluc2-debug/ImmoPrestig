@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVentesImmobilieres, useDeleteVenteImmobiliere, VenteWithDetails } from "@/hooks/useVentesImmobilieres";
 import { formatCurrency } from "@/lib/pdfFormat";
 import { format } from "date-fns";
@@ -30,10 +31,13 @@ import {
   FileText,
   Trash2,
   Receipt,
+  User,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { DocumentsVenteDialog } from "./DocumentsVenteDialog";
+import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
+import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
 const STATUS_CONFIG = {
   en_cours: { label: "En cours", color: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
@@ -48,6 +52,11 @@ export function VentesImmobilieresList() {
   const deleteVente = useDeleteVenteImmobiliere();
   const navigate = useNavigate();
   const { canDelete } = usePermissions();
+  const { isAdmin } = useIsAgencyOwner();
+
+  // Get all sold_by user ids for profile lookup
+  const soldByUserIds = ventes?.map(v => v.sold_by).filter(Boolean) || [];
+  const { data: profilesMap } = useUserProfiles(soldByUserIds);
 
   const filteredVentes = ventes?.filter((vente) => {
     const searchLower = search.toLowerCase();
@@ -115,6 +124,7 @@ export function VentesImmobilieresList() {
                   <TableHead>Paiement</TableHead>
                   <TableHead>Progression</TableHead>
                   <TableHead>Statut</TableHead>
+                  {isAdmin && <TableHead>Gestionnaire</TableHead>}
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -167,6 +177,29 @@ export function VentesImmobilieresList() {
                           {statusConfig.label}
                         </Badge>
                       </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          {vente.sold_by && profilesMap?.get(vente.sold_by) ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="secondary" className="gap-1">
+                                    <User className="h-3 w-3" />
+                                    <span className="truncate max-w-[80px]">
+                                      {profilesMap.get(vente.sold_by)}
+                                    </span>
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{profilesMap.get(vente.sold_by)}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

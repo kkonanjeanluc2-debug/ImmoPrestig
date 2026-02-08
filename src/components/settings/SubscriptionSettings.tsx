@@ -114,7 +114,11 @@ export function SubscriptionSettings() {
                   <div>
                     <h3 className="font-semibold text-lg">{subscription.plan.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {subscription.billing_cycle === "yearly" ? "Facturation annuelle" : "Facturation mensuelle"}
+                      {subscription.billing_cycle === "lifetime" 
+                        ? "Abonnement à vie" 
+                        : subscription.billing_cycle === "yearly" 
+                          ? "Facturation annuelle" 
+                          : "Facturation mensuelle"}
                     </p>
                   </div>
                 </div>
@@ -136,15 +140,21 @@ export function SubscriptionSettings() {
                     <span className="text-sm">Prix</span>
                   </div>
                   <p className="font-semibold">
-                    {formatPrice(
-                      subscription.billing_cycle === "yearly" 
-                        ? subscription.plan.price_yearly 
-                        : subscription.plan.price_monthly,
-                      subscription.plan.currency
+                    {subscription.billing_cycle === "lifetime" ? (
+                      <span className="text-primary">Gratuit à vie</span>
+                    ) : (
+                      <>
+                        {formatPrice(
+                          subscription.billing_cycle === "yearly" 
+                            ? subscription.plan.price_yearly 
+                            : subscription.plan.price_monthly,
+                          subscription.plan.currency
+                        )}
+                        <span className="text-sm font-normal text-muted-foreground">
+                          /{subscription.billing_cycle === "yearly" ? "an" : "mois"}
+                        </span>
+                      </>
                     )}
-                    <span className="text-sm font-normal text-muted-foreground">
-                      /{subscription.billing_cycle === "yearly" ? "an" : "mois"}
-                    </span>
                   </p>
                 </div>
                 <div className="p-4 border rounded-lg">
@@ -316,8 +326,12 @@ export function SubscriptionSettings() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{tx.plan?.name || "—"}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {tx.billing_cycle === "yearly" ? "Annuel" : "Mensuel"}
+                        <p className="text-xs text-muted-foreground">
+                            {tx.billing_cycle === "lifetime" 
+                              ? "À vie" 
+                              : tx.billing_cycle === "yearly" 
+                                ? "Annuel" 
+                                : "Mensuel"}
                           </p>
                         </div>
                       </TableCell>

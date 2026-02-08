@@ -25,7 +25,7 @@ export interface AgencySubscription {
   id: string;
   agency_id: string;
   plan_id: string;
-  billing_cycle: "monthly" | "yearly";
+  billing_cycle: "monthly" | "yearly" | "lifetime";
   status: "active" | "cancelled" | "expired" | "trial";
   starts_at: string;
   ends_at: string | null;
@@ -172,24 +172,40 @@ export function useAssignSubscription() {
       agency_id,
       plan_id,
       billing_cycle = "monthly",
+      ends_at,
     }: {
       agency_id: string;
       plan_id: string;
-      billing_cycle?: "monthly" | "yearly";
+      billing_cycle?: "monthly" | "yearly" | "lifetime";
+      ends_at?: string | null;
     }) => {
       // Upsert to handle existing subscriptions
+      // For lifetime subscriptions, set ends_at to null (never expires)
+      const subscriptionData: {
+        agency_id: string;
+        plan_id: string;
+        billing_cycle: string;
+        status: string;
+        starts_at: string;
+        ends_at?: string | null;
+      } = {
+        agency_id,
+        plan_id,
+        billing_cycle,
+        status: "active",
+        starts_at: new Date().toISOString(),
+      };
+
+      // Lifetime subscriptions never expire
+      if (billing_cycle === "lifetime") {
+        subscriptionData.ends_at = null;
+      } else if (ends_at !== undefined) {
+        subscriptionData.ends_at = ends_at;
+      }
+
       const { error } = await supabase
         .from("agency_subscriptions")
-        .upsert(
-          {
-            agency_id,
-            plan_id,
-            billing_cycle,
-            status: "active",
-            starts_at: new Date().toISOString(),
-          },
-          { onConflict: "agency_id" }
-        );
+        .upsert(subscriptionData, { onConflict: "agency_id" });
 
       if (error) throw error;
     },

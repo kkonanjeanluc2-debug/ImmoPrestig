@@ -60,7 +60,7 @@ export function AgencySubscriptionsManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<AgencyWithProfile | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
-  const [selectedBillingCycle, setSelectedBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<"monthly" | "yearly" | "lifetime">("monthly");
 
   const isLoading = agenciesLoading || plansLoading || subscriptionsLoading;
 
@@ -200,10 +200,12 @@ export function AgencySubscriptionsManager() {
                       </TableCell>
                       <TableCell>
                         {subscription ? (
-                          <Badge variant="outline">
-                            {subscription.billing_cycle === "yearly"
-                              ? "Annuel"
-                              : "Mensuel"}
+                          <Badge variant={subscription.billing_cycle === "lifetime" ? "default" : "outline"}>
+                            {subscription.billing_cycle === "lifetime"
+                              ? "À vie"
+                              : subscription.billing_cycle === "yearly"
+                                ? "Annuel"
+                                : "Mensuel"}
                           </Badge>
                         ) : (
                           "-"
@@ -288,7 +290,7 @@ export function AgencySubscriptionsManager() {
               <Label>Cycle de facturation</Label>
               <Select
                 value={selectedBillingCycle}
-                onValueChange={(v) => setSelectedBillingCycle(v as "monthly" | "yearly")}
+                onValueChange={(v) => setSelectedBillingCycle(v as "monthly" | "yearly" | "lifetime")}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -296,6 +298,7 @@ export function AgencySubscriptionsManager() {
                 <SelectContent>
                   <SelectItem value="monthly">Mensuel</SelectItem>
                   <SelectItem value="yearly">Annuel (économisez ~17%)</SelectItem>
+                  <SelectItem value="lifetime">À vie (gratuit, sans expiration)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -306,12 +309,18 @@ export function AgencySubscriptionsManager() {
                 <div className="flex justify-between text-sm">
                   <span>Forfait {getPlanById(selectedPlanId)?.name}</span>
                   <span className="font-medium">
-                    {formatPrice(
-                      selectedBillingCycle === "yearly"
-                        ? getPlanById(selectedPlanId)?.price_yearly || 0
-                        : getPlanById(selectedPlanId)?.price_monthly || 0
-                    )}{" "}
-                    FCFA/{selectedBillingCycle === "yearly" ? "an" : "mois"}
+                    {selectedBillingCycle === "lifetime" ? (
+                      <span className="text-primary font-semibold">Gratuit à vie</span>
+                    ) : (
+                      <>
+                        {formatPrice(
+                          selectedBillingCycle === "yearly"
+                            ? getPlanById(selectedPlanId)?.price_yearly || 0
+                            : getPlanById(selectedPlanId)?.price_monthly || 0
+                        )}{" "}
+                        FCFA/{selectedBillingCycle === "yearly" ? "an" : "mois"}
+                      </>
+                    )}
                   </span>
                 </div>
               </div>

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useProperties, useDeleteProperty, Property } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
@@ -22,6 +22,8 @@ import { PropertyTrashDialog } from "@/components/property/PropertyTrashDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 import { toast } from "sonner";
 import {
@@ -54,9 +56,22 @@ const Properties = () => {
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
   const deleteProperty = useDeleteProperty();
   const { data: unitsSummary = {} } = usePropertyUnitsSummary();
+  const { user } = useAuth();
+  const { data: userRole } = useCurrentUserRole();
+
+  // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
+  const isGestionnaire = userRole?.role === "gestionnaire";
+
+  // Filter properties based on role - gestionnaires only see their assigned properties
+  const roleFilteredProperties = useMemo(() => {
+    if (!properties) return [];
+    if (!isGestionnaire || !user) return properties;
+    // For gestionnaire, show only properties assigned to them
+    return properties.filter(p => p.assigned_to === user.id);
+  }, [properties, isGestionnaire, user]);
 
   // Only show rental properties (location)
-  const rentalProperties = (properties || []).filter((property) => property.type === "location");
+  const rentalProperties = roleFilteredProperties.filter((property) => property.type === "location");
   
   const filteredProperties = rentalProperties.filter((property) => {
     const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

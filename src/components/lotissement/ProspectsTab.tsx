@@ -90,7 +90,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
   const deleteProspect = useDeleteParcelleProspect();
   const updateProspect = useUpdateParcelleProspect();
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission("can_create_lotissements");
+  const canCreate = hasPermission("can_create_lotissement_prospects");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
 

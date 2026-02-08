@@ -69,7 +69,7 @@ export function DemarchesAdministrativesTab({ lotissementId, lotissementName }: 
   const { data: demarches, isLoading } = useDemarchesAdministratives(lotissementId);
   const deleteDemarche = useDeleteDemarcheAdministrative();
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission("can_create_lotissements");
+  const canCreate = hasPermission("can_create_demarches");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
   const [showAddDialog, setShowAddDialog] = useState(false);

@@ -1249,9 +1249,14 @@ export type Database = {
         Row: {
           can_access_settings: boolean
           can_create_contracts: boolean
+          can_create_demarches: boolean | null
           can_create_documents: boolean
+          can_create_ilots: boolean | null
+          can_create_lotissement_documents: boolean | null
+          can_create_lotissement_prospects: boolean | null
           can_create_lotissements: boolean
           can_create_owners: boolean
+          can_create_parcelles: boolean | null
           can_create_payments: boolean
           can_create_properties: boolean
           can_create_tenants: boolean
@@ -1294,9 +1299,14 @@ export type Database = {
         Insert: {
           can_access_settings?: boolean
           can_create_contracts?: boolean
+          can_create_demarches?: boolean | null
           can_create_documents?: boolean
+          can_create_ilots?: boolean | null
+          can_create_lotissement_documents?: boolean | null
+          can_create_lotissement_prospects?: boolean | null
           can_create_lotissements?: boolean
           can_create_owners?: boolean
+          can_create_parcelles?: boolean | null
           can_create_payments?: boolean
           can_create_properties?: boolean
           can_create_tenants?: boolean
@@ -1339,9 +1349,14 @@ export type Database = {
         Update: {
           can_access_settings?: boolean
           can_create_contracts?: boolean
+          can_create_demarches?: boolean | null
           can_create_documents?: boolean
+          can_create_ilots?: boolean | null
+          can_create_lotissement_documents?: boolean | null
+          can_create_lotissement_prospects?: boolean | null
           can_create_lotissements?: boolean
           can_create_owners?: boolean
+          can_create_parcelles?: boolean | null
           can_create_payments?: boolean
           can_create_properties?: boolean
           can_create_tenants?: boolean

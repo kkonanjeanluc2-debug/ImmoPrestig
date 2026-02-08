@@ -35,6 +35,12 @@ export interface MemberPermissions {
   can_create_lotissements: boolean;
   can_edit_lotissements: boolean;
   can_delete_lotissements: boolean;
+  // Lotissement sub-entities
+  can_create_parcelles: boolean;
+  can_create_ilots: boolean;
+  can_create_lotissement_documents: boolean;
+  can_create_demarches: boolean;
+  can_create_lotissement_prospects: boolean;
   // Ventes management
   can_view_ventes: boolean;
   can_create_ventes: boolean;
@@ -86,6 +92,11 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_lotissements: "Créer des lotissements",
   can_edit_lotissements: "Modifier les lotissements",
   can_delete_lotissements: "Supprimer les lotissements",
+  can_create_parcelles: "Ajouter des parcelles",
+  can_create_ilots: "Ajouter des îlots",
+  can_create_lotissement_documents: "Ajouter des documents",
+  can_create_demarches: "Ajouter des démarches",
+  can_create_lotissement_prospects: "Ajouter des prospects",
   can_view_ventes: "Voir les ventes immobilières",
   can_create_ventes: "Créer des ventes immobilières",
   can_edit_ventes: "Modifier les ventes immobilières",
@@ -126,7 +137,7 @@ export const PERMISSION_GROUPS = {
   },
   lotissements: {
     label: "Lotissements",
-    permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements"] as PermissionKey[],
+    permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements", "can_create_parcelles", "can_create_ilots", "can_create_lotissement_documents", "can_create_demarches", "can_create_lotissement_prospects"] as PermissionKey[],
   },
   ventes: {
     label: "Ventes immobilières",
@@ -173,6 +184,11 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_lotissements: true,
     can_edit_lotissements: true,
     can_delete_lotissements: true,
+    can_create_parcelles: true,
+    can_create_ilots: true,
+    can_create_lotissement_documents: true,
+    can_create_demarches: true,
+    can_create_lotissement_prospects: true,
     can_view_ventes: true,
     can_create_ventes: true,
     can_edit_ventes: true,
@@ -211,9 +227,14 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_edit_contracts: false,
     can_delete_contracts: false,
     can_view_lotissements: true,
-    can_create_lotissements: true,
+    can_create_lotissements: false,
     can_edit_lotissements: false,
     can_delete_lotissements: false,
+    can_create_parcelles: false,
+    can_create_ilots: false,
+    can_create_lotissement_documents: false,
+    can_create_demarches: false,
+    can_create_lotissement_prospects: false,
     can_view_ventes: true,
     can_create_ventes: true,
     can_edit_ventes: false,
@@ -255,6 +276,11 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_lotissements: false,
     can_edit_lotissements: false,
     can_delete_lotissements: false,
+    can_create_parcelles: false,
+    can_create_ilots: false,
+    can_create_lotissement_documents: false,
+    can_create_demarches: false,
+    can_create_lotissement_prospects: false,
     can_view_ventes: true,
     can_create_ventes: false,
     can_edit_ventes: false,

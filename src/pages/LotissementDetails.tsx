@@ -53,9 +53,10 @@ const LotissementDetails = () => {
   const { data: parcelles, isLoading: loadingParcelles } = useParcelles(id);
   const { data: ventes } = useVentesParcelles(id);
   const { data: echeances } = useEcheancesForLotissement(id);
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role } = usePermissions();
   const { isOwner } = useIsAgencyOwner();
-  const canCreateLotissement = hasPermission("can_create_lotissements");
+  const canCreateParcelle = hasPermission("can_create_parcelles");
+  const isGestionnaire = role === "gestionnaire";
 
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
@@ -162,7 +163,7 @@ const LotissementDetails = () => {
               </p>
             </div>
           </div>
-          {canCreateLotissement && (
+          {canCreateParcelle && (
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => setShowGenerateDocument(true)}>
                 <FileSignature className="h-4 w-4 mr-2" />
@@ -259,10 +260,12 @@ const LotissementDetails = () => {
                   <UserPlus className="h-4 w-4" />
                   <span className="hidden sm:inline">Prospects</span>
                 </TabsTrigger>
-                <TabsTrigger value="performance" className="gap-2">
-                  <Trophy className="h-4 w-4" />
-                  <span className="hidden sm:inline">Performance</span>
-                </TabsTrigger>
+                {!isGestionnaire && (
+                  <TabsTrigger value="performance" className="gap-2">
+                    <Trophy className="h-4 w-4" />
+                    <span className="hidden sm:inline">Performance</span>
+                  </TabsTrigger>
+                )}
                 {isOwner && (
                   <TabsTrigger value="affectations" className="gap-2">
                     <UserCheck className="h-4 w-4" />
@@ -354,9 +357,11 @@ const LotissementDetails = () => {
             />
           </TabsContent>
 
-          <TabsContent value="performance">
-            <SalesPerformanceChart ventes={ventes || []} />
-          </TabsContent>
+          {!isGestionnaire && (
+            <TabsContent value="performance">
+              <SalesPerformanceChart ventes={ventes || []} />
+            </TabsContent>
+          )}
 
           <TabsContent value="ilots">
             <IlotsTab 

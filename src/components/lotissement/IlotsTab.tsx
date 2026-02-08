@@ -56,7 +56,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
   const { data: ilots, isLoading } = useIlotsWithStats(lotissementId);
   const deleteIlot = useSoftDeleteIlot();
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission("can_create_lotissements");
+  const canCreate = hasPermission("can_create_ilots");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
 

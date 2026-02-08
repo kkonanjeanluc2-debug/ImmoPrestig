@@ -317,8 +317,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 </NavLink>
               )}
               
-              {/* Trash link with counter - hidden for tenants */}
-              {userRole?.role !== "locataire" && (
+              {/* Trash link with counter - hidden for tenants and gestionnaires */}
+              {userRole?.role !== "locataire" && userRole?.role !== "gestionnaire" && (
                 <NavLink
                   to="/trash"
                   className={cn(

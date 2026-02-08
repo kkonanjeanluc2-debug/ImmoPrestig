@@ -29,6 +29,28 @@ export const useTenants = () => {
   return useQuery({
     queryKey: ["tenants", user?.id],
     queryFn: async () => {
+      // First check if user is a gestionnaire (manager)
+      const { data: membership } = await supabase
+        .from("agency_members")
+        .select("role")
+        .eq("user_id", user!.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      const isGestionnaire = membership?.role === "gestionnaire";
+
+      // If gestionnaire, get properties assigned to them first
+      let assignedPropertyIds: string[] = [];
+      if (isGestionnaire) {
+        const { data: assignedProperties } = await supabase
+          .from("properties")
+          .select("id")
+          .eq("assigned_to", user!.id);
+        
+        assignedPropertyIds = (assignedProperties || []).map(p => p.id);
+      }
+
+      // Fetch tenants with details
       const { data, error } = await supabase
         .from("tenants")
         .select(`
@@ -42,7 +64,20 @@ export const useTenants = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as TenantWithDetails[];
+
+      let tenants = data as TenantWithDetails[];
+
+      // Filter tenants for gestionnaire: only show tenants linked to their assigned properties
+      if (isGestionnaire && assignedPropertyIds.length > 0) {
+        tenants = tenants.filter(tenant => 
+          tenant.property_id && assignedPropertyIds.includes(tenant.property_id)
+        );
+      } else if (isGestionnaire && assignedPropertyIds.length === 0) {
+        // Gestionnaire with no assigned properties sees no tenants
+        tenants = [];
+      }
+
+      return tenants;
     },
     enabled: !!user,
   });

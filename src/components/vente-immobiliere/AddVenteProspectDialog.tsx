@@ -93,14 +93,14 @@ export function AddVenteProspectDialog({ children, defaultBienId }: AddVentePros
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Bien concerné (optionnel)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <Select onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} value={field.value || "__none__"}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un bien (ou laisser vide)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Aucun bien pour le moment</SelectItem>
+                      <SelectItem value="__none__">Aucun bien pour le moment</SelectItem>
                       {availableBiens.map((bien) => (
                         <SelectItem key={bien.id} value={bien.id}>
                           {bien.title} - {bien.address}

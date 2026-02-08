@@ -37,6 +37,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Plus,
   Search,
   MoreVertical,
@@ -51,6 +56,7 @@ import {
   Trash2,
   CheckCircle2,
   ShoppingCart,
+  User,
 } from "lucide-react";
 import { format, isAfter, isBefore, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -58,6 +64,7 @@ import { toast } from "sonner";
 import { useLotissementProspects, useDeleteParcelleProspect, useUpdateParcelleProspect, ProspectStatus, InterestLevel, ParcelleProspect } from "@/hooks/useParcelleProspects";
 import { useParcelles, Parcelle } from "@/hooks/useParcelles";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { AddProspectDialog } from "./AddProspectDialog";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ConvertProspectDialog } from "./ConvertProspectDialog";
@@ -89,10 +96,15 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
   const { data: parcelles } = useParcelles(lotissementId);
   const deleteProspect = useDeleteParcelleProspect();
   const updateProspect = useUpdateParcelleProspect();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_lotissement_prospects");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
+  const isAdmin = role === "admin" || role === "super_admin" || role !== "gestionnaire";
+
+  // Fetch profiles for assigned users
+  const assignedUserIds = prospects?.map(p => p.assigned_to) || [];
+  const { data: userProfilesMap } = useUserProfiles(assignedUserIds);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -314,6 +326,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                     <TableHead>Intérêt</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Prochain suivi</TableHead>
+                    {isAdmin && <TableHead>Gestionnaire</TableHead>}
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -404,6 +417,27 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            {prospect.assigned_to && userProfilesMap?.get(prospect.assigned_to) ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center gap-1 text-sm">
+                                    <User className="h-3 w-3 text-muted-foreground" />
+                                    <span className="truncate max-w-[100px]">
+                                      {userProfilesMap.get(prospect.assigned_to)}
+                                    </span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {userProfilesMap.get(prospect.assigned_to)}
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
+                        )}
                         <TableCell>
                           {prospect.status === "converti" ? (
                             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">

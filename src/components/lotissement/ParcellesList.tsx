@@ -27,10 +27,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
 import { SellParcelleDialog } from "./SellParcelleDialog";
@@ -53,12 +59,17 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) {
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_parcelles");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
   const deleteParcelle = useSoftDeleteParcelle();
   const { data: ilots } = useIlots(lotissementId);
+  const isAdmin = role !== "gestionnaire";
+
+  // Fetch profiles for assigned users
+  const assignedUserIds = parcelles?.map(p => p.assigned_to) || [];
+  const { data: userProfilesMap } = useUserProfiles(assignedUserIds);
 
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
   const [sellingParcelle, setSellingParcelle] = useState<Parcelle | null>(null);
@@ -164,6 +175,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   <TableHead>Superficie</TableHead>
                   <TableHead>Prix</TableHead>
                   <TableHead>Statut</TableHead>
+                  {isAdmin && <TableHead>Gestionnaire</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -192,6 +204,27 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       {parcelle.status === "vendu" && "Vendu"}
                     </Badge>
                   </TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      {parcelle.assigned_to && userProfilesMap?.get(parcelle.assigned_to) ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1 text-sm">
+                              <User className="h-3 w-3 text-muted-foreground" />
+                              <span className="truncate max-w-[100px]">
+                                {userProfilesMap.get(parcelle.assigned_to)}
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {userProfilesMap.get(parcelle.assigned_to)}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
+                  )}
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

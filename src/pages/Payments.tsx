@@ -46,6 +46,7 @@ import { CommissionReportCard } from "@/components/commission/CommissionReportCa
 import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 const statusConfig = {
   paid: { 
     label: "Payé", 
@@ -85,6 +86,9 @@ export default function Payments() {
   const isLocataire = role === "locataire";
   const isGestionnaire = role === "gestionnaire";
   const showAdvancedTabs = !isLocataire && !isGestionnaire;
+
+  const { data: onlineAccountSetting } = usePlatformSetting("online_rent_account_enabled");
+  const isAccountTabEnabled = onlineAccountSetting?.value !== "false";
 
   const { data: payments, isLoading, error } = usePayments();
   const { data: owners = [] } = useOwners();
@@ -265,10 +269,12 @@ export default function Payments() {
                   <Percent className="h-4 w-4" />
                   <span className="hidden sm:inline">Commissions</span>
                 </TabsTrigger>
-                <TabsTrigger value="account" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="hidden sm:inline">Compte</span>
-                </TabsTrigger>
+                {isAccountTabEnabled && (
+                  <TabsTrigger value="account" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
+                    <TrendingUp className="h-4 w-4" />
+                    <span className="hidden sm:inline">Compte</span>
+                  </TabsTrigger>
+                )}
               </>
             )}
           </TabsList>

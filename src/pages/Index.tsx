@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useProperties } from "@/hooks/useProperties";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
@@ -30,6 +30,51 @@ const Index = () => {
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
   const { data: whatsappStats } = useWhatsAppLogsCount();
+
+  // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
+  const isGestionnaire = userRole?.role === "gestionnaire";
+
+  // Filter data based on role
+  const filteredProperties = useMemo(() => {
+    if (!properties) return [];
+    if (!isGestionnaire || !user) return properties;
+    // For gestionnaire, show only properties assigned to them
+    return properties.filter(p => p.assigned_to === user.id);
+  }, [properties, isGestionnaire, user]);
+
+  const filteredTenants = useMemo(() => {
+    if (!tenants) return [];
+    if (!isGestionnaire || !user) return tenants;
+    // For gestionnaire, show only tenants assigned to them
+    return tenants.filter(t => t.assigned_to === user.id);
+  }, [tenants, isGestionnaire, user]);
+
+  const filteredPayments = useMemo(() => {
+    if (!payments) return [];
+    if (!isGestionnaire || !user) return payments;
+    // For gestionnaire, show only payments for tenants assigned to them
+    const assignedTenantIds = new Set(filteredTenants.map(t => t.id));
+    return payments.filter(p => assignedTenantIds.has(p.tenant_id));
+  }, [payments, isGestionnaire, user, filteredTenants]);
+
+  // Compute stats using filtered data
+  const totalProperties = filteredProperties.length;
+  const activeTenants = filteredTenants.filter(t => 
+    t.contracts?.some(c => c.status === 'active')
+  ).length;
+  
+  const monthlyRevenue = filteredPayments.filter(p => {
+    const paidDate = p.paid_date ? new Date(p.paid_date) : null;
+    const now = new Date();
+    return p.status === 'paid' && paidDate && 
+           paidDate.getMonth() === now.getMonth() && 
+           paidDate.getFullYear() === now.getFullYear();
+  }).reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const occupiedProperties = filteredProperties.filter(p => p.status === 'loué').length;
+  const occupancyRate = totalProperties > 0 
+    ? Math.round((occupiedProperties / totalProperties) * 100) 
+    : 0;
 
   const handleGenerateReceipts = async () => {
     setIsGenerating(true);
@@ -59,25 +104,6 @@ const Index = () => {
   }
 
   const isLoading = propertiesLoading || tenantsLoading || paymentsLoading || roleLoading;
-
-  // Compute stats
-  const totalProperties = properties?.length || 0;
-  const activeTenants = tenants?.filter(t => 
-    t.contracts?.some(c => c.status === 'active')
-  ).length || 0;
-  
-  const monthlyRevenue = payments?.filter(p => {
-    const paidDate = p.paid_date ? new Date(p.paid_date) : null;
-    const now = new Date();
-    return p.status === 'paid' && paidDate && 
-           paidDate.getMonth() === now.getMonth() && 
-           paidDate.getFullYear() === now.getFullYear();
-  }).reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-
-  const occupiedProperties = properties?.filter(p => p.status === 'loué').length || 0;
-  const occupancyRate = totalProperties > 0 
-    ? Math.round((occupiedProperties / totalProperties) * 100) 
-    : 0;
 
   return (
     <DashboardLayout>
@@ -163,9 +189,9 @@ const Index = () => {
         {/* Charts Section */}
         {!isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <RevenueChart payments={payments || []} />
-            <OccupancyChart properties={properties || []} />
-            <PropertyTypesChart properties={properties || []} />
+            <RevenueChart payments={filteredPayments} />
+            <OccupancyChart properties={filteredProperties} />
+            <PropertyTypesChart properties={filteredProperties} />
           </div>
         )}
 

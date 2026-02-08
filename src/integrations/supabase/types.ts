@@ -3036,6 +3036,7 @@ export type Database = {
         Args: { _agency_id: string; _user_id: string }
         Returns: boolean
       }
+      is_agency_member: { Args: { agency_uuid: string }; Returns: boolean }
       is_agency_owner_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }

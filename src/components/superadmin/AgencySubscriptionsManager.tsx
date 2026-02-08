@@ -298,7 +298,7 @@ export function AgencySubscriptionsManager() {
                 <SelectContent>
                   <SelectItem value="monthly">Mensuel</SelectItem>
                   <SelectItem value="yearly">Annuel (économisez ~17%)</SelectItem>
-                  <SelectItem value="lifetime">À vie (gratuit, sans expiration)</SelectItem>
+                  <SelectItem value="lifetime">Abonnement à vie (gratuit, sans expiration)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

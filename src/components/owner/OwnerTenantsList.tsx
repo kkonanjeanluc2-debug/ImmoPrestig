@@ -13,6 +13,9 @@ import {
 import { Users, Mail, Phone, Home, Building2, ArrowRight } from "lucide-react";
 import { TenantWithDetails } from "@/hooks/useTenants";
 import { Tables } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OwnerTenantsListProps {
   tenants: TenantWithDetails[];
@@ -21,11 +24,40 @@ interface OwnerTenantsListProps {
 
 export function OwnerTenantsList({ tenants, properties }: OwnerTenantsListProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
 
+  // Check if user is a gestionnaire
+  const { data: membership } = useQuery({
+    queryKey: ["user-membership", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from("agency_members")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isGestionnaire = membership?.role === "gestionnaire";
+
+  // Filter properties for gestionnaire (only assigned ones)
+  const filteredProperties = isGestionnaire
+    ? properties.filter(p => p.assigned_to === user?.id)
+    : properties;
+
+  // Filter tenants based on property filter and gestionnaire access
+  const baseTenants = isGestionnaire
+    ? tenants.filter(t => filteredProperties.some(p => p.id === t.property_id))
+    : tenants;
+
   const filteredTenants = selectedPropertyId === "all"
-    ? tenants
-    : tenants.filter(t => t.property_id === selectedPropertyId);
+    ? baseTenants
+    : baseTenants.filter(t => t.property_id === selectedPropertyId);
 
   const getPaymentStatus = (tenant: TenantWithDetails) => {
     if (!tenant.payments || tenant.payments.length === 0) {
@@ -53,14 +85,14 @@ export function OwnerTenantsList({ tenants, properties }: OwnerTenantsListProps)
             Locataires ({filteredTenants.length})
           </CardTitle>
           
-          {properties.length > 1 && (
+          {filteredProperties.length > 1 && (
             <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
               <SelectTrigger className="w-full sm:w-[250px]">
                 <SelectValue placeholder="Filtrer par bien" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les biens</SelectItem>
-                {properties.map((property) => (
+                {filteredProperties.map((property) => (
                   <SelectItem key={property.id} value={property.id}>
                     {property.title}
                   </SelectItem>
@@ -74,7 +106,7 @@ export function OwnerTenantsList({ tenants, properties }: OwnerTenantsListProps)
         {filteredTenants.length > 0 ? (
           <div className="space-y-3">
             {filteredTenants.map((tenant) => {
-              const property = properties.find(p => p.id === tenant.property_id);
+              const property = filteredProperties.find(p => p.id === tenant.property_id);
               const paymentStatus = getPaymentStatus(tenant);
               const activeContract = tenant.contracts?.find(c => c.status === "active");
               

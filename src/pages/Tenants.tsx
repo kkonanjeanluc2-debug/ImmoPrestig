@@ -520,7 +520,7 @@ export default function Tenants() {
                 }},
               ]}
             />
-            <TenantTrashDialog />
+            {isAgencyOwner && <TenantTrashDialog />}
             {canCreate && <ImportTenantsDialog />}
             {canEdit && <MergeTenantsDialog />}
             {canCreate && <AddTenantDialog />}

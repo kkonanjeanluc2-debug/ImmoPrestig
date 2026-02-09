@@ -42,7 +42,7 @@ import { toast } from "sonner";
 import { AddLotissementDialog } from "@/components/lotissement/AddLotissementDialog";
 import { EditLotissementDialog } from "@/components/lotissement/EditLotissementDialog";
 import { LotissementsComparisonTable } from "@/components/lotissement/LotissementsComparisonTable";
-import { AcquereursListCard } from "@/components/lotissement/AcquereursListCard";
+
 import type { Lotissement } from "@/hooks/useLotissements";
 
 const Lotissements = () => {
@@ -298,9 +298,6 @@ const Lotissements = () => {
             })}
           </div>
         )}
-
-        {/* Liste des acquéreurs */}
-        <AcquereursListCard />
 
         {/* Tableau comparatif */}
         {lotissements && lotissements.length > 1 && (

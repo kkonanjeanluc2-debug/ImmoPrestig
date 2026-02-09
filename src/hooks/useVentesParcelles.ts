@@ -152,7 +152,7 @@ export const useCreateVenteParcelle = () => {
       // If payment is echelonne, create echeances
       if (vente.payment_type === "echelonne" && vente.total_installments && vente.monthly_payment) {
         const echeances = [];
-        const startDate = new Date(vente.sale_date || new Date());
+        const startDate = vente.sale_date ? new Date(vente.sale_date) : new Date();
         
         for (let i = 0; i < vente.total_installments; i++) {
           const dueDate = new Date(startDate);

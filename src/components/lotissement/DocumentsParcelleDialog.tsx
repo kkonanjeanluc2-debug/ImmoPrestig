@@ -104,7 +104,12 @@ export function DocumentsParcelleDialog({
         agencyInfo,
         vente.sale_date,
         depositPercentage,
-        depositAmount
+        depositAmount,
+        {
+          payment_type: vente.payment_type as "comptant" | "echelonne",
+          total_installments: vente.total_installments,
+          monthly_payment: vente.monthly_payment,
+        }
       );
       downloadPDF(doc, `promesse-vente-${parcelleInfo.plot_number}.pdf`);
       toast.success("Promesse de vente générée");

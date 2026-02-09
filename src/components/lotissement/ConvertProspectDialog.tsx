@@ -110,6 +110,7 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
         total_price: parseFloat(salePrice) || 0,
         payment_type: paymentType,
         payment_method: paymentMethod,
+        sale_date: new Date().toISOString().split('T')[0],
         down_payment: paymentType === "echelonne" ? (parseFloat(downPayment) || 0) : undefined,
         monthly_payment: paymentType === "echelonne" ? monthlyPayment : undefined,
         total_installments: paymentType === "echelonne" ? (parseInt(totalInstallments) || 1) : undefined,

@@ -359,7 +359,7 @@ const LotissementDetails = () => {
           )}
 
           <TabsContent value="acquereurs">
-            <AcquereursListCard />
+            <AcquereursListCard lotissementId={id} />
           </TabsContent>
 
           <TabsContent value="ilots">

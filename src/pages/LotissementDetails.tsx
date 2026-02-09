@@ -45,6 +45,7 @@ import { DemarchesAdministrativesTab } from "@/components/lotissement/DemarchesA
 import { ProspectsTab } from "@/components/lotissement/ProspectsTab";
 import { IlotsTab } from "@/components/lotissement/IlotsTab";
 import { GenerateLotissementDocumentDialog } from "@/components/lotissement/GenerateLotissementDocumentDialog";
+import { AcquereursListCard } from "@/components/lotissement/AcquereursListCard";
 
 const LotissementDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -256,6 +257,10 @@ const LotissementDetails = () => {
                     <span className="hidden sm:inline">Performance</span>
                   </TabsTrigger>
                 )}
+                <TabsTrigger value="acquereurs" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Acquéreurs</span>
+                </TabsTrigger>
                 {isOwner && (
                   <TabsTrigger value="affectations" className="gap-2">
                     <UserCheck className="h-4 w-4" />
@@ -352,6 +357,10 @@ const LotissementDetails = () => {
               <SalesPerformanceChart ventes={ventes || []} lotissementId={id} />
             </TabsContent>
           )}
+
+          <TabsContent value="acquereurs">
+            <AcquereursListCard />
+          </TabsContent>
 
           <TabsContent value="ilots">
             <IlotsTab 

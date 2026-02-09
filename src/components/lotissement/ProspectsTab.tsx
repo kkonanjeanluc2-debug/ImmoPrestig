@@ -68,6 +68,7 @@ import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { AddProspectDialog } from "./AddProspectDialog";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ConvertProspectDialog } from "./ConvertProspectDialog";
+import { ViewProspectDialog } from "./ViewProspectDialog";
 
 interface ProspectsTabProps {
   lotissementId: string;
@@ -112,6 +113,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [convertingProspect, setConvertingProspect] = useState<ParcelleProspect | null>(null);
+  const [viewingProspect, setViewingProspect] = useState<ParcelleProspect | null>(null);
 
   const availableParcelles = parcelles?.filter(p => p.status === "disponible") || [];
 
@@ -335,7 +337,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                   {filteredProspects.map((prospect) => {
                     const followupStatus = getFollowupStatus(prospect.next_followup_date);
                     return (
-                      <TableRow key={prospect.id}>
+                      <TableRow key={prospect.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setViewingProspect(prospect)}>
                         <TableCell>
                           <div>
                             <p className="font-medium">{prospect.name}</p>
@@ -351,7 +353,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                             Lot {getParcelleNumber(prospect.parcelle_id)}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
                             {prospect.phone && (
                               <WhatsAppButton
@@ -377,7 +379,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                             {INTEREST_CONFIG[prospect.interest_level].label}
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           {canEdit ? (
                             <Select
                               value={prospect.status}
@@ -439,7 +441,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                             )}
                           </TableCell>
                         )}
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           {prospect.status === "converti" ? (
                             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
                               Vendu
@@ -517,6 +519,16 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* View Prospect Detail Dialog */}
+      <ViewProspectDialog
+        prospect={viewingProspect}
+        parcelleNumber={viewingProspect ? getParcelleNumber(viewingProspect.parcelle_id) : ""}
+        lotissementName={lotissementName}
+        managerName={viewingProspect?.assigned_to ? userProfilesMap?.get(viewingProspect.assigned_to) : undefined}
+        open={!!viewingProspect}
+        onOpenChange={(open) => !open && setViewingProspect(null)}
+      />
 
       {/* Convert to Sale Dialog */}
       {convertingProspect && parcelles?.find(p => p.id === convertingProspect.parcelle_id) && (

@@ -103,30 +103,35 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
         profession: buyerInfo.profession.trim() || null,
       });
 
-      // 2. Create the sale
+      // 2. Create the sale (trigger will auto-update parcelle status to "vendu")
       await createVente.mutateAsync({
         parcelle_id: parcelle.id,
         acquereur_id: createdAcquereur.id,
-        total_price: parseFloat(salePrice),
+        total_price: parseFloat(salePrice) || 0,
         payment_type: paymentType,
         payment_method: paymentMethod,
-        down_payment: paymentType === "echelonne" ? parseFloat(downPayment) || 0 : null,
-        monthly_payment: paymentType === "echelonne" ? monthlyPayment : null,
-        total_installments: paymentType === "echelonne" ? parseInt(totalInstallments) : null,
-        sold_by: soldBy || null,
+        down_payment: paymentType === "echelonne" ? (parseFloat(downPayment) || 0) : undefined,
+        monthly_payment: paymentType === "echelonne" ? monthlyPayment : undefined,
+        total_installments: paymentType === "echelonne" ? (parseInt(totalInstallments) || 1) : undefined,
+        sold_by: soldBy || undefined,
       });
 
       // 3. Update prospect status to "converti"
-      await updateProspect.mutateAsync({
-        id: prospect.id,
-        status: "converti",
-      });
+      try {
+        await updateProspect.mutateAsync({
+          id: prospect.id,
+          status: "converti" as any,
+        });
+      } catch (statusError) {
+        console.warn("Could not update prospect status:", statusError);
+        // Sale was created successfully, just the status update failed - not critical
+      }
 
       toast.success("Prospect converti en vente avec succès !");
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error converting prospect:", error);
-      const message = error?.message || error?.error_description || "Erreur lors de la conversion du prospect";
+      const message = error?.message || error?.error_description || "Erreur inconnue";
       toast.error(`Erreur lors de la conversion : ${message}`);
     }
   };

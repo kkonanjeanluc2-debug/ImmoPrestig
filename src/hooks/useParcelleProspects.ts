@@ -150,7 +150,7 @@ export const useUpdateParcelleProspect = () => {
     mutationFn: async ({ id, ...updates }: ParcelleProspectUpdate) => {
       const { data, error } = await supabase
         .from("parcelle_prospects")
-        .update(updates)
+        .update(updates as any)
         .eq("id", id)
         .select()
         .single();

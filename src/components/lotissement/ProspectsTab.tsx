@@ -131,12 +131,13 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
     try {
       await updateProspect.mutateAsync({
         id: prospectId,
-        status: newStatus,
+        status: newStatus as any,
         last_contact_date: format(new Date(), "yyyy-MM-dd"),
       });
       toast.success("Statut mis à jour");
-    } catch {
-      toast.error("Erreur lors de la mise à jour");
+    } catch (error: any) {
+      console.error("Status change error:", error);
+      toast.error(`Erreur lors de la mise à jour : ${error?.message || "Erreur inconnue"}`);
     }
   };
 

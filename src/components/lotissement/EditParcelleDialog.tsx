@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, AlertCircle } from "lucide-react";
-import { Parcelle, PlotStatus, useUpdateParcelle } from "@/hooks/useParcelles";
+import { Parcelle, PlotStatus, useUpdateParcelle, useParcelles } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -38,6 +38,7 @@ export function EditParcelleDialog({
 }: EditParcelleDialogProps) {
   const updateParcelle = useUpdateParcelle();
   const { data: ilots } = useIlots(parcelle.lotissement_id);
+  const { data: allParcelles } = useParcelles(parcelle.lotissement_id);
   const { role } = usePermissions();
   const isAdmin = role === "admin" || role === "super_admin";
   
@@ -68,6 +69,25 @@ export function EditParcelleDialog({
   const isDuplicate = existingNumbers.some(
     n => n.toLowerCase() === formData.plot_number.trim().toLowerCase()
   );
+
+  // Check if changing ilot would exceed capacity
+  const ilotCapacityInfo = useMemo(() => {
+    if (!formData.ilot_id || !ilots || !allParcelles) {
+      return { currentCount: 0, maxCount: null, wouldExceed: false };
+    }
+    
+    const selectedIlot = ilots.find(i => i.id === formData.ilot_id);
+    if (!selectedIlot || selectedIlot.plots_count === null) {
+      return { currentCount: 0, maxCount: null, wouldExceed: false };
+    }
+
+    // Count parcelles in this ilot, excluding the current one being edited
+    const currentCount = allParcelles.filter(p => p.ilot_id === formData.ilot_id && p.id !== parcelle.id).length;
+    const maxCount = selectedIlot.plots_count;
+    const wouldExceed = (currentCount + 1) > maxCount;
+
+    return { currentCount, maxCount, wouldExceed };
+  }, [formData.ilot_id, ilots, allParcelles, parcelle.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,13 +199,28 @@ export function EditParcelleDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun îlot</SelectItem>
-                  {ilots?.map((ilot) => (
-                    <SelectItem key={ilot.id} value={ilot.id}>
-                      {ilot.name}
-                    </SelectItem>
-                  ))}
+                  {ilots?.map((ilot) => {
+                    const count = allParcelles?.filter(p => p.ilot_id === ilot.id && p.id !== parcelle.id).length || 0;
+                    const isFull = ilot.plots_count !== null && count >= ilot.plots_count;
+                    return (
+                      <SelectItem key={ilot.id} value={ilot.id} disabled={isFull}>
+                        {ilot.name}
+                        {ilot.plots_count !== null && (
+                          <span className={`ml-2 text-xs ${isFull ? "text-destructive" : "text-muted-foreground"}`}>
+                            ({count}/{ilot.plots_count})
+                          </span>
+                        )}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
+              {ilotCapacityInfo.wouldExceed && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  L'îlot est plein ({ilotCapacityInfo.currentCount}/{ilotCapacityInfo.maxCount} lots)
+                </p>
+              )}
             </div>
           </div>
 
@@ -214,7 +249,7 @@ export function EditParcelleDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={updateParcelle.isPending || isDuplicate}>
+            <Button type="submit" disabled={updateParcelle.isPending || isDuplicate || ilotCapacityInfo.wouldExceed}>
               {updateParcelle.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Enregistrer
             </Button>

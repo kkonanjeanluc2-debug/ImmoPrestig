@@ -124,9 +124,10 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
 
       toast.success("Prospect converti en vente avec succès !");
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error converting prospect:", error);
-      toast.error("Erreur lors de la conversion du prospect");
+      const message = error?.message || error?.error_description || "Erreur lors de la conversion du prospect";
+      toast.error(`Erreur lors de la conversion : ${message}`);
     }
   };
 

@@ -7,13 +7,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, User } from "lucide-react";
+import { Loader2, Upload, User, Mail, Check } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function ProfileSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
   const [profile, setProfile] = useState({
     full_name: "",
     email: "",
@@ -84,6 +97,43 @@ export function ProfileSettings() {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleEmailUpdate = async () => {
+    if (!user || !newEmail || newEmail === profile.email) return;
+    
+    setIsUpdatingEmail(true);
+    setShowEmailConfirm(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-user-email", {
+        body: { userId: user.id, newEmail },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      // Update profile email in DB too
+      await supabase
+        .from("profiles")
+        .update({ email: newEmail })
+        .eq("user_id", user.id);
+
+      setProfile((prev) => ({ ...prev, email: newEmail }));
+      setNewEmail("");
+
+      toast({
+        title: "Email mis à jour",
+        description: "Votre email de connexion a été modifié. Vous devrez vous reconnecter avec le nouvel email.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier l'email.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingEmail(false);
     }
   };
 
@@ -227,15 +277,32 @@ export function ProfileSettings() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              value={profile.email}
-              disabled
-              className="bg-muted"
-            />
+            <Label htmlFor="email">Email de connexion</Label>
+            <div className="flex gap-2">
+              <Input
+                id="email"
+                type="email"
+                value={newEmail || profile.email}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="email@exemple.com"
+              />
+              {newEmail && newEmail !== profile.email && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowEmailConfirm(true)}
+                  disabled={isUpdatingEmail}
+                >
+                  {isUpdatingEmail ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              L'email ne peut pas être modifié
+              Cet email sera utilisé pour vous connecter
             </p>
           </div>
         </div>
@@ -251,6 +318,21 @@ export function ProfileSettings() {
           )}
         </Button>
       </CardContent>
+
+      <AlertDialog open={showEmailConfirm} onOpenChange={setShowEmailConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Modifier l'email de connexion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Votre email de connexion sera changé de <strong>{profile.email}</strong> à <strong>{newEmail}</strong>. Vous devrez utiliser ce nouvel email pour vous connecter.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEmailUpdate}>Confirmer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

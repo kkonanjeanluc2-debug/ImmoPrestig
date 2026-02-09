@@ -6,9 +6,11 @@ import { TrendingUp, Trophy, Medal } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
+import { useEcheancesForLotissement } from "@/hooks/useEcheancesParcelles";
 
 interface SalesPerformanceChartProps {
   ventes: VenteWithDetails[];
+  lotissementId?: string;
 }
 
 interface SalesStats {
@@ -20,8 +22,9 @@ interface SalesStats {
   role: string;
 }
 
-export function SalesPerformanceChart({ ventes }: SalesPerformanceChartProps) {
+export function SalesPerformanceChart({ ventes, lotissementId }: SalesPerformanceChartProps) {
   const { data: assignableUsers } = useAssignableUsers();
+  const { data: echeances } = useEcheancesForLotissement(lotissementId);
 
   const salesByUser = useMemo(() => {
     const statsMap: Record<string, SalesStats> = {};
@@ -41,12 +44,22 @@ export function SalesPerformanceChart({ ventes }: SalesPerformanceChartProps) {
           };
         }
         statsMap[soldBy].salesCount += 1;
-        statsMap[soldBy].totalRevenue += vente.total_price;
+        
+        // Calculate actual paid amount (down payment + paid installments)
+        let totalPaid = vente.down_payment || 0;
+        const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
+        venteEcheances.forEach(echeance => {
+          if (echeance.status === "paid") {
+            totalPaid += echeance.paid_amount || echeance.amount;
+          }
+        });
+        
+        statsMap[soldBy].totalRevenue += totalPaid;
       }
     });
 
     return Object.values(statsMap).sort((a, b) => b.totalRevenue - a.totalRevenue);
-  }, [ventes, assignableUsers]);
+  }, [ventes, assignableUsers, echeances]);
 
   const chartData = salesByUser.slice(0, 10).map(user => ({
     name: user.name.split(" ")[0],
@@ -95,7 +108,7 @@ export function SalesPerformanceChart({ ventes }: SalesPerformanceChartProps) {
           Performance des commerciaux
         </CardTitle>
         <CardDescription>
-          Classement basé sur le chiffre d'affaires généré
+          Classement basé sur les montants réellement encaissés
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

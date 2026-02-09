@@ -91,15 +91,15 @@ export const useEcheancesForLotissement = (lotissementId?: string) => {
   });
 };
 
-export const useUpcomingEcheances = () => {
+export const useUpcomingEcheances = (monthsAhead: number = 1) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["echeances-parcelles", "upcoming"],
+    queryKey: ["echeances-parcelles", "upcoming", monthsAhead],
     queryFn: async () => {
       const today = new Date();
-      const nextMonth = new Date();
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + monthsAhead);
 
       const { data, error } = await supabase
         .from("echeances_parcelles")
@@ -115,7 +115,7 @@ export const useUpcomingEcheances = () => {
         `)
         .eq("status", "pending")
         .gte("due_date", today.toISOString().split('T')[0])
-        .lte("due_date", nextMonth.toISOString().split('T')[0])
+        .lte("due_date", endDate.toISOString().split('T')[0])
         .order("due_date", { ascending: true });
 
       if (error) throw error;

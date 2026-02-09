@@ -11,6 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   AlertTriangle, 
   Calendar, 
@@ -19,8 +26,9 @@ import {
   Phone,
   MessageCircle,
   Banknote,
+  Filter,
 } from "lucide-react";
-import { format, differenceInDays, isPast, isToday } from "date-fns";
+import { format, differenceInDays, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUpcomingEcheances, useOverdueEcheances, EcheanceWithDetails } from "@/hooks/useEcheancesParcelles";
 import { openWhatsApp } from "@/lib/whatsapp";
@@ -31,8 +39,18 @@ interface EcheancesDashboardProps {
   lotissementId?: string;
 }
 
+const monthsOptions = [
+  { value: "1", label: "1 mois" },
+  { value: "2", label: "2 mois" },
+  { value: "3", label: "3 mois" },
+  { value: "6", label: "6 mois" },
+  { value: "12", label: "12 mois" },
+  { value: "24", label: "24 mois" },
+];
+
 export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
-  const { data: upcomingEcheances, isLoading: loadingUpcoming } = useUpcomingEcheances();
+  const [monthsAhead, setMonthsAhead] = useState(1);
+  const { data: upcomingEcheances, isLoading: loadingUpcoming } = useUpcomingEcheances(monthsAhead);
   const { data: overdueEcheances, isLoading: loadingOverdue } = useOverdueEcheances();
   const [payingEcheance, setPayingEcheance] = useState<EcheanceWithDetails | null>(null);
 
@@ -67,7 +85,10 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
     if (days <= 3) {
       return <Badge variant="outline" className="border-orange-500 text-orange-600 gap-1"><Clock className="h-3 w-3" /> Imminent</Badge>;
     }
-    return <Badge variant="secondary" className="gap-1"><Calendar className="h-3 w-3" /> À venir</Badge>;
+    if (days <= 30) {
+      return <Badge variant="secondary" className="gap-1"><Calendar className="h-3 w-3" /> À venir</Badge>;
+    }
+    return <Badge variant="outline" className="gap-1"><Calendar className="h-3 w-3" /> Dans {days}j</Badge>;
   };
 
   const handleWhatsApp = (phone: string | null, echeance: EcheanceWithDetails) => {
@@ -167,7 +188,7 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">À venir (30 jours)</p>
+                <p className="text-sm text-muted-foreground">À venir ({monthsAhead} mois)</p>
                 <p className="text-2xl font-bold text-orange-600">
                   {filteredUpcoming?.length || 0}
                 </p>
@@ -201,23 +222,35 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
       {/* Tabs with tables */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Échéances de paiement
-          </CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Échéances de paiement
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Afficher :</span>
+              <Select
+                value={String(monthsAhead)}
+                onValueChange={(v) => setMonthsAhead(parseInt(v))}
+              >
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthsOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="overdue" className="space-y-4">
+          <Tabs defaultValue="upcoming" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="overdue" className="gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                En retard
-                {(filteredOverdue?.length || 0) > 0 && (
-                  <Badge variant="destructive" className="ml-1">
-                    {filteredOverdue?.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
               <TabsTrigger value="upcoming" className="gap-2">
                 <Clock className="h-4 w-4" />
                 À venir
@@ -227,7 +260,45 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="overdue" className="gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                En retard
+                {(filteredOverdue?.length || 0) > 0 && (
+                  <Badge variant="destructive" className="ml-1">
+                    {filteredOverdue?.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="upcoming">
+              {!filteredUpcoming?.length ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Aucune échéance à venir dans les {monthsAhead} prochain(s) mois</p>
+                </div>
+              ) : (
+                <div className="rounded-md border overflow-x-auto">
+                  <Table className="min-w-[650px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Acquéreur</TableHead>
+                        <TableHead>Parcelle</TableHead>
+                        <TableHead className="text-right">Montant</TableHead>
+                        <TableHead>Échéance</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUpcoming.map((echeance) => (
+                        <EcheanceRow key={echeance.id} echeance={echeance} />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
 
             <TabsContent value="overdue">
               {!filteredOverdue?.length ? (
@@ -250,35 +321,6 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
                     </TableHeader>
                     <TableBody>
                       {filteredOverdue.map((echeance) => (
-                        <EcheanceRow key={echeance.id} echeance={echeance} />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="upcoming">
-              {!filteredUpcoming?.length ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>Aucune échéance à venir dans les 30 prochains jours</p>
-                </div>
-              ) : (
-                <div className="rounded-md border overflow-x-auto">
-                  <Table className="min-w-[650px]">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Acquéreur</TableHead>
-                        <TableHead>Parcelle</TableHead>
-                        <TableHead className="text-right">Montant</TableHead>
-                        <TableHead>Échéance</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUpcoming.map((echeance) => (
                         <EcheanceRow key={echeance.id} echeance={echeance} />
                       ))}
                     </TableBody>

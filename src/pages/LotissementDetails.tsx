@@ -75,34 +75,24 @@ const LotissementDetails = () => {
     
     if (ventes && ventes.length > 0) {
       ventes.forEach(vente => {
-        // Calculate total paid for this sale
-        let totalPaid = 0;
+        // Calculate total actually paid for this sale (down payment + paid installments)
+        let totalPaid = vente.down_payment || 0;
         
-        if (vente.payment_type === "comptant") {
-          // Cash payment = fully paid
-          totalPaid = vente.total_price;
-          totalRevenue += vente.total_price;
+        // Add paid echeances for this vente
+        const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
+        venteEcheances.forEach(echeance => {
+          if (echeance.status === "paid") {
+            totalPaid += echeance.paid_amount || echeance.amount;
+          }
+        });
+        
+        totalRevenue += totalPaid;
+        
+        // Check if fully paid or partially paid
+        if (totalPaid >= vente.total_price) {
           vendues++;
         } else {
-          // Installment payment - calculate actual paid amount
-          totalPaid = vente.down_payment || 0;
-          
-          // Add paid echeances for this vente
-          const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
-          venteEcheances.forEach(echeance => {
-            if (echeance.status === "paid" && echeance.paid_amount) {
-              totalPaid += echeance.paid_amount;
-            }
-          });
-          
-          totalRevenue += totalPaid;
-          
-          // Check if fully paid or partially paid
-          if (totalPaid >= vente.total_price) {
-            vendues++;
-          } else {
-            reservees++;
-          }
+          reservees++;
         }
       });
     }
@@ -359,7 +349,7 @@ const LotissementDetails = () => {
 
           {!isGestionnaire && (
             <TabsContent value="performance">
-              <SalesPerformanceChart ventes={ventes || []} />
+              <SalesPerformanceChart ventes={ventes || []} lotissementId={id} />
             </TabsContent>
           )}
 

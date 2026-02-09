@@ -64,6 +64,7 @@ import { toast } from "sonner";
 import { useLotissementProspects, useDeleteParcelleProspect, useUpdateParcelleProspect, ProspectStatus, InterestLevel, ParcelleProspect } from "@/hooks/useParcelleProspects";
 import { useParcelles, Parcelle } from "@/hooks/useParcelles";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { AddProspectDialog } from "./AddProspectDialog";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
@@ -95,12 +96,14 @@ const STATUS_ORDER: ProspectStatus[] = ["nouveau", "contacte", "interesse", "neg
 export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabProps) {
   const { data: prospects, isLoading } = useLotissementProspects(lotissementId);
   const { data: parcelles } = useParcelles(lotissementId);
+  const { user } = useAuth();
   const deleteProspect = useDeleteParcelleProspect();
   const updateProspect = useUpdateParcelleProspect();
   const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_lotissement_prospects");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
+  const isGestionnaire = role === "gestionnaire";
   const isAdmin = role === "admin" || role === "super_admin" || role !== "gestionnaire";
 
   // Fetch profiles for assigned users
@@ -446,7 +449,10 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
                               Vendu
                             </Badge>
-                          ) : (canEdit || canDelete) ? (
+                          ) : (() => {
+                            const canConvert = canEdit || (isGestionnaire && prospect.assigned_to === user?.id);
+                            const showMenu = canConvert || canDelete;
+                            return showMenu ? (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -454,7 +460,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {canEdit && prospect.status !== "perdu" && (
+                                {canConvert && prospect.status !== "perdu" && (
                                   <DropdownMenuItem
                                     onClick={() => setConvertingProspect(prospect)}
                                     className="text-emerald-600"
@@ -465,7 +471,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                                 )}
                                 {canDelete && (
                                   <>
-                                    {canEdit && prospect.status !== "perdu" && <DropdownMenuSeparator />}
+                                    {canConvert && prospect.status !== "perdu" && <DropdownMenuSeparator />}
                                     <DropdownMenuItem
                                       className="text-destructive"
                                       onClick={() => setDeletingId(prospect.id)}
@@ -477,7 +483,8 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          ) : null}
+                          ) : null;
+                          })()}
                         </TableCell>
                       </TableRow>
                     );

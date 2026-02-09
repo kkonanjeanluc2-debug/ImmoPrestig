@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,8 @@ export function AgencySettings() {
   const { data: agency, isLoading } = useAgency();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: onlineRentConfigSetting } = usePlatformSetting("online_rent_config_enabled");
+  const isOnlineRentConfigEnabled = onlineRentConfigSetting?.value !== "false";
 
   const [formData, setFormData] = useState({
     account_type: "agence" as AccountType,
@@ -432,6 +435,7 @@ export function AgencySettings() {
         </div>
 
         {/* Online Rent Payment Settings */}
+        {isOnlineRentConfigEnabled && (
         <div className="space-y-4 border-t pt-6">
           <div className="flex items-center gap-2">
             <Smartphone className="h-5 w-5 text-primary" />
@@ -493,6 +497,7 @@ export function AgencySettings() {
             </div>
           )}
         </div>
+        )}
 
         {/* Save Button */}
         <div className="flex justify-end pt-4">

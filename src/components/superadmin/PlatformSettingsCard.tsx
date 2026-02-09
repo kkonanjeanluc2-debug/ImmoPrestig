@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { usePlatformSettings, useUpdatePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
-import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet } from "lucide-react";
+import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 export function PlatformSettingsCard() {
@@ -17,6 +17,7 @@ export function PlatformSettingsCard() {
   const [yearlyDiscount, setYearlyDiscount] = useState("20");
   const [onlineRentPaymentEnabled, setOnlineRentPaymentEnabled] = useState(true);
   const [onlineRentAccountEnabled, setOnlineRentAccountEnabled] = useState(true);
+  const [onlineRentConfigEnabled, setOnlineRentConfigEnabled] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -36,6 +37,10 @@ export function PlatformSettingsCard() {
       const onlineAccountSetting = settings.find(s => s.key === "online_rent_account_enabled");
       if (onlineAccountSetting?.value !== undefined) {
         setOnlineRentAccountEnabled(onlineAccountSetting.value === "true");
+      }
+      const onlineConfigSetting = settings.find(s => s.key === "online_rent_config_enabled");
+      if (onlineConfigSetting?.value !== undefined) {
+        setOnlineRentConfigEnabled(onlineConfigSetting.value === "true");
       }
     }
   }, [settings]);
@@ -61,6 +66,11 @@ export function PlatformSettingsCard() {
           key: "online_rent_account_enabled",
           value: String(onlineRentAccountEnabled),
           description: "Activer ou désactiver l'onglet Compte pour le suivi des fonds en ligne",
+        }),
+        upsertSetting.mutateAsync({
+          key: "online_rent_config_enabled",
+          value: String(onlineRentConfigEnabled),
+          description: "Activer ou désactiver la configuration de paiement en ligne dans les paramètres agence",
         }),
       ]);
       setHasChanges(false);
@@ -91,6 +101,11 @@ export function PlatformSettingsCard() {
 
   const handleOnlineAccountToggle = (checked: boolean) => {
     setOnlineRentAccountEnabled(checked);
+    setHasChanges(true);
+  };
+
+  const handleOnlineConfigToggle = (checked: boolean) => {
+    setOnlineRentConfigEnabled(checked);
     setHasChanges(true);
   };
 
@@ -188,6 +203,23 @@ export function PlatformSettingsCard() {
               id="online-rent-account"
               checked={onlineRentAccountEnabled}
               onCheckedChange={handleOnlineAccountToggle}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="online-rent-config" className="flex items-center gap-2">
+                <Smartphone className="h-4 w-4 text-primary" />
+                Configuration paiement en ligne (agences)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Afficher la section de configuration du paiement en ligne dans les paramètres des agences
+              </p>
+            </div>
+            <Switch
+              id="online-rent-config"
+              checked={onlineRentConfigEnabled}
+              onCheckedChange={handleOnlineConfigToggle}
             />
           </div>
         </div>

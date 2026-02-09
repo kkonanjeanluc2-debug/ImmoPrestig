@@ -77,7 +77,8 @@ export const useIlotsWithStats = (lotissementId?: string) => {
       const { data: parcelles, error: parcellesError } = await supabase
         .from("parcelles")
         .select("id, ilot_id, status")
-        .eq("lotissement_id", lotissementId);
+        .eq("lotissement_id", lotissementId)
+        .is("deleted_at", null);
 
       if (parcellesError) throw parcellesError;
 

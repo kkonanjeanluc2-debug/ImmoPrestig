@@ -153,11 +153,11 @@ export const useUpdateParcelleProspect = () => {
         .update(updates as any)
         .eq("id", id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
-      if (user) {
+      if (user && data) {
         await logActivityDirect(user.id, "update", "prospect", data.name, data.id);
       }
 

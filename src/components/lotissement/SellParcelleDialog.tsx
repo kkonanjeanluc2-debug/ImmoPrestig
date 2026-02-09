@@ -76,12 +76,34 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
         return;
       }
 
+      // Check for duplicate acquéreur by name + phone or CNI
+      const nameTrimmed = newAcquereur.name.trim().toLowerCase();
+      const phoneTrimmed = newAcquereur.phone.trim();
+      const cniTrimmed = newAcquereur.cni_number.trim();
+      
+      const duplicate = acquereurs?.find(a => {
+        const nameMatch = a.name.toLowerCase() === nameTrimmed;
+        const phoneMatch = phoneTrimmed && a.phone && a.phone === phoneTrimmed;
+        const cniMatch = cniTrimmed && a.cni_number && a.cni_number.toLowerCase() === cniTrimmed.toLowerCase();
+        return nameMatch || phoneMatch || cniMatch;
+      });
+
+      if (duplicate) {
+        const matchInfo = duplicate.name.toLowerCase() === nameTrimmed 
+          ? `nom "${duplicate.name}"` 
+          : duplicate.phone === phoneTrimmed 
+            ? `téléphone "${duplicate.phone}"`
+            : `CNI "${duplicate.cni_number}"`;
+        toast.error(`Un acquéreur avec le même ${matchInfo} existe déjà. Veuillez le sélectionner dans la liste.`);
+        return;
+      }
+
       try {
         const created = await createAcquereur.mutateAsync({
           name: newAcquereur.name.trim(),
-          phone: newAcquereur.phone.trim() || null,
+          phone: phoneTrimmed || null,
           email: newAcquereur.email.trim() || null,
-          cni_number: newAcquereur.cni_number.trim() || null,
+          cni_number: cniTrimmed || null,
           address: newAcquereur.address.trim() || null,
           birth_date: newAcquereur.birth_date || null,
           birth_place: newAcquereur.birth_place.trim() || null,

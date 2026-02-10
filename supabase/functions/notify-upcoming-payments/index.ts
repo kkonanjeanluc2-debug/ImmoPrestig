@@ -1,5 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "resend";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendEmail } from "../_shared/send-email.ts";
 import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
 
 const corsHeaders = {
@@ -56,8 +56,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    const resend = resendApiKey ? new Resend(resendApiKey) : null;
+    const emailSendingAvailable = true;
 
     // Calculate the date 3 days from now
     const today = new Date();
@@ -143,7 +142,7 @@ Deno.serve(async (req) => {
       }
 
       // Send email reminder if tenant has email and Resend is configured
-      if (tenant.email && resend) {
+      if (tenant.email) {
         try {
           const emailHtml = `
             <!DOCTYPE html>
@@ -170,32 +169,28 @@ Deno.serve(async (req) => {
                 <div class="content">
                   <p>Bonjour <strong>${tenant.name}</strong>,</p>
                   <p>Nous vous rappelons que votre paiement de loyer arrive à échéance prochainement.</p>
-                  
                   <div class="details">
                     <p><strong>📍 Propriété :</strong> ${propertyTitle}</p>
                     <p><strong>📅 Date d'échéance :</strong> ${formattedDate}</p>
                     <p class="amount">${formattedAmount} F CFA</p>
                   </div>
-                  
                   <p>Merci de prévoir le règlement de cette somme avant la date d'échéance afin d'éviter tout retard.</p>
-                  <p>Pour toute question, n'hésitez pas à nous contacter.</p>
-                  
                   <p>Cordialement,<br>L'équipe de gestion immobilière</p>
                 </div>
-                <div class="footer">
-                  <p>Ceci est un email automatique. Merci de ne pas y répondre directement.</p>
-                </div>
+                <div class="footer"><p>Ceci est un email automatique.</p></div>
               </div>
             </body>
             </html>
           `;
 
-          const emailResponse = await resend.emails.send({
+          const emailResponse = await sendEmail({
             from: "Gestion Immobilière <noreply@immoprestigeci.com>",
             to: [tenant.email],
             subject: `⏰ Rappel : Paiement de ${formattedAmount} F CFA dû le ${formattedDate}`,
             html: emailHtml,
           });
+
+          if (!emailResponse.success) throw new Error(emailResponse.error);
 
           console.log(`Email sent to ${tenant.email}:`, emailResponse);
 

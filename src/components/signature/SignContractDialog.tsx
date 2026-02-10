@@ -179,7 +179,7 @@ export function SignContractDialog({
       });
 
       // Construire le lien de signature - utiliser l'URL publiée pour les emails
-      const appOrigin = import.meta.env.VITE_APP_URL || window.location.origin;
+      const appOrigin = "https://property-grace.lovable.app";
       const signatureLink = `${appOrigin}/sign-contract?token=${result.token}`;
       
       // Envoyer l'email automatiquement
@@ -231,7 +231,7 @@ export function SignContractDialog({
 
   const handleCopyLink = async () => {
     if (pendingTenantRequest?.signature_token) {
-      const appOrigin = import.meta.env.VITE_APP_URL || window.location.origin;
+      const appOrigin = "https://property-grace.lovable.app";
       const signatureLink = `${appOrigin}/sign-contract?token=${pendingTenantRequest.signature_token}`;
       await navigator.clipboard.writeText(signatureLink);
       toast({

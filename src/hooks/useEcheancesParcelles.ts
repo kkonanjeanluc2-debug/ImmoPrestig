@@ -66,23 +66,30 @@ export const useEcheancesParcelles = (venteId?: string) => {
   });
 };
 
+// Helper to get vente IDs for a lotissement
+const getVenteIdsForLotissement = async (lotissementId: string): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from("ventes_parcelles")
+    .select("id, parcelle:parcelles!inner(lotissement_id)")
+    .eq("parcelle.lotissement_id", lotissementId);
+  if (error) throw error;
+  return (data || []).map((v: any) => v.id);
+};
+
 export const useEcheancesForLotissement = (lotissementId?: string) => {
   const { user } = useAuth();
 
   return useQuery({
     queryKey: ["echeances-parcelles", "lotissement", lotissementId],
     queryFn: async () => {
+      const venteIds = await getVenteIdsForLotissement(lotissementId!);
+      if (venteIds.length === 0) return [] as EcheanceParcelle[];
+
       const { data, error } = await supabase
         .from("echeances_parcelles")
-        .select(`
-          *,
-          vente:ventes_parcelles!inner(
-            parcelle:parcelles!inner(
-              lotissement_id
-            )
-          )
-        `)
-        .eq("vente.parcelle.lotissement_id", lotissementId);
+        .select("*")
+        .in("vente_id", venteIds)
+        .order("due_date", { ascending: true });
 
       if (error) throw error;
       return data as EcheanceParcelle[];
@@ -101,15 +108,20 @@ export const useUpcomingEcheances = (monthsAhead: number = 1, lotissementId?: st
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() + monthsAhead);
 
+      let venteIds: string[] | null = null;
+      if (lotissementId) {
+        venteIds = await getVenteIdsForLotissement(lotissementId);
+        if (venteIds.length === 0) return [] as EcheanceWithDetails[];
+      }
+
       let query = supabase
         .from("echeances_parcelles")
         .select(`
           *,
-          vente:ventes_parcelles${lotissementId ? '!inner' : ''}(
+          vente:ventes_parcelles(
             acquereur:acquereurs(name, phone),
-            parcelle:parcelles${lotissementId ? '!inner' : ''}(
+            parcelle:parcelles(
               plot_number,
-              lotissement_id,
               lotissement:lotissements(name)
             )
           )
@@ -119,8 +131,8 @@ export const useUpcomingEcheances = (monthsAhead: number = 1, lotissementId?: st
         .lte("due_date", endDate.toISOString().split('T')[0])
         .order("due_date", { ascending: true });
 
-      if (lotissementId) {
-        query = query.eq("vente.parcelle.lotissement_id", lotissementId);
+      if (venteIds) {
+        query = query.in("vente_id", venteIds);
       }
 
       const { data, error } = await query;
@@ -140,15 +152,20 @@ export const useOverdueEcheances = (lotissementId?: string) => {
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
 
+      let venteIds: string[] | null = null;
+      if (lotissementId) {
+        venteIds = await getVenteIdsForLotissement(lotissementId);
+        if (venteIds.length === 0) return [] as EcheanceWithDetails[];
+      }
+
       let query = supabase
         .from("echeances_parcelles")
         .select(`
           *,
-          vente:ventes_parcelles${lotissementId ? '!inner' : ''}(
+          vente:ventes_parcelles(
             acquereur:acquereurs(name, phone),
-            parcelle:parcelles${lotissementId ? '!inner' : ''}(
+            parcelle:parcelles(
               plot_number,
-              lotissement_id,
               lotissement:lotissements(name)
             )
           )
@@ -157,8 +174,8 @@ export const useOverdueEcheances = (lotissementId?: string) => {
         .lt("due_date", today)
         .order("due_date", { ascending: true });
 
-      if (lotissementId) {
-        query = query.eq("vente.parcelle.lotissement_id", lotissementId);
+      if (venteIds) {
+        query = query.in("vente_id", venteIds);
       }
 
       const { data, error } = await query;

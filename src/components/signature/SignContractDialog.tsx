@@ -178,8 +178,9 @@ export function SignContractDialog({
         tenantEmail,
       });
 
-      // Construire le lien de signature
-      const signatureLink = `${window.location.origin}/sign-contract?token=${result.token}`;
+      // Construire le lien de signature - utiliser l'URL publiée pour les emails
+      const appOrigin = import.meta.env.VITE_APP_URL || window.location.origin;
+      const signatureLink = `${appOrigin}/sign-contract?token=${result.token}`;
       
       // Envoyer l'email automatiquement
       const { error: emailError } = await supabase.functions.invoke("send-signature-invite", {
@@ -230,7 +231,8 @@ export function SignContractDialog({
 
   const handleCopyLink = async () => {
     if (pendingTenantRequest?.signature_token) {
-      const signatureLink = `${window.location.origin}/sign-contract?token=${pendingTenantRequest.signature_token}`;
+      const appOrigin = import.meta.env.VITE_APP_URL || window.location.origin;
+      const signatureLink = `${appOrigin}/sign-contract?token=${pendingTenantRequest.signature_token}`;
       await navigator.clipboard.writeText(signatureLink);
       toast({
         title: "Lien copié",

@@ -53,6 +53,23 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Check if SMS is enabled globally
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    const { data: smsSetting } = await supabaseAdmin
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "sms_enabled")
+      .maybeSingle();
+    if (smsSetting?.value === "false") {
+      return new Response(
+        JSON.stringify({ success: false, error: "L'envoi de SMS est désactivé par l'administrateur" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
     const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
     const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");

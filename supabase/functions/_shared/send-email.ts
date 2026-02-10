@@ -70,9 +70,9 @@ async function sendViaMaileroo(params: EmailRequest): Promise<EmailResponse> {
 
   if (params.attachments && params.attachments.length > 0) {
     body.attachments = params.attachments.map(a => ({
-      filename: a.filename,
+      file_name: a.filename,
       content: a.content,
-      encoding: "base64",
+      content_type: a.filename.endsWith(".pdf") ? "application/pdf" : "application/octet-stream",
     }));
   }
 

@@ -40,27 +40,35 @@ export const useEcheancesParcelles = (venteId?: string) => {
   return useQuery({
     queryKey: ["echeances-parcelles", venteId],
     queryFn: async () => {
-      let query = supabase
-        .from("echeances_parcelles")
-        .select(`
-          *,
-          vente:ventes_parcelles(
-            acquereur:acquereurs(name, phone),
-            parcelle:parcelles(
-              plot_number,
-              lotissement:lotissements(name)
-            )
-          )
-        `);
-      
       if (venteId) {
-        query = query.eq("vente_id", venteId);
+        // When filtering by venteId, include details
+        const { data, error } = await supabase
+          .from("echeances_parcelles")
+          .select(`
+            *,
+            vente:ventes_parcelles(
+              acquereur:acquereurs(name, phone),
+              parcelle:parcelles(
+                plot_number,
+                lotissement:lotissements(name)
+              )
+            )
+          `)
+          .eq("vente_id", venteId)
+          .order("due_date", { ascending: true });
+
+        if (error) throw error;
+        return data as EcheanceWithDetails[];
       }
-      
-      const { data, error } = await query.order("due_date", { ascending: true });
+
+      // Without venteId: lightweight query (no joins) for listing/stats
+      const { data, error } = await supabase
+        .from("echeances_parcelles")
+        .select("*")
+        .order("due_date", { ascending: true });
 
       if (error) throw error;
-      return data as EcheanceWithDetails[];
+      return data as EcheanceParcelle[];
     },
     enabled: !!user,
   });

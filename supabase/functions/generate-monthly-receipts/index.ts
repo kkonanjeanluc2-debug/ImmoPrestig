@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 import { validateAuth, corsHeaders, unauthorizedResponse } from "../_shared/auth.ts";
+import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -175,6 +176,14 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const emailEnabled = await isEmailEnabled();
+    if (!emailEnabled) {
+      return new Response(
+        JSON.stringify({ success: false, error: "L'envoi d'emails est désactivé par l'administrateur" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Validate authentication
     const auth = await validateAuth(req);
     if (!auth.authenticated) {

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
+import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,6 +30,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const emailEnabled = await isEmailEnabled();
+    if (!emailEnabled) {
+      return new Response(
+        JSON.stringify({ error: "L'envoi d'emails est désactivé par l'administrateur" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Validate auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {

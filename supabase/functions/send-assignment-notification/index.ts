@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
+import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -41,6 +42,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    const emailEnabled = await isEmailEnabled();
+    if (!emailEnabled) {
+      return new Response(
+        JSON.stringify({ success: false, error: "L'envoi d'emails est désactivé par l'administrateur" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);

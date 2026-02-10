@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { usePlatformSettings, useUpdatePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
-import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone } from "lucide-react";
+import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 export function PlatformSettingsCard() {
@@ -18,6 +18,7 @@ export function PlatformSettingsCard() {
   const [onlineRentPaymentEnabled, setOnlineRentPaymentEnabled] = useState(true);
   const [onlineRentAccountEnabled, setOnlineRentAccountEnabled] = useState(true);
   const [onlineRentConfigEnabled, setOnlineRentConfigEnabled] = useState(true);
+  const [resendEmailEnabled, setResendEmailEnabled] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -41,6 +42,10 @@ export function PlatformSettingsCard() {
       const onlineConfigSetting = settings.find(s => s.key === "online_rent_config_enabled");
       if (onlineConfigSetting?.value !== undefined) {
         setOnlineRentConfigEnabled(onlineConfigSetting.value === "true");
+      }
+      const resendSetting = settings.find(s => s.key === "resend_email_enabled");
+      if (resendSetting?.value !== undefined) {
+        setResendEmailEnabled(resendSetting.value === "true");
       }
     }
   }, [settings]);
@@ -71,6 +76,11 @@ export function PlatformSettingsCard() {
           key: "online_rent_config_enabled",
           value: String(onlineRentConfigEnabled),
           description: "Activer ou désactiver la configuration de paiement en ligne dans les paramètres agence",
+        }),
+        upsertSetting.mutateAsync({
+          key: "resend_email_enabled",
+          value: String(resendEmailEnabled),
+          description: "Activer ou désactiver l'envoi d'emails via Resend pour toute la plateforme",
         }),
       ]);
       setHasChanges(false);
@@ -106,6 +116,11 @@ export function PlatformSettingsCard() {
 
   const handleOnlineConfigToggle = (checked: boolean) => {
     setOnlineRentConfigEnabled(checked);
+    setHasChanges(true);
+  };
+
+  const handleResendEmailToggle = (checked: boolean) => {
+    setResendEmailEnabled(checked);
     setHasChanges(true);
   };
 
@@ -220,6 +235,23 @@ export function PlatformSettingsCard() {
               id="online-rent-config"
               checked={onlineRentConfigEnabled}
               onCheckedChange={handleOnlineConfigToggle}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="resend-email" className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" />
+                Envoi d'emails (Resend)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Activer ou désactiver l'envoi de tous les emails via Resend (quittances, rappels, rapports, etc.)
+              </p>
+            </div>
+            <Switch
+              id="resend-email"
+              checked={resendEmailEnabled}
+              onCheckedChange={handleResendEmailToggle}
             />
           </div>
         </div>

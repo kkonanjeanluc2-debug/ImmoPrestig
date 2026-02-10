@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "resend";
+import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -44,6 +45,14 @@ async function validateAuth(req: Request): Promise<{ authenticated: boolean; use
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const emailEnabled = await isEmailEnabled();
+  if (!emailEnabled) {
+    return new Response(
+      JSON.stringify({ success: false, error: "L'envoi d'emails est désactivé par l'administrateur" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   // Validate authentication

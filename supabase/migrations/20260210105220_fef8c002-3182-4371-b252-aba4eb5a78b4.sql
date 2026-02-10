@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_echeances_parcelles_vente_id ON public.echeances_parcelles (vente_id);

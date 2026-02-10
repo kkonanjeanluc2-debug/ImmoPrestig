@@ -22,6 +22,7 @@ export function PlatformSettingsCard() {
   const [resendEmailEnabled, setResendEmailEnabled] = useState(true);
   const [mailerooEmailEnabled, setMailerooEmailEnabled] = useState(true);
   const [emailProvider, setEmailProvider] = useState("resend");
+  const [smsEnabled, setSmsEnabled] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -49,6 +50,9 @@ export function PlatformSettingsCard() {
 
       const providerSetting = settings.find(s => s.key === "email_provider");
       if (providerSetting?.value) setEmailProvider(providerSetting.value);
+
+      const smsSetting = settings.find(s => s.key === "sms_enabled");
+      if (smsSetting?.value !== undefined) setSmsEnabled(smsSetting.value === "true");
     }
   }, [settings]);
 
@@ -63,6 +67,7 @@ export function PlatformSettingsCard() {
         upsertSetting.mutateAsync({ key: "resend_email_enabled", value: String(resendEmailEnabled), description: "Activer ou désactiver l'envoi d'emails via Resend" }),
         upsertSetting.mutateAsync({ key: "maileroo_email_enabled", value: String(mailerooEmailEnabled), description: "Activer ou désactiver l'envoi d'emails via Maileroo" }),
         upsertSetting.mutateAsync({ key: "email_provider", value: emailProvider, description: "Fournisseur d'emails actif: resend ou maileroo" }),
+        upsertSetting.mutateAsync({ key: "sms_enabled", value: String(smsEnabled), description: "Activer ou désactiver l'envoi de SMS via Twilio" }),
       ]);
       setHasChanges(false);
       toast.success("Paramètres enregistrés");
@@ -168,6 +173,19 @@ export function PlatformSettingsCard() {
             </div>
             <Switch id="online-rent-config" checked={onlineRentConfigEnabled}
               onCheckedChange={(v) => { setOnlineRentConfigEnabled(v); setChanged(); }} />
+          </div>
+
+          {/* SMS toggle */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="sms-enabled" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-blue-600" />
+                Envoi de SMS (Twilio)
+              </Label>
+              <p className="text-xs text-muted-foreground">Activer ou désactiver l'envoi de rappels par SMS aux locataires</p>
+            </div>
+            <Switch id="sms-enabled" checked={smsEnabled}
+              onCheckedChange={(v) => { setSmsEnabled(v); setChanged(); }} />
           </div>
 
           {/* Email provider selector */}

@@ -33,6 +33,7 @@ import { useCurrentUserRole, ROLE_LABELS, type AppRole } from "@/hooks/useUserRo
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useAgency } from "@/hooks/useAgency";
 import { useTrashCount } from "@/hooks/useTrashCount";
+import { useNewVenteProspectsCount, useNewAllLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
 import { useFeatureAccess, FeatureKey } from "@/hooks/useFeatureAccess";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
@@ -92,6 +93,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { data: ownAgency } = useAgency();
   const { canInstall, isIOS, promptInstall } = usePWAInstall();
   const { data: trashCount } = useTrashCount();
+  const { count: newVenteProspectsCount } = useNewVenteProspectsCount();
+  const { count: newLotProspectsCount } = useNewAllLotissementProspectsCount();
   const { hasFeature } = useFeatureAccess();
   const { hasPermission } = usePermissions();
   const canAccessSettings = hasPermission("can_access_settings");
@@ -304,14 +307,19 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               {otherNavigation
                 .filter((item) => hasFeature(item.featureKey))
                 .map((item) => {
-                  const isActive = location.pathname === item.href;
+                  const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
+                  const badgeCount = item.href === "/ventes-immobilieres" 
+                    ? newVenteProspectsCount 
+                    : item.href === "/lotissements" 
+                      ? newLotProspectsCount 
+                      : 0;
                   
                   return (
                     <NavLink
                       key={item.name}
                       to={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
                         isActive 
                           ? "bg-emerald text-primary-foreground" 
                           : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
@@ -322,7 +330,12 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                         !showText && "mx-auto"
                       )} />
                       {showText && (
-                        <span className="font-medium text-sm">{item.name}</span>
+                        <span className="font-medium text-sm flex-1">{item.name}</span>
+                      )}
+                      {badgeCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                          {badgeCount > 99 ? "99+" : badgeCount}
+                        </span>
                       )}
                     </NavLink>
                   );

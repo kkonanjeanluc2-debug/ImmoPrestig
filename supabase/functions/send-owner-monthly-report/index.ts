@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
     const fromName = data.agencyName || "Gestion Locative";
 
     const emailResponse = await sendEmail({
-      from: `${fromName} <noreply@immoprestigeci.com>`,
+      from: `RAPPORT MENSUEL <noreply@immoprestigeci.com>`,
       to: [data.ownerEmail],
       subject: `📊 Point mensuel - ${data.period}`,
       html,

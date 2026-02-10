@@ -90,7 +90,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       </body></html>`;
 
     const emailResponse = await sendEmail({
-      from: `${agencyName} <noreply@lagrace.ci>`,
+      from: `AFFECTATION <noreply@immoprestigeci.com>`,
       to: [assigneeProfile.email],
       subject: `${icon} ${items.length > 1 ? `${items.length} ${typeLabel} affectés` : `Nouveau ${typeSingular} affecté`} - ${agencyName}`,
       html: emailHtml,

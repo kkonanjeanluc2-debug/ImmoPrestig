@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       const amount = Number(payment.amount).toLocaleString("fr-FR");
       try {
         const emailResponse = await sendEmail({
-          from: "Gestion Immobilière <noreply@immoprestigeci.com>",
+          from: "RAPPEL ECHEANCE <noreply@immoprestigeci.com>",
           to: [tenant.email],
           subject: `Rappel: Paiement en retard - ${propertyTitle}`,
           html: `<!DOCTYPE html><html><head><style>

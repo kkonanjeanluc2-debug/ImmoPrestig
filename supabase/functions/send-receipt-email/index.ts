@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     const fileName = `quittance_${tenantName.replace(/\s+/g, "_")}_${period.replace(/\s+/g, "_")}.pdf`;
 
     const emailResponse = await sendEmail({
-      from: "Gestion Immobilière <noreply@immoprestigeci.com>",
+      from: "QUITTANCE LOYER <noreply@immoprestigeci.com>",
       to: [tenantEmail],
       subject: `Quittance de loyer - ${period} - ${propertyTitle}`,
       html: `

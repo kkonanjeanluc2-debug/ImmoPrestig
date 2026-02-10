@@ -94,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
       </body></html>`;
 
     const emailResponse = await sendEmail({
-      from: "Signature de contrat <noreply@immoprestige.lovable.app>",
+      from: "CONTRAT <noreply@immoprestigeci.com>",
       to: [tenantEmail],
       subject: `📝 Invitation à signer votre contrat de location - ${propertyTitle}`,
       html: emailHtml,

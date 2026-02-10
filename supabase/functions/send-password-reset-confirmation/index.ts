@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     });
 
     const emailResponse = await resend.emails.send({
-      from: "Gestion Immobilière <noreply@immoprestigeci.com>",
+      from: "MOT DE PASSE <noreply@immoprestigeci.com>",
       to: [email],
       subject: "✅ Votre mot de passe a été réinitialisé",
       html: `

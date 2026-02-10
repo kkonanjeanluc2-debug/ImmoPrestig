@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       : "Nous vous rappelons que l'échéance de paiement de votre loyer approche.";
 
     const emailResponse = await sendEmail({
-      from: "Gestion Immobilière <noreply@immoprestigeci.com>",
+      from: "RAPPEL ECHEANCE <noreply@immoprestigeci.com>",
       to: [tenantEmail],
       subject,
       html: `

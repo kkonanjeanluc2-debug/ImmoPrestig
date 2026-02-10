@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
           `;
 
           const emailResponse = await sendEmail({
-            from: "Gestion Immobilière <noreply@immoprestigeci.com>",
+            from: "RAPPEL ECHEANCE <noreply@immoprestigeci.com>",
             to: [tenant.email],
             subject: `⏰ Rappel : Paiement de ${formattedAmount} F CFA dû le ${formattedDate}`,
             html: emailHtml,

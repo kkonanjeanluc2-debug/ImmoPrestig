@@ -50,18 +50,12 @@ const monthsOptions = [
 
 export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
   const [monthsAhead, setMonthsAhead] = useState(1);
-  const { data: upcomingEcheances, isLoading: loadingUpcoming } = useUpcomingEcheances(monthsAhead);
-  const { data: overdueEcheances, isLoading: loadingOverdue } = useOverdueEcheances();
+  const { data: upcomingEcheances, isLoading: loadingUpcoming } = useUpcomingEcheances(monthsAhead, lotissementId);
+  const { data: overdueEcheances, isLoading: loadingOverdue } = useOverdueEcheances(lotissementId);
   const [payingEcheance, setPayingEcheance] = useState<EcheanceWithDetails | null>(null);
 
-  // Filter by lotissement if provided
-  const filteredUpcoming = lotissementId 
-    ? upcomingEcheances?.filter(e => e.vente?.parcelle?.lotissement?.name) 
-    : upcomingEcheances;
-  
-  const filteredOverdue = lotissementId 
-    ? overdueEcheances?.filter(e => e.vente?.parcelle?.lotissement?.name) 
-    : overdueEcheances;
+  const filteredUpcoming = upcomingEcheances;
+  const filteredOverdue = overdueEcheances;
 
   const totalOverdueAmount = filteredOverdue?.reduce((sum, e) => sum + e.amount, 0) || 0;
   const totalUpcomingAmount = filteredUpcoming?.reduce((sum, e) => sum + e.amount, 0) || 0;

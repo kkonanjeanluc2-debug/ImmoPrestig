@@ -91,24 +91,25 @@ export const useEcheancesForLotissement = (lotissementId?: string) => {
   });
 };
 
-export const useUpcomingEcheances = (monthsAhead: number = 1) => {
+export const useUpcomingEcheances = (monthsAhead: number = 1, lotissementId?: string) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["echeances-parcelles", "upcoming", monthsAhead],
+    queryKey: ["echeances-parcelles", "upcoming", monthsAhead, lotissementId],
     queryFn: async () => {
       const today = new Date();
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() + monthsAhead);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("echeances_parcelles")
         .select(`
           *,
-          vente:ventes_parcelles(
+          vente:ventes_parcelles${lotissementId ? '!inner' : ''}(
             acquereur:acquereurs(name, phone),
-            parcelle:parcelles(
+            parcelle:parcelles${lotissementId ? '!inner' : ''}(
               plot_number,
+              lotissement_id,
               lotissement:lotissements(name)
             )
           )
@@ -118,6 +119,12 @@ export const useUpcomingEcheances = (monthsAhead: number = 1) => {
         .lte("due_date", endDate.toISOString().split('T')[0])
         .order("due_date", { ascending: true });
 
+      if (lotissementId) {
+        query = query.eq("vente.parcelle.lotissement_id", lotissementId);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       return data as EcheanceWithDetails[];
     },
@@ -125,22 +132,23 @@ export const useUpcomingEcheances = (monthsAhead: number = 1) => {
   });
 };
 
-export const useOverdueEcheances = () => {
+export const useOverdueEcheances = (lotissementId?: string) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["echeances-parcelles", "overdue"],
+    queryKey: ["echeances-parcelles", "overdue", lotissementId],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("echeances_parcelles")
         .select(`
           *,
-          vente:ventes_parcelles(
+          vente:ventes_parcelles${lotissementId ? '!inner' : ''}(
             acquereur:acquereurs(name, phone),
-            parcelle:parcelles(
+            parcelle:parcelles${lotissementId ? '!inner' : ''}(
               plot_number,
+              lotissement_id,
               lotissement:lotissements(name)
             )
           )
@@ -148,6 +156,12 @@ export const useOverdueEcheances = () => {
         .eq("status", "pending")
         .lt("due_date", today)
         .order("due_date", { ascending: true });
+
+      if (lotissementId) {
+        query = query.eq("vente.parcelle.lotissement_id", lotissementId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as EcheanceWithDetails[];

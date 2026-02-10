@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Users, Plus, Search, Phone, Mail, MoreHorizontal, Trash2, Calendar, Building2, Link, User } from "lucide-react";
+import { Users, Plus, Search, Phone, Mail, MoreHorizontal, Trash2, Calendar, Building2, Link, User, CheckCircle2 } from "lucide-react";
 import { useAllVenteProspects, useDeleteVenteProspect, useUpdateVenteProspect, type ProspectStatus, type InterestLevel } from "@/hooks/useVenteProspects";
 import { useBiensVente } from "@/hooks/useBiensVente";
 import { AddVenteProspectDialog } from "./AddVenteProspectDialog";
+import { ConvertVenteProspectDialog } from "./ConvertVenteProspectDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
@@ -63,6 +64,8 @@ export function VenteProspectsTab() {
   const [assignBienDialogOpen, setAssignBienDialogOpen] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState<any>(null);
   const [selectedBienId, setSelectedBienId] = useState<string>("");
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [prospectToConvert, setProspectToConvert] = useState<any>(null);
 
   // Get user_id from prospects for profile lookup
   const userIds = prospects?.map(p => p.user_id).filter(Boolean) || [];
@@ -244,12 +247,22 @@ export function VenteProspectsTab() {
                         >
                           En négociation
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(prospect.id, "converti")}
-                          disabled={prospect.status === "converti"}
-                        >
-                          Converti (vendu)
-                        </DropdownMenuItem>
+                        {prospect.status !== "converti" && (prospect as any).bien && canEdit && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setProspectToConvert(prospect);
+                                setConvertDialogOpen(true);
+                              }}
+                              className="text-emerald-600"
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Convertir en vente
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
                         <DropdownMenuItem 
                           onClick={() => handleStatusChange(prospect.id, "perdu")}
                           disabled={prospect.status === "perdu"}
@@ -389,6 +402,18 @@ export function VenteProspectsTab() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Convert prospect dialog */}
+      {prospectToConvert && (
+        <ConvertVenteProspectDialog
+          prospect={prospectToConvert}
+          open={convertDialogOpen}
+          onOpenChange={(open) => {
+            setConvertDialogOpen(open);
+            if (!open) setProspectToConvert(null);
+          }}
+        />
+      )}
     </Card>
   );
 }

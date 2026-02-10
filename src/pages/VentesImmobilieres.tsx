@@ -15,6 +15,8 @@ import { useAcquereurs } from "@/hooks/useAcquereurs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { Badge } from "@/components/ui/badge";
+import { useNewVenteProspectsCount } from "@/hooks/useNewProspectsCount";
 
 export default function VentesImmobilieres() {
   const [activeTab, setActiveTab] = useState("biens");
@@ -23,6 +25,7 @@ export default function VentesImmobilieres() {
   const { isAdmin } = useIsAgencyOwner();
   const canCreateBien = hasPermission("can_create_biens_vente");
   const isLocataire = role === "locataire";
+  const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewVenteProspectsCount();
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -48,7 +51,10 @@ export default function VentesImmobilieres() {
         <VentesDashboard />
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(val) => {
+          setActiveTab(val);
+          if (val === "prospects") markProspectsSeen();
+        }}>
           <TabsList className="flex flex-wrap h-auto gap-1 p-1 overflow-x-auto">
             <TabsTrigger value="biens" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Building2 className="h-4 w-4" />
@@ -65,6 +71,11 @@ export default function VentesImmobilieres() {
             <TabsTrigger value="prospects" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <UserSearch className="h-4 w-4" />
               <span className="hidden sm:inline">Prospects</span>
+              {newProspectsCount > 0 && (
+                <Badge variant="destructive" className="h-5 min-w-[20px] px-1.5 text-xs flex items-center justify-center">
+                  {newProspectsCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="acquereurs" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Users className="h-4 w-4" />

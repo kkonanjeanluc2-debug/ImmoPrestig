@@ -46,7 +46,7 @@ import { ProspectsTab } from "@/components/lotissement/ProspectsTab";
 import { IlotsTab } from "@/components/lotissement/IlotsTab";
 import { GenerateLotissementDocumentDialog } from "@/components/lotissement/GenerateLotissementDocumentDialog";
 import { AcquereursListCard } from "@/components/lotissement/AcquereursListCard";
-
+import { useNewLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
 const LotissementDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -58,6 +58,7 @@ const LotissementDetails = () => {
   const { isOwner } = useIsAgencyOwner();
   const canCreateParcelle = hasPermission("can_create_parcelles");
   const isGestionnaire = role === "gestionnaire";
+  const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewLotissementProspectsCount(id);
 
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
@@ -219,7 +220,9 @@ const LotissementDetails = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="parcelles" className="space-y-4">
+        <Tabs defaultValue="parcelles" className="space-y-4" onValueChange={(val) => {
+          if (val === "prospects") markProspectsSeen();
+        }}>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <TabsList className="h-auto flex-wrap gap-1 p-1 overflow-x-auto">
@@ -250,6 +253,11 @@ const LotissementDetails = () => {
                 <TabsTrigger value="prospects" className="gap-2">
                   <UserPlus className="h-4 w-4" />
                   <span className="hidden sm:inline">Prospects</span>
+                  {newProspectsCount > 0 && (
+                    <Badge variant="destructive" className="h-5 min-w-[20px] px-1.5 text-xs flex items-center justify-center">
+                      {newProspectsCount}
+                    </Badge>
+                  )}
                 </TabsTrigger>
                 {!isGestionnaire && (
                   <TabsTrigger value="performance" className="gap-2">

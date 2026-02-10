@@ -57,7 +57,6 @@ export const useNewLotissementProspectsCount = (lotissementId?: string) => {
     queryFn: async () => {
       if (!lotissementId) return 0;
 
-      // Get parcelle IDs for this lotissement
       const { data: parcelles, error: pError } = await supabase
         .from("parcelles")
         .select("id")
@@ -85,6 +84,36 @@ export const useNewLotissementProspectsCount = (lotissementId?: string) => {
     setLastSeen(storageKey);
     setLastSeenState(new Date().toISOString());
   }, [storageKey]);
+
+  return { count: isAdmin ? (query.data ?? 0) : 0, markAsSeen };
+};
+
+// Global count of all new lotissement prospects (across all lotissements)
+export const useNewAllLotissementProspectsCount = () => {
+  const { user } = useAuth();
+  const { isAdmin } = useIsAgencyOwner();
+  const [lastSeen, setLastSeenState] = useState(() => getLastSeen(LOTISSEMENT_PROSPECTS_SEEN_KEY));
+
+  const query = useQuery({
+    queryKey: ["new-all-lotissement-prospects-count", lastSeen],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("parcelle_prospects")
+        .select("id", { count: "exact", head: true })
+        .is("deleted_at", null)
+        .gt("created_at", lastSeen);
+
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!user && isAdmin,
+    staleTime: 30000,
+  });
+
+  const markAsSeen = useCallback(() => {
+    setLastSeen(LOTISSEMENT_PROSPECTS_SEEN_KEY);
+    setLastSeenState(new Date().toISOString());
+  }, []);
 
   return { count: isAdmin ? (query.data ?? 0) : 0, markAsSeen };
 };

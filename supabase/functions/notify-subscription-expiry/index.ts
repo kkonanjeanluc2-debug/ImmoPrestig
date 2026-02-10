@@ -1,5 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "resend";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendEmail } from "../_shared/send-email.ts";
 import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
 
 const corsHeaders = {
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const twilioPhoneNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
@@ -88,8 +88,7 @@ Deno.serve(async (req) => {
       errors: [] as string[],
     };
 
-    // Initialize Resend if available
-    const resend = resendApiKey ? new Resend(resendApiKey) : null;
+    // Email sending is handled by shared sendEmail utility
 
     for (const sub of (subscriptions || []) as SubscriptionWithAgency[]) {
       results.processed++;
@@ -155,15 +154,15 @@ Deno.serve(async (req) => {
       }
 
       // Send email notification
-      if (resend && agency.email) {
+      if (agency.email) {
         try {
-          const urgencyText = daysRemaining <= 1 
+          const urgencyText = daysRemaining <= 1
             ? "URGENT : Votre abonnement expire demain !"
-            : daysRemaining <= 3 
+            : daysRemaining <= 3
               ? "Attention : Votre abonnement expire bientôt"
               : "Rappel : Votre abonnement arrive à expiration";
 
-          await resend.emails.send({
+          const emailResult = await sendEmail({
             from: "ImmoPrestige <noreply@immoprestigeci.com>",
             to: [agency.email],
             subject: `${urgencyText} - ${plan.name}`,
@@ -219,6 +218,8 @@ Deno.serve(async (req) => {
               </html>
             `,
           });
+
+          if (!emailResult.success) throw new Error(emailResult.error);
 
           results.emailsSent++;
           console.log(`Email sent to ${agency.email}`);

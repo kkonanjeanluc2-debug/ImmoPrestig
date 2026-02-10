@@ -1,8 +1,6 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendEmail } from "../_shared/send-email.ts";
 import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -396,7 +394,7 @@ Deno.serve(async (req) => {
 
       try {
         const fromName = agency?.name || "Gestion Locative";
-        const emailResponse = await resend.emails.send({
+        const emailResponse = await sendEmail({
           from: `${fromName} <noreply@immoprestigeci.com>`,
           to: [owner.email],
           subject: `📊 Rapport de commissions - ${period}`,
@@ -412,6 +410,8 @@ Deno.serve(async (req) => {
             agency
           ),
         });
+
+        if (!emailResponse.success) throw new Error(emailResponse.error);
 
         console.log(`Commission report sent to ${owner.email}:`, emailResponse);
 

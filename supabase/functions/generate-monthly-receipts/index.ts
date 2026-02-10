@@ -1,9 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
+import { sendEmail } from "../_shared/send-email.ts";
 import { validateAuth, corsHeaders, unauthorizedResponse } from "../_shared/auth.ts";
 import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 interface TenantData {
   id: string;
@@ -298,7 +296,7 @@ Deno.serve(async (req) => {
       try {
         // Send the receipt email
         const fromName = agency?.name || "Gestion Locative";
-        const emailResponse = await resend.emails.send({
+        const emailResponse = await sendEmail({
           from: `${fromName} <noreply@immoprestigeci.com>`,
           to: [tenant.email],
           subject: `✅ Quittance de loyer - ${period} - ${propertyTitle}`,
@@ -317,6 +315,8 @@ Deno.serve(async (req) => {
             agency
           ),
         });
+
+        if (!emailResponse.success) throw new Error(emailResponse.error);
 
         console.log(`Email sent to ${tenant.email}:`, emailResponse);
 

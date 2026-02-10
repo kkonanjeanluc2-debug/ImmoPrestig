@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -43,13 +43,26 @@ export function SendReminderDialog({
   const [open, setOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [activeTab, setActiveTab] = useState<"email" | "sms" | "whatsapp">("email");
+  const [smsGloballyEnabled, setSmsGloballyEnabled] = useState(true);
   const { toast } = useToast();
   const createEmailLog = useCreateEmailLog();
   const logWhatsAppMessage = useLogWhatsAppMessage();
 
+  useEffect(() => {
+    const checkSmsEnabled = async () => {
+      const { data } = await supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "sms_enabled")
+        .maybeSingle() as any;
+      if (data?.value === "false") setSmsGloballyEnabled(false);
+    };
+    checkSmsEnabled();
+  }, []);
+
   const isLate = status === "late";
   const canSendEmail = !!tenantEmail;
-  const canSendSms = !!tenantPhone;
+  const canSendSms = !!tenantPhone && smsGloballyEnabled;
   const canSendWhatsApp = !!tenantPhone;
 
   const handleSendReminder = async () => {
@@ -230,15 +243,17 @@ export function SendReminderDialog({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "email" | "sms" | "whatsapp")} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${smsGloballyEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="email" disabled={!canSendEmail} className="flex items-center gap-1 text-xs">
               <Mail className="h-3.5 w-3.5" />
               Email
             </TabsTrigger>
-            <TabsTrigger value="sms" disabled={!canSendSms} className="flex items-center gap-1 text-xs">
-              <MessageSquare className="h-3.5 w-3.5" />
-              SMS
-            </TabsTrigger>
+            {smsGloballyEnabled && (
+              <TabsTrigger value="sms" disabled={!canSendSms} className="flex items-center gap-1 text-xs">
+                <MessageSquare className="h-3.5 w-3.5" />
+                SMS
+              </TabsTrigger>
+            )}
             <TabsTrigger value="whatsapp" disabled={!canSendWhatsApp} className="flex items-center gap-1 text-xs text-green-600">
               <MessageCircle className="h-3.5 w-3.5" />
               WhatsApp

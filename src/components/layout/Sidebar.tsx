@@ -325,17 +325,19 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                           : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
                       )}
                     >
-                      <item.icon className={cn(
-                        "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
-                        !showText && "mx-auto"
-                      )} />
+                      <div className="relative flex-shrink-0">
+                        <item.icon className={cn(
+                          "h-5 w-5 transition-transform group-hover:scale-110",
+                          !showText && "mx-auto"
+                        )} />
+                        {badgeCount > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                            {badgeCount > 99 ? "99+" : badgeCount}
+                          </span>
+                        )}
+                      </div>
                       {showText && (
                         <span className="font-medium text-sm flex-1">{item.name}</span>
-                      )}
-                      {badgeCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
-                          {badgeCount > 99 ? "99+" : badgeCount}
-                        </span>
                       )}
                     </NavLink>
                   );

@@ -176,164 +176,263 @@ const addFooter = (doc: jsPDF, agency: AgencyInfo | null) => {
 // ========================================
 // FICHE DE RÉSERVATION
 // ========================================
+
+interface ReservationInfo {
+  deposit_amount: number;
+  reservation_date: string;
+  expiry_date: string;
+  validity_days: number;
+  payment_method?: string | null;
+  notes?: string | null;
+}
+
+const getPaymentMethodLabel = (method: string | null | undefined): string => {
+  const labels: Record<string, string> = {
+    especes: "Especes",
+    virement: "Virement bancaire",
+    mobile_money: "Mobile Money",
+    cheque: "Cheque",
+  };
+  return labels[method || ""] || method || "Non precise";
+};
+
 export const generateFicheReservation = async (
   parcelle: ParcelleInfo,
   lotissement: LotissementInfo,
   acquereur: AcquereurInfo,
   agency: AgencyInfo | null,
-  reservationDate: string = new Date().toISOString(),
-  depositPercentage: number = 30
+  reservation: ReservationInfo
 ): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   const maxWidth = pageWidth - margin * 2;
 
-  let yPos = await addHeader(doc, agency, "FICHE DE RÉSERVATION");
+  const checkPage = (needed: number, y: number): number => {
+    if (y + needed > pageHeight - 30) {
+      doc.addPage();
+      return margin;
+    }
+    return y;
+  };
 
-  // Reference number
+  let yPos = await addHeader(doc, agency, "FICHE DE RESERVATION");
+
+  // Reference & date
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
-  const refNumber = `REF-${Date.now().toString(36).toUpperCase()}`;
-  doc.text(`Référence : ${refNumber}`, pageWidth - margin, yPos, { align: "right" });
-  doc.text(`Date : ${formatDate(reservationDate)}`, pageWidth - margin, yPos + 5, { align: "right" });
-  
-  yPos += 15;
-
-  // Lotissement section
-  doc.setFillColor(...lightGray);
-  doc.roundedRect(margin, yPos, maxWidth, 8, 2, 2, "F");
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("LOTISSEMENT", margin + 5, yPos + 5.5);
-  
-  yPos += 12;
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-  doc.text(`Nom : ${lotissement.name}`, margin, yPos);
-  yPos += 6;
-  doc.text(`Localisation : ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`, margin, yPos);
-  
-  yPos += 15;
-
-  // Parcelle section
-  doc.setFillColor(...lightGray);
-  doc.roundedRect(margin, yPos, maxWidth, 8, 2, 2, "F");
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("PARCELLE RÉSERVÉE", margin + 5, yPos + 5.5);
-  
-  yPos += 12;
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-  doc.text(`Numéro de lot : ${parcelle.plot_number}`, margin, yPos);
-  yPos += 6;
-  doc.text(`Superficie : ${formatAmountForPDF(parcelle.area)} m²`, margin, yPos);
-  yPos += 6;
-  doc.text(`Prix : ${formatAmountWithCurrency(parcelle.price)}`, margin, yPos);
-  
-  yPos += 15;
-
-  // Acquéreur section
-  doc.setFillColor(...lightGray);
-  doc.roundedRect(margin, yPos, maxWidth, 8, 2, 2, "F");
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("RÉSERVATAIRE", margin + 5, yPos + 5.5);
-  
-  yPos += 12;
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-  doc.text(`Nom et prénoms : ${acquereur.name}`, margin, yPos);
-  yPos += 6;
-  if (acquereur.birth_date || acquereur.birth_place) {
-    const birthInfo = [];
-    if (acquereur.birth_date) birthInfo.push(`né(e) le ${formatDate(acquereur.birth_date)}`);
-    if (acquereur.birth_place) birthInfo.push(`à ${acquereur.birth_place}`);
-    doc.text(birthInfo.join(" "), margin, yPos);
-    yPos += 6;
-  }
-  if (acquereur.profession) {
-    doc.text(`Profession : ${acquereur.profession}`, margin, yPos);
-    yPos += 6;
-  }
-  if (acquereur.cni_number) {
-    doc.text(`N° CNI : ${acquereur.cni_number}`, margin, yPos);
-    yPos += 6;
-  }
-  if (acquereur.phone) {
-    doc.text(`Téléphone : ${acquereur.phone}`, margin, yPos);
-    yPos += 6;
-  }
-  if (acquereur.email) {
-    doc.text(`Email : ${acquereur.email}`, margin, yPos);
-    yPos += 6;
-  }
-  if (acquereur.address) {
-    doc.text(`Adresse : ${acquereur.address}`, margin, yPos);
-    yPos += 6;
-  }
+  const refNumber = `RES-${Date.now().toString(36).toUpperCase()}`;
+  doc.text(`Reference : ${refNumber}`, pageWidth - margin, yPos, { align: "right" });
+  doc.text(`Date : ${formatDate(reservation.reservation_date)}`, pageWidth - margin, yPos + 5, { align: "right" });
 
   yPos += 15;
 
-  // Conditions
-  doc.setFillColor(...lightGray);
-  doc.roundedRect(margin, yPos, maxWidth, 8, 2, 2, "F");
+  // === PREAMBULE ===
   doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("CONDITIONS DE LA RÉSERVATION", margin + 5, yPos + 5.5);
-  
-  yPos += 12;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.setFontSize(9);
-  
-  const conditions = [
-    "1. La présente réservation est valable pour une durée de trente (30) jours à compter de la date de signature.",
-    `2. Le réservataire s'engage à verser un acompte de ${depositPercentage}% du prix total dans les quinze (15) jours suivant la signature.`,
-    "3. En cas de non-respect des délais de paiement, la réservation sera annulée de plein droit.",
-    "4. Les frais de notaire et d'enregistrement sont à la charge de l'acquéreur.",
-    "5. La parcelle réservée ne peut faire l'objet d'aucune cession ou sous-location."
-  ];
-  
-  conditions.forEach(condition => {
-    const splitLines = doc.splitTextToSize(condition, maxWidth);
-    splitLines.forEach((line: string) => {
-      doc.text(line, margin, yPos);
-      yPos += 5;
-    });
-    yPos += 2;
+
+  const vendeurName = agency?.name || "Le Vendeur";
+  const vendeurDetails = [agency?.address, agency?.city, agency?.country].filter(Boolean).join(", ");
+  const rccm = agency?.siret ? `, RCCM : ${agency.siret}` : "";
+
+  let preambule = `Entre les soussignes :\n\n${vendeurName}`;
+  if (vendeurDetails) preambule += `, sis a ${vendeurDetails}`;
+  preambule += `${rccm}, ci-apres denomme "LE VENDEUR",\n\nD'une part,\n\nEt\n\n`;
+  preambule += `Monsieur/Madame ${acquereur.name}`;
+  if (acquereur.birth_date) preambule += `, ne(e) le ${formatDate(acquereur.birth_date)}`;
+  if (acquereur.birth_place) preambule += ` a ${acquereur.birth_place}`;
+  if (acquereur.profession) preambule += `, ${acquereur.profession}`;
+  if (acquereur.cni_number) preambule += `, CNI N° ${acquereur.cni_number}`;
+  if (acquereur.phone) preambule += `, Tel : ${acquereur.phone}`;
+  if (acquereur.address) preambule += `, domicilie(e) a ${acquereur.address}`;
+  preambule += `, ci-apres denomme "LE RESERVATAIRE",\n\nD'autre part,\n\nIl a ete convenu et arrete ce qui suit :`;
+
+  const preLines = doc.splitTextToSize(preambule, maxWidth);
+  preLines.forEach((line: string) => {
+    yPos = checkPage(6, yPos);
+    doc.text(line, margin, yPos);
+    yPos += 5;
   });
 
-  yPos += 20;
+  yPos += 10;
 
-  // Signatures
-  const colWidth = (maxWidth - 20) / 2;
-  
+  // === ARTICLE 1 - OBJET ===
+  yPos = checkPage(40, yPos);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 1 : OBJET DE LA RESERVATION", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const art1 = `Par la presente, le Reservataire declare reserver aupres du Vendeur la parcelle de terrain ci-apres designee :\n\n- Lotissement : ${lotissement.name}, sis a ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}\n- Numero de lot : ${parcelle.plot_number}\n- Superficie : ${formatAmountForPDF(parcelle.area)} m2\n- Prix de vente : ${formatAmountWithCurrency(parcelle.price)} (${numberToWordsPDF(parcelle.price)} francs CFA)`;
+
+  const art1Lines = doc.splitTextToSize(art1, maxWidth);
+  art1Lines.forEach((line: string) => {
+    yPos = checkPage(6, yPos);
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // === ARTICLE 2 - MONTANT DE LA RESERVATION ===
+  yPos = checkPage(50, yPos);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 2 : MONTANT DE LA RESERVATION", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const art2 = `Le Reservataire verse au Vendeur, a la signature des presentes, la somme de ${formatAmountWithCurrency(reservation.deposit_amount)} (${numberToWordsPDF(reservation.deposit_amount)} francs CFA) a titre de montant de reservation.\n\nMode de paiement : ${getPaymentMethodLabel(reservation.payment_method)}\n\nCe montant sera impute sur le prix total de la parcelle en cas de conclusion de la vente definitive.`;
+
+  const art2Lines = doc.splitTextToSize(art2, maxWidth);
+  art2Lines.forEach((line: string) => {
+    yPos = checkPage(6, yPos);
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // === ARTICLE 3 - CARACTERE NON REMBOURSABLE ===
+  yPos = checkPage(50, yPos);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 3 : CARACTERE NON REMBOURSABLE", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const art3 = `Le montant de la reservation vise a l'article 2 est NON REMBOURSABLE, quels que soient les motifs d'annulation ou de desistement du Reservataire.\n\nEn cas de renonciation du Reservataire a l'acquisition de la parcelle reservee, le montant de la reservation reste definitivement acquis au Vendeur a titre d'indemnite forfaitaire, conformement aux dispositions des articles 1134 et suivants du Code civil applicable en Cote d'Ivoire.\n\nEn cas de defaut du Vendeur a honorer ses engagements, le montant de la reservation sera integralement restitue au Reservataire, sans prejudice de dommages et interets eventuels.`;
+
+  const art3Lines = doc.splitTextToSize(art3, maxWidth);
+  art3Lines.forEach((line: string) => {
+    yPos = checkPage(6, yPos);
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // === ARTICLE 4 - DUREE DE VALIDITE ===
+  yPos = checkPage(40, yPos);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 4 : DUREE DE VALIDITE", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const art4 = `La presente reservation est valable pour une duree de ${reservation.validity_days} (${numberToWordsPDF(reservation.validity_days)}) jours a compter de sa date de signature, soit jusqu'au ${formatDate(reservation.expiry_date)}.\n\nA l'expiration de ce delai, si la vente definitive n'a pas ete conclue du fait du Reservataire, la reservation sera caduque de plein droit et le montant verse restera acquis au Vendeur conformement a l'article 3 ci-dessus.`;
+
+  const art4Lines = doc.splitTextToSize(art4, maxWidth);
+  art4Lines.forEach((line: string) => {
+    yPos = checkPage(6, yPos);
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // === ARTICLE 5 - OBLIGATIONS DES PARTIES ===
+  yPos = checkPage(60, yPos);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 5 : OBLIGATIONS DES PARTIES", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const art5 = `Le Vendeur s'engage a :\n- Retirer la parcelle de la vente pendant la duree de validite de la reservation\n- Informer le Reservataire de toute modification affectant le lotissement\n- Conclure la vente definitive dans les conditions convenues\n\nLe Reservataire s'engage a :\n- Conclure la vente definitive dans le delai de validite de la reservation\n- Fournir tous les documents necessaires a la regularisation de la vente\n- Respecter le calendrier de paiement qui sera fixe dans l'acte de vente`;
+
+  const art5Lines = doc.splitTextToSize(art5, maxWidth);
+  art5Lines.forEach((line: string) => {
+    yPos = checkPage(6, yPos);
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // === ARTICLE 6 - LITIGES ===
+  yPos = checkPage(30, yPos);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 6 : REGLEMENT DES LITIGES", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const art6 = `Tout differend ne de l'interpretation ou de l'execution de la presente fiche de reservation sera regle a l'amiable. A defaut, il sera soumis aux juridictions competentes d'Abidjan, Republique de Cote d'Ivoire.`;
+
+  const art6Lines = doc.splitTextToSize(art6, maxWidth);
+  art6Lines.forEach((line: string) => {
+    yPos = checkPage(6, yPos);
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // === ARTICLE 7 - DISPOSITIONS DIVERSES ===
+  yPos = checkPage(30, yPos);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 7 : DISPOSITIONS DIVERSES", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const art7 = `La presente fiche de reservation est etablie en deux (2) exemplaires originaux, un pour chaque partie.\n\nLes frais de notaire, d'enregistrement et toutes taxes afferentes a la vente definitive seront a la charge du Reservataire.`;
+
+  const art7Lines = doc.splitTextToSize(art7, maxWidth);
+  art7Lines.forEach((line: string) => {
+    yPos = checkPage(6, yPos);
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  if (reservation.notes) {
+    yPos += 5;
+    doc.setFont("helvetica", "italic");
+    doc.text(`Observations : ${reservation.notes}`, margin, yPos);
+    yPos += 7;
+  }
+
+  yPos += 15;
+
+  // === SIGNATURES ===
+  yPos = checkPage(40, yPos);
+  const sigDate = `Fait a ${agency?.city || "Abidjan"}, le ${formatDate(reservation.reservation_date)}`;
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
+  doc.text(sigDate, margin, yPos);
+  yPos += 10;
+
+  const colWidth = (maxWidth - 20) / 2;
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
-  doc.text("Le Réservataire", margin, yPos);
+  doc.text("Le Reservataire", margin, yPos);
   doc.text("Le Vendeur", margin + colWidth + 20, yPos);
-  
+
   yPos += 5;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text("(Signature précédée de \"Lu et approuvé\")", margin, yPos);
+  doc.text("(Signature precedee de \"Lu et approuve\")", margin, yPos);
   doc.text("(Signature et cachet)", margin + colWidth + 20, yPos);
-  
+
   yPos += 25;
   doc.setDrawColor(150, 150, 150);
   doc.line(margin, yPos, margin + colWidth, yPos);
   doc.line(margin + colWidth + 20, yPos, pageWidth - margin, yPos);
 
   addFooter(doc, agency);
-  
+
   return doc;
 };
 

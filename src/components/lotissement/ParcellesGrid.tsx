@@ -28,6 +28,7 @@ import { SellParcelleDialog } from "./SellParcelleDialog";
 import { ReserveParcelleDialog } from "./ReserveParcelleDialog";
 import { ReservationParcelleCard } from "./ReservationParcelleCard";
 import { useReservationByParcelle } from "@/hooks/useReservationsParcelles";
+import { useLotissement } from "@/hooks/useLotissements";
 
 interface ParcellesGridProps {
   parcelles: Parcelle[];
@@ -46,15 +47,16 @@ const STATUS_BG = {
   vendu: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900",
 };
 
-function ReservationPanel({ parcelleId, plotNumber, parcelle, onClose }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; onClose: () => void }) {
+function ReservationPanel({ parcelleId, plotNumber, parcelle, lotissementId, onClose }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; lotissementId: string; onClose: () => void }) {
   const { data: reservation, isLoading } = useReservationByParcelle(parcelleId);
+  const { data: lotissement } = useLotissement(lotissementId);
 
   if (isLoading) return <div className="mt-4"><Card><CardContent className="p-4 text-center text-muted-foreground">Chargement...</CardContent></Card></div>;
   if (!reservation) return <div className="mt-4"><Card><CardContent className="p-4 text-center text-muted-foreground">Aucune réservation trouvée pour le lot {plotNumber}</CardContent></Card></div>;
 
   return (
     <div className="mt-4 max-w-md">
-      <ReservationParcelleCard reservation={reservation} parcelle={parcelle} />
+      <ReservationParcelleCard reservation={reservation} parcelle={parcelle} lotissement={lotissement ? { name: lotissement.name, location: lotissement.location, city: lotissement.city } : undefined} />
     </div>
   );
 }
@@ -177,7 +179,7 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
 
       {/* Reservation card for selected reserved parcelle */}
       {viewingReservation && viewingReservation.status === "reserve" && (
-        <ReservationPanel parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} parcelle={viewingReservation} onClose={() => setViewingReservation(null)} />
+        <ReservationPanel parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} parcelle={viewingReservation} lotissementId={lotissementId} onClose={() => setViewingReservation(null)} />
       )}
 
       {editingParcelle && (

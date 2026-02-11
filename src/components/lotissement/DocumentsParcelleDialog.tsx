@@ -75,13 +75,20 @@ export function DocumentsParcelleDialog({
   const handleGenerateFicheReservation = async () => {
     setGenerating("reservation");
     try {
+      const depositAmount = vente.down_payment || Math.round(vente.total_price * depositPercentage / 100);
       const doc = await generateFicheReservation(
         parcelleInfo,
         lotissementInfo,
         acquereurInfo,
         agencyInfo,
-        vente.sale_date,
-        depositPercentage
+        {
+          deposit_amount: depositAmount,
+          reservation_date: vente.sale_date,
+          expiry_date: new Date(new Date(vente.sale_date).getTime() + 30 * 86400000).toISOString().split("T")[0],
+          validity_days: 30,
+          payment_method: null,
+          notes: null,
+        }
       );
       downloadPDF(doc, `fiche-reservation-${parcelleInfo.plot_number}.pdf`);
       toast.success("Fiche de réservation générée");

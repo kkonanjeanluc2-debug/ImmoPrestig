@@ -6,6 +6,12 @@ interface CreateTenantAccessRequest {
   password: string;
 }
 
+// Generate a deterministic pseudo-email from phone number for Supabase Auth
+function phoneToEmail(phone: string): string {
+  const cleaned = phone.replace(/[^0-9+]/g, "");
+  return `phone_${cleaned}@tenant.immoprestige.local`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -23,7 +29,6 @@ Deno.serve(async (req) => {
     const callingUserId = auth.userId;
     console.log("Authenticated user:", callingUserId);
 
-    // Create admin client for privileged operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -54,15 +59,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify the calling user owns this tenant record (is the agency owner)
-    // Get agency of the calling user
-    const { data: agency, error: agencyError } = await supabaseAdmin
+    // Verify authorization
+    const { data: agency } = await supabaseAdmin
       .from("agencies")
       .select("id, user_id")
       .eq("user_id", callingUserId)
       .maybeSingle();
 
-    // Also check if user is an admin member
     let isAdmin = false;
     if (!agency) {
       const { data: membership } = await supabaseAdmin
@@ -78,7 +81,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check if the calling user is the owner of the tenant record
     const { data: tenantOwner } = await supabaseAdmin
       .from("tenants")
       .select("user_id")
@@ -86,7 +88,6 @@ Deno.serve(async (req) => {
       .single();
 
     if (tenantOwner?.user_id !== callingUserId && !isAdmin) {
-      // Check if calling user is super_admin
       const { data: isSuperAdmin } = await supabaseAdmin.rpc("is_super_admin", { _user_id: callingUserId });
       
       if (!isSuperAdmin) {
@@ -105,15 +106,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if email is provided
-    if (!tenant.email) {
+    // Determine the auth email: real email or pseudo-email from phone
+    let authEmail: string;
+    let loginIdentifier: string;
+
+    if (tenant.email) {
+      authEmail = tenant.email.toLowerCase();
+      loginIdentifier = tenant.email;
+    } else if (tenant.phone) {
+      authEmail = phoneToEmail(tenant.phone);
+      loginIdentifier = tenant.phone;
+    } else {
       return new Response(
-        JSON.stringify({ error: "Le locataire doit avoir une adresse email pour créer un accès" }),
+        JSON.stringify({ error: "Le locataire doit avoir une adresse email ou un numéro de téléphone" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get agency ID for subscription check
+    // Check subscription limits
     let agencyId: string | null = null;
     if (agency) {
       agencyId = agency.id;
@@ -130,7 +140,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check subscription limits
     if (agencyId) {
       const { data: canAdd } = await supabaseAdmin.rpc("can_agency_add_tenant_portal", { p_agency_id: agencyId });
       
@@ -146,12 +155,11 @@ Deno.serve(async (req) => {
     const { data: existingUsers } = await supabaseAdmin
       .from("profiles")
       .select("user_id")
-      .eq("email", tenant.email.toLowerCase());
+      .eq("email", authEmail);
 
     let userId: string;
 
     if (existingUsers && existingUsers.length > 0) {
-      // User already exists - update their password
       userId = existingUsers[0].user_id;
       console.log("User already exists, updating password:", userId);
       
@@ -161,6 +169,7 @@ Deno.serve(async (req) => {
         user_metadata: {
           full_name: tenant.name,
           is_tenant: true,
+          login_identifier: loginIdentifier,
         },
       });
 
@@ -173,14 +182,14 @@ Deno.serve(async (req) => {
       }
       console.log("Password updated successfully for user:", userId);
     } else {
-      // Create new user
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email: tenant.email.toLowerCase(),
+        email: authEmail,
         password,
         email_confirm: true,
         user_metadata: {
           full_name: tenant.name,
           is_tenant: true,
+          login_identifier: loginIdentifier,
         },
       });
 
@@ -208,7 +217,7 @@ Deno.serve(async (req) => {
       console.error("Error setting user role:", roleError);
     }
 
-    // Update tenant with portal_user_id and portal access (keep original user_id for ownership)
+    // Update tenant with portal_user_id and portal access
     const { error: updateError } = await supabaseAdmin
       .from("tenants")
       .update({
@@ -225,12 +234,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("Portal access created successfully for tenant:", tenant_id);
+    console.log("Portal access created successfully for tenant:", tenant_id, "login:", loginIdentifier);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         user_id: userId,
+        login_identifier: loginIdentifier,
         message: "Accès portail créé avec succès" 
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -6,11 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Building2, Mail, Lock, CreditCard, Eye, EyeOff } from "lucide-react";
+import { Loader2, Building2, User, Lock, CreditCard, Eye, EyeOff } from "lucide-react";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
+
+// Convert phone number to pseudo-email for auth (must match edge function logic)
+function phoneToEmail(phone: string): string {
+  const cleaned = phone.replace(/[^0-9+]/g, "");
+  return `phone_${cleaned}@tenant.immoprestige.local`;
+}
+
+function isPhoneNumber(value: string): boolean {
+  const cleaned = value.replace(/\s/g, "");
+  return /^[+]?[0-9]{8,15}$/.test(cleaned);
+}
+
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,14 +36,22 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isValidEmail(email)) {
-      toast({ variant: "destructive", title: "Email invalide", description: EMAIL_ERROR_MESSAGE });
+    const trimmed = identifier.trim();
+    let loginEmail: string;
+
+    if (isPhoneNumber(trimmed)) {
+      // Phone-based login: convert to pseudo-email
+      loginEmail = phoneToEmail(trimmed);
+    } else if (isValidEmail(trimmed)) {
+      loginEmail = trimmed;
+    } else {
+      toast({ variant: "destructive", title: "Identifiant invalide", description: "Veuillez entrer un email valide ou un numéro de téléphone" });
       return;
     }
 
     setIsLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(loginEmail, password);
 
     if (error) {
       toast({
@@ -68,15 +88,15 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="identifier">Email ou téléphone</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="votre@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="identifier"
+                  type="text"
+                  placeholder="votre@email.com ou 0700000000"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   className="pl-10"
                   required
                 />

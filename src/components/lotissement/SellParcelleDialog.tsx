@@ -20,6 +20,7 @@ import { Loader2, Plus, User, CreditCard, Banknote, Smartphone, Building2 } from
 import { Parcelle } from "@/hooks/useParcelles";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useCreateVenteParcelle, PaymentType } from "@/hooks/useVentesParcelles";
+import { useUpdateReservationParcelle } from "@/hooks/useReservationsParcelles";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -28,17 +29,21 @@ interface SellParcelleDialogProps {
   parcelle: Parcelle;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  reservationId?: string;
+  defaultAcquereurId?: string;
+  defaultDownPayment?: number;
 }
 
-export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcelleDialogProps) {
+export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId, defaultAcquereurId, defaultDownPayment }: SellParcelleDialogProps) {
   const { user } = useAuth();
   const { data: acquereurs } = useAcquereurs();
   const { data: assignableUsers } = useAssignableUsers();
   const createAcquereur = useCreateAcquereur();
   const createVente = useCreateVenteParcelle();
+  const updateReservation = useUpdateReservationParcelle();
 
-  const [mode, setMode] = useState<"existing" | "new">("existing");
-  const [acquereurId, setAcquereurId] = useState("");
+  const [mode, setMode] = useState<"existing" | "new">(defaultAcquereurId ? "existing" : "existing");
+  const [acquereurId, setAcquereurId] = useState(defaultAcquereurId || "");
   const [newAcquereur, setNewAcquereur] = useState({
     name: "",
     phone: "",
@@ -51,7 +56,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
   });
   const [paymentType, setPaymentType] = useState<PaymentType>("comptant");
   const [paymentMethod, setPaymentMethod] = useState<string>("especes");
-  const [downPayment, setDownPayment] = useState("");
+  const [downPayment, setDownPayment] = useState(defaultDownPayment ? defaultDownPayment.toString() : "");
   const [totalInstallments, setTotalInstallments] = useState("12");
   const [salePrice, setSalePrice] = useState(parcelle.price.toString());
   const [soldBy, setSoldBy] = useState<string>((parcelle as any).assigned_to || user?.id || "");
@@ -122,7 +127,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
     }
 
     try {
-      await createVente.mutateAsync({
+      const vente = await createVente.mutateAsync({
         parcelle_id: parcelle.id,
         acquereur_id: buyerId,
         total_price: parseFloat(salePrice),
@@ -133,6 +138,15 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange }: SellParcell
         total_installments: paymentType === "echelonne" ? parseInt(totalInstallments) : null,
         sold_by: soldBy || null,
       });
+
+      // Mark reservation as converted if this sale comes from a reservation
+      if (reservationId) {
+        await updateReservation.mutateAsync({
+          id: reservationId,
+          status: "converted",
+          converted_vente_id: vente.id,
+        });
+      }
 
       toast.success("Vente enregistrée avec succès");
       onOpenChange(false);

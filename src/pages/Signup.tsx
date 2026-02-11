@@ -9,6 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2, Mail, Lock, User, Phone, MapPin, Building, Home, CreditCard, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
 
 type AccountType = "agence" | "proprietaire";
 
@@ -84,11 +86,12 @@ const Signup = () => {
       return;
     }
 
-    if (password.length < 6) {
+    const { valid, errors } = validatePassword(password);
+    if (!valid) {
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Le mot de passe doit contenir au moins 6 caractères",
+        title: "Mot de passe trop faible",
+        description: errors[0],
       });
       return;
     }
@@ -341,9 +344,7 @@ const Signup = () => {
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Minimum 6 caractères
-                  </p>
+                  <PasswordStrengthIndicator password={password} />
                 </div>
 
                 {/* Confirm Password */}

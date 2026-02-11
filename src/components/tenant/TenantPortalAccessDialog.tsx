@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCreateTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { Loader2, Eye, EyeOff, KeyRound } from "lucide-react";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
 
 interface TenantPortalAccessDialogProps {
   open: boolean;
@@ -31,8 +33,9 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Le mot de passe doit contenir au moins 6 caractères");
+    const { valid, errors } = validatePassword(password);
+    if (!valid) {
+      toast.error(errors[0]);
       return;
     }
 
@@ -58,11 +61,22 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
   };
 
   const generatePassword = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const digits = "0123456789";
+    const special = "!@#$%^&*()_+-=";
+    const all = lower + upper + digits + special;
+    // Guarantee at least one of each type
     let result = "";
-    for (let i = 0; i < 12; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += lower.charAt(Math.floor(Math.random() * lower.length));
+    result += upper.charAt(Math.floor(Math.random() * upper.length));
+    result += digits.charAt(Math.floor(Math.random() * digits.length));
+    result += special.charAt(Math.floor(Math.random() * special.length));
+    for (let i = 4; i < 16; i++) {
+      result += all.charAt(Math.floor(Math.random() * all.length));
     }
+    // Shuffle
+    result = result.split("").sort(() => Math.random() - 0.5).join("");
     setPassword(result);
     setConfirmPassword(result);
     setShowPassword(true);
@@ -125,6 +139,7 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
+              <PasswordStrengthIndicator password={password} />
             </div>
 
             <div className="space-y-2">

@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2, Lock, ArrowLeft, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -58,11 +60,12 @@ const ResetPassword = () => {
       return;
     }
 
-    if (password.length < 6) {
+    const { valid, errors } = validatePassword(password);
+    if (!valid) {
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Le mot de passe doit contenir au moins 6 caractères",
+        title: "Mot de passe trop faible",
+        description: errors[0],
       });
       return;
     }
@@ -220,9 +223,7 @@ const ResetPassword = () => {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Minimum 6 caractères
-              </p>
+              <PasswordStrengthIndicator password={password} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>

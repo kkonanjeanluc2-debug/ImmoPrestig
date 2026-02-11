@@ -27,7 +27,12 @@ export function isValidEmail(email: string): boolean {
   const labels = domain.split(".");
   if (labels.some((l) => l.length > 63 || l.length === 0)) return false;
 
+  // Only allow specific domains
+  const allowedDomains = ["gmail.com", "hotmail.com", "hotmail.fr"];
+  const domainLower = domain.toLowerCase();
+  if (!allowedDomains.includes(domainLower)) return false;
+
   return true;
 }
 
-export const EMAIL_ERROR_MESSAGE = "Veuillez entrer une adresse email valide (ex: nom@domaine.com)";
+export const EMAIL_ERROR_MESSAGE = "Seules les adresses @gmail.com, @hotmail.com et @hotmail.fr sont acceptées";

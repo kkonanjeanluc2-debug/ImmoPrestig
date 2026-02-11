@@ -20,14 +20,15 @@ import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
-import { MonthFilter } from "@/components/payment/MonthFilter";
+import { DateRangeFilter } from "@/components/payment/DateRangeFilter";
+import { DateRange } from "react-day-picker";
 
 const Index = () => {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
@@ -58,14 +59,17 @@ const Index = () => {
 
   // Apply month filter to payments
   const periodFilteredPayments = useMemo(() => {
-    if (!selectedMonth) return filteredPayments;
+    if (!dateRange?.from) return filteredPayments;
     return filteredPayments.filter(p => {
       const dateStr = p.paid_date || p.due_date;
       if (!dateStr) return false;
       const d = new Date(dateStr);
-      return d.getMonth() === selectedMonth.month && d.getFullYear() === selectedMonth.year;
+      if (dateRange.to) {
+        return d >= dateRange.from! && d <= dateRange.to;
+      }
+      return d.toDateString() === dateRange.from!.toDateString();
     });
-  }, [filteredPayments, selectedMonth]);
+  }, [filteredPayments, dateRange]);
 
   // Compute stats using filtered data
   const totalProperties = filteredProperties.length;
@@ -73,11 +77,11 @@ const Index = () => {
     t.contracts?.some(c => c.status === 'active')
   ).length;
   
-  const revenuePayments = selectedMonth ? periodFilteredPayments : filteredPayments;
+  const revenuePayments = dateRange?.from ? periodFilteredPayments : filteredPayments;
   const monthlyRevenue = revenuePayments.filter(p => {
     const paidDate = p.paid_date ? new Date(p.paid_date) : null;
     if (!paidDate || p.status !== 'paid') return false;
-    if (selectedMonth) return true;
+    if (dateRange?.from) return true;
     const now = new Date();
     return paidDate.getMonth() === now.getMonth() && paidDate.getFullYear() === now.getFullYear();
   }).reduce((sum, p) => sum + Number(p.amount), 0);
@@ -130,7 +134,7 @@ const Index = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <MonthFilter selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
+            <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
             <Button
               variant="outline"
               onClick={handleGenerateReceipts}
@@ -174,7 +178,7 @@ const Index = () => {
             <StatCard
               title="Revenus mensuels"
               value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
-              change={selectedMonth ? "Période sélectionnée" : "Ce mois-ci"}
+              change={dateRange?.from ? "Période sélectionnée" : "Ce mois-ci"}
               changeType="positive"
               icon={Wallet}
               iconBg="sand"

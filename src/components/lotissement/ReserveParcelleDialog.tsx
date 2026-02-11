@@ -168,9 +168,9 @@ export function ReserveParcelleDialog({ parcelle, open, onOpenChange }: ReserveP
             )}
           </div>
 
-          {/* Montant de l'acompte */}
+          {/* Montant de la réservation */}
           <div className="space-y-2">
-            <Label>Acompte de réservation (F CFA)</Label>
+            <Label>Montant de la réservation (F CFA)</Label>
             <Input
               type="number"
               min="0"

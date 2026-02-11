@@ -19,6 +19,7 @@ import { ZoomIn, ZoomOut, Filter, RotateCcw } from "lucide-react";
 import { Parcelle } from "@/hooks/useParcelles";
 import { SellParcelleDialog } from "./SellParcelleDialog";
 import { EditParcelleDialog } from "./EditParcelleDialog";
+import { ReserveParcelleDialog } from "./ReserveParcelleDialog";
 
 interface PlanMasseProps {
   parcelles: Parcelle[];
@@ -52,7 +53,7 @@ export function PlanMasse({ parcelles, lotissementName }: PlanMasseProps) {
   const [zoom, setZoom] = useState(1);
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [selectedParcelle, setSelectedParcelle] = useState<Parcelle | null>(null);
-  const [actionType, setActionType] = useState<"sell" | "edit" | null>(null);
+  const [actionType, setActionType] = useState<"sell" | "edit" | "reserve" | null>(null);
 
   // Calculate grid layout
   const gridConfig = useMemo(() => {
@@ -88,6 +89,8 @@ export function PlanMasse({ parcelles, lotissementName }: PlanMasseProps) {
     setSelectedParcelle(parcelle);
     if (parcelle.status === "disponible") {
       setActionType("sell");
+    } else if (parcelle.status === "reserve") {
+      setActionType("edit");
     } else {
       setActionType("edit");
     }
@@ -277,7 +280,7 @@ export function PlanMasse({ parcelles, lotissementName }: PlanMasseProps) {
                           </Badge>
                           {parcelle.status === "disponible" && (
                             <p className="text-xs text-muted-foreground mt-2">
-                              Cliquez pour vendre
+                              Cliquez pour vendre ou réserver
                             </p>
                           )}
                         </div>
@@ -314,6 +317,19 @@ export function PlanMasse({ parcelles, lotissementName }: PlanMasseProps) {
         <SellParcelleDialog
           parcelle={selectedParcelle}
           open={!!selectedParcelle && actionType === "sell"}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedParcelle(null);
+              setActionType(null);
+            }
+          }}
+        />
+      )}
+
+      {selectedParcelle && actionType === "reserve" && (
+        <ReserveParcelleDialog
+          parcelle={selectedParcelle}
+          open={!!selectedParcelle && actionType === "reserve"}
           onOpenChange={(open) => {
             if (!open) {
               setSelectedParcelle(null);

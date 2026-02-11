@@ -25,6 +25,7 @@ import {
   Layers,
   FileSignature,
 } from "lucide-react";
+import { PeriodFilter, getDefaultPeriod, getPeriodLabel, PeriodValue } from "@/components/dashboard/PeriodFilter";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useParcelles } from "@/hooks/useParcelles";
 import { useVentesParcelles } from "@/hooks/useVentesParcelles";
@@ -64,6 +65,7 @@ const LotissementDetails = () => {
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [showGenerateDocument, setShowGenerateDocument] = useState(false);
+  const [revenuePeriod, setRevenuePeriod] = useState<PeriodValue>(getDefaultPeriod);
 
   // Calculate stats based on payment status
   const stats = useMemo(() => {
@@ -77,10 +79,8 @@ const LotissementDetails = () => {
     
     if (ventes && ventes.length > 0) {
       ventes.forEach(vente => {
-        // Calculate total actually paid for this sale (down payment + paid installments)
         let totalPaid = vente.down_payment || 0;
         
-        // Add paid echeances for this vente
         const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
         venteEcheances.forEach(echeance => {
           if (echeance.status === "paid") {
@@ -90,7 +90,6 @@ const LotissementDetails = () => {
         
         totalRevenue += totalPaid;
         
-        // Check if fully paid or partially paid
         if (totalPaid >= vente.total_price) {
           vendues++;
         } else {
@@ -101,6 +100,33 @@ const LotissementDetails = () => {
     
     return { total, disponibles, vendues, reservees, totalRevenue };
   }, [parcelles, ventes, echeances]);
+
+  // Revenue filtered by period
+  const periodRevenue = useMemo(() => {
+    let total = 0;
+    if (ventes && ventes.length > 0) {
+      ventes.forEach(vente => {
+        // Down payment: use vente created_at as payment date
+        const venteDate = new Date(vente.created_at);
+        if (venteDate >= revenuePeriod.from && venteDate <= revenuePeriod.to && (vente.down_payment || 0) > 0) {
+          total += vente.down_payment || 0;
+        }
+        
+        const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
+        venteEcheances.forEach(echeance => {
+          if (echeance.status === "paid" && echeance.paid_date) {
+            const paidDate = new Date(echeance.paid_date);
+            if (paidDate >= revenuePeriod.from && paidDate <= revenuePeriod.to) {
+              total += echeance.paid_amount || echeance.amount;
+            }
+          }
+        });
+      });
+    }
+    return total;
+  }, [ventes, echeances, revenuePeriod]);
+
+  const revenuePeriodLabel = getPeriodLabel(revenuePeriod);
 
   if (loadingLotissement) {
     return (
@@ -211,13 +237,16 @@ const LotissementDetails = () => {
             <CardContent className="p-3 sm:pt-4">
               <div className="text-center">
                 <p className="text-sm sm:text-xl font-bold text-primary truncate">
-                  {stats.totalRevenue.toLocaleString("fr-FR")} F
+                  {periodRevenue.toLocaleString("fr-FR")} F
                 </p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Revenus</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">{revenuePeriodLabel.subtitle}</p>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Revenue Period Filter */}
+        <PeriodFilter value={revenuePeriod} onChange={setRevenuePeriod} />
 
         {/* Tabs */}
         <Tabs defaultValue="parcelles" className="space-y-4" onValueChange={(val) => {

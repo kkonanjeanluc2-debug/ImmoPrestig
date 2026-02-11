@@ -20,7 +20,7 @@ import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
-import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
+import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 
 const Index = () => {
   const { user } = useAuth();
@@ -167,9 +167,9 @@ const Index = () => {
               iconBg="emerald"
             />
             <StatCard
-              title="Revenus mensuels"
+              title={getPeriodLabel(period).title}
               value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
-              change={period.type === "month" ? "Ce mois-ci" : "Période sélectionnée"}
+              change={getPeriodLabel(period).subtitle}
               changeType="positive"
               icon={Wallet}
               iconBg="sand"
@@ -196,7 +196,7 @@ const Index = () => {
         {/* Charts Section */}
         {!isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <RevenueChart payments={periodFilteredPayments} />
+            <RevenueChart payments={periodFilteredPayments} periodLabel={getPeriodLabel(period)} />
             <OccupancyChart properties={filteredProperties} />
             <PropertyTypesChart properties={filteredProperties} />
           </div>

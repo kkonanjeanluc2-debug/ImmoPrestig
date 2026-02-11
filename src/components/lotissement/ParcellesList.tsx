@@ -61,7 +61,7 @@ const STATUS_LABELS: Record<string, string> = {
   vendu: "Vendu",
 };
 
-function ReservationPanelList({ parcelleId, plotNumber, onClose }: { parcelleId: string; plotNumber: string; onClose: () => void }) {
+function ReservationPanelList({ parcelleId, plotNumber, parcelle, onClose }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; onClose: () => void }) {
   const { data: reservation, isLoading } = useReservationByParcelle(parcelleId);
 
   if (isLoading) return <Card className="mt-4"><CardContent className="p-4 text-center text-muted-foreground">Chargement...</CardContent></Card>;
@@ -69,7 +69,7 @@ function ReservationPanelList({ parcelleId, plotNumber, onClose }: { parcelleId:
 
   return (
     <div className="mt-4 max-w-md">
-      <ReservationParcelleCard reservation={reservation} />
+      <ReservationParcelleCard reservation={reservation} parcelle={parcelle} />
     </div>
   );
 }
@@ -298,7 +298,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
 
       {/* Reservation card for selected reserved parcelle */}
       {viewingReservation && viewingReservation.status === "reserve" && (
-        <ReservationPanelList parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} onClose={() => setViewingReservation(null)} />
+        <ReservationPanelList parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} parcelle={viewingReservation} onClose={() => setViewingReservation(null)} />
       )}
 
       {editingParcelle && (

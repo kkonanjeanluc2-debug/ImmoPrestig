@@ -46,7 +46,7 @@ const STATUS_BG = {
   vendu: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900",
 };
 
-function ReservationPanel({ parcelleId, plotNumber, onClose }: { parcelleId: string; plotNumber: string; onClose: () => void }) {
+function ReservationPanel({ parcelleId, plotNumber, parcelle, onClose }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; onClose: () => void }) {
   const { data: reservation, isLoading } = useReservationByParcelle(parcelleId);
 
   if (isLoading) return <div className="mt-4"><Card><CardContent className="p-4 text-center text-muted-foreground">Chargement...</CardContent></Card></div>;
@@ -54,7 +54,7 @@ function ReservationPanel({ parcelleId, plotNumber, onClose }: { parcelleId: str
 
   return (
     <div className="mt-4 max-w-md">
-      <ReservationParcelleCard reservation={reservation} />
+      <ReservationParcelleCard reservation={reservation} parcelle={parcelle} />
     </div>
   );
 }
@@ -177,7 +177,7 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
 
       {/* Reservation card for selected reserved parcelle */}
       {viewingReservation && viewingReservation.status === "reserve" && (
-        <ReservationPanel parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} onClose={() => setViewingReservation(null)} />
+        <ReservationPanel parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} parcelle={viewingReservation} onClose={() => setViewingReservation(null)} />
       )}
 
       {editingParcelle && (

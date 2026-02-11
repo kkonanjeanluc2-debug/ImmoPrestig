@@ -9,6 +9,7 @@ interface RevenueChartProps {
     paid_date: string | null;
     status: string;
   }>;
+  periodLabel?: { title: string; subtitle: string };
 }
 
 const chartConfig = {
@@ -18,7 +19,7 @@ const chartConfig = {
   },
 };
 
-export function RevenueChart({ payments }: RevenueChartProps) {
+export function RevenueChart({ payments, periodLabel }: RevenueChartProps) {
   // Calculate monthly revenue for the last 6 months
   const getMonthlyData = () => {
     const months: { name: string; revenue: number; month: number; year: number }[] = [];
@@ -62,7 +63,7 @@ export function RevenueChart({ payments }: RevenueChartProps) {
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold">Revenus mensuels</CardTitle>
+          <CardTitle className="text-base font-semibold">{periodLabel?.title || "Revenus mensuels"}</CardTitle>
           <div className="flex items-center gap-1 text-sm text-emerald">
             <TrendingUp className="h-4 w-4" />
             <span>{percentChange >= 0 ? "+" : ""}{percentChange}%</span>
@@ -71,7 +72,7 @@ export function RevenueChart({ payments }: RevenueChartProps) {
         <p className="text-2xl font-bold text-foreground">
           {totalRevenue.toLocaleString("fr-FR")} F CFA
         </p>
-        <p className="text-xs text-muted-foreground">Total des 6 derniers mois</p>
+        <p className="text-xs text-muted-foreground">{periodLabel?.subtitle || "Total des 6 derniers mois"}</p>
       </CardHeader>
       <CardContent className="pt-0">
         <ChartContainer config={chartConfig} className="h-[200px] w-full">

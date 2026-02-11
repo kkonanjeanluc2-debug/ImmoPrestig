@@ -45,6 +45,22 @@ export function getDefaultPeriod(): PeriodValue {
   return { type: "month", from, to };
 }
 
+export function getPeriodLabel(period: PeriodValue): { title: string; subtitle: string } {
+  if (period.type === "month") {
+    const monthName = period.from.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    return { title: `Revenus de ${monthName}`, subtitle: `Total du mois` };
+  }
+  if (period.type === "3months") {
+    return { title: "Revenus (3 mois)", subtitle: "Total des 3 derniers mois" };
+  }
+  if (period.type === "12months") {
+    return { title: "Revenus (12 mois)", subtitle: "Total des 12 derniers mois" };
+  }
+  const fromStr = format(period.from, "dd/MM/yyyy", { locale: fr });
+  const toStr = format(period.to, "dd/MM/yyyy", { locale: fr });
+  return { title: "Revenus personnalisés", subtitle: `Du ${fromStr} au ${toStr}` };
+}
+
 const PRESETS: { label: string; value: Exclude<PeriodType, "custom"> }[] = [
   { label: "Ce mois", value: "month" },
   { label: "3 mois", value: "3months" },

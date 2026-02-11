@@ -10,6 +10,8 @@ interface RevenueChartProps {
     status: string;
   }>;
   periodLabel?: { title: string; subtitle: string };
+  periodFrom?: Date;
+  periodTo?: Date;
 }
 
 const chartConfig = {
@@ -19,21 +21,26 @@ const chartConfig = {
   },
 };
 
-export function RevenueChart({ payments, periodLabel }: RevenueChartProps) {
-  // Calculate monthly revenue for the last 6 months
+export function RevenueChart({ payments, periodLabel, periodFrom, periodTo }: RevenueChartProps) {
   const getMonthlyData = () => {
     const months: { name: string; revenue: number; month: number; year: number }[] = [];
     const now = new Date();
+    const from = periodFrom || new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const to = periodTo || now;
 
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthName = date.toLocaleDateString("fr-FR", { month: "short" });
+    // Build month buckets from period start to period end
+    const startMonth = new Date(from.getFullYear(), from.getMonth(), 1);
+    const endMonth = new Date(to.getFullYear(), to.getMonth(), 1);
+    const cursor = new Date(startMonth);
+    while (cursor <= endMonth) {
+      const monthName = cursor.toLocaleDateString("fr-FR", { month: "short" });
       months.push({
         name: monthName.charAt(0).toUpperCase() + monthName.slice(1),
         revenue: 0,
-        month: date.getMonth(),
-        year: date.getFullYear(),
+        month: cursor.getMonth(),
+        year: cursor.getFullYear(),
       });
+      cursor.setMonth(cursor.getMonth() + 1);
     }
 
     // Sum payments for each month

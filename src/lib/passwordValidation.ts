@@ -4,7 +4,7 @@ export interface PasswordRule {
 }
 
 export const passwordRules: PasswordRule[] = [
-  { label: "12 caractères minimum", test: (p) => p.length >= 12 },
+  { label: "8 caractères minimum", test: (p) => p.length >= 8 },
   { label: "Au moins une lettre majuscule (A-Z)", test: (p) => /[A-Z]/.test(p) },
   { label: "Au moins une lettre minuscule (a-z)", test: (p) => /[a-z]/.test(p) },
   { label: "Au moins un chiffre (0-9)", test: (p) => /[0-9]/.test(p) },

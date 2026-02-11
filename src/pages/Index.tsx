@@ -72,9 +72,11 @@ const Index = () => {
     t.contracts?.some(c => c.status === 'active')
   ).length;
   
-  const monthlyRevenue = periodFilteredPayments.filter(p => {
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthlyRevenue = filteredPayments.filter(p => {
     const paidDate = p.paid_date ? new Date(p.paid_date) : null;
-    return paidDate && p.status === 'paid';
+    return paidDate && p.status === 'paid' && paidDate >= currentMonthStart && paidDate <= now;
   }).reduce((sum, p) => sum + Number(p.amount), 0);
 
   const occupiedProperties = filteredProperties.filter(p => p.status === 'loué').length;
@@ -167,9 +169,9 @@ const Index = () => {
               iconBg="emerald"
             />
             <StatCard
-              title={getPeriodLabel(period).title}
+              title="Revenus du mois"
               value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
-              change={getPeriodLabel(period).subtitle}
+              change={now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
               changeType="positive"
               icon={Wallet}
               iconBg="sand"

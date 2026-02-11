@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCreateTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
-import { Loader2, Eye, EyeOff, KeyRound } from "lucide-react";
+import { Loader2, Eye, EyeOff, KeyRound, Phone, Mail } from "lucide-react";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
 
@@ -16,6 +16,7 @@ interface TenantPortalAccessDialogProps {
     id: string;
     name: string;
     email: string | null;
+    phone?: string | null;
   };
 }
 
@@ -25,11 +26,16 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
   const [showPassword, setShowPassword] = useState(false);
   const createAccess = useCreateTenantPortalAccess();
 
+  const hasEmail = !!tenant.email;
+  const hasPhone = !!tenant.phone;
+  const canCreateAccess = hasEmail || hasPhone;
+  const loginIdentifier = hasEmail ? tenant.email : tenant.phone;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!tenant.email) {
-      toast.error("Le locataire doit avoir une adresse email");
+    if (!canCreateAccess) {
+      toast.error("Le locataire doit avoir une adresse email ou un numéro de téléphone");
       return;
     }
 
@@ -49,8 +55,9 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
         tenant_id: tenant.id,
         password,
       });
+      const loginWith = hasEmail ? tenant.email : tenant.phone;
       toast.success("Accès portail créé avec succès", {
-        description: `${tenant.name} peut maintenant se connecter avec ${tenant.email}`,
+        description: `${tenant.name} peut maintenant se connecter avec ${loginWith}`,
       });
       onOpenChange(false);
       setPassword("");
@@ -66,7 +73,6 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
     const digits = "0123456789";
     const special = "!@#$%^&*()_+-=";
     const all = lower + upper + digits + special;
-    // Guarantee at least one of each type
     let result = "";
     result += lower.charAt(Math.floor(Math.random() * lower.length));
     result += upper.charAt(Math.floor(Math.random() * upper.length));
@@ -75,7 +81,6 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
     for (let i = 4; i < 16; i++) {
       result += all.charAt(Math.floor(Math.random() * all.length));
     }
-    // Shuffle
     result = result.split("").sort(() => Math.random() - 0.5).join("");
     setPassword(result);
     setConfirmPassword(result);
@@ -95,16 +100,24 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
           </DialogDescription>
         </DialogHeader>
 
-        {!tenant.email ? (
+        {!canCreateAccess ? (
           <div className="py-4 text-center text-muted-foreground">
-            <p>Ce locataire n'a pas d'adresse email configurée.</p>
-            <p className="text-sm mt-2">Veuillez d'abord ajouter une adresse email au profil du locataire.</p>
+            <p>Ce locataire n'a ni adresse email ni numéro de téléphone.</p>
+            <p className="text-sm mt-2">Veuillez d'abord ajouter un email ou un téléphone au profil du locataire.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Email de connexion</Label>
-              <Input value={tenant.email} disabled className="bg-muted" />
+              <Label className="flex items-center gap-1.5">
+                {hasEmail ? <Mail className="h-3.5 w-3.5" /> : <Phone className="h-3.5 w-3.5" />}
+                {hasEmail ? "Email de connexion" : "Téléphone de connexion"}
+              </Label>
+              <Input value={loginIdentifier || ""} disabled className="bg-muted" />
+              {!hasEmail && hasPhone && (
+                <p className="text-xs text-muted-foreground">
+                  Le locataire se connectera avec son numéro de téléphone et son mot de passe.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

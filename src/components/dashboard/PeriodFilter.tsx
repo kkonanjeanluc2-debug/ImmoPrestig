@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 
 export type PeriodType = "month" | "3months" | "12months" | "custom";
 
@@ -36,7 +36,6 @@ function getPresetRange(type: Exclude<PeriodType, "custom">): { from: Date; to: 
     const from = new Date(now.getFullYear(), now.getMonth() - 2, 1);
     return { from, to };
   }
-  // 12months
   const from = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);
   return { from, to };
 }
@@ -52,79 +51,90 @@ const PRESETS: { label: string; value: Exclude<PeriodType, "custom"> }[] = [
   { label: "12 mois", value: "12months" },
 ];
 
-export function PeriodFilter({ value, onChange }: PeriodFilterProps) {
-  const [customOpen, setCustomOpen] = useState(false);
-  const [tempRange, setTempRange] = useState<DateRange | undefined>(
-    value.type === "custom" ? { from: value.from, to: value.to } : undefined
+function DatePickerInput({ label, date, onSelect }: { label: string; date?: Date; onSelect: (d: Date | undefined) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="space-y-1">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "h-8 w-[130px] justify-start text-left text-xs font-normal px-2",
+              !date && "text-muted-foreground"
+            )}
+          >
+            {date ? format(date, "dd/MM/yyyy", { locale: fr }) : "jj/mm/aaaa"}
+            <CalendarIcon className="ml-auto h-3.5 w-3.5 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(d) => { onSelect(d); setOpen(false); }}
+            locale={fr}
+            className="p-3 pointer-events-auto"
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
   );
+}
+
+export function PeriodFilter({ value, onChange }: PeriodFilterProps) {
+  const isCustom = value.type === "custom";
 
   const handlePreset = (preset: Exclude<PeriodType, "custom">) => {
     const { from, to } = getPresetRange(preset);
     onChange({ type: preset, from, to });
   };
 
-  const handleCustomApply = () => {
-    if (tempRange?.from) {
-      onChange({
-        type: "custom",
-        from: tempRange.from,
-        to: tempRange.to || tempRange.from,
-      });
-      setCustomOpen(false);
+  const handleCustomToggle = () => {
+    if (!isCustom) {
+      onChange({ type: "custom", from: value.from, to: value.to });
     }
   };
 
-  const customLabel =
-    value.type === "custom"
-      ? `${format(value.from, "dd/MM/yy", { locale: fr })} - ${format(value.to, "dd/MM/yy", { locale: fr })}`
-      : "Personnalisé";
+  const handleFromChange = (d: Date | undefined) => {
+    if (d) onChange({ type: "custom", from: d, to: value.to < d ? d : value.to });
+  };
+
+  const handleToChange = (d: Date | undefined) => {
+    if (d) onChange({ type: "custom", from: value.from > d ? d : value.from, to: d });
+  };
 
   return (
     <div className="space-y-1.5">
       <span className="text-xs font-medium text-muted-foreground">Période</span>
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-end gap-1.5">
         {PRESETS.map((p) => (
           <Button
             key={p.value}
             size="sm"
             variant={value.type === p.value ? "default" : "outline"}
-            className={cn("rounded-full px-4 h-8 text-xs")}
+            className="rounded-full px-4 h-8 text-xs"
             onClick={() => handlePreset(p.value)}
           >
             {p.label}
           </Button>
         ))}
-        <Popover open={customOpen} onOpenChange={setCustomOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              size="sm"
-              variant={value.type === "custom" ? "default" : "outline"}
-              className="rounded-full px-4 h-8 text-xs"
-            >
-              {customLabel}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={tempRange?.from || new Date()}
-              selected={tempRange}
-              onSelect={setTempRange}
-              numberOfMonths={2}
-              locale={fr}
-              className="p-3 pointer-events-auto"
-            />
-            <div className="flex items-center justify-end gap-2 p-3 border-t">
-              <Button variant="ghost" size="sm" onClick={() => setCustomOpen(false)}>
-                Annuler
-              </Button>
-              <Button size="sm" onClick={handleCustomApply} disabled={!tempRange?.from}>
-                Appliquer
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <Button
+          size="sm"
+          variant={isCustom ? "default" : "outline"}
+          className="rounded-full px-4 h-8 text-xs"
+          onClick={handleCustomToggle}
+        >
+          Personnalisé
+        </Button>
+        {isCustom && (
+          <>
+            <DatePickerInput label="Du" date={value.from} onSelect={handleFromChange} />
+            <DatePickerInput label="Au" date={value.to} onSelect={handleToChange} />
+          </>
+        )}
       </div>
     </div>
   );

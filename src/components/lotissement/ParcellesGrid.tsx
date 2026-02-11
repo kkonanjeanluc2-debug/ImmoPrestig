@@ -3,6 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -47,17 +51,22 @@ const STATUS_BG = {
   vendu: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900",
 };
 
-function ReservationPanel({ parcelleId, plotNumber, parcelle, lotissementId, onClose }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; lotissementId: string; onClose: () => void }) {
+function ReservationModal({ parcelleId, plotNumber, parcelle, lotissementId, open, onOpenChange }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; lotissementId: string; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { data: reservation, isLoading } = useReservationByParcelle(parcelleId);
   const { data: lotissement } = useLotissement(lotissementId);
 
-  if (isLoading) return <div className="mt-4"><Card><CardContent className="p-4 text-center text-muted-foreground">Chargement...</CardContent></Card></div>;
-  if (!reservation) return <div className="mt-4"><Card><CardContent className="p-4 text-center text-muted-foreground">Aucune réservation trouvée pour le lot {plotNumber}</CardContent></Card></div>;
-
   return (
-    <div className="mt-4 max-w-md">
-      <ReservationParcelleCard reservation={reservation} parcelle={parcelle} lotissement={lotissement ? { name: lotissement.name, location: lotissement.location, city: lotissement.city } : undefined} />
-    </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 text-center text-muted-foreground">Chargement...</div>
+        ) : !reservation ? (
+          <div className="p-6 text-center text-muted-foreground">Aucune réservation trouvée pour le lot {plotNumber}</div>
+        ) : (
+          <ReservationParcelleCard reservation={reservation} parcelle={parcelle} lotissement={lotissement ? { name: lotissement.name, location: lotissement.location, city: lotissement.city } : undefined} />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -179,7 +188,7 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
 
       {/* Reservation card for selected reserved parcelle */}
       {viewingReservation && viewingReservation.status === "reserve" && (
-        <ReservationPanel parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} parcelle={viewingReservation} lotissementId={lotissementId} onClose={() => setViewingReservation(null)} />
+        <ReservationModal parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} parcelle={viewingReservation} lotissementId={lotissementId} open={!!viewingReservation} onOpenChange={(open) => !open && setViewingReservation(null)} />
       )}
 
       {editingParcelle && (

@@ -20,12 +20,14 @@ import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
+import { MonthFilter } from "@/components/payment/MonthFilter";
 
 const Index = () => {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | undefined>(undefined);
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
@@ -38,24 +40,32 @@ const Index = () => {
   const filteredProperties = useMemo(() => {
     if (!properties) return [];
     if (!isGestionnaire || !user) return properties;
-    // For gestionnaire, show only properties assigned to them
     return properties.filter(p => p.assigned_to === user.id);
   }, [properties, isGestionnaire, user]);
 
   const filteredTenants = useMemo(() => {
     if (!tenants) return [];
     if (!isGestionnaire || !user) return tenants;
-    // For gestionnaire, show only tenants assigned to them
     return tenants.filter(t => t.assigned_to === user.id);
   }, [tenants, isGestionnaire, user]);
 
   const filteredPayments = useMemo(() => {
     if (!payments) return [];
     if (!isGestionnaire || !user) return payments;
-    // For gestionnaire, show only payments for tenants assigned to them
     const assignedTenantIds = new Set(filteredTenants.map(t => t.id));
     return payments.filter(p => assignedTenantIds.has(p.tenant_id));
   }, [payments, isGestionnaire, user, filteredTenants]);
+
+  // Apply month filter to payments
+  const periodFilteredPayments = useMemo(() => {
+    if (!selectedMonth) return filteredPayments;
+    return filteredPayments.filter(p => {
+      const dateStr = p.paid_date || p.due_date;
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      return d.getMonth() === selectedMonth.month && d.getFullYear() === selectedMonth.year;
+    });
+  }, [filteredPayments, selectedMonth]);
 
   // Compute stats using filtered data
   const totalProperties = filteredProperties.length;
@@ -63,12 +73,13 @@ const Index = () => {
     t.contracts?.some(c => c.status === 'active')
   ).length;
   
-  const monthlyRevenue = filteredPayments.filter(p => {
+  const revenuePayments = selectedMonth ? periodFilteredPayments : filteredPayments;
+  const monthlyRevenue = revenuePayments.filter(p => {
     const paidDate = p.paid_date ? new Date(p.paid_date) : null;
+    if (!paidDate || p.status !== 'paid') return false;
+    if (selectedMonth) return true;
     const now = new Date();
-    return p.status === 'paid' && paidDate && 
-           paidDate.getMonth() === now.getMonth() && 
-           paidDate.getFullYear() === now.getFullYear();
+    return paidDate.getMonth() === now.getMonth() && paidDate.getFullYear() === now.getFullYear();
   }).reduce((sum, p) => sum + Number(p.amount), 0);
 
   const occupiedProperties = filteredProperties.filter(p => p.status === 'loué').length;
@@ -118,7 +129,8 @@ const Index = () => {
               Bienvenue. Voici un aperçu de votre patrimoine immobilier.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+            <MonthFilter selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
             <Button
               variant="outline"
               onClick={handleGenerateReceipts}
@@ -162,7 +174,7 @@ const Index = () => {
             <StatCard
               title="Revenus mensuels"
               value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
-              change="Ce mois-ci"
+              change={selectedMonth ? "Période sélectionnée" : "Ce mois-ci"}
               changeType="positive"
               icon={Wallet}
               iconBg="sand"
@@ -189,7 +201,7 @@ const Index = () => {
         {/* Charts Section */}
         {!isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <RevenueChart payments={filteredPayments} />
+            <RevenueChart payments={periodFilteredPayments} />
             <OccupancyChart properties={filteredProperties} />
             <PropertyTypesChart properties={filteredProperties} />
           </div>

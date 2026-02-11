@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2, Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -17,11 +18,11 @@ const ForgotPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.trim()) {
+    if (!email.trim() || !isValidEmail(email)) {
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Veuillez entrer votre adresse email",
+        title: "Email invalide",
+        description: EMAIL_ERROR_MESSAGE,
       });
       return;
     }

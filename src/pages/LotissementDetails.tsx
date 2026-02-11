@@ -67,39 +67,15 @@ const LotissementDetails = () => {
   const [showGenerateDocument, setShowGenerateDocument] = useState(false);
   const [revenuePeriod, setRevenuePeriod] = useState<PeriodValue>(getDefaultPeriod);
 
-  // Calculate stats based on payment status
+  // Calculate stats based on parcelle status
   const stats = useMemo(() => {
     const total = parcelles?.length || 0;
     const disponibles = parcelles?.filter(p => p.status === "disponible").length || 0;
+    const vendues = parcelles?.filter(p => p.status === "vendu").length || 0;
+    const reservees = parcelles?.filter(p => p.status === "reserve").length || 0;
     
-    // Calculate revenue and count vendues/reservees based on payment status
-    let totalRevenue = 0;
-    let vendues = 0;
-    let reservees = 0;
-    
-    if (ventes && ventes.length > 0) {
-      ventes.forEach(vente => {
-        let totalPaid = vente.down_payment || 0;
-        
-        const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
-        venteEcheances.forEach(echeance => {
-          if (echeance.status === "paid") {
-            totalPaid += echeance.paid_amount || echeance.amount;
-          }
-        });
-        
-        totalRevenue += totalPaid;
-        
-        if (totalPaid >= vente.total_price) {
-          vendues++;
-        } else {
-          reservees++;
-        }
-      });
-    }
-    
-    return { total, disponibles, vendues, reservees, totalRevenue };
-  }, [parcelles, ventes, echeances]);
+    return { total, disponibles, vendues, reservees };
+  }, [parcelles]);
 
   // Revenue filtered by period
   const periodRevenue = useMemo(() => {

@@ -8,6 +8,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,17 +66,22 @@ const STATUS_LABELS: Record<string, string> = {
   vendu: "Vendu",
 };
 
-function ReservationPanelList({ parcelleId, plotNumber, parcelle, lotissementId, onClose }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; lotissementId: string; onClose: () => void }) {
+function ReservationModalList({ parcelleId, plotNumber, parcelle, lotissementId, open, onOpenChange }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; lotissementId: string; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { data: reservation, isLoading } = useReservationByParcelle(parcelleId);
   const { data: lotissement } = useLotissement(lotissementId);
 
-  if (isLoading) return <Card className="mt-4"><CardContent className="p-4 text-center text-muted-foreground">Chargement...</CardContent></Card>;
-  if (!reservation) return <Card className="mt-4"><CardContent className="p-4 text-center text-muted-foreground">Aucune réservation trouvée pour le lot {plotNumber}</CardContent></Card>;
-
   return (
-    <div className="mt-4 max-w-md">
-      <ReservationParcelleCard reservation={reservation} parcelle={parcelle} lotissement={lotissement ? { name: lotissement.name, location: lotissement.location, city: lotissement.city } : undefined} />
-    </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 text-center text-muted-foreground">Chargement...</div>
+        ) : !reservation ? (
+          <div className="p-6 text-center text-muted-foreground">Aucune réservation trouvée pour le lot {plotNumber}</div>
+        ) : (
+          <ReservationParcelleCard reservation={reservation} parcelle={parcelle} lotissement={lotissement ? { name: lotissement.name, location: lotissement.location, city: lotissement.city } : undefined} />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -300,7 +309,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
 
       {/* Reservation card for selected reserved parcelle */}
       {viewingReservation && viewingReservation.status === "reserve" && (
-        <ReservationPanelList parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} parcelle={viewingReservation} lotissementId={lotissementId} onClose={() => setViewingReservation(null)} />
+        <ReservationModalList parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} parcelle={viewingReservation} lotissementId={lotissementId} open={!!viewingReservation} onOpenChange={(open) => !open && setViewingReservation(null)} />
       )}
 
       {editingParcelle && (

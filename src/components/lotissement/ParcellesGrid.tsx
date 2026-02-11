@@ -18,13 +18,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, BookmarkPlus } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
 import { SellParcelleDialog } from "./SellParcelleDialog";
+import { ReserveParcelleDialog } from "./ReserveParcelleDialog";
+import { ReservationParcelleCard } from "./ReservationParcelleCard";
+import { useReservationByParcelle } from "@/hooks/useReservationsParcelles";
 
 interface ParcellesGridProps {
   parcelles: Parcelle[];
@@ -43,6 +46,19 @@ const STATUS_BG = {
   vendu: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900",
 };
 
+function ReservationPanel({ parcelleId, plotNumber, onClose }: { parcelleId: string; plotNumber: string; onClose: () => void }) {
+  const { data: reservation, isLoading } = useReservationByParcelle(parcelleId);
+
+  if (isLoading) return <div className="mt-4"><Card><CardContent className="p-4 text-center text-muted-foreground">Chargement...</CardContent></Card></div>;
+  if (!reservation) return <div className="mt-4"><Card><CardContent className="p-4 text-center text-muted-foreground">Aucune réservation trouvée pour le lot {plotNumber}</CardContent></Card></div>;
+
+  return (
+    <div className="mt-4 max-w-md">
+      <ReservationParcelleCard reservation={reservation} />
+    </div>
+  );
+}
+
 export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) {
   const { hasPermission } = usePermissions();
   const canCreate = hasPermission("can_create_parcelles");
@@ -53,6 +69,8 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
 
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
   const [sellingParcelle, setSellingParcelle] = useState<Parcelle | null>(null);
+  const [reservingParcelle, setReservingParcelle] = useState<Parcelle | null>(null);
+  const [viewingReservation, setViewingReservation] = useState<Parcelle | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const getIlotName = (ilotId: string | null) => {
@@ -90,7 +108,8 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
           return (
             <Card
               key={parcelle.id}
-              className={`relative cursor-pointer hover:shadow-md transition-all border-2 ${STATUS_BG[parcelle.status]}`}
+              className={`relative cursor-pointer hover:shadow-md transition-all border-2 ${STATUS_BG[parcelle.status]} ${viewingReservation?.id === parcelle.id ? "ring-2 ring-amber-500" : ""}`}
+              onClick={() => parcelle.status === "reserve" ? setViewingReservation(parcelle) : undefined}
             >
               <CardContent className="p-3">
                 <div className="flex items-start justify-between">
@@ -103,10 +122,16 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       {parcelle.status === "disponible" && (
-                        <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Vendre
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Vendre
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setReservingParcelle(parcelle)}>
+                            <BookmarkPlus className="h-4 w-4 mr-2" />
+                            Réserver
+                          </DropdownMenuItem>
+                        </>
                       )}
                       {canEdit && (
                         <DropdownMenuItem onClick={() => setEditingParcelle(parcelle)}>
@@ -150,6 +175,11 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
         })}
       </div>
 
+      {/* Reservation card for selected reserved parcelle */}
+      {viewingReservation && viewingReservation.status === "reserve" && (
+        <ReservationPanel parcelleId={viewingReservation.id} plotNumber={viewingReservation.plot_number} onClose={() => setViewingReservation(null)} />
+      )}
+
       {editingParcelle && (
         <EditParcelleDialog
           parcelle={editingParcelle}
@@ -164,6 +194,14 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
           parcelle={sellingParcelle}
           open={!!sellingParcelle}
           onOpenChange={(open) => !open && setSellingParcelle(null)}
+        />
+      )}
+
+      {reservingParcelle && (
+        <ReserveParcelleDialog
+          parcelle={reservingParcelle}
+          open={!!reservingParcelle}
+          onOpenChange={(open) => !open && setReservingParcelle(null)}
         />
       )}
 

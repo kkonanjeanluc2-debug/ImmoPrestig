@@ -2420,6 +2420,79 @@ export type Database = {
         }
         Relationships: []
       }
+      reservations_parcelles: {
+        Row: {
+          acquereur_id: string
+          converted_vente_id: string | null
+          created_at: string
+          deposit_amount: number
+          expiry_date: string
+          id: string
+          notes: string | null
+          parcelle_id: string
+          payment_method: string | null
+          reservation_date: string
+          status: string
+          updated_at: string
+          user_id: string
+          validity_days: number
+        }
+        Insert: {
+          acquereur_id: string
+          converted_vente_id?: string | null
+          created_at?: string
+          deposit_amount?: number
+          expiry_date: string
+          id?: string
+          notes?: string | null
+          parcelle_id: string
+          payment_method?: string | null
+          reservation_date?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          validity_days?: number
+        }
+        Update: {
+          acquereur_id?: string
+          converted_vente_id?: string | null
+          created_at?: string
+          deposit_amount?: number
+          expiry_date?: string
+          id?: string
+          notes?: string | null
+          parcelle_id?: string
+          payment_method?: string | null
+          reservation_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          validity_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_parcelles_acquereur_id_fkey"
+            columns: ["acquereur_id"]
+            isOneToOne: false
+            referencedRelation: "acquereurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_parcelles_converted_vente_id_fkey"
+            columns: ["converted_vente_id"]
+            isOneToOne: false
+            referencedRelation: "ventes_parcelles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_parcelles_parcelle_id_fkey"
+            columns: ["parcelle_id"]
+            isOneToOne: false
+            referencedRelation: "parcelles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservations_vente: {
         Row: {
           acquereur_id: string

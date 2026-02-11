@@ -23,29 +23,44 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user has a valid recovery session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // The user should have been redirected here with a recovery token
-      // which Supabase automatically exchanges for a session
-      if (session) {
-        setIsValidSession(true);
-      }
-      setIsCheckingSession(false);
-    };
-
-    checkSession();
-
-    // Listen for auth state changes (when the recovery token is exchanged)
+    // Set up auth listener FIRST (before getSession) to catch PASSWORD_RECOVERY event
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' && session) {
         setIsValidSession(true);
         setIsCheckingSession(false);
+      } else if (event === 'SIGNED_IN' && session) {
+        // Recovery token was exchanged for a session
+        setIsValidSession(true);
+        setIsCheckingSession(false);
+      } else if (event === 'INITIAL_SESSION') {
+        // Initial session loaded - if we have a session, user might have a valid recovery
+        if (session) {
+          setIsValidSession(true);
+          setIsCheckingSession(false);
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Also check for hash fragments or code in URL (PKCE flow)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasRecoveryToken = hashParams.get('type') === 'recovery' || urlParams.has('code');
+
+    // Give Supabase time to process the token from URL before declaring invalid
+    const timeout = setTimeout(async () => {
+      if (!isValidSession) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setIsValidSession(true);
+        }
+        setIsCheckingSession(false);
+      }
+    }, hasRecoveryToken ? 3000 : 1000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

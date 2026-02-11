@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
 
 export function SecuritySettings() {
   const { user, signOut } = useAuth();
@@ -25,8 +27,9 @@ export function SecuritySettings() {
     setPasswordError("");
 
     // Validation
-    if (passwordForm.newPassword.length < 6) {
-      setPasswordError("Le mot de passe doit contenir au moins 6 caractères");
+    const { valid, errors } = validatePassword(passwordForm.newPassword);
+    if (!valid) {
+      setPasswordError(errors[0]);
       return;
     }
 
@@ -131,14 +134,7 @@ export function SecuritySettings() {
             </Alert>
           )}
 
-          <div className="text-xs text-muted-foreground">
-            <p>Le mot de passe doit contenir au moins :</p>
-            <ul className="list-disc list-inside mt-1 space-y-0.5">
-              <li className={passwordForm.newPassword.length >= 6 ? "text-emerald-600" : ""}>
-                6 caractères minimum
-              </li>
-            </ul>
-          </div>
+          <PasswordStrengthIndicator password={passwordForm.newPassword} />
 
           <Button
             onClick={handlePasswordChange}

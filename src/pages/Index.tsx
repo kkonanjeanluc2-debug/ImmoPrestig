@@ -20,15 +20,14 @@ import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
-import { DateRangeFilter } from "@/components/payment/DateRangeFilter";
-import { DateRange } from "react-day-picker";
+import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 
 const Index = () => {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
@@ -57,19 +56,15 @@ const Index = () => {
     return payments.filter(p => assignedTenantIds.has(p.tenant_id));
   }, [payments, isGestionnaire, user, filteredTenants]);
 
-  // Apply month filter to payments
+  // Apply period filter to payments
   const periodFilteredPayments = useMemo(() => {
-    if (!dateRange?.from) return filteredPayments;
     return filteredPayments.filter(p => {
       const dateStr = p.paid_date || p.due_date;
       if (!dateStr) return false;
       const d = new Date(dateStr);
-      if (dateRange.to) {
-        return d >= dateRange.from! && d <= dateRange.to;
-      }
-      return d.toDateString() === dateRange.from!.toDateString();
+      return d >= period.from && d <= period.to;
     });
-  }, [filteredPayments, dateRange]);
+  }, [filteredPayments, period]);
 
   // Compute stats using filtered data
   const totalProperties = filteredProperties.length;
@@ -77,13 +72,9 @@ const Index = () => {
     t.contracts?.some(c => c.status === 'active')
   ).length;
   
-  const revenuePayments = dateRange?.from ? periodFilteredPayments : filteredPayments;
-  const monthlyRevenue = revenuePayments.filter(p => {
+  const monthlyRevenue = periodFilteredPayments.filter(p => {
     const paidDate = p.paid_date ? new Date(p.paid_date) : null;
-    if (!paidDate || p.status !== 'paid') return false;
-    if (dateRange?.from) return true;
-    const now = new Date();
-    return paidDate.getMonth() === now.getMonth() && paidDate.getFullYear() === now.getFullYear();
+    return paidDate && p.status === 'paid';
   }).reduce((sum, p) => sum + Number(p.amount), 0);
 
   const occupiedProperties = filteredProperties.filter(p => p.status === 'loué').length;
@@ -133,8 +124,8 @@ const Index = () => {
               Bienvenue. Voici un aperçu de votre patrimoine immobilier.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+            <PeriodFilter value={period} onChange={setPeriod} />
             <Button
               variant="outline"
               onClick={handleGenerateReceipts}
@@ -178,7 +169,7 @@ const Index = () => {
             <StatCard
               title="Revenus mensuels"
               value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
-              change={dateRange?.from ? "Période sélectionnée" : "Ce mois-ci"}
+              change={period.type === "month" ? "Ce mois-ci" : "Période sélectionnée"}
               changeType="positive"
               icon={Wallet}
               iconBg="sand"

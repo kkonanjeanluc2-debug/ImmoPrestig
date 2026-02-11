@@ -11,6 +11,7 @@ import { Loader2, Building2, Mail, Lock, User, Phone, MapPin, Building, Home, Cr
 import { supabase } from "@/integrations/supabase/client";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
+import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
 
 type AccountType = "agence" | "proprietaire";
 
@@ -49,11 +50,11 @@ const Signup = () => {
       });
       return false;
     }
-    if (!email.trim()) {
+    if (!email.trim() || !isValidEmail(email)) {
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Veuillez entrer votre email",
+        title: "Email invalide",
+        description: EMAIL_ERROR_MESSAGE,
       });
       return false;
     }

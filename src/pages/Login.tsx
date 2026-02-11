@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2, Mail, Lock, CreditCard, Eye, EyeOff } from "lucide-react";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
+import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +23,12 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidEmail(email)) {
+      toast({ variant: "destructive", title: "Email invalide", description: EMAIL_ERROR_MESSAGE });
+      return;
+    }
+
     setIsLoading(true);
 
     const { error } = await signIn(email, password);

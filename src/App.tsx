@@ -42,7 +42,16 @@ const VentesImmobilieres = lazy(() => import("./pages/VentesImmobilieres"));
 const VenteImmobiliereDetails = lazy(() => import("./pages/VenteImmobiliereDetails"));
 const BienVenteDetails = lazy(() => import("./pages/BienVenteDetails"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh, no refetch on mount
+      gcTime: 30 * 60 * 1000, // 30 minutes - keep unused data in cache
+      refetchOnWindowFocus: false, // Don't refetch every time user returns to tab
+      retry: 1, // Reduce retries for faster failure
+    },
+  },
+});
 
 // Loading fallback component
 const PageLoader = () => (

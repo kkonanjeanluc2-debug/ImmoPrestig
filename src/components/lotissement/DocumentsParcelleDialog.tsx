@@ -245,27 +245,6 @@ export function DocumentsParcelleDialog({
             </Button>
           </div>
 
-          {/* Fiche de réservation */}
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div>
-              <p className="font-medium text-sm">Fiche de réservation</p>
-              <p className="text-xs text-muted-foreground">
-                Document de réservation de la parcelle
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleGenerateFicheReservation}
-              disabled={generating === "reservation"}
-            >
-              {generating === "reservation" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
 
           {/* Contrat de vente */}
           <div className="flex items-center justify-between p-3 border rounded-lg">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -16,6 +16,7 @@ import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateMan
 import { ContractTemplateManager } from "@/components/settings/ContractTemplateManager";
 import { SaleContractTemplateManager } from "@/components/settings/SaleContractTemplateManager";
 import { PromesseVenteTemplateManager } from "@/components/settings/PromesseVenteTemplateManager";
+import { ReservationFormTemplateManager } from "@/components/settings/ReservationFormTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
@@ -176,6 +177,15 @@ const Settings = () => {
                 <span>Promesses de vente</span>
               </TabsTrigger>
             )}
+            {(hasLotissement || hasVentesImmobilieres) && !isGestionnaire && (
+              <TabsTrigger
+                value="reservation-forms"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <BookmarkCheck className="h-4 w-4" />
+                <span>Fiches de réservation</span>
+              </TabsTrigger>
+            )}
             {!isGestionnaire && (
               <TabsTrigger
                 value="subscription"
@@ -299,6 +309,12 @@ const Settings = () => {
           {hasLotissement && !isGestionnaire && (
             <TabsContent value="promesse-vente">
               <PromesseVenteTemplateManager />
+            </TabsContent>
+          )}
+
+          {(hasLotissement || hasVentesImmobilieres) && !isGestionnaire && (
+            <TabsContent value="reservation-forms">
+              <ReservationFormTemplateManager />
             </TabsContent>
           )}
 

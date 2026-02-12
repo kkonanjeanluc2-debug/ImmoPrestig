@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBiensVente } from "@/hooks/useBiensVente";
 import { useVentesImmobilieres } from "@/hooks/useVentesImmobilieres";
 import { useOverdueEcheancesVentes, useUpcomingEcheancesVentes, useEcheancesVentes } from "@/hooks/useEcheancesVentes";
-import { Building2, TrendingUp, AlertTriangle, Calendar } from "lucide-react";
+import { Building2, TrendingUp, AlertTriangle, Calendar, BookmarkCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/pdfFormat";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 
@@ -17,6 +17,7 @@ export function VentesDashboard() {
   const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
 
   const biensDisponibles = biens?.filter((b) => b.status === "disponible").length || 0;
+  const biensReserves = biens?.filter((b) => b.status === "reserve").length || 0;
   const biensVendus = biens?.filter((b) => b.status === "vendu").length || 0;
 
   // Calculate revenue filtered by period
@@ -52,7 +53,7 @@ export function VentesDashboard() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Biens disponibles</CardTitle>
@@ -62,6 +63,21 @@ export function VentesDashboard() {
             <div className="text-2xl font-bold">{biensDisponibles}</div>
             <p className="text-xs text-muted-foreground">
               {biensVendus} vendus au total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className={biensReserves > 0 ? "border-primary/50" : ""}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Biens réservés</CardTitle>
+            <BookmarkCheck className={`h-4 w-4 ${biensReserves > 0 ? "text-primary" : "text-muted-foreground"}`} />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${biensReserves > 0 ? "text-primary" : ""}`}>
+              {biensReserves}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              en attente de finalisation
             </p>
           </CardContent>
         </Card>

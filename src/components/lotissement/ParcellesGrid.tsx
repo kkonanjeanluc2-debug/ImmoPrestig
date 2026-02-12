@@ -83,6 +83,7 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
   const [reservingParcelle, setReservingParcelle] = useState<Parcelle | null>(null);
   const [viewingReservation, setViewingReservation] = useState<Parcelle | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const getIlotName = (ilotId: string | null) => {
     if (!ilotId) return null;
@@ -101,6 +102,8 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
     setDeletingId(null);
   };
 
+  const displayedParcelles = statusFilter === "all" ? parcelles : parcelles.filter(p => p.status === statusFilter);
+
   if (parcelles.length === 0) {
     return (
       <Card className="py-12">
@@ -113,8 +116,41 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
 
   return (
     <>
+      <div className="flex gap-1.5 flex-wrap mb-3">
+        <Button
+          variant={statusFilter === "all" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("all")}
+        >
+          Tous ({parcelles.length})
+        </Button>
+        <Button
+          variant={statusFilter === "disponible" ? "default" : "outline"}
+          size="sm"
+          className={statusFilter !== "disponible" ? "text-emerald-600 border-emerald-300 hover:bg-emerald-50" : "bg-emerald-600 hover:bg-emerald-700"}
+          onClick={() => setStatusFilter("disponible")}
+        >
+          Disponibles ({parcelles.filter(p => p.status === "disponible").length})
+        </Button>
+        <Button
+          variant={statusFilter === "reserve" ? "default" : "outline"}
+          size="sm"
+          className={statusFilter !== "reserve" ? "text-amber-600 border-amber-300 hover:bg-amber-50" : "bg-amber-600 hover:bg-amber-700"}
+          onClick={() => setStatusFilter("reserve")}
+        >
+          Réservées ({parcelles.filter(p => p.status === "reserve").length})
+        </Button>
+        <Button
+          variant={statusFilter === "vendu" ? "default" : "outline"}
+          size="sm"
+          className={statusFilter !== "vendu" ? "text-blue-600 border-blue-300 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700"}
+          onClick={() => setStatusFilter("vendu")}
+        >
+          Vendues ({parcelles.filter(p => p.status === "vendu").length})
+        </Button>
+      </div>
       <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
-        {parcelles.map((parcelle) => {
+        {displayedParcelles.map((parcelle) => {
           const ilotName = getIlotName(parcelle.ilot_id);
           return (
             <Card

@@ -104,30 +104,39 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewingReservation, setViewingReservation] = useState<Parcelle | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const getIlotName = (ilotId: string | null) => {
     if (!ilotId) return null;
     return ilots?.find(i => i.id === ilotId)?.name || null;
   };
 
-  // Filter parcelles based on search query
+  // Filter parcelles based on search query and status
   const filteredParcelles = useMemo(() => {
-    if (!searchQuery.trim()) return parcelles;
+    let filtered = parcelles;
     
-    const query = searchQuery.toLowerCase();
-    return parcelles.filter((parcelle) => {
-      const ilotName = getIlotName(parcelle.ilot_id)?.toLowerCase() || "";
-      const statusLabel = STATUS_LABELS[parcelle.status]?.toLowerCase() || "";
-      
-      return (
-        parcelle.plot_number.toLowerCase().includes(query) ||
-        ilotName.includes(query) ||
-        statusLabel.includes(query) ||
-        parcelle.area.toString().includes(query) ||
-        parcelle.price.toString().includes(query)
-      );
-    });
-  }, [parcelles, searchQuery, ilots]);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(p => p.status === statusFilter);
+    }
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((parcelle) => {
+        const ilotName = getIlotName(parcelle.ilot_id)?.toLowerCase() || "";
+        const statusLabel = STATUS_LABELS[parcelle.status]?.toLowerCase() || "";
+        
+        return (
+          parcelle.plot_number.toLowerCase().includes(query) ||
+          ilotName.includes(query) ||
+          statusLabel.includes(query) ||
+          parcelle.area.toString().includes(query) ||
+          parcelle.price.toString().includes(query)
+        );
+      });
+    }
+    
+    return filtered;
+  }, [parcelles, searchQuery, statusFilter, ilots]);
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -154,27 +163,62 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   return (
     <>
       <Card>
-        {/* Search Bar */}
+        {/* Search Bar & Status Filter */}
         {parcelles.length > 0 && (
           <div className="p-4 border-b">
-            <div className="relative max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher une parcelle..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9"
-              />
-              {searchQuery && (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher une parcelle..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-9"
+                />
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                  onClick={() => setSearchQuery("")}
+                  variant={statusFilter === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter("all")}
                 >
-                  <X className="h-4 w-4" />
+                  Tous ({parcelles.length})
                 </Button>
-              )}
+                <Button
+                  variant={statusFilter === "disponible" ? "default" : "outline"}
+                  size="sm"
+                  className={statusFilter !== "disponible" ? "text-emerald-600 border-emerald-300 hover:bg-emerald-50" : "bg-emerald-600 hover:bg-emerald-700"}
+                  onClick={() => setStatusFilter("disponible")}
+                >
+                  Disponibles ({parcelles.filter(p => p.status === "disponible").length})
+                </Button>
+                <Button
+                  variant={statusFilter === "reserve" ? "default" : "outline"}
+                  size="sm"
+                  className={statusFilter !== "reserve" ? "text-amber-600 border-amber-300 hover:bg-amber-50" : "bg-amber-600 hover:bg-amber-700"}
+                  onClick={() => setStatusFilter("reserve")}
+                >
+                  Réservées ({parcelles.filter(p => p.status === "reserve").length})
+                </Button>
+                <Button
+                  variant={statusFilter === "vendu" ? "default" : "outline"}
+                  size="sm"
+                  className={statusFilter !== "vendu" ? "text-blue-600 border-blue-300 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700"}
+                  onClick={() => setStatusFilter("vendu")}
+                >
+                  Vendues ({parcelles.filter(p => p.status === "vendu").length})
+                </Button>
+              </div>
             </div>
           </div>
         )}

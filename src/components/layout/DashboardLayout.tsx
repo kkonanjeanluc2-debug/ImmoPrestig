@@ -14,9 +14,10 @@ import { NotificationCenter } from "@/components/notifications/NotificationCente
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole, ROLE_LABELS, AppRole } from "@/hooks/useUserRoles";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAgency } from "@/hooks/useAgency";
+import { usePrefetchRoute } from "@/hooks/usePrefetchRoutes";
 import {
   Tooltip,
   TooltipContent,
@@ -111,6 +112,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: ownAgency } = useAgency();
   const displayAgency = isLocataire ? tenantAgency : ownAgency;
   
+  // Prefetch all main routes data on mount for instant navigation
+  const prefetchRoute = usePrefetchRoute();
+  useEffect(() => {
+    const routes = ["/dashboard", "/properties", "/tenants", "/owners", "/payments", "/contracts", "/ventes-immobilieres", "/lotissements", "/settings"];
+    routes.forEach(r => prefetchRoute(r));
+  }, [prefetchRoute]);
+
   // Subscribe to real-time late payment notifications
   useLatePaymentNotifications();
   

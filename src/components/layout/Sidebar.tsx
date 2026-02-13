@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, Link } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Users, 
@@ -38,6 +38,7 @@ import { useFeatureAccess, FeatureKey } from "@/hooks/useFeatureAccess";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { usePrefetchRoute } from "@/hooks/usePrefetchRoutes";
 import {
   Collapsible,
   CollapsibleContent,
@@ -97,6 +98,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { count: newLotProspectsCount } = useNewAllLotissementProspectsCount();
   const { hasFeature } = useFeatureAccess();
   const { hasPermission } = usePermissions();
+  const prefetchRoute = usePrefetchRoute();
   const canAccessSettings = hasPermission("can_access_settings");
   
   const isLocataire = userRole?.role === "locataire";
@@ -283,6 +285,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                         <NavLink
                           key={item.name}
                           to={item.href}
+                          onMouseEnter={() => prefetchRoute(item.href)}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
                             isActive 
@@ -318,6 +321,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     <NavLink
                       key={item.name}
                       to={item.href}
+                      onMouseEnter={() => prefetchRoute(item.href)}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
                         isActive 
@@ -352,6 +356,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               {canAccessSettings && (
                 <NavLink
                   to="/settings"
+                  onMouseEnter={() => prefetchRoute("/settings")}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group mt-2",
                     location.pathname === "/settings"

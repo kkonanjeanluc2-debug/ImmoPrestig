@@ -126,23 +126,7 @@ const Index = () => {
               Bienvenue. Voici un aperçu de votre patrimoine immobilier.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-            <PeriodFilter value={period} onChange={setPeriod} />
-            <Button
-              variant="outline"
-              onClick={handleGenerateReceipts}
-              disabled={isGenerating}
-              className="w-full sm:w-auto text-sm"
-              size="sm"
-            >
-              {isGenerating ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <FileText className="h-4 w-4 mr-2" />
-              )}
-              Générer les quittances
-            </Button>
-          </div>
+          <PeriodFilter value={period} onChange={setPeriod} />
         </div>
 
         {/* Stats Grid */}

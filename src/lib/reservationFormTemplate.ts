@@ -44,8 +44,8 @@ La présente réservation est valable pour une durée de {duree_validite} jours 
 
 En deux (2) exemplaires originaux.`;
 
-// Available variables for the template
-export const RESERVATION_FORM_VARIABLES = [
+// Available variables for the template - Lotissement (parcelles)
+export const RESERVATION_FORM_VARIABLES_LOTISSEMENT = [
   { variable: "{date}", description: "Date de la réservation" },
   { variable: "{vendeur}", description: "Nom du vendeur / agence" },
   { variable: "{vendeur_adresse}", description: "Adresse du vendeur" },
@@ -70,6 +70,93 @@ export const RESERVATION_FORM_VARIABLES = [
   { variable: "{date_expiration}", description: "Date d'expiration de la réservation" },
   { variable: "{ville}", description: "Ville de signature" },
 ];
+
+// Available variables for the template - Ventes immobilières
+export const RESERVATION_FORM_VARIABLES_VENTE_IMMO = [
+  { variable: "{date}", description: "Date de la réservation" },
+  { variable: "{vendeur}", description: "Nom du vendeur / agence" },
+  { variable: "{vendeur_adresse}", description: "Adresse du vendeur" },
+  { variable: "{vendeur_telephone}", description: "Téléphone du vendeur" },
+  { variable: "{vendeur_email}", description: "Email du vendeur" },
+  { variable: "{acquereur}", description: "Nom de l'acquéreur" },
+  { variable: "{acquereur_naissance}", description: "Date et lieu de naissance" },
+  { variable: "{acquereur_profession}", description: "Profession de l'acquéreur" },
+  { variable: "{acquereur_cni}", description: "N° CNI de l'acquéreur" },
+  { variable: "{acquereur_adresse}", description: "Adresse de l'acquéreur" },
+  { variable: "{acquereur_telephone}", description: "Téléphone de l'acquéreur" },
+  { variable: "{acquereur_email}", description: "Email de l'acquéreur" },
+  { variable: "{bien_titre}", description: "Titre du bien immobilier" },
+  { variable: "{bien_type}", description: "Type de bien (appartement, villa, etc.)" },
+  { variable: "{bien_adresse}", description: "Adresse du bien" },
+  { variable: "{bien_ville}", description: "Ville du bien" },
+  { variable: "{bien_superficie}", description: "Superficie du bien" },
+  { variable: "{bien_chambres}", description: "Nombre de chambres" },
+  { variable: "{bien_salles_bain}", description: "Nombre de salles de bain" },
+  { variable: "{bien_description}", description: "Description du bien" },
+  { variable: "{prix_vente}", description: "Prix de vente du bien" },
+  { variable: "{montant_reservation}", description: "Montant de la réservation" },
+  { variable: "{mode_paiement}", description: "Mode de paiement" },
+  { variable: "{duree_validite}", description: "Durée de validité en jours" },
+  { variable: "{date_expiration}", description: "Date d'expiration de la réservation" },
+  { variable: "{ville}", description: "Ville de signature" },
+];
+
+// Combined variables (all unique) for backward compatibility
+export const RESERVATION_FORM_VARIABLES = [
+  ...RESERVATION_FORM_VARIABLES_LOTISSEMENT,
+  ...RESERVATION_FORM_VARIABLES_VENTE_IMMO.filter(
+    v => !RESERVATION_FORM_VARIABLES_LOTISSEMENT.some(lv => lv.variable === v.variable)
+  ),
+];
+
+// Default template for ventes immobilières
+export const DEFAULT_RESERVATION_FORM_TEMPLATE_VENTE_IMMO = `# FICHE DE RÉSERVATION - BIEN IMMOBILIER
+
+**Date :** {date}
+
+## IDENTIFICATION DU VENDEUR
+
+**Nom / Raison sociale :** {vendeur}
+**Adresse :** {vendeur_adresse}
+**Téléphone :** {vendeur_telephone}
+**Email :** {vendeur_email}
+
+## IDENTIFICATION DE L'ACQUÉREUR
+
+**Nom et Prénoms :** {acquereur}
+**Date et lieu de naissance :** {acquereur_naissance}
+**Profession :** {acquereur_profession}
+**N° CNI :** {acquereur_cni}
+**Adresse :** {acquereur_adresse}
+**Téléphone :** {acquereur_telephone}
+**Email :** {acquereur_email}
+
+## DÉSIGNATION DU BIEN
+
+**Titre :** {bien_titre}
+**Type de bien :** {bien_type}
+**Adresse :** {bien_adresse}
+**Ville :** {bien_ville}
+**Superficie :** {bien_superficie}
+**Chambres :** {bien_chambres}
+**Salles de bain :** {bien_salles_bain}
+**Description :** {bien_description}
+
+## CONDITIONS FINANCIÈRES
+
+**Prix de vente :** {prix_vente}
+**Montant de la réservation :** {montant_reservation}
+**Mode de paiement :** {mode_paiement}
+
+## DISPOSITIONS
+
+En vertu de l'article 1134 du Code Civil, le montant de la réservation versé ce jour est strictement non remboursable en cas de désistement de l'acquéreur.
+
+La présente réservation est valable pour une durée de {duree_validite} jours à compter de la date de signature, soit jusqu'au {date_expiration}.
+
+**Fait à** {ville}, le {date}
+
+En deux (2) exemplaires originaux.`;
 
 // Sample data for preview
 export const SAMPLE_RESERVATION_FORM_DATA: Record<string, string> = {
@@ -96,6 +183,14 @@ export const SAMPLE_RESERVATION_FORM_DATA: Record<string, string> = {
   "{duree_validite}": "30",
   "{date_expiration}": "14/02/2025",
   "{ville}": "Abidjan",
+  "{bien_titre}": "Villa Balmoral T4",
+  "{bien_type}": "Villa",
+  "{bien_adresse}": "Cocody Riviera 3, Rue des Jardins",
+  "{bien_ville}": "Abidjan",
+  "{bien_superficie}": "250 m²",
+  "{bien_chambres}": "4",
+  "{bien_salles_bain}": "3",
+  "{bien_description}": "Villa moderne avec piscine et jardin paysager",
 };
 
 export function replaceReservationFormVariables(

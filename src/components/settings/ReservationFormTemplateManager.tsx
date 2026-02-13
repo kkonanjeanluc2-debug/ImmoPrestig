@@ -26,7 +26,8 @@ import {
   type ReservationFormTemplate,
 } from "@/hooks/useReservationFormTemplates";
 import {
-  DEFAULT_RESERVATION_FORM_TEMPLATE, RESERVATION_FORM_VARIABLES,
+  DEFAULT_RESERVATION_FORM_TEMPLATE, DEFAULT_RESERVATION_FORM_TEMPLATE_VENTE_IMMO,
+  RESERVATION_FORM_VARIABLES_LOTISSEMENT, RESERVATION_FORM_VARIABLES_VENTE_IMMO,
   SAMPLE_RESERVATION_FORM_DATA, replaceReservationFormVariables,
 } from "@/lib/reservationFormTemplate";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -323,7 +324,7 @@ export function ReservationFormTemplateManager() {
             <Separator />
 
             {/* Variables */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Label>Variables disponibles</Label>
                 <TooltipProvider>
@@ -333,22 +334,48 @@ export function ReservationFormTemplateManager() {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <ScrollArea className="h-32 border rounded-lg p-3">
-                <div className="flex flex-wrap gap-2">
-                  {RESERVATION_FORM_VARIABLES.map((v) => (
-                    <TooltipProvider key={v.variable}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => insertVariable(v.variable)} className="text-xs h-7">
-                            {v.variable}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{v.description}</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
-                </div>
-              </ScrollArea>
+              <Tabs defaultValue="lotissement" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 h-8">
+                  <TabsTrigger value="lotissement" className="text-xs">Lotissement / Parcelles</TabsTrigger>
+                  <TabsTrigger value="vente-immo" className="text-xs">Ventes immobilières</TabsTrigger>
+                </TabsList>
+                <TabsContent value="lotissement" className="mt-2">
+                  <ScrollArea className="h-28 border rounded-lg p-3">
+                    <div className="flex flex-wrap gap-2">
+                      {RESERVATION_FORM_VARIABLES_LOTISSEMENT.map((v) => (
+                        <TooltipProvider key={v.variable}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => insertVariable(v.variable)} className="text-xs h-7">
+                                {v.variable}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{v.description}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                <TabsContent value="vente-immo" className="mt-2">
+                  <ScrollArea className="h-28 border rounded-lg p-3">
+                    <div className="flex flex-wrap gap-2">
+                      {RESERVATION_FORM_VARIABLES_VENTE_IMMO.map((v) => (
+                        <TooltipProvider key={v.variable}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => insertVariable(v.variable)} className="text-xs h-7">
+                                {v.variable}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{v.description}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
             </div>
 
             {/* Editor + Preview */}

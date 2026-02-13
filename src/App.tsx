@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,31 +16,75 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
 
 // Lazy load pages for code splitting
-const Index = lazy(() => import("./pages/Index"));
-const Properties = lazy(() => import("./pages/Properties"));
-const PropertyDetails = lazy(() => import("./pages/PropertyDetails"));
-const Owners = lazy(() => import("./pages/Owners"));
-const OwnerDetails = lazy(() => import("./pages/OwnerDetails"));
-const Tenants = lazy(() => import("./pages/Tenants"));
-const TenantDetails = lazy(() => import("./pages/TenantDetails"));
-const Contracts = lazy(() => import("./pages/Contracts"));
-const Payments = lazy(() => import("./pages/Payments"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Install = lazy(() => import("./pages/Install"));
-const Login = lazy(() => import("./pages/Login"));
-const Signup = lazy(() => import("./pages/Signup"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const Trash = lazy(() => import("./pages/Trash"));
-const SignContract = lazy(() => import("./pages/SignContract"));
-const Lotissements = lazy(() => import("./pages/Lotissements"));
-const LotissementDetails = lazy(() => import("./pages/LotissementDetails"));
-const VentesImmobilieres = lazy(() => import("./pages/VentesImmobilieres"));
-const VenteImmobiliereDetails = lazy(() => import("./pages/VenteImmobiliereDetails"));
-const BienVenteDetails = lazy(() => import("./pages/BienVenteDetails"));
+const pageImports = {
+  Index: () => import("./pages/Index"),
+  Properties: () => import("./pages/Properties"),
+  PropertyDetails: () => import("./pages/PropertyDetails"),
+  Owners: () => import("./pages/Owners"),
+  OwnerDetails: () => import("./pages/OwnerDetails"),
+  Tenants: () => import("./pages/Tenants"),
+  TenantDetails: () => import("./pages/TenantDetails"),
+  Contracts: () => import("./pages/Contracts"),
+  Payments: () => import("./pages/Payments"),
+  Settings: () => import("./pages/Settings"),
+  Install: () => import("./pages/Install"),
+  Login: () => import("./pages/Login"),
+  Signup: () => import("./pages/Signup"),
+  ForgotPassword: () => import("./pages/ForgotPassword"),
+  ResetPassword: () => import("./pages/ResetPassword"),
+  NotFound: () => import("./pages/NotFound"),
+  SuperAdmin: () => import("./pages/SuperAdmin"),
+  Pricing: () => import("./pages/Pricing"),
+  Trash: () => import("./pages/Trash"),
+  SignContract: () => import("./pages/SignContract"),
+  Lotissements: () => import("./pages/Lotissements"),
+  LotissementDetails: () => import("./pages/LotissementDetails"),
+  VentesImmobilieres: () => import("./pages/VentesImmobilieres"),
+  VenteImmobiliereDetails: () => import("./pages/VenteImmobiliereDetails"),
+  BienVenteDetails: () => import("./pages/BienVenteDetails"),
+};
+
+const Index = lazy(pageImports.Index);
+const Properties = lazy(pageImports.Properties);
+const PropertyDetails = lazy(pageImports.PropertyDetails);
+const Owners = lazy(pageImports.Owners);
+const OwnerDetails = lazy(pageImports.OwnerDetails);
+const Tenants = lazy(pageImports.Tenants);
+const TenantDetails = lazy(pageImports.TenantDetails);
+const Contracts = lazy(pageImports.Contracts);
+const Payments = lazy(pageImports.Payments);
+const Settings = lazy(pageImports.Settings);
+const Install = lazy(pageImports.Install);
+const Login = lazy(pageImports.Login);
+const Signup = lazy(pageImports.Signup);
+const ForgotPassword = lazy(pageImports.ForgotPassword);
+const ResetPassword = lazy(pageImports.ResetPassword);
+const NotFound = lazy(pageImports.NotFound);
+const SuperAdmin = lazy(pageImports.SuperAdmin);
+const Pricing = lazy(pageImports.Pricing);
+const Trash = lazy(pageImports.Trash);
+const SignContract = lazy(pageImports.SignContract);
+const Lotissements = lazy(pageImports.Lotissements);
+const LotissementDetails = lazy(pageImports.LotissementDetails);
+const VentesImmobilieres = lazy(pageImports.VentesImmobilieres);
+const VenteImmobiliereDetails = lazy(pageImports.VenteImmobiliereDetails);
+const BienVenteDetails = lazy(pageImports.BienVenteDetails);
+
+// Preload all pages in background after initial render
+function usePreloadPages() {
+  useEffect(() => {
+    const preload = () => {
+      Object.values(pageImports).forEach((importFn) => {
+        importFn().catch(() => {/* ignore preload errors */});
+      });
+    };
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(preload);
+    } else {
+      setTimeout(preload, 2000);
+    }
+  }, []);
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +105,8 @@ const PageLoader = () => (
 );
 
 const App = () => {
+  usePreloadPages();
+  
   const [showSplash, setShowSplash] = useState(() => {
     // Only show splash on first visit per session
     const hasSeenSplash = sessionStorage.getItem("hasSeenSplash");

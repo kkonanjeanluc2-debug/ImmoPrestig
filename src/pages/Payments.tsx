@@ -380,43 +380,49 @@ export default function Payments() {
                 {/* Payment List */}
                 <Card className={isLocataire ? "" : "lg:col-span-2"}>
                   <CardHeader className="pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <CardTitle className="text-base font-semibold">
-                        Historique des paiements
-                      </CardTitle>
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-wrap">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Rechercher..."
-                            className="pl-10 h-9 w-full sm:w-48"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base font-semibold">
+                          Historique des paiements
+                        </CardTitle>
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-end">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Rechercher..."
+                              className="pl-10 h-9 w-full sm:w-52"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                          </div>
+                          <PeriodFilter
+                            value={periodFilter || getDefaultPeriod()}
+                            onChange={(v) => setPeriodFilter(v)}
                           />
                         </div>
-                        <PeriodFilter
-                          value={periodFilter || getDefaultPeriod()}
-                          onChange={(v) => setPeriodFilter(v)}
-                        />
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="h-9 w-full sm:w-36">
-                            <Filter className="h-4 w-4 mr-2" />
-                            <SelectValue placeholder="Filtrer" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-background border shadow-lg z-50">
-                            <SelectItem value="all">Tous</SelectItem>
-                            <SelectItem value="due_soon">
-                              <span className="flex items-center gap-2">
-                                <AlertCircle className="h-3 w-3 text-orange-500" />
-                                Échéance proche (7j)
-                              </span>
-                            </SelectItem>
-                            <SelectItem value="paid">Payés</SelectItem>
-                            <SelectItem value="pending">En attente</SelectItem>
-                            <SelectItem value="late">En retard</SelectItem>
-                            <SelectItem value="upcoming">À venir</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div>
+                          <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="h-9 w-full sm:w-40">
+                              <Filter className="h-4 w-4 mr-2" />
+                              <SelectValue placeholder="Filtrer" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border shadow-lg z-50">
+                              <SelectItem value="all">Tous</SelectItem>
+                              <SelectItem value="due_soon">
+                                <span className="flex items-center gap-2">
+                                  <AlertCircle className="h-3 w-3 text-orange-500" />
+                                  Échéance proche (7j)
+                                </span>
+                              </SelectItem>
+                              <SelectItem value="paid">Payés</SelectItem>
+                              <SelectItem value="pending">En attente</SelectItem>
+                              <SelectItem value="late">En retard</SelectItem>
+                              <SelectItem value="upcoming">À venir</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
                   </CardHeader>

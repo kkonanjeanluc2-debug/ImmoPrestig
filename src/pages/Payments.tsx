@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
 import { differenceInDays, isFuture, isPast } from "date-fns";
 import { usePayments } from "@/hooks/usePayments";
-import { MonthFilter } from "@/components/payment/MonthFilter";
+import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 import { useOwners } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
@@ -79,7 +79,7 @@ export default function Payments() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "commissions" | "account">("payments");
-  const [monthFilter, setMonthFilter] = useState<{ month: number; year: number } | undefined>(undefined);
+  const [periodFilter, setPeriodFilter] = useState<PeriodValue | undefined>(undefined);
   const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_payments");
   const canEdit = hasPermission("can_edit_payments");
@@ -129,17 +129,16 @@ export default function Payments() {
       tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       propertyTitle.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Filter by month
-    let matchesMonth = true;
-    if (monthFilter) {
+    // Filter by period
+    let matchesPeriod = true;
+    if (periodFilter) {
       const dueDate = new Date(payment.due_date);
       const paidDate = payment.paid_date ? new Date(payment.paid_date) : null;
       const dateToCheck = paidDate || dueDate;
-      matchesMonth = dateToCheck.getMonth() === monthFilter.month && 
-                     dateToCheck.getFullYear() === monthFilter.year;
+      matchesPeriod = dateToCheck >= periodFilter.from && dateToCheck <= periodFilter.to;
     }
     
-    if (!matchesMonth) return false;
+    if (!matchesPeriod) return false;
     
     // Handle "due_soon" filter for payments due within 7 days
     if (statusFilter === "due_soon") {
@@ -395,9 +394,9 @@ export default function Payments() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                           />
                         </div>
-                        <MonthFilter
-                          selectedMonth={monthFilter}
-                          onMonthChange={setMonthFilter}
+                        <PeriodFilter
+                          value={periodFilter || getDefaultPeriod()}
+                          onChange={(v) => setPeriodFilter(v)}
                         />
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                           <SelectTrigger className="h-9 w-full sm:w-36">

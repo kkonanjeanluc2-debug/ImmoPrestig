@@ -129,124 +129,18 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         <DialogHeader>
           <DialogTitle>Modifier le locataire</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 -mx-6 px-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom complet *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Jean Dupont" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email *</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="jean@email.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Téléphone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="+225 00 00 00 00" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Additional Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="birth_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date de naissance</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="birth_place"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lieu de naissance</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Abidjan" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="profession"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Profession</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ingénieur, Commerçant..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="cni_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Numéro CNI</FormLabel>
-                    <FormControl>
-                      <Input placeholder="CI-0123456789" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Emergency Contact */}
-            <div className="space-y-2 pt-2 border-t border-dashed">
-              <h4 className="text-sm font-medium text-muted-foreground">Contact d'urgence</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden gap-4">
+            <ScrollArea className="flex-1 -mx-6 px-6">
+              <div className="space-y-4 pb-2">
                 <FormField
                   control={form.control}
-                  name="emergency_contact_name"
+                  name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nom du contact</FormLabel>
+                      <FormLabel>Nom complet *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nom de la personne" {...field} />
+                        <Input placeholder="Jean Dupont" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -255,10 +149,24 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
 
                 <FormField
                   control={form.control}
-                  name="emergency_contact_phone"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Téléphone du contact</FormLabel>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="jean@email.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Téléphone</FormLabel>
                       <FormControl>
                         <Input placeholder="+225 00 00 00 00" {...field} />
                       </FormControl>
@@ -266,24 +174,116 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                     </FormItem>
                   )}
                 />
-              </div>
-            </div>
 
-            {/* Assignment Selector - Only visible to agency owner/admin */}
-            {isAgencyOwner && (
-              <div className="space-y-2">
-                <Label>Gestionnaire assigné</Label>
-                <AssignUserSelect
-                  value={assignedTo}
-                  onValueChange={setAssignedTo}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Si assigné, seul ce gestionnaire pourra voir ce locataire
-                </p>
-              </div>
-            )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="birth_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date de naissance</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <div className="flex gap-3 pt-4">
+                  <FormField
+                    control={form.control}
+                    name="birth_place"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lieu de naissance</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Abidjan" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="profession"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Profession</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ingénieur, Commerçant..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cni_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Numéro CNI</FormLabel>
+                        <FormControl>
+                          <Input placeholder="CI-0123456789" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-dashed">
+                  <h4 className="text-sm font-medium text-muted-foreground">Contact d'urgence</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="emergency_contact_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom du contact</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nom de la personne" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="emergency_contact_phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Téléphone du contact</FormLabel>
+                          <FormControl>
+                            <Input placeholder="+225 00 00 00 00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {isAgencyOwner && (
+                  <div className="space-y-2">
+                    <Label>Gestionnaire assigné</Label>
+                    <AssignUserSelect
+                      value={assignedTo}
+                      onValueChange={setAssignedTo}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Si assigné, seul ce gestionnaire pourra voir ce locataire
+                    </p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <div className="flex gap-3 pt-2 border-t">
               <Button
                 type="button"
                 variant="outline"
@@ -309,7 +309,6 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
             </div>
           </form>
         </Form>
-        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

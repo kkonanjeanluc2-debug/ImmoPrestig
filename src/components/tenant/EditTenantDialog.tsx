@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import {
   Dialog,
   DialogContent,
@@ -131,7 +131,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden gap-4">
-            <ScrollArea className="flex-1 -mx-6 px-6">
+            <div className="flex-1 overflow-y-auto -mx-6 px-6">
               <div className="space-y-4 pb-2">
                 <FormField
                   control={form.control}
@@ -281,7 +281,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
             <div className="flex gap-3 pt-2 border-t">
               <Button

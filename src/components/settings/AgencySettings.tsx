@@ -86,11 +86,7 @@ export function AgencySettings() {
         kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
       });
       setLogoUrl(agency.logo_url);
-      setOnlineRentToggle(!!(
-        (agency as any).kkiapay_public_key || 
-        (agency as any).kkiapay_private_key || 
-        (agency as any).kkiapay_secret
-      ));
+      setOnlineRentToggle(!!(agency as any).online_rent_enabled);
     }
   });
 
@@ -198,6 +194,7 @@ export function AgencySettings() {
             kkiapay_private_key: formData.kkiapay_private_key || null,
             kkiapay_secret: formData.kkiapay_secret || null,
             kkiapay_sandbox: formData.kkiapay_sandbox,
+            online_rent_enabled: onlineRentToggle,
           })
           .eq('user_id', user.id);
 
@@ -225,6 +222,7 @@ export function AgencySettings() {
             kkiapay_private_key: formData.kkiapay_private_key || null,
             kkiapay_secret: formData.kkiapay_secret || null,
             kkiapay_sandbox: formData.kkiapay_sandbox,
+            online_rent_enabled: onlineRentToggle,
           });
 
         if (error) throw error;

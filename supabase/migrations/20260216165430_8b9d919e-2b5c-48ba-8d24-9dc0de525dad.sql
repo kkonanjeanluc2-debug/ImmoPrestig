@@ -1,0 +1,1 @@
+ALTER TABLE public.agencies ADD COLUMN online_rent_enabled boolean NOT NULL DEFAULT false;

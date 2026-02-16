@@ -113,6 +113,7 @@ export type Database = {
           mobile_money_number: string | null
           mobile_money_provider: string | null
           name: string
+          online_rent_enabled: boolean
           phone: string | null
           primary_color: string | null
           reservation_deposit_percentage: number
@@ -143,6 +144,7 @@ export type Database = {
           mobile_money_number?: string | null
           mobile_money_provider?: string | null
           name: string
+          online_rent_enabled?: boolean
           phone?: string | null
           primary_color?: string | null
           reservation_deposit_percentage?: number
@@ -173,6 +175,7 @@ export type Database = {
           mobile_money_number?: string | null
           mobile_money_provider?: string | null
           name?: string
+          online_rent_enabled?: boolean
           phone?: string | null
           primary_color?: string | null
           reservation_deposit_percentage?: number

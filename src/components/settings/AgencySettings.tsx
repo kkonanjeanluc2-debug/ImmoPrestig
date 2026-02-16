@@ -112,6 +112,7 @@ export function AgencySettings() {
         kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
       });
       setLogoUrl(agency.logo_url);
+      setOnlineRentToggle(!!(agency as any).online_rent_enabled);
     }
   }
 

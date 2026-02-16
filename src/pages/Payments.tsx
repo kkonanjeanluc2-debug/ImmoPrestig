@@ -543,6 +543,26 @@ export default function Payments() {
                                       </span>
                                     )}
                                   </div>
+                                  {/* Partial payment progress */}
+                                  {Number((payment as any).paid_amount || 0) > 0 && payment.status !== 'paid' && (
+                                    <div className="mt-2 space-y-1">
+                                      <div className="flex items-center gap-2 text-xs">
+                                        <span className="text-emerald font-medium">
+                                          Payé : {formatCurrency(Number((payment as any).paid_amount))}
+                                        </span>
+                                        <span className="text-muted-foreground">•</span>
+                                        <span className="text-destructive font-medium">
+                                          Reste : {formatCurrency(Number(payment.amount) - Number((payment as any).paid_amount))}
+                                        </span>
+                                      </div>
+                                      <div className="w-full max-w-[200px] bg-muted rounded-full h-1.5">
+                                        <div 
+                                          className="bg-emerald h-1.5 rounded-full transition-all" 
+                                          style={{ width: `${Math.min((Number((payment as any).paid_amount) / Number(payment.amount)) * 100, 100)}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
                                   {/* Display paid months */}
                                   {(payment as any).payment_months && (payment as any).payment_months.length > 0 && (
                                     <div className="flex flex-wrap items-center gap-1 mt-2">
@@ -560,7 +580,8 @@ export default function Payments() {
                                 <span className="text-lg font-bold text-foreground whitespace-nowrap">
                                   {formatCurrency(Number(payment.amount))}
                                 </span>
-                                {payment.status === "paid" && (
+                                {/* Show receipt for paid OR partial payments */}
+                                {(payment.status === "paid" || Number((payment as any).paid_amount || 0) > 0) && (
                                   <ReceiptActions
                                     paymentId={payment.id}
                                     tenantId={payment.tenant_id}
@@ -569,7 +590,7 @@ export default function Payments() {
                                     tenantPhone={tenant?.phone || null}
                                     propertyTitle={propertyTitle}
                                     propertyAddress={tenant?.property?.address}
-                                    amount={Number(payment.amount)}
+                                    amount={Number((payment as any).paid_amount || payment.amount)}
                                     paidDate={payment.paid_date || payment.due_date}
                                     dueDate={payment.due_date}
                                     method={payment.method || undefined}
@@ -605,6 +626,7 @@ export default function Payments() {
                                       tenantName={tenantName}
                                       tenantEmail={tenant?.email || null}
                                       amount={Number(payment.amount)}
+                                      paidAmount={Number((payment as any).paid_amount || 0)}
                                       dueDate={payment.due_date}
                                       propertyTitle={propertyTitle}
                                       currentMethod={payment.method}

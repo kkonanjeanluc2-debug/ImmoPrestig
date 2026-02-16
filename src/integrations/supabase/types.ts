@@ -1938,6 +1938,7 @@ export type Database = {
           due_date: string
           id: string
           method: string | null
+          paid_amount: number | null
           paid_date: string | null
           payment_months: string[] | null
           status: string
@@ -1952,6 +1953,7 @@ export type Database = {
           due_date: string
           id?: string
           method?: string | null
+          paid_amount?: number | null
           paid_date?: string | null
           payment_months?: string[] | null
           status?: string
@@ -1966,6 +1968,7 @@ export type Database = {
           due_date?: string
           id?: string
           method?: string | null
+          paid_amount?: number | null
           paid_date?: string | null
           payment_months?: string[] | null
           status?: string

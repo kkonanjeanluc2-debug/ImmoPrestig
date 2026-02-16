@@ -90,9 +90,14 @@ export const useUpdatePayment = () => {
 
   return useMutation({
     mutationFn: async ({ id, tenantName, ...updates }: PaymentUpdate & { id: string; tenantName?: string }) => {
+      // Remove undefined status to avoid overwriting
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, v]) => v !== undefined)
+      );
+      
       const { data, error } = await supabase
         .from("payments")
-        .update(updates)
+        .update(cleanUpdates)
         .eq("id", id)
         .select()
         .single();

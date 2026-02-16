@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,16 +41,29 @@ const Login = () => {
     let loginEmail: string;
 
     if (isPhoneNumber(trimmed)) {
-      // Phone-based login: convert to pseudo-email
-      loginEmail = phoneToEmail(trimmed);
+      // Phone-based login: resolve actual auth email via edge function
+      setIsLoading(true);
+      try {
+        const { data, error: resolveError } = await supabase.functions.invoke("resolve-tenant-login", {
+          body: { phone: trimmed },
+        });
+        if (resolveError || !data?.auth_email) {
+          loginEmail = phoneToEmail(trimmed);
+        } else {
+          loginEmail = data.auth_email;
+        }
+      } catch {
+        loginEmail = phoneToEmail(trimmed);
+      }
     } else if (isValidEmail(trimmed)) {
       loginEmail = trimmed;
+      setIsLoading(true);
     } else {
       toast({ variant: "destructive", title: "Identifiant invalide", description: "Veuillez entrer un email valide ou un numéro de téléphone" });
       return;
     }
 
-    setIsLoading(true);
+    if (!isLoading) setIsLoading(true);
 
     const { error } = await signIn(loginEmail, password);
 

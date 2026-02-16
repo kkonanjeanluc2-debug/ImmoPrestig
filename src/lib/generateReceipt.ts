@@ -27,6 +27,8 @@ interface ReceiptData {
   ownerName?: string;
   agency?: AgencyInfo | null;
   paymentMonths?: string[]; // New field for multi-month payments
+  totalRentAmount?: number; // Total rent amount for partial payment tracking
+  remainingAmount?: number; // Remaining amount after this payment
 }
 
 interface ReceiptDataWithTemplate extends ReceiptData {
@@ -267,8 +269,30 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   const amountText = formatAmountWithCurrency(data.amount);
   doc.text(amountText, pageWidth / 2, yPos + 26, { align: "center", charSpace: 0.5 });
   
-  yPos += 50;
-  
+    yPos += 50;
+
+  // Partial payment info (remaining balance)
+  if (data.totalRentAmount && data.totalRentAmount > data.amount && data.remainingAmount !== undefined) {
+    const accentColor: [number, number, number] = [220, 120, 0]; // Orange
+    doc.setFillColor(255, 248, 235);
+    doc.roundedRect(15, yPos - 5, pageWidth - 30, data.remainingAmount > 0 ? 22 : 14, 3, 3, "F");
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...accentColor);
+    doc.text(`Loyer total : ${formatAmountWithCurrency(data.totalRentAmount)}`, 20, yPos + 3);
+    doc.text(`Montant recu : ${formatAmountWithCurrency(data.amount)}`, pageWidth - 20, yPos + 3, { align: "right" });
+    if (data.remainingAmount > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text(`Reste a payer : ${formatAmountWithCurrency(data.remainingAmount)}`, 20, yPos + 12);
+    } else {
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(34, 139, 34);
+      doc.text("Loyer integralement paye", pageWidth - 20, yPos + 3, { align: "right" });
+    }
+    doc.setTextColor(...textColor);
+    yPos += (data.remainingAmount > 0 ? 28 : 20);
+  }
+
   // Amount in words
   if (templates.showAmountInWords) {
     doc.setTextColor(...textColor);

@@ -163,6 +163,8 @@ export function CollectPaymentDialog({
             } : undefined,
             template: selectedTemplate,
             paymentMonths: paymentMonths || undefined,
+            totalRentAmount: amount,
+            remainingAmount: amount - newPaidAmount,
           });
 
           const { data, error } = await supabase.functions.invoke("send-receipt-email", {

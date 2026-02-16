@@ -17,7 +17,7 @@ function phoneToEmail(phone: string): string {
 }
 
 function isPhoneNumber(value: string): boolean {
-  const cleaned = value.replace(/\s/g, "");
+  const cleaned = value.replace(/[^0-9+]/g, "");
   return /^[+]?[0-9]{8,15}$/.test(cleaned);
 }
 

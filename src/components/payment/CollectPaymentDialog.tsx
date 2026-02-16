@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { useUpdatePayment } from "@/hooks/usePayments";
@@ -34,6 +35,7 @@ interface CollectPaymentDialogProps {
   tenantName: string;
   tenantEmail?: string | null;
   amount: number;
+  paidAmount?: number;
   dueDate: string;
   propertyTitle?: string;
   propertyAddress?: string;
@@ -41,7 +43,7 @@ interface CollectPaymentDialogProps {
   currentMethod?: string | null;
   commissionPercentage?: number;
   commissionAmount?: number;
-  paymentMonths?: string[] | null; // New field for multi-month
+  paymentMonths?: string[] | null;
   onSuccess?: () => void;
 }
 
@@ -64,6 +66,7 @@ export function CollectPaymentDialog({
   tenantName,
   tenantEmail,
   amount,
+  paidAmount = 0,
   dueDate,
   propertyTitle = "Bien immobilier",
   propertyAddress,
@@ -80,6 +83,8 @@ export function CollectPaymentDialog({
   const [isSendingReceipt, setIsSendingReceipt] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplate | null>(null);
+  const remaining = amount - paidAmount;
+  const [collectAmount, setCollectAmount] = useState<number>(remaining);
   const updatePayment = useUpdatePayment();
   const { data: agency } = useAgency();
   const { toast } = useToast();
@@ -89,28 +94,48 @@ export function CollectPaymentDialog({
     setSelectedTemplate(template);
   }, []);
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      setCollectAmount(remaining);
+    }
+  };
+
   const handleCollect = async () => {
+    if (collectAmount <= 0 || collectAmount > remaining) {
+      toast({
+        title: "Montant invalide",
+        description: `Le montant doit être entre 1 et ${formatCurrency(remaining)}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const paidDate = new Date().toISOString().split("T")[0];
+    const newPaidAmount = paidAmount + collectAmount;
+    const isFullyPaid = newPaidAmount >= amount;
     
     try {
       await updatePayment.mutateAsync({
         id: paymentId,
-        status: "paid",
+        status: isFullyPaid ? "paid" : undefined,
         paid_date: paidDate,
+        paid_amount: newPaidAmount,
         method: method,
         tenantName: tenantName,
       });
 
       toast({
-        title: "Paiement encaissé",
-        description: `Le paiement de ${tenantName} a été enregistré avec succès.`,
+        title: isFullyPaid ? "Paiement encaissé en totalité" : "Paiement partiel enregistré",
+        description: isFullyPaid 
+          ? `Le paiement de ${tenantName} a été enregistré avec succès.`
+          : `${formatCurrency(collectAmount)} encaissé. Reste à payer : ${formatCurrency(amount - newPaidAmount)}.`,
       });
 
       // Send receipt automatically if enabled
       if (sendReceipt && tenantEmail) {
         setIsSendingReceipt(true);
         try {
-          // Use payment months if available, otherwise use due date
           const period = paymentMonths && paymentMonths.length > 0
             ? getPaymentPeriodsFromMonths(paymentMonths)
             : getPaymentPeriod(dueDate);
@@ -121,7 +146,7 @@ export function CollectPaymentDialog({
             tenantEmail,
             propertyTitle,
             propertyAddress,
-            amount,
+            amount: collectAmount,
             paidDate,
             dueDate,
             period,
@@ -145,7 +170,7 @@ export function CollectPaymentDialog({
               tenantName,
               tenantEmail,
               propertyTitle,
-              amount,
+              amount: collectAmount,
               period,
               pdfBase64,
             },
@@ -190,7 +215,7 @@ export function CollectPaymentDialog({
   const isLoading = updatePayment.isPending || isSendingReceipt;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="text-xs">
           <Banknote className="h-3 w-3 mr-1" />
@@ -215,11 +240,37 @@ export function CollectPaymentDialog({
               <span className="font-medium">{tenantName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Montant</span>
-              <span className="text-lg font-bold text-emerald">
+              <span className="text-sm text-muted-foreground">Montant total</span>
+              <span className="text-lg font-bold">
                 {formatCurrency(amount)}
               </span>
             </div>
+            {paidAmount > 0 && (
+              <>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Déjà payé</span>
+                  <span className="font-medium text-emerald">
+                    {formatCurrency(paidAmount)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Reste à payer</span>
+                  <span className="font-bold text-destructive">
+                    {formatCurrency(remaining)}
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full bg-muted rounded-full h-2 mt-1">
+                  <div 
+                    className="bg-emerald h-2 rounded-full transition-all" 
+                    style={{ width: `${Math.min((paidAmount / amount) * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground text-right">
+                  {Math.round((paidAmount / amount) * 100)}% payé
+                </p>
+              </>
+            )}
             {paymentMonths && paymentMonths.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 <span className="text-sm text-muted-foreground">Mois :</span>
@@ -257,6 +308,24 @@ export function CollectPaymentDialog({
                 {new Date().toLocaleDateString("fr-FR")}
               </span>
             </div>
+          </div>
+
+          {/* Amount to collect */}
+          <div className="space-y-2">
+            <Label htmlFor="collect-amount">Montant à encaisser (F CFA)</Label>
+            <Input
+              id="collect-amount"
+              type="number"
+              min={1}
+              max={remaining}
+              value={collectAmount}
+              onChange={(e) => setCollectAmount(Number(e.target.value))}
+            />
+            {collectAmount < remaining && collectAmount > 0 && (
+              <p className="text-xs text-amber-500">
+                Paiement partiel — Reste après encaissement : {formatCurrency(remaining - collectAmount)}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -320,7 +389,7 @@ export function CollectPaymentDialog({
           </Button>
           <Button
             onClick={handleCollect}
-            disabled={isLoading}
+            disabled={isLoading || collectAmount <= 0}
             className="bg-emerald hover:bg-emerald/90"
           >
             {isLoading ? (
@@ -331,7 +400,7 @@ export function CollectPaymentDialog({
             ) : (
               <>
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Confirmer l'encaissement
+                Encaisser {formatCurrency(collectAmount)}
               </>
             )}
           </Button>

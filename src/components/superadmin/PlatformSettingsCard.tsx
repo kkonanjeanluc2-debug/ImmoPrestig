@@ -136,18 +136,6 @@ export function PlatformSettingsCard() {
             </p>
           </div>
 
-          {/* Online rent payment */}
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="space-y-0.5">
-              <Label htmlFor="online-rent-payment" className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-primary" />
-                Paiement de loyers en ligne
-              </Label>
-              <p className="text-xs text-muted-foreground">Permettre aux locataires de payer leur loyer en ligne</p>
-            </div>
-            <Switch id="online-rent-payment" checked={onlineRentPaymentEnabled}
-              onCheckedChange={(v) => { setOnlineRentPaymentEnabled(v); setChanged(); }} />
-          </div>
 
           {/* Online rent account */}
           <div className="flex items-center justify-between p-4 border rounded-lg">

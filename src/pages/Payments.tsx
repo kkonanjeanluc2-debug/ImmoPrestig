@@ -539,6 +539,7 @@ export default function Payments() {
                                     dueDate={payment.due_date}
                                     propertyTitle={propertyTitle}
                                     tenantPhone={tenant?.phone}
+                                    agencyUserId={payment.user_id}
                                   />
                                 )}
                                 {payment.status !== "paid" && canEdit && !isLocataire && (

@@ -16,8 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import { toast } from "sonner";
 import { Loader2, CreditCard, Smartphone, AlertCircle } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { usePlatformSetting } from "@/hooks/usePlatformSettings";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 interface TenantPayRentDialogProps {
   paymentId: string;
@@ -25,6 +24,7 @@ interface TenantPayRentDialogProps {
   dueDate: string;
   propertyTitle: string;
   tenantPhone?: string | null;
+  agencyUserId: string;
 }
 
 type PaymentMethod = "wave" | "kkiapay";
@@ -41,6 +41,7 @@ export function TenantPayRentDialog({
   dueDate,
   propertyTitle,
   tenantPhone,
+  agencyUserId,
 }: Omit<TenantPayRentDialogProps, 'agencyMobileMoneyProvider'>) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,9 +49,21 @@ export function TenantPayRentDialog({
   const [phone, setPhone] = useState(tenantPhone || "");
   const queryClient = useQueryClient();
   
-  // Check if online rent payment is enabled
-  const { data: onlinePaymentSetting, isLoading: isLoadingSetting } = usePlatformSetting("online_rent_payment_enabled");
-  const isOnlinePaymentEnabled = onlinePaymentSetting?.value !== "false";
+  // Check if the agency has KKiaPay configured (agency-level toggle)
+  const { data: agency, isLoading: isLoadingAgency } = useQuery({
+    queryKey: ["agency-kkiapay-config", agencyUserId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agencies")
+        .select("kkiapay_public_key, kkiapay_private_key")
+        .eq("user_id", agencyUserId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!agencyUserId,
+  });
+  const isOnlinePaymentEnabled = !!(agency?.kkiapay_public_key || agency?.kkiapay_private_key);
 
   const dueMonth = new Date(dueDate).toLocaleDateString("fr-FR", {
     month: "long",
@@ -230,20 +243,15 @@ export function TenantPayRentDialog({
     }
   };
 
-  // If online payment is disabled, show disabled button with tooltip
-  if (!isOnlinePaymentEnabled && !isLoadingSetting) {
-    return (
-      <Button size="sm" className="text-xs" disabled title="Le paiement en ligne est temporairement indisponible">
-        <CreditCard className="h-3 w-3 mr-1" />
-        Payer
-      </Button>
-    );
+  // If agency hasn't enabled online payment, hide the button entirely
+  if (!isOnlinePaymentEnabled && !isLoadingAgency) {
+    return null;
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="text-xs" disabled={isLoadingSetting}>
+        <Button size="sm" className="text-xs" disabled={isLoadingAgency}>
           <CreditCard className="h-3 w-3 mr-1" />
           Payer
         </Button>

@@ -43,16 +43,49 @@ export function ManagerPerformanceChart({ periodFrom, periodTo }: ManagerPerform
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
   const { data: payments = [], isLoading: paymentsLoading } = usePayments();
 
+  // Build unique display names for each manager
+  const managerDisplayNames = useMemo(() => {
+    const nameCount: Record<string, number> = {};
+    return assignableUsers.map((user) => {
+      const fullName = user.full_name || user.email || "Utilisateur";
+      const firstName = fullName.split(" ")[0];
+      nameCount[firstName] = (nameCount[firstName] || 0) + 1;
+      // If duplicate first names, append last initial
+      if (nameCount[firstName] > 1) {
+        const parts = fullName.split(" ");
+        return parts.length > 1 ? `${firstName} ${parts[1][0]}.` : `${firstName} ${nameCount[firstName]}`;
+      }
+      return firstName;
+    });
+  }, [assignableUsers]);
+
+  // Fix duplicates in a second pass
+  const uniqueNames = useMemo(() => {
+    const firstNames = assignableUsers.map((u) => (u.full_name || u.email || "Utilisateur").split(" ")[0]);
+    const counts: Record<string, number> = {};
+    firstNames.forEach((n) => (counts[n] = (counts[n] || 0) + 1));
+
+    const seen: Record<string, number> = {};
+    return assignableUsers.map((user) => {
+      const fullName = user.full_name || user.email || "Utilisateur";
+      const firstName = fullName.split(" ")[0];
+      if (counts[firstName] > 1) {
+        seen[firstName] = (seen[firstName] || 0) + 1;
+        const parts = fullName.split(" ");
+        return parts.length > 1 ? `${firstName} ${parts[1][0]}.` : `${firstName}${seen[firstName]}`;
+      }
+      return firstName;
+    });
+  }, [assignableUsers]);
+
   const chartData = useMemo(() => {
     if (!assignableUsers.length || !payments.length) return [];
 
-    // Determine the range of months to display based on period
     const from = periodFrom || subMonths(new Date(), 5);
     const to = periodTo || new Date();
 
     const months: MonthData[] = [];
 
-    // Generate months between from and to
     let current = startOfMonth(from);
     const end = startOfMonth(to);
     while (current <= end) {
@@ -62,15 +95,12 @@ export function ManagerPerformanceChart({ periodFrom, periodTo }: ManagerPerform
 
       const monthData: MonthData = { month: monthLabel };
 
-      // Calculate collection rate for each manager
       assignableUsers.forEach((user, index) => {
-        // Get tenants assigned to this user
         const userTenants = tenants.filter(
           (t: any) => t.assigned_to === user.user_id
         );
         const tenantIds = new Set(userTenants.map((t: any) => t.id));
 
-        // Get payments for this month and these tenants
         const monthPayments = payments.filter((p: any) => {
           const dueDate = new Date(p.due_date);
           return (
@@ -84,10 +114,9 @@ export function ManagerPerformanceChart({ periodFrom, periodTo }: ManagerPerform
         const collectionRate =
           monthPayments.length > 0
             ? Math.round((paidPayments.length / monthPayments.length) * 100)
-            : null;
+            : 0;
 
-        const userName = (user.full_name || user.email || "Utilisateur").split(" ")[0];
-        monthData[userName] = collectionRate !== null ? collectionRate : 0;
+        monthData[uniqueNames[index]] = collectionRate;
       });
 
       months.push(monthData);
@@ -95,7 +124,7 @@ export function ManagerPerformanceChart({ periodFrom, periodTo }: ManagerPerform
     }
 
     return months;
-  }, [assignableUsers, tenants, payments, periodFrom, periodTo]);
+  }, [assignableUsers, tenants, payments, periodFrom, periodTo, uniqueNames]);
 
   const isLoading = usersLoading || tenantsLoading || paymentsLoading;
 
@@ -121,10 +150,8 @@ export function ManagerPerformanceChart({ periodFrom, periodTo }: ManagerPerform
     return null;
   }
 
-  // Get manager names for legend
-  const managerNames = assignableUsers.map(
-    (u) => (u.full_name || u.email || "Utilisateur").split(" ")[0]
-  );
+  // Get manager names for legend - use uniqueNames
+  const managerNames = uniqueNames;
 
   return (
     <Card>

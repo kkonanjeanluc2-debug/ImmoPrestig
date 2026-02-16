@@ -328,46 +328,74 @@ export default function Payments() {
             {/* Main Content */}
             {!isLoading && !error && (
               <div className={cn("grid gap-6", isLocataire ? "" : "lg:grid-cols-3")}>
-                {/* Calendar - Hidden for tenants */}
+                {/* Calendar + Events - Hidden for tenants */}
                 {!isLocataire && (
-                  <Card className="lg:col-span-1">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                        Calendrier des échéances
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-2 sm:p-4">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        locale={fr}
-                        className="w-full pointer-events-auto"
-                        modifiers={{
-                          hasPayment: (date) => {
-                            const dateStr = date.toISOString().split('T')[0];
-                            return !!paymentDates[dateStr];
-                          }
-                        }}
-                        modifiersClassNames={{
-                          hasPayment: "ring-2 ring-primary ring-offset-1"
-                        }}
-                      />
+                  <div className="lg:col-span-1 space-y-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base font-semibold flex items-center gap-2">
+                          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                          Calendrier des échéances
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-2 sm:p-4">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          locale={fr}
+                          className="w-full pointer-events-auto"
+                          modifiers={{
+                            hasPayment: (date) => {
+                              const dateStr = date.toISOString().split('T')[0];
+                              return !!paymentDates[dateStr];
+                            }
+                          }}
+                          modifiersClassNames={{
+                            hasPayment: "ring-2 ring-primary ring-offset-1"
+                          }}
+                        />
+                        {/* Legend */}
+                        <div className="mt-4 pt-4 border-t border-border space-y-2">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Légende</p>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 rounded bg-emerald/20" />
+                              <span className="text-muted-foreground">Payé</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 rounded bg-amber-500/20" />
+                              <span className="text-muted-foreground">En attente</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 rounded bg-red-500/20" />
+                              <span className="text-muted-foreground">En retard</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 rounded bg-blue-500/20" />
+                              <span className="text-muted-foreground">À venir</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                      {/* Selected date events */}
-                      {selectedDate && (() => {
-                        const dateStr = selectedDate.toISOString().split('T')[0];
-                        const datePayments = paymentDates[dateStr] || [];
-                        return (
-                          <div className="mt-4 pt-4 border-t border-border">
-                            <p className="text-sm font-medium mb-2">
+                    {/* Selected date events card */}
+                    {selectedDate && (() => {
+                      const dateStr = selectedDate.toISOString().split('T')[0];
+                      const datePayments = paymentDates[dateStr] || [];
+                      return (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-semibold">
                               {format(selectedDate, "d MMMM yyyy", { locale: fr })}
-                            </p>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-2 sm:p-4">
                             {datePayments.length === 0 ? (
                               <p className="text-xs text-muted-foreground">Aucune échéance à cette date</p>
                             ) : (
-                              <div className="space-y-2 max-h-48 overflow-y-auto">
+                              <div className="space-y-2 max-h-60 overflow-y-auto">
                                 {datePayments.map((p: any) => {
                                   const tenant = p.tenant as any;
                                   const config = statusConfig[p.status as keyof typeof statusConfig] || statusConfig.pending;
@@ -387,34 +415,11 @@ export default function Payments() {
                                 })}
                               </div>
                             )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Legend */}
-                      <div className="mt-4 pt-4 border-t border-border space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Légende</p>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded bg-emerald/20" />
-                            <span className="text-muted-foreground">Payé</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded bg-amber-500/20" />
-                            <span className="text-muted-foreground">En attente</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded bg-red-500/20" />
-                            <span className="text-muted-foreground">En retard</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded bg-blue-500/20" />
-                            <span className="text-muted-foreground">À venir</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
+                  </div>
                 )}
 
                 {/* Payment List */}

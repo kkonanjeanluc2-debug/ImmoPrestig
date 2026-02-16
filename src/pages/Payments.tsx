@@ -32,7 +32,7 @@ import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
-import { differenceInDays, isFuture, isPast } from "date-fns";
+import { differenceInDays, isFuture, isPast, format } from "date-fns";
 import { usePayments } from "@/hooks/usePayments";
 import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 import { useOwners } from "@/hooks/useOwners";
@@ -354,6 +354,42 @@ export default function Payments() {
                           hasPayment: "ring-2 ring-primary ring-offset-1"
                         }}
                       />
+
+                      {/* Selected date events */}
+                      {selectedDate && (() => {
+                        const dateStr = selectedDate.toISOString().split('T')[0];
+                        const datePayments = paymentDates[dateStr] || [];
+                        return (
+                          <div className="mt-4 pt-4 border-t border-border">
+                            <p className="text-sm font-medium mb-2">
+                              {format(selectedDate, "d MMMM yyyy", { locale: fr })}
+                            </p>
+                            {datePayments.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">Aucune échéance à cette date</p>
+                            ) : (
+                              <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {datePayments.map((p: any) => {
+                                  const tenant = p.tenant as any;
+                                  const config = statusConfig[p.status as keyof typeof statusConfig] || statusConfig.pending;
+                                  const StatusIcon = config.icon;
+                                  return (
+                                    <div key={p.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50 text-sm">
+                                      <StatusIcon className="h-3.5 w-3.5 shrink-0" />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-medium truncate">{tenant?.name || "—"}</p>
+                                        <p className="text-xs text-muted-foreground">{formatCurrency(p.amount)}</p>
+                                      </div>
+                                      <Badge variant="outline" className={cn("text-[10px] shrink-0", config.className)}>
+                                        {config.label}
+                                      </Badge>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Legend */}
                       <div className="mt-4 pt-4 border-t border-border space-y-2">

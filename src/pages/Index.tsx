@@ -189,7 +189,7 @@ const Index = () => {
         )}
 
         {/* Manager Performance Chart */}
-        {!isLoading && <ManagerPerformanceChart />}
+        {!isLoading && <ManagerPerformanceChart periodFrom={period.from} periodTo={period.to} />}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 gap-4 sm:gap-6">

@@ -359,7 +359,7 @@ const TenantDetails = () => {
               <CardContent>
                 {tenant.payments && tenant.payments.length > 0 ? (
                   <div className="space-y-3">
-                    {tenant.payments.map((payment) => {
+                    {[...tenant.payments].sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime()).map((payment) => {
                       const status = paymentStatusConfig[payment.status as keyof typeof paymentStatusConfig] || paymentStatusConfig.pending;
                       const StatusIcon = status.icon;
                       

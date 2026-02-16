@@ -602,6 +602,7 @@ export default function Payments() {
                                   <TenantPayRentDialog
                                     paymentId={payment.id}
                                     amount={Number(payment.amount)}
+                                    paidAmount={Number((payment as any).paid_amount || 0)}
                                     dueDate={payment.due_date}
                                     propertyTitle={propertyTitle}
                                     tenantPhone={tenant?.phone}

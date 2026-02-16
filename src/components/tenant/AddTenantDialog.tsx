@@ -156,6 +156,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
 
   // Watch property_id to load units
   const watchedPropertyId = form.watch("property_id");
+  const watchedRentAmount = form.watch("rent_amount");
   
   useEffect(() => {
     if (watchedPropertyId && watchedPropertyId !== selectedPropertyId) {
@@ -163,6 +164,14 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       form.setValue("unit_id", "");
     }
   }, [watchedPropertyId, selectedPropertyId, form]);
+
+  // Auto-fill deposit = 2 * rent_amount
+  useEffect(() => {
+    const rent = parseFloat(watchedRentAmount);
+    if (!isNaN(rent) && rent > 0) {
+      form.setValue("deposit", String(rent * 2));
+    }
+  }, [watchedRentAmount, form]);
 
   const isSubmitting = createTenant.isPending || createContract.isPending || updateProperty.isPending || updatePropertyUnit.isPending;
 

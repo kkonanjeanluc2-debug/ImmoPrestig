@@ -14,7 +14,7 @@ interface WaveWebhookPayload {
     amount: string;
     currency: string;
     checkout_status: "complete" | "cancelled" | "expired";
-    client_reference: string; // Our transaction_id
+    client_reference: string;
     last_payment_error?: string;
     payment_status?: string;
     when_completed?: string;
@@ -24,7 +24,6 @@ interface WaveWebhookPayload {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -37,43 +36,48 @@ Deno.serve(async (req) => {
     // Handle GET request (redirect from Wave success/error URLs)
     if (req.method === "GET") {
       const url = new URL(req.url);
-      const status = url.searchParams.get("status");
       const redirectUrl = url.searchParams.get("redirect") || "/settings?tab=subscription";
-
-      // Simply redirect to the app
       return new Response(null, {
         status: 302,
-        headers: {
-          ...corsHeaders,
-          "Location": redirectUrl,
-        },
+        headers: { ...corsHeaders, "Location": redirectUrl },
       });
     }
 
     // Handle POST webhook from Wave
     const waveWebhookSecret = Deno.env.get("WAVE_WEBHOOK_SECRET");
+    if (!waveWebhookSecret) {
+      console.error("WAVE_WEBHOOK_SECRET not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const rawBody = await req.text();
-    
-    // Verify webhook signature if secret is configured
-    if (waveWebhookSecret) {
-      const signature = req.headers.get("wave-signature");
-      if (signature) {
-        const expectedSignature = createHmac("sha256", waveWebhookSecret)
-          .update(rawBody)
-          .digest("hex");
-        
-        if (signature !== expectedSignature) {
-          console.error("Invalid Wave webhook signature");
-          return new Response(
-            JSON.stringify({ error: "Invalid signature" }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      }
+
+    // Verify webhook signature - mandatory
+    const signature = req.headers.get("wave-signature");
+    if (!signature) {
+      console.error("Missing Wave webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Missing signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const expectedSignature = createHmac("sha256", waveWebhookSecret)
+      .update(rawBody)
+      .digest("hex");
+
+    if (signature !== expectedSignature) {
+      console.error("Invalid Wave webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const payload: WaveWebhookPayload = JSON.parse(rawBody);
-
     console.log("Wave webhook received:", JSON.stringify(payload));
 
     // Only process checkout.session.completed events

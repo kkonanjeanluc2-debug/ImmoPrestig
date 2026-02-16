@@ -5,27 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, pawapay-signature",
 };
 
-interface PawapayWebhookPayload {
-  depositId: string;
-  status: "COMPLETED" | "FAILED" | "DUPLICATE_IGNORED" | "REJECTED" | "SUBMITTED" | "ACCEPTED";
-  amount: string;
-  currency: string;
-  correspondent: string;
-  payer: {
-    type: string;
-    address: {
-      value: string;
-    };
-  };
-  customerTimestamp?: string;
-  created?: string;
-  metadata?: Array<{ fieldName: string; fieldValue: string }>;
-  failureReason?: {
-    failureCode: string;
-    failureMessage: string;
-  };
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -34,24 +13,53 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // PawaPay sends webhook signature in header
-    const signature = req.headers.get("pawapay-signature");
     const webhookSecret = Deno.env.get("PAWAPAY_WEBHOOK_SECRET");
 
-    // Verify webhook signature if secret is configured
-    if (webhookSecret && signature) {
-      // PawaPay uses HMAC-SHA256 signature verification
-      // For now, log the signature - implement full verification if needed
-      console.log("PawaPay webhook signature received:", signature);
+    if (!webhookSecret) {
+      console.error("PAWAPAY_WEBHOOK_SECRET not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const payload: PawapayWebhookPayload = await req.json();
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const rawBody = await req.text();
+
+    // Verify webhook signature - mandatory
+    const signature = req.headers.get("pawapay-signature");
+    if (!signature) {
+      console.error("Missing PawaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Missing signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // PawaPay uses HMAC-SHA256 signature verification
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(webhookSecret);
+    const key = await crypto.subtle.importKey(
+      "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    );
+    const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    if (signature !== expectedSignature) {
+      console.error("Invalid PawaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const payload = JSON.parse(rawBody);
     console.log("PawaPay webhook received:", JSON.stringify(payload));
 
-    const { depositId, status, failureReason, metadata } = payload;
+    const { depositId, status, failureReason } = payload;
 
     if (!depositId) {
       return new Response(
@@ -69,14 +77,12 @@ Deno.serve(async (req) => {
 
     if (txError || !transaction) {
       console.error("Transaction not found for depositId:", depositId);
-      // Still return 200 to acknowledge webhook
       return new Response(
         JSON.stringify({ received: true, error: "Transaction not found" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Map PawaPay status to our status
     let newStatus: string;
     let errorMessage: string | null = null;
 
@@ -96,7 +102,6 @@ Deno.serve(async (req) => {
         newStatus = "pending";
         break;
       case "DUPLICATE_IGNORED":
-        // Ignore duplicate webhooks
         return new Response(
           JSON.stringify({ received: true, status: "duplicate_ignored" }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -105,7 +110,6 @@ Deno.serve(async (req) => {
         newStatus = transaction.status;
     }
 
-    // Update transaction status
     const updateData: Record<string, unknown> = {
       status: newStatus,
       fedapay_reference: status,
@@ -125,7 +129,6 @@ Deno.serve(async (req) => {
       .update(updateData)
       .eq("id", transaction.id);
 
-    // If payment completed, activate subscription
     if (newStatus === "completed") {
       const startsAt = new Date();
       const endsAt = new Date();
@@ -152,7 +155,6 @@ Deno.serve(async (req) => {
       } else {
         console.log(`Subscription activated for agency ${transaction.agency_id}`);
 
-        // Create notification for the user
         const { data: agency } = await supabase
           .from("agencies")
           .select("user_id, name")
@@ -179,7 +181,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error("PawaPay webhook error:", error);
-    // Return 200 to prevent retries for malformed requests
     return new Response(
       JSON.stringify({ received: true, error: "Processing error" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

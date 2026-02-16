@@ -59,7 +59,7 @@ export function TenantPayRentDialog({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agencies")
-        .select("kkiapay_public_key, kkiapay_private_key, online_rent_enabled")
+        .select("kkiapay_public_key, online_rent_enabled")
         .eq("user_id", agencyUserId)
         .maybeSingle();
       if (error) throw error;

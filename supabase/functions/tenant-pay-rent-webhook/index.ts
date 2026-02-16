@@ -67,20 +67,32 @@ Deno.serve(async (req) => {
     const rawBody = await req.text();
     const signature = req.headers.get("X-FedaPay-Signature") || req.headers.get("x-fedapay-signature");
 
-    // Verify signature if secret key is configured
-    if (fedapaySecretKey) {
-      const isValid = await verifyFedaPaySignature(rawBody, signature, fedapaySecretKey);
-      if (!isValid) {
-        console.error("Invalid FedaPay webhook signature");
-        return new Response(
-          JSON.stringify({ error: "Invalid signature" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      console.log("FedaPay webhook signature verified successfully");
-    } else {
-      console.warn("FEDAPAY_SECRET_KEY not configured, skipping signature verification");
+    // Verify signature - mandatory
+    if (!fedapaySecretKey) {
+      console.error("FEDAPAY_SECRET_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    if (!signature) {
+      console.error("Missing FedaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Missing signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const isValid = await verifyFedaPaySignature(rawBody, signature, fedapaySecretKey);
+    if (!isValid) {
+      console.error("Invalid FedaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    console.log("FedaPay webhook signature verified successfully");
 
     const body = JSON.parse(rawBody);
     console.log("Tenant rent webhook received:", JSON.stringify(body));

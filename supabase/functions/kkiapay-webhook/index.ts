@@ -15,6 +15,14 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const KKIAPAY_SECRET = Deno.env.get("KKIAPAY_SECRET");
 
+    if (!KKIAPAY_SECRET) {
+      console.error("KKIAPAY_SECRET not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.text();
@@ -22,31 +30,32 @@ Deno.serve(async (req) => {
 
     console.log("KKiaPay webhook received:", payload);
 
-    // Verify signature if secret is configured (optional)
+    // Verify signature - mandatory
     const signature = req.headers.get("x-kkiapay-signature");
-    if (KKIAPAY_SECRET && signature) {
-      // Use Web Crypto API for HMAC
-      const encoder = new TextEncoder();
-      const keyData = encoder.encode(KKIAPAY_SECRET);
-      const key = await crypto.subtle.importKey(
-        "raw",
-        keyData,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
+    if (!signature) {
+      console.error("Missing KKiaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Missing signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-      const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
-      const computedSignature = Array.from(new Uint8Array(signatureBuffer))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
-      
-      if (signature !== computedSignature) {
-        console.error("Invalid KKiaPay webhook signature");
-        return new Response(
-          JSON.stringify({ error: "Invalid signature" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    }
+
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(KKIAPAY_SECRET);
+    const key = await crypto.subtle.importKey(
+      "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    );
+    const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+    const computedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    if (signature !== computedSignature) {
+      console.error("Invalid KKiaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Extract transaction data from KKiaPay webhook
@@ -54,7 +63,6 @@ Deno.serve(async (req) => {
     const transactionId = payload.transactionId || payload.transaction_id || payload.data?.transaction_id;
     const status = payload.status || payload.state;
     const kkiapayReference = payload.reference || payload.externalTransactionId;
-    const amount = payload.amount || payload.data?.amount;
 
     // Handle different status values from KKiaPay
     let normalizedStatus: string;

@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +15,14 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const KKIAPAY_SECRET = Deno.env.get("KKIAPAY_SECRET");
 
+    if (!KKIAPAY_SECRET) {
+      console.error("KKIAPAY_SECRET not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.text();
@@ -23,20 +30,32 @@ Deno.serve(async (req) => {
 
     console.log("KKiaPay rent webhook received:", payload);
 
-    // Verify signature if secret is configured
+    // Verify signature - mandatory
     const signature = req.headers.get("x-kkiapay-signature");
-    if (KKIAPAY_SECRET && signature) {
-      const computedSignature = createHmac("sha256", KKIAPAY_SECRET)
-        .update(body)
-        .digest("hex");
-      
-      if (signature !== computedSignature) {
-        console.error("Invalid KKiaPay webhook signature");
-        return new Response(
-          JSON.stringify({ error: "Invalid signature" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    if (!signature) {
+      console.error("Missing KKiaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Missing signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(KKIAPAY_SECRET);
+    const key = await crypto.subtle.importKey(
+      "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    );
+    const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+    const computedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    if (signature !== computedSignature) {
+      console.error("Invalid KKiaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Extract data from webhook
@@ -44,7 +63,6 @@ Deno.serve(async (req) => {
     const paymentId = payload.data?.payment_id;
     const transactionReference = payload.transactionId || payload.reference;
 
-    // Normalize status
     let normalizedStatus: string;
     switch (status?.toLowerCase()) {
       case "success":
@@ -72,7 +90,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get the payment
     const { data: payment, error: paymentError } = await adminClient
       .from("payments")
       .select("*")
@@ -87,7 +104,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Only update if payment completed
     if (normalizedStatus === "completed") {
       const now = new Date();
 
@@ -103,7 +119,6 @@ Deno.serve(async (req) => {
 
       console.log(`Rent payment marked as paid: ${paymentId}`);
 
-      // Record the online payment for the account tab
       const paymentMethod = payload.source || payload.paymentMethod || "mobile_money";
       await adminClient.from("online_rent_payments").insert({
         user_id: payment.user_id,
@@ -118,7 +133,6 @@ Deno.serve(async (req) => {
 
       console.log(`Online payment recorded for account tracking`);
 
-      // Create notification for agency owner
       await adminClient.from("notifications").insert({
         user_id: payment.user_id,
         type: "payment",

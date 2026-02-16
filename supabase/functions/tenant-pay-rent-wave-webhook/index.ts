@@ -1,8 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, wave-signature",
 };
 
 Deno.serve(async (req) => {
@@ -13,6 +14,16 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const waveWebhookSecret = Deno.env.get("WAVE_WEBHOOK_SECRET");
+
+    if (!waveWebhookSecret) {
+      console.error("WAVE_WEBHOOK_SECRET not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Handle Wave webhook callback
@@ -22,15 +33,40 @@ Deno.serve(async (req) => {
 
     // Also try to parse body for Wave webhook data
     let body: any = {};
+    let rawBody = "";
     try {
-      body = await req.json();
+      rawBody = await req.text();
+      body = JSON.parse(rawBody);
     } catch {
       // Body may be empty for redirect callbacks
     }
 
+    // Verify signature for POST requests with body
+    if (req.method === "POST" && rawBody) {
+      const signature = req.headers.get("wave-signature");
+      if (!signature) {
+        console.error("Missing Wave webhook signature");
+        return new Response(
+          JSON.stringify({ error: "Missing signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const expectedSignature = createHmac("sha256", waveWebhookSecret)
+        .update(rawBody)
+        .digest("hex");
+
+      if (signature !== expectedSignature) {
+        console.error("Invalid Wave webhook signature");
+        return new Response(
+          JSON.stringify({ error: "Invalid signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     console.log("Wave rent webhook received:", JSON.stringify({ status, paymentId, body }));
 
-    // Extract payment ID from client_reference if available
     let targetPaymentId = paymentId;
     if (body.client_reference && body.client_reference.startsWith("rent_")) {
       targetPaymentId = body.client_reference.replace("rent_", "");
@@ -44,11 +80,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check Wave payment status
     const waveStatus = body.checkout_status || body.payment_status || status;
-    
+
     if (waveStatus === "succeeded" || waveStatus === "success" || status === "success") {
-      // Update payment as paid
       const { error: updateError } = await supabase
         .from("payments")
         .update({
@@ -68,14 +102,10 @@ Deno.serve(async (req) => {
 
       console.log("Payment marked as paid via Wave:", targetPaymentId);
 
-      // Redirect to success page or return JSON
       if (req.headers.get("Accept")?.includes("text/html")) {
         return new Response(null, {
           status: 302,
-          headers: {
-            ...corsHeaders,
-            "Location": "/tenant-portal?payment=success",
-          },
+          headers: { ...corsHeaders, "Location": "/tenant-portal?payment=success" },
         });
       }
 
@@ -91,10 +121,7 @@ Deno.serve(async (req) => {
       if (req.headers.get("Accept")?.includes("text/html")) {
         return new Response(null, {
           status: 302,
-          headers: {
-            ...corsHeaders,
-            "Location": "/tenant-portal?payment=failed",
-          },
+          headers: { ...corsHeaders, "Location": "/tenant-portal?payment=failed" },
         });
       }
 

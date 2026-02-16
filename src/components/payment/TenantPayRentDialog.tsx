@@ -21,6 +21,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 interface TenantPayRentDialogProps {
   paymentId: string;
   amount: number;
+  paidAmount?: number;
   dueDate: string;
   propertyTitle: string;
   tenantPhone?: string | null;
@@ -38,15 +39,18 @@ const allPaymentMethods: { value: PaymentMethod; label: string; color: string; p
 export function TenantPayRentDialog({
   paymentId,
   amount,
+  paidAmount = 0,
   dueDate,
   propertyTitle,
   tenantPhone,
   agencyUserId,
 }: Omit<TenantPayRentDialogProps, 'agencyMobileMoneyProvider'>) {
+  const remainingAmount = amount - paidAmount;
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
   const [phone, setPhone] = useState(tenantPhone || "");
+  const [payAmount, setPayAmount] = useState(remainingAmount);
   const queryClient = useQueryClient();
   
   // Check if the agency has KKiaPay configured (agency-level toggle)
@@ -79,6 +83,7 @@ export function TenantPayRentDialog({
         body: {
           payment_id: paymentId,
           transaction_id: String(transactionId),
+          amount: payAmount,
         },
       });
 
@@ -94,15 +99,16 @@ export function TenantPayRentDialog({
     }
   };
 
-  const waitForPaymentToBePaid = async () => {
+  const waitForPaymentUpdate = async () => {
     for (let i = 0; i < 10; i++) {
       const { data, error } = await supabase
         .from("payments")
-        .select("status")
+        .select("status, paid_amount")
         .eq("id", paymentId)
         .single();
 
-      if (!error && data?.status === "paid") return true;
+      // Consider success if status changed to paid OR paid_amount increased
+      if (!error && (data?.status === "paid" || Number(data?.paid_amount || 0) > paidAmount)) return true;
       await new Promise((r) => setTimeout(r, 2000));
     }
 
@@ -112,6 +118,11 @@ export function TenantPayRentDialog({
   const handlePayment = async () => {
     if (!phone.trim()) {
       toast.error("Veuillez entrer votre numéro de téléphone");
+      return;
+    }
+
+    if (payAmount <= 0 || payAmount > remainingAmount) {
+      toast.error(`Veuillez entrer un montant entre 1 et ${remainingAmount.toLocaleString("fr-FR")} F CFA`);
       return;
     }
 
@@ -127,7 +138,7 @@ export function TenantPayRentDialog({
         functionName = "tenant-pay-rent-kkiapay";
         body = { 
           payment_id: paymentId, 
-          amount: amount,
+          amount: payAmount,
           customer_name: "",
           customer_phone: phone,
         };
@@ -177,7 +188,7 @@ export function TenantPayRentDialog({
           const verified = await verifyAndFinalizeKkiapayPayment(transactionId);
 
           // Attendre la propagation du statut avant de rafraîchir l'UI
-          const paid = verified ? await waitForPaymentToBePaid() : false;
+          const paid = verified ? await waitForPaymentUpdate() : false;
 
           if (paid) {
             toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");
@@ -278,12 +289,40 @@ export function TenantPayRentDialog({
               <span className="text-sm text-muted-foreground">Période</span>
               <span className="font-medium capitalize">{dueMonth}</span>
             </div>
+            {paidAmount > 0 && (
+              <>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Loyer total</span>
+                  <span className="font-medium">{amount.toLocaleString("fr-FR")} F CFA</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Déjà payé</span>
+                  <span className="font-medium text-emerald-600">{paidAmount.toLocaleString("fr-FR")} F CFA</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between items-center pt-2 border-t">
-              <span className="text-sm font-medium">Montant à payer</span>
+              <span className="text-sm font-medium">{paidAmount > 0 ? "Reste à payer" : "Montant à payer"}</span>
               <span className="text-lg font-bold text-primary">
-                {amount.toLocaleString("fr-FR")} F CFA
+                {remainingAmount.toLocaleString("fr-FR")} F CFA
               </span>
             </div>
+          </div>
+
+          {/* Amount to pay */}
+          <div className="space-y-2">
+            <Label htmlFor="payAmount">Montant à payer</Label>
+            <Input
+              id="payAmount"
+              type="number"
+              min={1}
+              max={remainingAmount}
+              value={payAmount}
+              onChange={(e) => setPayAmount(Number(e.target.value))}
+            />
+            <p className="text-xs text-muted-foreground">
+              Vous pouvez payer la totalité ou une partie du montant
+            </p>
           </div>
 
           {/* Phone input */}
@@ -342,7 +381,7 @@ export function TenantPayRentDialog({
             ) : (
               <>
                 <CreditCard className="h-4 w-4 mr-2" />
-                Payer {amount.toLocaleString("fr-FR")} F
+                Payer {payAmount.toLocaleString("fr-FR")} F
               </>
             )}
           </Button>

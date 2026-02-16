@@ -5,6 +5,7 @@ import { corsHeaders, validateAuth, unauthorizedResponse } from "../_shared/auth
 interface VerifyPayload {
   payment_id: string;
   transaction_id: string;
+  amount?: number;
 }
 
 function isPaidStatus(raw: unknown): boolean {
@@ -64,7 +65,7 @@ Deno.serve(async (req) => {
 
     const { data: payment, error: paymentError } = await adminClient
       .from("payments")
-      .select("id, status, tenant_id, user_id")
+      .select("id, status, tenant_id, user_id, amount, paid_amount")
       .eq("id", body.payment_id)
       .single();
 
@@ -138,15 +139,25 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
+    const paidAmountFromWidget = body.amount || 0;
+    const currentPaidAmount = Number(payment.paid_amount || 0);
+    const totalAmount = Number(payment.amount);
+    const newPaidAmount = currentPaidAmount + paidAmountFromWidget;
+    const isFullyPaid = newPaidAmount >= totalAmount;
+
+    const updateData: Record<string, unknown> = {
+      paid_amount: newPaidAmount,
+      paid_date: now.toISOString().split("T")[0],
+      method: "kkiapay",
+      updated_at: now.toISOString(),
+    };
+    if (isFullyPaid) {
+      updateData.status = "paid";
+    }
 
     await adminClient
       .from("payments")
-      .update({
-        status: "paid",
-        paid_date: now.toISOString().split("T")[0],
-        method: "kkiapay",
-        updated_at: now.toISOString(),
-      })
+      .update(updateData)
       .eq("id", payment.id);
 
     return new Response(JSON.stringify({ success: true, verified: true, payment_updated: true }), {

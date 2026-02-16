@@ -2,11 +2,33 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-fedapay-signature",
 };
 
+async function verifyFedaPaySignature(
+  payload: string,
+  signature: string,
+  secretKey: string
+): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw", encoder.encode(secretKey),
+      { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    );
+    const signatureBytes = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+    const expectedSignature = Array.from(new Uint8Array(signatureBytes))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    const cleanSignature = signature.replace(/^sha256=/, "").toLowerCase();
+    return expectedSignature.toLowerCase() === cleanSignature;
+  } catch (error) {
+    console.error("Error verifying signature:", error);
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -14,10 +36,42 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const fedapaySecretKey = Deno.env.get("FEDAPAY_SECRET_KEY");
+
+    if (!fedapaySecretKey) {
+      console.error("FEDAPAY_SECRET_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Parse webhook payload
-    const body = await req.json();
+    const rawBody = await req.text();
+
+    // Verify signature - mandatory
+    const signature = req.headers.get("X-FedaPay-Signature") || req.headers.get("x-fedapay-signature");
+    if (!signature) {
+      console.error("Missing FedaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Missing signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const isValid = await verifyFedaPaySignature(rawBody, signature, fedapaySecretKey);
+    if (!isValid) {
+      console.error("Invalid FedaPay webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("FedaPay webhook signature verified successfully");
+
+    const body = JSON.parse(rawBody);
     console.log("FedaPay webhook received:", JSON.stringify(body));
 
     const { event, entity } = body;
@@ -26,9 +80,7 @@ Deno.serve(async (req) => {
     if (entity?.name === "transaction") {
       const fedapayTransactionId = String(entity.id);
       const status = entity.status;
-      const metadata = entity.metadata || {};
 
-      // Find our transaction
       const { data: transaction, error: txError } = await supabase
         .from("payment_transactions")
         .select("*, agencies(*)")
@@ -43,7 +95,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Map FedaPay status to our status
       let newStatus = transaction.status;
       let completedAt = null;
 
@@ -65,7 +116,6 @@ Deno.serve(async (req) => {
           break;
       }
 
-      // Update transaction status
       const { error: updateError } = await supabase
         .from("payment_transactions")
         .update({
@@ -79,19 +129,16 @@ Deno.serve(async (req) => {
         console.error("Failed to update transaction:", updateError);
       }
 
-      // If payment completed, activate subscription
       if (newStatus === "completed") {
-        // Calculate end date based on billing cycle
         const startsAt = new Date();
         const endsAt = new Date();
-        
+
         if (transaction.billing_cycle === "yearly") {
           endsAt.setFullYear(endsAt.getFullYear() + 1);
         } else {
           endsAt.setMonth(endsAt.getMonth() + 1);
         }
 
-        // Upsert subscription
         const { error: subError } = await supabase
           .from("agency_subscriptions")
           .upsert({
@@ -108,7 +155,6 @@ Deno.serve(async (req) => {
         } else {
           console.log("Subscription activated for agency:", transaction.agency_id);
 
-          // Update transaction with subscription reference
           const { data: sub } = await supabase
             .from("agency_subscriptions")
             .select("id")

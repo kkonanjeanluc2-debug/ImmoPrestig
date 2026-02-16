@@ -88,9 +88,32 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
     }
   };
 
+  const parseMonthKey = (monthKey: string): Date | null => {
+    const MONTHS_MAP: Record<string, number> = {
+      "Janvier": 0, "Février": 1, "Mars": 2, "Avril": 3, "Mai": 4, "Juin": 5,
+      "Juillet": 6, "Août": 7, "Septembre": 8, "Octobre": 9, "Novembre": 10, "Décembre": 11
+    };
+    const parts = monthKey.split(" ");
+    if (parts.length !== 2) return null;
+    const monthIndex = MONTHS_MAP[parts[0]];
+    const year = parseInt(parts[1]);
+    if (monthIndex === undefined || isNaN(year)) return null;
+    return new Date(year, monthIndex, 10);
+  };
+
   const handleMonthsChange = useCallback((months: string[]) => {
     setSelectedMonths(months);
     form.setValue("payment_months", months);
+
+    // Auto-set due_date to the 10th of the last selected month
+    if (months.length > 0) {
+      const dates = months.map(parseMonthKey).filter(Boolean) as Date[];
+      dates.sort((a, b) => a.getTime() - b.getTime());
+      const lastDate = dates[dates.length - 1];
+      const yyyy = lastDate.getFullYear();
+      const mm = String(lastDate.getMonth() + 1).padStart(2, "0");
+      form.setValue("due_date", `${yyyy}-${mm}-10`);
+    }
   }, [form]);
 
   const handleTotalChange = useCallback((total: number) => {

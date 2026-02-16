@@ -103,6 +103,10 @@ export type Database = {
           email: string
           id: string
           is_active: boolean
+          kkiapay_private_key: string | null
+          kkiapay_public_key: string | null
+          kkiapay_sandbox: boolean | null
+          kkiapay_secret: string | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -129,6 +133,10 @@ export type Database = {
           email: string
           id?: string
           is_active?: boolean
+          kkiapay_private_key?: string | null
+          kkiapay_public_key?: string | null
+          kkiapay_sandbox?: boolean | null
+          kkiapay_secret?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -155,6 +163,10 @@ export type Database = {
           email?: string
           id?: string
           is_active?: boolean
+          kkiapay_private_key?: string | null
+          kkiapay_public_key?: string | null
+          kkiapay_sandbox?: boolean | null
+          kkiapay_secret?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null

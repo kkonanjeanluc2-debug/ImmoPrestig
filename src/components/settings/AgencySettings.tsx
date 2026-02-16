@@ -22,9 +22,13 @@ import {
   Camera,
   FileText,
   Percent,
-  Smartphone
+  Smartphone,
+  Key,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 export function AgencySettings() {
   const { user } = useAuth();
@@ -47,11 +51,17 @@ export function AgencySettings() {
     sale_commission_percentage: "5",
     mobile_money_number: "",
     mobile_money_provider: "" as MobileMoneyProvider | "",
+    kkiapay_public_key: "",
+    kkiapay_private_key: "",
+    kkiapay_secret: "",
+    kkiapay_sandbox: false,
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showPrivateKey, setShowPrivateKey] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
 
   // Initialize form when agency data loads
   useState(() => {
@@ -69,6 +79,10 @@ export function AgencySettings() {
         sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
         mobile_money_number: agency.mobile_money_number || "",
         mobile_money_provider: agency.mobile_money_provider || "",
+        kkiapay_public_key: (agency as any).kkiapay_public_key || "",
+        kkiapay_private_key: (agency as any).kkiapay_private_key || "",
+        kkiapay_secret: (agency as any).kkiapay_secret || "",
+        kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
       });
       setLogoUrl(agency.logo_url);
     }
@@ -90,6 +104,10 @@ export function AgencySettings() {
         sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
         mobile_money_number: agency.mobile_money_number || "",
         mobile_money_provider: agency.mobile_money_provider || "",
+        kkiapay_public_key: (agency as any).kkiapay_public_key || "",
+        kkiapay_private_key: (agency as any).kkiapay_private_key || "",
+        kkiapay_secret: (agency as any).kkiapay_secret || "",
+        kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
       });
       setLogoUrl(agency.logo_url);
     }
@@ -170,6 +188,10 @@ export function AgencySettings() {
             sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
             mobile_money_number: formData.mobile_money_number || null,
             mobile_money_provider: formData.mobile_money_provider || null,
+            kkiapay_public_key: formData.kkiapay_public_key || null,
+            kkiapay_private_key: formData.kkiapay_private_key || null,
+            kkiapay_secret: formData.kkiapay_secret || null,
+            kkiapay_sandbox: formData.kkiapay_sandbox,
           })
           .eq('user_id', user.id);
 
@@ -193,6 +215,10 @@ export function AgencySettings() {
             sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
             mobile_money_number: formData.mobile_money_number || null,
             mobile_money_provider: formData.mobile_money_provider || null,
+            kkiapay_public_key: formData.kkiapay_public_key || null,
+            kkiapay_private_key: formData.kkiapay_private_key || null,
+            kkiapay_secret: formData.kkiapay_secret || null,
+            kkiapay_sandbox: formData.kkiapay_sandbox,
           });
 
         if (error) throw error;
@@ -498,6 +524,102 @@ export function AgencySettings() {
           )}
         </div>
         )}
+
+
+        {/* KKiaPay API Configuration */}
+        <div className="space-y-4 border-t pt-6">
+          <div className="flex items-center gap-2">
+            <Key className="h-5 w-5 text-primary" />
+            <h3 className="font-medium">Configuration KKiaPay</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Entrez vos clés API KKiaPay pour activer le paiement des loyers en ligne. Vous pouvez obtenir vos clés sur <a href="https://app.kkiapay.me" target="_blank" rel="noopener noreferrer" className="text-primary underline">app.kkiapay.me</a>.
+          </p>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="kkiapay-public-key">Clé publique</Label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="kkiapay-public-key"
+                  value={formData.kkiapay_public_key}
+                  onChange={(e) => handleChange("kkiapay_public_key", e.target.value)}
+                  placeholder="pk_xxxxxxxxxxxxxxx"
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="kkiapay-private-key">Clé privée</Label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="kkiapay-private-key"
+                  type={showPrivateKey ? "text" : "password"}
+                  value={formData.kkiapay_private_key}
+                  onChange={(e) => handleChange("kkiapay_private_key", e.target.value)}
+                  placeholder="prk_xxxxxxxxxxxxxxx"
+                  className="pl-10 pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={() => setShowPrivateKey(!showPrivateKey)}
+                >
+                  {showPrivateKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="kkiapay-secret">Secret</Label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="kkiapay-secret"
+                  type={showSecret ? "text" : "password"}
+                  value={formData.kkiapay_secret}
+                  onChange={(e) => handleChange("kkiapay_secret", e.target.value)}
+                  placeholder="sk_xxxxxxxxxxxxxxx"
+                  className="pl-10 pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={() => setShowSecret(!showSecret)}
+                >
+                  {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Switch
+                id="kkiapay-sandbox"
+                checked={formData.kkiapay_sandbox}
+                onCheckedChange={(checked) => {
+                  setFormData(prev => ({ ...prev, kkiapay_sandbox: checked }));
+                  setHasChanges(true);
+                }}
+              />
+              <Label htmlFor="kkiapay-sandbox" className="cursor-pointer">
+                Mode Sandbox (test)
+              </Label>
+            </div>
+
+            {!formData.kkiapay_public_key && (
+              <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+                <strong className="text-foreground">Note :</strong> Configurez vos clés KKiaPay pour que vos locataires puissent payer leurs loyers en ligne directement depuis leur portail.
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Save Button */}
         <div className="flex justify-end pt-4">

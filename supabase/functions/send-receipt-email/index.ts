@@ -1,11 +1,11 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendEmail } from "../_shared/send-email.ts";
 import { isEmailEnabled } from "../_shared/check-email-enabled.ts";
+import { validateAuth } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface SendReceiptRequest {
@@ -15,23 +15,6 @@ interface SendReceiptRequest {
   amount: number;
   period: string;
   pdfBase64: string;
-}
-
-async function validateAuth(req: Request): Promise<{ authenticated: boolean; userId?: string; error?: string }> {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return { authenticated: false, error: "Missing or invalid Authorization header" };
-  }
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
-    return { authenticated: false, error: error?.message || "Invalid token" };
-  }
-  return { authenticated: true, userId: data.user.id };
 }
 
 Deno.serve(async (req) => {

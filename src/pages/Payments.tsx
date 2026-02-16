@@ -150,7 +150,11 @@ export default function Payments() {
     
     const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
     return matchesSearch && matchesStatus;
-  }).sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime());
+  }).sort((a, b) => {
+    const dateA = new Date(a.paid_date || a.updated_at || a.created_at).getTime();
+    const dateB = new Date(b.paid_date || b.updated_at || b.created_at).getTime();
+    return dateB - dateA;
+  });
 
   // Compute stats
   const now = new Date();

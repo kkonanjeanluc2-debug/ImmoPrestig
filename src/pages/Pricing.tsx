@@ -15,10 +15,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 
 const planIcons: Record<string, React.ReactNode> = {
-  "Gratuit": <Zap className="h-6 w-6" />,
-  "Starter": <Building2 className="h-6 w-6" />,
-  "Pro": <Star className="h-6 w-6" />,
-  "Enterprise": <Crown className="h-6 w-6" />,
+  Gratuit: <Zap className="h-6 w-6" />,
+  Starter: <Building2 className="h-6 w-6" />,
+  Pro: <Star className="h-6 w-6" />,
+  Enterprise: <Crown className="h-6 w-6" />,
 };
 
 const Pricing = () => {
@@ -32,7 +32,7 @@ const Pricing = () => {
   const navigate = useNavigate();
 
   const yearlyDiscountPercent = parseInt(discountSetting?.value || "20", 10);
-  const activePlans = plans?.filter(plan => plan.is_active) || [];
+  const activePlans = plans?.filter((plan) => plan.is_active) || [];
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fr-CI", {
@@ -73,11 +73,11 @@ const Pricing = () => {
               <img src={logoImage} alt="ImmoPrestige" className="h-10 md:h-12" />
               <span className="font-bold text-lg md:text-xl">ImmoPrestige</span>
             </Link>
-            
+
             {/* Desktop Navigation */}
             <div className="hidden sm:flex items-center gap-3">
-              <DemoRequestButton 
-                variant="outline" 
+              <DemoRequestButton
+                variant="outline"
                 size="sm"
                 className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
               />
@@ -88,7 +88,9 @@ const Pricing = () => {
               ) : (
                 <>
                   <Link to="/login">
-                    <Button variant="ghost" size="sm">Se connecter</Button>
+                    <Button variant="ghost" size="sm">
+                      Se connecter
+                    </Button>
                   </Link>
                   <Link to="/signup">
                     <Button size="sm">Commencer</Button>
@@ -106,8 +108,8 @@ const Pricing = () => {
               </SheetTrigger>
               <SheetContent side="top" className="pt-12">
                 <div className="flex flex-col gap-3">
-                  <DemoRequestButton 
-                    variant="outline" 
+                  <DemoRequestButton
+                    variant="outline"
                     className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
                     onClick={() => setMobileMenuOpen(false)}
                   />
@@ -118,7 +120,9 @@ const Pricing = () => {
                   ) : (
                     <>
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="ghost" className="w-full">Se connecter</Button>
+                        <Button variant="ghost" className="w-full">
+                          Se connecter
+                        </Button>
                       </Link>
                       <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
                         <Button className="w-full">Commencer</Button>
@@ -144,8 +148,8 @@ const Pricing = () => {
             <span className="text-primary">adapté à vos besoins</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Gérez vos biens immobiliers en toute simplicité avec notre solution complète.
-            Commencez gratuitement, évoluez selon vos besoins.
+            Gérez vos biens immobiliers en toute simplicité avec notre solution complète. Commencez gratuitement,
+            évoluez selon vos besoins.
           </p>
 
           {/* Billing Toggle */}
@@ -156,7 +160,7 @@ const Pricing = () => {
                 "px-4 py-2 rounded-lg font-medium transition-colors",
                 billingCycle === "monthly"
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Mensuel
@@ -167,7 +171,7 @@ const Pricing = () => {
                 "px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
                 billingCycle === "yearly"
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Annuel
@@ -215,7 +219,7 @@ const Pricing = () => {
                     key={plan.id}
                     className={cn(
                       "relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
-                      plan.is_popular && "border-primary shadow-md ring-1 ring-primary"
+                      plan.is_popular && "border-primary shadow-md ring-1 ring-primary",
                     )}
                   >
                     {plan.is_popular && (
@@ -240,12 +244,8 @@ const Pricing = () => {
                     <CardContent className="text-center">
                       <div className="mb-6">
                         <div className="flex items-baseline justify-center gap-1">
-                          <span className="text-4xl font-bold">
-                            {formatPrice(price)}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {plan.currency}
-                          </span>
+                          <span className="text-4xl font-bold">{formatPrice(price)}</span>
+                          <span className="text-muted-foreground">{plan.currency}</span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           {billingCycle === "monthly" ? "par mois" : "par an"}
@@ -319,7 +319,8 @@ const Pricing = () => {
               <span className="font-semibold text-lg">Frais de paramétrage : 150 000 FCFA</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Paiement unique incluant la configuration, l'accompagnement au démarrage et l'activation du compte entreprise
+              Paiement unique incluant la configuration et l'accompagnement au démarrage pour prendre en main
+              l'application, eventuellement.
             </p>
           </div>
         </div>
@@ -328,9 +329,7 @@ const Pricing = () => {
       {/* FAQ Section */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Questions fréquentes
-          </h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Questions fréquentes</h2>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div>
               <h3 className="font-semibold mb-2">Puis-je changer de forfait ?</h3>
@@ -363,9 +362,7 @@ const Pricing = () => {
       {/* CTA Section */}
       <section className="py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Prêt à simplifier votre gestion immobilière ?
-          </h2>
+          <h2 className="text-3xl font-bold mb-4">Prêt à simplifier votre gestion immobilière ?</h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
             Rejoignez des centaines de propriétaires et agences qui font confiance à ImmoPrestige.
           </p>

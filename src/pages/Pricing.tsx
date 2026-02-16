@@ -311,6 +311,17 @@ const Pricing = () => {
               })}
             </div>
           )}
+
+          {/* Frais de paramétrage */}
+          <div className="mt-10 mx-auto max-w-2xl rounded-xl border border-primary/20 bg-primary/5 p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Check className="h-5 w-5 text-primary" />
+              <span className="font-semibold text-lg">Frais de paramétrage : 150 000 FCFA</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Paiement unique incluant la configuration, l'accompagnement au démarrage et l'activation du compte entreprise
+            </p>
+          </div>
         </div>
       </section>
 

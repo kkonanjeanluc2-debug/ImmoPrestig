@@ -15,7 +15,7 @@ import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { useMemo } from "react";
-import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, differenceInMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const CHART_COLORS = [
@@ -32,7 +32,12 @@ interface MonthData {
   [key: string]: number | string;
 }
 
-export function ManagerPerformanceChart() {
+interface ManagerPerformanceChartProps {
+  periodFrom?: Date;
+  periodTo?: Date;
+}
+
+export function ManagerPerformanceChart({ periodFrom, periodTo }: ManagerPerformanceChartProps) {
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
   const { data: assignableUsers = [], isLoading: usersLoading } = useAssignableUsers();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
@@ -41,15 +46,19 @@ export function ManagerPerformanceChart() {
   const chartData = useMemo(() => {
     if (!assignableUsers.length || !payments.length) return [];
 
-    const now = new Date();
+    // Determine the range of months to display based on period
+    const from = periodFrom || subMonths(new Date(), 5);
+    const to = periodTo || new Date();
+
     const months: MonthData[] = [];
 
-    // Generate last 6 months
-    for (let i = 5; i >= 0; i--) {
-      const monthDate = subMonths(now, i);
-      const monthStart = startOfMonth(monthDate);
-      const monthEnd = endOfMonth(monthDate);
-      const monthLabel = format(monthDate, "MMM yy", { locale: fr });
+    // Generate months between from and to
+    let current = startOfMonth(from);
+    const end = startOfMonth(to);
+    while (current <= end) {
+      const monthStart = startOfMonth(current);
+      const monthEnd = endOfMonth(current);
+      const monthLabel = format(current, "MMM yy", { locale: fr });
 
       const monthData: MonthData = { month: monthLabel };
 
@@ -82,10 +91,11 @@ export function ManagerPerformanceChart() {
       });
 
       months.push(monthData);
+      current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
     }
 
     return months;
-  }, [assignableUsers, tenants, payments]);
+  }, [assignableUsers, tenants, payments, periodFrom, periodTo]);
 
   const isLoading = usersLoading || tenantsLoading || paymentsLoading;
 
@@ -121,7 +131,7 @@ export function ManagerPerformanceChart() {
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
-          Évolution des performances (6 mois)
+          Évolution des performances
         </CardTitle>
       </CardHeader>
       <CardContent>

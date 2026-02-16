@@ -750,6 +750,9 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                       <FormControl>
                         <Input type="number" placeholder="300000" {...field} />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Conformément à la loi ivoirienne (Loi n° 2019-576), la caution ne peut excéder 2 mois de loyer.
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -139,7 +139,7 @@ export function TenantPortalAccessDialog({ open, onOpenChange, tenant }: TenantP
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimum 6 caractères"
+                  placeholder="Minimum 8 caractères"
                   required
                 />
                 <Button

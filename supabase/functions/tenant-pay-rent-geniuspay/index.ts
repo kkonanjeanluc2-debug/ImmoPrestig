@@ -104,7 +104,19 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const geniusPayData = await geniusPayResponse.json();
+    const responseText = await geniusPayResponse.text();
+    console.log(`GeniusPay response status: ${geniusPayResponse.status}, body preview: ${responseText.substring(0, 300)}`);
+
+    let geniusPayData: any;
+    try {
+      geniusPayData = JSON.parse(responseText);
+    } catch {
+      console.error("GeniusPay returned non-JSON response:", responseText.substring(0, 500));
+      return new Response(
+        JSON.stringify({ error: "Réponse invalide du service de paiement. Vérifiez vos clés API GeniusPay." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!geniusPayResponse.ok || !geniusPayData.checkout_url) {
       console.error("GeniusPay rent checkout error:", geniusPayData);

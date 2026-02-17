@@ -27,14 +27,14 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
 
   const venteEcheances = echeances?.filter((e) => e.vente_id === vente.id && e.status === "paid") || [];
 
-  const handleDownloadPromesse = () => {
+  const handleDownloadPromesse = async () => {
     if (!agency || !vente.bien || !vente.acquereur) {
       toast.error("Informations manquantes pour générer le document");
       return;
     }
 
     try {
-      const doc = generatePromesseVenteImmo(
+      const doc = await generatePromesseVenteImmo(
         {
           bien: vente.bien,
           acquereur: vente.acquereur,
@@ -54,14 +54,14 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
     }
   };
 
-  const handleDownloadContratVente = () => {
+  const handleDownloadContratVente = async () => {
     if (!agency || !vente.bien || !vente.acquereur) {
       toast.error("Informations manquantes pour générer le contrat");
       return;
     }
 
     try {
-      const doc = generateContratVenteImmo(
+      const doc = await generateContratVenteImmo(
         {
           bien: vente.bien,
           acquereur: vente.acquereur,
@@ -81,14 +81,14 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
     }
   };
 
-  const handleDownloadRecu = (echeance: { amount: number; paid_date: string | null; payment_method?: string | null; receipt_number?: string | null }) => {
+  const handleDownloadRecu = async (echeance: { amount: number; paid_date: string | null; payment_method?: string | null; receipt_number?: string | null }) => {
     if (!agency || !vente.bien || !vente.acquereur || !echeance.paid_date) {
       toast.error("Informations manquantes pour générer le reçu");
       return;
     }
 
     try {
-      const doc = generateRecuVenteImmo(
+      const doc = await generateRecuVenteImmo(
         {
           amount: echeance.amount,
           paid_date: echeance.paid_date,

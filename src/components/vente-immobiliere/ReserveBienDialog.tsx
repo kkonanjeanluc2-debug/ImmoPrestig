@@ -122,7 +122,7 @@ export function ReserveBienDialog({ bien, open, onOpenChange }: ReserveBienDialo
 
       // Generate reservation contract PDF if requested
       if (generateContract && agency && acquereurData) {
-        const doc = generateContratReservationImmo(
+        const doc = await generateContratReservationImmo(
           {
             bien: {
               title: bien.title,

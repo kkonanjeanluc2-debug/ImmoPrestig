@@ -53,12 +53,55 @@ const checkPageBreak = (doc: jsPDF, yPos: number, neededSpace: number = 30): num
 };
 
 /**
+ * Loads an image from a URL and returns it as a base64 data URL
+ */
+const loadImageAsBase64 = (url: string): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        } else {
+          resolve(null);
+        }
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+};
+
+/**
  * Adds agency header with logo and contact info
  */
-const addAgencyHeader = (doc: jsPDF, agency: AgencyData, yPos: number): number => {
+const addAgencyHeader = async (doc: jsPDF, agency: AgencyData, yPos: number): Promise<number> => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   let currentY = yPos;
+
+  // Try to add logo
+  if (agency.logo_url) {
+    try {
+      const logoData = await loadImageAsBase64(agency.logo_url);
+      if (logoData) {
+        const logoHeight = 20;
+        const logoWidth = 20;
+        doc.addImage(logoData, "PNG", pageWidth / 2 - logoWidth / 2, currentY, logoWidth, logoHeight);
+        currentY += logoHeight + 5;
+      }
+    } catch {
+      // Skip logo if loading fails
+    }
+  }
 
   // Agency name (large, centered)
   doc.setFontSize(16);
@@ -101,17 +144,17 @@ const addAgencyHeader = (doc: jsPDF, agency: AgencyData, yPos: number): number =
 /**
  * Generates a Promise de Vente (Sales Promise) PDF document
  */
-export const generatePromesseVenteImmo = (
+export const generatePromesseVenteImmo = async (
   vente: VenteImmobiliereData,
   agency: AgencyData,
   validityDays: number = 90
-): jsPDF => {
+): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   
   // Add agency header
-  let yPos = addAgencyHeader(doc, agency, 20);
+  let yPos = await addAgencyHeader(doc, agency, 20);
 
   // Document title
   doc.setFontSize(18);
@@ -278,7 +321,7 @@ export const generatePromesseVenteImmo = (
 /**
  * Generates a Receipt PDF for a payment installment
  */
-export const generateRecuVenteImmo = (
+export const generateRecuVenteImmo = async (
   echeance: {
     amount: number;
     paid_date: string;
@@ -287,13 +330,13 @@ export const generateRecuVenteImmo = (
   },
   vente: VenteImmobiliereData,
   agency: AgencyData
-): jsPDF => {
+): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   
   // Add agency header
-  let yPos = addAgencyHeader(doc, agency, 20);
+  let yPos = await addAgencyHeader(doc, agency, 20);
 
   // Document title
   doc.setFontSize(16);
@@ -387,17 +430,17 @@ interface ReservationData {
 /**
  * Generates a Reservation Contract PDF document
  */
-export const generateContratReservationImmo = (
+export const generateContratReservationImmo = async (
   reservation: ReservationData,
   agency: AgencyData,
   validityDays: number = 30
-): jsPDF => {
+): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   
   // Add agency header
-  let yPos = addAgencyHeader(doc, agency, 20);
+  let yPos = await addAgencyHeader(doc, agency, 20);
 
   // Document title
   doc.setFontSize(18);
@@ -612,16 +655,16 @@ export const generateContratReservationImmo = (
 /**
  * Generates a Sales Contract (Contrat de Vente) PDF document
  */
-export const generateContratVenteImmo = (
+export const generateContratVenteImmo = async (
   vente: VenteImmobiliereData,
   agency: AgencyData
-): jsPDF => {
+): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   
   // Add agency header
-  let yPos = addAgencyHeader(doc, agency, 20);
+  let yPos = await addAgencyHeader(doc, agency, 20);
 
   // Document title
   doc.setFontSize(18);

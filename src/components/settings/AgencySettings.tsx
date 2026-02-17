@@ -57,7 +57,7 @@ export function AgencySettings() {
     kkiapay_sandbox: false,
     geniuspay_public_key: "",
     geniuspay_secret_key: "",
-    geniuspay_sandbox: true,
+    geniuspay_sandbox: false,
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);

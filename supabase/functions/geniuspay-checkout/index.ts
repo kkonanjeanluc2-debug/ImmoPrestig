@@ -63,8 +63,14 @@ Deno.serve(async (req) => {
       .eq("user_id", userId)
       .maybeSingle();
 
+    // Determine sandbox or production mode
+    const isSandbox = Deno.env.get("GENIUSPAY_SANDBOX") === "true";
+    const baseUrl = isSandbox
+      ? "https://sandbox.pay.genius.ci/api/v1/merchant/checkout"
+      : "https://pay.genius.ci/api/v1/merchant/checkout";
+
     // Create GeniusPay checkout session via API
-    const geniusPayResponse = await fetch("https://pay.genius.ci/api/v1/merchant/checkout", {
+    const geniusPayResponse = await fetch(baseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -113,3 +113,15 @@ verify_jwt = false
 
 [functions.complete-tenant-signature]
 verify_jwt = false
+
+[functions.geniuspay-checkout]
+verify_jwt = false
+
+[functions.geniuspay-webhook]
+verify_jwt = false
+
+[functions.tenant-pay-rent-geniuspay]
+verify_jwt = false
+
+[functions.tenant-pay-rent-geniuspay-webhook]
+verify_jwt = false

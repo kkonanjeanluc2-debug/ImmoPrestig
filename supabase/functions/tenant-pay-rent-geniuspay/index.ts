@@ -48,9 +48,10 @@ Deno.serve(async (req) => {
 
     // Use agency keys if configured, otherwise fall back to platform keys
     const secretKey = agency?.geniuspay_secret_key || Deno.env.get("GENIUSPAY_SECRET_KEY");
+    const publicKey = agency?.geniuspay_public_key || Deno.env.get("GENIUSPAY_PUBLIC_KEY");
     const isSandbox = agency?.geniuspay_sandbox ?? false;
 
-    if (!secretKey) {
+    if (!secretKey || !publicKey) {
       return new Response(
         JSON.stringify({ error: "GeniusPay not configured for this agency" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -58,8 +59,8 @@ Deno.serve(async (req) => {
     }
 
     const baseUrl = isSandbox
-      ? "https://sandbox.pay.genius.ci/api/v1/merchant/checkout"
-      : "https://pay.genius.ci/api/v1/merchant/checkout";
+      ? "https://sandbox.pay.genius.ci/api/v1/merchant/payments"
+      : "https://pay.genius.ci/api/v1/merchant/payments";
 
     const payAmount = amount || (payment.amount - (payment.paid_amount || 0));
     const tenant = payment.tenants as any;
@@ -73,19 +74,21 @@ Deno.serve(async (req) => {
     // Create GeniusPay checkout (redirect mode - no payment_method specified)
     const appUrl = Deno.env.get("VITE_APP_URL") || "https://property-grace.lovable.app";
 
+    console.log(`Creating GeniusPay payment: amount=${Math.round(payAmount)}, sandbox=${isSandbox}`);
+
     const geniusPayResponse = await fetch(baseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${secretKey}`,
+        "X-API-Key": publicKey,
+        "X-API-Secret": secretKey,
       },
       body: JSON.stringify({
         amount: Math.round(payAmount),
-        currency: "XOF",
         description: `Loyer ${dueMonth} - ${property?.title || ""}`,
         customer: {
-          email: tenant?.email || "",
-          name: tenant?.name || "",
+          email: tenant?.email || undefined,
+          name: tenant?.name || undefined,
           phone: customer_phone || tenant?.phone || "",
         },
         metadata: {

@@ -14,8 +14,9 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const GENIUSPAY_SECRET_KEY = Deno.env.get("GENIUSPAY_SECRET_KEY");
+    const GENIUSPAY_PUBLIC_KEY = Deno.env.get("GENIUSPAY_PUBLIC_KEY");
 
-    if (!GENIUSPAY_SECRET_KEY) {
+    if (!GENIUSPAY_SECRET_KEY || !GENIUSPAY_PUBLIC_KEY) {
       return new Response(
         JSON.stringify({ error: "GeniusPay not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -66,19 +67,19 @@ Deno.serve(async (req) => {
     // Determine sandbox or production mode
     const isSandbox = Deno.env.get("GENIUSPAY_SANDBOX") === "true";
     const baseUrl = isSandbox
-      ? "https://sandbox.pay.genius.ci/api/v1/merchant/checkout"
-      : "https://pay.genius.ci/api/v1/merchant/checkout";
+      ? "https://sandbox.pay.genius.ci/api/v1/merchant/payments"
+      : "https://pay.genius.ci/api/v1/merchant/payments";
 
     // Create GeniusPay checkout session via API
     const geniusPayResponse = await fetch(baseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${GENIUSPAY_SECRET_KEY}`,
+        "X-API-Key": GENIUSPAY_PUBLIC_KEY,
+        "X-API-Secret": GENIUSPAY_SECRET_KEY,
       },
       body: JSON.stringify({
         amount: Math.round(amount),
-        currency: "XOF",
         description: description || "Abonnement ImmoPrestige",
         customer: {
           email: profile?.email || "",

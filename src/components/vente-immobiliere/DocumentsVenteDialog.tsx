@@ -26,6 +26,8 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
   const { data: echeances } = useEcheancesVentes();
 
   const venteEcheances = echeances?.filter((e) => e.vente_id === vente.id && e.status === "paid") || [];
+  const allEcheances = echeances?.filter((e) => e.vente_id === vente.id) || [];
+  const isFullyPaid = vente.payment_type === "comptant" || (allEcheances.length > 0 && allEcheances.every((e) => e.status === "paid"));
 
   const handleDownloadPromesse = async () => {
     if (!agency || !vente.bien || !vente.acquereur) {
@@ -130,12 +132,16 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
               </div>
               <div className="flex-1">
                 <p className="font-medium">Contrat de vente</p>
-                <p className="text-sm text-muted-foreground">Document officiel de cession du bien</p>
+                <p className="text-sm text-muted-foreground">
+                  {isFullyPaid
+                    ? "Document officiel de cession du bien"
+                    : "Disponible uniquement après solde complet du bien"}
+                </p>
               </div>
             </div>
-            <Button className="w-full" onClick={handleDownloadContratVente}>
+            <Button className="w-full" onClick={handleDownloadContratVente} disabled={!isFullyPaid}>
               <Download className="h-4 w-4 mr-2" />
-              Télécharger
+              {isFullyPaid ? "Télécharger" : "En attente du solde complet"}
             </Button>
           </div>
 

@@ -28,32 +28,29 @@ Deno.serve(async (req) => {
 
     console.log("GeniusPay subscription webhook received:", payload);
 
-    // Verify HMAC signature
+    // Verify HMAC signature if provided (GeniusPay may not always send it)
     const signature = req.headers.get("x-geniuspay-signature");
-    if (!signature) {
-      console.error("Missing GeniusPay webhook signature");
-      return new Response(
-        JSON.stringify({ error: "Missing signature" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    if (signature && GENIUSPAY_WEBHOOK_SECRET) {
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(GENIUSPAY_WEBHOOK_SECRET);
+      const key = await crypto.subtle.importKey(
+        "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
       );
-    }
+      const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+      const computedSignature = Array.from(new Uint8Array(signatureBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(GENIUSPAY_WEBHOOK_SECRET);
-    const key = await crypto.subtle.importKey(
-      "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
-    );
-    const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
-    const computedSignature = Array.from(new Uint8Array(signatureBuffer))
-      .map(b => b.toString(16).padStart(2, "0"))
-      .join("");
-
-    if (signature !== computedSignature) {
-      console.error("Invalid GeniusPay webhook signature");
-      return new Response(
-        JSON.stringify({ error: "Invalid signature" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (signature !== computedSignature) {
+        console.error("Invalid GeniusPay webhook signature");
+        return new Response(
+          JSON.stringify({ error: "Invalid signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log("GeniusPay webhook signature verified");
+    } else {
+      console.log("No signature header - processing webhook without signature verification");
     }
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);

@@ -82,7 +82,8 @@ Deno.serve(async (req) => {
     });
 
     // Create GeniusPay checkout (redirect mode - no payment_method specified)
-    const appUrl = Deno.env.get("VITE_APP_URL") || "https://property-grace.lovable.app";
+    // IMPORTANT: Use the actual frontend app URL, not VITE_APP_URL which may point to Supabase
+    const appUrl = "https://property-grace.lovable.app";
 
     console.log(`Creating GeniusPay payment: amount=${Math.round(payAmount)}, sandbox=${isSandbox}`);
 

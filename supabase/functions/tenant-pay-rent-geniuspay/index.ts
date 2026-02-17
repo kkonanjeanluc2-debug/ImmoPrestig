@@ -78,30 +78,36 @@ Deno.serve(async (req) => {
 
     console.log(`Creating GeniusPay payment: amount=${Math.round(payAmount)}, sandbox=${isSandbox}`);
 
+    const requestBody = {
+      amount: Math.round(payAmount),
+      description: `Loyer ${dueMonth} - ${property?.title || ""}`,
+      customer: {
+        email: tenant?.email || undefined,
+        name: tenant?.name || undefined,
+        phone: customer_phone || tenant?.phone || "",
+      },
+      metadata: {
+        payment_id: payment_id,
+        tenant_id: payment.tenant_id,
+        user_id: payment.user_id,
+        type: "rent",
+      },
+      success_url: `${appUrl}/sign-contract?payment=success`,
+      error_url: `${appUrl}/sign-contract?payment=cancelled`,
+    };
+
+    console.log(`GeniusPay request URL: ${baseUrl}`);
+    console.log(`GeniusPay request body:`, JSON.stringify(requestBody));
+
     const geniusPayResponse = await fetch(baseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "X-API-Key": publicKey,
         "X-API-Secret": secretKey,
       },
-      body: JSON.stringify({
-        amount: Math.round(payAmount),
-        description: `Loyer ${dueMonth} - ${property?.title || ""}`,
-        customer: {
-          email: tenant?.email || undefined,
-          name: tenant?.name || undefined,
-          phone: customer_phone || tenant?.phone || "",
-        },
-        metadata: {
-          payment_id: payment_id,
-          tenant_id: payment.tenant_id,
-          user_id: payment.user_id,
-          type: "rent",
-        },
-        success_url: `${appUrl}/sign-contract?payment=success`,
-        cancel_url: `${appUrl}/sign-contract?payment=cancelled`,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const responseText = await geniusPayResponse.text();
@@ -118,21 +124,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!geniusPayResponse.ok || !geniusPayData.checkout_url) {
-      console.error("GeniusPay rent checkout error:", geniusPayData);
+    // GeniusPay wraps response in data: { checkout_url, reference, ... }
+    const paymentData = geniusPayData.data || geniusPayData;
+    const checkoutUrl = paymentData.checkout_url;
+
+    if (!geniusPayResponse.ok || !checkoutUrl) {
+      console.error("GeniusPay rent checkout error:", JSON.stringify(geniusPayData));
       return new Response(
-        JSON.stringify({ error: geniusPayData.message || "Erreur lors de la création du paiement" }),
+        JSON.stringify({ error: geniusPayData.message || paymentData.message || "Erreur lors de la création du paiement" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`GeniusPay rent checkout created for payment ${payment_id}, reference: ${geniusPayData.reference || geniusPayData.id}`);
+    console.log(`GeniusPay rent checkout created for payment ${payment_id}, reference: ${paymentData.reference || paymentData.id}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        payment_url: geniusPayData.checkout_url,
-        reference: geniusPayData.reference || geniusPayData.id,
+        payment_url: checkoutUrl,
+        reference: paymentData.reference || paymentData.id,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

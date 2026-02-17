@@ -51,13 +51,13 @@ export default function BienVenteDetails() {
   const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const handleDownloadContract = () => {
+  const handleDownloadContract = async () => {
     if (!reservation || !agency || !bien) {
       toast.error("Données de réservation non disponibles");
       return;
     }
 
-    const doc = generateContratReservationImmo(
+    const doc = await generateContratReservationImmo(
       {
         bien: {
           title: bien.title,

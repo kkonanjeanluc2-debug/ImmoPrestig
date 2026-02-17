@@ -31,6 +31,7 @@ const PROVIDER_ICONS: Record<string, React.ReactNode> = {
   wave_ci: <Smartphone className="h-5 w-5" />,
   pawapay: <Smartphone className="h-5 w-5" />,
   kkiapay: <CreditCard className="h-5 w-5" />,
+  geniuspay: <CreditCard className="h-5 w-5" />,
 };
 
 const PROVIDER_COLORS: Record<string, string> = {
@@ -38,6 +39,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   wave_ci: "bg-blue-500",
   pawapay: "bg-purple-500",
   kkiapay: "bg-red-500",
+  geniuspay: "bg-emerald-500",
 };
 
 const METHOD_LABELS: Record<string, string> = {
@@ -230,6 +232,19 @@ export function PaymentProvidersSettings() {
           webhookInfo: "Le secret est utilisé pour vérifier les signatures des webhooks.",
           hasThreeKeys: true,
         };
+      case "geniuspay":
+        return {
+          secretName: "GENIUSPAY_SECRET_KEY",
+          publicKeyName: "GENIUSPAY_PUBLIC_KEY",
+          publicKeyLabel: "Clé Publique",
+          secretKeyLabel: "Clé Secrète",
+          extraSecretName: "GENIUSPAY_WEBHOOK_SECRET",
+          extraSecretLabel: "Secret Webhook",
+          description: "Configurez vos clés API GeniusPay.",
+          docsUrl: "https://pay.genius.ci/docs/api",
+          webhookInfo: "Le secret webhook est utilisé pour vérifier les signatures des notifications.",
+          hasThreeKeys: true,
+        };
       default:
         return null;
     }
@@ -376,6 +391,9 @@ export function PaymentProvidersSettings() {
                 <li><code className="bg-background px-1 rounded">KKIAPAY_PUBLIC_KEY</code> - Clé publique KKiaPay</li>
                 <li><code className="bg-background px-1 rounded">KKIAPAY_PRIVATE_KEY</code> - Clé privée KKiaPay</li>
                 <li><code className="bg-background px-1 rounded">KKIAPAY_SECRET</code> - Secret webhook KKiaPay</li>
+                <li><code className="bg-background px-1 rounded">GENIUSPAY_PUBLIC_KEY</code> - Clé publique GeniusPay</li>
+                <li><code className="bg-background px-1 rounded">GENIUSPAY_SECRET_KEY</code> - Clé secrète GeniusPay</li>
+                <li><code className="bg-background px-1 rounded">GENIUSPAY_WEBHOOK_SECRET</code> - Secret webhook GeniusPay</li>
               </ul>
             </div>
           </div>

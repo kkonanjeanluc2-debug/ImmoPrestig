@@ -55,6 +55,9 @@ export function AgencySettings() {
     kkiapay_private_key: "",
     kkiapay_secret: "",
     kkiapay_sandbox: false,
+    geniuspay_public_key: "",
+    geniuspay_secret_key: "",
+    geniuspay_sandbox: true,
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +65,7 @@ export function AgencySettings() {
   const [hasChanges, setHasChanges] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
+  const [showGeniusPaySecret, setShowGeniusPaySecret] = useState(false);
   const [onlineRentToggle, setOnlineRentToggle] = useState(false);
 
   // Initialize form when agency data loads
@@ -84,6 +88,9 @@ export function AgencySettings() {
         kkiapay_private_key: (agency as any).kkiapay_private_key || "",
         kkiapay_secret: (agency as any).kkiapay_secret || "",
         kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
+        geniuspay_public_key: (agency as any).geniuspay_public_key || "",
+        geniuspay_secret_key: (agency as any).geniuspay_secret_key || "",
+        geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
       });
       setLogoUrl(agency.logo_url);
       setOnlineRentToggle(!!(agency as any).online_rent_enabled);
@@ -110,6 +117,9 @@ export function AgencySettings() {
         kkiapay_private_key: (agency as any).kkiapay_private_key || "",
         kkiapay_secret: (agency as any).kkiapay_secret || "",
         kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
+        geniuspay_public_key: (agency as any).geniuspay_public_key || "",
+        geniuspay_secret_key: (agency as any).geniuspay_secret_key || "",
+        geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
       });
       setLogoUrl(agency.logo_url);
       setOnlineRentToggle(!!(agency as any).online_rent_enabled);
@@ -195,6 +205,9 @@ export function AgencySettings() {
             kkiapay_private_key: formData.kkiapay_private_key || null,
             kkiapay_secret: formData.kkiapay_secret || null,
             kkiapay_sandbox: formData.kkiapay_sandbox,
+            geniuspay_public_key: formData.geniuspay_public_key || null,
+            geniuspay_secret_key: formData.geniuspay_secret_key || null,
+            geniuspay_sandbox: formData.geniuspay_sandbox,
             online_rent_enabled: onlineRentToggle,
           })
           .eq('user_id', user.id);
@@ -223,6 +236,9 @@ export function AgencySettings() {
             kkiapay_private_key: formData.kkiapay_private_key || null,
             kkiapay_secret: formData.kkiapay_secret || null,
             kkiapay_sandbox: formData.kkiapay_sandbox,
+            geniuspay_public_key: formData.geniuspay_public_key || null,
+            geniuspay_secret_key: formData.geniuspay_secret_key || null,
+            geniuspay_sandbox: formData.geniuspay_sandbox,
             online_rent_enabled: onlineRentToggle,
           });
 
@@ -649,6 +665,79 @@ export function AgencySettings() {
             </div>
           )}
         </div>
+
+        {/* GeniusPay Configuration */}
+        {onlineRentToggle && (
+          <div className="space-y-4 border-t pt-6">
+            <div className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-emerald-600" />
+              <h3 className="font-medium">Configuration GeniusPay</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Entrez vos clés API GeniusPay pour activer les paiements via Wave, Orange Money, MTN et Carte. Obtenez vos clés sur <a href="https://pay.genius.ci" target="_blank" rel="noopener noreferrer" className="text-primary underline">pay.genius.ci</a>.
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="geniuspay-public-key">Clé publique</Label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="geniuspay-public-key"
+                    value={formData.geniuspay_public_key}
+                    onChange={(e) => handleChange("geniuspay_public_key", e.target.value)}
+                    placeholder="pk_live_xxxxxxxxxxxxxxx"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="geniuspay-secret-key">Clé secrète</Label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="geniuspay-secret-key"
+                    type={showGeniusPaySecret ? "text" : "password"}
+                    value={formData.geniuspay_secret_key}
+                    onChange={(e) => handleChange("geniuspay_secret_key", e.target.value)}
+                    placeholder="sk_live_xxxxxxxxxxxxxxx"
+                    className="pl-10 pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                    onClick={() => setShowGeniusPaySecret(!showGeniusPaySecret)}
+                  >
+                    {showGeniusPaySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="geniuspay-sandbox"
+                  checked={formData.geniuspay_sandbox}
+                  onCheckedChange={(checked) => {
+                    setFormData(prev => ({ ...prev, geniuspay_sandbox: checked }));
+                    setHasChanges(true);
+                  }}
+                />
+                <Label htmlFor="geniuspay-sandbox" className="cursor-pointer">
+                  Mode Sandbox (test)
+                </Label>
+              </div>
+
+              {!formData.geniuspay_public_key && (
+                <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+                  <strong className="text-foreground">Note :</strong> Configurez vos clés GeniusPay pour offrir Wave, Orange Money, MTN et les paiements par carte à vos locataires.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Save Button */}
         <div className="flex justify-end pt-4">

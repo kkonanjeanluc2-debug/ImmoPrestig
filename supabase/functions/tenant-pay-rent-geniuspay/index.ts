@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
 
     // Use agency keys if configured, otherwise fall back to platform keys
     const secretKey = agency?.geniuspay_secret_key || Deno.env.get("GENIUSPAY_SECRET_KEY");
+    const isSandbox = agency?.geniuspay_sandbox ?? false;
 
     if (!secretKey) {
       return new Response(
@@ -55,6 +56,10 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const baseUrl = isSandbox
+      ? "https://sandbox.pay.genius.ci/api/v1/merchant/checkout"
+      : "https://pay.genius.ci/api/v1/merchant/checkout";
 
     const payAmount = amount || (payment.amount - (payment.paid_amount || 0));
     const tenant = payment.tenants as any;
@@ -68,7 +73,7 @@ Deno.serve(async (req) => {
     // Create GeniusPay checkout (redirect mode - no payment_method specified)
     const appUrl = Deno.env.get("VITE_APP_URL") || "https://property-grace.lovable.app";
 
-    const geniusPayResponse = await fetch("https://pay.genius.ci/api/v1/merchant/checkout", {
+    const geniusPayResponse = await fetch(baseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

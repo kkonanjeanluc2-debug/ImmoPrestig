@@ -94,6 +94,11 @@ Deno.serve(async (req) => {
         secret: "KKIAPAY_PRIVATE_KEY",
         extra: "KKIAPAY_SECRET",
       },
+      geniuspay: {
+        public: "GENIUSPAY_PUBLIC_KEY",
+        secret: "GENIUSPAY_SECRET_KEY",
+        extra: "GENIUSPAY_WEBHOOK_SECRET",
+      },
     };
 
     const providerSecrets = secretNames[provider_name];

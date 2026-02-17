@@ -101,6 +101,9 @@ export type Database = {
           country: string | null
           created_at: string
           email: string
+          geniuspay_public_key: string | null
+          geniuspay_sandbox: boolean | null
+          geniuspay_secret_key: string | null
           id: string
           is_active: boolean
           kkiapay_private_key: string | null
@@ -132,6 +135,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           email: string
+          geniuspay_public_key?: string | null
+          geniuspay_sandbox?: boolean | null
+          geniuspay_secret_key?: string | null
           id?: string
           is_active?: boolean
           kkiapay_private_key?: string | null
@@ -163,6 +169,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string
+          geniuspay_public_key?: string | null
+          geniuspay_sandbox?: boolean | null
+          geniuspay_secret_key?: string | null
           id?: string
           is_active?: boolean
           kkiapay_private_key?: string | null

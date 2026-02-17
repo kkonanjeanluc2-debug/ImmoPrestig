@@ -339,13 +339,12 @@ export default function Payments() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-1 sm:p-4">
-                        <div className="w-full overflow-hidden flex justify-center">
                         <Calendar
                           mode="single"
                           selected={selectedDate}
                           onSelect={setSelectedDate}
                           locale={fr}
-                          className="w-full max-w-full pointer-events-auto [&_.rdp-table]:w-full [&_.rdp-head_cell]:w-auto [&_.rdp-cell]:w-auto [&_.rdp-day]:h-8 [&_.rdp-day]:w-8 [&_.rdp-head_cell]:text-[0.7rem] [&_.rdp-row]:flex [&_.rdp-row]:justify-between [&_.rdp-head_row]:flex [&_.rdp-head_row]:justify-between"
+                          className="w-full pointer-events-auto !p-1 sm:!p-3 [&_.rdp-months]:w-full [&_.rdp-month]:w-full [&_.rdp-table]:w-full [&_.rdp-head_row]:flex [&_.rdp-head_row]:w-full [&_.rdp-head_cell]:flex-1 [&_.rdp-head_cell]:text-center [&_.rdp-head_cell]:text-[0.7rem] [&_.rdp-row]:flex [&_.rdp-row]:w-full [&_.rdp-cell]:flex-1 [&_.rdp-cell]:text-center [&_.rdp-day]:h-8 [&_.rdp-day]:w-full [&_.rdp-caption]:px-1"
                           modifiers={{
                             hasPayment: (date) => {
                               const dateStr = date.toISOString().split('T')[0];
@@ -356,7 +355,6 @@ export default function Payments() {
                             hasPayment: "ring-2 ring-primary ring-offset-1"
                           }}
                         />
-                        </div>
                         {/* Legend */}
                         <div className="mt-4 pt-4 border-t border-border space-y-2">
                           <p className="text-xs font-medium text-muted-foreground mb-2">Légende</p>

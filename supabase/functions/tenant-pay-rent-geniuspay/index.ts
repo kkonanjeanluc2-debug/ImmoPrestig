@@ -64,6 +64,14 @@ Deno.serve(async (req) => {
       : "https://pay.genius.ci/api/v1/merchant/payments";
 
     const payAmount = amount || (payment.amount - (payment.paid_amount || 0));
+
+    // GeniusPay requires a minimum amount (typically 100 FCFA)
+    if (payAmount < 100) {
+      return new Response(
+        JSON.stringify({ error: "Le montant minimum pour un paiement GeniusPay est de 100 F CFA" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const tenant = payment.tenants as any;
     const contract = payment.contracts as any;
     const property = contract?.properties as any;
@@ -130,8 +138,16 @@ Deno.serve(async (req) => {
 
     if (!geniusPayResponse.ok || !checkoutUrl) {
       console.error("GeniusPay rent checkout error:", JSON.stringify(geniusPayData));
+      // Extract readable error from validation errors
+      let errorMsg = geniusPayData.message || paymentData.message || "Erreur lors de la création du paiement";
+      if (geniusPayData.error?.errors) {
+        const fieldErrors = Object.entries(geniusPayData.error.errors)
+          .map(([field, msgs]: [string, any]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+          .join("; ");
+        errorMsg = `Erreur de validation: ${fieldErrors}`;
+      }
       return new Response(
-        JSON.stringify({ error: geniusPayData.message || paymentData.message || "Erreur lors de la création du paiement" }),
+        JSON.stringify({ error: errorMsg }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

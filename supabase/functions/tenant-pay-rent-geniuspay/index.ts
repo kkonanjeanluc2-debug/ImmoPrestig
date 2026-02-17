@@ -25,14 +25,15 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get payment details
+    // Get payment details with tenant and property info via contract
     const { data: payment, error: paymentError } = await adminClient
       .from("payments")
-      .select("*, tenants(name, email, phone), properties(title)")
+      .select("*, tenants(name, email, phone), contracts(properties(title))")
       .eq("id", payment_id)
       .single();
 
     if (paymentError || !payment) {
+      console.error("Payment lookup error:", paymentError?.message, "for id:", payment_id);
       return new Response(
         JSON.stringify({ error: "Payment not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -64,7 +65,8 @@ Deno.serve(async (req) => {
 
     const payAmount = amount || (payment.amount - (payment.paid_amount || 0));
     const tenant = payment.tenants as any;
-    const property = payment.properties as any;
+    const contract = payment.contracts as any;
+    const property = contract?.properties as any;
 
     const dueMonth = new Date(payment.due_date).toLocaleDateString("fr-FR", {
       month: "long",

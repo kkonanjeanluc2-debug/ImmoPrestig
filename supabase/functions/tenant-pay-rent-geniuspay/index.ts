@@ -65,10 +65,10 @@ Deno.serve(async (req) => {
 
     const payAmount = amount || (payment.amount - (payment.paid_amount || 0));
 
-    // GeniusPay requires a minimum amount (typically 100 FCFA)
-    if (payAmount < 100) {
+    // GeniusPay requires a minimum amount of 200 FCFA
+    if (payAmount < 200) {
       return new Response(
-        JSON.stringify({ error: "Le montant minimum pour un paiement GeniusPay est de 100 F CFA" }),
+        JSON.stringify({ error: "Le montant minimum pour un paiement GeniusPay est de 200 F CFA" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

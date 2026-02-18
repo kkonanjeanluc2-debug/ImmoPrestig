@@ -101,8 +101,8 @@ Deno.serve(async (req) => {
         user_id: payment.user_id,
         type: "rent",
       },
-      success_url: `${appUrl}/sign-contract?payment=success`,
-      error_url: `${appUrl}/sign-contract?payment=cancelled`,
+      success_url: `${appUrl}/payments?payment=success`,
+      error_url: `${appUrl}/payments?payment=cancelled`,
     };
 
     console.log(`GeniusPay request URL: ${baseUrl}`);

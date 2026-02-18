@@ -240,6 +240,22 @@ export function TenantPayRentDialog({
         return;
       }
 
+      // GeniusPay redirect flow - open in new tab and poll for updates
+      if (provider === "geniuspay" && data?.payment_url) {
+        toast.success("Redirection vers le paiement...");
+        window.open(data.payment_url, "_blank");
+        setIsLoading(false);
+        setOpen(false);
+
+        // Poll for payment update like KKiaPay
+        const paid = await waitForPaymentUpdate();
+        if (paid) {
+          toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");
+          queryClient.invalidateQueries({ queryKey: ["payments"] });
+        }
+        return;
+      }
+
       if (data?.payment_url) {
         toast.success("Redirection vers le paiement...");
         window.open(data.payment_url, "_blank");

@@ -107,18 +107,29 @@ Deno.serve(async (req) => {
       const newPaidAmount = currentPaidAmount + additionalAmount;
       const totalAmount = Number(payment.amount);
 
-      const newStatus = newPaidAmount >= totalAmount ? "paid" : "partial";
+      const newStatus = newPaidAmount >= totalAmount ? "paid" : "pending";
 
-      await adminClient
+      const updatePayload = {
+        status: newStatus,
+        paid_amount: Math.min(newPaidAmount, totalAmount),
+        paid_date: now.toISOString().split("T")[0],
+        method: "geniuspay",
+        updated_at: now.toISOString(),
+      };
+
+      console.log(`Updating payment ${paymentId} with:`, JSON.stringify(updatePayload));
+
+      const { data: updateData, error: updateError } = await adminClient
         .from("payments")
-        .update({
-          status: newStatus,
-          paid_amount: Math.min(newPaidAmount, totalAmount),
-          paid_date: now.toISOString().split("T")[0],
-          method: "geniuspay",
-          updated_at: now.toISOString(),
-        })
-        .eq("id", paymentId);
+        .update(updatePayload)
+        .eq("id", paymentId)
+        .select();
+
+      if (updateError) {
+        console.error("Failed to update payment:", updateError);
+      } else {
+        console.log("Payment update result:", JSON.stringify(updateData));
+      }
 
       console.log(`Rent payment updated: ${paymentId}, status: ${newStatus}, paid: ${newPaidAmount}`);
 

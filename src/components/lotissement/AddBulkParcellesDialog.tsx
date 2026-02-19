@@ -26,7 +26,9 @@ interface AddBulkParcellesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existingNumbers: string[];
-  existingParcelles?: { ilot_id: string | null }[];
+  existingParcelles?: { ilot_id: string | null; area?: number }[];
+  lotissementTotalArea?: number | null;
+  existingParcellesArea?: number;
 }
 
 // Helper function to extract the next number from existing plot numbers
@@ -77,7 +79,9 @@ export function AddBulkParcellesDialog({
   open, 
   onOpenChange, 
   existingNumbers,
-  existingParcelles = []
+  existingParcelles = [],
+  lotissementTotalArea,
+  existingParcellesArea = 0,
 }: AddBulkParcellesDialogProps) {
   const createBulkParcelles = useCreateBulkParcelles();
   const { data: ilots } = useIlots(lotissementId);
@@ -122,6 +126,14 @@ export function AddBulkParcellesDialog({
     const area = parseFloat(formData.area) || 0;
     return count * area;
   }, [formData.count, formData.area]);
+
+  // Area capacity validation against lotissement total area
+  const areaCapacityInfo = useMemo(() => {
+    if (!lotissementTotalArea) return { remainingArea: null, wouldExceed: false };
+    const remainingArea = Math.max(0, lotissementTotalArea - existingParcellesArea);
+    const wouldExceed = totalArea > remainingArea + 0.01;
+    return { remainingArea, wouldExceed };
+  }, [lotissementTotalArea, existingParcellesArea, totalArea]);
 
   // Find matching îlots (where total_area equals total area of parcelles)
   const matchingIlots = useMemo(() => {
@@ -302,6 +314,20 @@ export function AddBulkParcellesDialog({
             </div>
           </div>
 
+          {/* Remaining area info */}
+          {areaCapacityInfo.remainingArea !== null && (
+            <div className={`text-sm p-2 rounded ${areaCapacityInfo.wouldExceed ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+              {areaCapacityInfo.wouldExceed ? (
+                <p className="flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Superficie restante : {areaCapacityInfo.remainingArea.toLocaleString("fr-FR")} m² — la superficie totale ({totalArea.toLocaleString("fr-FR")} m²) dépasse la capacité
+                </p>
+              ) : (
+                <p>Superficie restante disponible : <strong>{areaCapacityInfo.remainingArea.toLocaleString("fr-FR")} m²</strong> {totalArea > 0 && `(après ajout : ${(areaCapacityInfo.remainingArea - totalArea).toLocaleString("fr-FR")} m²)`}</p>
+              )}
+            </div>
+          )}
+
           {/* Îlot selector - only shown when there are îlots */}
           {ilots && ilots.length > 0 && (
             <div className="space-y-2">
@@ -388,7 +414,7 @@ export function AddBulkParcellesDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={createBulkParcelles.isPending || ilotCapacityInfo.wouldExceed}>
+            <Button type="submit" disabled={createBulkParcelles.isPending || ilotCapacityInfo.wouldExceed || areaCapacityInfo.wouldExceed}>
               {createBulkParcelles.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Créer {formData.count} parcelles
             </Button>

@@ -26,6 +26,7 @@ export function OwnerTenantsList({ tenants, properties }: OwnerTenantsListProps)
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Check if user is a gestionnaire
   const { data: membership } = useQuery({
@@ -55,9 +56,19 @@ export function OwnerTenantsList({ tenants, properties }: OwnerTenantsListProps)
     ? tenants.filter(t => filteredProperties.some(p => p.id === t.property_id))
     : tenants;
 
-  const filteredTenants = selectedPropertyId === "all"
+  const propertyFiltered = selectedPropertyId === "all"
     ? baseTenants
     : baseTenants.filter(t => t.property_id === selectedPropertyId);
+
+  const filteredTenants = statusFilter === "all"
+    ? propertyFiltered
+    : statusFilter === "active"
+      ? propertyFiltered.filter(t => t.contracts?.some(c => c.status === "active"))
+      : propertyFiltered.filter(t => {
+          const hasActive = t.contracts?.some(c => c.status === "active");
+          const hasExpired = t.contracts?.some(c => c.status === "expired");
+          return !hasActive && hasExpired;
+        });
 
   const getPaymentStatus = (tenant: TenantWithDetails) => {
     // Check if contract is expired
@@ -108,6 +119,17 @@ export function OwnerTenantsList({ tenants, properties }: OwnerTenantsListProps)
               </SelectContent>
             </Select>
           )}
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Filtrer par statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="active">Contrat actif</SelectItem>
+              <SelectItem value="expired">Contrat expiré</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>

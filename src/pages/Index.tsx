@@ -17,6 +17,7 @@ import { useMemo, useState } from "react";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
+import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
@@ -32,6 +33,7 @@ const Index = () => {
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
   const { data: whatsappStats } = useWhatsAppLogsCount();
+  const { data: unitsSummary } = usePropertyUnitsSummary();
 
   // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
   const isGestionnaire = userRole?.role === "gestionnaire";
@@ -79,9 +81,25 @@ const Index = () => {
     return paidDate && p.status === 'paid' && paidDate >= currentMonthStart && paidDate <= now;
   }).reduce((sum, p) => sum + Number(p.amount), 0);
 
-  const occupiedProperties = filteredProperties.filter(p => p.status === 'loué').length;
-  const occupancyRate = totalProperties > 0 
-    ? Math.round((occupiedProperties / totalProperties) * 100) 
+  // Calculate occupancy considering units (portes)
+  const { totalUnits, occupiedUnits } = useMemo(() => {
+    let total = 0;
+    let occupied = 0;
+    filteredProperties.forEach(p => {
+      const summary = unitsSummary ? unitsSummary[p.id] : null;
+      if (summary && summary.total_units > 0) {
+        total += summary.total_units;
+        occupied += summary.occupied_units;
+      } else {
+        total++;
+        if (p.status === 'loué') occupied++;
+      }
+    });
+    return { totalUnits: total, occupiedUnits: occupied };
+  }, [filteredProperties, unitsSummary]);
+
+  const occupancyRate = totalUnits > 0 
+    ? Math.round((occupiedUnits / totalUnits) * 100) 
     : 0;
 
   const handleGenerateReceipts = async () => {
@@ -163,7 +181,7 @@ const Index = () => {
             <StatCard
               title="Taux d'occupation"
               value={`${occupancyRate}%`}
-              change={`${occupiedProperties}/${totalProperties} biens`}
+              change={`${occupiedUnits}/${totalUnits} unités`}
               changeType="positive"
               icon={TrendingUp}
               iconBg="navy"

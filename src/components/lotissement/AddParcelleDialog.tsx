@@ -26,6 +26,8 @@ interface AddParcelleDialogProps {
   onOpenChange: (open: boolean) => void;
   existingNumbers: string[];
   existingParcelles?: Parcelle[];
+  lotissementTotalArea?: number | null;
+  existingParcellesArea?: number;
 }
 
 export function AddParcelleDialog({ 
@@ -33,7 +35,9 @@ export function AddParcelleDialog({
   open, 
   onOpenChange, 
   existingNumbers,
-  existingParcelles = []
+  existingParcelles = [],
+  lotissementTotalArea,
+  existingParcellesArea = 0,
 }: AddParcelleDialogProps) {
   const createParcelle = useCreateParcelle();
   const { data: ilots } = useIlots(lotissementId);
@@ -68,6 +72,15 @@ export function AddParcelleDialog({
 
     return { currentCount, maxCount, wouldExceed, remainingCapacity };
   }, [formData.ilot_id, ilots, existingParcelles]);
+
+  // Area capacity validation against lotissement total area
+  const areaCapacityInfo = useMemo(() => {
+    if (!lotissementTotalArea) return { remainingArea: null, wouldExceed: false };
+    const newArea = parseFloat(formData.area) || 0;
+    const remainingArea = Math.max(0, lotissementTotalArea - existingParcellesArea);
+    const wouldExceed = newArea > remainingArea + 0.01;
+    return { remainingArea, wouldExceed };
+  }, [lotissementTotalArea, existingParcellesArea, formData.area]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +146,20 @@ export function AddParcelleDialog({
             )}
           </div>
 
+          {/* Remaining area info */}
+          {areaCapacityInfo.remainingArea !== null && (
+            <div className={`text-sm p-2 rounded ${areaCapacityInfo.wouldExceed ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+              {areaCapacityInfo.wouldExceed ? (
+                <p className="flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Superficie restante : {areaCapacityInfo.remainingArea.toLocaleString("fr-FR")} m² — la superficie saisie dépasse la capacité
+                </p>
+              ) : (
+                <p>Superficie restante disponible : <strong>{areaCapacityInfo.remainingArea.toLocaleString("fr-FR")} m²</strong></p>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="area">Superficie (m²) *</Label>
@@ -140,9 +167,11 @@ export function AddParcelleDialog({
                 id="area"
                 type="number"
                 min="0"
+                max={areaCapacityInfo.remainingArea ?? undefined}
                 value={formData.area}
                 onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                 placeholder="ex: 500"
+                className={areaCapacityInfo.wouldExceed ? "border-destructive" : ""}
               />
             </div>
             <div className="space-y-2">
@@ -223,7 +252,7 @@ export function AddParcelleDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={createParcelle.isPending || isDuplicate || ilotCapacityInfo.wouldExceed}>
+            <Button type="submit" disabled={createParcelle.isPending || isDuplicate || ilotCapacityInfo.wouldExceed || areaCapacityInfo.wouldExceed}>
               {createParcelle.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Créer
             </Button>

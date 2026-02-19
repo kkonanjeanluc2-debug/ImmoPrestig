@@ -60,6 +60,14 @@ export function OwnerTenantsList({ tenants, properties }: OwnerTenantsListProps)
     : baseTenants.filter(t => t.property_id === selectedPropertyId);
 
   const getPaymentStatus = (tenant: TenantWithDetails) => {
+    // Check if contract is expired
+    const hasExpiredContract = tenant.contracts?.some(c => c.status === "expired");
+    const hasActiveContract = tenant.contracts?.some(c => c.status === "active");
+    
+    if (hasExpiredContract && !hasActiveContract) {
+      return { label: "Contrat expiré", variant: "outline" as const, className: "border-muted-foreground text-muted-foreground" };
+    }
+
     if (!tenant.payments || tenant.payments.length === 0) {
       return { label: "Aucun paiement", variant: "secondary" as const };
     }

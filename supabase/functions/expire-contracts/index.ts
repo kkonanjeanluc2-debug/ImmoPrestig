@@ -59,6 +59,7 @@ Deno.serve(async (req) => {
         user_id,
         property_id,
         unit_id,
+        tenant_id,
         tenant:tenants(name),
         property:properties(title)
       `)
@@ -149,6 +150,33 @@ Deno.serve(async (req) => {
 
       if (updatePropertiesError) {
         console.error("Error updating properties:", updatePropertiesError);
+      }
+    }
+
+    // Revoke tenant portal access for tenants with no remaining active contracts
+    const tenantIds = [...new Set(expiredContracts.map((c: any) => c.tenant_id).filter(Boolean))];
+    for (const tenantId of tenantIds) {
+      // Check if tenant has any other active contract
+      const { data: otherActive } = await supabase
+        .from("contracts")
+        .select("id")
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .limit(1);
+
+      if (!otherActive || otherActive.length === 0) {
+        // Revoke portal access
+        const { error: revokeErr } = await supabase
+          .from("tenants")
+          .update({ has_portal_access: false })
+          .eq("id", tenantId)
+          .eq("has_portal_access", true);
+
+        if (revokeErr) {
+          console.error(`Failed to revoke portal access for tenant ${tenantId}:`, revokeErr);
+        } else {
+          console.log(`Portal access revoked for tenant ${tenantId}`);
+        }
       }
     }
 

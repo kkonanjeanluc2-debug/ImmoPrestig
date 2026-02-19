@@ -407,6 +407,7 @@ export default function Tenants() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [assignedFilter, setAssignedFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("active");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [accessDialogTenant, setAccessDialogTenant] = useState<TenantWithDetails | null>(null);
@@ -470,9 +471,11 @@ export default function Tenants() {
 
 
   const filteredTenants = (tenants || []).filter(tenant => {
-    // Filter out tenants with no active contracts (all contracts expired)
     const hasActiveContract = tenant.contracts?.some(c => c.status === 'active');
-    if (!hasActiveContract) return false;
+    
+    // Status filter
+    if (statusFilter === "active" && !hasActiveContract) return false;
+    if (statusFilter === "expired" && hasActiveContract) return false;
 
     const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -560,28 +563,40 @@ export default function Tenants() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          {/* Assigned Filter - Only for agency owner/admin */}
-          {isAgencyOwner && assignableUsers.length > 1 && (
-            <Select value={assignedFilter} onValueChange={setAssignedFilter}>
+          <div className="flex flex-wrap gap-3">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Gestionnaire" />
+                <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les gestionnaires</SelectItem>
-                <SelectItem value="unassigned">
-                  <span className="text-muted-foreground">Non assignés</span>
-                </SelectItem>
-                {assignableUsers.map((user) => (
-                  <SelectItem key={user.user_id} value={user.user_id}>
-                    <div className="flex items-center gap-2">
-                      <UserCheck className="h-3 w-3" />
-                      {user.full_name || user.email}
-                    </div>
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="active">Contrat actif</SelectItem>
+                <SelectItem value="expired">Contrat expiré</SelectItem>
               </SelectContent>
             </Select>
-          )}
+            {/* Assigned Filter - Only for agency owner/admin */}
+            {isAgencyOwner && assignableUsers.length > 1 && (
+              <Select value={assignedFilter} onValueChange={setAssignedFilter}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Gestionnaire" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les gestionnaires</SelectItem>
+                  <SelectItem value="unassigned">
+                    <span className="text-muted-foreground">Non assignés</span>
+                  </SelectItem>
+                  {assignableUsers.map((user) => (
+                    <SelectItem key={user.user_id} value={user.user_id}>
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-3 w-3" />
+                        {user.full_name || user.email}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         {/* Stats */}

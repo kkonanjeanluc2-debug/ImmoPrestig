@@ -2,9 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
 import { Building2 } from "lucide-react";
+import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 
 interface OccupancyChartProps {
   properties: Array<{
+    id?: string;
     status: string;
     property_type: string;
   }>;
@@ -22,7 +24,9 @@ const chartConfig = {
 };
 
 export function OccupancyChart({ properties }: OccupancyChartProps) {
-  // Group properties by type
+  const { data: unitsSummary } = usePropertyUnitsSummary();
+
+  // Group properties by type, counting units for multi-unit properties
   const getOccupancyData = () => {
     const types: Record<string, { total: number; occupied: number }> = {
       maison: { total: 0, occupied: 0 },
@@ -35,9 +39,19 @@ export function OccupancyChart({ properties }: OccupancyChartProps) {
       if (!types[type]) {
         types[type] = { total: 0, occupied: 0 };
       }
-      types[type].total++;
-      if (property.status === "loué") {
-        types[type].occupied++;
+
+      const summary = property.id && unitsSummary ? unitsSummary[property.id] : null;
+
+      if (summary && summary.total_units > 0) {
+        // Multi-unit property: count each unit
+        types[type].total += summary.total_units;
+        types[type].occupied += summary.occupied_units;
+      } else {
+        // Single property without units
+        types[type].total++;
+        if (property.status === "loué") {
+          types[type].occupied++;
+        }
       }
     });
 
@@ -58,9 +72,24 @@ export function OccupancyChart({ properties }: OccupancyChartProps) {
   };
 
   const data = getOccupancyData();
-  const totalProperties = properties.length;
-  const occupiedProperties = properties.filter((p) => p.status === "loué").length;
-  const globalRate = totalProperties > 0 ? Math.round((occupiedProperties / totalProperties) * 100) : 0;
+
+  // Calculate global stats with units
+  let totalCount = 0;
+  let occupiedCount = 0;
+  properties.forEach((property) => {
+    const summary = property.id && unitsSummary ? unitsSummary[property.id] : null;
+    if (summary && summary.total_units > 0) {
+      totalCount += summary.total_units;
+      occupiedCount += summary.occupied_units;
+    } else {
+      totalCount++;
+      if (property.status === "loué") {
+        occupiedCount++;
+      }
+    }
+  });
+
+  const globalRate = totalCount > 0 ? Math.round((occupiedCount / totalCount) * 100) : 0;
 
   const getBarColor = (rate: number) => {
     if (rate >= 80) return "hsl(var(--emerald, 142 76% 36%))";
@@ -79,7 +108,7 @@ export function OccupancyChart({ properties }: OccupancyChartProps) {
         </div>
         <p className="text-2xl font-bold text-foreground">{globalRate}%</p>
         <p className="text-xs text-muted-foreground">
-          {occupiedProperties} sur {totalProperties} bien{totalProperties > 1 ? "s" : ""} loué{occupiedProperties > 1 ? "s" : ""}
+          {occupiedCount} sur {totalCount} unité{totalCount > 1 ? "s" : ""} louée{occupiedCount > 1 ? "s" : ""}
         </p>
       </CardHeader>
       <CardContent className="pt-0">

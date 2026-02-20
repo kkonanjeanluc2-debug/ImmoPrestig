@@ -122,8 +122,8 @@ export function GenerateLotissementDocumentDialog({
           break;
 
         case "contrat_prefinancement":
-          if (!prefinancementData.investorName || !prefinancementData.investmentAmount) {
-            toast.error("Veuillez remplir les informations de l'investisseur");
+          if (!prefinancementData.proprietaireName || !prefinancementData.prefinanceurName) {
+            toast.error("Veuillez remplir les informations du propriétaire et du préfinanceur");
             return;
           }
           doc = await generateContratPrefinancement(prefinancementData, lotissement, agency || null);
@@ -210,17 +210,31 @@ export function GenerateLotissementDocumentDialog({
     }));
   };
 
-  const addGuarantee = () => {
+  const addEngagementPrefinanceur = () => {
     setPrefinancementData(prev => ({
       ...prev,
-      guarantees: [...prev.guarantees, ""]
+      engagementsPrefinanceur: [...prev.engagementsPrefinanceur, ""]
     }));
   };
 
-  const removeGuarantee = (index: number) => {
+  const removeEngagementPrefinanceur = (index: number) => {
     setPrefinancementData(prev => ({
       ...prev,
-      guarantees: prev.guarantees.filter((_, i) => i !== index)
+      engagementsPrefinanceur: prev.engagementsPrefinanceur.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addEngagementProprietairePrefin = () => {
+    setPrefinancementData(prev => ({
+      ...prev,
+      engagementsProprietaire: [...prev.engagementsProprietaire, ""]
+    }));
+  };
+
+  const removeEngagementProprietairePrefin = (index: number) => {
+    setPrefinancementData(prev => ({
+      ...prev,
+      engagementsProprietaire: prev.engagementsProprietaire.filter((_, i) => i !== index)
     }));
   };
 
@@ -684,134 +698,238 @@ export function GenerateLotissementDocumentDialog({
         return (
           <ScrollArea className="h-[60vh] pr-4">
             <div className="space-y-6">
-              {/* Investisseur */}
+              {/* Propriétaire */}
               <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground">Informations de l'investisseur</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Le Propriétaire foncier</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Nom complet *</Label>
                     <Input
-                      value={prefinancementData.investorName}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, investorName: e.target.value }))}
-                      placeholder="ex: M. KONAN Koffi"
+                      value={prefinancementData.proprietaireName}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, proprietaireName: e.target.value }))}
+                      placeholder="ex: M. KOUASSI Yao"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>N° CNI</Label>
                     <Input
-                      value={prefinancementData.investorCni}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, investorCni: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Adresse</Label>
-                    <Input
-                      value={prefinancementData.investorAddress}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, investorAddress: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Téléphone</Label>
-                    <Input
-                      value={prefinancementData.investorPhone}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, investorPhone: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Investissement */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground">Détails de l'investissement</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Montant (F CFA) *</Label>
-                    <Input
-                      type="number"
-                      value={prefinancementData.investmentAmount}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, investmentAmount: Number(e.target.value) }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Rendement (%)</Label>
-                    <Input
-                      type="number"
-                      value={prefinancementData.returnPercentage}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, returnPercentage: Number(e.target.value) }))}
+                      value={prefinancementData.proprietaireCni}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, proprietaireCni: e.target.value }))}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Destination des fonds</Label>
-                  <Textarea
-                    value={prefinancementData.investmentPurpose}
-                    onChange={(e) => setPrefinancementData(prev => ({ ...prev, investmentPurpose: e.target.value }))}
-                    rows={2}
+                  <Label>Adresse</Label>
+                  <Input
+                    value={prefinancementData.proprietaireAddress}
+                    onChange={(e) => setPrefinancementData(prev => ({ ...prev, proprietaireAddress: e.target.value }))}
                   />
                 </div>
+              </div>
+
+              {/* Préfinanceur */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Le Préfinanceur / Promoteur</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Durée</Label>
+                    <Label>Nom ou raison sociale *</Label>
                     <Input
-                      value={prefinancementData.duration}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, duration: e.target.value }))}
-                      placeholder="ex: 12 mois"
+                      value={prefinancementData.prefinanceurName}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurName: e.target.value }))}
+                      placeholder="ex: SCI IMMO PRESTIGE"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Date du contrat</Label>
+                    <Label>RCCM</Label>
+                    <Input
+                      value={prefinancementData.prefinanceurRccm}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurRccm: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Adresse</Label>
+                  <Input
+                    value={prefinancementData.prefinanceurAddress}
+                    onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurAddress: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Terrain */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Terrain</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Localisation</Label>
+                    <Input
+                      value={prefinancementData.terrainLocalisation}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, terrainLocalisation: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Superficie (hectares)</Label>
+                    <Input
+                      value={prefinancementData.terrainSuperficie}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, terrainSuperficie: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>N° Arrêté d'approbation</Label>
+                    <Input
+                      value={prefinancementData.arreteReference}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, arreteReference: e.target.value }))}
+                      placeholder="ex: 2024-001"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Date de l'arrêté</Label>
                     <Input
                       type="date"
-                      value={prefinancementData.contractDate}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, contractDate: e.target.value }))}
+                      value={prefinancementData.arreteDate}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, arreteDate: e.target.value }))}
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Calendrier de remboursement</Label>
-                  <Textarea
-                    value={prefinancementData.paymentSchedule}
-                    onChange={(e) => setPrefinancementData(prev => ({ ...prev, paymentSchedule: e.target.value }))}
-                    rows={2}
-                  />
-                </div>
               </div>
 
-              {/* Garanties */}
+              {/* Engagements du Préfinanceur */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm text-muted-foreground">Garanties offertes</h4>
-                  <Button type="button" variant="outline" size="sm" onClick={addGuarantee}>
+                  <h4 className="font-medium text-sm text-muted-foreground">Engagements du Préfinanceur (Art. 3)</h4>
+                  <Button type="button" variant="outline" size="sm" onClick={addEngagementPrefinanceur}>
                     <Plus className="h-4 w-4 mr-1" />
                     Ajouter
                   </Button>
                 </div>
-                {prefinancementData.guarantees.map((guarantee, index) => (
+                {prefinancementData.engagementsPrefinanceur.map((eng, index) => (
                   <div key={index} className="flex gap-2 items-start">
                     <Textarea
-                      value={guarantee}
+                      value={eng}
                       onChange={(e) => {
-                        const newGuarantees = [...prefinancementData.guarantees];
-                        newGuarantees[index] = e.target.value;
-                        setPrefinancementData(prev => ({ ...prev, guarantees: newGuarantees }));
+                        const newEngs = [...prefinancementData.engagementsPrefinanceur];
+                        newEngs[index] = e.target.value;
+                        setPrefinancementData(prev => ({ ...prev, engagementsPrefinanceur: newEngs }));
                       }}
                       rows={2}
                       className="flex-1"
                     />
-                    {prefinancementData.guarantees.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeGuarantee(index)}
-                      >
+                    {prefinancementData.engagementsPrefinanceur.length > 1 && (
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeEngagementPrefinanceur(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     )}
                   </div>
                 ))}
+              </div>
+
+              {/* Engagements du Propriétaire */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm text-muted-foreground">Engagements du Propriétaire (Art. 4)</h4>
+                  <Button type="button" variant="outline" size="sm" onClick={addEngagementProprietairePrefin}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Ajouter
+                  </Button>
+                </div>
+                {prefinancementData.engagementsProprietaire.map((eng, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <Textarea
+                      value={eng}
+                      onChange={(e) => {
+                        const newEngs = [...prefinancementData.engagementsProprietaire];
+                        newEngs[index] = e.target.value;
+                        setPrefinancementData(prev => ({ ...prev, engagementsProprietaire: newEngs }));
+                      }}
+                      rows={2}
+                      className="flex-1"
+                    />
+                    {prefinancementData.engagementsProprietaire.length > 1 && (
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeEngagementProprietairePrefin(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Modalités de rémunération */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Modalités de rémunération (Art. 5)</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Type de rémunération</Label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={prefinancementData.remunerationType}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, remunerationType: e.target.value as "lots" | "remboursement" }))}
+                    >
+                      <option value="lots">Attribution de lots</option>
+                      <option value="remboursement">Remboursement + intérêts</option>
+                    </select>
+                  </div>
+                  {prefinancementData.remunerationType === "lots" ? (
+                    <div className="space-y-2">
+                      <Label>Quantité / pourcentage de lots</Label>
+                      <Input
+                        value={prefinancementData.remunerationLotsQuantity}
+                        onChange={(e) => setPrefinancementData(prev => ({ ...prev, remunerationLotsQuantity: e.target.value }))}
+                        placeholder="ex: 30% ou 15 lots"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label>Taux d'intérêt (%)</Label>
+                      <Input
+                        type="number"
+                        value={prefinancementData.remunerationInterestRate}
+                        onChange={(e) => setPrefinancementData(prev => ({ ...prev, remunerationInterestRate: Number(e.target.value) }))}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Durée et signature */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Durée et signature</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Durée du contrat</Label>
+                    <Input
+                      value={prefinancementData.duree}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, duree: e.target.value }))}
+                      placeholder="ex: 24 mois"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nombre d'exemplaires</Label>
+                    <Input
+                      type="number"
+                      value={prefinancementData.nombreExemplaires}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, nombreExemplaires: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Lieu de signature</Label>
+                    <Input
+                      value={prefinancementData.lieuSignature}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, lieuSignature: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Date de signature</Label>
+                    <Input
+                      type="date"
+                      value={prefinancementData.signatureDate}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, signatureDate: e.target.value }))}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </ScrollArea>

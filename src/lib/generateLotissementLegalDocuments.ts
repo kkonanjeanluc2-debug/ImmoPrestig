@@ -56,17 +56,25 @@ export interface ConventionData {
 }
 
 export interface ContratPrefinancementData {
-  investorName: string;
-  investorAddress: string;
-  investorCni: string;
-  investorPhone: string;
-  investmentAmount: number;
-  investmentPurpose: string;
-  returnPercentage: number;
-  duration: string;
-  paymentSchedule: string;
-  guarantees: string[];
-  contractDate: string;
+  proprietaireName: string;
+  proprietaireAddress: string;
+  proprietaireCni: string;
+  prefinanceurName: string;
+  prefinanceurRccm: string;
+  prefinanceurAddress: string;
+  terrainLocalisation: string;
+  terrainSuperficie: string;
+  arreteReference: string;
+  arreteDate: string;
+  engagementsPrefinanceur: string[];
+  engagementsProprietaire: string[];
+  remunerationType: "lots" | "remboursement";
+  remunerationLotsQuantity: string;
+  remunerationInterestRate: number;
+  duree: string;
+  nombreExemplaires: number;
+  signatureDate: string;
+  lieuSignature: string;
 }
 
 // Colors
@@ -657,50 +665,52 @@ export const generateContratPrefinancement = async (
     doc,
     agency,
     "CONTRAT DE PREFINANCEMENT",
-    `Projet : ${lotissement.name}`
+    `Lotissement ${lotissement.name}`
   );
 
-  // Préambule
+  // ENTRE
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
+  doc.text("ENTRE :", margin, yPos);
+  yPos += 7;
 
-  const preambule = `Entre les soussignes,
+  doc.setFont("helvetica", "normal");
+  const partieProprietaire = `Le proprietaire foncier : ${data.proprietaireName}${data.proprietaireAddress ? `, demeurant a ${data.proprietaireAddress}` : ""}${data.proprietaireCni ? `, CNI N° ${data.proprietaireCni}` : ""}, ci-apres denomme Le Proprietaire.`;
+  const propLines = doc.splitTextToSize(partieProprietaire, maxWidth);
+  propLines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
 
-D'une part :
-${agency?.name || "Le Promoteur"}, ${agency?.address ? `sis a ${agency.address}` : ""} ${agency?.city || ""}${agency?.siret ? `, RCCM : ${agency.siret}` : ""}, represente par son responsable dument habilite,
-Ci-apres denomme "LE PROMOTEUR"
+  yPos += 5;
+  doc.setFont("helvetica", "bold");
+  doc.text("ET", margin, yPos);
+  yPos += 7;
 
-D'autre part :
-${data.investorName}, demeurant a ${data.investorAddress}, CNI N° ${data.investorCni}, Tel: ${data.investorPhone},
-Ci-apres denomme "L'INVESTISSEUR"
-
-Il a ete convenu ce qui suit :`;
-
-  const preambuleLines = doc.splitTextToSize(preambule, maxWidth);
-  preambuleLines.forEach((line: string) => {
-    yPos = checkPageBreak(doc, yPos, 8);
+  doc.setFont("helvetica", "normal");
+  const partiePrefinanceur = `Le prefinanceur / promoteur : ${data.prefinanceurName}${data.prefinanceurRccm ? `, RCCM : ${data.prefinanceurRccm}` : ""}${data.prefinanceurAddress ? `, sis a ${data.prefinanceurAddress}` : ""}, ci-apres denomme Le Prefinanceur.`;
+  const prefLines = doc.splitTextToSize(partiePrefinanceur, maxWidth);
+  prefLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
     yPos += 5;
   });
 
   yPos += 10;
 
-  // Article 1 - Objet
+  // ARTICLE 1 – OBJET
   yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 1 : OBJET DU CONTRAT", margin, yPos);
+  doc.text("ARTICLE 1 - OBJET", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article1 = `Le present contrat a pour objet de definir les conditions dans lesquelles l'Investisseur participe au prefinancement du projet immobilier "${lotissement.name}" situe a ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}.
-
-Destination des fonds : ${data.investmentPurpose}`;
-
-  const article1Lines = doc.splitTextToSize(article1, maxWidth);
-  article1Lines.forEach((line: string) => {
+  const arreteClause = data.arreteReference ? `, conformement au plan de lotissement approuve par arrete n° ${data.arreteReference}${data.arreteDate ? ` du ${formatDate(data.arreteDate)}` : ""}` : "";
+  const article1 = `La presente convention a pour objet de definir les modalites de prefinancement des travaux de lotissement du terrain sis a ${data.terrainLocalisation}, d'une superficie de ${data.terrainSuperficie} hectares${arreteClause}.`;
+  const art1Lines = doc.splitTextToSize(article1, maxWidth);
+  art1Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
     doc.text(line, margin, yPos);
     yPos += 5;
@@ -708,42 +718,21 @@ Destination des fonds : ${data.investmentPurpose}`;
 
   yPos += 10;
 
-  // Article 2 - Montant
-  yPos = checkPageBreak(doc, yPos, 40);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 2 : MONTANT DE L'INVESTISSEMENT", margin, yPos);
-  yPos += 7;
-
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-  const article2 = `L'Investisseur s'engage a verser au Promoteur la somme de ${formatAmountWithCurrency(data.investmentAmount)} (${numberToWordsPDF(data.investmentAmount)} francs CFA) a titre de prefinancement du projet.`;
-
-  const article2Lines = doc.splitTextToSize(article2, maxWidth);
-  article2Lines.forEach((line: string) => {
-    doc.text(line, margin, yPos);
-    yPos += 5;
-  });
-
-  yPos += 10;
-
-  // Article 3 - Durée et rendement
+  // ARTICLE 2 – BASE LÉGALE
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 3 : DUREE ET RENDEMENT", margin, yPos);
+  doc.text("ARTICLE 2 - BASE LEGALE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article3 = `3.1 Duree : Le present contrat est conclu pour une duree de ${data.duration}.
-
-3.2 Rendement : En contrepartie de son investissement, l'Investisseur beneficiera d'un rendement de ${data.returnPercentage}% sur le montant investi.
-
-3.3 Calendrier de remboursement : ${data.paymentSchedule}`;
-
-  const article3Lines = doc.splitTextToSize(article3, maxWidth);
-  article3Lines.forEach((line: string) => {
+  const article2 = `Le contrat est regi par :
+- La Loi n° 2020-624 du 14 aout 2020 instituant Code de l'Urbanisme et du Domaine Foncier Urbain.
+- Le Decret n° 2021-784 du 08 decembre 2021 portant organisation des procedures d'elaboration, d'approbation et d'application des plans de lotissement.
+- Les dispositions du Code civil relatives aux contrats et obligations.`;
+  const art2Lines = doc.splitTextToSize(article2, maxWidth);
+  art2Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
     doc.text(line, margin, yPos);
     yPos += 5;
@@ -751,53 +740,71 @@ Destination des fonds : ${data.investmentPurpose}`;
 
   yPos += 10;
 
-  // Article 4 - Garanties
+  // ARTICLE 3 – ENGAGEMENTS DU PRÉFINANCEUR
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 4 : GARANTIES", margin, yPos);
+  doc.text("ARTICLE 3 - ENGAGEMENTS DU PREFINANCEUR", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text("Le Promoteur offre les garanties suivantes a l'Investisseur :", margin, yPos);
-  yPos += 7;
+  doc.text("Le Prefinanceur s'engage a :", margin, yPos);
+  yPos += 6;
 
-  data.guarantees.forEach((guarantee, index) => {
-    yPos = checkPageBreak(doc, yPos, 12);
-    const guaranteeText = `${index + 1}. ${guarantee}`;
-    const guaranteeLines = doc.splitTextToSize(guaranteeText, maxWidth);
-    guaranteeLines.forEach((line: string) => {
+  data.engagementsPrefinanceur.forEach((eng) => {
+    yPos = checkPageBreak(doc, yPos, 10);
+    const engLines = doc.splitTextToSize(`- ${eng}`, maxWidth);
+    engLines.forEach((line: string) => {
       doc.text(line, margin, yPos);
       yPos += 5;
     });
-    yPos += 2;
   });
 
   yPos += 10;
 
-  // Article 5 - Obligations
-  yPos = checkPageBreak(doc, yPos, 60);
+  // ARTICLE 4 – ENGAGEMENTS DU PROPRIÉTAIRE
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 5 : OBLIGATIONS DES PARTIES", margin, yPos);
+  doc.text("ARTICLE 4 - ENGAGEMENTS DU PROPRIETAIRE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article5 = `5.1 Obligations du Promoteur :
-- Utiliser les fonds exclusivement pour le projet designe
-- Fournir des rapports d'avancement trimestriels
-- Rembourser l'investissement selon le calendrier convenu
-- Informer l'Investisseur de tout evenement affectant le projet
+  doc.text("Le Proprietaire s'engage a :", margin, yPos);
+  yPos += 6;
 
-5.2 Obligations de l'Investisseur :
-- Verser les fonds selon le calendrier convenu
-- Ne pas ceder ses droits sans l'accord prealable du Promoteur
-- Respecter la confidentialite des informations relatives au projet`;
+  data.engagementsProprietaire.forEach((eng) => {
+    yPos = checkPageBreak(doc, yPos, 10);
+    const engLines = doc.splitTextToSize(`- ${eng}`, maxWidth);
+    engLines.forEach((line: string) => {
+      doc.text(line, margin, yPos);
+      yPos += 5;
+    });
+  });
 
-  const article5Lines = doc.splitTextToSize(article5, maxWidth);
-  article5Lines.forEach((line: string) => {
+  yPos += 10;
+
+  // ARTICLE 5 – MODALITÉS DE RÉMUNÉRATION
+  yPos = checkPageBreak(doc, yPos, 50);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 5 - MODALITES DE REMUNERATION", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  let article5Text = "La remuneration du Prefinanceur se fera par :\n\n";
+  if (data.remunerationType === "lots") {
+    article5Text += `- Attribution de ${data.remunerationLotsQuantity} de lots viabilises.`;
+  } else {
+    article5Text += `- Remboursement du capital investi majore d'un interet de ${data.remunerationInterestRate}%, payable a la livraison des lots.`;
+  }
+  article5Text += "\n\nUn proces-verbal de repartition ou un echeancier de remboursement sera annexe au present contrat.";
+
+  const art5Lines = doc.splitTextToSize(article5Text, maxWidth);
+  art5Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
     doc.text(line, margin, yPos);
     yPos += 5;
@@ -805,30 +812,85 @@ Destination des fonds : ${data.investmentPurpose}`;
 
   yPos += 10;
 
-  // Article 6 - Résiliation
-  yPos = checkPageBreak(doc, yPos, 40);
+  // ARTICLE 6 – DURÉE
+  yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 6 : RESILIATION", margin, yPos);
+  doc.text("ARTICLE 6 - DUREE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article6 = `En cas de manquement grave de l'une des parties a ses obligations, l'autre partie pourra resilier le present contrat apres mise en demeure restee sans effet pendant quinze (15) jours.`;
-
-  const article6Lines = doc.splitTextToSize(article6, maxWidth);
-  article6Lines.forEach((line: string) => {
+  const article6 = `Le present contrat est conclu pour une duree de ${data.duree}, correspondant au delai de realisation des travaux et de livraison des lots.`;
+  const art6Lines = doc.splitTextToSize(article6, maxWidth);
+  art6Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
     yPos += 5;
   });
 
   yPos += 10;
+
+  // ARTICLE 7 – SANCTIONS
+  yPos = checkPageBreak(doc, yPos, 30);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 7 - SANCTIONS", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article7 = `En cas de non-respect des engagements, la partie defaillante pourra etre poursuivie conformement aux dispositions legales et reglementaires en vigueur.`;
+  const art7Lines = doc.splitTextToSize(article7, maxWidth);
+  art7Lines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // ARTICLE 8 – RÈGLEMENT DES LITIGES
+  yPos = checkPageBreak(doc, yPos, 30);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 8 - REGLEMENT DES LITIGES", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article8 = `Tout litige ne de l'interpretation ou de l'execution du present contrat sera regle a l'amiable. A defaut, il sera porte devant les juridictions competentes d'Abidjan.`;
+  const art8Lines = doc.splitTextToSize(article8, maxWidth);
+  art8Lines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // ARTICLE 9 – DISPOSITIONS FINALES
+  yPos = checkPageBreak(doc, yPos, 30);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 9 - DISPOSITIONS FINALES", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article9 = `Le present contrat prend effet a compter de sa signature par les parties. Il sera depose aupres de la Direction de l'Urbanisme et publie conformement aux textes en vigueur.`;
+  const art9Lines = doc.splitTextToSize(article9, maxWidth);
+  art9Lines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 15;
 
   // Clause finale
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "italic");
-  const clauseFinale = `Fait a ${lotissement.city || "Abidjan"}, le ${formatDate(data.contractDate)}, en deux (02) exemplaires originaux.`;
+  const clauseFinale = `Fait a ${data.lieuSignature || lotissement.city || "Abidjan"}, le ${formatDate(data.signatureDate)}`;
   doc.text(clauseFinale, margin, yPos);
+  yPos += 5;
+  doc.text(`En ${data.nombreExemplaires} exemplaires originaux.`, margin, yPos);
 
   yPos += 20;
 
@@ -838,17 +900,8 @@ Destination des fonds : ${data.investmentPurpose}`;
 
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
-  doc.text("LE PROMOTEUR", margin, yPos);
-  doc.text("L'INVESTISSEUR", margin + colWidth + 20, yPos);
-
-  yPos += 5;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("(Signature et cachet)", margin, yPos);
-  doc.text("(Signature precedee de", margin + colWidth + 20, yPos);
-  yPos += 4;
-  doc.text("", margin, yPos);
-  doc.text('"Lu et approuve")', margin + colWidth + 20, yPos);
+  doc.text("Le Proprietaire", margin, yPos);
+  doc.text("Le Prefinanceur", margin + colWidth + 20, yPos);
 
   yPos += 25;
   doc.setDrawColor(150, 150, 150);
@@ -918,19 +971,31 @@ export const getDefaultConventionData = (lotissement: LotissementInfo): Conventi
 });
 
 export const getDefaultContratPrefinancementData = (lotissement: LotissementInfo): ContratPrefinancementData => ({
-  investorName: "",
-  investorAddress: "",
-  investorCni: "",
-  investorPhone: "",
-  investmentAmount: 0,
-  investmentPurpose: `Amenagement et viabilisation du lotissement ${lotissement.name}`,
-  returnPercentage: 15,
-  duration: "12 mois",
-  paymentSchedule: "Remboursement du capital et des interets a l'echeance du contrat",
-  guarantees: [
-    "Attribution d'une parcelle au choix de l'Investisseur en cas de defaut de remboursement",
-    "Hypotheque sur les terrains du projet",
-    "Caution personnelle du gerant du Promoteur",
+  proprietaireName: "",
+  proprietaireAddress: "",
+  proprietaireCni: "",
+  prefinanceurName: "",
+  prefinanceurRccm: "",
+  prefinanceurAddress: "",
+  terrainLocalisation: `${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`,
+  terrainSuperficie: lotissement.total_area ? String((lotissement.total_area / 10000).toFixed(2)) : "",
+  arreteReference: "",
+  arreteDate: "",
+  engagementsPrefinanceur: [
+    "Mettre a disposition les fonds necessaires pour la realisation des travaux de viabilisation (voirie, assainissement, reseaux divers)",
+    "Respecter le calendrier de financement convenu",
+    "Assurer le suivi technique et financier des travaux",
   ],
-  contractDate: new Date().toISOString().split("T")[0],
+  engagementsProprietaire: [
+    "Garantir la propriete du terrain et l'absence de litiges fonciers",
+    "Faciliter l'obtention des autorisations administratives necessaires",
+    "Reserver au Prefinanceur la part de lots convenue en contrepartie du financement",
+  ],
+  remunerationType: "lots",
+  remunerationLotsQuantity: "",
+  remunerationInterestRate: 0,
+  duree: "24 mois",
+  nombreExemplaires: 2,
+  signatureDate: new Date().toISOString().split("T")[0],
+  lieuSignature: lotissement.city || "Abidjan",
 });

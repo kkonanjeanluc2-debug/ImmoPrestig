@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
 import { formatAmountWithCurrency, numberToWordsPDF, formatAmountForPDF } from "./pdfFormat";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -149,7 +150,7 @@ export const generatePromesseVenteImmo = async (
   agency: AgencyData,
   validityDays: number = 90
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   
@@ -331,7 +332,7 @@ export const generateRecuVenteImmo = async (
   vente: VenteImmobiliereData,
   agency: AgencyData
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   
@@ -435,7 +436,7 @@ export const generateContratReservationImmo = async (
   agency: AgencyData,
   validityDays: number = 30
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   
@@ -659,7 +660,7 @@ export const generateContratVenteImmo = async (
   vente: VenteImmobiliereData,
   agency: AgencyData
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   

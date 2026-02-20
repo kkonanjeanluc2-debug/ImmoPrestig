@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
 import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
@@ -232,7 +233,7 @@ export const generateContractPDF = async (
   templateContent: string,
   data: ContractData
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;

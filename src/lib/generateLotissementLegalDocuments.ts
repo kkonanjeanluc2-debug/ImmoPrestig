@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
 import { formatAmountForPDF, formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
@@ -197,7 +198,7 @@ const addFooter = (doc: jsPDF, agency: AgencyInfo | null, pageNum: number, total
 
   if (agency) {
     doc.text(
-      `${agency.name} - Document genere le ${formatDate(new Date().toISOString())}`,
+      `${agency.name} - Document généré le ${formatDate(new Date().toISOString())}`,
       pageWidth / 2,
       pageHeight - 10,
       { align: "center" }
@@ -224,14 +225,14 @@ export const generatePVFamille = async (
   lotissement: LotissementInfo,
   agency: AgencyInfo | null
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const maxWidth = pageWidth - margin * 2;
 
   let yPos = await addHeader(
     doc,
     agency,
-    "PROCES-VERBAL DE REUNION DE FAMILLE",
+    "PROCÈS-VERBAL DE RÉUNION DE FAMILLE",
     `Lotissement ${lotissement.name}`
   );
 
@@ -240,7 +241,7 @@ export const generatePVFamille = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
 
-  const intro = `L'an ${new Date(data.meetingDate).getFullYear()}, le ${formatDate(data.meetingDate)}, a ${data.meetingPlace}, s'est tenue une reunion de famille sous la presidence de ${data.representativeName}, ${data.representativeRole} de la famille ${data.familyName}.`;
+  const intro = `L'an ${new Date(data.meetingDate).getFullYear()}, le ${formatDate(data.meetingDate)}, à ${data.meetingPlace}, s'est tenue une réunion de famille sous la présidence de ${data.representativeName}, ${data.representativeRole} de la famille ${data.familyName}.`;
 
   const introLines = doc.splitTextToSize(intro, maxWidth);
   introLines.forEach((line: string) => {
@@ -256,7 +257,7 @@ export const generatePVFamille = async (
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("MEMBRES PRESENTS", margin + 5, yPos + 5.5);
+  doc.text("MEMBRES PRÉSENTS", margin + 5, yPos + 5.5);
 
   yPos += 12;
   doc.setFont("helvetica", "normal");
@@ -278,13 +279,13 @@ export const generatePVFamille = async (
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("OBJET DE LA REUNION", margin + 5, yPos + 5.5);
+  doc.text("OBJET DE LA RÉUNION", margin + 5, yPos + 5.5);
 
   yPos += 12;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
 
-  const landDesc = `La reunion a pour objet la gestion du terrain familial decrit comme suit :\n\nDescription : ${data.landDescription}\nSuperficie : ${formatAmountForPDF(data.landArea)} m²\nLocalisation : ${data.landLocation}`;
+  const landDesc = `La réunion a pour objet la gestion du terrain familial décrit comme suit :\n\nDescription : ${data.landDescription}\nSuperficie : ${formatAmountForPDF(data.landArea)} m²\nLocalisation : ${data.landLocation}`;
 
   const landLines = doc.splitTextToSize(landDesc, maxWidth);
   landLines.forEach((line: string) => {
@@ -302,7 +303,7 @@ export const generatePVFamille = async (
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("DECISIONS PRISES A L'UNANIMITE", margin + 5, yPos + 5.5);
+  doc.text("DÉCISIONS PRISES À L'UNANIMITÉ", margin + 5, yPos + 5.5);
 
   yPos += 12;
   doc.setFont("helvetica", "normal");
@@ -329,7 +330,7 @@ export const generatePVFamille = async (
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
-    doc.text("TEMOINS", margin + 5, yPos + 5.5);
+    doc.text("TÉMOINS", margin + 5, yPos + 5.5);
 
     yPos += 12;
     doc.setFont("helvetica", "normal");
@@ -395,7 +396,7 @@ export const generateConvention = async (
   lotissement: LotissementInfo,
   agency: AgencyInfo | null
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const maxWidth = pageWidth - margin * 2;
 
@@ -414,7 +415,7 @@ export const generateConvention = async (
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
-  const partieProprietaire = `Le proprietaire foncier : ${data.proprietaireName}${data.proprietaireAddress ? `, demeurant a ${data.proprietaireAddress}` : ""}${data.proprietaireCni ? `, CNI N° ${data.proprietaireCni}` : ""}, ci-apres denomme Le Proprietaire.`;
+  const partieProprietaire = `Le propriétaire foncier : ${data.proprietaireName}${data.proprietaireAddress ? `, demeurant à ${data.proprietaireAddress}` : ""}${data.proprietaireCni ? `, CNI N° ${data.proprietaireCni}` : ""}, ci-après dénommé Le Propriétaire.`;
   const propLines = doc.splitTextToSize(partieProprietaire, maxWidth);
   propLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -427,7 +428,7 @@ export const generateConvention = async (
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
-  const partieLotisseur = `Le lotisseur / amenageur : ${data.lotisseurName}${data.lotisseurRccm ? `, RCCM : ${data.lotisseurRccm}` : ""}${data.lotisseurAddress ? `, sis a ${data.lotisseurAddress}` : ""}, ci-apres denomme Le Lotisseur.`;
+  const partieLotisseur = `Le lotisseur / aménageur : ${data.lotisseurName}${data.lotisseurRccm ? `, RCCM : ${data.lotisseurRccm}` : ""}${data.lotisseurAddress ? `, sis à ${data.lotisseurAddress}` : ""}, ci-après dénommé Le Lotisseur.`;
   const lotLines = doc.splitTextToSize(partieLotisseur, maxWidth);
   lotLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -445,8 +446,8 @@ export const generateConvention = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const arreteClause = data.arreteReference ? `, conformement au plan de lotissement approuve par arrete n° ${data.arreteReference} du ${data.arreteDate ? formatDate(data.arreteDate) : "[date]"}` : "";
-  const article1 = `La presente convention a pour objet de definir les droits et obligations des parties dans le cadre de l'operation de lotissement du terrain sis a ${data.terrainLocalisation}, d'une superficie de ${data.terrainSuperficie} hectares${arreteClause}.`;
+  const arreteClause = data.arreteReference ? `, conformément au plan de lotissement approuvé par arrêté n° ${data.arreteReference} du ${data.arreteDate ? formatDate(data.arreteDate) : "[date]"}` : "";
+  const article1 = `La présente convention a pour objet de définir les droits et obligations des parties dans le cadre de l'opération de lotissement du terrain sis à ${data.terrainLocalisation}, d'une superficie de ${data.terrainSuperficie} hectares${arreteClause}.`;
   const art1Lines = doc.splitTextToSize(article1, maxWidth);
   art1Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
@@ -460,15 +461,15 @@ export const generateConvention = async (
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 2 - BASE LEGALE", margin, yPos);
+  doc.text("ARTICLE 2 - BASE LÉGALE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article2 = `Le lotissement est regi par :
-- La Loi n° 2020-624 du 14 aout 2020 instituant Code de l'Urbanisme et du Domaine Foncier Urbain.
-- Le Decret n° 2021-784 du 08 decembre 2021 portant organisation des procedures d'elaboration, d'approbation et d'application des plans de lotissement.
-- Les arretes et reglements locaux en vigueur.`;
+  const article2 = `Le lotissement est régi par :
+- La Loi n° 2020-624 du 14 août 2020 instituant Code de l'Urbanisme et du Domaine Foncier Urbain.
+- Le Décret n° 2021-784 du 08 décembre 2021 portant organisation des procédures d'élaboration, d'approbation et d'application des plans de lotissement.
+- Les arrêtés et règlements locaux en vigueur.`;
   const art2Lines = doc.splitTextToSize(article2, maxWidth);
   art2Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
@@ -487,7 +488,7 @@ export const generateConvention = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text("Le Lotisseur s'engage a :", margin, yPos);
+  doc.text("Le Lotisseur s'engage à :", margin, yPos);
   yPos += 6;
 
   data.engagementsLotisseur.forEach((eng) => {
@@ -505,12 +506,12 @@ export const generateConvention = async (
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 4 - ENGAGEMENTS DU PROPRIETAIRE", margin, yPos);
+  doc.text("ARTICLE 4 - ENGAGEMENTS DU PROPRIÉTAIRE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text("Le Proprietaire s'engage a :", margin, yPos);
+  doc.text("Le Propriétaire s'engage à :", margin, yPos);
   yPos += 6;
 
   data.engagementsProprietaire.forEach((eng) => {
@@ -533,11 +534,11 @@ export const generateConvention = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article5 = `La repartition des lots se fera comme suit :
-- ${data.repartitionProprietaire}% des lots reviennent au Proprietaire.
+  const article5 = `La répartition des lots se fera comme suit :
+- ${data.repartitionProprietaire}% des lots reviennent au Propriétaire.
 - ${data.repartitionLotisseur}% des lots reviennent au Lotisseur pour commercialisation.
 
-Un proces-verbal de repartition sera etabli et annexe a la presente convention.`;
+Un procès-verbal de répartition sera établi et annexé à la présente convention.`;
   const art5Lines = doc.splitTextToSize(article5, maxWidth);
   art5Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
@@ -551,12 +552,12 @@ Un proces-verbal de repartition sera etabli et annexe a la presente convention.`
   yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 6 - DUREE", margin, yPos);
+  doc.text("ARTICLE 6 - DURÉE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article6 = `La presente convention est conclue pour une duree de ${data.duree}, correspondant au delai de realisation des travaux et de livraison des lots.`;
+  const article6 = `La présente convention est conclue pour une durée de ${data.duree}, correspondant au délai de réalisation des travaux et de livraison des lots.`;
   const art6Lines = doc.splitTextToSize(article6, maxWidth);
   art6Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -574,7 +575,7 @@ Un proces-verbal de repartition sera etabli et annexe a la presente convention.`
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article7 = `En cas de non-respect des engagements, la partie defaillante pourra etre poursuivie conformement aux dispositions legales et reglementaires en vigueur.`;
+  const article7 = `En cas de non-respect des engagements, la partie défaillante pourra être poursuivie conformément aux dispositions légales et réglementaires en vigueur.`;
   const art7Lines = doc.splitTextToSize(article7, maxWidth);
   art7Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -587,12 +588,12 @@ Un proces-verbal de repartition sera etabli et annexe a la presente convention.`
   yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 8 - REGLEMENT DES LITIGES", margin, yPos);
+  doc.text("ARTICLE 8 - RÈGLEMENT DES LITIGES", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article8 = `Tout litige ne de l'interpretation ou de l'execution de la presente convention sera regle a l'amiable. A defaut, il sera porte devant les juridictions competentes d'Abidjan.`;
+  const article8 = `Tout litige né de l'interprétation ou de l'exécution de la présente convention sera réglé à l'amiable. À défaut, il sera porté devant les juridictions compétentes d'Abidjan.`;
   const art8Lines = doc.splitTextToSize(article8, maxWidth);
   art8Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -610,7 +611,7 @@ Un proces-verbal de repartition sera etabli et annexe a la presente convention.`
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article9 = `La presente convention prend effet a compter de sa signature par les parties. Elle sera deposee aupres de la Direction de l'Urbanisme et publiee conformement aux textes en vigueur.`;
+  const article9 = `La présente convention prend effet à compter de sa signature par les parties. Elle sera déposée auprès de la Direction de l'Urbanisme et publiée conformément aux textes en vigueur.`;
   const art9Lines = doc.splitTextToSize(article9, maxWidth);
   art9Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -622,7 +623,7 @@ Un proces-verbal de repartition sera etabli et annexe a la presente convention.`
   // Clause finale
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "italic");
-  const clauseFinale = `Fait a ${data.lieuSignature || lotissement.city || "Abidjan"}, le ${formatDate(data.signatureDate)}`;
+  const clauseFinale = `Fait à ${data.lieuSignature || lotissement.city || "Abidjan"}, le ${formatDate(data.signatureDate)}`;
   doc.text(clauseFinale, margin, yPos);
   yPos += 5;
   doc.text(`En ${data.nombreExemplaires} exemplaires originaux.`, margin, yPos);
@@ -635,7 +636,7 @@ Un proces-verbal de repartition sera etabli et annexe a la presente convention.`
 
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
-  doc.text("Le Proprietaire", margin, yPos);
+  doc.text("Le Propriétaire", margin, yPos);
   doc.text("Le Lotisseur", margin + colWidth + 20, yPos);
 
   yPos += 25;
@@ -661,7 +662,7 @@ export const generateContratPrefinancement = async (
   lotissement: LotissementInfo,
   agency: AgencyInfo | null
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const maxWidth = pageWidth - margin * 2;
 
@@ -680,7 +681,7 @@ export const generateContratPrefinancement = async (
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
-  const partieLotisseur = `La societe ${data.lotisseurName}${data.lotisseurRccm ? `, immatriculee au RCCM sous le numero ${data.lotisseurRccm}` : ""}${data.lotisseurAddress ? `, ayant son siege social a ${data.lotisseurAddress}` : ""}${data.lotisseurRepresentant ? `, representee par ${data.lotisseurRepresentant}` : ""}, ci-apres denommee Le Lotisseur.`;
+  const partieLotisseur = `La société ${data.lotisseurName}${data.lotisseurRccm ? `, immatriculée au RCCM sous le numéro ${data.lotisseurRccm}` : ""}${data.lotisseurAddress ? `, ayant son siège social à ${data.lotisseurAddress}` : ""}${data.lotisseurRepresentant ? `, représentée par ${data.lotisseurRepresentant}` : ""}, ci-après dénommée Le Lotisseur.`;
   const lotLines = doc.splitTextToSize(partieLotisseur, maxWidth);
   lotLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -695,9 +696,9 @@ export const generateContratPrefinancement = async (
   doc.setFont("helvetica", "normal");
   let partiePrefinanceur: string;
   if (data.prefinanceurType === "societe") {
-    partiePrefinanceur = `La societe ${data.prefinanceurName}${data.prefinanceurRccm ? `, immatriculee au RCCM sous le numero ${data.prefinanceurRccm}` : ""}${data.prefinanceurAddress ? `, ayant son siege social a ${data.prefinanceurAddress}` : ""}${data.prefinanceurRepresentant ? `, representee par ${data.prefinanceurRepresentant}` : ""}, ci-apres denommee Le Prefinanceur.`;
+    partiePrefinanceur = `La société ${data.prefinanceurName}${data.prefinanceurRccm ? `, immatriculée au RCCM sous le numéro ${data.prefinanceurRccm}` : ""}${data.prefinanceurAddress ? `, ayant son siège social à ${data.prefinanceurAddress}` : ""}${data.prefinanceurRepresentant ? `, représentée par ${data.prefinanceurRepresentant}` : ""}, ci-après dénommée Le Préfinanceur.`;
   } else {
-    partiePrefinanceur = `${data.prefinanceurName}${data.prefinanceurAddress ? `, demeurant a ${data.prefinanceurAddress}` : ""}${data.prefinanceurCni ? `, CNI N° ${data.prefinanceurCni}` : ""}, ci-apres denomme(e) Le Prefinanceur.`;
+    partiePrefinanceur = `${data.prefinanceurName}${data.prefinanceurAddress ? `, demeurant à ${data.prefinanceurAddress}` : ""}${data.prefinanceurCni ? `, CNI N° ${data.prefinanceurCni}` : ""}, ci-après dénommé(e) Le Préfinanceur.`;
   }
   const prefLines = doc.splitTextToSize(partiePrefinanceur, maxWidth);
   prefLines.forEach((line: string) => {
@@ -716,8 +717,8 @@ export const generateContratPrefinancement = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const arreteClause = data.arreteReference ? `, conformement au plan de lotissement approuve par arrete n° ${data.arreteReference}${data.arreteDate ? ` du ${formatDate(data.arreteDate)}` : ""}` : "";
-  const article1 = `La presente convention a pour objet de definir les modalites de prefinancement des travaux de lotissement du terrain sis a ${data.terrainLocalisation}, d'une superficie de ${data.terrainSuperficie} hectares${arreteClause}.`;
+  const arreteClause = data.arreteReference ? `, conformément au plan de lotissement approuvé par arrêté n° ${data.arreteReference}${data.arreteDate ? ` du ${formatDate(data.arreteDate)}` : ""}` : "";
+  const article1 = `La présente convention a pour objet de définir les modalités de préfinancement des travaux de lotissement du terrain sis à ${data.terrainLocalisation}, d'une superficie de ${data.terrainSuperficie} hectares${arreteClause}.`;
   const art1Lines = doc.splitTextToSize(article1, maxWidth);
   art1Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
@@ -731,14 +732,14 @@ export const generateContratPrefinancement = async (
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 2 - BASE LEGALE", margin, yPos);
+  doc.text("ARTICLE 2 - BASE LÉGALE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article2 = `Le contrat est regi par :
-- La Loi n° 2020-624 du 14 aout 2020 instituant Code de l'Urbanisme et du Domaine Foncier Urbain.
-- Le Decret n° 2021-784 du 08 decembre 2021 portant organisation des procedures d'elaboration, d'approbation et d'application des plans de lotissement.
+  const article2 = `Le contrat est régi par :
+- La Loi n° 2020-624 du 14 août 2020 instituant Code de l'Urbanisme et du Domaine Foncier Urbain.
+- Le Décret n° 2021-784 du 08 décembre 2021 portant organisation des procédures d'élaboration, d'approbation et d'application des plans de lotissement.
 - Les dispositions du Code civil relatives aux contrats et obligations.`;
   const art2Lines = doc.splitTextToSize(article2, maxWidth);
   art2Lines.forEach((line: string) => {
@@ -753,12 +754,12 @@ export const generateContratPrefinancement = async (
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 3 - ENGAGEMENTS DU PREFINANCEUR", margin, yPos);
+  doc.text("ARTICLE 3 - ENGAGEMENTS DU PRÉFINANCEUR", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text("Le Prefinanceur s'engage a :", margin, yPos);
+  doc.text("Le Préfinanceur s'engage à :", margin, yPos);
   yPos += 6;
 
   data.engagementsPrefinanceur.forEach((eng) => {
@@ -781,7 +782,7 @@ export const generateContratPrefinancement = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text("Le Lotisseur s'engage a :", margin, yPos);
+  doc.text("Le Lotisseur s'engage à :", margin, yPos);
   yPos += 6;
 
   data.engagementsLotisseur.forEach((eng) => {
@@ -799,16 +800,16 @@ export const generateContratPrefinancement = async (
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 5 - MODALITES DE REMUNERATION", margin, yPos);
+  doc.text("ARTICLE 5 - MODALITÉS DE RÉMUNÉRATION", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  let article5Text = "La remuneration du Prefinanceur se fera par :\n\n";
+  let article5Text = "La rémunération du Préfinanceur se fera par :\n\n";
   if (data.remunerationType === "lots") {
-    article5Text += `- Attribution de ${data.remunerationLotsQuantity} lots viabilises.\n\nLes lots attribues au Prefinanceur seront determines d'un commun accord entre les parties et feront l'objet d'un proces-verbal d'attribution annexe au present contrat.`;
+    article5Text += `- Attribution de ${data.remunerationLotsQuantity} lots viabilisés.\n\nLes lots attribués au Préfinanceur seront déterminés d'un commun accord entre les parties et feront l'objet d'un procès-verbal d'attribution annexé au présent contrat.`;
   } else {
-    article5Text += `- Remboursement du capital investi majore d'un interet de ${data.remunerationInterestRate}%, payable a la livraison des lots.\n\nUn echeancier de remboursement detaillant les montants et les dates de paiement sera annexe au present contrat.`;
+    article5Text += `- Remboursement du capital investi majoré d'un intérêt de ${data.remunerationInterestRate}%, payable à la livraison des lots.\n\nUn échéancier de remboursement détaillant les montants et les dates de paiement sera annexé au présent contrat.`;
   }
 
   const art5Lines = doc.splitTextToSize(article5Text, maxWidth);
@@ -824,12 +825,12 @@ export const generateContratPrefinancement = async (
   yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 6 - DUREE", margin, yPos);
+  doc.text("ARTICLE 6 - DURÉE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article6 = `Le present contrat est conclu pour une duree de ${data.duree}, correspondant au delai de realisation des travaux et de livraison des lots.`;
+  const article6 = `Le présent contrat est conclu pour une durée de ${data.duree}, correspondant au délai de réalisation des travaux et de livraison des lots.`;
   const art6Lines = doc.splitTextToSize(article6, maxWidth);
   art6Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -847,7 +848,7 @@ export const generateContratPrefinancement = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article7 = `En cas de non-respect des engagements, la partie defaillante pourra etre poursuivie conformement aux dispositions legales et reglementaires en vigueur.`;
+  const article7 = `En cas de non-respect des engagements, la partie défaillante pourra être poursuivie conformément aux dispositions légales et réglementaires en vigueur.`;
   const art7Lines = doc.splitTextToSize(article7, maxWidth);
   art7Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -860,12 +861,12 @@ export const generateContratPrefinancement = async (
   yPos = checkPageBreak(doc, yPos, 30);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 8 - REGLEMENT DES LITIGES", margin, yPos);
+  doc.text("ARTICLE 8 - RÈGLEMENT DES LITIGES", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article8 = `Tout litige ne de l'interpretation ou de l'execution du present contrat sera regle a l'amiable. A defaut, il sera porte devant les juridictions competentes d'Abidjan.`;
+  const article8 = `Tout litige né de l'interprétation ou de l'exécution du présent contrat sera réglé à l'amiable. À défaut, il sera porté devant les juridictions compétentes d'Abidjan.`;
   const art8Lines = doc.splitTextToSize(article8, maxWidth);
   art8Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -883,7 +884,7 @@ export const generateContratPrefinancement = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article9 = `Le present contrat prend effet a compter de sa signature par les parties. Il sera depose aupres de la Direction de l'Urbanisme et publie conformement aux textes en vigueur.`;
+  const article9 = `Le présent contrat prend effet à compter de sa signature par les parties. Il sera déposé auprès de la Direction de l'Urbanisme et publié conformément aux textes en vigueur.`;
   const art9Lines = doc.splitTextToSize(article9, maxWidth);
   art9Lines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -895,7 +896,7 @@ export const generateContratPrefinancement = async (
   // Clause finale
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "italic");
-  const clauseFinale = `Fait a ${data.lieuSignature || lotissement.city || "Abidjan"}, le ${formatDate(data.signatureDate)}`;
+  const clauseFinale = `Fait à ${data.lieuSignature || lotissement.city || "Abidjan"}, le ${formatDate(data.signatureDate)}`;
   doc.text(clauseFinale, margin, yPos);
   yPos += 5;
   doc.text(`En ${data.nombreExemplaires} exemplaires originaux.`, margin, yPos);
@@ -909,7 +910,7 @@ export const generateContratPrefinancement = async (
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
   doc.text("Le Lotisseur", margin, yPos);
-  doc.text("Le Prefinanceur", margin + colWidth + 20, yPos);
+  doc.text("Le Préfinanceur", margin + colWidth + 20, yPos);
 
   yPos += 25;
   doc.setDrawColor(150, 150, 150);
@@ -935,13 +936,13 @@ export const getDefaultPVFamilleData = (lotissement: LotissementInfo): PVFamille
     { name: "", role: "Chef de famille" },
     { name: "", role: "Membre" },
   ],
-  landDescription: `Terrain situe dans le lotissement ${lotissement.name}`,
+  landDescription: `Terrain situé dans le lotissement ${lotissement.name}`,
   landArea: lotissement.total_area || 0,
   landLocation: `${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`,
   decisions: [
-    "Autoriser la vente du terrain familial decrit ci-dessus",
-    "Designer le representant pour toutes les demarches administratives",
-    "Repartir equitablement le produit de la vente entre les membres de la famille",
+    "Autoriser la vente du terrain familial décrit ci-dessus",
+    "Désigner le représentant pour toutes les démarches administratives",
+    "Répartir équitablement le produit de la vente entre les membres de la famille",
   ],
   witnesses: [{ name: "", cniNumber: "" }],
   meetingDate: new Date().toISOString().split("T")[0],
@@ -960,14 +961,14 @@ export const getDefaultConventionData = (lotissement: LotissementInfo): Conventi
   arreteReference: "",
   arreteDate: "",
   engagementsLotisseur: [
-    "Realiser les travaux d'amenagement conformement au plan approuve (voirie, assainissement, reseaux divers)",
-    "Respecter les prescriptions techniques et urbanistiques fixees par l'arrete d'autorisation de lotir",
-    "Mettre a disposition les equipements collectifs prevus (espaces verts, ecoles, marches, etc.)",
-    "Livrer les lots viabilises dans les delais convenus",
+    "Réaliser les travaux d'aménagement conformément au plan approuvé (voirie, assainissement, réseaux divers)",
+    "Respecter les prescriptions techniques et urbanistiques fixées par l'arrêté d'autorisation de lotir",
+    "Mettre à disposition les équipements collectifs prévus (espaces verts, écoles, marchés, etc.)",
+    "Livrer les lots viabilisés dans les délais convenus",
   ],
   engagementsProprietaire: [
-    "Mettre a disposition le terrain objet du lotissement",
-    "Garantir la propriete et l'absence de litiges fonciers",
+    "Mettre à disposition le terrain objet du lotissement",
+    "Garantir la propriété et l'absence de litiges fonciers",
     "Respecter les clauses de cession ou de partage convenues avec le Lotisseur",
   ],
   repartitionProprietaire: 30,
@@ -994,15 +995,15 @@ export const getDefaultContratPrefinancementData = (lotissement: LotissementInfo
   arreteReference: "",
   arreteDate: "",
   engagementsPrefinanceur: [
-    "Mettre a disposition les fonds necessaires pour la realisation des travaux de viabilisation (voirie, assainissement, reseaux divers)",
+    "Mettre à disposition les fonds nécessaires pour la réalisation des travaux de viabilisation (voirie, assainissement, réseaux divers)",
     "Respecter le calendrier de financement convenu",
     "Assurer le suivi technique et financier des travaux",
   ],
   engagementsLotisseur: [
-    "Mettre a disposition le terrain et assurer la maitrise fonciere",
+    "Mettre à disposition le terrain et assurer la maîtrise foncière",
     "Garantir l'absence de litiges fonciers sur le terrain",
-    "Faciliter l'obtention des autorisations administratives necessaires",
-    "Reserver au Prefinanceur la part de lots convenue en contrepartie du financement",
+    "Faciliter l'obtention des autorisations administratives nécessaires",
+    "Réserver au Préfinanceur la part de lots convenue en contrepartie du financement",
   ],
   remunerationType: "lots",
   remunerationLotsQuantity: "",

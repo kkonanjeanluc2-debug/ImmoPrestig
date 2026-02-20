@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
 import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
 
 interface TenantPaymentRow {
@@ -78,7 +79,7 @@ const getInterventionTypeLabel = (type: string): string => {
 };
 
 export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): Promise<void> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 

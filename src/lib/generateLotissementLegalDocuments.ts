@@ -56,9 +56,10 @@ export interface ConventionData {
 }
 
 export interface ContratPrefinancementData {
-  proprietaireName: string;
-  proprietaireAddress: string;
-  proprietaireCni: string;
+  lotisseurName: string;
+  lotisseurAddress: string;
+  lotisseurCni: string;
+  lotisseurRccm: string;
   prefinanceurName: string;
   prefinanceurRccm: string;
   prefinanceurAddress: string;
@@ -67,7 +68,7 @@ export interface ContratPrefinancementData {
   arreteReference: string;
   arreteDate: string;
   engagementsPrefinanceur: string[];
-  engagementsProprietaire: string[];
+  engagementsLotisseur: string[];
   remunerationType: "lots" | "remboursement";
   remunerationLotsQuantity: string;
   remunerationInterestRate: number;
@@ -676,9 +677,9 @@ export const generateContratPrefinancement = async (
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
-  const partieProprietaire = `Le proprietaire foncier : ${data.proprietaireName}${data.proprietaireAddress ? `, demeurant a ${data.proprietaireAddress}` : ""}${data.proprietaireCni ? `, CNI N° ${data.proprietaireCni}` : ""}, ci-apres denomme Le Proprietaire.`;
-  const propLines = doc.splitTextToSize(partieProprietaire, maxWidth);
-  propLines.forEach((line: string) => {
+  const partieLotisseur = `Le Lotisseur : ${data.lotisseurName}${data.lotisseurAddress ? `, demeurant a ${data.lotisseurAddress}` : ""}${data.lotisseurCni ? `, CNI N° ${data.lotisseurCni}` : ""}${data.lotisseurRccm ? `, RCCM : ${data.lotisseurRccm}` : ""}, ci-apres denomme Le Lotisseur.`;
+  const lotLines = doc.splitTextToSize(partieLotisseur, maxWidth);
+  lotLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
     yPos += 5;
   });
@@ -767,15 +768,15 @@ export const generateContratPrefinancement = async (
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 4 - ENGAGEMENTS DU PROPRIETAIRE", margin, yPos);
+  doc.text("ARTICLE 4 - ENGAGEMENTS DU LOTISSEUR", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text("Le Proprietaire s'engage a :", margin, yPos);
+  doc.text("Le Lotisseur s'engage a :", margin, yPos);
   yPos += 6;
 
-  data.engagementsProprietaire.forEach((eng) => {
+  data.engagementsLotisseur.forEach((eng) => {
     yPos = checkPageBreak(doc, yPos, 10);
     const engLines = doc.splitTextToSize(`- ${eng}`, maxWidth);
     engLines.forEach((line: string) => {
@@ -900,7 +901,7 @@ export const generateContratPrefinancement = async (
 
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
-  doc.text("Le Proprietaire", margin, yPos);
+  doc.text("Le Lotisseur", margin, yPos);
   doc.text("Le Prefinanceur", margin + colWidth + 20, yPos);
 
   yPos += 25;
@@ -971,9 +972,10 @@ export const getDefaultConventionData = (lotissement: LotissementInfo): Conventi
 });
 
 export const getDefaultContratPrefinancementData = (lotissement: LotissementInfo): ContratPrefinancementData => ({
-  proprietaireName: "",
-  proprietaireAddress: "",
-  proprietaireCni: "",
+  lotisseurName: "",
+  lotisseurAddress: "",
+  lotisseurCni: "",
+  lotisseurRccm: "",
   prefinanceurName: "",
   prefinanceurRccm: "",
   prefinanceurAddress: "",
@@ -986,8 +988,9 @@ export const getDefaultContratPrefinancementData = (lotissement: LotissementInfo
     "Respecter le calendrier de financement convenu",
     "Assurer le suivi technique et financier des travaux",
   ],
-  engagementsProprietaire: [
-    "Garantir la propriete du terrain et l'absence de litiges fonciers",
+  engagementsLotisseur: [
+    "Mettre a disposition le terrain et assurer la maitrise fonciere",
+    "Garantir l'absence de litiges fonciers sur le terrain",
     "Faciliter l'obtention des autorisations administratives necessaires",
     "Reserver au Prefinanceur la part de lots convenue en contrepartie du financement",
   ],

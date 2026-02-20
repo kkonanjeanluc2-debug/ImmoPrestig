@@ -617,7 +617,10 @@ export function GenerateLotissementDocumentDialog({
                     <Input
                       type="number"
                       value={conventionData.repartitionProprietaire}
-                      onChange={(e) => setConventionData(prev => ({ ...prev, repartitionProprietaire: Number(e.target.value) }))}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setConventionData(prev => ({ ...prev, repartitionProprietaire: val, repartitionLotisseur: 100 - val }));
+                      }}
                     />
                   </div>
                   <div className="space-y-2">
@@ -625,7 +628,10 @@ export function GenerateLotissementDocumentDialog({
                     <Input
                       type="number"
                       value={conventionData.repartitionLotisseur}
-                      onChange={(e) => setConventionData(prev => ({ ...prev, repartitionLotisseur: Number(e.target.value) }))}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setConventionData(prev => ({ ...prev, repartitionLotisseur: val, repartitionProprietaire: 100 - val }));
+                      }}
                     />
                   </div>
                 </div>

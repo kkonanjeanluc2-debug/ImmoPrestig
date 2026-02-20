@@ -85,7 +85,7 @@ export const generateAgencyFeesReceipt = async (data: AgencyFeesReceiptData): Pr
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("RECU DE FRAIS D'AGENCE", data.agency ? pageWidth - 15 : pageWidth / 2, 18, {
+  doc.text("REÇU DE FRAIS D'AGENCE", data.agency ? pageWidth - 15 : pageWidth / 2, 18, {
     align: data.agency ? "right" : "center",
   });
 
@@ -126,7 +126,7 @@ export const generateAgencyFeesReceipt = async (data: AgencyFeesReceiptData): Pr
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("BIEN LOUE", 15, yPos);
+  doc.text("BIEN LOUÉ", 15, yPos);
   doc.setTextColor(...textColor);
   doc.setFont("helvetica", "normal");
   yPos += 7;
@@ -167,7 +167,7 @@ export const generateAgencyFeesReceipt = async (data: AgencyFeesReceiptData): Pr
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   const signerName = data.agency?.name || "le bailleur";
-  const declaration = `Je soussigne(e) ${signerName}, reconnais avoir recu de ${data.tenantName} la somme de ${formatAmountWithCurrency(data.amount)} au titre des frais d'agence pour le bien situe a ${data.propertyTitle}${data.propertyAddress ? ", " + data.propertyAddress : ""}.`;
+  const declaration = `Je soussigné(e) ${signerName}, reconnais avoir reçu de ${data.tenantName} la somme de ${formatAmountWithCurrency(data.amount)} au titre des frais d'agence pour le bien situé à ${data.propertyTitle}${data.propertyAddress ? ", " + data.propertyAddress : ""}.`;
   const splitDecl = doc.splitTextToSize(declaration, pageWidth - 30);
   doc.text(splitDecl, 15, yPos, { lineHeightFactor: 1.5 });
 
@@ -190,7 +190,7 @@ export const generateAgencyFeesReceipt = async (data: AgencyFeesReceiptData): Pr
 
   if (data.agency) {
     doc.text(
-      `${data.agency.name} - Recu de frais d'agence`,
+      `${data.agency.name} - Reçu de frais d'agence`,
       pageWidth / 2,
       pageHeight - 15,
       { align: "center" }

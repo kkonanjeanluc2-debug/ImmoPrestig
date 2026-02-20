@@ -2739,6 +2739,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          agency_fees: number | null
           assigned_to: string | null
           avatar_url: string | null
           birth_date: string | null
@@ -2761,6 +2762,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agency_fees?: number | null
           assigned_to?: string | null
           avatar_url?: string | null
           birth_date?: string | null
@@ -2783,6 +2785,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agency_fees?: number | null
           assigned_to?: string | null
           avatar_url?: string | null
           birth_date?: string | null

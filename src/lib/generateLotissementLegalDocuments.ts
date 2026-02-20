@@ -35,14 +35,24 @@ export interface PVFamilleData {
 }
 
 export interface ConventionData {
-  partiesVendeur: string;
-  partiesAcquereur: string;
-  landDescription: string;
-  landArea: number;
-  price: number;
-  paymentTerms: string;
-  conditions: string[];
+  proprietaireName: string;
+  proprietaireAddress: string;
+  proprietaireCni: string;
+  lotisseurName: string;
+  lotisseurRccm: string;
+  lotisseurAddress: string;
+  terrainLocalisation: string;
+  terrainSuperficie: string;
+  arreteReference: string;
+  arreteDate: string;
+  engagementsLotisseur: string[];
+  engagementsProprietaire: string[];
+  repartitionProprietaire: number;
+  repartitionLotisseur: number;
+  duree: string;
+  nombreExemplaires: number;
   signatureDate: string;
+  lieuSignature: string;
 }
 
 export interface ContratPrefinancementData {
@@ -380,53 +390,52 @@ export const generateConvention = async (
   let yPos = await addHeader(
     doc,
     agency,
-    "CONVENTION DE CESSION DE DROITS FONCIERS",
+    "CONVENTION DE LOTISSEMENT",
     `Lotissement ${lotissement.name}`
   );
 
-  // Préambule
+  // ENTRE
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
+  doc.text("ENTRE :", margin, yPos);
+  yPos += 7;
 
-  const preambule = `Entre les soussignes,
+  doc.setFont("helvetica", "normal");
+  const partieProprietaire = `Le proprietaire foncier : ${data.proprietaireName}${data.proprietaireAddress ? `, demeurant a ${data.proprietaireAddress}` : ""}${data.proprietaireCni ? `, CNI N° ${data.proprietaireCni}` : ""}, ci-apres denomme Le Proprietaire.`;
+  const propLines = doc.splitTextToSize(partieProprietaire, maxWidth);
+  propLines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
 
-D'une part :
-${data.partiesVendeur}
-Ci-apres denomme "LE CEDANT"
+  yPos += 5;
+  doc.setFont("helvetica", "bold");
+  doc.text("ET", margin, yPos);
+  yPos += 7;
 
-D'autre part :
-${data.partiesAcquereur}
-Ci-apres denomme "LE CESSIONNAIRE"
-
-Il a ete convenu et arrete ce qui suit :`;
-
-  const preambuleLines = doc.splitTextToSize(preambule, maxWidth);
-  preambuleLines.forEach((line: string) => {
-    yPos = checkPageBreak(doc, yPos, 8);
+  doc.setFont("helvetica", "normal");
+  const partieLotisseur = `Le lotisseur / amenageur : ${data.lotisseurName}${data.lotisseurRccm ? `, RCCM : ${data.lotisseurRccm}` : ""}${data.lotisseurAddress ? `, sis a ${data.lotisseurAddress}` : ""}, ci-apres denomme Le Lotisseur.`;
+  const lotLines = doc.splitTextToSize(partieLotisseur, maxWidth);
+  lotLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
     yPos += 5;
   });
 
   yPos += 10;
 
-  // Article 1 - Objet
+  // ARTICLE 1 – OBJET
   yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 1 : OBJET DE LA CONVENTION", margin, yPos);
+  doc.text("ARTICLE 1 - OBJET", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article1 = `Le Cedant cede au Cessionnaire, qui accepte, les droits coutumiers et/ou de propriete sur le terrain decrit comme suit :
-
-Description : ${data.landDescription}
-Superficie : ${formatAmountForPDF(data.landArea)} m²
-Localisation : ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`;
-
-  const article1Lines = doc.splitTextToSize(article1, maxWidth);
-  article1Lines.forEach((line: string) => {
+  const article1 = `La presente convention a pour objet de definir les droits et obligations des parties dans le cadre de l'operation de lotissement du terrain sis a ${data.terrainLocalisation}, d'une superficie de ${data.terrainSuperficie} hectares, conformement au plan de lotissement approuve par arrete n° ${data.arreteReference} du ${data.arreteDate ? formatDate(data.arreteDate) : "[date]"}.`;
+  const art1Lines = doc.splitTextToSize(article1, maxWidth);
+  art1Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
     doc.text(line, margin, yPos);
     yPos += 5;
@@ -434,21 +443,21 @@ Localisation : ${lotissement.location}${lotissement.city ? `, ${lotissement.city
 
   yPos += 10;
 
-  // Article 2 - Prix
-  yPos = checkPageBreak(doc, yPos, 40);
+  // ARTICLE 2 – BASE LÉGALE
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 2 : PRIX ET MODALITES DE PAIEMENT", margin, yPos);
+  doc.text("ARTICLE 2 - BASE LEGALE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article2 = `La presente cession est consentie et acceptee moyennant le prix de ${formatAmountWithCurrency(data.price)} (${numberToWordsPDF(data.price)} francs CFA).
-
-${data.paymentTerms}`;
-
-  const article2Lines = doc.splitTextToSize(article2, maxWidth);
-  article2Lines.forEach((line: string) => {
+  const article2 = `Le lotissement est regi par :
+- La Loi n° 2020-624 du 14 aout 2020 instituant Code de l'Urbanisme et du Domaine Foncier Urbain.
+- Le Decret n° 2021-784 du 08 decembre 2021 portant organisation des procedures d'elaboration, d'approbation et d'application des plans de lotissement.
+- Les arretes et reglements locaux en vigueur.`;
+  const art2Lines = doc.splitTextToSize(article2, maxWidth);
+  art2Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);
     doc.text(line, margin, yPos);
     yPos += 5;
@@ -456,79 +465,154 @@ ${data.paymentTerms}`;
 
   yPos += 10;
 
-  // Article 3 - Garanties
-  yPos = checkPageBreak(doc, yPos, 40);
+  // ARTICLE 3 – ENGAGEMENTS DU LOTISSEUR
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 3 : GARANTIES DU CEDANT", margin, yPos);
+  doc.text("ARTICLE 3 - ENGAGEMENTS DU LOTISSEUR", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article3 = `Le Cedant declare et garantit :
-- Etre le seul et unique proprietaire ou detenteur des droits sur le terrain objet de la presente convention
-- Que le terrain est libre de toute hypotheque, servitude ou charge quelconque
-- Garantir le Cessionnaire contre toute eviction et troubles de jouissance
-- Que le terrain n'a fait l'objet d'aucune cession anterieure`;
+  doc.text("Le Lotisseur s'engage a :", margin, yPos);
+  yPos += 6;
 
-  const article3Lines = doc.splitTextToSize(article3, maxWidth);
-  article3Lines.forEach((line: string) => {
-    yPos = checkPageBreak(doc, yPos, 8);
-    doc.text(line, margin, yPos);
-    yPos += 5;
-  });
-
-  yPos += 10;
-
-  // Article 4 - Conditions
-  if (data.conditions.length > 0) {
-    yPos = checkPageBreak(doc, yPos, 40);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...primaryColor);
-    doc.text("ARTICLE 4 : CONDITIONS PARTICULIERES", margin, yPos);
-    yPos += 7;
-
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...textColor);
-
-    data.conditions.forEach((condition, index) => {
-      yPos = checkPageBreak(doc, yPos, 15);
-      const conditionText = `${index + 1}. ${condition}`;
-      const conditionLines = doc.splitTextToSize(conditionText, maxWidth);
-      conditionLines.forEach((line: string) => {
-        doc.text(line, margin, yPos);
-        yPos += 5;
-      });
-      yPos += 2;
+  data.engagementsLotisseur.forEach((eng) => {
+    yPos = checkPageBreak(doc, yPos, 10);
+    const engLines = doc.splitTextToSize(`- ${eng}`, maxWidth);
+    engLines.forEach((line: string) => {
+      doc.text(line, margin, yPos);
+      yPos += 5;
     });
-  }
+  });
 
   yPos += 10;
 
-  // Article 5 - Litiges
-  yPos = checkPageBreak(doc, yPos, 40);
+  // ARTICLE 4 – ENGAGEMENTS DU PROPRIÉTAIRE
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 5 : REGLEMENT DES LITIGES", margin, yPos);
+  doc.text("ARTICLE 4 - ENGAGEMENTS DU PROPRIETAIRE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article5 = `Tout differend relatif a l'interpretation ou a l'execution de la presente convention sera regle a l'amiable. A defaut, les parties conviennent de soumettre le litige aux juridictions competentes d'Abidjan, Cote d'Ivoire.`;
+  doc.text("Le Proprietaire s'engage a :", margin, yPos);
+  yPos += 6;
 
-  const article5Lines = doc.splitTextToSize(article5, maxWidth);
-  article5Lines.forEach((line: string) => {
+  data.engagementsProprietaire.forEach((eng) => {
+    yPos = checkPageBreak(doc, yPos, 10);
+    const engLines = doc.splitTextToSize(`- ${eng}`, maxWidth);
+    engLines.forEach((line: string) => {
+      doc.text(line, margin, yPos);
+      yPos += 5;
+    });
+  });
+
+  yPos += 10;
+
+  // ARTICLE 5 – CESSION DES LOTS
+  yPos = checkPageBreak(doc, yPos, 50);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 5 - CESSION DES LOTS", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article5 = `La repartition des lots se fera comme suit :
+- ${data.repartitionProprietaire}% des lots reviennent au Proprietaire.
+- ${data.repartitionLotisseur}% des lots reviennent au Lotisseur pour commercialisation.
+
+Un proces-verbal de repartition sera etabli et annexe a la presente convention.`;
+  const art5Lines = doc.splitTextToSize(article5, maxWidth);
+  art5Lines.forEach((line: string) => {
+    yPos = checkPageBreak(doc, yPos, 8);
     doc.text(line, margin, yPos);
     yPos += 5;
   });
 
   yPos += 10;
+
+  // ARTICLE 6 – DURÉE
+  yPos = checkPageBreak(doc, yPos, 30);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 6 - DUREE", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article6 = `La presente convention est conclue pour une duree de ${data.duree}, correspondant au delai de realisation des travaux et de livraison des lots.`;
+  const art6Lines = doc.splitTextToSize(article6, maxWidth);
+  art6Lines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // ARTICLE 7 – SANCTIONS
+  yPos = checkPageBreak(doc, yPos, 30);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 7 - SANCTIONS", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article7 = `En cas de non-respect des engagements, la partie defaillante pourra etre poursuivie conformement aux dispositions legales et reglementaires en vigueur.`;
+  const art7Lines = doc.splitTextToSize(article7, maxWidth);
+  art7Lines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // ARTICLE 8 – RÈGLEMENT DES LITIGES
+  yPos = checkPageBreak(doc, yPos, 30);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 8 - REGLEMENT DES LITIGES", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article8 = `Tout litige ne de l'interpretation ou de l'execution de la presente convention sera regle a l'amiable. A defaut, il sera porte devant les juridictions competentes d'Abidjan.`;
+  const art8Lines = doc.splitTextToSize(article8, maxWidth);
+  art8Lines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 10;
+
+  // ARTICLE 9 – DISPOSITIONS FINALES
+  yPos = checkPageBreak(doc, yPos, 30);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("ARTICLE 9 - DISPOSITIONS FINALES", margin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const article9 = `La presente convention prend effet a compter de sa signature par les parties. Elle sera deposee aupres de la Direction de l'Urbanisme et publiee conformement aux textes en vigueur.`;
+  const art9Lines = doc.splitTextToSize(article9, maxWidth);
+  art9Lines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
+
+  yPos += 15;
 
   // Clause finale
-  yPos = checkPageBreak(doc, yPos, 40);
+  yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "italic");
-  const clauseFinale = `Fait a ${lotissement.city || "Abidjan"}, le ${formatDate(data.signatureDate)}, en deux (02) exemplaires originaux.`;
+  const clauseFinale = `Fait a ${data.lieuSignature || lotissement.city || "Abidjan"}, le ${formatDate(data.signatureDate)}`;
   doc.text(clauseFinale, margin, yPos);
+  yPos += 5;
+  doc.text(`En ${data.nombreExemplaires} exemplaires originaux.`, margin, yPos);
 
   yPos += 20;
 
@@ -538,17 +622,8 @@ ${data.paymentTerms}`;
 
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
-  doc.text("LE CEDANT", margin, yPos);
-  doc.text("LE CESSIONNAIRE", margin + colWidth + 20, yPos);
-
-  yPos += 5;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("(Signature precedee de", margin, yPos);
-  doc.text("(Signature precedee de", margin + colWidth + 20, yPos);
-  yPos += 4;
-  doc.text('"Lu et approuve")', margin, yPos);
-  doc.text('"Lu et approuve")', margin + colWidth + 20, yPos);
+  doc.text("Le Proprietaire", margin, yPos);
+  doc.text("Le Lotisseur", margin + colWidth + 20, yPos);
 
   yPos += 25;
   doc.setDrawColor(150, 150, 150);
@@ -812,18 +887,33 @@ export const getDefaultPVFamilleData = (lotissement: LotissementInfo): PVFamille
 });
 
 export const getDefaultConventionData = (lotissement: LotissementInfo): ConventionData => ({
-  partiesVendeur: "",
-  partiesAcquereur: "",
-  landDescription: `Terrain situe dans le lotissement ${lotissement.name}`,
-  landArea: 0,
-  price: 0,
-  paymentTerms: "Le paiement sera effectue en une seule fois a la signature de la presente convention.",
-  conditions: [
-    "Le Cessionnaire prendra possession du terrain a compter de la signature de la presente convention",
-    "Les frais d'enregistrement et de mutation sont a la charge du Cessionnaire",
-    "Le Cedant s'engage a fournir tous les documents necessaires a la regularisation fonciere",
+  proprietaireName: "",
+  proprietaireAddress: "",
+  proprietaireCni: "",
+  lotisseurName: "",
+  lotisseurRccm: "",
+  lotisseurAddress: "",
+  terrainLocalisation: `${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`,
+  terrainSuperficie: lotissement.total_area ? String((lotissement.total_area / 10000).toFixed(2)) : "",
+  arreteReference: "",
+  arreteDate: "",
+  engagementsLotisseur: [
+    "Realiser les travaux d'amenagement conformement au plan approuve (voirie, assainissement, reseaux divers)",
+    "Respecter les prescriptions techniques et urbanistiques fixees par l'arrete d'autorisation de lotir",
+    "Mettre a disposition les equipements collectifs prevus (espaces verts, ecoles, marches, etc.)",
+    "Livrer les lots viabilises dans les delais convenus",
   ],
+  engagementsProprietaire: [
+    "Mettre a disposition le terrain objet du lotissement",
+    "Garantir la propriete et l'absence de litiges fonciers",
+    "Respecter les clauses de cession ou de partage convenues avec le Lotisseur",
+  ],
+  repartitionProprietaire: 30,
+  repartitionLotisseur: 70,
+  duree: "24 mois",
+  nombreExemplaires: 2,
   signatureDate: new Date().toISOString().split("T")[0],
+  lieuSignature: lotissement.city || "Abidjan",
 });
 
 export const getDefaultContratPrefinancementData = (lotissement: LotissementInfo): ContratPrefinancementData => ({

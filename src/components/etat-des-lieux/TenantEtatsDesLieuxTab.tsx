@@ -29,7 +29,13 @@ export function TenantEtatsDesLieuxTab({ tenant }: TenantEtatsDesLieuxTabProps) 
         )}
       </CardHeader>
       <CardContent>
-        <EtatsDesLieuxList etats={etats} isLoading={isLoading} />
+        <EtatsDesLieuxList
+          etats={etats}
+          isLoading={isLoading}
+          tenantName={tenant.name}
+          propertyTitle={tenant.property?.title}
+          unitNumber={tenant.unit?.unit_number}
+        />
       </CardContent>
     </Card>
   );

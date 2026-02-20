@@ -28,6 +28,7 @@ import {
   DoorOpen,
   ClipboardCheck,
   KeyRound,
+  MessageSquare,
   ShieldOff
 } from "lucide-react";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
@@ -51,6 +52,7 @@ import { TenantEtatsDesLieuxTab } from "@/components/etat-des-lieux/TenantEtatsD
 import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
 import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
+import { TenantRequestsTab } from "@/components/tenant/TenantRequestsTab";
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -363,6 +365,10 @@ const TenantDetails = () => {
             <TabsTrigger value="etats-des-lieux" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <ClipboardCheck className="h-4 w-4" />
               <span className="hidden sm:inline">États des lieux</span>
+            </TabsTrigger>
+            <TabsTrigger value="requests" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Requêtes</span>
             </TabsTrigger>
           </TabsList>
 
@@ -761,6 +767,15 @@ const TenantDetails = () => {
 
           <TabsContent value="etats-des-lieux">
             <TenantEtatsDesLieuxTab tenant={tenant} />
+          </TabsContent>
+
+          <TabsContent value="requests">
+            <TenantRequestsTab 
+              tenantId={tenant.id} 
+              userId={tenant.user_id}
+              propertyId={tenant.property_id || undefined}
+              isLocataire={isLocataire}
+            />
           </TabsContent>
     </Tabs>
   </div>

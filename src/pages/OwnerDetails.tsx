@@ -32,7 +32,8 @@ import {
   Wrench,
   FileText,
   Send,
-  Users
+  Users,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -43,6 +44,7 @@ import { OwnerTenantsList } from "@/components/owner/OwnerTenantsList";
 import { OwnerRevenueChart } from "@/components/owner/OwnerRevenueChart";
 import { InterventionsList } from "@/components/intervention/InterventionsList";
 import { usePermissions } from "@/hooks/usePermissions";
+import { OwnerRequestsList } from "@/components/owner/OwnerRequestsList";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -466,18 +468,22 @@ const OwnerDetails = () => {
 
             {/* Tabs for Properties, Tenants and Interventions */}
             <Tabs defaultValue="properties" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="properties" className="gap-2">
                   <Building2 className="h-4 w-4" />
-                  Biens ({totalProperties})
+                  <span className="hidden sm:inline">Biens ({totalProperties})</span>
                 </TabsTrigger>
                 <TabsTrigger value="tenants" className="gap-2">
                   <Users className="h-4 w-4" />
-                  Locataires ({ownerTenants.length})
+                  <span className="hidden sm:inline">Locataires ({ownerTenants.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="interventions" className="gap-2">
                   <Wrench className="h-4 w-4" />
-                  Interventions
+                  <span className="hidden sm:inline">Interventions</span>
+                </TabsTrigger>
+                <TabsTrigger value="requests" className="gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline">Requêtes</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -507,6 +513,13 @@ const OwnerDetails = () => {
               
               <TabsContent value="interventions" className="mt-4">
                 <InterventionsList ownerId={id} showPropertyColumn={true} />
+              </TabsContent>
+
+              <TabsContent value="requests" className="mt-4">
+                <OwnerRequestsList 
+                  tenantIds={ownerTenantIds} 
+                  tenants={ownerTenants.map(t => ({ id: t.id, name: t.name }))} 
+                />
               </TabsContent>
             </Tabs>
           </div>

@@ -34,6 +34,7 @@ import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useAgency } from "@/hooks/useAgency";
 import { useTrashCount } from "@/hooks/useTrashCount";
 import { useNewVenteProspectsCount, useNewAllLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
+import { useNewTenantRequestsCount } from "@/hooks/useNewTenantRequestsCount";
 import { useFeatureAccess, FeatureKey } from "@/hooks/useFeatureAccess";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
@@ -96,6 +97,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { data: trashCount } = useTrashCount();
   const { count: newVenteProspectsCount } = useNewVenteProspectsCount();
   const { count: newLotProspectsCount } = useNewAllLotissementProspectsCount();
+  const { count: newRequestsCount } = useNewTenantRequestsCount();
   const { hasFeature } = useFeatureAccess();
   const { hasPermission } = usePermissions();
   const prefetchRoute = usePrefetchRoute();
@@ -281,6 +283,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     .filter((item) => !(userRole?.role === "gestionnaire" && item.hiddenForGestionnaire))
                     .map((item) => {
                       const isActive = location.pathname === item.href;
+                      const badgeCount = item.href === "/tenants" ? newRequestsCount : 0;
                       return (
                         <NavLink
                           key={item.name}
@@ -293,10 +296,17 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                               : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
                           )}
                         >
-                          <item.icon className={cn(
-                            "h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110",
-                            !showText && "mx-auto"
-                          )} />
+                          <div className="relative flex-shrink-0">
+                            <item.icon className={cn(
+                              "h-4 w-4 transition-transform group-hover:scale-110",
+                              !showText && "mx-auto"
+                            )} />
+                            {badgeCount > 0 && (
+                              <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                                {badgeCount > 99 ? "99+" : badgeCount}
+                              </span>
+                            )}
+                          </div>
                           {showText && (
                             <span className="font-medium text-sm">{item.name}</span>
                           )}

@@ -21,6 +21,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Search, 
   Users, 
@@ -45,7 +51,8 @@ import {
   Trash2,
   KeyRound,
   ShieldCheck,
-  ShieldX
+  ShieldX,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
@@ -64,6 +71,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
 import { useToast } from "@/hooks/use-toast";
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
+import { useNewTenantRequestsCount, useNewTenantRequests } from "@/hooks/useNewTenantRequestsCount";
 
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
@@ -422,6 +430,26 @@ export default function Tenants() {
   const canDelete = hasPermission("can_delete_tenants");
   const { data: assignableUsers = [] } = useAssignableUsers();
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
+  const { count: newRequestsCount, markAsSeen } = useNewTenantRequestsCount();
+  const { data: newRequests } = useNewTenantRequests();
+  const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
+
+  const handleOpenRequests = () => {
+    setRequestsDialogOpen(true);
+    markAsSeen();
+  };
+
+  const categoryLabels: Record<string, string> = {
+    maintenance: "Maintenance",
+    reclamation: "Réclamation",
+    administrative: "Administratif",
+  };
+
+  const priorityConfig: Record<string, { label: string; className: string }> = {
+    haute: { label: "Haute", className: "bg-destructive/10 text-destructive border-destructive/20" },
+    moyenne: { label: "Moyenne", className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
+    basse: { label: "Basse", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  };
 
   const handleEditTenant = (tenant: TenantWithDetails) => {
     setEditingTenant(tenant);
@@ -550,6 +578,17 @@ export default function Tenants() {
             {canEdit && <MergeTenantsDialog />}
             {canCreate && <AddTenantDialog />}
           </div>
+
+          {/* Emergency button for new requests */}
+          {newRequestsCount > 0 && (
+            <Button
+              onClick={handleOpenRequests}
+              className="animate-pulse bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2 shadow-lg"
+            >
+              <Bell className="h-4 w-4" />
+              <span>{newRequestsCount} nouvelle{newRequestsCount > 1 ? "s" : ""} requête{newRequestsCount > 1 ? "s" : ""} locataire</span>
+            </Button>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -690,6 +729,62 @@ export default function Tenants() {
             }}
           />
         )}
+
+        {/* New Requests Dialog */}
+        <Dialog open={requestsDialogOpen} onOpenChange={setRequestsDialogOpen}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-destructive" />
+                Nouvelles requêtes locataires
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 mt-2">
+              {newRequests && newRequests.length > 0 ? (
+                newRequests.map((req: any) => (
+                  <Card key={req.id} className="overflow-hidden">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-semibold text-sm text-foreground">{req.title}</h4>
+                        <div className="flex gap-1.5">
+                          <Badge variant="outline" className="text-[10px]">
+                            {categoryLabels[req.category] || req.category}
+                          </Badge>
+                          <Badge variant="outline" className={cn("text-[10px]", priorityConfig[req.priority]?.className)}>
+                            {priorityConfig[req.priority]?.label || req.priority}
+                          </Badge>
+                        </div>
+                      </div>
+                      {req.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{req.description}</p>
+                      )}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">
+                          {req.tenants?.name || "Locataire"}
+                        </span>
+                        <span>{new Date(req.created_at).toLocaleDateString("fr-FR")}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-1 gap-1"
+                        onClick={() => {
+                          setRequestsDialogOpen(false);
+                          navigate(`/tenants/${req.tenant_id}`);
+                        }}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Voir le locataire
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Aucune nouvelle requête.</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
       </div>
     </DashboardLayout>

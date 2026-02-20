@@ -96,6 +96,8 @@ export const useIlotsWithStats = (lotissementId?: string) => {
       return ilotsWithStats;
     },
     enabled: !!user && !!lotissementId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 };
 

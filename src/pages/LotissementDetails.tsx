@@ -48,6 +48,7 @@ import { IlotsTab } from "@/components/lotissement/IlotsTab";
 import { GenerateLotissementDocumentDialog } from "@/components/lotissement/GenerateLotissementDocumentDialog";
 import { AcquereursListCard } from "@/components/lotissement/AcquereursListCard";
 import { useNewLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
+import { useIlotsWithStats } from "@/hooks/useIlots";
 const LotissementDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -60,7 +61,8 @@ const LotissementDetails = () => {
   const canCreateParcelle = hasPermission("can_create_parcelles");
   const isGestionnaire = role === "gestionnaire";
   const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewLotissementProspectsCount(id);
-
+  // Prefetch ilots data for instant tab switching
+  useIlotsWithStats(id);
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);

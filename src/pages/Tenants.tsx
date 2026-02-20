@@ -72,6 +72,8 @@ import { AssignmentBadge } from "@/components/assignment/AssignUserSelect";
 import { useToast } from "@/hooks/use-toast";
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { useNewTenantRequestsCount, useNewTenantRequests } from "@/hooks/useNewTenantRequestsCount";
+import { useTenantsActiveRequestsMap, TenantActiveRequest } from "@/hooks/useTenantsActiveRequests";
+import { MessageSquare } from "lucide-react";
 
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
@@ -99,9 +101,17 @@ interface TenantCardProps {
   isDeleting: boolean;
   isRevokingAccess: boolean;
   isAgencyOwner: boolean;
+  tenantRequests?: TenantActiveRequest[];
 }
 
-function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevokeAccess, canEdit, isDeleting, isRevokingAccess, isAgencyOwner }: TenantCardProps) {
+const requestStatusConfig: Record<string, { label: string; className: string }> = {
+  nouveau: { label: "Nouveau", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  en_cours: { label: "En cours", className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
+  en_attente: { label: "En attente", className: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
+  rejete: { label: "Rejeté", className: "bg-red-500/10 text-red-500 border-red-500/20" },
+};
+
+function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevokeAccess, canEdit, isDeleting, isRevokingAccess, isAgencyOwner, tenantRequests = [] }: TenantCardProps) {
   const [expanded, setExpanded] = useState(false);
   
   // Get active contract - prioritize active contracts
@@ -355,6 +365,27 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
           </div>
         )}
 
+        {/* Active Requests */}
+        {tenantRequests.length > 0 && (
+          <div className="px-4 sm:px-6 pb-3">
+            <div className="flex flex-wrap gap-2">
+              {tenantRequests.map((req) => {
+                const reqStatus = requestStatusConfig[req.status] || requestStatusConfig.nouveau;
+                return (
+                  <Badge
+                    key={req.id}
+                    variant="outline"
+                    className={cn("text-[10px] sm:text-xs gap-1", reqStatus.className)}
+                  >
+                    <MessageSquare className="h-3 w-3" />
+                    Requête: {reqStatus.label}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Expand Button */}
         <button
           onClick={() => setExpanded(!expanded)}
@@ -433,6 +464,7 @@ export default function Tenants() {
   const { count: newRequestsCount, markAsSeen } = useNewTenantRequestsCount();
   const { data: newRequests } = useNewTenantRequests();
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
+  const { requestsByTenant } = useTenantsActiveRequestsMap();
 
   const handleOpenRequests = () => {
     setRequestsDialogOpen(true);
@@ -692,6 +724,7 @@ export default function Tenants() {
                   isDeleting={deleteTenantMutation.isPending}
                   isRevokingAccess={revokeAccessMutation.isPending}
                   isAgencyOwner={isAgencyOwner}
+                  tenantRequests={requestsByTenant[tenant.id] || []}
                 />
               ))}
             </div>

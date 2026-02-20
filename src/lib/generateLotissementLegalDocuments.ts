@@ -433,7 +433,8 @@ export const generateConvention = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const article1 = `La presente convention a pour objet de definir les droits et obligations des parties dans le cadre de l'operation de lotissement du terrain sis a ${data.terrainLocalisation}, d'une superficie de ${data.terrainSuperficie} hectares, conformement au plan de lotissement approuve par arrete n° ${data.arreteReference} du ${data.arreteDate ? formatDate(data.arreteDate) : "[date]"}.`;
+  const arreteClause = data.arreteReference ? `, conformement au plan de lotissement approuve par arrete n° ${data.arreteReference} du ${data.arreteDate ? formatDate(data.arreteDate) : "[date]"}` : "";
+  const article1 = `La presente convention a pour objet de definir les droits et obligations des parties dans le cadre de l'operation de lotissement du terrain sis a ${data.terrainLocalisation}, d'une superficie de ${data.terrainSuperficie} hectares${arreteClause}.`;
   const art1Lines = doc.splitTextToSize(article1, maxWidth);
   art1Lines.forEach((line: string) => {
     yPos = checkPageBreak(doc, yPos, 8);

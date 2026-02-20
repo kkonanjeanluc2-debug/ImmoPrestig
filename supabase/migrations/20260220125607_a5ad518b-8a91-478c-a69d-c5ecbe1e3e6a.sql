@@ -1,0 +1,2 @@
+CREATE INDEX IF NOT EXISTS idx_echeances_ventes_status_due_date ON public.echeances_ventes (status, due_date);
+CREATE INDEX IF NOT EXISTS idx_echeances_ventes_vente_id ON public.echeances_ventes (vente_id);

@@ -2737,6 +2737,69 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_requests: {
+        Row: {
+          admin_response: string | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          priority: string
+          property_id: string | null
+          responded_at: string | null
+          status: string
+          tenant_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          property_id?: string | null
+          responded_at?: string | null
+          status?: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          property_id?: string | null
+          responded_at?: string | null
+          status?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           agency_fees: number | null

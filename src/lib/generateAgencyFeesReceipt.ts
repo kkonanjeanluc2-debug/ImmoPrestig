@@ -167,7 +167,8 @@ export const generateAgencyFeesReceipt = async (data: AgencyFeesReceiptData): Pr
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   const signerName = data.agency?.name || "le bailleur";
-  const declaration = `Je soussigné(e) ${signerName}, reconnais avoir reçu de ${data.tenantName} la somme de ${formatAmountWithCurrency(data.amount)} au titre des frais d'agence pour le bien situé à ${data.propertyTitle}${data.propertyAddress ? ", " + data.propertyAddress : ""}.`;
+  const locationPart = data.propertyAddress ? ` situé à ${data.propertyAddress}` : "";
+  const declaration = `Je soussigné(e) ${signerName}, reconnais avoir reçu de ${data.tenantName} la somme de ${formatAmountWithCurrency(data.amount)} au titre des frais d'agence pour le bien ${data.propertyTitle}${locationPart}.`;
   const splitDecl = doc.splitTextToSize(declaration, pageWidth - 30);
   doc.text(splitDecl, 15, yPos, { lineHeightFactor: 1.5 });
 

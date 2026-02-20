@@ -122,8 +122,8 @@ export function GenerateLotissementDocumentDialog({
           break;
 
         case "contrat_prefinancement":
-          if (!prefinancementData.proprietaireName || !prefinancementData.prefinanceurName) {
-            toast.error("Veuillez remplir les informations du propriétaire et du préfinanceur");
+          if (!prefinancementData.lotisseurName || !prefinancementData.prefinanceurName) {
+            toast.error("Veuillez remplir les informations du lotisseur et du préfinanceur");
             return;
           }
           doc = await generateContratPrefinancement(prefinancementData, lotissement, agency || null);
@@ -224,17 +224,17 @@ export function GenerateLotissementDocumentDialog({
     }));
   };
 
-  const addEngagementProprietairePrefin = () => {
+  const addEngagementLotisseurPrefin = () => {
     setPrefinancementData(prev => ({
       ...prev,
-      engagementsProprietaire: [...prev.engagementsProprietaire, ""]
+      engagementsLotisseur: [...prev.engagementsLotisseur, ""]
     }));
   };
 
-  const removeEngagementProprietairePrefin = (index: number) => {
+  const removeEngagementLotisseurPrefin = (index: number) => {
     setPrefinancementData(prev => ({
       ...prev,
-      engagementsProprietaire: prev.engagementsProprietaire.filter((_, i) => i !== index)
+      engagementsLotisseur: prev.engagementsLotisseur.filter((_, i) => i !== index)
     }));
   };
 
@@ -698,32 +698,41 @@ export function GenerateLotissementDocumentDialog({
         return (
           <ScrollArea className="h-[60vh] pr-4">
             <div className="space-y-6">
-              {/* Propriétaire */}
+              {/* Lotisseur */}
               <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground">Le Propriétaire foncier</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Le Lotisseur</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Nom complet *</Label>
                     <Input
-                      value={prefinancementData.proprietaireName}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, proprietaireName: e.target.value }))}
+                      value={prefinancementData.lotisseurName}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurName: e.target.value }))}
                       placeholder="ex: M. KOUASSI Yao"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>N° CNI</Label>
                     <Input
-                      value={prefinancementData.proprietaireCni}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, proprietaireCni: e.target.value }))}
+                      value={prefinancementData.lotisseurCni}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurCni: e.target.value }))}
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Adresse</Label>
-                  <Input
-                    value={prefinancementData.proprietaireAddress}
-                    onChange={(e) => setPrefinancementData(prev => ({ ...prev, proprietaireAddress: e.target.value }))}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>RCCM</Label>
+                    <Input
+                      value={prefinancementData.lotisseurRccm}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurRccm: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Adresse</Label>
+                    <Input
+                      value={prefinancementData.lotisseurAddress}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurAddress: e.target.value }))}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -825,29 +834,29 @@ export function GenerateLotissementDocumentDialog({
                 ))}
               </div>
 
-              {/* Engagements du Propriétaire */}
+              {/* Engagements du Lotisseur */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm text-muted-foreground">Engagements du Propriétaire (Art. 4)</h4>
-                  <Button type="button" variant="outline" size="sm" onClick={addEngagementProprietairePrefin}>
+                  <h4 className="font-medium text-sm text-muted-foreground">Engagements du Lotisseur (Art. 4)</h4>
+                  <Button type="button" variant="outline" size="sm" onClick={addEngagementLotisseurPrefin}>
                     <Plus className="h-4 w-4 mr-1" />
                     Ajouter
                   </Button>
                 </div>
-                {prefinancementData.engagementsProprietaire.map((eng, index) => (
+                {prefinancementData.engagementsLotisseur.map((eng, index) => (
                   <div key={index} className="flex gap-2 items-start">
                     <Textarea
                       value={eng}
                       onChange={(e) => {
-                        const newEngs = [...prefinancementData.engagementsProprietaire];
+                        const newEngs = [...prefinancementData.engagementsLotisseur];
                         newEngs[index] = e.target.value;
-                        setPrefinancementData(prev => ({ ...prev, engagementsProprietaire: newEngs }));
+                        setPrefinancementData(prev => ({ ...prev, engagementsLotisseur: newEngs }));
                       }}
                       rows={2}
                       className="flex-1"
                     />
-                    {prefinancementData.engagementsProprietaire.length > 1 && (
-                      <Button type="button" variant="ghost" size="icon" onClick={() => removeEngagementProprietairePrefin(index)}>
+                    {prefinancementData.engagementsLotisseur.length > 1 && (
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeEngagementLotisseurPrefin(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     )}

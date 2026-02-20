@@ -66,6 +66,7 @@ const formSchema = z.object({
   end_date: z.string().min(1, "La date de fin est requise"),
   rent_amount: z.string().min(1, "Le montant du loyer est requis"),
   deposit: z.string().optional(),
+  agency_fees: z.string().optional(),
   advance_months: z.string().optional(),
 });
 
@@ -150,6 +151,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       end_date: "",
       rent_amount: "",
       deposit: "",
+      agency_fees: "",
       advance_months: "0",
     },
   });
@@ -193,6 +195,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         cni_number: values.cni_number || null,
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
+        agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
       });
 
       // Update tenant with unit_id if needed
@@ -758,6 +761,20 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="agency_fees"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frais d'agence (F CFA)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Advance Months Payment */}
               <FormField

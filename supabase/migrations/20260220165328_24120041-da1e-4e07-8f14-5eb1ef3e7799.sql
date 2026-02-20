@@ -1,0 +1,1 @@
+ALTER TABLE public.tenants ADD COLUMN agency_fees numeric DEFAULT NULL;

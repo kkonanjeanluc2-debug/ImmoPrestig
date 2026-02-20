@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
 import { getReceiptTemplates, type ReceiptTemplates } from "@/components/settings/ReceiptSettings";
 import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
 import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
@@ -110,7 +111,7 @@ const replaceVariables = (
 };
 
 const createReceiptDocument = async (data: ReceiptData, templateOverride?: ReceiptTemplates): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const templates = templateOverride || getReceiptTemplates();
   

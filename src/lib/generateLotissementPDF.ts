@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
 import { formatAmountForPDF, formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
 interface AgencyInfo {
@@ -203,7 +204,7 @@ export const generateFicheReservation = async (
   agency: AgencyInfo | null,
   reservation: ReservationInfo
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -446,7 +447,7 @@ export const generateContratVente = async (
   acquereur: AcquereurInfo,
   agency: AgencyInfo | null
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -658,7 +659,7 @@ export const generatePromesseVente = async (
     monthly_payment?: number | null;
   }
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -881,7 +882,7 @@ export const generateAttestationPaiement = async (
   echeanceNumber: number,
   totalEcheances: number
 ): Promise<jsPDF> => {
-  const doc = new jsPDF();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   const maxWidth = pageWidth - margin * 2;

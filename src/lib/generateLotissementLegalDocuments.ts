@@ -60,10 +60,12 @@ export interface ContratPrefinancementData {
   lotisseurRccm: string;
   lotisseurRepresentant: string;
   lotisseurAddress: string;
+  prefinanceurType: "individu" | "societe";
   prefinanceurName: string;
   prefinanceurRccm: string;
   prefinanceurRepresentant: string;
   prefinanceurAddress: string;
+  prefinanceurCni: string;
   terrainLocalisation: string;
   terrainSuperficie: string;
   arreteReference: string;
@@ -691,7 +693,12 @@ export const generateContratPrefinancement = async (
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
-  const partiePrefinanceur = `La societe ${data.prefinanceurName}${data.prefinanceurRccm ? `, immatriculee au RCCM sous le numero ${data.prefinanceurRccm}` : ""}${data.prefinanceurAddress ? `, ayant son siege social a ${data.prefinanceurAddress}` : ""}${data.prefinanceurRepresentant ? `, representee par ${data.prefinanceurRepresentant}` : ""}, ci-apres denommee Le Prefinanceur.`;
+  let partiePrefinanceur: string;
+  if (data.prefinanceurType === "societe") {
+    partiePrefinanceur = `La societe ${data.prefinanceurName}${data.prefinanceurRccm ? `, immatriculee au RCCM sous le numero ${data.prefinanceurRccm}` : ""}${data.prefinanceurAddress ? `, ayant son siege social a ${data.prefinanceurAddress}` : ""}${data.prefinanceurRepresentant ? `, representee par ${data.prefinanceurRepresentant}` : ""}, ci-apres denommee Le Prefinanceur.`;
+  } else {
+    partiePrefinanceur = `${data.prefinanceurName}${data.prefinanceurAddress ? `, demeurant a ${data.prefinanceurAddress}` : ""}${data.prefinanceurCni ? `, CNI N° ${data.prefinanceurCni}` : ""}, ci-apres denomme(e) Le Prefinanceur.`;
+  }
   const prefLines = doc.splitTextToSize(partiePrefinanceur, maxWidth);
   prefLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -977,10 +984,12 @@ export const getDefaultContratPrefinancementData = (lotissement: LotissementInfo
   lotisseurRccm: "",
   lotisseurRepresentant: "",
   lotisseurAddress: "",
+  prefinanceurType: "societe",
   prefinanceurName: "",
   prefinanceurRccm: "",
   prefinanceurRepresentant: "",
   prefinanceurAddress: "",
+  prefinanceurCni: "",
   terrainLocalisation: `${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`,
   terrainSuperficie: lotissement.total_area ? String((lotissement.total_area / 10000).toFixed(2)) : "",
   arreteReference: "",

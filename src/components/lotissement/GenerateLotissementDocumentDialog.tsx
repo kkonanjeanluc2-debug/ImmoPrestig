@@ -741,41 +741,84 @@ export function GenerateLotissementDocumentDialog({
 
               {/* Préfinanceur */}
               <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground">Le Préfinanceur / Promoteur</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Raison sociale *</Label>
-                    <Input
-                      value={prefinancementData.prefinanceurName}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurName: e.target.value }))}
-                      placeholder="ex: SCI IMMO PRESTIGE"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>RCCM</Label>
-                    <Input
-                      value={prefinancementData.prefinanceurRccm}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurRccm: e.target.value }))}
-                    />
-                  </div>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm text-muted-foreground">Le Préfinanceur / Promoteur</h4>
+                  <select
+                    className="text-xs rounded-md border border-input bg-background px-2 py-1"
+                    value={prefinancementData.prefinanceurType}
+                    onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurType: e.target.value as "individu" | "societe" }))}
+                  >
+                    <option value="societe">Société</option>
+                    <option value="individu">Individu</option>
+                  </select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Représentant légal</Label>
-                    <Input
-                      value={prefinancementData.prefinanceurRepresentant}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurRepresentant: e.target.value }))}
-                      placeholder="ex: Mme DIALLO Aminata, Directrice"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Siège social</Label>
-                    <Input
-                      value={prefinancementData.prefinanceurAddress}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurAddress: e.target.value }))}
-                    />
-                  </div>
-                </div>
+
+                {prefinancementData.prefinanceurType === "societe" ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Raison sociale *</Label>
+                        <Input
+                          value={prefinancementData.prefinanceurName}
+                          onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurName: e.target.value }))}
+                          placeholder="ex: SCI IMMO PRESTIGE"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>RCCM</Label>
+                        <Input
+                          value={prefinancementData.prefinanceurRccm}
+                          onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurRccm: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Représentant légal</Label>
+                        <Input
+                          value={prefinancementData.prefinanceurRepresentant}
+                          onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurRepresentant: e.target.value }))}
+                          placeholder="ex: Mme DIALLO Aminata, Directrice"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Siège social</Label>
+                        <Input
+                          value={prefinancementData.prefinanceurAddress}
+                          onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurAddress: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Nom complet *</Label>
+                        <Input
+                          value={prefinancementData.prefinanceurName}
+                          onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurName: e.target.value }))}
+                          placeholder="ex: M. KOUAME Jean"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>N° CNI</Label>
+                        <Input
+                          value={prefinancementData.prefinanceurCni}
+                          onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurCni: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Adresse</Label>
+                      <Input
+                        value={prefinancementData.prefinanceurAddress}
+                        onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurAddress: e.target.value }))}
+                        placeholder="ex: Abidjan, Marcory"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Terrain */}

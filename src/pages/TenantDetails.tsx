@@ -44,6 +44,8 @@ import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog"
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateAgencyFeesReceipt } from "@/lib/generateAgencyFeesReceipt";
 import { useAgency } from "@/hooks/useAgency";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
 import { TenantEtatsDesLieuxTab } from "@/components/etat-des-lieux/TenantEtatsDesLieuxTab";
 import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
@@ -82,7 +84,7 @@ const TenantDetails = () => {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
-  const { data: agency } = useAgency();
+  const { data: ownAgency } = useAgency();
   const deleteTenant = useDeleteTenant();
   const { canEdit, canDelete } = usePermissions();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -95,6 +97,30 @@ const TenantDetails = () => {
   const revokeAccess = useRevokeTenantPortalAccess();
 
   const isLocataire = userRole?.role === "locataire";
+
+  // For tenant portal users: fetch the landlord's agency
+  const { data: tenantAgency } = useQuery({
+    queryKey: ["tenant-landlord-agency", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data: tenantRecord } = await supabase
+        .from("tenants")
+        .select("user_id")
+        .eq("portal_user_id", user.id)
+        .eq("has_portal_access", true)
+        .maybeSingle();
+      if (!tenantRecord) return null;
+      const { data: agencyData } = await supabase
+        .from("agencies")
+        .select("name, email, phone, address, city, country, logo_url")
+        .eq("user_id", tenantRecord.user_id)
+        .maybeSingle();
+      return agencyData;
+    },
+    enabled: !!user?.id && isLocataire,
+  });
+
+  const agency = isLocataire ? tenantAgency : ownAgency;
 
   // For tenants: find their own tenant record using portal_user_id
   const ownTenant = isLocataire 

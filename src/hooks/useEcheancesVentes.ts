@@ -39,7 +39,26 @@ export const useEcheancesVentes = (venteId?: string) => {
   return useQuery({
     queryKey: ["echeances-ventes", venteId],
     queryFn: async () => {
-      let query = supabase
+      if (venteId) {
+        // With venteId: use joins for detail view
+        const { data, error } = await supabase
+          .from("echeances_ventes")
+          .select(`
+            *,
+            vente:ventes_immobilieres(
+              acquereur:acquereurs(name, phone, email),
+              bien:biens_vente(title, address)
+            )
+          `)
+          .eq("vente_id", venteId)
+          .order("due_date", { ascending: true });
+
+        if (error) throw error;
+        return data as EcheanceVenteWithDetails[];
+      }
+
+      // Without venteId: lightweight query + separate joins to avoid timeout
+      const { data, error } = await supabase
         .from("echeances_ventes")
         .select(`
           *,
@@ -47,18 +66,16 @@ export const useEcheancesVentes = (venteId?: string) => {
             acquereur:acquereurs(name, phone, email),
             bien:biens_vente(title, address)
           )
-        `);
-      
-      if (venteId) {
-        query = query.eq("vente_id", venteId);
-      }
-      
-      const { data, error } = await query.order("due_date", { ascending: true });
+        `)
+        .order("due_date", { ascending: true })
+        .limit(500);
 
       if (error) throw error;
       return data as EcheanceVenteWithDetails[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 };
 
@@ -90,6 +107,8 @@ export const useUpcomingEcheancesVentes = () => {
       return data as EcheanceVenteWithDetails[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 };
 
@@ -118,6 +137,8 @@ export const useOverdueEcheancesVentes = () => {
       return data as EcheanceVenteWithDetails[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 };
 

@@ -703,34 +703,37 @@ export function GenerateLotissementDocumentDialog({
                 <h4 className="font-medium text-sm text-muted-foreground">Le Lotisseur</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Nom complet *</Label>
+                    <Label>Raison sociale *</Label>
                     <Input
                       value={prefinancementData.lotisseurName}
                       onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurName: e.target.value }))}
-                      placeholder="ex: M. KOUASSI Yao"
+                      placeholder="ex: SCI LOTISSEMENT PRESTIGE"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>N° CNI</Label>
-                    <Input
-                      value={prefinancementData.lotisseurCni}
-                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurCni: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>RCCM</Label>
                     <Input
                       value={prefinancementData.lotisseurRccm}
                       onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurRccm: e.target.value }))}
+                      placeholder="ex: CI-ABJ-2024-B-12345"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Représentant légal</Label>
+                    <Input
+                      value={prefinancementData.lotisseurRepresentant}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurRepresentant: e.target.value }))}
+                      placeholder="ex: M. KOUASSI Yao, Gérant"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Adresse</Label>
+                    <Label>Siège social</Label>
                     <Input
                       value={prefinancementData.lotisseurAddress}
                       onChange={(e) => setPrefinancementData(prev => ({ ...prev, lotisseurAddress: e.target.value }))}
+                      placeholder="ex: Abidjan, Cocody"
                     />
                   </div>
                 </div>
@@ -741,7 +744,7 @@ export function GenerateLotissementDocumentDialog({
                 <h4 className="font-medium text-sm text-muted-foreground">Le Préfinanceur / Promoteur</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Nom ou raison sociale *</Label>
+                    <Label>Raison sociale *</Label>
                     <Input
                       value={prefinancementData.prefinanceurName}
                       onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurName: e.target.value }))}
@@ -756,12 +759,22 @@ export function GenerateLotissementDocumentDialog({
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Adresse</Label>
-                  <Input
-                    value={prefinancementData.prefinanceurAddress}
-                    onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurAddress: e.target.value }))}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Représentant légal</Label>
+                    <Input
+                      value={prefinancementData.prefinanceurRepresentant}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurRepresentant: e.target.value }))}
+                      placeholder="ex: Mme DIALLO Aminata, Directrice"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Siège social</Label>
+                    <Input
+                      value={prefinancementData.prefinanceurAddress}
+                      onChange={(e) => setPrefinancementData(prev => ({ ...prev, prefinanceurAddress: e.target.value }))}
+                    />
+                  </div>
                 </div>
               </div>
 

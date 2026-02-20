@@ -57,11 +57,12 @@ export interface ConventionData {
 
 export interface ContratPrefinancementData {
   lotisseurName: string;
-  lotisseurAddress: string;
-  lotisseurCni: string;
   lotisseurRccm: string;
+  lotisseurRepresentant: string;
+  lotisseurAddress: string;
   prefinanceurName: string;
   prefinanceurRccm: string;
+  prefinanceurRepresentant: string;
   prefinanceurAddress: string;
   terrainLocalisation: string;
   terrainSuperficie: string;
@@ -677,7 +678,7 @@ export const generateContratPrefinancement = async (
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
-  const partieLotisseur = `Le Lotisseur : ${data.lotisseurName}${data.lotisseurAddress ? `, demeurant a ${data.lotisseurAddress}` : ""}${data.lotisseurCni ? `, CNI N° ${data.lotisseurCni}` : ""}${data.lotisseurRccm ? `, RCCM : ${data.lotisseurRccm}` : ""}, ci-apres denomme Le Lotisseur.`;
+  const partieLotisseur = `La societe ${data.lotisseurName}${data.lotisseurRccm ? `, immatriculee au RCCM sous le numero ${data.lotisseurRccm}` : ""}${data.lotisseurAddress ? `, ayant son siege social a ${data.lotisseurAddress}` : ""}${data.lotisseurRepresentant ? `, representee par ${data.lotisseurRepresentant}` : ""}, ci-apres denommee Le Lotisseur.`;
   const lotLines = doc.splitTextToSize(partieLotisseur, maxWidth);
   lotLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -690,7 +691,7 @@ export const generateContratPrefinancement = async (
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
-  const partiePrefinanceur = `Le prefinanceur / promoteur : ${data.prefinanceurName}${data.prefinanceurRccm ? `, RCCM : ${data.prefinanceurRccm}` : ""}${data.prefinanceurAddress ? `, sis a ${data.prefinanceurAddress}` : ""}, ci-apres denomme Le Prefinanceur.`;
+  const partiePrefinanceur = `La societe ${data.prefinanceurName}${data.prefinanceurRccm ? `, immatriculee au RCCM sous le numero ${data.prefinanceurRccm}` : ""}${data.prefinanceurAddress ? `, ayant son siege social a ${data.prefinanceurAddress}` : ""}${data.prefinanceurRepresentant ? `, representee par ${data.prefinanceurRepresentant}` : ""}, ci-apres denommee Le Prefinanceur.`;
   const prefLines = doc.splitTextToSize(partiePrefinanceur, maxWidth);
   prefLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
@@ -973,11 +974,12 @@ export const getDefaultConventionData = (lotissement: LotissementInfo): Conventi
 
 export const getDefaultContratPrefinancementData = (lotissement: LotissementInfo): ContratPrefinancementData => ({
   lotisseurName: "",
-  lotisseurAddress: "",
-  lotisseurCni: "",
   lotisseurRccm: "",
+  lotisseurRepresentant: "",
+  lotisseurAddress: "",
   prefinanceurName: "",
   prefinanceurRccm: "",
+  prefinanceurRepresentant: "",
   prefinanceurAddress: "",
   terrainLocalisation: `${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`,
   terrainSuperficie: lotissement.total_area ? String((lotissement.total_area / 10000).toFixed(2)) : "",

@@ -806,11 +806,10 @@ export const generateContratPrefinancement = async (
   doc.setTextColor(...textColor);
   let article5Text = "La remuneration du Prefinanceur se fera par :\n\n";
   if (data.remunerationType === "lots") {
-    article5Text += `- Attribution de ${data.remunerationLotsQuantity} de lots viabilises.`;
+    article5Text += `- Attribution de ${data.remunerationLotsQuantity} lots viabilises.\n\nLes lots attribues au Prefinanceur seront determines d'un commun accord entre les parties et feront l'objet d'un proces-verbal d'attribution annexe au present contrat.`;
   } else {
-    article5Text += `- Remboursement du capital investi majore d'un interet de ${data.remunerationInterestRate}%, payable a la livraison des lots.`;
+    article5Text += `- Remboursement du capital investi majore d'un interet de ${data.remunerationInterestRate}%, payable a la livraison des lots.\n\nUn echeancier de remboursement detaillant les montants et les dates de paiement sera annexe au present contrat.`;
   }
-  article5Text += "\n\nUn proces-verbal de repartition ou un echeancier de remboursement sera annexe au present contrat.";
 
   const art5Lines = doc.splitTextToSize(article5Text, maxWidth);
   art5Lines.forEach((line: string) => {

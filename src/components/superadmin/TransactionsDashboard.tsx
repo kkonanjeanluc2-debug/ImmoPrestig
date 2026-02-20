@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAllTransactions, useTransactionStats } from "@/hooks/useTransactions";
+import { useAllTransactions } from "@/hooks/useTransactions";
 import { MonthlyReportPDF } from "./MonthlyReportPDF";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -24,6 +24,7 @@ import {
   Smartphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PeriodFilter, getDefaultPeriod, type PeriodValue } from "@/components/dashboard/PeriodFilter";
 
 const paymentMethodLabels: Record<string, { label: string; color: string }> = {
   orange_money: { label: "Orange Money", color: "bg-orange-500" },
@@ -42,10 +43,10 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 
 export function TransactionsDashboard() {
   const { data: transactions, isLoading } = useAllTransactions();
-  const stats = useTransactionStats();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [methodFilter, setMethodFilter] = useState<string>("all");
+  const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
 
   const formatPrice = (amount: number, currency: string = "XOF") => {
     return new Intl.NumberFormat("fr-CI", {
@@ -58,7 +59,53 @@ export function TransactionsDashboard() {
     return format(new Date(dateString), "dd MMM yyyy à HH:mm", { locale: fr });
   };
 
-  const filteredTransactions = (transactions || []).filter((tx) => {
+  // Filter transactions by period
+  const periodTransactions = useMemo(() => {
+    if (!transactions) return [];
+    return transactions.filter((tx) => {
+      const txDate = new Date(tx.created_at);
+      return txDate >= period.from && txDate <= period.to;
+    });
+  }, [transactions, period]);
+
+  // Compute stats from period-filtered transactions
+  const stats = useMemo(() => {
+    const s = {
+      totalRevenue: 0,
+      totalTransactions: 0,
+      completedTransactions: 0,
+      failedTransactions: 0,
+      byPaymentMethod: {} as Record<string, { count: number; amount: number }>,
+      byPlan: {} as Record<string, { count: number; amount: number }>,
+    };
+
+    periodTransactions.forEach((tx) => {
+      s.totalTransactions++;
+      if (tx.status === "completed") {
+        s.completedTransactions++;
+        s.totalRevenue += tx.amount;
+
+        if (!s.byPaymentMethod[tx.payment_method]) {
+          s.byPaymentMethod[tx.payment_method] = { count: 0, amount: 0 };
+        }
+        s.byPaymentMethod[tx.payment_method].count++;
+        s.byPaymentMethod[tx.payment_method].amount += tx.amount;
+
+        const planName = tx.plan?.name || "Inconnu";
+        if (!s.byPlan[planName]) {
+          s.byPlan[planName] = { count: 0, amount: 0 };
+        }
+        s.byPlan[planName].count++;
+        s.byPlan[planName].amount += tx.amount;
+      } else if (tx.status === "failed") {
+        s.failedTransactions++;
+      }
+    });
+
+    return s;
+  }, [periodTransactions]);
+
+  const filteredTransactions = periodTransactions.filter((tx) => {
     const matchesSearch = 
       tx.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,10 +121,15 @@ export function TransactionsDashboard() {
   return (
     <div className="space-y-6">
       {/* Header with PDF Export */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-lg font-semibold">Tableau de bord des transactions</h2>
-        <MonthlyReportPDF />
+        <div className="flex items-center gap-4">
+          <MonthlyReportPDF />
+        </div>
       </div>
+
+      {/* Period Filter */}
+      <PeriodFilter value={period} onChange={setPeriod} />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -99,21 +151,11 @@ export function TransactionsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Ce mois-ci</p>
-                <p className="text-2xl font-bold">{formatPrice(stats.revenueThisMonth)}</p>
-                <div className="flex items-center gap-1 mt-1">
-                  {stats.growthRate >= 0 ? (
-                    <TrendingUp className="h-3 w-3 text-green-600" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-red-600" />
-                  )}
-                  <span className={cn(
-                    "text-xs font-medium",
-                    stats.growthRate >= 0 ? "text-green-600" : "text-red-600"
-                  )}>
-                    {stats.growthRate >= 0 ? "+" : ""}{stats.growthRate.toFixed(1)}%
-                  </span>
-                </div>
+                <p className="text-xs text-muted-foreground">Réussis</p>
+                <p className="text-2xl font-bold">{formatPrice(stats.totalRevenue)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.completedTransactions} transactions
+                </p>
               </div>
               <div className="p-2 bg-primary/10 rounded-lg">
                 <BarChart3 className="h-5 w-5 text-primary" />

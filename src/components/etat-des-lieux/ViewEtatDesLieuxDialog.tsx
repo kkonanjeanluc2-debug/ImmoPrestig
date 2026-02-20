@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -7,16 +8,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EtatDesLieux } from "@/hooks/useEtatsDesLieux";
 import { RoomInspectionForm } from "./RoomInspectionForm";
 import { KeysForm } from "./KeysForm";
-import { Zap, Droplets, Flame, Key, Home, Calendar, User } from "lucide-react";
+import { Zap, Droplets, Flame, Key, Home, Calendar, User, Download, Loader2 } from "lucide-react";
+import { generateEtatDesLieuxPDF } from "@/lib/generateEtatDesLieuxPDF";
+import { toast } from "sonner";
 
 interface ViewEtatDesLieuxDialogProps {
   etat: EtatDesLieux;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  tenantName?: string;
+  propertyTitle?: string;
+  unitNumber?: string;
 }
 
 const typeLabels: Record<string, string> = {
@@ -38,15 +45,51 @@ const conditionColors: Record<string, string> = {
   mauvais: "bg-red-500",
 };
 
-export function ViewEtatDesLieuxDialog({ etat, open, onOpenChange }: ViewEtatDesLieuxDialogProps) {
+export function ViewEtatDesLieuxDialog({ etat, open, onOpenChange, tenantName, propertyTitle, unitNumber }: ViewEtatDesLieuxDialogProps) {
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setIsGenerating(true);
+    try {
+      await generateEtatDesLieuxPDF({
+        etat,
+        tenantName: tenantName || "Locataire",
+        propertyTitle,
+        unitNumber,
+      });
+      toast.success("PDF généré avec succès");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <Home className="h-5 w-5" />
-            {typeLabels[etat.type]}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-3">
+              <Home className="h-5 w-5" />
+              {typeLabels[etat.type]}
+            </DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadPDF}
+              disabled={isGenerating}
+              className="gap-2"
+            >
+              {isGenerating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Télécharger PDF
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">

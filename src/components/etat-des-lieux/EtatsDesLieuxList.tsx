@@ -36,6 +36,9 @@ import { CompareEtatsDesLieuxDialog } from "./CompareEtatsDesLieuxDialog";
 interface EtatsDesLieuxListProps {
   etats: EtatDesLieux[];
   isLoading: boolean;
+  tenantName?: string;
+  propertyTitle?: string;
+  unitNumber?: string;
 }
 
 const typeLabels: Record<string, string> = {
@@ -67,7 +70,7 @@ const conditionLabels: Record<string, string> = {
   mauvais: "Mauvais",
 };
 
-export function EtatsDesLieuxList({ etats, isLoading }: EtatsDesLieuxListProps) {
+export function EtatsDesLieuxList({ etats, isLoading, tenantName, propertyTitle, unitNumber }: EtatsDesLieuxListProps) {
   const [viewingEtat, setViewingEtat] = useState<EtatDesLieux | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showCompare, setShowCompare] = useState(false);
@@ -187,6 +190,9 @@ export function EtatsDesLieuxList({ etats, isLoading }: EtatsDesLieuxListProps) 
           etat={viewingEtat}
           open={!!viewingEtat}
           onOpenChange={(open) => !open && setViewingEtat(null)}
+          tenantName={tenantName}
+          propertyTitle={propertyTitle}
+          unitNumber={unitNumber}
         />
       )}
 

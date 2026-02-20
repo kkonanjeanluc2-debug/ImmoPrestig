@@ -42,6 +42,7 @@ import { WhatsAppHistoryDialog } from "@/components/tenant/WhatsAppHistoryDialog
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
+import { generateAgencyFeesReceipt } from "@/lib/generateAgencyFeesReceipt";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
 import { TenantEtatsDesLieuxTab } from "@/components/etat-des-lieux/TenantEtatsDesLieuxTab";
@@ -88,6 +89,7 @@ const TenantDetails = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [whatsappHistoryOpen, setWhatsappHistoryOpen] = useState(false);
   const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null);
+  const [downloadingAgencyFees, setDownloadingAgencyFees] = useState(false);
   const [portalAccessDialogOpen, setPortalAccessDialogOpen] = useState(false);
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
   const revokeAccess = useRevokeTenantPortalAccess();
@@ -632,6 +634,65 @@ const TenantDetails = () => {
                       </div>
                     </>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Agency Fees */}
+            {tenant.agency_fees && Number(tenant.agency_fees) > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Euro className="h-5 w-5" />
+                    Frais d'agence
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Montant</span>
+                    <span className="font-bold text-foreground">
+                      {Number(tenant.agency_fees).toLocaleString('fr-FR')} F CFA
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    disabled={downloadingAgencyFees}
+                    onClick={async () => {
+                      setDownloadingAgencyFees(true);
+                      try {
+                        await generateAgencyFeesReceipt({
+                          tenantName: tenant.name,
+                          tenantEmail: tenant.email,
+                          propertyTitle: tenant.property?.title || "Bien immobilier",
+                          propertyAddress: tenant.property?.address,
+                          amount: Number(tenant.agency_fees),
+                          date: tenant.created_at,
+                          agency: agency ? {
+                            name: agency.name,
+                            email: agency.email,
+                            phone: agency.phone || undefined,
+                            address: agency.address || undefined,
+                            city: agency.city || undefined,
+                            country: agency.country || undefined,
+                            logo_url: agency.logo_url,
+                          } : undefined,
+                        });
+                      } catch {
+                        toast.error("Erreur lors de la génération du reçu");
+                      } finally {
+                        setDownloadingAgencyFees(false);
+                      }
+                    }}
+                  >
+                    {downloadingAgencyFees ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-2" />
+                    )}
+                    Télécharger le reçu
+                  </Button>
                 </CardContent>
               </Card>
             )}

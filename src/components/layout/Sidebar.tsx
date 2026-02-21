@@ -3,6 +3,7 @@ import {
   LayoutDashboard, 
   Users, 
   Wallet, 
+  AlertTriangle,
   Settings,
   Home,
   ChevronLeft,
@@ -69,6 +70,7 @@ const gestionLocativeItems = [
   { name: "Propriétaires", href: "/owners", icon: Home, hiddenForTenant: true, hiddenForGestionnaire: false },
   { name: "Contrats", href: "/contracts", icon: ScrollText, hiddenForTenant: false, hiddenForGestionnaire: true },
   { name: "Paiements", href: "/payments", icon: Wallet, hiddenForTenant: false, hiddenForGestionnaire: false },
+  { name: "Impayés", href: "/impayes", icon: AlertTriangle, hiddenForTenant: true, hiddenForGestionnaire: false },
 ];
 
 const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [

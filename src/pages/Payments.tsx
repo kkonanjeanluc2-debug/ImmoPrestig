@@ -26,7 +26,8 @@ import {
   Loader2,
   FileText,
   AlertCircle,
-  Percent
+  Percent,
+  AlertTriangle as AlertTriangleIcon
 } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
@@ -47,6 +48,7 @@ import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
+import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
 const statusConfig = {
   paid: { 
     label: "Payé", 
@@ -78,7 +80,7 @@ export default function Payments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [activeTab, setActiveTab] = useState<"payments" | "commissions" | "account">("payments");
+  const [activeTab, setActiveTab] = useState<"payments" | "impayes" | "commissions" | "account">("payments");
   const [periodFilter, setPeriodFilter] = useState<PeriodValue | undefined>(undefined);
   const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_payments");
@@ -260,7 +262,7 @@ export default function Payments() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "payments" | "commissions" | "account")}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "payments" | "impayes" | "commissions" | "account")}>
           <TabsList className="flex flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="payments" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Wallet className="h-4 w-4" />
@@ -268,6 +270,10 @@ export default function Payments() {
             </TabsTrigger>
             {showAdvancedTabs && (
               <>
+                <TabsTrigger value="impayes" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
+                  <AlertTriangleIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Impayés</span>
+                </TabsTrigger>
                 <TabsTrigger value="commissions" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
                   <Percent className="h-4 w-4" />
                   <span className="hidden sm:inline">Commissions</span>
@@ -657,6 +663,10 @@ export default function Payments() {
                 </Card>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="impayes" className="mt-6">
+            <UnpaidCasesList />
           </TabsContent>
 
           <TabsContent value="commissions" className="mt-6">

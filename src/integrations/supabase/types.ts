@@ -2887,6 +2887,135 @@ export type Database = {
           },
         ]
       }
+      unpaid_case_actions: {
+        Row: {
+          action_type: Database["public"]["Enums"]["unpaid_action_type"]
+          case_id: string
+          created_at: string
+          description: string
+          document_url: string | null
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["unpaid_action_type"]
+          case_id: string
+          created_at?: string
+          description: string
+          document_url?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["unpaid_action_type"]
+          case_id?: string
+          created_at?: string
+          description?: string
+          document_url?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unpaid_case_actions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "unpaid_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unpaid_cases: {
+        Row: {
+          amount_due: number
+          court_reference: string | null
+          created_at: string
+          days_late: number
+          due_date: string
+          formal_notice_date: string | null
+          id: string
+          judgment_date: string | null
+          lawyer_email: string | null
+          lawyer_name: string | null
+          lawyer_phone: string | null
+          legal_transmission_date: string | null
+          notes: string | null
+          payment_id: string | null
+          property_id: string | null
+          status: Database["public"]["Enums"]["unpaid_case_status"]
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_due?: number
+          court_reference?: string | null
+          created_at?: string
+          days_late?: number
+          due_date: string
+          formal_notice_date?: string | null
+          id?: string
+          judgment_date?: string | null
+          lawyer_email?: string | null
+          lawyer_name?: string | null
+          lawyer_phone?: string | null
+          legal_transmission_date?: string | null
+          notes?: string | null
+          payment_id?: string | null
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["unpaid_case_status"]
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_due?: number
+          court_reference?: string | null
+          created_at?: string
+          days_late?: number
+          due_date?: string
+          formal_notice_date?: string | null
+          id?: string
+          judgment_date?: string | null
+          lawyer_email?: string | null
+          lawyer_name?: string | null
+          lawyer_phone?: string | null
+          legal_transmission_date?: string | null
+          notes?: string | null
+          payment_id?: string | null
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["unpaid_case_status"]
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unpaid_cases_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unpaid_cases_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unpaid_cases_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -3336,6 +3465,25 @@ export type Database = {
         | "perdu"
         | "converti"
       sale_payment_status: "en_cours" | "complete" | "annule"
+      unpaid_action_type:
+        | "detection"
+        | "email_reminder"
+        | "whatsapp_reminder"
+        | "sms_reminder"
+        | "formal_notice"
+        | "legal_transmission"
+        | "status_update"
+        | "note"
+      unpaid_case_status:
+        | "detected"
+        | "reminded"
+        | "formal_notice"
+        | "legal_proceedings"
+        | "awaiting_judgment"
+        | "eviction_validated"
+        | "eviction_executed"
+        | "eviction_cancelled"
+        | "resolved"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3484,6 +3632,27 @@ export const Constants = {
         "converti",
       ],
       sale_payment_status: ["en_cours", "complete", "annule"],
+      unpaid_action_type: [
+        "detection",
+        "email_reminder",
+        "whatsapp_reminder",
+        "sms_reminder",
+        "formal_notice",
+        "legal_transmission",
+        "status_update",
+        "note",
+      ],
+      unpaid_case_status: [
+        "detected",
+        "reminded",
+        "formal_notice",
+        "legal_proceedings",
+        "awaiting_judgment",
+        "eviction_validated",
+        "eviction_executed",
+        "eviction_cancelled",
+        "resolved",
+      ],
     },
   },
 } as const

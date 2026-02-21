@@ -198,7 +198,7 @@ const PropertyDetails = () => {
             )}
 
             {/* Property Units (Multi-door management) */}
-            {property.type === "location" && (
+            {property.type === "location" && property.property_type === "maison" && (
               <Card>
                 <CardHeader>
                   <CardTitle>Gestion des portes</CardTitle>

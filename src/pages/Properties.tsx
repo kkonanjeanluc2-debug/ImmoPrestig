@@ -175,7 +175,7 @@ const Properties = () => {
                 <SelectItem value="all">Tous les types</SelectItem>
                 <SelectItem value="maison">Maison</SelectItem>
                 <SelectItem value="appartement">Appartement</SelectItem>
-                <SelectItem value="terrain">Terrain</SelectItem>
+                
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>

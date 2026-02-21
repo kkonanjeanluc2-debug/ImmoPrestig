@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +22,15 @@ import {
   CheckCircle,
   Clock,
   Mail,
-  MessageSquare,
   Filter,
+  TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUnpaidCases, STATUS_LABELS, type UnpaidCase } from "@/hooks/useUnpaidCases";
+import { usePayments } from "@/hooks/usePayments";
 import { UnpaidCaseDetailDialog } from "./UnpaidCaseDetailDialog";
 import { CreateUnpaidCaseDialog } from "./CreateUnpaidCaseDialog";
+import { differenceInDays } from "date-fns";
 
 const STATUS_CONFIG: Record<string, { icon: typeof AlertTriangle; className: string }> = {
   detected: { icon: AlertTriangle, className: "bg-red-500/10 text-red-500 border-red-500/20" },
@@ -42,12 +44,50 @@ const STATUS_CONFIG: Record<string, { icon: typeof AlertTriangle; className: str
   resolved: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
 };
 
+interface DetectedLatePayment {
+  id: string;
+  tenantName: string;
+  propertyTitle: string;
+  amount: number;
+  dueDate: string;
+  daysLate: number;
+  paymentId: string;
+  tenantId: string;
+  propertyId: string | null;
+}
+
 export function UnpaidCasesList() {
   const { data: cases, isLoading } = useUnpaidCases();
+  const { data: payments, isLoading: isLoadingPayments } = usePayments();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCase, setSelectedCase] = useState<UnpaidCase | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  // Auto-detect late payments not yet converted to unpaid cases
+  const latePaymentsDetected = useMemo<DetectedLatePayment[]>(() => {
+    if (!payments) return [];
+    const existingPaymentIds = new Set((cases || []).map(c => c.payment_id).filter(Boolean));
+    return payments.filter(p => {
+      if (existingPaymentIds.has(p.id)) return false;
+      if (p.status === "paid" || p.status === "cancelled") return false;
+      return new Date(p.due_date) < new Date();
+    }).map(p => {
+      const tenant = p.tenant as any;
+      const daysLate = differenceInDays(new Date(), new Date(p.due_date));
+      return {
+        id: p.id,
+        tenantName: tenant?.name || "Locataire inconnu",
+        propertyTitle: tenant?.property?.title || "Bien non assigné",
+        amount: Number(p.amount),
+        dueDate: p.due_date,
+        daysLate: Math.max(0, daysLate),
+        paymentId: p.id,
+        tenantId: p.tenant_id,
+        propertyId: tenant?.property_id || null,
+      };
+    });
+  }, [payments, cases]);
 
   const filteredCases = (cases || []).filter((c) => {
     const tenantName = c.tenant?.name || "";
@@ -59,15 +99,42 @@ export function UnpaidCasesList() {
     return matchesSearch && matchesStatus;
   });
 
+  const filteredDetected = latePaymentsDetected.filter(p => {
+    if (statusFilter !== "all" && statusFilter !== "detected_auto") return false;
+    return p.tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.propertyTitle.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   // Stats
-  const totalAmount = (cases || []).filter(c => c.status !== "resolved").reduce((s, c) => s + Number(c.amount_due), 0);
+  const totalCaseAmount = (cases || []).filter(c => c.status !== "resolved").reduce((s, c) => s + Number(c.amount_due), 0);
+  const totalDetectedAmount = latePaymentsDetected.reduce((s, p) => s + p.amount, 0);
+  const totalAmount = totalCaseAmount + totalDetectedAmount;
   const activeCount = (cases || []).filter(c => !["resolved", "eviction_cancelled"].includes(c.status)).length;
+  const detectedCount = latePaymentsDetected.length;
   const formalNoticeCount = (cases || []).filter(c => ["formal_notice", "legal_proceedings", "awaiting_judgment"].includes(c.status)).length;
+
+  const loading = isLoading || isLoadingPayments;
 
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <TrendingDown className="h-5 w-5 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Impayés détectés</p>
+              <p className="text-xl font-bold">{detectedCount}</p>
+              {detectedCount > 0 && (
+                <p className="text-xs text-orange-500 font-medium">
+                  {totalDetectedAmount.toLocaleString("fr-FR")} F CFA
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-red-500/10">
@@ -97,7 +164,7 @@ export function UnpaidCasesList() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Montant total impayé</p>
-              <p className="text-xl font-bold">{totalAmount.toLocaleString("fr-FR")} F CFA</p>
+              <p className="text-xl font-bold text-destructive">{totalAmount.toLocaleString("fr-FR")} F CFA</p>
             </div>
           </CardContent>
         </Card>
@@ -122,6 +189,7 @@ export function UnpaidCasesList() {
             </SelectTrigger>
             <SelectContent className="bg-background border shadow-lg z-50">
               <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="detected_auto">🔍 Détectés automatiquement</SelectItem>
               {Object.entries(STATUS_LABELS).map(([key, label]) => (
                 <SelectItem key={key} value={key}>{label}</SelectItem>
               ))}
@@ -134,21 +202,84 @@ export function UnpaidCasesList() {
         </Button>
       </div>
 
-      {/* List */}
-      {isLoading ? (
+      {/* Auto-detected late payments */}
+      {filteredDetected.length > 0 && (statusFilter === "all" || statusFilter === "detected_auto") && (
+        <Card className="border-orange-500/30">
+          <CardContent className="p-0">
+            <div className="p-4 border-b border-border bg-orange-500/5 rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <TrendingDown className="h-4 w-4 text-orange-500" />
+                <span className="text-sm font-semibold text-orange-600">
+                  Impayés détectés automatiquement ({filteredDetected.length})
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Paiements en retard non encore convertis en dossier de recouvrement
+              </p>
+            </div>
+            <div className="divide-y divide-border">
+              {filteredDetected.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 sm:p-5 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-orange-500/10">
+                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-foreground">{item.tenantName}</p>
+                          <Badge variant="outline" className="text-xs bg-orange-500/10 text-orange-500 border-orange-500/20">
+                            Non traité
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-0.5">{item.propertyTitle}</p>
+                        <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
+                          <span className="text-orange-500 font-medium">{item.daysLate} jour{item.daysLate > 1 ? "s" : ""} de retard</span>
+                          <span>•</span>
+                          <span>Échéance : {new Date(item.dueDate).toLocaleDateString("fr-FR")}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 pl-11 sm:pl-0">
+                      <span className="text-lg font-bold text-destructive whitespace-nowrap">
+                        {item.amount.toLocaleString("fr-FR")} F CFA
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setShowCreateDialog(true)}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Créer dossier
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Existing cases list */}
+      {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : filteredCases.length === 0 ? (
+      ) : filteredCases.length === 0 && filteredDetected.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
-              {cases?.length === 0 ? "Aucun dossier d'impayé" : "Aucun résultat trouvé"}
+              {(cases?.length === 0 && latePaymentsDetected.length === 0) ? "Aucun dossier d'impayé" : "Aucun résultat trouvé"}
             </p>
           </CardContent>
         </Card>
-      ) : (
+      ) : filteredCases.length > 0 ? (
         <Card>
           <CardContent className="p-0 divide-y divide-border">
             {filteredCases.map((unpaidCase) => {
@@ -197,7 +328,7 @@ export function UnpaidCasesList() {
             })}
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       {/* Dialogs */}
       {selectedCase && (

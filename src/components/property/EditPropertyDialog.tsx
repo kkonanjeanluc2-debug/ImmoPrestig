@@ -266,7 +266,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
             <Label htmlFor="title">Titre du bien *</Label>
             <Input
               id="title"
-              placeholder="Ex: Villa Belle Époque"
+              placeholder="Ex: Villa Les Palmiers"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
@@ -276,7 +276,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
             <Label htmlFor="address">Adresse *</Label>
             <Input
               id="address"
-              placeholder="Ex: 16 Avenue Foch, Paris 16ème"
+              placeholder="Ex: Cocody Riviera 3, Abidjan"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             />

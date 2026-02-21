@@ -185,12 +185,6 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
                     Maison à porte multiple
                   </div>
                 </SelectItem>
-                <SelectItem value="terrain">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Terrain
-                  </div>
-                </SelectItem>
               </SelectContent>
             </Select>
           </div>

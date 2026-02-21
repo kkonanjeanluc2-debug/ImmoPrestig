@@ -395,22 +395,6 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
                   </Button>
                 </div>
 
-                {/* Quick note */}
-                <div className="space-y-2">
-                  <Label>Ajouter une note</Label>
-                  <div className="flex gap-2">
-                    <Textarea
-                      placeholder="Écrire une note..."
-                      value={newNote}
-                      onChange={(e) => setNewNote(e.target.value)}
-                      rows={2}
-                      className="flex-1"
-                    />
-                    <Button size="icon" onClick={handleAddNote} disabled={!newNote.trim()}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
               </TabsContent>
 
               {/* Juridique Tab */}

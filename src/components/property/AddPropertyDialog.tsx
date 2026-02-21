@@ -182,7 +182,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
                 <SelectItem value="maison">
                   <div className="flex items-center gap-2">
                     <Home className="h-4 w-4" />
-                    Maison
+                    Maison à porte multiple
                   </div>
                 </SelectItem>
                 <SelectItem value="terrain">

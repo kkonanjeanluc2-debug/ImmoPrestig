@@ -109,7 +109,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.address || !formData.price || !formData.area) {
+    if (!formData.title || !formData.address || !formData.price) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -123,7 +123,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
         property_type: formData.property_type,
         bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
-        area: Number(formData.area),
+        area: formData.area ? Number(formData.area) : null,
         description: formData.description || null,
         image_url: formData.image_url || null,
         owner_id: formData.owner_id || null,
@@ -247,7 +247,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="area">Surface (m²) *</Label>
+              <Label htmlFor="area">Surface (m²)</Label>
               <Input
                 id="area"
                 type="number"

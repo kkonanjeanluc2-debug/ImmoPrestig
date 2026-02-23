@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -25,9 +25,10 @@ import { differenceInDays } from "date-fns";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preselectedTenantId?: string | null;
 }
 
-export function CreateUnpaidCaseDialog({ open, onOpenChange }: Props) {
+export function CreateUnpaidCaseDialog({ open, onOpenChange, preselectedTenantId }: Props) {
   const { data: payments } = usePayments();
   const { data: existingCases } = useUnpaidCases();
   const createCase = useCreateUnpaidCase();
@@ -40,11 +41,26 @@ export function CreateUnpaidCaseDialog({ open, onOpenChange }: Props) {
   );
 
   // Only show late/pending payments for tenants without an existing case
+  // If preselectedTenantId, filter to only that tenant
   const latePayments = (payments || []).filter(
     (p) =>
       (p.status === "late" || (p.status === "pending" && new Date(p.due_date) < new Date())) &&
-      !tenantIdsWithCase.has(p.tenant_id)
+      !tenantIdsWithCase.has(p.tenant_id) &&
+      (!preselectedTenantId || p.tenant_id === preselectedTenantId)
   );
+
+  const isPreselected = !!preselectedTenantId;
+
+  // Auto-select first payment when dialog opens with preselection
+  useEffect(() => {
+    if (open && preselectedTenantId && latePayments.length > 0) {
+      setSelectedPaymentId(latePayments[0].id);
+    }
+    if (!open) {
+      setSelectedPaymentId("");
+      setNotes("");
+    }
+  }, [open, preselectedTenantId]);
 
   const selectedPayment = latePayments.find((p) => p.id === selectedPaymentId);
   const tenant = selectedPayment?.tenant as any;
@@ -65,8 +81,6 @@ export function CreateUnpaidCaseDialog({ open, onOpenChange }: Props) {
         notes: notes || null,
       });
       toast.success("Dossier d'impayé créé avec succès");
-      setSelectedPaymentId("");
-      setNotes("");
       onOpenChange(false);
     } catch (err) {
       toast.error("Erreur lors de la création du dossier");
@@ -83,8 +97,8 @@ export function CreateUnpaidCaseDialog({ open, onOpenChange }: Props) {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Paiement en retard</Label>
-            <Select value={selectedPaymentId} onValueChange={setSelectedPaymentId}>
-              <SelectTrigger>
+            <Select value={selectedPaymentId} onValueChange={setSelectedPaymentId} disabled={isPreselected}>
+              <SelectTrigger disabled={isPreselected}>
                 <SelectValue placeholder="Sélectionner un paiement en retard" />
               </SelectTrigger>
               <SelectContent className="bg-background border shadow-lg z-50">

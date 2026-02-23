@@ -365,6 +365,8 @@ const Contracts = () => {
                 } : null,
                 rentType: contractToGenerate.property?.rent_type || "mensuel",
                 propertyType: contractToGenerate.property?.property_type || "appartement",
+                dailyRentDays: (contractToGenerate.property as any)?.daily_rent_days || null,
+                dailyRentDiscount: (contractToGenerate.property as any)?.daily_rent_discount || 0,
               }}
             />
           )}
@@ -800,6 +802,14 @@ const Contracts = () => {
               propertyType: (() => {
                 const property = properties?.find((p) => p.id === contractToGenerate.property_id);
                 return property?.property_type || "appartement";
+              })(),
+              dailyRentDays: (() => {
+                const property = properties?.find((p) => p.id === contractToGenerate.property_id);
+                return (property as any)?.daily_rent_days || null;
+              })(),
+              dailyRentDiscount: (() => {
+                const property = properties?.find((p) => p.id === contractToGenerate.property_id);
+                return (property as any)?.daily_rent_discount || 0;
               })(),
             }}
           />

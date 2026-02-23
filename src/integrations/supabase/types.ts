@@ -2206,6 +2206,8 @@ export type Database = {
           bathrooms: number | null
           bedrooms: number | null
           created_at: string
+          daily_rent_days: number | null
+          daily_rent_discount: number | null
           deleted_at: string | null
           description: string | null
           id: string
@@ -2229,6 +2231,8 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string
+          daily_rent_days?: number | null
+          daily_rent_discount?: number | null
           deleted_at?: string | null
           description?: string | null
           id?: string
@@ -2252,6 +2256,8 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string
+          daily_rent_days?: number | null
+          daily_rent_discount?: number | null
           deleted_at?: string | null
           description?: string | null
           id?: string

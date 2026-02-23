@@ -361,8 +361,10 @@ const Contracts = () => {
                   birth_place: contractToGenerate.property.owner.birth_place || undefined,
                   profession: contractToGenerate.property.owner.profession || undefined,
                   cni_number: contractToGenerate.property.owner.cni_number || undefined,
-                  management_type: contractToGenerate.property.owner.management_type || null,
+                   management_type: contractToGenerate.property.owner.management_type || null,
                 } : null,
+                rentType: contractToGenerate.property?.rent_type || "mensuel",
+                propertyType: contractToGenerate.property?.property_type || "appartement",
               }}
             />
           )}
@@ -790,6 +792,14 @@ const Contracts = () => {
                   }
                 }
                 return null;
+              })(),
+              rentType: (() => {
+                const property = properties?.find((p) => p.id === contractToGenerate.property_id);
+                return (property as any)?.rent_type || "mensuel";
+              })(),
+              propertyType: (() => {
+                const property = properties?.find((p) => p.id === contractToGenerate.property_id);
+                return property?.property_type || "appartement";
               })(),
             }}
           />

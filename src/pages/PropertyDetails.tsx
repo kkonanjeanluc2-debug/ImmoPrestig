@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useProperty, useDeleteProperty } from "@/hooks/useProperties";
+import { PropertyInventoryManager } from "@/components/property/PropertyInventoryManager";
 import { useOwners } from "@/hooks/useOwners";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -101,12 +102,14 @@ const PropertyDetails = () => {
     maison: "Maison",
     appartement: "Appartement",
     terrain: "Terrain",
+    meuble: "Location meublée",
   };
 
   const typeIcons: Record<string, React.ReactNode> = {
     maison: <Home className="h-5 w-5" />,
     appartement: <Building className="h-5 w-5" />,
     terrain: <Map className="h-5 w-5" />,
+    meuble: <Building className="h-5 w-5" />,
   };
 
   const defaultImage = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
@@ -205,6 +208,23 @@ const PropertyDetails = () => {
                 </CardHeader>
                 <CardContent>
                   <PropertyUnitsManager propertyId={property.id} canEdit={canEdit} />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Property Inventory (Furnished rental) */}
+            {property.property_type === "meuble" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Inventaire du mobilier</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PropertyInventoryManager
+                    propertyId={property.id}
+                    propertyTitle={property.title}
+                    propertyAddress={property.address}
+                    canEdit={canEdit}
+                  />
                 </CardContent>
               </Card>
             )}

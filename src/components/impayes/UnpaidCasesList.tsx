@@ -45,15 +45,14 @@ const STATUS_CONFIG: Record<string, { icon: typeof AlertTriangle; className: str
 };
 
 interface DetectedLatePayment {
-  id: string;
   tenantName: string;
   propertyTitle: string;
-  amount: number;
-  dueDate: string;
-  daysLate: number;
-  paymentId: string;
+  totalAmount: number;
+  maxDaysLate: number;
+  earliestDueDate: string;
   tenantId: string;
   propertyId: string | null;
+  payments: { id: string; amount: number; dueDate: string }[];
 }
 
 export function UnpaidCasesList() {
@@ -63,30 +62,46 @@ export function UnpaidCasesList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCase, setSelectedCase] = useState<UnpaidCase | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [preselectedTenantId, setPreselectedTenantId] = useState<string | null>(null);
 
   // Auto-detect late payments not yet converted to unpaid cases
   const latePaymentsDetected = useMemo<DetectedLatePayment[]>(() => {
     if (!payments) return [];
     const existingPaymentIds = new Set((cases || []).map(c => c.payment_id).filter(Boolean));
-    return payments.filter(p => {
+    const tenantIdsWithCase = new Set((cases || []).map(c => c.tenant_id));
+    
+    const latePayments = payments.filter(p => {
       if (existingPaymentIds.has(p.id)) return false;
+      if (tenantIdsWithCase.has(p.tenant_id)) return false;
       if (p.status === "paid" || p.status === "cancelled") return false;
       return new Date(p.due_date) < new Date();
-    }).map(p => {
-      const tenant = p.tenant as any;
-      const daysLate = differenceInDays(new Date(), new Date(p.due_date));
-      return {
-        id: p.id,
-        tenantName: tenant?.name || "Locataire inconnu",
-        propertyTitle: tenant?.property?.title || "Bien non assigné",
-        amount: Number(p.amount),
-        dueDate: p.due_date,
-        daysLate: Math.max(0, daysLate),
-        paymentId: p.id,
-        tenantId: p.tenant_id,
-        propertyId: tenant?.property_id || null,
-      };
     });
+
+    // Group by tenant
+    const grouped = new Map<string, DetectedLatePayment>();
+    for (const p of latePayments) {
+      const tenant = p.tenant as any;
+      const daysLate = Math.max(0, differenceInDays(new Date(), new Date(p.due_date)));
+      const existing = grouped.get(p.tenant_id);
+      if (existing) {
+        existing.totalAmount += Number(p.amount);
+        existing.maxDaysLate = Math.max(existing.maxDaysLate, daysLate);
+        if (p.due_date < existing.earliestDueDate) existing.earliestDueDate = p.due_date;
+        existing.payments.push({ id: p.id, amount: Number(p.amount), dueDate: p.due_date });
+      } else {
+        grouped.set(p.tenant_id, {
+          tenantName: tenant?.name || "Locataire inconnu",
+          propertyTitle: tenant?.property?.title || "Bien non assigné",
+          totalAmount: Number(p.amount),
+          maxDaysLate: daysLate,
+          earliestDueDate: p.due_date,
+          tenantId: p.tenant_id,
+          propertyId: tenant?.property_id || null,
+          payments: [{ id: p.id, amount: Number(p.amount), dueDate: p.due_date }],
+        });
+      }
+    }
+    return Array.from(grouped.values());
   }, [payments, cases]);
 
   const filteredCases = (cases || []).filter((c) => {
@@ -107,7 +122,7 @@ export function UnpaidCasesList() {
 
   // Stats
   const totalCaseAmount = (cases || []).filter(c => c.status !== "resolved").reduce((s, c) => s + Number(c.amount_due), 0);
-  const totalDetectedAmount = latePaymentsDetected.reduce((s, p) => s + p.amount, 0);
+  const totalDetectedAmount = latePaymentsDetected.reduce((s, p) => s + p.totalAmount, 0);
   const totalAmount = totalCaseAmount + totalDetectedAmount;
   const activeCount = (cases || []).filter(c => !["resolved", "eviction_cancelled"].includes(c.status)).length;
   const detectedCount = latePaymentsDetected.length;
@@ -220,7 +235,7 @@ export function UnpaidCasesList() {
             <div className="divide-y divide-border">
               {filteredDetected.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.tenantId}
                   className="p-4 sm:p-5 hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -234,24 +249,32 @@ export function UnpaidCasesList() {
                           <Badge variant="outline" className="text-xs bg-orange-500/10 text-orange-500 border-orange-500/20">
                             Non traité
                           </Badge>
+                          {item.payments.length > 1 && (
+                            <Badge variant="outline" className="text-xs">
+                              {item.payments.length} paiements
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground mt-0.5">{item.propertyTitle}</p>
                         <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
-                          <span className="text-orange-500 font-medium">{item.daysLate} jour{item.daysLate > 1 ? "s" : ""} de retard</span>
+                          <span className="text-orange-500 font-medium">{item.maxDaysLate} jour{item.maxDaysLate > 1 ? "s" : ""} de retard</span>
                           <span>•</span>
-                          <span>Échéance : {new Date(item.dueDate).toLocaleDateString("fr-FR")}</span>
+                          <span>Échéance : {new Date(item.earliestDueDate).toLocaleDateString("fr-FR")}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 pl-11 sm:pl-0">
                       <span className="text-lg font-bold text-destructive whitespace-nowrap">
-                        {item.amount.toLocaleString("fr-FR")} F CFA
+                        {item.totalAmount.toLocaleString("fr-FR")} F CFA
                       </span>
                       <Button
                         variant="outline"
                         size="sm"
                         className="text-xs"
-                        onClick={() => setShowCreateDialog(true)}
+                        onClick={() => {
+                          setPreselectedTenantId(item.tenantId);
+                          setShowCreateDialog(true);
+                        }}
                       >
                         <Plus className="h-3 w-3 mr-1" />
                         Créer dossier
@@ -340,7 +363,11 @@ export function UnpaidCasesList() {
       )}
       <CreateUnpaidCaseDialog
         open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
+        onOpenChange={(open) => {
+          setShowCreateDialog(open);
+          if (!open) setPreselectedTenantId(null);
+        }}
+        preselectedTenantId={preselectedTenantId}
       />
     </div>
   );

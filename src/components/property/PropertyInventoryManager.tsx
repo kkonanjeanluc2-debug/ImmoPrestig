@@ -215,9 +215,11 @@ export const PropertyInventoryManager = ({
                     <Button variant="ghost" size="icon" onClick={() => setViewingInventory(inv)} title="Voir">
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setSigningInventory(inv)} title="Signer">
-                      <PenTool className="h-4 w-4" />
-                    </Button>
+                    {tenantName && (
+                      <Button variant="ghost" size="icon" onClick={() => setSigningInventory(inv)} title="Signer">
+                        <PenTool className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => handleExportPDF(inv)} title="Exporter PDF">
                       <FileDown className="h-4 w-4" />
                     </Button>

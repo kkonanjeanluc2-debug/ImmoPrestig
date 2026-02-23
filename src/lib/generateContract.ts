@@ -62,6 +62,8 @@ interface ContractData {
   signatures?: SignatureInfo[];
   rentType?: string; // "mensuel" or "journalier"
   propertyType?: string; // "meuble", "appartement", etc.
+  dailyRentDays?: number | null;
+  dailyRentDiscount?: number | null;
 }
 
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -214,6 +216,13 @@ export const replaceContractVariables = (
     // Rent type info
     "{type_loyer}": data.rentType === "journalier" ? "journalier" : "mensuel",
     "{loyer_label}": data.rentType === "journalier" ? "Loyer journalier" : "Loyer mensuel",
+    "{nombre_jours}": data.dailyRentDays ? data.dailyRentDays.toString() : "",
+    "{reduction}": data.dailyRentDiscount ? data.dailyRentDiscount.toString() + "%" : "0%",
+    "{montant_total}": data.rentType === "journalier" && data.dailyRentDays
+      ? formatAmountWithCurrency(
+          Math.round(data.rentAmount * data.dailyRentDays * (1 - (data.dailyRentDiscount || 0) / 100))
+        )
+      : "",
     
     // Financial info
     "{loyer}": formatAmountWithCurrency(data.rentAmount),

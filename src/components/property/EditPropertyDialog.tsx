@@ -27,6 +27,8 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
     type: "location",
     property_type: "appartement",
     rent_type: "mensuel",
+    daily_rent_days: "",
+    daily_rent_discount: "",
     bedrooms: "",
     bathrooms: "",
     area: "",
@@ -52,6 +54,8 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         type: property.type || "location",
         property_type: property.property_type || "appartement",
         rent_type: (property as any).rent_type || "mensuel",
+        daily_rent_days: (property as any).daily_rent_days?.toString() || "",
+        daily_rent_discount: (property as any).daily_rent_discount?.toString() || "0",
         bedrooms: property.bedrooms?.toString() || "",
         bathrooms: property.bathrooms?.toString() || "",
         area: property.area?.toString() || "",
@@ -132,6 +136,8 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         type: formData.type,
         property_type: formData.property_type,
         rent_type: formData.property_type === "meuble" ? formData.rent_type : "mensuel",
+        daily_rent_days: formData.rent_type === "journalier" && formData.daily_rent_days ? Number(formData.daily_rent_days) : null,
+        daily_rent_discount: formData.rent_type === "journalier" && formData.daily_rent_discount ? Number(formData.daily_rent_discount) : 0,
         bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
         area: Number(formData.area),
@@ -300,6 +306,34 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
                   <SelectItem value="journalier">Loyer journalier</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {formData.property_type === "meuble" && formData.rent_type === "journalier" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="daily_rent_days">Nombre de jours</Label>
+                <Input
+                  id="daily_rent_days"
+                  type="number"
+                  placeholder="Ex: 30"
+                  min="1"
+                  value={formData.daily_rent_days}
+                  onChange={(e) => setFormData({ ...formData, daily_rent_days: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="daily_rent_discount">Réduction (%)</Label>
+                <Input
+                  id="daily_rent_discount"
+                  type="number"
+                  placeholder="Ex: 10"
+                  min="0"
+                  max="100"
+                  value={formData.daily_rent_discount}
+                  onChange={(e) => setFormData({ ...formData, daily_rent_discount: e.target.value })}
+                />
+              </div>
             </div>
           )}
 

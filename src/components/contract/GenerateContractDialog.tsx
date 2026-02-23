@@ -75,6 +75,8 @@ interface ContractData {
   owner?: OwnerData | null;
   rentType?: string;
   propertyType?: string;
+  dailyRentDays?: number | null;
+  dailyRentDiscount?: number | null;
 }
 
 interface GenerateContractDialogProps {
@@ -158,6 +160,8 @@ export function GenerateContractDialog({
     signatures: pdfSignatures,
     rentType: contractData.rentType,
     propertyType: contractData.propertyType,
+    dailyRentDays: contractData.dailyRentDays,
+    dailyRentDiscount: contractData.dailyRentDiscount,
   };
 
   const handleDownload = async () => {
@@ -317,6 +321,22 @@ export function GenerateContractDialog({
               <span className="font-medium text-foreground">
                 {contractData.rentAmount.toLocaleString("fr-FR")} FCFA{contractData.rentType === "journalier" ? " /jour" : ""}
               </span>
+              {contractData.rentType === "journalier" && contractData.dailyRentDays && (
+                <>
+                  <span>Nombre de jours :</span>
+                  <span className="font-medium text-foreground">{contractData.dailyRentDays} jours</span>
+                  {contractData.dailyRentDiscount ? (
+                    <>
+                      <span>Réduction :</span>
+                      <span className="font-medium text-foreground">{contractData.dailyRentDiscount}%</span>
+                    </>
+                  ) : null}
+                  <span>Montant total :</span>
+                  <span className="font-medium text-foreground">
+                    {Math.round(contractData.rentAmount * contractData.dailyRentDays * (1 - (contractData.dailyRentDiscount || 0) / 100)).toLocaleString("fr-FR")} FCFA
+                  </span>
+                </>
+              )}
               <span>Période :</span>
               <span className="font-medium text-foreground">
                 Du {new Date(contractData.startDate).toLocaleDateString("fr-FR")}{" "}

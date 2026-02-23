@@ -187,18 +187,18 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     }
   }, [watchedRentAmount, form, selectedProperty?.property_type, rentType]);
 
-  // Auto-calculate daily rent days from start_date and end_date
+  // Auto-calculate end_date from start_date + dailyRentDays
   useEffect(() => {
-    if (selectedProperty?.property_type === "meuble" && rentType === "journalier" && watchedStartDate && watchedEndDate) {
-      const start = new Date(watchedStartDate);
-      const end = new Date(watchedEndDate);
-      const diffTime = end.getTime() - start.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 0) {
-        setDailyRentDays(String(diffDays));
+    if (selectedProperty?.property_type === "meuble" && rentType === "journalier" && watchedStartDate && dailyRentDays) {
+      const days = parseInt(dailyRentDays);
+      if (days > 0) {
+        const start = new Date(watchedStartDate);
+        start.setDate(start.getDate() + days);
+        const endStr = start.toISOString().split("T")[0];
+        form.setValue("end_date", endStr);
       }
     }
-  }, [watchedStartDate, watchedEndDate, selectedProperty?.property_type, rentType]);
+  }, [watchedStartDate, dailyRentDays, selectedProperty?.property_type, rentType, form]);
 
   // Calculate total amount for daily rentals
   const dailyTotal = (() => {
@@ -765,17 +765,15 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Nombre de jours</Label>
+                        <Label>Nombre de jours *</Label>
                         <Input
                           type="number"
-                          placeholder="Auto-calculé"
+                          placeholder="Ex: 3"
                           min="1"
                           value={dailyRentDays}
                           onChange={(e) => setDailyRentDays(e.target.value)}
-                          readOnly
-                          className="bg-muted"
                         />
-                        <p className="text-xs text-muted-foreground">Calculé selon les dates</p>
+                        <p className="text-xs text-muted-foreground">La date de fin sera auto-calculée</p>
                       </div>
                       <div className="space-y-2">
                         <Label>Réduction (%)</Label>

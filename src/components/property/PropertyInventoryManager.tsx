@@ -30,6 +30,7 @@ import {
   FileDown,
   Eye,
   Package,
+  PenTool,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -45,6 +46,7 @@ import {
   type InventoryItem,
 } from "@/hooks/usePropertyInventory";
 import { generateInventoryPDF } from "@/lib/generateInventoryPDF";
+import { SignInventoryDialog } from "./SignInventoryDialog";
 
 const ROOMS = [
   "Salon",
@@ -111,6 +113,7 @@ interface PropertyInventoryManagerProps {
   propertyTitle: string;
   propertyAddress: string;
   canEdit: boolean;
+  tenantName?: string;
 }
 
 export const PropertyInventoryManager = ({
@@ -118,6 +121,7 @@ export const PropertyInventoryManager = ({
   propertyTitle,
   propertyAddress,
   canEdit,
+  tenantName,
 }: PropertyInventoryManagerProps) => {
   const { data: inventories = [], isLoading } = usePropertyInventories(propertyId);
   const createInventory = useCreatePropertyInventory();
@@ -125,6 +129,7 @@ export const PropertyInventoryManager = ({
   const bulkCreate = useBulkCreateInventoryItems();
   const [viewingInventory, setViewingInventory] = useState<PropertyInventory | null>(null);
   const [deletingInventory, setDeletingInventory] = useState<PropertyInventory | null>(null);
+  const [signingInventory, setSigningInventory] = useState<PropertyInventory | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const handleDeleteInventory = async () => {
@@ -207,14 +212,17 @@ export const PropertyInventoryManager = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => setViewingInventory(inv)}>
+                    <Button variant="ghost" size="icon" onClick={() => setViewingInventory(inv)} title="Voir">
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleExportPDF(inv)}>
+                    <Button variant="ghost" size="icon" onClick={() => setSigningInventory(inv)} title="Signer">
+                      <PenTool className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleExportPDF(inv)} title="Exporter PDF">
                       <FileDown className="h-4 w-4" />
                     </Button>
                     {canEdit && (
-                      <Button variant="ghost" size="icon" onClick={() => setDeletingInventory(inv)}>
+                      <Button variant="ghost" size="icon" onClick={() => setDeletingInventory(inv)} title="Supprimer">
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     )}
@@ -242,6 +250,17 @@ export const PropertyInventoryManager = ({
           open={!!viewingInventory}
           onOpenChange={(open) => !open && setViewingInventory(null)}
           canEdit={canEdit}
+        />
+      )}
+
+      {/* Sign Inventory Dialog */}
+      {signingInventory && (
+        <SignInventoryDialog
+          inventory={signingInventory}
+          open={!!signingInventory}
+          onOpenChange={(open) => !open && setSigningInventory(null)}
+          propertyTitle={propertyTitle}
+          tenantName={tenantName}
         />
       )}
 

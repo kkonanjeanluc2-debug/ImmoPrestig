@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useProperty, useDeleteProperty } from "@/hooks/useProperties";
+import { useContracts } from "@/hooks/useContracts";
 import { PropertyInventoryManager } from "@/components/property/PropertyInventoryManager";
 import { useOwners } from "@/hooks/useOwners";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ const PropertyDetails = () => {
   const navigate = useNavigate();
   const { data: property, isLoading, error } = useProperty(id || "");
   const { data: owners = [] } = useOwners();
+  const { data: contracts = [] } = useContracts();
   const deleteProperty = useDeleteProperty();
   const { canEdit, canDelete } = usePermissions();
   const { generateMessage } = useWhatsAppPropertyMessage();
@@ -55,6 +57,8 @@ const PropertyDetails = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const owner = property?.owner_id ? owners.find(o => o.id === property.owner_id) : null;
+  const activeContract = property ? contracts.find(c => c.property_id === property.id && c.status === "actif") : null;
+  const tenantName = activeContract?.tenant ? (activeContract.tenant as any).name : undefined;
 
   const handleDelete = async () => {
     if (!property) return;
@@ -224,6 +228,7 @@ const PropertyDetails = () => {
                     propertyTitle={property.title}
                     propertyAddress={property.address}
                     canEdit={canEdit}
+                    tenantName={tenantName}
                   />
                 </CardContent>
               </Card>

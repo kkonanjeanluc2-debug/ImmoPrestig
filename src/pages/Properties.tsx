@@ -141,7 +141,7 @@ const Properties = () => {
               columns={[
                 { key: 'title', label: 'Titre' },
                 { key: 'address', label: 'Adresse' },
-                { key: 'property_type', label: 'Type', format: (v) => v === 'maison' ? 'Maison' : v === 'appartement' ? 'Appartement' : 'Terrain' },
+                { key: 'property_type', label: 'Type', format: (v) => v === 'maison' ? 'Maison' : v === 'appartement' ? 'Appartement' : v === 'meuble' ? 'Location meublée' : 'Terrain' },
                 { key: 'type', label: 'Mode', format: (v) => v === 'location' ? 'Location' : 'Vente' },
                 { key: 'price', label: 'Prix (F CFA)', format: (v) => Number(v).toString() },
                 { key: 'area', label: 'Surface (m²)', format: (v) => v ? Number(v).toString() : '' },
@@ -175,6 +175,7 @@ const Properties = () => {
                 <SelectItem value="all">Tous les types</SelectItem>
                 <SelectItem value="maison">Maison</SelectItem>
                 <SelectItem value="appartement">Appartement</SelectItem>
+                <SelectItem value="meuble">Location meublée</SelectItem>
                 
               </SelectContent>
             </Select>

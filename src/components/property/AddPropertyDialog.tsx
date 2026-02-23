@@ -185,6 +185,12 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
                     Maison à porte multiple
                   </div>
                 </SelectItem>
+                <SelectItem value="meuble">
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    Location meublée
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

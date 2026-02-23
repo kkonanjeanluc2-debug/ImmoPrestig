@@ -303,11 +303,14 @@ export const generateContractPDF = async (
     yPos += 10;
   }
   
-  // Title
+  // Title - detect furnished type from property title or template content
+  const isFurnished = templateContent.toLowerCase().includes("meublé") || templateContent.toLowerCase().includes("meublee") || templateContent.toLowerCase().includes("inventaire");
+  const contractTitle = isFurnished ? "CONTRAT DE LOCATION MEUBLÉE" : "CONTRAT DE LOCATION";
+  
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("CONTRAT DE LOCATION", pageWidth / 2, yPos, { align: "center" });
+  doc.text(contractTitle, pageWidth / 2, yPos, { align: "center" });
   
   yPos += 15;
   

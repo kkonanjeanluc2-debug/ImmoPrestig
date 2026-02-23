@@ -1112,6 +1112,59 @@ export type Database = {
           },
         ]
       }
+      inventory_items: {
+        Row: {
+          brand: string | null
+          condition: string
+          created_at: string
+          id: string
+          inventory_id: string
+          item_name: string
+          model: string | null
+          observations: string | null
+          quantity: number
+          room: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          condition?: string
+          created_at?: string
+          id?: string
+          inventory_id: string
+          item_name: string
+          model?: string | null
+          observations?: string | null
+          quantity?: number
+          room: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          condition?: string
+          created_at?: string
+          id?: string
+          inventory_id?: string
+          item_name?: string
+          model?: string | null
+          observations?: string | null
+          quantity?: number
+          room?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "property_inventories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lotissement_documents: {
         Row: {
           created_at: string
@@ -2318,6 +2371,82 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_inventories: {
+        Row: {
+          contract_id: string | null
+          created_at: string
+          general_notes: string | null
+          id: string
+          inventory_date: string
+          landlord_signature: string | null
+          landlord_signed_at: string | null
+          property_id: string
+          status: string
+          tenant_id: string | null
+          tenant_signature: string | null
+          tenant_signed_at: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contract_id?: string | null
+          created_at?: string
+          general_notes?: string | null
+          id?: string
+          inventory_date?: string
+          landlord_signature?: string | null
+          landlord_signed_at?: string | null
+          property_id: string
+          status?: string
+          tenant_id?: string | null
+          tenant_signature?: string | null
+          tenant_signed_at?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contract_id?: string | null
+          created_at?: string
+          general_notes?: string | null
+          id?: string
+          inventory_date?: string
+          landlord_signature?: string | null
+          landlord_signed_at?: string | null
+          property_id?: string
+          status?: string
+          tenant_id?: string | null
+          tenant_signature?: string | null
+          tenant_signed_at?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_inventories_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_inventories_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_inventories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]

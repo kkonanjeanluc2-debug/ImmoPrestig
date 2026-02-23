@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2, Calendar } from "lucide-react";
@@ -79,6 +80,9 @@ interface AddTenantDialogProps {
 export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
+  const [rentType, setRentType] = useState<string>("mensuel");
+  const [dailyRentDays, setDailyRentDays] = useState<string>("");
+  const [dailyRentDiscount, setDailyRentDiscount] = useState<string>("0");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdContractData, setCreatedContractData] = useState<{
     tenantName: string;
@@ -130,6 +134,9 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     if (isOpen) {
       refetchProperties();
       setSelectedPropertyId("");
+      setRentType("mensuel");
+      setDailyRentDays("");
+      setDailyRentDiscount("0");
     }
   };
 
@@ -246,6 +253,16 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         });
       }
 
+      // Update property with rent type info if furnished
+      if (selectedProp?.property_type === "meuble") {
+        await updateProperty.mutateAsync({
+          id: values.property_id,
+          rent_type: rentType,
+          daily_rent_days: rentType === "journalier" && dailyRentDays ? Number(dailyRentDays) : null,
+          daily_rent_discount: rentType === "journalier" && dailyRentDiscount ? Number(dailyRentDiscount) : 0,
+        });
+      }
+
       // Update unit status to 'loué' if a unit was selected
       if (unitId) {
         await updatePropertyUnit.mutateAsync({
@@ -302,6 +319,9 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       toast.success("Locataire et contrat créés avec succès");
       form.reset();
       setSelectedPropertyId("");
+      setRentType("mensuel");
+      setDailyRentDays("");
+      setDailyRentDiscount("0");
       setOpen(false);
       setShowSuccessDialog(true);
       onSuccess?.();
@@ -693,6 +713,52 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                   </p>
                 </div>
               )}
+
+            {/* Rent Type for furnished properties */}
+            {selectedProperty?.property_type === "meuble" && (
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="text-sm font-medium text-muted-foreground">Type de loyer</h3>
+                
+                <div className="space-y-2">
+                  <Label>Loyer mensuel ou journalier *</Label>
+                  <Select value={rentType} onValueChange={setRentType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border z-50">
+                      <SelectItem value="mensuel">Loyer mensuel</SelectItem>
+                      <SelectItem value="journalier">Loyer journalier</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {rentType === "journalier" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Nombre de jours</Label>
+                      <Input
+                        type="number"
+                        placeholder="Ex: 30"
+                        min="1"
+                        value={dailyRentDays}
+                        onChange={(e) => setDailyRentDays(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Réduction (%)</Label>
+                      <Input
+                        type="number"
+                        placeholder="Ex: 10"
+                        min="0"
+                        max="100"
+                        value={dailyRentDiscount}
+                        onChange={(e) => setDailyRentDiscount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             </div>
 
             {/* Contract Details */}
@@ -735,7 +801,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                   name="rent_amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Loyer mensuel (F CFA) *</FormLabel>
+                      <FormLabel>{selectedProperty?.property_type === "meuble" && rentType === "journalier" ? "Loyer journalier (F CFA) *" : "Loyer mensuel (F CFA) *"}</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="150000" {...field} />
                       </FormControl>

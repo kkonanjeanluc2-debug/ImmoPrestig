@@ -166,6 +166,8 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   // Watch property_id to load units
   const watchedPropertyId = form.watch("property_id");
   const watchedRentAmount = form.watch("rent_amount");
+  const watchedStartDate = form.watch("start_date");
+  const watchedEndDate = form.watch("end_date");
   
   useEffect(() => {
     if (watchedPropertyId && watchedPropertyId !== selectedPropertyId) {
@@ -174,13 +176,40 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     }
   }, [watchedPropertyId, selectedPropertyId, form]);
 
-  // Auto-fill deposit = 2 * rent_amount
+  // Auto-fill deposit = 2 * rent_amount (only for non-daily rentals)
   useEffect(() => {
     const rent = parseFloat(watchedRentAmount);
-    if (!isNaN(rent) && rent > 0) {
+    const isDaily = selectedProperty?.property_type === "meuble" && rentType === "journalier";
+    if (isDaily) {
+      form.setValue("deposit", "0");
+    } else if (!isNaN(rent) && rent > 0) {
       form.setValue("deposit", String(rent * 2));
     }
-  }, [watchedRentAmount, form]);
+  }, [watchedRentAmount, form, selectedProperty?.property_type, rentType]);
+
+  // Auto-calculate daily rent days from start_date and end_date
+  useEffect(() => {
+    if (selectedProperty?.property_type === "meuble" && rentType === "journalier" && watchedStartDate && watchedEndDate) {
+      const start = new Date(watchedStartDate);
+      const end = new Date(watchedEndDate);
+      const diffTime = end.getTime() - start.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) {
+        setDailyRentDays(String(diffDays));
+      }
+    }
+  }, [watchedStartDate, watchedEndDate, selectedProperty?.property_type, rentType]);
+
+  // Calculate total amount for daily rentals
+  const dailyTotal = (() => {
+    const rent = parseFloat(watchedRentAmount);
+    const days = parseInt(dailyRentDays);
+    const discount = parseFloat(dailyRentDiscount) || 0;
+    if (!isNaN(rent) && !isNaN(days) && days > 0 && rent > 0) {
+      return Math.round(rent * days * (1 - discount / 100));
+    }
+    return 0;
+  })();
 
   const isSubmitting = createTenant.isPending || createContract.isPending || updateProperty.isPending || updatePropertyUnit.isPending;
 
@@ -733,28 +762,51 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                 </div>
 
                 {rentType === "journalier" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Nombre de jours</Label>
-                      <Input
-                        type="number"
-                        placeholder="Ex: 30"
-                        min="1"
-                        value={dailyRentDays}
-                        onChange={(e) => setDailyRentDays(e.target.value)}
-                      />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Nombre de jours</Label>
+                        <Input
+                          type="number"
+                          placeholder="Auto-calculé"
+                          min="1"
+                          value={dailyRentDays}
+                          onChange={(e) => setDailyRentDays(e.target.value)}
+                          readOnly
+                          className="bg-muted"
+                        />
+                        <p className="text-xs text-muted-foreground">Calculé selon les dates</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Réduction (%)</Label>
+                        <Input
+                          type="number"
+                          placeholder="Ex: 10"
+                          min="0"
+                          max="100"
+                          value={dailyRentDiscount}
+                          onChange={(e) => setDailyRentDiscount(e.target.value)}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Réduction (%)</Label>
-                      <Input
-                        type="number"
-                        placeholder="Ex: 10"
-                        min="0"
-                        max="100"
-                        value={dailyRentDiscount}
-                        onChange={(e) => setDailyRentDiscount(e.target.value)}
-                      />
-                    </div>
+                    {dailyTotal > 0 && (
+                      <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>{dailyRentDays} jours × {parseFloat(watchedRentAmount || "0").toLocaleString("fr-FR")} F CFA</span>
+                          <span>{(parseInt(dailyRentDays) * parseFloat(watchedRentAmount || "0")).toLocaleString("fr-FR")} F CFA</span>
+                        </div>
+                        {parseFloat(dailyRentDiscount) > 0 && (
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Réduction ({dailyRentDiscount}%)</span>
+                            <span>-{Math.round(parseInt(dailyRentDays) * parseFloat(watchedRentAmount || "0") * parseFloat(dailyRentDiscount) / 100).toLocaleString("fr-FR")} F CFA</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between font-semibold text-foreground border-t pt-1">
+                          <span>Montant total</span>
+                          <span>{dailyTotal.toLocaleString("fr-FR")} F CFA</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -795,38 +847,54 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {selectedProperty?.property_type === "meuble" && rentType === "journalier" ? (
                 <FormField
                   control={form.control}
                   name="rent_amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{selectedProperty?.property_type === "meuble" && rentType === "journalier" ? "Loyer journalier (F CFA) *" : "Loyer mensuel (F CFA) *"}</FormLabel>
+                      <FormLabel>Loyer journalier (F CFA) *</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="150000" {...field} />
+                        <Input type="number" placeholder="50000" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="rent_amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Loyer mensuel (F CFA) *</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="150000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="deposit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Caution (F CFA)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="300000" {...field} />
-                      </FormControl>
-                      <p className="text-xs text-muted-foreground">
-                        Conformément à la loi ivoirienne (Loi n° 2019-576), la caution ne peut excéder 2 mois de loyer.
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                  <FormField
+                    control={form.control}
+                    name="deposit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Caution (F CFA)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="300000" {...field} />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          Conformément à la loi ivoirienne (Loi n° 2019-576), la caution ne peut excéder 2 mois de loyer.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
 
               <FormField
                 control={form.control}

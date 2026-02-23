@@ -26,6 +26,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
     price: "",
     type: "location",
     property_type: "appartement",
+    rent_type: "mensuel",
     bedrooms: "",
     bathrooms: "",
     area: "",
@@ -50,6 +51,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         price: property.price?.toString() || "",
         type: property.type || "location",
         property_type: property.property_type || "appartement",
+        rent_type: (property as any).rent_type || "mensuel",
         bedrooms: property.bedrooms?.toString() || "",
         bathrooms: property.bathrooms?.toString() || "",
         area: property.area?.toString() || "",
@@ -129,6 +131,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         price: Number(formData.price),
         type: formData.type,
         property_type: formData.property_type,
+        rent_type: formData.property_type === "meuble" ? formData.rent_type : "mensuel",
         bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
         area: Number(formData.area),
@@ -282,10 +285,30 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
             />
           </div>
 
+          {formData.property_type === "meuble" && (
+            <div className="space-y-2 col-span-2">
+              <Label>Type de loyer *</Label>
+              <Select
+                value={formData.rent_type}
+                onValueChange={(value) => setFormData({ ...formData, rent_type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mensuel">Loyer mensuel</SelectItem>
+                  <SelectItem value="journalier">Loyer journalier</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">
-                {formData.type === "location" ? "Loyer mensuel (F CFA) *" : "Prix de vente (F CFA) *"}
+                {formData.property_type === "meuble" && formData.rent_type === "journalier"
+                  ? "Loyer journalier (F CFA) *"
+                  : formData.type === "location" ? "Loyer mensuel (F CFA) *" : "Prix de vente (F CFA) *"}
               </Label>
               <Input
                 id="price"

@@ -73,6 +73,8 @@ interface ContractData {
   endDate: string;
   ownerName?: string;
   owner?: OwnerData | null;
+  rentType?: string;
+  propertyType?: string;
 }
 
 interface GenerateContractDialogProps {
@@ -154,6 +156,8 @@ export function GenerateContractDialog({
       : null,
     owner: contractData.owner || null,
     signatures: pdfSignatures,
+    rentType: contractData.rentType,
+    propertyType: contractData.propertyType,
   };
 
   const handleDownload = async () => {
@@ -309,9 +313,9 @@ export function GenerateContractDialog({
                   </span>
                 </>
               )}
-              <span>Loyer :</span>
+              <span>{contractData.rentType === "journalier" ? "Loyer journalier :" : "Loyer :"}</span>
               <span className="font-medium text-foreground">
-                {contractData.rentAmount.toLocaleString("fr-FR")} FCFA
+                {contractData.rentAmount.toLocaleString("fr-FR")} FCFA{contractData.rentType === "journalier" ? " /jour" : ""}
               </span>
               <span>Période :</span>
               <span className="font-medium text-foreground">

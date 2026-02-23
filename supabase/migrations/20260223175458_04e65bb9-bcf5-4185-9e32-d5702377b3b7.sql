@@ -1,0 +1,1 @@
+ALTER TABLE public.properties ADD COLUMN rent_type text NOT NULL DEFAULT 'mensuel';

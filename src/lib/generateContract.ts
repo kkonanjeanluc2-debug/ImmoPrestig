@@ -60,6 +60,8 @@ interface ContractData {
   ownerName?: string;
   owner?: OwnerInfo | null;
   signatures?: SignatureInfo[];
+  rentType?: string; // "mensuel" or "journalier"
+  propertyType?: string; // "meuble", "appartement", etc.
 }
 
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -209,6 +211,10 @@ export const replaceContractVariables = (
     "{bien_adresse}": data.propertyAddress || "",
     "{unite}": data.unitNumber || "",
     
+    // Rent type info
+    "{type_loyer}": data.rentType === "journalier" ? "journalier" : "mensuel",
+    "{loyer_label}": data.rentType === "journalier" ? "Loyer journalier" : "Loyer mensuel",
+    
     // Financial info
     "{loyer}": formatAmountWithCurrency(data.rentAmount),
     "{loyer_lettres}": numberToWordsPDF(data.rentAmount) + " francs CFA",
@@ -303,9 +309,15 @@ export const generateContractPDF = async (
     yPos += 10;
   }
   
-  // Title - detect furnished type from property title or template content
-  const isFurnished = templateContent.toLowerCase().includes("meublé") || templateContent.toLowerCase().includes("meublee") || templateContent.toLowerCase().includes("inventaire");
-  const contractTitle = isFurnished ? "CONTRAT DE LOCATION MEUBLÉE" : "CONTRAT DE LOCATION";
+  // Title - detect furnished type and rent type
+  const isFurnished = data.propertyType === "meuble" || templateContent.toLowerCase().includes("meublé") || templateContent.toLowerCase().includes("meublee") || templateContent.toLowerCase().includes("inventaire");
+  const isDaily = data.rentType === "journalier";
+  let contractTitle = "CONTRAT DE LOCATION";
+  if (isFurnished && isDaily) {
+    contractTitle = "CONTRAT DE LOCATION MEUBLÉE JOURNALIÈRE";
+  } else if (isFurnished) {
+    contractTitle = "CONTRAT DE LOCATION MEUBLÉE";
+  }
   
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");

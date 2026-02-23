@@ -2215,6 +2215,7 @@ export type Database = {
           owner_id: string | null
           price: number
           property_type: string
+          rent_type: string
           status: string
           title: string
           type: string
@@ -2237,6 +2238,7 @@ export type Database = {
           owner_id?: string | null
           price: number
           property_type: string
+          rent_type?: string
           status?: string
           title: string
           type: string
@@ -2259,6 +2261,7 @@ export type Database = {
           owner_id?: string | null
           price?: number
           property_type?: string
+          rent_type?: string
           status?: string
           title?: string
           type?: string

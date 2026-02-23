@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -82,13 +81,6 @@ const TYPE_LABELS: Record<string, string> = {
   sortie: "Sortie",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  brouillon: "Brouillon",
-  valide: "Validé",
-  signe: "Signé",
-};
-
-// Suggested items per room
 const ROOM_SUGGESTIONS: Record<string, string[]> = {
   "Salon": ["Canapé", "Table basse", "Télévision", "Meuble TV", "Luminaire", "Rideau", "Tapis", "Climatiseur", "Ventilateur"],
   "Chambre 1": ["Lit", "Matelas", "Armoire", "Table de chevet", "Lampe de chevet", "Rideau", "Climatiseur", "Ventilateur"],
@@ -102,6 +94,17 @@ const ROOM_SUGGESTIONS: Record<string, string[]> = {
   "Buanderie": ["Étagère", "Fer à repasser", "Table à repasser"],
   "Divers": ["Décoration", "Plante artificielle"],
 };
+
+interface DraftItem {
+  id: string;
+  room: string;
+  item_name: string;
+  quantity: number;
+  brand: string;
+  model: string;
+  condition: string;
+  observations: string;
+}
 
 interface PropertyInventoryManagerProps {
   propertyId: string;
@@ -119,23 +122,10 @@ export const PropertyInventoryManager = ({
   const { data: inventories = [], isLoading } = usePropertyInventories(propertyId);
   const createInventory = useCreatePropertyInventory();
   const deleteInventory = useDeletePropertyInventory();
+  const bulkCreate = useBulkCreateInventoryItems();
   const [viewingInventory, setViewingInventory] = useState<PropertyInventory | null>(null);
   const [deletingInventory, setDeletingInventory] = useState<PropertyInventory | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newType, setNewType] = useState<string>("entree");
-
-  const handleCreateInventory = async () => {
-    try {
-      await createInventory.mutateAsync({
-        property_id: propertyId,
-        type: newType,
-      });
-      toast.success("Inventaire créé avec succès");
-      setCreateDialogOpen(false);
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la création");
-    }
-  };
 
   const handleDeleteInventory = async () => {
     if (!deletingInventory) return;
@@ -217,9 +207,6 @@ export const PropertyInventoryManager = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="outline" className="text-xs">
-                      {STATUS_LABELS[inv.status] || inv.status}
-                    </Badge>
                     <Button variant="ghost" size="icon" onClick={() => setViewingInventory(inv)}>
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -239,35 +226,14 @@ export const PropertyInventoryManager = ({
         </div>
       )}
 
-      {/* Create Dialog */}
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Nouvel inventaire</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <Label>Type d'inventaire</Label>
-              <Select value={newType} onValueChange={setNewType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="entree">Entrée (état des lieux d'entrée)</SelectItem>
-                  <SelectItem value="sortie">Sortie (état des lieux de sortie)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Annuler</Button>
-              <Button onClick={handleCreateInventory} disabled={createInventory.isPending} className="bg-emerald hover:bg-emerald-dark">
-                {createInventory.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Créer
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Create Dialog - Full inventory creation with items */}
+      <CreateInventoryDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        propertyId={propertyId}
+        createInventory={createInventory}
+        bulkCreate={bulkCreate}
+      />
 
       {/* View/Edit Inventory Dialog */}
       {viewingInventory && (
@@ -300,7 +266,281 @@ export const PropertyInventoryManager = ({
   );
 };
 
-// Sub-component for viewing/editing inventory items
+// ─── Create Inventory Dialog with draft items ───
+const CreateInventoryDialog = ({
+  open,
+  onOpenChange,
+  propertyId,
+  createInventory,
+  bulkCreate,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  propertyId: string;
+  createInventory: ReturnType<typeof useCreatePropertyInventory>;
+  bulkCreate: ReturnType<typeof useBulkCreateInventoryItems>;
+}) => {
+  const [newType, setNewType] = useState<string>("entree");
+  const [draftItems, setDraftItems] = useState<DraftItem[]>([]);
+  const [addingRoom, setAddingRoom] = useState<string | null>(null);
+  const [newItem, setNewItem] = useState({ item_name: "", quantity: "1", brand: "", model: "", condition: "bon", observations: "" });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const groupedDraftItems = draftItems.reduce((acc, item) => {
+    if (!acc[item.room]) acc[item.room] = [];
+    acc[item.room].push(item);
+    return acc;
+  }, {} as Record<string, DraftItem[]>);
+
+  const handleAddDraftItem = () => {
+    if (!newItem.item_name || !addingRoom) return;
+    setDraftItems(prev => [...prev, {
+      id: crypto.randomUUID(),
+      room: addingRoom,
+      item_name: newItem.item_name,
+      quantity: parseInt(newItem.quantity) || 1,
+      brand: newItem.brand,
+      model: newItem.model,
+      condition: newItem.condition,
+      observations: newItem.observations,
+    }]);
+    setNewItem({ item_name: "", quantity: "1", brand: "", model: "", condition: "bon", observations: "" });
+  };
+
+  const handleRemoveDraftItem = (id: string) => {
+    setDraftItems(prev => prev.filter(i => i.id !== id));
+  };
+
+  const handleAddSuggestions = (room: string) => {
+    const suggestions = ROOM_SUGGESTIONS[room] || [];
+    const existingNames = draftItems.filter(i => i.room === room).map(i => i.item_name.toLowerCase());
+    const newItems = suggestions
+      .filter(s => !existingNames.includes(s.toLowerCase()))
+      .map(name => ({
+        id: crypto.randomUUID(),
+        room,
+        item_name: name,
+        quantity: 1,
+        brand: "",
+        model: "",
+        condition: "bon",
+        observations: "",
+      }));
+    if (newItems.length === 0) {
+      toast.info("Tous les éléments suggérés existent déjà");
+      return;
+    }
+    setDraftItems(prev => [...prev, ...newItems]);
+    toast.success(`${newItems.length} éléments ajoutés`);
+  };
+
+  const handleSave = async () => {
+    if (draftItems.length === 0) {
+      toast.error("Ajoutez au moins un élément à l'inventaire");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const inventory = await createInventory.mutateAsync({
+        property_id: propertyId,
+        type: newType,
+      });
+      await bulkCreate.mutateAsync({
+        inventoryId: inventory.id,
+        items: draftItems.map(({ room, item_name, quantity, brand, model, condition, observations }) => ({
+          room,
+          item_name,
+          quantity,
+          brand: brand || null,
+          model: model || null,
+          condition,
+          observations: observations || null,
+        })),
+      });
+      toast.success("Inventaire créé avec succès");
+      setDraftItems([]);
+      setAddingRoom(null);
+      setNewType("entree");
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la création");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleClose = () => {
+    setDraftItems([]);
+    setAddingRoom(null);
+    setNewType("entree");
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange(v); }}>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl">Nouvel inventaire</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-2">
+          <div className="space-y-2">
+            <Label>Type d'inventaire</Label>
+            <Select value={newType} onValueChange={setNewType}>
+              <SelectTrigger className="w-full sm:w-[300px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="entree">Entrée (état des lieux d'entrée)</SelectItem>
+                <SelectItem value="sortie">Sortie (état des lieux de sortie)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Separator />
+
+          {/* Room sections */}
+          {ROOMS.map((room) => {
+            const roomItems = groupedDraftItems[room] || [];
+            const isAdding = addingRoom === room;
+
+            return (
+              <div key={room} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                    {room} ({roomItems.length})
+                  </h3>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => handleAddSuggestions(room)}>
+                      Suggestions
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setAddingRoom(isAdding ? null : room)}>
+                      <Plus className="h-3 w-3 mr-1" />
+                      Ajouter
+                    </Button>
+                  </div>
+                </div>
+
+                {roomItems.length > 0 && (
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="text-left p-2 font-medium">Élément</th>
+                          <th className="text-center p-2 font-medium w-16">Qté</th>
+                          <th className="text-center p-2 font-medium">État</th>
+                          <th className="w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roomItems.map((item) => (
+                          <tr key={item.id} className="border-t">
+                            <td className="p-2">{item.item_name}</td>
+                            <td className="p-2 text-center">{item.quantity}</td>
+                            <td className="p-2 text-center">
+                              <Badge variant="outline" className={`text-xs ${CONDITION_COLORS[item.condition] || ""}`}>
+                                {CONDITION_LABELS[item.condition] || item.condition}
+                              </Badge>
+                            </td>
+                            <td className="p-2">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDraftItem(item.id)}>
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {isAdding && (
+                  <Card className="border-dashed">
+                    <CardContent className="p-3 space-y-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <Input
+                          placeholder="Nom de l'élément *"
+                          value={newItem.item_name}
+                          onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
+                          className="col-span-2"
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Qté"
+                          min={1}
+                          value={newItem.quantity}
+                          onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
+                        />
+                        <Select value={newItem.condition} onValueChange={(v) => setNewItem({ ...newItem, condition: v })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(CONDITION_LABELS).map(([k, v]) => (
+                              <SelectItem key={k} value={k}>{v}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Marque (optionnel)"
+                          value={newItem.brand}
+                          onChange={(e) => setNewItem({ ...newItem, brand: e.target.value })}
+                        />
+                        <Input
+                          placeholder="Modèle (optionnel)"
+                          value={newItem.model}
+                          onChange={(e) => setNewItem({ ...newItem, model: e.target.value })}
+                        />
+                      </div>
+                      <Input
+                        placeholder="Observations (optionnel)"
+                        value={newItem.observations}
+                        onChange={(e) => setNewItem({ ...newItem, observations: e.target.value })}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setAddingRoom(null)}>Fermer</Button>
+                        <Button
+                          size="sm"
+                          onClick={handleAddDraftItem}
+                          disabled={!newItem.item_name}
+                          className="bg-emerald hover:bg-emerald-dark"
+                        >
+                          Ajouter
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Separator />
+              </div>
+            );
+          })}
+
+          <p className="text-xs text-muted-foreground text-center">
+            Total : {draftItems.length} élément{draftItems.length > 1 ? "s" : ""}
+          </p>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={handleClose}>Annuler</Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || draftItems.length === 0}
+              className="bg-emerald hover:bg-emerald-dark"
+            >
+              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Créer l'inventaire ({draftItems.length} élément{draftItems.length > 1 ? "s" : ""})
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ─── View/Edit existing inventory ───
 const InventoryDetailDialog = ({
   inventory,
   open,
@@ -315,20 +555,11 @@ const InventoryDetailDialog = ({
   const { data: items = [], isLoading } = useInventoryItems(inventory.id);
   const createItem = useCreateInventoryItem();
   const deleteItem = useDeleteInventoryItem();
-  const updateItem = useUpdateInventoryItem();
   const bulkCreate = useBulkCreateInventoryItems();
 
   const [addingRoom, setAddingRoom] = useState<string | null>(null);
-  const [newItem, setNewItem] = useState({
-    item_name: "",
-    quantity: "1",
-    brand: "",
-    model: "",
-    condition: "bon",
-    observations: "",
-  });
+  const [newItem, setNewItem] = useState({ item_name: "", quantity: "1", brand: "", model: "", condition: "bon", observations: "" });
 
-  // Group items by room
   const groupedItems = items.reduce((acc, item) => {
     if (!acc[item.room]) acc[item.room] = [];
     acc[item.room].push(item);
@@ -366,25 +597,15 @@ const InventoryDetailDialog = ({
 
   const handleAddSuggestedItems = async (room: string) => {
     const suggestions = ROOM_SUGGESTIONS[room] || [];
-    if (suggestions.length === 0) return;
-
-    // Filter out already existing items
     const existingNames = (groupedItems[room] || []).map(i => i.item_name.toLowerCase());
     const newItems = suggestions
       .filter(s => !existingNames.includes(s.toLowerCase()))
       .map(name => ({ room, item_name: name, quantity: 1, condition: "bon" }));
-
-    if (newItems.length === 0) {
-      toast.info("Tous les éléments suggérés existent déjà");
-      return;
-    }
-
+    if (newItems.length === 0) { toast.info("Tous les éléments suggérés existent déjà"); return; }
     try {
       await bulkCreate.mutateAsync({ inventoryId: inventory.id, items: newItems });
       toast.success(`${newItems.length} éléments ajoutés`);
-    } catch {
-      toast.error("Erreur lors de l'ajout");
-    }
+    } catch { toast.error("Erreur lors de l'ajout"); }
   };
 
   return (
@@ -397,46 +618,25 @@ const InventoryDetailDialog = ({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : (
           <div className="space-y-6 mt-4">
-            {/* Room sections */}
             {ROOMS.map((room) => {
               const roomItems = groupedItems[room] || [];
               const isAdding = addingRoom === room;
-
               return (
                 <div key={room} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
-                      {room} ({roomItems.length})
-                    </h3>
+                    <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">{room} ({roomItems.length})</h3>
                     {canEdit && (
                       <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs h-7"
-                          onClick={() => handleAddSuggestedItems(room)}
-                          disabled={bulkCreate.isPending}
-                        >
-                          Suggestions
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs h-7"
-                          onClick={() => setAddingRoom(isAdding ? null : room)}
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Ajouter
+                        <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => handleAddSuggestedItems(room)} disabled={bulkCreate.isPending}>Suggestions</Button>
+                        <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setAddingRoom(isAdding ? null : room)}>
+                          <Plus className="h-3 w-3 mr-1" />Ajouter
                         </Button>
                       </div>
                     )}
                   </div>
-
                   {roomItems.length > 0 && (
                     <div className="border rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
@@ -455,17 +655,11 @@ const InventoryDetailDialog = ({
                             <tr key={item.id} className="border-t">
                               <td className="p-2">{item.item_name}</td>
                               <td className="p-2 text-center">{item.quantity}</td>
-                              <td className="p-2 hidden sm:table-cell text-muted-foreground">
-                                {[item.brand, item.model].filter(Boolean).join(" ") || "-"}
-                              </td>
+                              <td className="p-2 hidden sm:table-cell text-muted-foreground">{[item.brand, item.model].filter(Boolean).join(" ") || "-"}</td>
                               <td className="p-2 text-center">
-                                <Badge variant="outline" className={`text-xs ${CONDITION_COLORS[item.condition] || ""}`}>
-                                  {CONDITION_LABELS[item.condition] || item.condition}
-                                </Badge>
+                                <Badge variant="outline" className={`text-xs ${CONDITION_COLORS[item.condition] || ""}`}>{CONDITION_LABELS[item.condition] || item.condition}</Badge>
                               </td>
-                              <td className="p-2 hidden md:table-cell text-muted-foreground text-xs">
-                                {item.observations || "-"}
-                              </td>
+                              <td className="p-2 hidden md:table-cell text-muted-foreground text-xs">{item.observations || "-"}</td>
                               {canEdit && (
                                 <td className="p-2">
                                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteItem(item)}>
@@ -479,76 +673,35 @@ const InventoryDetailDialog = ({
                       </table>
                     </div>
                   )}
-
-                  {/* Add item form for this room */}
                   {isAdding && canEdit && (
                     <Card className="border-dashed">
                       <CardContent className="p-3 space-y-3">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          <Input
-                            placeholder="Nom de l'élément *"
-                            value={newItem.item_name}
-                            onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
-                            className="col-span-2"
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Qté"
-                            min={1}
-                            value={newItem.quantity}
-                            onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
-                          />
+                          <Input placeholder="Nom de l'élément *" value={newItem.item_name} onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })} className="col-span-2" />
+                          <Input type="number" placeholder="Qté" min={1} value={newItem.quantity} onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })} />
                           <Select value={newItem.condition} onValueChange={(v) => setNewItem({ ...newItem, condition: v })}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.entries(CONDITION_LABELS).map(([k, v]) => (
-                                <SelectItem key={k} value={k}>{v}</SelectItem>
-                              ))}
-                            </SelectContent>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>{Object.entries(CONDITION_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
                           </Select>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
-                          <Input
-                            placeholder="Marque (optionnel)"
-                            value={newItem.brand}
-                            onChange={(e) => setNewItem({ ...newItem, brand: e.target.value })}
-                          />
-                          <Input
-                            placeholder="Modèle (optionnel)"
-                            value={newItem.model}
-                            onChange={(e) => setNewItem({ ...newItem, model: e.target.value })}
-                          />
+                          <Input placeholder="Marque (optionnel)" value={newItem.brand} onChange={(e) => setNewItem({ ...newItem, brand: e.target.value })} />
+                          <Input placeholder="Modèle (optionnel)" value={newItem.model} onChange={(e) => setNewItem({ ...newItem, model: e.target.value })} />
                         </div>
-                        <Input
-                          placeholder="Observations (optionnel)"
-                          value={newItem.observations}
-                          onChange={(e) => setNewItem({ ...newItem, observations: e.target.value })}
-                        />
+                        <Input placeholder="Observations (optionnel)" value={newItem.observations} onChange={(e) => setNewItem({ ...newItem, observations: e.target.value })} />
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => setAddingRoom(null)}>
-                            Fermer
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={handleAddItem}
-                            disabled={!newItem.item_name || createItem.isPending}
-                            className="bg-emerald hover:bg-emerald-dark"
-                          >
-                            {createItem.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                            Ajouter
+                          <Button variant="outline" size="sm" onClick={() => setAddingRoom(null)}>Fermer</Button>
+                          <Button size="sm" onClick={handleAddItem} disabled={!newItem.item_name || createItem.isPending} className="bg-emerald hover:bg-emerald-dark">
+                            {createItem.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Ajouter
                           </Button>
                         </div>
                       </CardContent>
                     </Card>
                   )}
-
                   <Separator />
                 </div>
               );
             })}
-
             <p className="text-xs text-muted-foreground text-center">
               Total : {items.length} élément{items.length > 1 ? "s" : ""} dans {Object.keys(groupedItems).length} pièce{Object.keys(groupedItems).length > 1 ? "s" : ""}
             </p>

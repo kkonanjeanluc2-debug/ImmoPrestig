@@ -19,7 +19,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePayments } from "@/hooks/usePayments";
-import { useCreateUnpaidCase } from "@/hooks/useUnpaidCases";
+import { useCreateUnpaidCase, useUnpaidCases } from "@/hooks/useUnpaidCases";
 import { differenceInDays } from "date-fns";
 
 interface Props {
@@ -29,13 +29,21 @@ interface Props {
 
 export function CreateUnpaidCaseDialog({ open, onOpenChange }: Props) {
   const { data: payments } = usePayments();
+  const { data: existingCases } = useUnpaidCases();
   const createCase = useCreateUnpaidCase();
   const [selectedPaymentId, setSelectedPaymentId] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Only show late/pending payments
+  // Tenant IDs that already have an unpaid case
+  const tenantIdsWithCase = new Set(
+    (existingCases || []).map((c) => c.tenant_id)
+  );
+
+  // Only show late/pending payments for tenants without an existing case
   const latePayments = (payments || []).filter(
-    (p) => p.status === "late" || (p.status === "pending" && new Date(p.due_date) < new Date())
+    (p) =>
+      (p.status === "late" || (p.status === "pending" && new Date(p.due_date) < new Date())) &&
+      !tenantIdsWithCase.has(p.tenant_id)
   );
 
   const selectedPayment = latePayments.find((p) => p.id === selectedPaymentId);

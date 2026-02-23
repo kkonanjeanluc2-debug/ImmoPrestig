@@ -106,6 +106,21 @@ export function MonthYearSelector({
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 
+  // Find the earliest paid month index for the current displayed year
+  // to hide all months before it (months preceding advance payments)
+  const firstPaidMonthIndex = (() => {
+    for (let i = 0; i < 12; i++) {
+      if (isMonthPaid(i)) return i;
+    }
+    return -1;
+  })();
+
+  // Check if a month should be hidden (precedes advance-paid months)
+  const isMonthHidden = (monthIndex: number) => {
+    if (firstPaidMonthIndex === -1) return false; // No paid months, show all
+    return monthIndex < firstPaidMonthIndex;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -139,6 +154,8 @@ export function MonthYearSelector({
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {MONTHS.map((month, index) => {
+            if (isMonthHidden(index)) return null;
+
             const monthKey = getMonthKey(index);
             const isPaid = isMonthPaid(index);
             const isSelected = isMonthSelected(index);

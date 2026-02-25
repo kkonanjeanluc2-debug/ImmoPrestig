@@ -43,6 +43,10 @@ export function OffresAchatList() {
   const [contreOffreId, setContreOffreId] = useState<string | null>(null);
   const [counterAmount, setCounterAmount] = useState("");
   const [counterConditions, setCounterConditions] = useState("");
+  const [acceptOffre, setAcceptOffre] = useState<any | null>(null);
+  const [achatForm, setAchatForm] = useState({
+    payment_type: "comptant", total_installments: "", down_payment: "", notary_fees: "", agency_fees: "", notes: "",
+  });
 
   const handleSubmit = async () => {
     await createMutation.mutateAsync({
@@ -62,16 +66,23 @@ export function OffresAchatList() {
     setCounterConditions("");
   };
 
-  const handleAccept = async (offre: any) => {
-    await updateMutation.mutateAsync({ id: offre.id, status: "acceptee" });
-    // Auto-create achat from accepted offer
-    const finalAmount = offre.counter_amount || offre.offer_amount;
+  const handleAcceptConfirm = async () => {
+    if (!acceptOffre) return;
+    await updateMutation.mutateAsync({ id: acceptOffre.id, status: "acceptee" });
+    const finalAmount = acceptOffre.counter_amount || acceptOffre.offer_amount;
     await createAchatMutation.mutateAsync({
-      bien_id: offre.bien_id,
+      bien_id: acceptOffre.bien_id,
       sale_price: Number(finalAmount),
-      payment_type: "comptant",
-      vendeur_id: offre.biens_achat?.vendeur_id || undefined,
+      payment_type: achatForm.payment_type,
+      total_installments: achatForm.total_installments ? Number(achatForm.total_installments) : undefined,
+      down_payment: achatForm.down_payment ? Number(achatForm.down_payment) : undefined,
+      notary_fees: achatForm.notary_fees ? Number(achatForm.notary_fees) : undefined,
+      agency_fees: achatForm.agency_fees ? Number(achatForm.agency_fees) : undefined,
+      notes: achatForm.notes || undefined,
+      vendeur_id: acceptOffre.biens_achat?.vendeur_id || undefined,
     });
+    setAcceptOffre(null);
+    setAchatForm({ payment_type: "comptant", total_installments: "", down_payment: "", notary_fees: "", agency_fees: "", notes: "" });
   };
 
   const availableBiens = biens.filter(b => b.status !== "achete" && b.status !== "abandonne");
@@ -152,6 +163,63 @@ export function OffresAchatList() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog accepter offre - choix paiement */}
+      <Dialog open={!!acceptOffre} onOpenChange={(v) => { if (!v) { setAcceptOffre(null); setAchatForm({ payment_type: "comptant", total_installments: "", down_payment: "", notary_fees: "", agency_fees: "", notes: "" }); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Valider l'achat</DialogTitle>
+            <DialogDescription>
+              {acceptOffre && <>Bien : <strong>{acceptOffre.biens_achat?.title}</strong> — Montant : <strong>{Number(acceptOffre.counter_amount || acceptOffre.offer_amount).toLocaleString("fr-FR")} FCFA</strong></>}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Type de paiement *</Label>
+              <Select value={achatForm.payment_type} onValueChange={(v) => setAchatForm({ ...achatForm, payment_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="comptant">Comptant</SelectItem>
+                  <SelectItem value="echelonne">Échelonné</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {achatForm.payment_type === "echelonne" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nombre d'échéances</Label>
+                  <Input type="number" value={achatForm.total_installments} onChange={(e) => setAchatForm({ ...achatForm, total_installments: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Apport initial (FCFA)</Label>
+                  <Input type="number" value={achatForm.down_payment} onChange={(e) => setAchatForm({ ...achatForm, down_payment: e.target.value })} />
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Frais de notaire</Label>
+                <Input type="number" value={achatForm.notary_fees} onChange={(e) => setAchatForm({ ...achatForm, notary_fees: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Frais d'agence</Label>
+                <Input type="number" value={achatForm.agency_fees} onChange={(e) => setAchatForm({ ...achatForm, agency_fees: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea value={achatForm.notes} onChange={(e) => setAchatForm({ ...achatForm, notes: e.target.value })} rows={2} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAcceptOffre(null); setAchatForm({ payment_type: "comptant", total_installments: "", down_payment: "", notary_fees: "", agency_fees: "", notes: "" }); }}>Annuler</Button>
+            <Button onClick={handleAcceptConfirm} disabled={updateMutation.isPending || createAchatMutation.isPending}>
+              {(updateMutation.isPending || createAchatMutation.isPending) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Valider l'achat
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {!offres?.length ? (
         <Card>
           <CardContent className="text-center py-12">
@@ -177,8 +245,7 @@ export function OffresAchatList() {
                   <Badge className={STATUS_COLORS[offre.status] || ""}>{STATUS_LABELS[offre.status] || offre.status}</Badge>
                   {(offre.status === "en_attente" || offre.status === "contre_offre") && (
                     <div className="flex gap-1 flex-wrap">
-                      <Button size="sm" variant="outline" onClick={() => handleAccept(offre)} disabled={updateMutation.isPending || createAchatMutation.isPending}>
-                        {(updateMutation.isPending || createAchatMutation.isPending) ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                      <Button size="sm" variant="outline" onClick={() => setAcceptOffre(offre)}>
                         Accepter
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setContreOffreId(offre.id)}>Contre-offre</Button>

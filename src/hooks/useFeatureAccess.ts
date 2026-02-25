@@ -4,6 +4,7 @@ import { useAgencySubscription } from "./useAgencySubscription";
 // Feature keys that map to subscription plan features
 export type FeatureKey = 
   | "ventes_immobilieres"
+  | "achats_immobiliers"
   | "lotissement"
   | "rappels_sms"
   | "rappels_automatiques"
@@ -16,6 +17,7 @@ export type FeatureKey =
 // Map feature keys to strings that appear in subscription_plans.features
 const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
   ventes_immobilieres: ["Ventes immobilières", "ventes immobilieres", "Toutes les fonctionnalités"],
+  achats_immobiliers: ["Achats immobiliers", "achats immobiliers", "Ventes immobilières", "ventes immobilieres", "Toutes les fonctionnalités"],
   lotissement: ["Lotissement", "lotissement", "Toutes les fonctionnalités"],
   rappels_sms: ["Rappels SMS & Email", "Rappels SMS", "rappels sms", "Rappels Whatsapp & Email", "Toutes les fonctionnalités"],
   rappels_automatiques: ["Rappels automatiques", "Rappels SMS & Email", "Rappels Whatsapp & Email", "Planification des automatisations", "Toutes les fonctionnalités"],
@@ -33,8 +35,8 @@ const PLANS_WITH_ALL_FEATURES = ["Enterprise"];
 const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {
   "Gratuit": [],
   "Starter": ["rappels_automatiques"],
-  "Pro": ["rappels_automatiques", "rappels_sms", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "ventes_immobilieres"],
-  "Enterprise": ["ventes_immobilieres", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee"],
+  "Pro": ["rappels_automatiques", "rappels_sms", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "ventes_immobilieres", "achats_immobiliers"],
+  "Enterprise": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee"],
 };
 
 export interface FeatureAccessResult {

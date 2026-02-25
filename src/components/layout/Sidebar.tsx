@@ -21,7 +21,9 @@ import {
   Trash2,
   Building2,
   HandCoins,
-  KeyRound
+  KeyRound,
+  ShoppingCart,
+  Briefcase
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { cn } from "@/lib/utils";
@@ -73,9 +75,13 @@ const gestionLocativeItems = [
   { name: "Impayés", href: "/impayes", icon: AlertTriangle, hiddenForTenant: true, hiddenForGestionnaire: false },
 ];
 
+const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
+  { name: "Ventes Immobilières", href: "/ventes-immobilieres", icon: HandCoins, featureKey: "ventes_immobilieres" },
+  { name: "Achats Immobiliers", href: "/achats-immobiliers", icon: ShoppingCart, featureKey: "achats_immobiliers" },
+];
+
 const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
   { name: "Lotissements", href: "/lotissements", icon: Building2, featureKey: "lotissement" },
-  { name: "Ventes Immobilières", href: "/ventes-immobilieres", icon: HandCoins, featureKey: "ventes_immobilieres" },
 ];
 
 const superAdminNavigation = [
@@ -318,16 +324,69 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Other navigation items - only show if feature is available */}
+              {/* CRM Immobilier - Collapsible Group */}
+              {crmImmobilierItems.some(item => hasFeature(item.featureKey)) && (
+                <Collapsible defaultOpen className="space-y-1 mt-2">
+                  <CollapsibleTrigger className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full group",
+                    "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                  )}>
+                    <Briefcase className={cn(
+                      "h-5 w-5 flex-shrink-0",
+                      !showText && "mx-auto"
+                    )} />
+                    {showText && (
+                      <>
+                        <span className="font-medium text-sm flex-1 text-left">CRM Immobilier</span>
+                        <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                      </>
+                    )}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-3 space-y-1">
+                    {crmImmobilierItems
+                      .filter((item) => hasFeature(item.featureKey))
+                      .map((item) => {
+                        const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
+                        const badgeCount = item.href === "/ventes-immobilieres" ? newVenteProspectsCount : 0;
+                        return (
+                          <NavLink
+                            key={item.name}
+                            to={item.href}
+                            onMouseEnter={() => prefetchRoute(item.href)}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
+                              isActive 
+                                ? "bg-emerald text-primary-foreground" 
+                                : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                            )}
+                          >
+                            <div className="relative flex-shrink-0">
+                              <item.icon className={cn(
+                                "h-4 w-4 transition-transform group-hover:scale-110",
+                                !showText && "mx-auto"
+                              )} />
+                              {badgeCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                                  {badgeCount > 99 ? "99+" : badgeCount}
+                                </span>
+                              )}
+                            </div>
+                            {showText && (
+                              <span className="font-medium text-sm">{item.name}</span>
+                            )}
+                          </NavLink>
+                        );
+                      })}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+
+              {/* Other navigation items (Lotissements) - only show if feature is available */}
               {otherNavigation
                 .filter((item) => hasFeature(item.featureKey))
                 .map((item) => {
                   const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
-                  const badgeCount = item.href === "/ventes-immobilieres" 
-                    ? newVenteProspectsCount 
-                    : item.href === "/lotissements" 
-                      ? newLotProspectsCount 
-                      : 0;
+                  const badgeCount = item.href === "/lotissements" ? newLotProspectsCount : 0;
                   
                   return (
                     <NavLink

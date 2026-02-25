@@ -42,6 +42,7 @@ export function OffresAchatList() {
   const [form, setForm] = useState({ bien_id: "", offer_amount: "", conditions: "" });
   const [contreOffreId, setContreOffreId] = useState<string | null>(null);
   const [counterAmount, setCounterAmount] = useState("");
+  const [counterConditions, setCounterConditions] = useState("");
 
   const handleSubmit = async () => {
     await createMutation.mutateAsync({
@@ -55,9 +56,10 @@ export function OffresAchatList() {
 
   const handleContreOffre = async () => {
     if (!contreOffreId || !counterAmount) return;
-    await updateMutation.mutateAsync({ id: contreOffreId, status: "contre_offre", counter_amount: Number(counterAmount) });
+    await updateMutation.mutateAsync({ id: contreOffreId, status: "contre_offre", counter_amount: Number(counterAmount), conditions: counterConditions || undefined });
     setContreOffreId(null);
     setCounterAmount("");
+    setCounterConditions("");
   };
 
   const handleAccept = async (offre: any) => {
@@ -124,7 +126,7 @@ export function OffresAchatList() {
       </div>
 
       {/* Dialog contre-offre */}
-      <Dialog open={!!contreOffreId} onOpenChange={(v) => { if (!v) { setContreOffreId(null); setCounterAmount(""); } }}>
+      <Dialog open={!!contreOffreId} onOpenChange={(v) => { if (!v) { setContreOffreId(null); setCounterAmount(""); setCounterConditions(""); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Faire une contre-offre</DialogTitle>
@@ -135,9 +137,13 @@ export function OffresAchatList() {
               <Label>Montant de la contre-offre (FCFA) *</Label>
               <Input type="number" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} placeholder="Ex: 100 000 000" />
             </div>
+            <div className="space-y-2">
+              <Label>Conditions</Label>
+              <Textarea value={counterConditions} onChange={(e) => setCounterConditions(e.target.value)} rows={3} placeholder="Ex: Sous réserve d'obtention de financement..." />
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setContreOffreId(null); setCounterAmount(""); }}>Annuler</Button>
+            <Button variant="outline" onClick={() => { setContreOffreId(null); setCounterAmount(""); setCounterConditions(""); }}>Annuler</Button>
             <Button onClick={handleContreOffre} disabled={!counterAmount || updateMutation.isPending}>
               {updateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Confirmer

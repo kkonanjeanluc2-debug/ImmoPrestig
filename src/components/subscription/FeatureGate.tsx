@@ -17,6 +17,10 @@ const FEATURE_LABELS: Record<FeatureKey, { title: string; description: string }>
     title: "Ventes Immobilières",
     description: "Gérez vos biens à vendre, suivez les transactions et les paiements échelonnés.",
   },
+  achats_immobiliers: {
+    title: "Achats Immobiliers",
+    description: "Gérez vos prospections d'achat, offres, vendeurs et paiements échelonnés.",
+  },
   lotissement: {
     title: "Lotissements",
     description: "Gérez vos lotissements, parcelles et ventes de terrains.",

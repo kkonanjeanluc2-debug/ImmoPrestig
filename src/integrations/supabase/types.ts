@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      achats_immobiliers: {
+        Row: {
+          agency_fees: number | null
+          bien_id: string
+          created_at: string
+          down_payment: number | null
+          id: string
+          notary_fees: number | null
+          notes: string | null
+          payment_type: string
+          sale_date: string
+          sale_price: number
+          total_installments: number | null
+          updated_at: string
+          user_id: string
+          vendeur_id: string | null
+        }
+        Insert: {
+          agency_fees?: number | null
+          bien_id: string
+          created_at?: string
+          down_payment?: number | null
+          id?: string
+          notary_fees?: number | null
+          notes?: string | null
+          payment_type?: string
+          sale_date?: string
+          sale_price: number
+          total_installments?: number | null
+          updated_at?: string
+          user_id: string
+          vendeur_id?: string | null
+        }
+        Update: {
+          agency_fees?: number | null
+          bien_id?: string
+          created_at?: string
+          down_payment?: number | null
+          id?: string
+          notary_fees?: number | null
+          notes?: string | null
+          payment_type?: string
+          sale_date?: string
+          sale_price?: number
+          total_installments?: number | null
+          updated_at?: string
+          user_id?: string
+          vendeur_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achats_immobiliers_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_achat"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "achats_immobiliers_vendeur_id_fkey"
+            columns: ["vendeur_id"]
+            isOneToOne: false
+            referencedRelation: "vendeurs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       acquereurs: {
         Row: {
           address: string | null
@@ -399,6 +465,86 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      biens_achat: {
+        Row: {
+          address: string
+          area: number | null
+          assigned_to: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          image_url: string | null
+          latitude: number | null
+          longitude: number | null
+          price: number
+          property_type: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          vendeur_id: string | null
+        }
+        Insert: {
+          address: string
+          area?: number | null
+          assigned_to?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          price: number
+          property_type: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          vendeur_id?: string | null
+        }
+        Update: {
+          address?: string
+          area?: number | null
+          assigned_to?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          price?: number
+          property_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          vendeur_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biens_achat_vendeur_id_fkey"
+            columns: ["vendeur_id"]
+            isOneToOne: false
+            referencedRelation: "vendeurs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       biens_vente: {
         Row: {
@@ -803,6 +949,62 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      echeances_achats: {
+        Row: {
+          achat_id: string
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_amount: number | null
+          paid_date: string | null
+          payment_method: string | null
+          receipt_number: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achat_id: string
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_method?: string | null
+          receipt_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achat_id?: string
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_method?: string | null
+          receipt_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "echeances_achats_achat_id_fkey"
+            columns: ["achat_id"]
+            isOneToOne: false
+            referencedRelation: "achats_immobiliers"
             referencedColumns: ["id"]
           },
         ]
@@ -1530,6 +1732,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      offres_achat: {
+        Row: {
+          bien_id: string
+          counter_amount: number | null
+          created_at: string
+          expiry_date: string | null
+          id: string
+          notes: string | null
+          offer_amount: number
+          offer_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bien_id: string
+          counter_amount?: number | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          offer_amount: number
+          offer_date?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bien_id?: string
+          counter_amount?: number | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          offer_amount?: number
+          offer_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offres_achat_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_achat"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       online_rent_payments: {
         Row: {
@@ -3173,6 +3425,51 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vendeurs: {
+        Row: {
+          address: string | null
+          birth_date: string | null
+          birth_place: string | null
+          cni_number: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          profession: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cni_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          profession?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cni_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          profession?: string | null
           updated_at?: string
           user_id?: string
         }

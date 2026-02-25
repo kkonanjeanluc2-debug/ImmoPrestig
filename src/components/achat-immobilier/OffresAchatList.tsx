@@ -35,16 +35,17 @@ export function OffresAchatList() {
   const createMutation = useCreateOffreAchat();
   const updateMutation = useUpdateOffreAchat();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ bien_id: "", offer_amount: "", notes: "" });
+  const [form, setForm] = useState({ bien_id: "", offer_amount: "", notes: "", conditions: "" });
 
   const handleSubmit = async () => {
     await createMutation.mutateAsync({
       bien_id: form.bien_id,
       offer_amount: Number(form.offer_amount),
       notes: form.notes || undefined,
+      conditions: form.conditions || undefined,
     });
     setOpen(false);
-    setForm({ bien_id: "", offer_amount: "", notes: "" });
+    setForm({ bien_id: "", offer_amount: "", notes: "", conditions: "" });
   };
 
   const availableBiens = biens.filter(b => b.status !== "achete" && b.status !== "abandonne");
@@ -83,8 +84,12 @@ export function OffresAchatList() {
                 <Input type="number" value={form.offer_amount} onChange={(e) => setForm({ ...form, offer_amount: e.target.value })} />
               </div>
               <div className="space-y-2">
+                <Label>Conditions</Label>
+                <Textarea value={form.conditions} onChange={(e) => setForm({ ...form, conditions: e.target.value })} rows={3} placeholder="Ex: Sous réserve d'obtention de financement, inspection satisfaisante..." />
+              </div>
+              <div className="space-y-2">
                 <Label>Notes</Label>
-                <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
+                <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} />
               </div>
             </div>
             <DialogFooter>

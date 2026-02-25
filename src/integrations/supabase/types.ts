@@ -1736,6 +1736,7 @@ export type Database = {
       offres_achat: {
         Row: {
           bien_id: string
+          conditions: string | null
           counter_amount: number | null
           created_at: string
           expiry_date: string | null
@@ -1749,6 +1750,7 @@ export type Database = {
         }
         Insert: {
           bien_id: string
+          conditions?: string | null
           counter_amount?: number | null
           created_at?: string
           expiry_date?: string | null
@@ -1762,6 +1764,7 @@ export type Database = {
         }
         Update: {
           bien_id?: string
+          conditions?: string | null
           counter_amount?: number | null
           created_at?: string
           expiry_date?: string | null

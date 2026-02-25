@@ -20,6 +20,8 @@ export interface BienAchat {
   vendeur_id: string | null;
   assigned_to: string | null;
   deleted_at: string | null;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string;
   updated_at: string;
   vendeurs?: { name: string; phone: string | null } | null;
@@ -54,6 +56,8 @@ export interface BienAchatInput {
   description?: string;
   vendeur_id?: string;
   status?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export function useCreateBienAchat() {

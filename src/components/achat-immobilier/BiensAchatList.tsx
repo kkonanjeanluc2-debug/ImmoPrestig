@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Plus, MapPin, Loader2, UserX, Navigation } from "lucide-react";
-import { useBiensAchat, useUpdateBienAchat } from "@/hooks/useBiensAchat";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Building2, Plus, MapPin, Loader2, UserX, Navigation, Pencil, Trash2 } from "lucide-react";
+import { useBiensAchat, useUpdateBienAchat, useDeleteBienAchat, type BienAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { AddBienAchatDialog } from "./AddBienAchatDialog";
+import { EditBienAchatDialog } from "./EditBienAchatDialog";
 
 const STATUS_COLORS: Record<string, string> = {
   prospection: "bg-blue-100 text-blue-800",
@@ -29,6 +32,10 @@ export function BiensAchatList() {
   const { data: biens, isLoading } = useBiensAchat();
   const { data: vendeurs = [] } = useVendeurs();
   const updateMutation = useUpdateBienAchat();
+  const deleteMutation = useDeleteBienAchat();
+
+  const [editBien, setEditBien] = useState<BienAchat | null>(null);
+  const [deleteBienId, setDeleteBienId] = useState<string | null>(null);
 
   const handleVendeurChange = (bienId: string, vendeurId: string) => {
     const bien = biens?.find((b) => b.id === bienId);
@@ -40,6 +47,13 @@ export function BiensAchatList() {
       address: bien.address,
       price: bien.price,
       vendeur_id: vendeurId === "__none__" ? undefined : vendeurId,
+    });
+  };
+
+  const handleDelete = () => {
+    if (!deleteBienId) return;
+    deleteMutation.mutate(deleteBienId, {
+      onSettled: () => setDeleteBienId(null),
     });
   };
 
@@ -71,9 +85,17 @@ export function BiensAchatList() {
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold truncate flex-1">{bien.title}</h3>
-                  <Badge className={STATUS_COLORS[bien.status] || ""}>{STATUS_LABELS[bien.status] || bien.status}</Badge>
+                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditBien(bien)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteBienId(bien.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                <Badge className={STATUS_COLORS[bien.status] || ""}>{STATUS_LABELS[bien.status] || bien.status}</Badge>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2 mb-2">
                   <MapPin className="h-3 w-3" />
                   <span className="truncate">{bien.address}{bien.city ? `, ${bien.city}` : ""}</span>
                 </div>
@@ -86,7 +108,6 @@ export function BiensAchatList() {
                   {bien.bathrooms && <span>{bien.bathrooms} sdb</span>}
                 </div>
 
-                {/* Google Maps itinerary link */}
                 {bien.latitude && bien.longitude && (
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${bien.latitude},${bien.longitude}`}
@@ -99,7 +120,6 @@ export function BiensAchatList() {
                   </a>
                 )}
 
-                {/* Vendeur selector */}
                 <div className="mt-3 pt-3 border-t">
                   <label className="text-xs text-muted-foreground mb-1 block">Vendeur</label>
                   <Select
@@ -127,6 +147,30 @@ export function BiensAchatList() {
           ))}
         </div>
       )}
+
+      {/* Edit dialog */}
+      {editBien && (
+        <EditBienAchatDialog bien={editBien} open={!!editBien} onOpenChange={(o) => !o && setEditBien(null)} />
+      )}
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteBienId} onOpenChange={(o) => !o && setDeleteBienId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce bien ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ce bien sera déplacé dans la corbeille. Vous pourrez le restaurer dans les 30 jours.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

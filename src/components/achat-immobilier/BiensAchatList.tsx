@@ -5,13 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Building2, Plus, MapPin, Loader2, UserX, Navigation, Pencil, Trash2 } from "lucide-react";
+import { Building2, Plus, MapPin, Loader2, UserX, Navigation, Pencil, Trash2, FileText, FileDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBiensAchat, useUpdateBienAchat, useDeleteBienAchat, type BienAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { useOffresAchat } from "@/hooks/useOffresAchat";
 import { useAchatsImmobiliers } from "@/hooks/useAchatsImmobiliers";
+import { useEcheancesAchats } from "@/hooks/useEcheancesAchats";
+import { useAgency } from "@/hooks/useAgency";
 import { AddBienAchatDialog } from "./AddBienAchatDialog";
 import { EditBienAchatDialog } from "./EditBienAchatDialog";
+import { DocumentsAchatDialog } from "./DocumentsAchatDialog";
+import { generateFicheRecapBien, generateOffreAchatPDF, generateDossierAchatPDF } from "@/lib/generateAchatPDF";
+
 
 const STATUS_COLORS: Record<string, string> = {
   prospection: "bg-blue-100 text-blue-800",
@@ -36,6 +42,8 @@ export function BiensAchatList() {
   const { data: vendeurs = [] } = useVendeurs();
   const { data: offres = [] } = useOffresAchat();
   const { data: achats = [] } = useAchatsImmobiliers();
+  const { data: echeances = [] } = useEcheancesAchats();
+  const { data: agency } = useAgency();
   const updateMutation = useUpdateBienAchat();
   const deleteMutation = useDeleteBienAchat();
 
@@ -47,6 +55,7 @@ export function BiensAchatList() {
 
   const [editBien, setEditBien] = useState<BienAchat | null>(null);
   const [deleteBienId, setDeleteBienId] = useState<string | null>(null);
+  const [docsBien, setDocsBien] = useState<BienAchat | null>(null);
 
   const handleVendeurChange = (bienId: string, vendeurId: string) => {
     const bien = biens?.find((b) => b.id === bienId);
@@ -171,10 +180,62 @@ export function BiensAchatList() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Documents & PDF buttons */}
+                <div className="flex gap-2 mt-3 pt-3 border-t">
+                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setDocsBien(bien)}>
+                    <FileText className="h-3.5 w-3.5 mr-1" />
+                    Documents
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <FileDown className="h-3.5 w-3.5 mr-1" />
+                        PDF
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {
+                        const bienOffres = offres.filter(o => o.bien_id === bien.id);
+                        const bienAchat = achats.find(a => a.bien_id === bien.id) || null;
+                        const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined } : null;
+                        generateFicheRecapBien(bien, bienOffres, bienAchat, agencyInfo);
+                      }}>
+                        Fiche récapitulative
+                      </DropdownMenuItem>
+                      {offres.filter(o => o.bien_id === bien.id).length > 0 && (
+                        <DropdownMenuItem onClick={() => {
+                          const lastOffre = offres.filter(o => o.bien_id === bien.id)[0];
+                          const vendeurName = bien.vendeurs?.name || "Vendeur";
+                          const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined } : null;
+                          generateOffreAchatPDF(lastOffre, bien, vendeurName, agencyInfo);
+                        }}>
+                          Offre d'achat
+                        </DropdownMenuItem>
+                      )}
+                      {achats.some(a => a.bien_id === bien.id) && (
+                        <DropdownMenuItem onClick={() => {
+                          const bienAchat = achats.find(a => a.bien_id === bien.id)!;
+                          const bienOffres = offres.filter(o => o.bien_id === bien.id);
+                          const bienEcheances = echeances.filter(e => e.achat_id === bienAchat.id);
+                          const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined } : null;
+                          generateDossierAchatPDF(bien, bienOffres, bienAchat, bienEcheances, agencyInfo);
+                        }}>
+                          Dossier d'achat complet
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Documents dialog */}
+      {docsBien && (
+        <DocumentsAchatDialog bien={docsBien} open={!!docsBien} onOpenChange={(o) => !o && setDocsBien(null)} />
       )}
 
       {/* Edit dialog */}

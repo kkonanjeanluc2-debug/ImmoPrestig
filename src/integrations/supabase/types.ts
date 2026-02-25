@@ -953,6 +953,53 @@ export type Database = {
           },
         ]
       }
+      documents_achats: {
+        Row: {
+          bien_id: string
+          created_at: string
+          file_size: string | null
+          file_url: string | null
+          id: string
+          name: string
+          notes: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bien_id: string
+          created_at?: string
+          file_size?: string | null
+          file_url?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bien_id?: string
+          created_at?: string
+          file_size?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_achats_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_achat"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       echeances_achats: {
         Row: {
           achat_id: string

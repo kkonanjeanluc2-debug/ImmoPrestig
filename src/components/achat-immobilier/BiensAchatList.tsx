@@ -1,8 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Plus, MapPin, Loader2 } from "lucide-react";
-import { useBiensAchat } from "@/hooks/useBiensAchat";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Building2, Plus, MapPin, Loader2, UserX } from "lucide-react";
+import { useBiensAchat, useUpdateBienAchat } from "@/hooks/useBiensAchat";
+import { useVendeurs } from "@/hooks/useVendeurs";
 import { AddBienAchatDialog } from "./AddBienAchatDialog";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -25,6 +27,21 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function BiensAchatList() {
   const { data: biens, isLoading } = useBiensAchat();
+  const { data: vendeurs = [] } = useVendeurs();
+  const updateMutation = useUpdateBienAchat();
+
+  const handleVendeurChange = (bienId: string, vendeurId: string) => {
+    const bien = biens?.find((b) => b.id === bienId);
+    if (!bien) return;
+    updateMutation.mutate({
+      id: bienId,
+      title: bien.title,
+      property_type: bien.property_type,
+      address: bien.address,
+      price: bien.price,
+      vendeur_id: vendeurId === "__none__" ? undefined : vendeurId,
+    });
+  };
 
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -63,13 +80,34 @@ export function BiensAchatList() {
                 <p className="text-lg font-bold text-primary">
                   {Number(bien.price).toLocaleString("fr-FR")} FCFA
                 </p>
-                {bien.vendeurs && (
-                  <p className="text-sm text-muted-foreground mt-1">Vendeur: {bien.vendeurs.name}</p>
-                )}
                 <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
                   {bien.area && <span>{bien.area} m²</span>}
                   {bien.bedrooms && <span>{bien.bedrooms} ch.</span>}
                   {bien.bathrooms && <span>{bien.bathrooms} sdb</span>}
+                </div>
+
+                {/* Vendeur selector */}
+                <div className="mt-3 pt-3 border-t">
+                  <label className="text-xs text-muted-foreground mb-1 block">Vendeur</label>
+                  <Select
+                    value={bien.vendeur_id || "__none__"}
+                    onValueChange={(v) => handleVendeurChange(bien.id, v)}
+                    disabled={updateMutation.isPending}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Aucun vendeur" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <UserX className="h-3 w-3" /> Aucun vendeur
+                        </span>
+                      </SelectItem>
+                      {vendeurs.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>

@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Plus, MapPin, Loader2, UserX } from "lucide-react";
+import { Building2, Plus, MapPin, Loader2, UserX, Navigation } from "lucide-react";
 import { useBiensAchat, useUpdateBienAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { AddBienAchatDialog } from "./AddBienAchatDialog";
@@ -85,6 +85,19 @@ export function BiensAchatList() {
                   {bien.bedrooms && <span>{bien.bedrooms} ch.</span>}
                   {bien.bathrooms && <span>{bien.bathrooms} sdb</span>}
                 </div>
+
+                {/* Google Maps itinerary link */}
+                {bien.latitude && bien.longitude && (
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${bien.latitude},${bien.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 mt-2 text-xs text-primary hover:underline"
+                  >
+                    <Navigation className="h-3 w-3" />
+                    Itinéraire Google Maps
+                  </a>
+                )}
 
                 {/* Vendeur selector */}
                 <div className="mt-3 pt-3 border-t">

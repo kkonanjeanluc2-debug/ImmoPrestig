@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin, Navigation } from "lucide-react";
 import { useCreateBienAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
+import { toast } from "sonner";
 
 const PROPERTY_TYPES = [
   { value: "appartement", label: "Appartement" },
@@ -28,6 +29,7 @@ export function AddBienAchatDialog({ children }: Props) {
   const [open, setOpen] = useState(false);
   const createMutation = useCreateBienAchat();
   const { data: vendeurs = [] } = useVendeurs();
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -40,7 +42,33 @@ export function AddBienAchatDialog({ children }: Props) {
     bathrooms: "",
     description: "",
     vendeur_id: "",
+    latitude: "",
+    longitude: "",
   });
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("La géolocalisation n'est pas supportée par votre navigateur");
+      return;
+    }
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setForm((prev) => ({
+          ...prev,
+          latitude: String(position.coords.latitude),
+          longitude: String(position.coords.longitude),
+        }));
+        setGettingLocation(false);
+        toast.success("Position GPS capturée");
+      },
+      (error) => {
+        setGettingLocation(false);
+        toast.error("Impossible d'obtenir la position GPS");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const handleSubmit = async () => {
     await createMutation.mutateAsync({
@@ -54,9 +82,11 @@ export function AddBienAchatDialog({ children }: Props) {
       bathrooms: form.bathrooms ? Number(form.bathrooms) : undefined,
       description: form.description || undefined,
       vendeur_id: form.vendeur_id || undefined,
+      latitude: form.latitude ? Number(form.latitude) : undefined,
+      longitude: form.longitude ? Number(form.longitude) : undefined,
     });
     setOpen(false);
-    setForm({ title: "", property_type: "appartement", address: "", city: "", price: "", area: "", bedrooms: "", bathrooms: "", description: "", vendeur_id: "" });
+    setForm({ title: "", property_type: "appartement", address: "", city: "", price: "", area: "", bedrooms: "", bathrooms: "", description: "", vendeur_id: "", latitude: "", longitude: "" });
   };
 
   const isValid = form.title && form.address && form.price;
@@ -113,6 +143,48 @@ export function AddBienAchatDialog({ children }: Props) {
               <Input type="number" value={form.bathrooms} onChange={(e) => setForm({ ...form, bathrooms: e.target.value })} />
             </div>
           </div>
+
+          {/* GPS Position */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Position GPS
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                step="any"
+                placeholder="Latitude"
+                value={form.latitude}
+                onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                step="any"
+                placeholder="Longitude"
+                value={form.longitude}
+                onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleGetLocation}
+                disabled={gettingLocation}
+                title="Capturer ma position"
+              >
+                {gettingLocation ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Navigation className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Cliquez sur le bouton pour capturer votre position actuelle</p>
+          </div>
+
           {vendeurs.length > 0 && (
             <div className="space-y-2">
               <Label>Vendeur</Label>

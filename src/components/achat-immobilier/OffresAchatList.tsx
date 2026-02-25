@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FileText, Plus, Loader2 } from "lucide-react";
 import { useOffresAchat, useCreateOffreAchat, useUpdateOffreAchat } from "@/hooks/useOffresAchat";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
@@ -245,9 +246,18 @@ export function OffresAchatList() {
                   <Badge className={STATUS_COLORS[offre.status] || ""}>{STATUS_LABELS[offre.status] || offre.status}</Badge>
                   {(offre.status === "en_attente" || offre.status === "contre_offre") && (
                     <div className="flex gap-1 flex-wrap">
-                      <Button size="sm" variant="outline" onClick={() => setAcceptOffre(offre)}>
-                        Accepter
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button size="sm" variant="outline" onClick={() => setAcceptOffre(offre)} disabled={!offre.biens_achat?.vendeur_id}>
+                                Accepter
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {!offre.biens_achat?.vendeur_id && <TooltipContent>Veuillez d'abord associer un vendeur à ce bien</TooltipContent>}
+                        </Tooltip>
+                      </TooltipProvider>
                       <Button size="sm" variant="outline" onClick={() => setContreOffreId(offre.id)}>Contre-offre</Button>
                       <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: offre.id, status: "refusee" })}>Refuser</Button>
                     </div>

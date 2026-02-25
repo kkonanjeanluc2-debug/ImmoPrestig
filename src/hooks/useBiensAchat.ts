@@ -80,8 +80,13 @@ export function useCreateBienAchat() {
 export function useUpdateBienAchat() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...input }: BienAchatInput & { id: string }) => {
-      const { error } = await supabase.from("biens_achat").update(input).eq("id", id);
+    mutationFn: async ({ id, ...input }: Partial<BienAchatInput> & { id: string }) => {
+      const updateData: Record<string, unknown> = { ...input };
+      // Allow explicitly setting vendeur_id to null
+      if (!("vendeur_id" in input) || input.vendeur_id === undefined) {
+        updateData.vendeur_id = null;
+      }
+      const { error } = await supabase.from("biens_achat").update(updateData).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

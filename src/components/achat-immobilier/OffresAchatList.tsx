@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Plus, Loader2 } from "lucide-react";
 import { useOffresAchat, useCreateOffreAchat, useUpdateOffreAchat } from "@/hooks/useOffresAchat";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
+import { useCreateAchatImmobilier } from "@/hooks/useAchatsImmobiliers";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -34,6 +36,8 @@ export function OffresAchatList() {
   const { data: biens = [] } = useBiensAchat();
   const createMutation = useCreateOffreAchat();
   const updateMutation = useUpdateOffreAchat();
+  const createAchatMutation = useCreateAchatImmobilier();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ bien_id: "", offer_amount: "", conditions: "" });
   const [contreOffreId, setContreOffreId] = useState<string | null>(null);
@@ -54,6 +58,18 @@ export function OffresAchatList() {
     await updateMutation.mutateAsync({ id: contreOffreId, status: "contre_offre", counter_amount: Number(counterAmount) });
     setContreOffreId(null);
     setCounterAmount("");
+  };
+
+  const handleAccept = async (offre: any) => {
+    await updateMutation.mutateAsync({ id: offre.id, status: "acceptee" });
+    // Auto-create achat from accepted offer
+    const finalAmount = offre.counter_amount || offre.offer_amount;
+    await createAchatMutation.mutateAsync({
+      bien_id: offre.bien_id,
+      sale_price: Number(finalAmount),
+      payment_type: "comptant",
+      vendeur_id: offre.biens_achat?.vendeur_id || undefined,
+    });
   };
 
   const availableBiens = biens.filter(b => b.status !== "achete" && b.status !== "abandonne");
@@ -153,11 +169,14 @@ export function OffresAchatList() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge className={STATUS_COLORS[offre.status] || ""}>{STATUS_LABELS[offre.status] || offre.status}</Badge>
-                  {offre.status === "en_attente" && (
+                  {(offre.status === "en_attente" || offre.status === "contre_offre") && (
                     <div className="flex gap-1 flex-wrap">
-                      <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: offre.id, status: "acceptee" })}>Acceptée</Button>
+                      <Button size="sm" variant="outline" onClick={() => handleAccept(offre)} disabled={updateMutation.isPending || createAchatMutation.isPending}>
+                        {(updateMutation.isPending || createAchatMutation.isPending) ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                        Accepter
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => setContreOffreId(offre.id)}>Contre-offre</Button>
-                      <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: offre.id, status: "refusee" })}>Refusée</Button>
+                      <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: offre.id, status: "refusee" })}>Refuser</Button>
                     </div>
                   )}
                 </div>

@@ -4,9 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Building2, Plus, MapPin, Loader2, UserX, Navigation, Pencil, Trash2 } from "lucide-react";
 import { useBiensAchat, useUpdateBienAchat, useDeleteBienAchat, type BienAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
+import { useOffresAchat } from "@/hooks/useOffresAchat";
+import { useAchatsImmobiliers } from "@/hooks/useAchatsImmobiliers";
 import { AddBienAchatDialog } from "./AddBienAchatDialog";
 import { EditBienAchatDialog } from "./EditBienAchatDialog";
 
@@ -31,8 +34,16 @@ const STATUS_LABELS: Record<string, string> = {
 export function BiensAchatList() {
   const { data: biens, isLoading } = useBiensAchat();
   const { data: vendeurs = [] } = useVendeurs();
+  const { data: offres = [] } = useOffresAchat();
+  const { data: achats = [] } = useAchatsImmobiliers();
   const updateMutation = useUpdateBienAchat();
   const deleteMutation = useDeleteBienAchat();
+
+  const bienHasOffreOrAchat = (bienId: string) => {
+    const hasOffre = offres.some(o => o.bien_id === bienId && o.status !== "refusee" && o.status !== "expiree");
+    const hasAchat = achats.some(a => a.bien_id === bienId);
+    return hasOffre || hasAchat;
+  };
 
   const [editBien, setEditBien] = useState<BienAchat | null>(null);
   const [deleteBienId, setDeleteBienId] = useState<string | null>(null);
@@ -83,16 +94,34 @@ export function BiensAchatList() {
           {biens.map((bien) => (
             <Card key={bien.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold truncate flex-1">{bien.title}</h3>
-                  <div className="flex items-center gap-1 ml-2 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditBien(bien)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteBienId(bien.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold truncate flex-1">{bien.title}</h3>
+                    <div className="flex items-center gap-1 ml-2 shrink-0">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditBien(bien)} disabled={bienHasOffreOrAchat(bien.id)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {bienHasOffreOrAchat(bien.id) && <TooltipContent>Ce bien est lié à une offre ou un achat</TooltipContent>}
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteBienId(bien.id)} disabled={bienHasOffreOrAchat(bien.id)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {bienHasOffreOrAchat(bien.id) && <TooltipContent>Ce bien est lié à une offre ou un achat</TooltipContent>}
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                 </div>
                 <Badge className={STATUS_COLORS[bien.status] || ""}>{STATUS_LABELS[bien.status] || bien.status}</Badge>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2 mb-2">

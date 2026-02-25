@@ -185,17 +185,21 @@ export function AddBienAchatDialog({ children }: Props) {
             <p className="text-xs text-muted-foreground">Cliquez sur le bouton pour capturer votre position actuelle</p>
           </div>
 
-          {vendeurs.length > 0 && (
-            <div className="space-y-2">
-              <Label>Vendeur</Label>
-              <Select value={form.vendeur_id} onValueChange={(v) => setForm({ ...form, vendeur_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Sélectionner un vendeur" /></SelectTrigger>
-                <SelectContent>
-                  {vendeurs.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>Vendeur</Label>
+            <Select value={form.vendeur_id} onValueChange={(v) => setForm({ ...form, vendeur_id: v === "__none__" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="Sélectionner un vendeur" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">
+                  <span className="text-muted-foreground">Aucun vendeur</span>
+                </SelectItem>
+                {vendeurs.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {vendeurs.length === 0 && (
+              <p className="text-xs text-muted-foreground">Aucun vendeur enregistré. Ajoutez-en depuis l'onglet Vendeurs.</p>
+            )}
+          </div>
           <div className="space-y-2">
             <Label>Description</Label>
             <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />

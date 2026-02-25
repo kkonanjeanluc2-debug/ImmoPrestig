@@ -36,6 +36,8 @@ export function OffresAchatList() {
   const updateMutation = useUpdateOffreAchat();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ bien_id: "", offer_amount: "", conditions: "" });
+  const [contreOffreId, setContreOffreId] = useState<string | null>(null);
+  const [counterAmount, setCounterAmount] = useState("");
 
   const handleSubmit = async () => {
     await createMutation.mutateAsync({
@@ -45,6 +47,13 @@ export function OffresAchatList() {
     });
     setOpen(false);
     setForm({ bien_id: "", offer_amount: "", conditions: "" });
+  };
+
+  const handleContreOffre = async () => {
+    if (!contreOffreId || !counterAmount) return;
+    await updateMutation.mutateAsync({ id: contreOffreId, status: "contre_offre", counter_amount: Number(counterAmount) });
+    setContreOffreId(null);
+    setCounterAmount("");
   };
 
   const availableBiens = biens.filter(b => b.status !== "achete" && b.status !== "abandonne");
@@ -98,6 +107,29 @@ export function OffresAchatList() {
         </Dialog>
       </div>
 
+      {/* Dialog contre-offre */}
+      <Dialog open={!!contreOffreId} onOpenChange={(v) => { if (!v) { setContreOffreId(null); setCounterAmount(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Faire une contre-offre</DialogTitle>
+            <DialogDescription>Indiquez le montant de votre contre-proposition</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Montant de la contre-offre (FCFA) *</Label>
+              <Input type="number" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} placeholder="Ex: 100 000 000" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setContreOffreId(null); setCounterAmount(""); }}>Annuler</Button>
+            <Button onClick={handleContreOffre} disabled={!counterAmount || updateMutation.isPending}>
+              {updateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {!offres?.length ? (
         <Card>
           <CardContent className="text-center py-12">
@@ -114,13 +146,17 @@ export function OffresAchatList() {
                   <p className="font-semibold">{offre.biens_achat?.title || "Bien inconnu"}</p>
                   <p className="text-sm text-muted-foreground">{offre.biens_achat?.address}</p>
                   <p className="text-lg font-bold mt-1">{Number(offre.offer_amount).toLocaleString("fr-FR")} FCFA</p>
+                  {offre.status === "contre_offre" && offre.counter_amount && (
+                    <p className="text-sm font-semibold text-purple-700">Contre-offre : {Number(offre.counter_amount).toLocaleString("fr-FR")} FCFA</p>
+                  )}
                   <p className="text-xs text-muted-foreground">{format(new Date(offre.offer_date), "dd MMM yyyy", { locale: fr })}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge className={STATUS_COLORS[offre.status] || ""}>{STATUS_LABELS[offre.status] || offre.status}</Badge>
                   {offre.status === "en_attente" && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                       <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: offre.id, status: "acceptee" })}>Acceptée</Button>
+                      <Button size="sm" variant="outline" onClick={() => setContreOffreId(offre.id)}>Contre-offre</Button>
                       <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: offre.id, status: "refusee" })}>Refusée</Button>
                     </div>
                   )}

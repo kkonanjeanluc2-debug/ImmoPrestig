@@ -12,6 +12,7 @@ export interface OffreAchat {
   status: string;
   counter_amount: number | null;
   notes: string | null;
+  conditions: string | null;
   expiry_date: string | null;
   created_at: string;
   biens_achat?: { title: string; address: string } | null;
@@ -40,6 +41,7 @@ export interface OffreAchatInput {
   status?: string;
   counter_amount?: number;
   notes?: string;
+  conditions?: string;
   expiry_date?: string;
 }
 

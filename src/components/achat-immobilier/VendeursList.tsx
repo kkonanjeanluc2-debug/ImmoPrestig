@@ -1,12 +1,17 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { DateSelect } from "@/components/ui/date-select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users, Plus, Loader2, Phone, Mail, Building2, ChevronDown, MapPin } from "lucide-react";
+import { Users, Plus, Loader2, Phone, Mail, Building2, ChevronDown, MapPin, User, CreditCard } from "lucide-react";
 import { useVendeurs, useCreateVendeur } from "@/hooks/useVendeurs";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 
@@ -19,22 +24,52 @@ const STATUS_LABELS: Record<string, string> = {
   abandonne: "Abandonné",
 };
 
+const vendeurSchema = z.object({
+  name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100, "Le nom doit contenir moins de 100 caractères"),
+  phone: z.string().trim().max(20, "Le téléphone doit contenir moins de 20 caractères").optional().or(z.literal("")),
+  email: z.string().trim().max(255, "L'email doit contenir moins de 255 caractères").optional().or(z.literal("")).refine((val) => !val || z.string().email().safeParse(val).success, "Email invalide"),
+  address: z.string().trim().max(500, "L'adresse doit contenir moins de 500 caractères").optional().or(z.literal("")),
+  birth_date: z.date().optional(),
+  birth_place: z.string().trim().max(100).optional().or(z.literal("")),
+  profession: z.string().trim().max(100).optional().or(z.literal("")),
+  cni_number: z.string().trim().max(50).optional().or(z.literal("")),
+});
+
+type VendeurFormData = z.infer<typeof vendeurSchema>;
+
 export function VendeursList() {
   const { data: vendeurs, isLoading } = useVendeurs();
   const { data: biens = [] } = useBiensAchat();
   const createMutation = useCreateVendeur();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "" });
 
-  const handleSubmit = async () => {
+  const form = useForm<VendeurFormData>({
+    resolver: zodResolver(vendeurSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      email: "",
+      address: "",
+      birth_date: undefined,
+      birth_place: "",
+      profession: "",
+      cni_number: "",
+    },
+  });
+
+  const onSubmit = async (data: VendeurFormData) => {
     await createMutation.mutateAsync({
-      name: form.name,
-      phone: form.phone || undefined,
-      email: form.email || undefined,
-      address: form.address || undefined,
+      name: data.name,
+      phone: data.phone || undefined,
+      email: data.email || undefined,
+      address: data.address || undefined,
+      birth_date: data.birth_date ? format(data.birth_date, "yyyy-MM-dd") : undefined,
+      birth_place: data.birth_place || undefined,
+      profession: data.profession || undefined,
+      cni_number: data.cni_number || undefined,
     });
     setOpen(false);
-    setForm({ name: "", phone: "", email: "", address: "" });
+    form.reset();
   };
 
   const getBiensForVendeur = (vendeurId: string) =>
@@ -48,42 +83,157 @@ export function VendeursList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Vendeurs</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) form.reset(); }}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4 mr-2" />Ajouter un vendeur</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nouveau vendeur</DialogTitle>
-              <DialogDescription>Ajoutez les coordonnées du vendeur</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Nom complet *</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Téléphone</Label>
-                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom complet *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Jean Dupont" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Téléphone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+225 07 00 00 00 00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="jean@exemple.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label>Email</Label>
-                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Adresse</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Abidjan, Cocody" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Informations complémentaires */}
+                <div className="border-t pt-4 mt-2">
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Informations complémentaires
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="birth_date"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col sm:col-span-2">
+                          <FormLabel>Date de naissance</FormLabel>
+                          <FormControl>
+                            <DateSelect
+                              value={field.value}
+                              onChange={field.onChange}
+                              maxYear={new Date().getFullYear()}
+                              minYear={1900}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="birth_place"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lieu de naissance</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Abidjan" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <FormField
+                      control={form.control}
+                      name="profession"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Profession</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Entrepreneur" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cni_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            Numéro CNI
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="CI00000000" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Adresse</Label>
-                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-              <Button onClick={handleSubmit} disabled={!form.name || createMutation.isPending}>
-                {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Ajouter
-              </Button>
-            </DialogFooter>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Ajouter
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
@@ -116,6 +266,9 @@ export function VendeursList() {
                       <p className="text-sm text-muted-foreground flex items-center gap-1 truncate">
                         <Mail className="h-3 w-3" />{v.email}
                       </p>
+                    )}
+                    {v.profession && (
+                      <p className="text-xs text-muted-foreground mt-1">{v.profession}</p>
                     )}
                   </div>
                 </div>

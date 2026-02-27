@@ -110,14 +110,16 @@ export function OffresAchatList() {
     if (!acceptOffre) return;
     await updateMutation.mutateAsync({ id: acceptOffre.id, status: "acceptee" });
     const finalAmount = Number(acceptOffre.counter_amount || acceptOffre.offer_amount);
+    const notaryFeesAmount = achatForm.notary_fees ? Math.round(finalAmount * Number(achatForm.notary_fees) / 100) : undefined;
+    const agencyFeesAmount = achatForm.agency_fees ? Math.round(finalAmount * Number(achatForm.agency_fees) / 100) : undefined;
     const achatResult = await createAchatMutation.mutateAsync({
       bien_id: acceptOffre.bien_id,
       sale_price: finalAmount,
       payment_type: achatForm.payment_type,
       total_installments: achatForm.total_installments ? Number(achatForm.total_installments) : undefined,
       down_payment: achatForm.down_payment ? Number(achatForm.down_payment) : undefined,
-      notary_fees: achatForm.notary_fees ? Number(achatForm.notary_fees) : undefined,
-      agency_fees: achatForm.agency_fees ? Number(achatForm.agency_fees) : undefined,
+      notary_fees: notaryFeesAmount,
+      agency_fees: agencyFeesAmount,
       notes: achatForm.notes || undefined,
       vendeur_id: acceptOffre.biens_achat?.vendeur_id || undefined,
     });
@@ -270,14 +272,25 @@ export function OffresAchatList() {
                 </div>
               </div>
             )}
+            <p className="text-xs text-destructive font-medium">⚠️ Conformément au droit ivoirien (Décret n°2013-461), les frais de notaire sont fixés entre 7% et 10% du prix de vente. Les frais d'agence ne doivent pas excéder 10%.</p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Frais de notaire</Label>
-                <Input type="number" value={achatForm.notary_fees} onChange={(e) => setAchatForm({ ...achatForm, notary_fees: e.target.value })} />
+                <Label>Frais de notaire (%)</Label>
+                <Input type="number" min="0" max="100" step="0.5" value={achatForm.notary_fees} onChange={(e) => setAchatForm({ ...achatForm, notary_fees: e.target.value })} placeholder="Ex: 8" />
+                {achatForm.notary_fees && acceptOffre && (
+                  <p className="text-xs text-muted-foreground">
+                    = {Math.round(Number(acceptOffre.counter_amount || acceptOffre.offer_amount) * Number(achatForm.notary_fees) / 100).toLocaleString("fr-FR")} FCFA
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label>Frais d'agence</Label>
-                <Input type="number" value={achatForm.agency_fees} onChange={(e) => setAchatForm({ ...achatForm, agency_fees: e.target.value })} />
+                <Label>Frais d'agence (%)</Label>
+                <Input type="number" min="0" max="100" step="0.5" value={achatForm.agency_fees} onChange={(e) => setAchatForm({ ...achatForm, agency_fees: e.target.value })} placeholder="Ex: 5" />
+                {achatForm.agency_fees && acceptOffre && (
+                  <p className="text-xs text-muted-foreground">
+                    = {Math.round(Number(acceptOffre.counter_amount || acceptOffre.offer_amount) * Number(achatForm.agency_fees) / 100).toLocaleString("fr-FR")} FCFA
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">

@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
       .single();
 
     const agencyName = agency?.name || "ImmoPrestige";
-    const agencyEmail = agency?.email || "noreply@immoprestigeci.com";
+    const senderEmail = "noreply@immoprestigeci.com";
 
     // Build the link
     const appUrl = Deno.env.get("VITE_APP_URL") || "https://property-grace.lovable.app";
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
     `;
 
     const emailResult = await sendEmail({
-      from: `${agencyName} <${agencyEmail}>`,
+      from: `${agencyName} <${senderEmail}>`,
       to: [vendeur.email],
       subject: `Offre d'achat reçue - ${offre.biens_achat?.title}`,
       html,

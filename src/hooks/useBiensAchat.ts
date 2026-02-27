@@ -55,6 +55,7 @@ export interface BienAchatInput {
   bathrooms?: number;
   description?: string;
   vendeur_id?: string;
+  assigned_to?: string | null;
   status?: string;
   latitude?: number;
   longitude?: number;
@@ -87,8 +88,12 @@ export function useUpdateBienAchat() {
     mutationFn: async ({ id, ...input }: Partial<BienAchatInput> & { id: string }) => {
       const updateData: Record<string, unknown> = { ...input };
       // Allow explicitly setting vendeur_id to null
-      if (!("vendeur_id" in input) || input.vendeur_id === undefined) {
+      if ("vendeur_id" in input && input.vendeur_id === undefined) {
         updateData.vendeur_id = null;
+      }
+      // Allow explicitly setting assigned_to to null
+      if ("assigned_to" in input && input.assigned_to === null) {
+        updateData.assigned_to = null;
       }
       const { error } = await supabase.from("biens_achat").update(updateData).eq("id", id);
       if (error) throw error;

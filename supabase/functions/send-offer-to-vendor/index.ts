@@ -104,6 +104,12 @@ Deno.serve(async (req) => {
 
     const agencyName = agency?.name || "ImmoPrestige";
     const senderEmail = "noreply@immoprestigeci.com";
+    const senderDomain = senderEmail.split("@")[1]?.toLowerCase();
+    const agencyEmail = agency?.email?.trim().toLowerCase();
+    const safeReplyTo =
+      agencyEmail && senderDomain && agencyEmail.endsWith(`@${senderDomain}`)
+        ? agencyEmail
+        : undefined;
 
     // Build the link
     const appUrl = Deno.env.get("VITE_APP_URL") || "https://property-grace.lovable.app";
@@ -167,7 +173,7 @@ Deno.serve(async (req) => {
       to: [vendeur.email],
       subject: `Offre d'achat - ${offre.biens_achat?.title}`,
       html,
-      replyTo: agency?.email || undefined,
+      replyTo: safeReplyTo,
     });
 
     if (!emailResult.success) {

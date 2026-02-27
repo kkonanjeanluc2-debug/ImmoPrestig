@@ -25,12 +25,12 @@ export interface PVFamilleData {
   familyName: string;
   representativeName: string;
   representativeRole: string;
-  members: { name: string; role: string; cniNumber?: string }[];
+  members: { name: string; role: string; cniNumber?: string; signatureData?: string }[];
   landDescription: string;
   landArea: number;
   landLocation: string;
   decisions: string[];
-  witnesses: { name: string; cniNumber?: string }[];
+  witnesses: { name: string; cniNumber?: string; signatureData?: string }[];
   meetingDate: string;
   meetingPlace: string;
 }
@@ -345,7 +345,7 @@ export const generatePVFamille = async (
 
   yPos += 15;
 
-  // Signatures
+  // Signatures des membres
   yPos = checkPageBreak(doc, yPos, 60);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
@@ -355,28 +355,83 @@ export const generatePVFamille = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
 
-  // Grille de signatures (2 colonnes)
   const colWidth = (maxWidth - 20) / 2;
   let xPos = margin;
   let signatureCount = 0;
 
-  data.members.forEach((member) => {
+  for (const member of data.members) {
     if (signatureCount % 2 === 0 && signatureCount > 0) {
-      yPos += 25;
+      yPos += 50;
       xPos = margin;
     }
     if (signatureCount % 2 === 0) {
-      yPos = checkPageBreak(doc, yPos, 30);
+      yPos = checkPageBreak(doc, yPos, 55);
     }
 
     doc.text(member.name, xPos, yPos);
     doc.text(`(${member.role})`, xPos, yPos + 5);
-    doc.setDrawColor(150, 150, 150);
-    doc.line(xPos, yPos + 20, xPos + colWidth - 10, yPos + 20);
+
+    if (member.signatureData) {
+      try {
+        doc.addImage(member.signatureData, "PNG", xPos, yPos + 8, 60, 30);
+      } catch (e) {
+        doc.setDrawColor(150, 150, 150);
+        doc.line(xPos, yPos + 30, xPos + colWidth - 10, yPos + 30);
+      }
+    } else {
+      doc.setDrawColor(150, 150, 150);
+      doc.line(xPos, yPos + 30, xPos + colWidth - 10, yPos + 30);
+    }
 
     xPos = margin + colWidth + 20;
     signatureCount++;
-  });
+  }
+
+  // Signatures des témoins
+  if (data.witnesses.some(w => w.signatureData)) {
+    yPos += signatureCount % 2 === 0 ? 10 : 55;
+    yPos = checkPageBreak(doc, yPos, 60);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...primaryColor);
+    doc.text("SIGNATURES DES TÉMOINS", margin, yPos);
+
+    yPos += 10;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...textColor);
+
+    xPos = margin;
+    let witnessCount = 0;
+
+    for (const witness of data.witnesses) {
+      if (witnessCount % 2 === 0 && witnessCount > 0) {
+        yPos += 50;
+        xPos = margin;
+      }
+      if (witnessCount % 2 === 0) {
+        yPos = checkPageBreak(doc, yPos, 55);
+      }
+
+      doc.text(witness.name, xPos, yPos);
+      if (witness.cniNumber) {
+        doc.text(`(CNI: ${witness.cniNumber})`, xPos, yPos + 5);
+      }
+
+      if (witness.signatureData) {
+        try {
+          doc.addImage(witness.signatureData, "PNG", xPos, yPos + 8, 60, 30);
+        } catch (e) {
+          doc.setDrawColor(150, 150, 150);
+          doc.line(xPos, yPos + 30, xPos + colWidth - 10, yPos + 30);
+        }
+      } else {
+        doc.setDrawColor(150, 150, 150);
+        doc.line(xPos, yPos + 30, xPos + colWidth - 10, yPos + 30);
+      }
+
+      xPos = margin + colWidth + 20;
+      witnessCount++;
+    }
+  }
 
   // Add footers to all pages
   const totalPages = doc.getNumberOfPages();

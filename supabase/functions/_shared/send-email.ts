@@ -5,6 +5,9 @@ export interface EmailRequest {
   to: string[];
   subject: string;
   html: string;
+  text?: string;
+  replyTo?: string;
+  headers?: Record<string, string>;
   attachments?: Array<{ filename: string; content: string }>;
 }
 
@@ -12,6 +15,27 @@ export interface EmailResponse {
   success: boolean;
   id?: string;
   error?: string;
+}
+
+// Strip HTML tags to generate a plain-text fallback
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/div>/gi, "\n")
+    .replace(/<\/h[1-6]>/gi, "\n\n")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<hr[^>]*>/gi, "\n---\n")
+    .replace(/<a[^>]+href="([^"]*)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 async function getEmailProvider(): Promise<string> {
@@ -41,7 +65,14 @@ async function sendViaResend(params: EmailRequest): Promise<EmailResponse> {
     to: params.to,
     subject: params.subject,
     html: params.html,
+    text: params.text || htmlToPlainText(params.html),
   };
+  if (params.replyTo) {
+    payload.reply_to = params.replyTo;
+  }
+  if (params.headers) {
+    payload.headers = params.headers;
+  }
   if (params.attachments) {
     payload.attachments = params.attachments;
   }
@@ -66,7 +97,12 @@ async function sendViaMaileroo(params: EmailRequest): Promise<EmailResponse> {
     to: params.to.map(email => ({ address: email })),
     subject: params.subject,
     html: params.html,
+    plain: params.text || htmlToPlainText(params.html),
   };
+
+  if (params.replyTo) {
+    body.reply_to = [{ address: params.replyTo }];
+  }
 
   if (params.attachments && params.attachments.length > 0) {
     body.attachments = params.attachments.map(a => ({
@@ -97,6 +133,11 @@ async function sendViaMaileroo(params: EmailRequest): Promise<EmailResponse> {
 export async function sendEmail(params: EmailRequest): Promise<EmailResponse> {
   const provider = await getEmailProvider();
   console.log(`Sending email via ${provider} to ${params.to.join(", ")}`);
+
+  // Auto-generate plain text if not provided
+  if (!params.text) {
+    params.text = htmlToPlainText(params.html);
+  }
 
   if (provider === "maileroo") {
     return sendViaMaileroo(params);

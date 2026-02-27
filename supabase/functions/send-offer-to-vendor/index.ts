@@ -117,37 +117,47 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Send email
+    // Send email with improved deliverability
     const html = `
       <!DOCTYPE html>
-      <html>
-      <head><meta charset="utf-8"></head>
-      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
-        <div style="background: #1a365d; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 22px;">${agencyName}</h1>
-          <p style="margin: 5px 0 0; opacity: 0.9;">Offre d'achat reçue</p>
-        </div>
-        <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
-          <p>Bonjour <strong>${vendeur.name}</strong>,</p>
-          <p>Vous avez reçu une offre d'achat pour votre bien :</p>
-          <div style="background: #f7fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
-            <p style="margin: 4px 0;"><strong>Bien :</strong> ${offre.biens_achat?.title}</p>
-            <p style="margin: 4px 0;"><strong>Adresse :</strong> ${offre.biens_achat?.address}</p>
-            <p style="margin: 4px 0;"><strong>Montant de l'offre :</strong> ${Number(offre.offer_amount).toLocaleString("fr-FR")} FCFA</p>
-            ${offre.conditions ? `<p style="margin: 4px 0;"><strong>Conditions :</strong> ${offre.conditions}</p>` : ""}
-          </div>
-          <p>Vous pouvez consulter cette offre et y répondre (accepter, refuser ou faire une contre-offre) en cliquant sur le lien ci-dessous :</p>
-          <div style="text-align: center; margin: 24px 0;">
-            <a href="${offerLink}" style="background: #1a365d; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-              Consulter et répondre à l'offre
-            </a>
-          </div>
-          <p style="color: #718096; font-size: 13px;">Ce lien est valable pendant 7 jours.</p>
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-          <p style="color: #a0aec0; font-size: 12px; text-align: center;">
-            ${agencyName} — Cet email a été envoyé automatiquement.
-          </p>
-        </div>
+      <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Offre d'achat - ${offre.biens_achat?.title}</title>
+      </head>
+      <body style="font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #333333;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto;">
+          <tr>
+            <td style="background-color: #1a365d; color: #ffffff; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+              <h1 style="margin: 0; font-size: 20px; font-weight: bold;">${agencyName}</h1>
+              <p style="margin: 5px 0 0; opacity: 0.9; font-size: 14px;">Offre d'achat reçue</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0 0 12px;">Bonjour <strong>${vendeur.name}</strong>,</p>
+              <p style="margin: 0 0 16px;">Vous avez reçu une offre d'achat pour votre bien :</p>
+              <table width="100%" cellpadding="8" cellspacing="0" style="background-color: #f7fafc; border-radius: 8px; margin: 0 0 16px;">
+                <tr><td><strong>Bien :</strong> ${offre.biens_achat?.title}</td></tr>
+                <tr><td><strong>Adresse :</strong> ${offre.biens_achat?.address}</td></tr>
+                <tr><td><strong>Montant de l'offre :</strong> ${Number(offre.offer_amount).toLocaleString("fr-FR")} FCFA</td></tr>
+                ${offre.conditions ? `<tr><td><strong>Conditions :</strong> ${offre.conditions}</td></tr>` : ""}
+              </table>
+              <p style="margin: 0 0 16px;">Vous pouvez consulter cette offre et y répondre (accepter, refuser ou faire une contre-offre) en cliquant sur le bouton ci-dessous :</p>
+              <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding: 12px 0;">
+                <a href="${offerLink}" style="background-color: #1a365d; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                  Consulter et répondre
+                </a>
+              </td></tr></table>
+              <p style="color: #718096; font-size: 13px; margin: 16px 0 0;">Ce lien est valable pendant 7 jours.</p>
+              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+              <p style="color: #a0aec0; font-size: 12px; text-align: center; margin: 0;">
+                ${agencyName}
+              </p>
+            </td>
+          </tr>
+        </table>
       </body>
       </html>
     `;
@@ -155,8 +165,9 @@ Deno.serve(async (req) => {
     const emailResult = await sendEmail({
       from: `${agencyName} <${senderEmail}>`,
       to: [vendeur.email],
-      subject: `Offre d'achat reçue - ${offre.biens_achat?.title}`,
+      subject: `Offre d'achat - ${offre.biens_achat?.title}`,
       html,
+      replyTo: agency?.email || undefined,
     });
 
     if (!emailResult.success) {

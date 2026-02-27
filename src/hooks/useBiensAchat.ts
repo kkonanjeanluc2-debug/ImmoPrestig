@@ -67,7 +67,7 @@ export function useCreateBienAchat() {
     mutationFn: async (input: BienAchatInput) => {
       const { data, error } = await supabase
         .from("biens_achat")
-        .insert({ ...input, user_id: user!.id })
+        .insert({ ...input, user_id: user!.id, assigned_to: user!.id })
         .select()
         .single();
       if (error) throw error;

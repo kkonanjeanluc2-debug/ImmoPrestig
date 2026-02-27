@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { FileText, Plus, Loader2, Mail } from "lucide-react";
 import { useOffresAchat, useCreateOffreAchat, useUpdateOffreAchat } from "@/hooks/useOffresAchat";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
-import { useCreateAchatImmobilier } from "@/hooks/useAchatsImmobiliers";
+import { useCreateAchatImmobilier, useAchatsImmobiliers } from "@/hooks/useAchatsImmobiliers";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -40,6 +40,7 @@ export function OffresAchatList() {
   const createMutation = useCreateOffreAchat();
   const updateMutation = useUpdateOffreAchat();
   const createAchatMutation = useCreateAchatImmobilier();
+  const { data: achatsData } = useAchatsImmobiliers();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ bien_id: "", offer_amount: "", conditions: "" });
@@ -324,6 +325,9 @@ export function OffresAchatList() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge className={STATUS_COLORS[offre.status] || ""}>{STATUS_LABELS[offre.status] || offre.status}</Badge>
+                  {offre.status === "acceptee" && !achatsData?.some(a => a.bien_id === offre.bien_id) && (
+                    <Button size="sm" onClick={() => setAcceptOffre(offre)}>Finaliser l'achat</Button>
+                  )}
                   {(offre.status === "en_attente" || offre.status === "contre_offre") && (
                     <div className="flex gap-1 flex-wrap">
                       <TooltipProvider>

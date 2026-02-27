@@ -7,13 +7,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { DateSelect } from "@/components/ui/date-select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users, Plus, Loader2, Phone, Mail, Building2, ChevronDown, MapPin, User, CreditCard } from "lucide-react";
-import { useVendeurs, useCreateVendeur } from "@/hooks/useVendeurs";
+import { Users, Plus, Loader2, Phone, Mail, Building2, ChevronDown, MapPin, User, CreditCard, Pencil, Trash2 } from "lucide-react";
+import { useVendeurs, useCreateVendeur, useDeleteVendeur, Vendeur } from "@/hooks/useVendeurs";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
+import { VendeurEditDialog } from "./VendeurEditDialog";
 
 const STATUS_LABELS: Record<string, string> = {
   prospection: "Prospection",
@@ -41,7 +43,10 @@ export function VendeursList() {
   const { data: vendeurs, isLoading } = useVendeurs();
   const { data: biens = [] } = useBiensAchat();
   const createMutation = useCreateVendeur();
+  const deleteMutation = useDeleteVendeur();
   const [open, setOpen] = useState(false);
+  const [editVendeur, setEditVendeur] = useState<Vendeur | null>(null);
+  const [deleteVendeur, setDeleteVendeur] = useState<Vendeur | null>(null);
 
   const form = useForm<VendeurFormData>({
     resolver: zodResolver(vendeurSchema),
@@ -256,7 +261,17 @@ export function VendeursList() {
                     <Users className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{v.name}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium truncate">{v.name}</p>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditVendeur(v)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteVendeur(v)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                     {v.phone && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Phone className="h-3 w-3" />{v.phone}
@@ -314,6 +329,39 @@ export function VendeursList() {
           })}
         </div>
       )}
+
+      {editVendeur && (
+        <VendeurEditDialog
+          vendeur={editVendeur}
+          open={!!editVendeur}
+          onOpenChange={(o) => { if (!o) setEditVendeur(null); }}
+        />
+      )}
+
+      <AlertDialog open={!!deleteVendeur} onOpenChange={(o) => { if (!o) setDeleteVendeur(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le vendeur</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer <strong>{deleteVendeur?.name}</strong> ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteVendeur) {
+                  deleteMutation.mutate(deleteVendeur.id);
+                  setDeleteVendeur(null);
+                }
+              }}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

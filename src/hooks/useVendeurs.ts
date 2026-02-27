@@ -65,6 +65,24 @@ export function useCreateVendeur() {
   });
 }
 
+export function useUpdateVendeur() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: VendeurInput & { id: string }) => {
+      const { error } = await supabase
+        .from("vendeurs")
+        .update(input)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vendeurs"] });
+      toast.success("Vendeur mis à jour");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
 export function useDeleteVendeur() {
   const queryClient = useQueryClient();
   return useMutation({

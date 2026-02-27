@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -13,7 +14,8 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import UpdatePrompt from "@/components/UpdatePrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { Loader2 } from "lucide-react";
+import PageSkeleton from "@/components/PageSkeleton";
+import { createIDBPersister } from "@/lib/queryPersister";
 
 // Lazy load pages for code splitting
 const pageImports = {
@@ -95,20 +97,23 @@ function usePreloadPages() {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh, no refetch on mount
-      gcTime: 30 * 60 * 1000, // 30 minutes - keep unused data in cache
-      refetchOnWindowFocus: false, // Don't refetch every time user returns to tab
-      retry: 1, // Reduce retries for faster failure
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+      gcTime: 24 * 60 * 60 * 1000, // 24 hours - keep in cache for offline
+      refetchOnWindowFocus: false,
+      retry: 1,
+      networkMode: "offlineFirst", // Serve from cache first, then revalidate
+      refetchOnReconnect: true, // Auto-refresh when coming back online
+    },
+    mutations: {
+      networkMode: "offlineFirst",
     },
   },
 });
 
-// Loading fallback component
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-  </div>
-);
+const persister = createIDBPersister();
+
+// Skeleton-based loader for perceived instant loading
+const PageLoader = () => <PageSkeleton />;
 
 const App = () => {
   usePreloadPages();
@@ -125,7 +130,7 @@ const App = () => {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60 * 1000 }}>
       <TooltipProvider>
         {showSplash && <WelcomeScreen onComplete={handleSplashComplete} minDuration={5000} />}
         <PWAInstallBanner />
@@ -175,7 +180,7 @@ const App = () => {
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 };
 

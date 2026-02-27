@@ -85,6 +85,21 @@ export function OffresAchatList() {
   const handleContreOffre = async () => {
     if (!contreOffreId || !counterAmount) return;
     await updateMutation.mutateAsync({ id: contreOffreId, status: "contre_offre", counter_amount: Number(counterAmount), conditions: counterConditions || undefined });
+    
+    // Re-notify vendor by email
+    try {
+      const { data, error } = await supabase.functions.invoke("send-offer-to-vendor", {
+        body: { offre_id: contreOffreId },
+      });
+      if (data?.success) {
+        toast.success("Contre-offre envoyée et vendeur notifié par email");
+      } else {
+        toast.info("Contre-offre enregistrée. L'email au vendeur n'a pas pu être envoyé.");
+      }
+    } catch {
+      toast.info("Contre-offre enregistrée mais l'envoi de l'email a échoué.");
+    }
+
     setContreOffreId(null);
     setCounterAmount("");
     setCounterConditions("");

@@ -388,7 +388,7 @@ export const generatePVFamille = async (
   }
 
   // Signatures des témoins
-  if (data.witnesses.some(w => w.signatureData)) {
+  if (data.witnesses.length > 0) {
     yPos += signatureCount % 2 === 0 ? 10 : 55;
     yPos = checkPageBreak(doc, yPos, 60);
     doc.setFont("helvetica", "bold");

@@ -64,6 +64,7 @@ export function BiensAchatList() {
   const [editBien, setEditBien] = useState<BienAchat | null>(null);
   const [deleteBienId, setDeleteBienId] = useState<string | null>(null);
   const [docsBien, setDocsBien] = useState<BienAchat | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const handleVendeurChange = (bienId: string, vendeurId: string) => {
     const bien = biens?.find((b) => b.id === bienId);
@@ -98,26 +99,41 @@ export function BiensAchatList() {
     return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
 
+  const filteredBiens = statusFilter === "all" ? biens : biens?.filter(b => b.status === statusFilter);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Biens à acheter</h2>
-        <AddBienAchatDialog>
-          <Button size="sm"><Plus className="h-4 w-4 mr-2" />Ajouter un bien</Button>
-        </AddBienAchatDialog>
+        <div className="flex items-center gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px] h-9 text-sm">
+              <SelectValue placeholder="Tous les statuts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <AddBienAchatDialog>
+            <Button size="sm"><Plus className="h-4 w-4 mr-2" />Ajouter un bien</Button>
+          </AddBienAchatDialog>
+        </div>
       </div>
 
-      {!biens?.length ? (
+      {!filteredBiens?.length ? (
         <Card>
           <CardContent className="text-center py-12">
             <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Aucun bien prospecté</p>
+            <p className="text-muted-foreground">{statusFilter === "all" ? "Aucun bien prospecté" : `Aucun bien avec le statut "${STATUS_LABELS[statusFilter]}"`}</p>
             <p className="text-sm text-muted-foreground mt-1">Commencez par ajouter un bien à acheter</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {biens.map((bien) => (
+          {filteredBiens.map((bien) => (
             <Card key={bien.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">

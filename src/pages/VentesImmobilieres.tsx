@@ -17,7 +17,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { Badge } from "@/components/ui/badge";
 import { useNewVenteProspectsCount } from "@/hooks/useNewProspectsCount";
-import { useEcheancesVentes } from "@/hooks/useEcheancesVentes";
+import { useUpcomingEcheancesVentes, useOverdueEcheancesVentes } from "@/hooks/useEcheancesVentes";
 
 export default function VentesImmobilieres() {
   const [activeTab, setActiveTab] = useState("biens");
@@ -28,8 +28,9 @@ export default function VentesImmobilieres() {
   const isLocataire = role === "locataire";
   const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewVenteProspectsCount();
   
-  // Prefetch echeances data so it's instant when clicking the tab
-  useEcheancesVentes();
+  // Prefetch both echeances sub-tabs so they load instantly
+  useUpcomingEcheancesVentes();
+  useOverdueEcheancesVentes();
   
   return (
     <DashboardLayout>

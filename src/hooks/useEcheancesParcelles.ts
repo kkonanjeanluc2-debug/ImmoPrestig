@@ -71,6 +71,8 @@ export const useEcheancesParcelles = (venteId?: string) => {
       return data as EcheanceParcelle[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 };
 
@@ -151,6 +153,8 @@ export const useUpcomingEcheances = (monthsAhead: number = 1, lotissementId?: st
       return data as EcheanceWithDetails[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 };
 
@@ -194,6 +198,8 @@ export const useOverdueEcheances = (lotissementId?: string) => {
       return data as EcheanceWithDetails[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 };
 

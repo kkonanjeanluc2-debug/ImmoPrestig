@@ -10,30 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEcheancesVentes, type EcheanceVenteWithDetails } from "@/hooks/useEcheancesVentes";
+import { useUpcomingEcheancesVentes, type EcheanceVenteWithDetails } from "@/hooks/useEcheancesVentes";
 import { formatCurrency } from "@/lib/pdfFormat";
-import { format, differenceInDays, isToday, addDays, isBefore, isAfter } from "date-fns";
+import { format, differenceInDays, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar, Clock, AlertCircle, Bell } from "lucide-react";
 import { SendVenteReminderDialog } from "./SendVenteReminderDialog";
 
 export function UpcomingEcheancesVentesList() {
-  const { data: echeances, isLoading } = useEcheancesVentes();
-
-  // Filter échéances due within the next 30 days (pending only)
-  const upcomingEcheances = useMemo(() => {
-    if (!echeances) return [];
-    
-    const today = new Date();
-    const in30Days = addDays(today, 30);
-    
-    return echeances.filter((echeance) => {
-      if (echeance.status !== "pending") return false;
-      
-      const dueDate = new Date(echeance.due_date);
-      return (isToday(dueDate) || isAfter(dueDate, today)) && isBefore(dueDate, in30Days);
-    }).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
-  }, [echeances]);
+  // Use dedicated server-filtered hook instead of loading all + client filter
+  const { data: upcomingEcheances = [], isLoading } = useUpcomingEcheancesVentes();
 
   const getUrgencyBadge = (echeance: EcheanceVenteWithDetails) => {
     const dueDate = new Date(echeance.due_date);

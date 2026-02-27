@@ -25,9 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEcheancesVentes, usePayEcheanceVente, type EcheanceVenteWithDetails } from "@/hooks/useEcheancesVentes";
+import { useOverdueEcheancesVentes, usePayEcheanceVente, type EcheanceVenteWithDetails } from "@/hooks/useEcheancesVentes";
 import { formatCurrency } from "@/lib/pdfFormat";
-import { format, differenceInDays, isPast, isToday } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { Calendar, Check, AlertTriangle, Loader2, Mail, Search, X } from "lucide-react";
@@ -42,36 +42,22 @@ export function LateEcheancesVentesList() {
   const [receiptNumber, setReceiptNumber] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: echeances, isLoading } = useEcheancesVentes();
+  // Use dedicated server-filtered hook instead of loading all + client filter
+  const { data: overdueEcheances = [], isLoading } = useOverdueEcheancesVentes();
   const payEcheance = usePayEcheanceVente();
 
-  // Filter only late échéances (past due date and not paid)
+  // Only apply client-side search filter on already server-filtered data
   const lateEcheances = useMemo(() => {
-    if (!echeances) return [];
-    
-    return echeances
-      .filter((echeance) => {
-        if (echeance.status !== "pending") return false;
-        const dueDate = new Date(echeance.due_date);
-        return isPast(dueDate) && !isToday(dueDate);
-      })
-      .filter((echeance) => {
-        if (!searchQuery.trim()) return true;
-        const query = searchQuery.toLowerCase();
-        const bienTitle = echeance.vente?.bien?.title?.toLowerCase() || "";
-        const acquereurName = echeance.vente?.acquereur?.name?.toLowerCase() || "";
-        const acquereurPhone = echeance.vente?.acquereur?.phone?.toLowerCase() || "";
-        const amount = echeance.amount.toString();
-        
-        return (
-          bienTitle.includes(query) ||
-          acquereurName.includes(query) ||
-          acquereurPhone.includes(query) ||
-          amount.includes(query)
-        );
-      })
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
-  }, [echeances, searchQuery]);
+    if (!searchQuery.trim()) return overdueEcheances;
+    const query = searchQuery.toLowerCase();
+    return overdueEcheances.filter((echeance) => {
+      const bienTitle = echeance.vente?.bien?.title?.toLowerCase() || "";
+      const acquereurName = echeance.vente?.acquereur?.name?.toLowerCase() || "";
+      const acquereurPhone = echeance.vente?.acquereur?.phone?.toLowerCase() || "";
+      const amount = echeance.amount.toString();
+      return bienTitle.includes(query) || acquereurName.includes(query) || acquereurPhone.includes(query) || amount.includes(query);
+    });
+  }, [overdueEcheances, searchQuery]);
 
   // Statistics
   const stats = useMemo(() => {

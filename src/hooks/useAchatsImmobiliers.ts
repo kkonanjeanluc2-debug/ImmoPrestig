@@ -63,7 +63,7 @@ export function useCreateAchatImmobilier() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["achats-immobiliers"] });
       queryClient.invalidateQueries({ queryKey: ["biens-achat"] });
       toast.success("Achat enregistré");

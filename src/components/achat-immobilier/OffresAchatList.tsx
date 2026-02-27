@@ -108,10 +108,10 @@ export function OffresAchatList() {
   const handleAcceptConfirm = async () => {
     if (!acceptOffre) return;
     await updateMutation.mutateAsync({ id: acceptOffre.id, status: "acceptee" });
-    const finalAmount = acceptOffre.counter_amount || acceptOffre.offer_amount;
-    await createAchatMutation.mutateAsync({
+    const finalAmount = Number(acceptOffre.counter_amount || acceptOffre.offer_amount);
+    const achatResult = await createAchatMutation.mutateAsync({
       bien_id: acceptOffre.bien_id,
-      sale_price: Number(finalAmount),
+      sale_price: finalAmount,
       payment_type: achatForm.payment_type,
       total_installments: achatForm.total_installments ? Number(achatForm.total_installments) : undefined,
       down_payment: achatForm.down_payment ? Number(achatForm.down_payment) : undefined,
@@ -120,8 +120,43 @@ export function OffresAchatList() {
       notes: achatForm.notes || undefined,
       vendeur_id: acceptOffre.biens_achat?.vendeur_id || undefined,
     });
+
+    // Auto-generate payment installments
+    if (achatResult?.id && achatForm.payment_type === "echelonne" && achatForm.total_installments) {
+      const totalInstallments = Number(achatForm.total_installments);
+      const downPayment = achatForm.down_payment ? Number(achatForm.down_payment) : 0;
+      const remaining = finalAmount - downPayment;
+      const installmentAmount = Math.round(remaining / totalInstallments);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const echeances = Array.from({ length: totalInstallments }, (_, i) => {
+          const dueDate = new Date();
+          dueDate.setMonth(dueDate.getMonth() + i + 1);
+          dueDate.setDate(10);
+          const isLast = i === totalInstallments - 1;
+          const amount = isLast ? remaining - installmentAmount * (totalInstallments - 1) : installmentAmount;
+          return {
+            achat_id: achatResult.id,
+            user_id: user.id,
+            amount,
+            due_date: dueDate.toISOString().split("T")[0],
+            status: "en_attente",
+          };
+        });
+        const { error } = await supabase.from("echeances_achats").insert(echeances);
+        if (error) {
+          console.error("Erreur création échéances:", error);
+          toast.error("L'achat a été créé mais les échéances n'ont pas pu être générées.");
+        } else {
+          toast.success(`${totalInstallments} échéances générées automatiquement`);
+        }
+      }
+    }
+
     setAcceptOffre(null);
     setAchatForm({ payment_type: "comptant", total_installments: "", down_payment: "", notary_fees: "", agency_fees: "", notes: "" });
+    navigate("/achats-immobiliers");
   };
 
   const availableBiens = biens.filter(b => b.status !== "achete" && b.status !== "abandonne" && !!b.vendeur_id);

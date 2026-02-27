@@ -86,7 +86,7 @@ export function OffresAchatList() {
     setAchatForm({ payment_type: "comptant", total_installments: "", down_payment: "", notary_fees: "", agency_fees: "", notes: "" });
   };
 
-  const availableBiens = biens.filter(b => b.status !== "achete" && b.status !== "abandonne");
+  const availableBiens = biens.filter(b => b.status !== "achete" && b.status !== "abandonne" && !!b.vendeur_id);
 
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;

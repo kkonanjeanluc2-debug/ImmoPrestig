@@ -1744,6 +1744,108 @@ export type Database = {
           },
         ]
       }
+      mutations_achats: {
+        Row: {
+          achat_id: string
+          bien_id: string
+          certificat_localisation: boolean | null
+          created_at: string
+          date_acte_signe: string | null
+          date_depot_notaire: string | null
+          date_mutation_enregistree: string | null
+          droits_enregistrement: number | null
+          etat_foncier: boolean | null
+          frais_fixes: number | null
+          frais_notariaux: number | null
+          id: string
+          notaire_address: string | null
+          notaire_email: string | null
+          notaire_name: string | null
+          notaire_phone: string | null
+          notes: string | null
+          pieces_identite: boolean | null
+          quittances_paiement: boolean | null
+          situation_fiscale: boolean | null
+          status: string
+          taxe_publicite: number | null
+          titre_propriete: boolean | null
+          type_mutation: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achat_id: string
+          bien_id: string
+          certificat_localisation?: boolean | null
+          created_at?: string
+          date_acte_signe?: string | null
+          date_depot_notaire?: string | null
+          date_mutation_enregistree?: string | null
+          droits_enregistrement?: number | null
+          etat_foncier?: boolean | null
+          frais_fixes?: number | null
+          frais_notariaux?: number | null
+          id?: string
+          notaire_address?: string | null
+          notaire_email?: string | null
+          notaire_name?: string | null
+          notaire_phone?: string | null
+          notes?: string | null
+          pieces_identite?: boolean | null
+          quittances_paiement?: boolean | null
+          situation_fiscale?: boolean | null
+          status?: string
+          taxe_publicite?: number | null
+          titre_propriete?: boolean | null
+          type_mutation?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achat_id?: string
+          bien_id?: string
+          certificat_localisation?: boolean | null
+          created_at?: string
+          date_acte_signe?: string | null
+          date_depot_notaire?: string | null
+          date_mutation_enregistree?: string | null
+          droits_enregistrement?: number | null
+          etat_foncier?: boolean | null
+          frais_fixes?: number | null
+          frais_notariaux?: number | null
+          id?: string
+          notaire_address?: string | null
+          notaire_email?: string | null
+          notaire_name?: string | null
+          notaire_phone?: string | null
+          notes?: string | null
+          pieces_identite?: boolean | null
+          quittances_paiement?: boolean | null
+          situation_fiscale?: boolean | null
+          status?: string
+          taxe_publicite?: number | null
+          titre_propriete?: boolean | null
+          type_mutation?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mutations_achats_achat_id_fkey"
+            columns: ["achat_id"]
+            isOneToOne: true
+            referencedRelation: "achats_immobiliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mutations_achats_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_achat"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

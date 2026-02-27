@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Users, FileText, ShoppingCart, Calendar, Plus, Loader2 } from "lucide-react";
+import { Building2, Users, FileText, ShoppingCart, Calendar, Plus, Loader2, FileCheck } from "lucide-react";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { useOffresAchat } from "@/hooks/useOffresAchat";
@@ -16,6 +16,7 @@ import { OffresAchatList } from "@/components/achat-immobilier/OffresAchatList";
 import { AchatsImmobiliersList } from "@/components/achat-immobilier/AchatsImmobiliersList";
 import { EcheancesAchatsList } from "@/components/achat-immobilier/EcheancesAchatsList";
 import { AchatsDashboard } from "@/components/achat-immobilier/AchatsDashboard";
+import { MutationsAchatList } from "@/components/achat-immobilier/MutationsAchatList";
 
 const STATUS_LABELS: Record<string, string> = {
   prospection: "Prospection",
@@ -65,6 +66,10 @@ export default function AchatsImmobiliers() {
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Échéances</span>
             </TabsTrigger>
+            <TabsTrigger value="mutations" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
+              <FileCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Mutations</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="biens" className="mt-6">
@@ -81,6 +86,9 @@ export default function AchatsImmobiliers() {
           </TabsContent>
           <TabsContent value="echeances" className="mt-6">
             <EcheancesAchatsList />
+          </TabsContent>
+          <TabsContent value="mutations" className="mt-6">
+            <MutationsAchatList />
           </TabsContent>
         </Tabs>
       </div>

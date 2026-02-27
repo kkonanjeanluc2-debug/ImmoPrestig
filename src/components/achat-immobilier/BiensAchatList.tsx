@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Building2, Plus, MapPin, Loader2, UserX, Navigation, Pencil, Trash2, FileText, FileDown } from "lucide-react";
+import { Building2, Plus, MapPin, Loader2, UserX, Navigation, Pencil, Trash2, FileText, FileDown, Users } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBiensAchat, useUpdateBienAchat, useDeleteBienAchat, type BienAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
@@ -13,6 +13,9 @@ import { useOffresAchat } from "@/hooks/useOffresAchat";
 import { useAchatsImmobiliers } from "@/hooks/useAchatsImmobiliers";
 import { useEcheancesAchats } from "@/hooks/useEcheancesAchats";
 import { useAgency } from "@/hooks/useAgency";
+import { useAgencyMembers } from "@/hooks/useAgencyMembers";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
+import { useAuth } from "@/contexts/AuthContext";
 import { AddBienAchatDialog } from "./AddBienAchatDialog";
 import { EditBienAchatDialog } from "./EditBienAchatDialog";
 import { DocumentsAchatDialog } from "./DocumentsAchatDialog";
@@ -44,8 +47,13 @@ export function BiensAchatList() {
   const { data: achats = [] } = useAchatsImmobiliers();
   const { data: echeances = [] } = useEcheancesAchats();
   const { data: agency } = useAgency();
+  const { data: members = [] } = useAgencyMembers();
+  const { data: userRole } = useCurrentUserRole();
+  const { user } = useAuth();
   const updateMutation = useUpdateBienAchat();
   const deleteMutation = useDeleteBienAchat();
+
+  const isAdmin = userRole?.role === "admin" || agency?.user_id === user?.id;
 
   const bienHasOffreOrAchat = (bienId: string) => {
     const hasOffre = offres.some(o => o.bien_id === bienId && o.status !== "refusee" && o.status !== "expiree");
@@ -69,6 +77,15 @@ export function BiensAchatList() {
       vendeur_id: vendeurId === "__none__" ? undefined : vendeurId,
     });
   };
+
+  const handleAssignChange = (bienId: string, userId: string) => {
+    updateMutation.mutate({
+      id: bienId,
+      assigned_to: userId === "__none__" ? null : userId,
+    });
+  };
+
+  const activeMembers = members.filter(m => m.status === "active");
 
   const handleDelete = () => {
     if (!deleteBienId) return;
@@ -180,6 +197,36 @@ export function BiensAchatList() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Gestionnaire assignment - admin only */}
+                {isAdmin && activeMembers.length > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Users className="h-3 w-3" /> Gestionnaire assigné
+                    </label>
+                    <Select
+                      value={bien.assigned_to || "__none__"}
+                      onValueChange={(v) => handleAssignChange(bien.id, v)}
+                      disabled={updateMutation.isPending}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Non assigné" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <UserX className="h-3 w-3" /> Non assigné
+                          </span>
+                        </SelectItem>
+                        {activeMembers.map((m) => (
+                          <SelectItem key={m.user_id} value={m.user_id}>
+                            {m.profile?.full_name || m.profile?.email || "Membre"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {/* Documents & PDF buttons */}
                 <div className="flex gap-2 mt-3 pt-3 border-t">

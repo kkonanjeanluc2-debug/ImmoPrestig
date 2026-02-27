@@ -18,7 +18,7 @@ interface Props {
 export function AddMutationDialog({ children, achats, biens }: Props) {
   const [open, setOpen] = useState(false);
   const [achatId, setAchatId] = useState("");
-  const [typeMutation, setTypeMutation] = useState("vente");
+  const [typeMutation] = useState("vente");
   const [notaireName, setNotaireName] = useState("");
   const [notairePhone, setNotairePhone] = useState("");
   const [notaireEmail, setNotaireEmail] = useState("");
@@ -82,20 +82,6 @@ export function AddMutationDialog({ children, achats, biens }: Props) {
             </Select>
           </div>
 
-          <div>
-            <Label>Type de mutation</Label>
-            <Select value={typeMutation} onValueChange={setTypeMutation}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="vente">Vente</SelectItem>
-                <SelectItem value="donation">Donation</SelectItem>
-                <SelectItem value="heritage">Héritage</SelectItem>
-                <SelectItem value="transfert_lot">Transfert de lot</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="border-t pt-4">
             <p className="text-sm font-medium mb-2">Informations du notaire (optionnel)</p>

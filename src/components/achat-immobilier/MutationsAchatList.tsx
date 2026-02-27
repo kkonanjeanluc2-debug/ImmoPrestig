@@ -101,9 +101,8 @@ export function MutationsAchatList() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="mb-2">
                     <Badge className={STATUS_COLORS[mut.status] || ""}>{STATUS_LABELS[mut.status] || mut.status}</Badge>
-                    <Badge variant="outline">{TYPE_LABELS[mut.type_mutation] || mut.type_mutation}</Badge>
                   </div>
 
                   {mut.biens_achat?.address && (

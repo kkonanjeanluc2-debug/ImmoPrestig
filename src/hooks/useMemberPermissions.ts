@@ -50,6 +50,20 @@ export interface MemberPermissions {
   can_create_biens_vente: boolean;
   can_edit_biens_vente: boolean;
   can_create_vente_prospects: boolean;
+  // Achats Immobiliers
+  can_view_achats: boolean;
+  can_create_achats: boolean;
+  can_edit_achats: boolean;
+  can_delete_achats: boolean;
+  can_create_offres_achat: boolean;
+  can_create_achats_documents: boolean;
+  can_manage_mutations: boolean;
+  // Impayés
+  can_view_impayes: boolean;
+  can_create_impayes: boolean;
+  can_edit_impayes: boolean;
+  can_delete_impayes: boolean;
+  can_create_impayes_actions: boolean;
   // Documents
   can_view_documents: boolean;
   can_create_documents: boolean;
@@ -108,6 +122,20 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_biens_vente: "Ajouter des biens à vendre",
   can_edit_biens_vente: "Modifier des biens à vendre",
   can_create_vente_prospects: "Ajouter des prospects vente",
+  // Achats Immobiliers
+  can_view_achats: "Voir les achats immobiliers",
+  can_create_achats: "Créer des achats",
+  can_edit_achats: "Modifier les achats",
+  can_delete_achats: "Supprimer les achats",
+  can_create_offres_achat: "Créer des offres d'achat",
+  can_create_achats_documents: "Ajouter des documents achat",
+  can_manage_mutations: "Gérer les mutations",
+  // Impayés
+  can_view_impayes: "Voir les impayés",
+  can_create_impayes: "Créer des dossiers d'impayés",
+  can_edit_impayes: "Modifier les dossiers d'impayés",
+  can_delete_impayes: "Supprimer les dossiers d'impayés",
+  can_create_impayes_actions: "Ajouter des actions de recouvrement",
   can_view_documents: "Voir les documents",
   can_create_documents: "Créer des documents",
   can_delete_documents: "Supprimer les documents",
@@ -149,6 +177,14 @@ export const PERMISSION_GROUPS = {
   ventes: {
     label: "Ventes immobilières",
     permissions: ["can_view_ventes", "can_create_ventes", "can_edit_ventes", "can_delete_ventes", "can_create_biens_vente", "can_edit_biens_vente", "can_create_vente_prospects"] as PermissionKey[],
+  },
+  achats: {
+    label: "Achats immobiliers",
+    permissions: ["can_view_achats", "can_create_achats", "can_edit_achats", "can_delete_achats", "can_create_offres_achat", "can_create_achats_documents", "can_manage_mutations"] as PermissionKey[],
+  },
+  impayes: {
+    label: "Impayés",
+    permissions: ["can_view_impayes", "can_create_impayes", "can_edit_impayes", "can_delete_impayes", "can_create_impayes_actions"] as PermissionKey[],
   },
   documents: {
     label: "Documents",
@@ -203,6 +239,18 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_biens_vente: true,
     can_edit_biens_vente: true,
     can_create_vente_prospects: true,
+    can_view_achats: true,
+    can_create_achats: true,
+    can_edit_achats: true,
+    can_delete_achats: true,
+    can_create_offres_achat: true,
+    can_create_achats_documents: true,
+    can_manage_mutations: true,
+    can_view_impayes: true,
+    can_create_impayes: true,
+    can_edit_impayes: true,
+    can_delete_impayes: true,
+    can_create_impayes_actions: true,
     can_view_documents: true,
     can_create_documents: true,
     can_delete_documents: true,
@@ -252,6 +300,18 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_biens_vente: false,
     can_edit_biens_vente: false,
     can_create_vente_prospects: false,
+    can_view_achats: true,
+    can_create_achats: false,
+    can_edit_achats: false,
+    can_delete_achats: false,
+    can_create_offres_achat: false,
+    can_create_achats_documents: false,
+    can_manage_mutations: false,
+    can_view_impayes: true,
+    can_create_impayes: false,
+    can_edit_impayes: false,
+    can_delete_impayes: false,
+    can_create_impayes_actions: false,
     can_view_documents: true,
     can_create_documents: true,
     can_delete_documents: false,
@@ -301,6 +361,18 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_biens_vente: false,
     can_edit_biens_vente: false,
     can_create_vente_prospects: false,
+    can_view_achats: true,
+    can_create_achats: false,
+    can_edit_achats: false,
+    can_delete_achats: false,
+    can_create_offres_achat: false,
+    can_create_achats_documents: false,
+    can_manage_mutations: false,
+    can_view_impayes: true,
+    can_create_impayes: false,
+    can_edit_impayes: false,
+    can_delete_impayes: false,
+    can_create_impayes_actions: false,
     can_view_documents: true,
     can_create_documents: false,
     can_delete_documents: false,

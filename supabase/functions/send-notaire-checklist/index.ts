@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { mutation_id } = await req.json();
+    const { mutation_id, current_docs } = await req.json();
 
     // Fetch mutation with related data
     const { data: mutation, error: fetchError } = await supabase
@@ -78,12 +78,12 @@ Deno.serve(async (req) => {
     const bienAddress = mutation.biens_achat?.address || "";
 
     const docsHtml = docs.map((d) => {
-      const checked = mutation[d.key];
+      const checked = current_docs ? current_docs[d.key] : mutation[d.key];
       const icon = checked ? "✅" : "❌";
       return `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee;">${icon}</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${d.label}</td></tr>`;
     }).join("");
 
-    const missing = docs.filter((d) => !mutation[d.key]);
+    const missing = docs.filter((d) => !(current_docs ? current_docs[d.key] : mutation[d.key]));
 
     const html = `
 <!DOCTYPE html>

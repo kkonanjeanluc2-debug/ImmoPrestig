@@ -119,7 +119,7 @@ export function MutationDetailDialog({ mutation: mut, open, onOpenChange }: Prop
     setSendingEmail(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-notaire-checklist", {
-        body: { mutation_id: mut.id },
+        body: { mutation_id: mut.id, current_docs: docs },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Mail, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useUpdateMutationAchat, type MutationAchat } from "@/hooks/useMutationsAchats";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const STATUS_STEPS = [
   { key: "offre_creee", label: "Offre créée" },
@@ -43,6 +44,7 @@ export function MutationDetailDialog({ mutation: mut, open, onOpenChange }: Prop
   const [notaireEmail, setNotaireEmail] = useState(mut.notaire_email || "");
   const [notaireAddress, setNotaireAddress] = useState(mut.notaire_address || "");
   const [notes, setNotes] = useState(mut.notes || "");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const [docs, setDocs] = useState({
     titre_propriete: mut.titre_propriete,
@@ -52,6 +54,11 @@ export function MutationDetailDialog({ mutation: mut, open, onOpenChange }: Prop
     situation_fiscale: mut.situation_fiscale,
     quittances_paiement: mut.quittances_paiement,
   });
+
+  // Per-document submission tracking
+  const [docsTransmis, setDocsTransmis] = useState<Record<string, string>>(
+    (mut as any).documents_transmis || {}
+  );
 
   const [droitsEnregistrement, setDroitsEnregistrement] = useState(mut.droits_enregistrement || 0);
   const [taxePublicite, setTaxePublicite] = useState(mut.taxe_publicite || 0);
@@ -63,6 +70,22 @@ export function MutationDetailDialog({ mutation: mut, open, onOpenChange }: Prop
   const [dateMutation, setDateMutation] = useState(mut.date_mutation_enregistree?.split("T")[0] || "");
 
   const totalCosts = droitsEnregistrement + taxePublicite + fraisFixes + fraisNotariaux;
+
+  // Missing documents summary
+  const missingDocs = DOCUMENTS.filter((d) => !docs[d.key]);
+  const transmittedDocs = DOCUMENTS.filter((d) => docsTransmis[d.key]);
+
+  const toggleTransmis = (key: string) => {
+    setDocsTransmis((prev) => {
+      const next = { ...prev };
+      if (next[key]) {
+        delete next[key];
+      } else {
+        next[key] = new Date().toISOString().split("T")[0];
+      }
+      return next;
+    });
+  };
 
   const handleSave = () => {
     updateMutation.mutate(
@@ -82,9 +105,30 @@ export function MutationDetailDialog({ mutation: mut, open, onOpenChange }: Prop
         date_acte_signe: dateActe || undefined,
         date_depot_notaire: dateDepot || undefined,
         date_mutation_enregistree: dateMutation || undefined,
+        documents_transmis: docsTransmis,
       },
       { onSuccess: () => onOpenChange(false) }
     );
+  };
+
+  const handleSendChecklist = async () => {
+    if (!notaireEmail) {
+      toast.error("Veuillez renseigner l'email du notaire");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-notaire-checklist", {
+        body: { mutation_id: mut.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Checklist envoyée au notaire");
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de l'envoi");
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const currentStep = STATUS_STEPS.findIndex((s) => s.key === status);
@@ -120,23 +164,74 @@ export function MutationDetailDialog({ mutation: mut, open, onOpenChange }: Prop
 
         <Separator />
 
-        {/* Documents requis */}
+        {/* Documents requis + suivi transmission */}
         <div>
           <p className="text-sm font-semibold mb-2">Pièces nécessaires</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {DOCUMENTS.map((doc) => (
-              <label key={doc.key} className="flex items-center gap-2 text-sm cursor-pointer">
-                <Checkbox
-                  checked={docs[doc.key]}
-                  onCheckedChange={(v) => setDocs((prev) => ({ ...prev, [doc.key]: !!v }))}
-                />
-                {doc.label}
-              </label>
+              <div key={doc.key} className="flex items-center justify-between gap-2 text-sm">
+                <label className="flex items-center gap-2 cursor-pointer flex-1">
+                  <Checkbox
+                    checked={docs[doc.key]}
+                    onCheckedChange={(v) => setDocs((prev) => ({ ...prev, [doc.key]: !!v }))}
+                  />
+                  {doc.label}
+                </label>
+                {docs[doc.key] && (
+                  <button
+                    type="button"
+                    onClick={() => toggleTransmis(doc.key)}
+                    className={`text-xs px-2 py-0.5 rounded-full border whitespace-nowrap ${
+                      docsTransmis[doc.key]
+                        ? "bg-primary/10 border-primary/30 text-primary"
+                        : "bg-muted border-border text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {docsTransmis[doc.key]
+                      ? `Transmis le ${docsTransmis[doc.key]}`
+                      : "Marquer transmis"}
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>
 
         <Separator />
+
+        {/* Résumé automatique */}
+        {(missingDocs.length > 0 || transmittedDocs.length > 0) && (
+          <>
+            <div className="space-y-2">
+              {missingDocs.length > 0 && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-destructive">
+                      {missingDocs.length} pièce{missingDocs.length > 1 ? "s" : ""} manquante{missingDocs.length > 1 ? "s" : ""}
+                    </p>
+                    <ul className="text-xs text-destructive/80 mt-1 list-disc list-inside">
+                      {missingDocs.map((d) => (
+                        <li key={d.key}>{d.label}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+              {transmittedDocs.length > 0 && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                  <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-primary">
+                      {transmittedDocs.length}/{DOCUMENTS.length} pièce{transmittedDocs.length > 1 ? "s" : ""} transmise{transmittedDocs.length > 1 ? "s" : ""} au notaire
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <Separator />
+          </>
+        )}
 
         {/* Notaire */}
         <div>
@@ -159,6 +254,19 @@ export function MutationDetailDialog({ mutation: mut, open, onOpenChange }: Prop
               <Input value={notaireAddress} onChange={(e) => setNotaireAddress(e.target.value)} />
             </div>
           </div>
+          {notaireEmail && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={handleSendChecklist}
+              disabled={sendingEmail}
+            >
+              {sendingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+              Envoyer la checklist au notaire
+            </Button>
+          )}
         </div>
 
         <Separator />

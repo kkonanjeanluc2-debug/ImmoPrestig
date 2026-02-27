@@ -74,6 +74,7 @@ export interface MutationAchatInput {
   date_mutation_enregistree?: string;
   type_mutation?: string;
   notes?: string;
+  documents_transmis?: Record<string, string>;
 }
 
 export function useCreateMutationAchat() {

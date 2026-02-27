@@ -18,6 +18,7 @@ interface EcheanceReceiptData {
   agencyEmail?: string;
   agencyAddress?: string;
   agencyLogoUrl?: string | null;
+  validatedBy?: string;
 }
 
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -147,12 +148,15 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   const paidDateFormatted = new Date(data.paidDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   const dueDateFormatted = new Date(data.dueDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-  const details = [
+  const details: [string, string][] = [
     ["Prix total du bien", formatAmountWithCurrency(data.totalSalePrice)],
     ["Date d'echeance", dueDateFormatted],
     ["Date de paiement", paidDateFormatted],
     ["Mode de paiement", data.paymentMethod || "Non specifie"],
   ];
+  if (data.validatedBy) {
+    details.push(["Valide par", data.validatedBy]);
+  }
 
   details.forEach(([label, value]) => {
     doc.text(label, 20, yPos);
@@ -165,7 +169,8 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   // Declaration
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  const declaration = `Le soussigne reconnait avoir recu la somme de ${formatAmountWithCurrency(data.amount)} au titre du paiement de l'echeance du ${dueDateFormatted} pour le bien "${data.propertyTitle}".`;
+  const validatorText = data.validatedBy ? `, valide par ${data.validatedBy}` : "";
+  const declaration = `Le soussigne reconnait avoir recu la somme de ${formatAmountWithCurrency(data.amount)} au titre du paiement de l'echeance du ${dueDateFormatted} pour le bien "${data.propertyTitle}"${validatorText}.`;
   const splitDecl = doc.splitTextToSize(declaration, pageWidth - 30);
   doc.text(splitDecl, 15, yPos, { lineHeightFactor: 1.5 });
   yPos += splitDecl.length * 5 + 20;
@@ -176,7 +181,7 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   doc.text(`Fait le ${today}`, pageWidth - 20, yPos, { align: "right" });
   yPos += 15;
   doc.setFont("helvetica", "italic");
-  doc.text("Signature", pageWidth - 20, yPos, { align: "right" });
+  doc.text(data.validatedBy || "Signature", pageWidth - 20, yPos, { align: "right" });
 
   // Footer
   doc.setFillColor(...lightGray);

@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { 
   FileText, 
   Users, 
@@ -20,10 +21,15 @@ import {
   Download, 
   Plus, 
   Trash2,
-  Loader2 
+  Loader2,
+  PenTool,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
+import { SignatureTypeSelector } from "@/components/signature/SignatureTypeSelector";
 import {
   generatePVFamille,
   generateConvention,
@@ -83,6 +89,9 @@ export function GenerateLotissementDocumentDialog({
   const { data: agency } = useAgency();
   const [selectedType, setSelectedType] = useState<DocumentType | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [signingStep, setSigningStep] = useState<"form" | "signatures">("form");
+  const [currentSignerIndex, setCurrentSignerIndex] = useState(0);
+  const [signerCategory, setSignerCategory] = useState<"members" | "witnesses">("members");
 
   // Form states for each document type
   const [pvFamilleData, setPvFamilleData] = useState<PVFamilleData>(() => 
@@ -94,6 +103,59 @@ export function GenerateLotissementDocumentDialog({
   const [prefinancementData, setPrefinancementData] = useState<ContratPrefinancementData>(() => 
     getDefaultContratPrefinancementData(lotissement)
   );
+
+  const allSigners = [
+    ...pvFamilleData.members.map((m, i) => ({ ...m, category: "members" as const, index: i, label: `${m.name} (${m.role})` })),
+    ...pvFamilleData.witnesses.map((w, i) => ({ ...w, category: "witnesses" as const, index: i, label: `${w.name}${w.cniNumber ? ` - CNI: ${w.cniNumber}` : ""} (Témoin)` })),
+  ];
+
+  const currentSigner = allSigners[currentSignerIndex];
+  const allSigned = allSigners.every(s => s.signatureData);
+
+  const handleSignatureComplete = (data: { type: "drawn" | "typed"; signatureData?: string; signatureText?: string }) => {
+    const signer = allSigners[currentSignerIndex];
+    const sigValue = data.signatureData || data.signatureText || "";
+    
+    if (signer.category === "members") {
+      setPvFamilleData(prev => {
+        const newMembers = [...prev.members];
+        newMembers[signer.index] = { ...newMembers[signer.index], signatureData: sigValue };
+        return { ...prev, members: newMembers };
+      });
+    } else {
+      setPvFamilleData(prev => {
+        const newWitnesses = [...prev.witnesses];
+        newWitnesses[signer.index] = { ...newWitnesses[signer.index], signatureData: sigValue };
+        return { ...prev, witnesses: newWitnesses };
+      });
+    }
+  };
+
+  const goToNextSigner = () => {
+    if (currentSignerIndex < allSigners.length - 1) {
+      setCurrentSignerIndex(currentSignerIndex + 1);
+    }
+  };
+
+  const goToPreviousSigner = () => {
+    if (currentSignerIndex > 0) {
+      setCurrentSignerIndex(currentSignerIndex - 1);
+    }
+  };
+
+  const startSigningProcess = () => {
+    if (selectedType !== "pv_famille") return;
+    if (!pvFamilleData.familyName || !pvFamilleData.representativeName) {
+      toast.error("Veuillez remplir le nom de famille et le représentant");
+      return;
+    }
+    if (pvFamilleData.members.length === 0) {
+      toast.error("Veuillez ajouter au moins un membre");
+      return;
+    }
+    setCurrentSignerIndex(0);
+    setSigningStep("signatures");
+  };
 
   const handleGenerate = async () => {
     if (!selectedType) return;
@@ -1040,6 +1102,93 @@ export function GenerateLotissementDocumentDialog({
               );
             })}
           </div>
+        ) : signingStep === "signatures" && selectedType === "pv_famille" ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PenTool className="h-5 w-5 text-primary" />
+                <h3 className="font-medium">Signatures numériques</h3>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSigningStep("form")}>
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Retour au formulaire
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Signataire {currentSignerIndex + 1} / {allSigners.length}</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {allSigners.map((signer, idx) => (
+                <Badge
+                  key={`${signer.category}-${signer.index}`}
+                  variant={idx === currentSignerIndex ? "default" : signer.signatureData ? "secondary" : "outline"}
+                  className={`cursor-pointer gap-1 ${signer.signatureData && idx !== currentSignerIndex ? "bg-green-100 text-green-700 border-green-200" : ""}`}
+                  onClick={() => setCurrentSignerIndex(idx)}
+                >
+                  {signer.signatureData && <CheckCircle2 className="h-3 w-3" />}
+                  {signer.label}
+                </Badge>
+              ))}
+            </div>
+
+            {currentSigner && (
+              <ScrollArea className="h-[45vh] pr-4">
+                <div className="space-y-4">
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <p className="font-medium text-sm">
+                      Signature de : {currentSigner.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Signez en dessinant ou en tapant votre nom.
+                    </p>
+                  </div>
+
+                  <SignatureTypeSelector
+                    key={`signer-${currentSignerIndex}`}
+                    signerName={currentSigner.name || "Signataire"}
+                    onSignatureComplete={handleSignatureComplete}
+                  />
+                </div>
+              </ScrollArea>
+            )}
+
+            <div className="flex justify-between pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={goToPreviousSigner}
+                disabled={currentSignerIndex === 0}
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Précédent
+              </Button>
+
+              <div className="flex gap-2">
+                {currentSignerIndex < allSigners.length - 1 ? (
+                  <Button onClick={goToNextSigner}>
+                    Suivant
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                ) : (
+                  <Button onClick={handleGenerate} disabled={isGenerating || !allSigned}>
+                    {isGenerating ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-2" />
+                    )}
+                    Générer le PDF
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {!allSigned && currentSignerIndex === allSigners.length - 1 && (
+              <p className="text-xs text-destructive text-center">
+                Tous les signataires doivent signer avant de générer le PDF.
+              </p>
+            )}
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -1054,7 +1203,7 @@ export function GenerateLotissementDocumentDialog({
                   {documentTypes.find(d => d.value === selectedType)?.label}
                 </h3>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedType(null)}>
+              <Button variant="ghost" size="sm" onClick={() => { setSelectedType(null); setSigningStep("form"); }}>
                 ← Retour
               </Button>
             </div>
@@ -1065,14 +1214,21 @@ export function GenerateLotissementDocumentDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleGenerate} disabled={isGenerating}>
-                {isGenerating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Download className="h-4 w-4 mr-2" />
-                )}
-                Générer le PDF
-              </Button>
+              {selectedType === "pv_famille" ? (
+                <Button onClick={startSigningProcess}>
+                  <PenTool className="h-4 w-4 mr-2" />
+                  Passer aux signatures
+                </Button>
+              ) : (
+                <Button onClick={handleGenerate} disabled={isGenerating}>
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  Générer le PDF
+                </Button>
+              )}
             </div>
           </div>
         )}

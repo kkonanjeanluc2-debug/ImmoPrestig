@@ -30,6 +30,13 @@ const STATUS_LABELS: Record<string, string> = {
 export default function AchatsImmobiliers() {
   const [activeTab, setActiveTab] = useState("biens");
 
+  // Prefetch all tab data on mount for instant switching
+  useBiensAchat();
+  useVendeurs();
+  useOffresAchat();
+  useAchatsImmobiliers();
+  useEcheancesAchats();
+
   return (
     <DashboardLayout>
       <div className="space-y-6">

@@ -33,6 +33,10 @@ const routePrefetchMap: Record<string, (queryClient: any) => void> = {
   "/achats-immobiliers": (qc) => {
     qc.prefetchQuery({ queryKey: ["biens-achat"], queryFn: () => supabase.from("biens_achat").select("*, vendeurs(name, phone)").is("deleted_at", null).order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
     qc.prefetchQuery({ queryKey: ["vendeurs"], queryFn: () => supabase.from("vendeurs").select("*").order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["offres-achat"], queryFn: () => supabase.from("offres_achat").select("*, biens_achat(title, address, price)").order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["achats-immobiliers"], queryFn: () => supabase.from("achats_immobiliers").select("*, biens_achat(title, address), vendeurs(name, phone)").order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["echeances-achats"], queryFn: () => supabase.from("echeances_achats").select("*, achats_immobiliers(sale_price, biens_achat(title, address))").order("due_date", { ascending: true }).then(r => r.data), staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["mutations-achats"], queryFn: () => supabase.from("mutations_achats").select("*, biens_achat(title, address), achats_immobiliers(sale_price, sale_date)").order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
   },
   "/lotissements": (qc) => {
     qc.prefetchQuery({ queryKey: ["lotissements"], queryFn: () => supabase.from("lotissements").select("*").is("deleted_at", null).order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });

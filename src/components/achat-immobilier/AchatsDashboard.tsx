@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, FileText, ShoppingCart, Calendar, TrendingUp, AlertTriangle } from "lucide-react";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useOffresAchat } from "@/hooks/useOffresAchat";
@@ -17,6 +17,9 @@ export function AchatsDashboard() {
   const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
 
   const enRetard = echeances.filter(e => e.status === "en_retard").length;
+  const enRetardAmount = echeances.filter(e => e.status === "en_retard").reduce((sum, e) => sum + e.amount, 0);
+
+  const offresEnCours = offres.filter(o => o.status === "en_attente").length;
 
   // Calculate revenue filtered by period
   const { periodRevenue, periodLabel } = useMemo(() => {
@@ -29,12 +32,10 @@ export function AchatsDashboard() {
       return d >= from && d <= to;
     };
 
-    // Down payments from achats within period
     const downPayments = achats
       .filter((a) => isInPeriod(a.sale_date))
       .reduce((sum, a) => sum + (a.down_payment || 0), 0);
 
-    // Paid installments within period
     const paidInstallments = echeances
       .filter((e) => e.status === "paye" && isInPeriod(e.paid_date))
       .reduce((sum, e) => sum + (e.paid_amount || e.amount), 0);
@@ -45,40 +46,65 @@ export function AchatsDashboard() {
     };
   }, [achats, echeances, period]);
 
-  const kpis = [
-    { label: "Biens prospectés", value: biens.length, icon: Building2, color: "text-blue-500" },
-    { label: "Offres en cours", value: offres.filter(o => o.status === "en_attente").length, icon: FileText, color: "text-amber-500" },
-    { label: "Achats réalisés", value: achats.length, icon: ShoppingCart, color: "text-emerald-500" },
-    { label: "Échéances en retard", value: enRetard, icon: Calendar, color: enRetard > 0 ? "text-destructive" : "text-muted-foreground" },
-  ];
-
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {kpis.map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`p-2 rounded-lg bg-muted ${kpi.color}`}>
-                <kpi.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{kpi.value}</p>
-                <p className="text-xs text-muted-foreground">{kpi.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Revenue card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-muted text-emerald-500">
-              <TrendingUp className="h-5 w-5" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Biens prospectés</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{biens.length}</div>
+            <p className="text-xs text-muted-foreground">au total</p>
+          </CardContent>
+        </Card>
+
+        <Card className={offresEnCours > 0 ? "border-primary/50" : ""}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Offres en cours</CardTitle>
+            <FileText className={`h-4 w-4 ${offresEnCours > 0 ? "text-primary" : "text-muted-foreground"}`} />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${offresEnCours > 0 ? "text-primary" : ""}`}>
+              {offresEnCours}
             </div>
-            <div>
-              <p className="text-2xl font-bold">{formatCurrency(periodRevenue)}</p>
-              <p className="text-xs text-muted-foreground">{periodLabel.title}</p>
+            <p className="text-xs text-muted-foreground">en attente de réponse</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">{periodLabel.title}</CardTitle>
+            <TrendingUp className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(periodRevenue)}</div>
+            <p className="text-xs text-muted-foreground">{periodLabel.subtitle}</p>
+          </CardContent>
+        </Card>
+
+        <Card className={enRetard > 0 ? "border-destructive/50" : ""}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Échéances en retard</CardTitle>
+            <AlertTriangle className={`h-4 w-4 ${enRetard > 0 ? "text-destructive" : "text-muted-foreground"}`} />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${enRetard > 0 ? "text-destructive" : ""}`}>
+              {enRetard}
             </div>
+            <p className="text-xs text-muted-foreground">{formatCurrency(enRetardAmount)} à payer</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Achats réalisés</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{achats.length}</div>
+            <p className="text-xs text-muted-foreground">au total</p>
           </CardContent>
         </Card>
       </div>

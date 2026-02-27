@@ -44,6 +44,7 @@ const pageImports = {
   BienVenteDetails: () => import("./pages/BienVenteDetails"),
   Impayes: () => import("./pages/Impayes"),
   AchatsImmobiliers: () => import("./pages/AchatsImmobiliers"),
+  VendorOfferResponse: () => import("./pages/VendorOfferResponse"),
 };
 
 const Index = lazy(pageImports.Index);
@@ -73,6 +74,7 @@ const VenteImmobiliereDetails = lazy(pageImports.VenteImmobiliereDetails);
 const BienVenteDetails = lazy(pageImports.BienVenteDetails);
 const Impayes = lazy(pageImports.Impayes);
 const AchatsImmobiliers = lazy(pageImports.AchatsImmobiliers);
+const VendorOfferResponse = lazy(pageImports.VendorOfferResponse);
 
 // Preload all pages in background after initial render
 function usePreloadPages() {
@@ -164,6 +166,7 @@ const App = () => {
                   <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />
+                  <Route path="/offre-vendeur/:token" element={<VendorOfferResponse />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

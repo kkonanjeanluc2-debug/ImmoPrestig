@@ -1794,6 +1794,10 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          vendor_responded_at: string | null
+          vendor_response_notes: string | null
+          vendor_token: string | null
+          vendor_token_expires_at: string | null
         }
         Insert: {
           bien_id: string
@@ -1808,6 +1812,10 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          vendor_responded_at?: string | null
+          vendor_response_notes?: string | null
+          vendor_token?: string | null
+          vendor_token_expires_at?: string | null
         }
         Update: {
           bien_id?: string
@@ -1822,6 +1830,10 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          vendor_responded_at?: string | null
+          vendor_response_notes?: string | null
+          vendor_token?: string | null
+          vendor_token_expires_at?: string | null
         }
         Relationships: [
           {

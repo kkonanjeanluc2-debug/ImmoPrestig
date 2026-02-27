@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FileText, Plus, Loader2 } from "lucide-react";
+import { FileText, Plus, Loader2, Mail } from "lucide-react";
 import { useOffresAchat, useCreateOffreAchat, useUpdateOffreAchat } from "@/hooks/useOffresAchat";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useCreateAchatImmobilier } from "@/hooks/useAchatsImmobiliers";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const STATUS_COLORS: Record<string, string> = {
   en_attente: "bg-amber-100 text-amber-800",
@@ -50,13 +52,34 @@ export function OffresAchatList() {
   });
 
   const handleSubmit = async () => {
-    await createMutation.mutateAsync({
+    const result = await createMutation.mutateAsync({
       bien_id: form.bien_id,
       offer_amount: Number(form.offer_amount),
       conditions: form.conditions || undefined,
     });
     setOpen(false);
     setForm({ bien_id: "", offer_amount: "", conditions: "" });
+
+    // Auto-send email to vendor
+    if (result?.id) {
+      try {
+        const { data, error } = await supabase.functions.invoke("send-offer-to-vendor", {
+          body: { offre_id: result.id },
+        });
+        if (error) {
+          console.error("Email send error:", error);
+          toast.info("Offre créée. L'email au vendeur n'a pas pu être envoyé.");
+        } else if (data?.success) {
+          toast.success("Email envoyé au vendeur avec le lien de consultation");
+        } else if (data?.warning) {
+          toast.info(data.warning);
+        } else {
+          toast.info("Offre créée. Vérifiez l'email du vendeur.");
+        }
+      } catch {
+        toast.info("Offre créée mais l'envoi de l'email a échoué.");
+      }
+    }
   };
 
   const handleContreOffre = async () => {
@@ -239,6 +262,13 @@ export function OffresAchatList() {
                   <p className="text-lg font-bold mt-1">{Number(offre.offer_amount).toLocaleString("fr-FR")} FCFA</p>
                   {offre.status === "contre_offre" && offre.counter_amount && (
                     <p className="text-sm font-semibold text-purple-700">Contre-offre : {Number(offre.counter_amount).toLocaleString("fr-FR")} FCFA</p>
+                  )}
+                  {offre.vendor_responded_at && (
+                    <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                      <Mail className="h-3 w-3" />
+                      Réponse du vendeur le {format(new Date(offre.vendor_responded_at), "dd MMM yyyy", { locale: fr })}
+                      {offre.vendor_response_notes && ` — "${offre.vendor_response_notes}"`}
+                    </p>
                   )}
                   <p className="text-xs text-muted-foreground">{format(new Date(offre.offer_date), "dd MMM yyyy", { locale: fr })}</p>
                 </div>

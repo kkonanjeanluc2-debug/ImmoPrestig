@@ -14,6 +14,9 @@ export interface OffreAchat {
   notes: string | null;
   conditions: string | null;
   expiry_date: string | null;
+  vendor_token: string | null;
+  vendor_response_notes: string | null;
+  vendor_responded_at: string | null;
   created_at: string;
   biens_achat?: { title: string; address: string; vendeur_id: string | null } | null;
 }

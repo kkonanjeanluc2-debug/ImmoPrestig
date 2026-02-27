@@ -125,3 +125,9 @@ verify_jwt = false
 
 [functions.tenant-pay-rent-geniuspay-webhook]
 verify_jwt = false
+
+[functions.send-offer-to-vendor]
+verify_jwt = false
+
+[functions.vendor-offer-response]
+verify_jwt = false

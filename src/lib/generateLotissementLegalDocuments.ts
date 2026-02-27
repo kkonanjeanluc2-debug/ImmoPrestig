@@ -356,40 +356,46 @@ export const generatePVFamille = async (
   doc.setTextColor(...textColor);
 
   const colWidth = (maxWidth - 20) / 2;
+  const signatureBlockHeight = 45; // height for name + role/cni + signature image
   let xPos = margin;
   let signatureCount = 0;
 
   for (const member of data.members) {
+    // Move to next row (2 per row)
     if (signatureCount % 2 === 0 && signatureCount > 0) {
-      yPos += 50;
+      yPos += signatureBlockHeight;
       xPos = margin;
     }
     if (signatureCount % 2 === 0) {
-      yPos = checkPageBreak(doc, yPos, 55);
+      yPos = checkPageBreak(doc, yPos, signatureBlockHeight + 5);
     }
 
+    // Name and role
     doc.text(member.name, xPos, yPos);
     doc.text(`(${member.role})`, xPos, yPos + 5);
 
+    // Signature below name+role
     if (member.signatureData) {
       try {
-        doc.addImage(member.signatureData, "PNG", xPos, yPos + 8, 60, 30);
+        doc.addImage(member.signatureData, "PNG", xPos, yPos + 10, 55, 25);
       } catch (e) {
         doc.setDrawColor(150, 150, 150);
-        doc.line(xPos, yPos + 30, xPos + colWidth - 10, yPos + 30);
+        doc.line(xPos, yPos + 35, xPos + colWidth - 10, yPos + 35);
       }
     } else {
       doc.setDrawColor(150, 150, 150);
-      doc.line(xPos, yPos + 30, xPos + colWidth - 10, yPos + 30);
+      doc.line(xPos, yPos + 35, xPos + colWidth - 10, yPos + 35);
     }
 
     xPos = margin + colWidth + 20;
     signatureCount++;
   }
 
+  // Always advance yPos past the last row of member signatures
+  yPos += signatureBlockHeight + 15;
+
   // Signatures des témoins
   if (data.witnesses.length > 0) {
-    yPos += signatureCount % 2 === 0 ? 10 : 55;
     yPos = checkPageBreak(doc, yPos, 60);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
@@ -404,11 +410,11 @@ export const generatePVFamille = async (
 
     for (const witness of data.witnesses) {
       if (witnessCount % 2 === 0 && witnessCount > 0) {
-        yPos += 50;
+        yPos += signatureBlockHeight;
         xPos = margin;
       }
       if (witnessCount % 2 === 0) {
-        yPos = checkPageBreak(doc, yPos, 55);
+        yPos = checkPageBreak(doc, yPos, signatureBlockHeight + 5);
       }
 
       doc.text(witness.name, xPos, yPos);
@@ -416,16 +422,17 @@ export const generatePVFamille = async (
         doc.text(`(CNI: ${witness.cniNumber})`, xPos, yPos + 5);
       }
 
+      // Signature below name+cni
       if (witness.signatureData) {
         try {
-          doc.addImage(witness.signatureData, "PNG", xPos, yPos + 8, 60, 30);
+          doc.addImage(witness.signatureData, "PNG", xPos, yPos + 10, 55, 25);
         } catch (e) {
           doc.setDrawColor(150, 150, 150);
-          doc.line(xPos, yPos + 30, xPos + colWidth - 10, yPos + 30);
+          doc.line(xPos, yPos + 35, xPos + colWidth - 10, yPos + 35);
         }
       } else {
         doc.setDrawColor(150, 150, 150);
-        doc.line(xPos, yPos + 30, xPos + colWidth - 10, yPos + 30);
+        doc.line(xPos, yPos + 35, xPos + colWidth - 10, yPos + 35);
       }
 
       xPos = margin + colWidth + 20;

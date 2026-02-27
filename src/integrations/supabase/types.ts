@@ -1753,6 +1753,7 @@ export type Database = {
           date_acte_signe: string | null
           date_depot_notaire: string | null
           date_mutation_enregistree: string | null
+          documents_transmis: Json | null
           droits_enregistrement: number | null
           etat_foncier: boolean | null
           frais_fixes: number | null
@@ -1781,6 +1782,7 @@ export type Database = {
           date_acte_signe?: string | null
           date_depot_notaire?: string | null
           date_mutation_enregistree?: string | null
+          documents_transmis?: Json | null
           droits_enregistrement?: number | null
           etat_foncier?: boolean | null
           frais_fixes?: number | null
@@ -1809,6 +1811,7 @@ export type Database = {
           date_acte_signe?: string | null
           date_depot_notaire?: string | null
           date_mutation_enregistree?: string | null
+          documents_transmis?: Json | null
           droits_enregistrement?: number | null
           etat_foncier?: boolean | null
           frais_fixes?: number | null

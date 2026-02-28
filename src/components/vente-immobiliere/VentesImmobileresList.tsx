@@ -38,7 +38,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { DocumentsVenteDialog } from "./DocumentsVenteDialog";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
-import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
+import { PeriodValue } from "@/components/dashboard/PeriodFilter";
 
 const STATUS_CONFIG = {
   en_cours: { label: "En cours", color: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
@@ -46,9 +46,12 @@ const STATUS_CONFIG = {
   annule: { label: "Annulé", color: "bg-destructive/10 text-destructive border-destructive/30" },
 };
 
-export function VentesImmobilieresList() {
+interface VentesImmobilieresListProps {
+  period: PeriodValue;
+}
+
+export function VentesImmobilieresList({ period }: VentesImmobilieresListProps) {
   const [search, setSearch] = useState("");
-  const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod());
   const [selectedVente, setSelectedVente] = useState<VenteWithDetails | null>(null);
   const { data: ventes, isLoading } = useVentesImmobilieres();
   const deleteVente = useDeleteVenteImmobiliere();
@@ -121,7 +124,6 @@ export function VentesImmobilieresList() {
             />
           </div>
         </div>
-        <PeriodFilter value={period} onChange={setPeriod} />
       </CardHeader>
       <CardContent>
         {filteredVentes?.length === 0 ? (

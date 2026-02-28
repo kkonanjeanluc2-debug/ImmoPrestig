@@ -124,6 +124,7 @@ export function VentesImmobilieresList({ period }: VentesImmobilieresListProps) 
             />
           </div>
         </div>
+      </CardHeader>
       <CardContent>
         {filteredVentes?.length === 0 ? (
           <div className="text-center py-12">

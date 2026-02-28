@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,25 +10,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { FileText, User, Banknote, Building2, Smartphone, CreditCard } from "lucide-react";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
+import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
 
 interface VentesListProps {
   ventes: VenteWithDetails[];
   lotissementId: string;
+  period?: PeriodValue;
 }
 
-export function VentesList({ ventes, lotissementId }: VentesListProps) {
+export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const [selectedVente, setSelectedVente] = useState<VenteWithDetails | null>(null);
   const { data: assignableUsers } = useAssignableUsers();
   
-  const filteredVentes = ventes.filter(
-    v => v.parcelle?.lotissement?.name
-  );
+  const filteredVentes = useMemo(() => {
+    return ventes.filter(v => {
+      if (!v.parcelle?.lotissement?.name) return false;
+      if (period) {
+        const saleDate = new Date(v.sale_date);
+        if (!isWithinInterval(saleDate, { start: period.from, end: period.to })) return false;
+      }
+      return true;
+    });
+  }, [ventes, period]);
 
   const getSoldByName = (soldBy: string | null | undefined) => {
     if (!soldBy) return null;

@@ -339,7 +339,7 @@ const LotissementDetails = () => {
           </TabsContent>
 
           <TabsContent value="ventes">
-            <VentesList ventes={ventes || []} lotissementId={id || ""} />
+            <VentesList ventes={ventes || []} lotissementId={id || ""} period={revenuePeriod} />
           </TabsContent>
 
           <TabsContent value="echeances">

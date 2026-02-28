@@ -19,7 +19,7 @@ export function VentesDashboard({ period, onPeriodChange }: VentesDashboardProps
   const { data: overdueEcheances } = useOverdueEcheancesVentes();
   const { data: upcomingEcheances } = useUpcomingEcheancesVentes();
 
-  const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
+  
 
   const biensDisponibles = biens?.filter((b) => b.status === "disponible").length || 0;
   const biensReserves = biens?.filter((b) => b.status === "reserve").length || 0;

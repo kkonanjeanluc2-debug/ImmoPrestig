@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,15 @@ import { ShoppingCart, Plus, Loader2 } from "lucide-react";
 import { useAchatsImmobiliers, useCreateAchatImmobilier } from "@/hooks/useAchatsImmobiliers";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
-import { format } from "date-fns";
+import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
+import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
 
-export function AchatsImmobiliersList() {
+interface AchatsImmobiliersListProps {
+  period?: PeriodValue;
+}
+
+export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
   const { data: achats, isLoading } = useAchatsImmobiliers();
   const { data: biens = [] } = useBiensAchat();
   const { data: vendeurs = [] } = useVendeurs();
@@ -138,16 +143,28 @@ export function AchatsImmobiliersList() {
         </Dialog>
       </div>
 
-      {!achats?.length ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Aucun achat enregistré</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {achats.map((achat) => (
+      {(() => {
+        const filtered = period
+          ? (achats || []).filter(a => {
+              const d = new Date(a.sale_date);
+              return isWithinInterval(d, { start: period.from, end: period.to });
+            })
+          : achats || [];
+
+        if (!filtered.length) {
+          return (
+            <Card>
+              <CardContent className="text-center py-12">
+                <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Aucun achat enregistré</p>
+              </CardContent>
+            </Card>
+          );
+        }
+
+        return (
+          <div className="space-y-3">
+            {filtered.map((achat) => (
             <Card key={achat.id} className="p-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
@@ -163,8 +180,9 @@ export function AchatsImmobiliersList() {
               </div>
             </Card>
           ))}
-        </div>
-      )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

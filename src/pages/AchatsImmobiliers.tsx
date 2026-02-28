@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function AchatsImmobiliers() {
   const [activeTab, setActiveTab] = useState("biens");
+  const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
 
   // Prefetch all tab data on mount for instant switching
   useBiensAchat();
@@ -49,7 +51,7 @@ export default function AchatsImmobiliers() {
           </div>
         </div>
 
-        <AchatsDashboard />
+        <AchatsDashboard period={period} onPeriodChange={setPeriod} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="flex flex-wrap h-auto gap-1 p-1 overflow-x-auto">
@@ -89,7 +91,7 @@ export default function AchatsImmobiliers() {
             <OffresAchatList />
           </TabsContent>
           <TabsContent value="achats" className="mt-6">
-            <AchatsImmobiliersList />
+            <AchatsImmobiliersList period={period} />
           </TabsContent>
           <TabsContent value="echeances" className="mt-6">
             <EcheancesAchatsList />

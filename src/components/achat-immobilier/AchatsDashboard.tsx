@@ -8,13 +8,16 @@ import { useEcheancesAchats } from "@/hooks/useEcheancesAchats";
 import { formatCurrency } from "@/lib/pdfFormat";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 
-export function AchatsDashboard() {
+interface AchatsDashboardProps {
+  period: PeriodValue;
+  onPeriodChange: (value: PeriodValue) => void;
+}
+
+export function AchatsDashboard({ period, onPeriodChange }: AchatsDashboardProps) {
   const { data: biens = [] } = useBiensAchat();
   const { data: offres = [] } = useOffresAchat();
   const { data: achats = [] } = useAchatsImmobiliers();
   const { data: echeances = [] } = useEcheancesAchats();
-
-  const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
 
   const enRetard = echeances.filter(e => e.status === "en_retard").length;
   const enRetardAmount = echeances.filter(e => e.status === "en_retard").reduce((sum, e) => sum + e.amount, 0);
@@ -109,7 +112,7 @@ export function AchatsDashboard() {
         </Card>
       </div>
 
-      <PeriodFilter value={period} onChange={setPeriod} />
+      <PeriodFilter value={period} onChange={onPeriodChange} />
     </div>
   );
 }

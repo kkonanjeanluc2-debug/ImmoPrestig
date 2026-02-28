@@ -60,17 +60,58 @@ export const useVentesImmobilieres = () => {
   return useQuery({
     queryKey: ["ventes-immobilieres"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: ventesData, error: ventesError } = await supabase
         .from("ventes_immobilieres")
-        .select(`
-          *,
-          bien:biens_vente(title, address, property_type, image_url),
-          acquereur:acquereurs(name, phone, email)
-        `)
+        .select("*")
         .order("sale_date", { ascending: false });
 
-      if (error) throw error;
-      return data as VenteWithDetails[];
+      if (ventesError) throw ventesError;
+      if (!ventesData?.length) return [];
+
+      const bienIds = Array.from(new Set(ventesData.map((v) => v.bien_id).filter(Boolean)));
+      const acquereurIds = Array.from(new Set(ventesData.map((v) => v.acquereur_id).filter(Boolean)));
+
+      const biensMap = new Map<string, { title: string; address: string; property_type: string; image_url: string | null }>();
+      const acquereursMap = new Map<string, { name: string; phone: string | null; email: string | null }>();
+
+      if (bienIds.length > 0) {
+        const { data: biensData, error: biensError } = await supabase
+          .from("biens_vente")
+          .select("id, title, address, property_type, image_url")
+          .in("id", bienIds);
+
+        if (biensError) throw biensError;
+        biensData?.forEach((bien) => {
+          biensMap.set(bien.id, {
+            title: bien.title,
+            address: bien.address,
+            property_type: bien.property_type,
+            image_url: bien.image_url,
+          });
+        });
+      }
+
+      if (acquereurIds.length > 0) {
+        const { data: acquereursData, error: acquereursError } = await supabase
+          .from("acquereurs")
+          .select("id, name, phone, email")
+          .in("id", acquereurIds);
+
+        if (acquereursError) throw acquereursError;
+        acquereursData?.forEach((acquereur) => {
+          acquereursMap.set(acquereur.id, {
+            name: acquereur.name,
+            phone: acquereur.phone,
+            email: acquereur.email,
+          });
+        });
+      }
+
+      return ventesData.map((vente) => ({
+        ...vente,
+        bien: biensMap.get(vente.bien_id),
+        acquereur: acquereursMap.get(vente.acquereur_id),
+      })) as VenteWithDetails[];
     },
     enabled: !!user,
   });

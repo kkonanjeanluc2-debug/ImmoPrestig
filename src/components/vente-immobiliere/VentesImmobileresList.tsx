@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVentesImmobilieres, useDeleteVenteImmobiliere, VenteWithDetails } from "@/hooks/useVentesImmobilieres";
 import { formatCurrency } from "@/lib/pdfFormat";
-import { format } from "date-fns";
+import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import {
@@ -38,6 +38,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { DocumentsVenteDialog } from "./DocumentsVenteDialog";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 
 const STATUS_CONFIG = {
   en_cours: { label: "En cours", color: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
@@ -47,6 +48,7 @@ const STATUS_CONFIG = {
 
 export function VentesImmobilieresList() {
   const [search, setSearch] = useState("");
+  const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod());
   const [selectedVente, setSelectedVente] = useState<VenteWithDetails | null>(null);
   const { data: ventes, isLoading } = useVentesImmobilieres();
   const deleteVente = useDeleteVenteImmobiliere();
@@ -58,14 +60,26 @@ export function VentesImmobilieresList() {
   const soldByUserIds = ventes?.map(v => v.sold_by).filter(Boolean) || [];
   const { data: profilesMap } = useUserProfiles(soldByUserIds);
 
-  const filteredVentes = ventes?.filter((vente) => {
-    const searchLower = search.toLowerCase();
-    return (
-      vente.bien?.title?.toLowerCase().includes(searchLower) ||
-      vente.acquereur?.name?.toLowerCase().includes(searchLower)
-    );
-  });
-
+  const filteredVentes = useMemo(() => {
+    if (!ventes) return [];
+    
+    return ventes.filter((vente) => {
+      // Period filter
+      const saleDate = new Date(vente.sale_date);
+      if (!isWithinInterval(saleDate, { start: period.from, end: period.to })) {
+        return false;
+      }
+      // Search filter
+      if (search) {
+        const searchLower = search.toLowerCase();
+        return (
+          vente.bien?.title?.toLowerCase().includes(searchLower) ||
+          vente.acquereur?.name?.toLowerCase().includes(searchLower)
+        );
+      }
+      return true;
+    });
+  }, [ventes, period, search]);
   const handleDelete = async (id: string) => {
     try {
       await deleteVente.mutateAsync(id);
@@ -94,17 +108,20 @@ export function VentesImmobilieresList() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Historique des ventes</CardTitle>
-        <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+      <CardHeader className="space-y-4">
+        <div className="flex flex-row items-center justify-between">
+          <CardTitle>Historique des ventes</CardTitle>
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
+        <PeriodFilter value={period} onChange={setPeriod} />
       </CardHeader>
       <CardContent>
         {filteredVentes?.length === 0 ? (

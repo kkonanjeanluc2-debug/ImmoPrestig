@@ -18,9 +18,11 @@ import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { Badge } from "@/components/ui/badge";
 import { useNewVenteProspectsCount } from "@/hooks/useNewProspectsCount";
 import { useUpcomingEcheancesVentes, useOverdueEcheancesVentes } from "@/hooks/useEcheancesVentes";
+import { PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 
 export default function VentesImmobilieres() {
   const [activeTab, setActiveTab] = useState("biens");
+  const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
   const { data: acquereurs } = useAcquereurs();
   const { hasPermission, role, isLoading: isLoadingPermissions } = usePermissions();
   const { isAdmin } = useIsAgencyOwner();
@@ -54,7 +56,7 @@ export default function VentesImmobilieres() {
         </div>
 
         {/* Dashboard KPIs */}
-        <VentesDashboard />
+        <VentesDashboard period={period} onPeriodChange={setPeriod} />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(val) => {
@@ -100,7 +102,7 @@ export default function VentesImmobilieres() {
           </TabsContent>
 
           <TabsContent value="ventes" className="mt-6">
-            <VentesImmobilieresList />
+            <VentesImmobilieresList period={period} />
           </TabsContent>
 
           <TabsContent value="echeances" className="mt-6">

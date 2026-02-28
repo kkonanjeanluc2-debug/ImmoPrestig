@@ -32,7 +32,13 @@ export function VentesDashboard() {
     };
 
     // Down payments from ventes within period (use sale_date)
-    const downPayments = ventes?.filter((v) => isInPeriod(v.sale_date)).reduce((sum, v) => sum + (v.down_payment || 0), 0) || 0;
+    // For cash payments (comptant), use total_price if down_payment is null
+    const downPayments = ventes?.filter((v) => isInPeriod(v.sale_date)).reduce((sum, v) => {
+      if (v.payment_type === "comptant") {
+        return sum + (v.down_payment ?? v.total_price ?? 0);
+      }
+      return sum + (v.down_payment || 0);
+    }, 0) || 0;
 
     // Paid installments within period (use paid_date)
     const paidInstallments = allEcheances?.filter((e) => e.status === "paid" && isInPeriod(e.paid_date)).reduce((sum, e) => sum + (e.paid_amount || e.amount), 0) || 0;

@@ -1,13 +1,18 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBiensVente } from "@/hooks/useBiensVente";
 import { useVentesImmobilieres } from "@/hooks/useVentesImmobilieres";
 import { useOverdueEcheancesVentes, useUpcomingEcheancesVentes, useEcheancesVentes } from "@/hooks/useEcheancesVentes";
 import { Building2, TrendingUp, AlertTriangle, Calendar, BookmarkCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/pdfFormat";
-import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
+import { PeriodFilter, PeriodValue, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 
-export function VentesDashboard() {
+interface VentesDashboardProps {
+  period: PeriodValue;
+  onPeriodChange: (period: PeriodValue) => void;
+}
+
+export function VentesDashboard({ period, onPeriodChange }: VentesDashboardProps) {
   const { data: biens } = useBiensVente();
   const { data: ventes } = useVentesImmobilieres();
   const { data: allEcheances } = useEcheancesVentes();
@@ -130,7 +135,7 @@ export function VentesDashboard() {
         </Card>
       </div>
 
-      <PeriodFilter value={period} onChange={setPeriod} />
+      <PeriodFilter value={period} onChange={onPeriodChange} />
     </div>
   );
 }

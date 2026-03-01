@@ -152,7 +152,7 @@ const Pricing = () => {
             className="text-base text-muted-foreground max-w-2xl mx-auto mb-10"
             initial="hidden" animate="visible" variants={fadeUp} custom={3}
           >
-            Contrats numériques · Paiements en ligne · Quittances automatiques · Suivi des impayés · CRM immobilier · Gestion de lotissements
+            Contrats numériques · Paiements en ligne · Quittances automatiques · Points mensuels · Suivi des impayés · CRM immobilier · Gestion de lotissements
           </motion.p>
 
           <motion.div 
@@ -237,10 +237,13 @@ const Pricing = () => {
                   <ul className="space-y-3">
                     {[
                       "Contrats numériques avec signature",
-                      "Paiements en ligne (Mobile Money, CB)",
+                      "Paiements en ligne (Mobile Money, wave, CB)",
                       "Quittances automatiques",
+                      "Point mensuel du bailleur"
                       "Suivi et relance des impayés",
                       "États des lieux digitaux",
+                      "Inventaire du bien pour location meublée"
+                      "Quittances et contrats personnalisables"
                       "Rappels WhatsApp automatiques",
                     ].map((f, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
@@ -261,7 +264,7 @@ const Pricing = () => {
                     <ShoppingCart className="h-7 w-7 text-accent" />
                   </div>
                   <CardTitle className="text-xl">CRM Immobilier</CardTitle>
-                  <CardDescription>Boostez vos ventes avec des outils puissants</CardDescription>
+                  <CardDescription>Gerez vos Ventes et Achats avec des outils puissants</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
@@ -270,7 +273,7 @@ const Pricing = () => {
                       "Négociation directe avec vendeurs",
                       "Encaissement et échéanciers",
                       "Traçabilité complète des transactions",
-                      "Gestion des prospects acquéreurs",
+                      "Gestion des prospects et acquéreurs",
                       "Suivi des mutations notariales",
                     ].map((f, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
@@ -330,9 +333,9 @@ const Pricing = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {[
-              { icon: Smartphone, title: "100% Mobile", desc: "Gérez tout depuis votre téléphone, même hors connexion" },
+              { icon: Smartphone, title: "Web et Mobile", desc: "Gérez tout depuis votre PC ou téléphone, même hors connexion" },
               { icon: Shield, title: "Données sécurisées", desc: "Chiffrement de bout en bout, hébergement cloud fiable" },
-              { icon: Bell, title: "Rappels automatiques", desc: "WhatsApp, SMS et email pour ne rien oublier" },
+              { icon: Bell, title: "Rappels automatiques", desc: "WhatsApp et email pour ne rien oublier" },
               { icon: BarChart3, title: "Tableaux de bord", desc: "Statistiques en temps réel pour piloter votre activité" },
             ].map((item, i) => (
               <motion.div key={i} className="text-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>

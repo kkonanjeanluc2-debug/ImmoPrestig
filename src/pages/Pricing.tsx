@@ -91,9 +91,7 @@ const Pricing = () => {
                   <Link to="/login">
                     <Button variant="ghost" size="sm">Se connecter</Button>
                   </Link>
-                  <Link to="/signup">
-                    <Button size="sm">Commencer</Button>
-                  </Link>
+                  <Button size="sm" onClick={scrollToPricing}>Commencer</Button>
                 </>
               )}
             </div>
@@ -109,7 +107,7 @@ const Pricing = () => {
                   ) : (
                     <>
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)}><Button variant="ghost" className="w-full">Se connecter</Button></Link>
-                      <Link to="/signup" onClick={() => setMobileMenuOpen(false)}><Button className="w-full">Commencer</Button></Link>
+                      <Button className="w-full" onClick={() => { setMobileMenuOpen(false); scrollToPricing(); }}>Commencer</Button>
                     </>
                   )}
                 </div>
@@ -160,12 +158,10 @@ const Pricing = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
             initial="hidden" animate="visible" variants={fadeUp} custom={4}
           >
-            <Link to="/signup">
-              <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all">
-                Commencer gratuitement
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" onClick={scrollToPricing}>
+              Commencer gratuitement
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-6" onClick={scrollToPricing}>
               Voir les tarifs
             </Button>
@@ -384,12 +380,10 @@ const Pricing = () => {
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
               Rejoignez des centaines de propriétaires et agences qui ont dit adieu à la paperasse et aux loyers impayés.
             </p>
-            <Link to="/signup">
-              <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 mb-4">
-                Commencer gratuitement
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 mb-4" onClick={scrollToPricing}>
+              Commencer gratuitement
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
             <p className="text-sm text-muted-foreground">
               ✓ Aucun engagement · ✓ Plan gratuit inclus · ✓ Support WhatsApp
             </p>
@@ -563,12 +557,10 @@ const Pricing = () => {
             Rejoignez des centaines de propriétaires et agences qui font confiance à ImmoPrestige.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/signup">
-              <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25">
-                Commencer gratuitement
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25" onClick={scrollToPricing}>
+              Commencer gratuitement
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
             <DemoRequestButton
               variant="outline"
               size="lg"

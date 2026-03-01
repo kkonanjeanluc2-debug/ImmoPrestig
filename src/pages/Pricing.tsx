@@ -1,11 +1,12 @@
-import { Check, Star, Zap, Building2, Crown, Menu, Home, ShoppingCart, MapPin, Shield, Clock, Smartphone, Users, FileText, CreditCard, BarChart3, Bell, ArrowRight } from "lucide-react";
+import { Check, Star, Zap, Building2, Crown, Menu, Home, ShoppingCart, MapPin, Shield, Clock, Smartphone, Users, FileText, CreditCard, BarChart3, Bell, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSubscriptionPlans, SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
@@ -37,10 +38,10 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const pricingRef = useRef<HTMLElement>(null);
 
   const yearlyDiscountPercent = parseInt(discountSetting?.value || "20", 10);
   const activePlans = plans?.filter((plan) => plan.is_active) || [];
@@ -62,8 +63,8 @@ const Pricing = () => {
     }
   };
 
-  const scrollToPricing = () => {
-    pricingRef.current?.scrollIntoView({ behavior: "smooth" });
+  const openPricing = () => {
+    setPricingOpen(true);
   };
 
   return (
@@ -91,7 +92,7 @@ const Pricing = () => {
                   <Link to="/login">
                     <Button variant="ghost" size="sm">Se connecter</Button>
                   </Link>
-                  <Button size="sm" onClick={scrollToPricing}>Commencer</Button>
+                  <Button size="sm" onClick={openPricing}>Commencer</Button>
                 </>
               )}
             </div>
@@ -107,7 +108,7 @@ const Pricing = () => {
                   ) : (
                     <>
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)}><Button variant="ghost" className="w-full">Se connecter</Button></Link>
-                      <Button className="w-full" onClick={() => { setMobileMenuOpen(false); scrollToPricing(); }}>Commencer</Button>
+                      <Button className="w-full" onClick={() => { setMobileMenuOpen(false); openPricing(); }}>Commencer</Button>
                     </>
                   )}
                 </div>
@@ -158,11 +159,11 @@ const Pricing = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
             initial="hidden" animate="visible" variants={fadeUp} custom={4}
           >
-            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" onClick={scrollToPricing}>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" onClick={openPricing}>
               Commencer gratuitement
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6" onClick={scrollToPricing}>
+            <Button variant="outline" size="lg" className="text-lg px-8 py-6" onClick={openPricing}>
               Voir les tarifs
             </Button>
           </motion.div>
@@ -380,7 +381,7 @@ const Pricing = () => {
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
               Rejoignez des centaines de propriétaires et agences qui ont dit adieu à la paperasse et aux loyers impayés.
             </p>
-            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 mb-4" onClick={scrollToPricing}>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 mb-4" onClick={openPricing}>
               Commencer gratuitement
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -391,20 +392,22 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* ===== PRICING SECTION ===== */}
-      <section ref={pricingRef} className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">Tarification simple et transparente</Badge>
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+      {/* ===== PRICING DIALOG ===== */}
+      <Dialog open={pricingOpen} onOpenChange={setPricingOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="p-6 pb-0 text-center">
+            <Badge variant="secondary" className="mb-4 mx-auto w-fit">Tarification simple et transparente</Badge>
+            <DialogTitle className="text-2xl md:text-3xl font-display font-bold">
               Choisissez le forfait <span className="text-primary">adapté à vos besoins</span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-base max-w-2xl mx-auto">
               Commencez gratuitement, évoluez selon votre croissance.
-            </p>
+            </DialogDescription>
+          </DialogHeader>
 
+          <div className="px-6 pb-6">
             {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-4 mb-12">
+            <div className="flex items-center justify-center gap-4 my-6">
               <button
                 onClick={() => setBillingCycle("monthly")}
                 className={cn(
@@ -425,107 +428,107 @@ const Pricing = () => {
                 <Badge variant="secondary" className="text-xs">Économisez jusqu'à {yearlyDiscountPercent}%</Badge>
               </button>
             </div>
-          </div>
 
-          {isLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="relative">
-                  <CardHeader><Skeleton className="h-6 w-6 rounded-full mb-2" /><Skeleton className="h-6 w-24" /><Skeleton className="h-4 w-32 mt-2" /></CardHeader>
-                  <CardContent><Skeleton className="h-10 w-full mb-4" /><div className="space-y-2">{[1, 2, 3, 4].map((j) => (<Skeleton key={j} className="h-4 w-full" />))}</div></CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {activePlans.map((plan) => {
-                const calculatedYearlyPrice = Math.round(plan.price_monthly * 12 * (1 - yearlyDiscountPercent / 100));
-                const price = billingCycle === "monthly" ? plan.price_monthly : calculatedYearlyPrice;
-                const features = Array.isArray(plan.features) ? plan.features : [];
-
-                return (
-                  <Card
-                    key={plan.id}
-                    className={cn(
-                      "relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
-                      plan.is_popular && "border-primary shadow-md ring-1 ring-primary",
-                    )}
-                  >
-                    {plan.is_popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-primary text-primary-foreground shadow-sm">
-                          <Star className="h-3 w-3 mr-1 fill-current" />Plus populaire
-                        </Badge>
-                      </div>
-                    )}
-                    <CardHeader className="text-center pb-4">
-                      <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        {planIcons[plan.name] || <Building2 className="h-6 w-6" />}
-                      </div>
-                      <CardTitle className="text-xl">{plan.name}</CardTitle>
-                      <CardDescription className="min-h-[40px]">{plan.description || "Idéal pour démarrer"}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-center">
-                      <div className="mb-6">
-                        <div className="flex items-baseline justify-center gap-1">
-                          <span className="text-4xl font-bold">{formatPrice(price)}</span>
-                          <span className="text-muted-foreground">{plan.currency}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{billingCycle === "monthly" ? "par mois" : "par an"}</p>
-                        {billingCycle === "yearly" && plan.price_monthly > 0 && (
-                          <Badge variant="secondary" className="mt-2">Économisez {yearlyDiscountPercent}%</Badge>
-                        )}
-                      </div>
-                      <div className="space-y-3 text-left mb-6">
-                        {plan.max_properties && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                            <span>{plan.max_properties === 999999 ? "Biens illimités" : `Jusqu'à ${plan.max_properties} biens`}</span>
-                          </div>
-                        )}
-                        {plan.max_tenants && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                            <span>{plan.max_tenants === 999999 ? "Locataires illimités" : `Jusqu'à ${plan.max_tenants} locataires`}</span>
-                          </div>
-                        )}
-                        {plan.max_users && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                            <span>{plan.max_users === 999999 ? "Utilisateurs illimités" : `${plan.max_users} utilisateur${plan.max_users > 1 ? "s" : ""}`}</span>
-                          </div>
-                        )}
-                        {features.map((feature, index) => (
-                          <div key={index} className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                            <span>{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button className="w-full" variant={plan.is_popular ? "default" : "outline"} onClick={() => handleSelectPlan(plan)}>
-                        {plan.price_monthly === 0 ? "Commencer gratuitement" : "Choisir ce forfait"}
-                      </Button>
-                    </CardFooter>
+            {isLoading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="relative">
+                    <CardHeader><Skeleton className="h-6 w-6 rounded-full mb-2" /><Skeleton className="h-6 w-24" /><Skeleton className="h-4 w-32 mt-2" /></CardHeader>
+                    <CardContent><Skeleton className="h-10 w-full mb-4" /><div className="space-y-2">{[1, 2, 3, 4].map((j) => (<Skeleton key={j} className="h-4 w-full" />))}</div></CardContent>
                   </Card>
-                );
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {activePlans.map((plan) => {
+                  const calculatedYearlyPrice = Math.round(plan.price_monthly * 12 * (1 - yearlyDiscountPercent / 100));
+                  const price = billingCycle === "monthly" ? plan.price_monthly : calculatedYearlyPrice;
+                  const features = Array.isArray(plan.features) ? plan.features : [];
 
-          {/* Frais de paramétrage */}
-          <div className="mt-10 mx-auto max-w-2xl rounded-xl border border-primary/20 bg-primary/5 p-6 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Check className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-lg">Frais de paramétrage : 150 000 FCFA</span>
+                  return (
+                    <Card
+                      key={plan.id}
+                      className={cn(
+                        "relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
+                        plan.is_popular && "border-primary shadow-md ring-1 ring-primary",
+                      )}
+                    >
+                      {plan.is_popular && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                          <Badge className="bg-primary text-primary-foreground shadow-sm">
+                            <Star className="h-3 w-3 mr-1 fill-current" />Plus populaire
+                          </Badge>
+                        </div>
+                      )}
+                      <CardHeader className="text-center pb-3">
+                        <div className="mx-auto mb-2 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          {planIcons[plan.name] || <Building2 className="h-5 w-5" />}
+                        </div>
+                        <CardTitle className="text-lg">{plan.name}</CardTitle>
+                        <CardDescription className="text-xs min-h-[32px]">{plan.description || "Idéal pour démarrer"}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="text-center pt-0">
+                        <div className="mb-4">
+                          <div className="flex items-baseline justify-center gap-1">
+                            <span className="text-3xl font-bold">{formatPrice(price)}</span>
+                            <span className="text-sm text-muted-foreground">{plan.currency}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{billingCycle === "monthly" ? "par mois" : "par an"}</p>
+                          {billingCycle === "yearly" && plan.price_monthly > 0 && (
+                            <Badge variant="secondary" className="mt-1 text-xs">Économisez {yearlyDiscountPercent}%</Badge>
+                          )}
+                        </div>
+                        <div className="space-y-2 text-left mb-4">
+                          {plan.max_properties && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                              <span>{plan.max_properties === 999999 ? "Biens illimités" : `Jusqu'à ${plan.max_properties} biens`}</span>
+                            </div>
+                          )}
+                          {plan.max_tenants && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                              <span>{plan.max_tenants === 999999 ? "Locataires illimités" : `Jusqu'à ${plan.max_tenants} locataires`}</span>
+                            </div>
+                          )}
+                          {plan.max_users && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                              <span>{plan.max_users === 999999 ? "Utilisateurs illimités" : `${plan.max_users} utilisateur${plan.max_users > 1 ? "s" : ""}`}</span>
+                            </div>
+                          )}
+                          {features.map((feature, index) => (
+                            <div key={index} className="flex items-center gap-2 text-xs">
+                              <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="pt-0">
+                        <Button className="w-full" size="sm" variant={plan.is_popular ? "default" : "outline"} onClick={() => handleSelectPlan(plan)}>
+                          {plan.price_monthly === 0 ? "Commencer gratuitement" : "Choisir ce forfait"}
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Frais de paramétrage */}
+            <div className="mt-6 mx-auto max-w-2xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Check className="h-4 w-4 text-primary" />
+                <span className="font-semibold">Frais de paramétrage : 150 000 FCFA</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Paiement unique incluant la configuration et l'accompagnement au démarrage pour prendre en main l'application, eventuellement.
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Paiement unique incluant la configuration et l'accompagnement au démarrage pour prendre en main l'application, eventuellement.
-            </p>
           </div>
-        </div>
-      </section>
+        </DialogContent>
+      </Dialog>
 
       {/* FAQ Section */}
       <section className="py-16 bg-muted/30">
@@ -557,7 +560,7 @@ const Pricing = () => {
             Rejoignez des centaines de propriétaires et agences qui font confiance à ImmoPrestige.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25" onClick={scrollToPricing}>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25" onClick={openPricing}>
               Commencer gratuitement
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

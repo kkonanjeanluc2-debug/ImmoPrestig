@@ -39,6 +39,15 @@ export function AcquisitionFormDialog() {
     // Notaire
     notaire_name: "",
     notaire_phone: "",
+    // Bénéficiaire
+    beneficiaire_type: "particulier" as "particulier" | "societe",
+    beneficiaire_name: "",
+    beneficiaire_phone: "",
+    beneficiaire_email: "",
+    beneficiaire_address: "",
+    beneficiaire_cni: "",
+    beneficiaire_rccm: "",
+    beneficiaire_representant: "",
     notes: "",
   });
 
@@ -65,6 +74,14 @@ export function AcquisitionFormDialog() {
       valeur_bien_echange: form.valeur_bien_echange ? Number(form.valeur_bien_echange) : undefined,
       notaire_name: form.notaire_name || undefined,
       notaire_phone: form.notaire_phone || undefined,
+      beneficiaire_type: form.beneficiaire_type || undefined,
+      beneficiaire_name: form.beneficiaire_name || undefined,
+      beneficiaire_phone: form.beneficiaire_phone || undefined,
+      beneficiaire_email: form.beneficiaire_email || undefined,
+      beneficiaire_address: form.beneficiaire_address || undefined,
+      beneficiaire_cni: form.beneficiaire_cni || undefined,
+      beneficiaire_rccm: form.beneficiaire_rccm || undefined,
+      beneficiaire_representant: form.beneficiaire_representant || undefined,
       notes: form.notes || undefined,
     });
     setOpen(false);
@@ -73,7 +90,11 @@ export function AcquisitionFormDialog() {
       valeur_estimee: "", counterpart_name: "", counterpart_phone: "", counterpart_email: "", counterpart_address: "",
       date_deces: "", lien_parente: "", numero_succession: "", type_donation: "",
       societe_name: "", societe_siret: "", type_apport: "",
-      bien_echange_description: "", valeur_bien_echange: "", notaire_name: "", notaire_phone: "", notes: "",
+      bien_echange_description: "", valeur_bien_echange: "", notaire_name: "", notaire_phone: "",
+      beneficiaire_type: "particulier" as "particulier" | "societe",
+      beneficiaire_name: "", beneficiaire_phone: "", beneficiaire_email: "", beneficiaire_address: "",
+      beneficiaire_cni: "", beneficiaire_rccm: "", beneficiaire_representant: "",
+      notes: "",
     });
   };
 
@@ -226,6 +247,81 @@ export function AcquisitionFormDialog() {
                 </div>
               </div>
             </>
+          )}
+
+          {/* Bénéficiaire */}
+          <div className="flex items-center justify-between pt-2">
+            <h3 className="font-semibold text-sm">Bénéficiaire</h3>
+            <select
+              className="text-xs rounded-md border border-input bg-background px-2 py-1"
+              value={form.beneficiaire_type}
+              onChange={e => setForm(f => ({ ...f, beneficiaire_type: e.target.value as "particulier" | "societe" }))}
+            >
+              <option value="particulier">Particulier</option>
+              <option value="societe">Société</option>
+            </select>
+          </div>
+
+          {form.beneficiaire_type === "societe" ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Raison sociale</Label>
+                  <Input value={form.beneficiaire_name} onChange={e => setForm(f => ({ ...f, beneficiaire_name: e.target.value }))} placeholder="ex: SCI IMMO PRESTIGE" />
+                </div>
+                <div>
+                  <Label>RCCM</Label>
+                  <Input value={form.beneficiaire_rccm} onChange={e => setForm(f => ({ ...f, beneficiaire_rccm: e.target.value }))} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Représentant légal</Label>
+                  <Input value={form.beneficiaire_representant} onChange={e => setForm(f => ({ ...f, beneficiaire_representant: e.target.value }))} placeholder="ex: M. KOUASSI Yao, Gérant" />
+                </div>
+                <div>
+                  <Label>Siège social</Label>
+                  <Input value={form.beneficiaire_address} onChange={e => setForm(f => ({ ...f, beneficiaire_address: e.target.value }))} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Téléphone</Label>
+                  <Input value={form.beneficiaire_phone} onChange={e => setForm(f => ({ ...f, beneficiaire_phone: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input type="email" value={form.beneficiaire_email} onChange={e => setForm(f => ({ ...f, beneficiaire_email: e.target.value }))} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Nom complet</Label>
+                  <Input value={form.beneficiaire_name} onChange={e => setForm(f => ({ ...f, beneficiaire_name: e.target.value }))} placeholder="ex: M. KOUAME Jean" />
+                </div>
+                <div>
+                  <Label>N° CNI</Label>
+                  <Input value={form.beneficiaire_cni} onChange={e => setForm(f => ({ ...f, beneficiaire_cni: e.target.value }))} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Adresse</Label>
+                  <Input value={form.beneficiaire_address} onChange={e => setForm(f => ({ ...f, beneficiaire_address: e.target.value }))} placeholder="ex: Abidjan, Marcory" />
+                </div>
+                <div>
+                  <Label>Téléphone</Label>
+                  <Input value={form.beneficiaire_phone} onChange={e => setForm(f => ({ ...f, beneficiaire_phone: e.target.value }))} />
+                </div>
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={form.beneficiaire_email} onChange={e => setForm(f => ({ ...f, beneficiaire_email: e.target.value }))} />
+              </div>
+            </div>
           )}
 
           <h3 className="font-semibold text-sm pt-2">Notaire</h3>

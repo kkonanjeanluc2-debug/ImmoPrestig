@@ -44,6 +44,8 @@ export function AddBienAchatDialog({ children }: Props) {
     vendeur_id: "",
     latitude: "",
     longitude: "",
+    lotArea: "",
+    floors: "",
   });
 
   const handleGetLocation = () => {
@@ -71,6 +73,10 @@ export function AddBienAchatDialog({ children }: Props) {
   };
 
   const handleSubmit = async () => {
+    const features: Record<string, unknown> = {};
+    if (form.lotArea) features.lot_area = Number(form.lotArea);
+    if (form.floors) features.floors = Number(form.floors);
+
     await createMutation.mutateAsync({
       title: form.title,
       property_type: form.property_type,
@@ -84,9 +90,10 @@ export function AddBienAchatDialog({ children }: Props) {
       vendeur_id: form.vendeur_id || undefined,
       latitude: form.latitude ? Number(form.latitude) : undefined,
       longitude: form.longitude ? Number(form.longitude) : undefined,
+      features: Object.keys(features).length > 0 ? features : undefined,
     });
     setOpen(false);
-    setForm({ title: "", property_type: "appartement", address: "", city: "", price: "", area: "", bedrooms: "", bathrooms: "", description: "", vendeur_id: "", latitude: "", longitude: "" });
+    setForm({ title: "", property_type: "appartement", address: "", city: "", price: "", area: "", bedrooms: "", bathrooms: "", description: "", vendeur_id: "", latitude: "", longitude: "", lotArea: "", floors: "" });
   };
 
   const isValid = form.title && form.address && form.price;
@@ -129,20 +136,64 @@ export function AddBienAchatDialog({ children }: Props) {
               <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Surface (m²)</Label>
-              <Input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
+          {/* Champs adaptatifs selon le type */}
+          {form.property_type === "terrain" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Superficie totale (m²)</Label>
+                <Input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} placeholder="Ex: 500" />
+              </div>
+              <div className="space-y-2">
+                <Label>Superficie lotie (m²)</Label>
+                <Input type="number" value={form.lotArea} onChange={(e) => setForm({ ...form, lotArea: e.target.value })} placeholder="Ex: 400" />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Chambres</Label>
-              <Input type="number" value={form.bedrooms} onChange={(e) => setForm({ ...form, bedrooms: e.target.value })} />
+          ) : form.property_type === "immeuble" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Surface (m²)</Label>
+                <Input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Nombre d'étages</Label>
+                <Input type="number" value={form.floors} onChange={(e) => setForm({ ...form, floors: e.target.value })} placeholder="Ex: 3" />
+              </div>
+              <div className="space-y-2">
+                <Label>Chambres</Label>
+                <Input type="number" value={form.bedrooms} onChange={(e) => setForm({ ...form, bedrooms: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>SdB</Label>
+                <Input type="number" value={form.bathrooms} onChange={(e) => setForm({ ...form, bathrooms: e.target.value })} />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>SdB</Label>
-              <Input type="number" value={form.bathrooms} onChange={(e) => setForm({ ...form, bathrooms: e.target.value })} />
+          ) : form.property_type === "bureau" || form.property_type === "commerce" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Surface (m²)</Label>
+                <Input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>SdB</Label>
+                <Input type="number" value={form.bathrooms} onChange={(e) => setForm({ ...form, bathrooms: e.target.value })} />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Surface (m²)</Label>
+                <Input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Chambres</Label>
+                <Input type="number" value={form.bedrooms} onChange={(e) => setForm({ ...form, bedrooms: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>SdB</Label>
+                <Input type="number" value={form.bathrooms} onChange={(e) => setForm({ ...form, bathrooms: e.target.value })} />
+              </div>
+            </div>
+          )}
 
           {/* GPS Position */}
           <div className="space-y-2">

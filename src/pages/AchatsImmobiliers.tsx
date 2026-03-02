@@ -20,7 +20,7 @@ import { AchatsDashboard } from "@/components/achat-immobilier/AchatsDashboard";
 import { MutationsAchatList } from "@/components/achat-immobilier/MutationsAchatList";
 
 const STATUS_LABELS: Record<string, string> = {
-  prospection: "Prospection",
+  
   en_negociation: "En négociation",
   offre_faite: "Offre faite",
   sous_compromis: "Sous compromis",

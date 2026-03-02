@@ -16,8 +16,11 @@ export type Database = {
     Tables: {
       achats_immobiliers: {
         Row: {
+          acquereur_id: string | null
           agency_fees: number | null
           bien_id: string
+          commission_amount: number | null
+          commission_percentage: number | null
           created_at: string
           down_payment: number | null
           id: string
@@ -32,8 +35,11 @@ export type Database = {
           vendeur_id: string | null
         }
         Insert: {
+          acquereur_id?: string | null
           agency_fees?: number | null
           bien_id: string
+          commission_amount?: number | null
+          commission_percentage?: number | null
           created_at?: string
           down_payment?: number | null
           id?: string
@@ -48,8 +54,11 @@ export type Database = {
           vendeur_id?: string | null
         }
         Update: {
+          acquereur_id?: string | null
           agency_fees?: number | null
           bien_id?: string
+          commission_amount?: number | null
+          commission_percentage?: number | null
           created_at?: string
           down_payment?: number | null
           id?: string
@@ -64,6 +73,13 @@ export type Database = {
           vendeur_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "achats_immobiliers_acquereur_id_fkey"
+            columns: ["acquereur_id"]
+            isOneToOne: false
+            referencedRelation: "acquereurs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "achats_immobiliers_bien_id_fkey"
             columns: ["bien_id"]

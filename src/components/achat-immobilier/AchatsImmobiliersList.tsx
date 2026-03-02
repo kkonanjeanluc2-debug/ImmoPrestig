@@ -32,7 +32,7 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
   const createAcquereur = useCreateAcquereur();
   const [open, setOpen] = useState(false);
   const [showNewAcquereur, setShowNewAcquereur] = useState(false);
-  const [newAcquereur, setNewAcquereur] = useState({ name: "", phone: "", email: "" });
+  const [newAcquereur, setNewAcquereur] = useState({ name: "", phone: "", email: "", address: "", cni_number: "", birth_date: "", birth_place: "", profession: "" });
   const [form, setForm] = useState({
     bien_id: "", vendeur_id: "", acquereur_id: "", sale_price: "", payment_type: "comptant",
     total_installments: "", down_payment: "", notary_fees: "", agency_fees: "",
@@ -69,6 +69,11 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
           name: newAcquereur.name.trim(),
           phone: newAcquereur.phone.trim() || null,
           email: newAcquereur.email.trim() || null,
+          address: newAcquereur.address.trim() || null,
+          cni_number: newAcquereur.cni_number.trim() || null,
+          birth_date: newAcquereur.birth_date || null,
+          birth_place: newAcquereur.birth_place.trim() || null,
+          profession: newAcquereur.profession.trim() || null,
         });
         acquereurId = created.id;
       } catch (e: any) {
@@ -98,7 +103,7 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
   const resetForm = () => {
     setForm({ bien_id: "", vendeur_id: "", acquereur_id: "", sale_price: "", payment_type: "comptant", total_installments: "", down_payment: "", notary_fees: "", agency_fees: "", commission_percentage: "", commission_amount: "", notes: "" });
     setShowNewAcquereur(false);
-    setNewAcquereur({ name: "", phone: "", email: "" });
+    setNewAcquereur({ name: "", phone: "", email: "", address: "", cni_number: "", birth_date: "", birth_place: "", profession: "" });
   };
 
   const availableBiens = biens.filter(b => b.status !== "achete" && !!b.vendeur_id);
@@ -149,6 +154,21 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
                     <div className="grid grid-cols-2 gap-2">
                       <Input placeholder="Téléphone" value={newAcquereur.phone} onChange={(e) => setNewAcquereur({ ...newAcquereur, phone: e.target.value })} />
                       <Input placeholder="Email" type="email" value={newAcquereur.email} onChange={(e) => setNewAcquereur({ ...newAcquereur, email: e.target.value })} />
+                    </div>
+                    <Input placeholder="Adresse" value={newAcquereur.address} onChange={(e) => setNewAcquereur({ ...newAcquereur, address: e.target.value })} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="N° CNI" value={newAcquereur.cni_number} onChange={(e) => setNewAcquereur({ ...newAcquereur, cni_number: e.target.value })} />
+                      <Input placeholder="Profession" value={newAcquereur.profession} onChange={(e) => setNewAcquereur({ ...newAcquereur, profession: e.target.value })} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Date de naissance</Label>
+                        <Input type="date" value={newAcquereur.birth_date} onChange={(e) => setNewAcquereur({ ...newAcquereur, birth_date: e.target.value })} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Lieu de naissance</Label>
+                        <Input placeholder="Lieu" value={newAcquereur.birth_place} onChange={(e) => setNewAcquereur({ ...newAcquereur, birth_place: e.target.value })} />
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -215,15 +235,9 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Frais de notaire</Label>
-                  <Input type="number" value={form.notary_fees} onChange={(e) => setForm({ ...form, notary_fees: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Frais d'agence</Label>
-                  <Input type="number" value={form.agency_fees} onChange={(e) => setForm({ ...form, agency_fees: e.target.value })} />
-                </div>
+              <div className="space-y-2">
+                <Label>Frais de notaire</Label>
+                <Input type="number" value={form.notary_fees} onChange={(e) => setForm({ ...form, notary_fees: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Notes</Label>

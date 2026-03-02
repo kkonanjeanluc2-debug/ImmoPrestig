@@ -54,9 +54,16 @@ export const useCreateProperty = () => {
     mutationFn: async (property: Omit<PropertyInsert, "user_id">) => {
       if (!user) throw new Error("User not authenticated");
       
+      // Auto-assign to the creator if not explicitly set
+      const insertData = {
+        ...property,
+        user_id: user.id,
+        assigned_to: property.assigned_to ?? user.id,
+      };
+
       const { data, error } = await supabase
         .from("properties")
-        .insert({ ...property, user_id: user.id })
+        .insert(insertData)
         .select()
         .single();
 

@@ -30,6 +30,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener BEFORE checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("[Auth] Event:", event, "Session:", !!session);
+        
+        // If token refresh failed, try to recover the session before logging out
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          console.warn("[Auth] Token refresh returned no session, attempting recovery...");
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            setSession(data.session);
+            setUser(data.session.user);
+            return;
+          }
+        }
+        
+        // Don't immediately clear user on transient SIGNED_OUT if we had a session
+        // This handles cases where refresh temporarily fails due to network issues
+        if (event === 'SIGNED_OUT' && user) {
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            console.log("[Auth] Recovered session after SIGNED_OUT event");
+            setSession(data.session);
+            setUser(data.session.user);
+            return;
+          }
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -43,7 +68,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Set up periodic session refresh every 10 minutes to prevent token expiry
+    const refreshInterval = setInterval(async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession) {
+        const expiresAt = currentSession.expires_at ?? 0;
+        const now = Math.floor(Date.now() / 1000);
+        // Refresh if token expires in less than 5 minutes
+        if (expiresAt - now < 300) {
+          console.log("[Auth] Proactively refreshing session...");
+          const { data, error } = await supabase.auth.refreshSession();
+          if (error) {
+            console.error("[Auth] Proactive refresh failed:", error.message);
+          } else if (data.session) {
+            console.log("[Auth] Session refreshed successfully");
+          }
+        }
+      }
+    }, 10 * 60 * 1000); // Every 10 minutes
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(refreshInterval);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {

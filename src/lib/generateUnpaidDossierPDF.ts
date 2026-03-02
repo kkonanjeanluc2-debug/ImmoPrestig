@@ -1,5 +1,6 @@
 import { createPDFDocument } from "./pdfFont";
 import { formatAmountWithCurrency } from "./pdfFormat";
+import { addPDFHeader, addPDFFooter, type PDFAgencyInfo } from "./pdfHeader";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -22,6 +23,7 @@ interface UnpaidDossierData {
     description: string;
     created_at: string;
   }>;
+  agency?: PDFAgencyInfo | null;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -50,29 +52,15 @@ const ACTION_LABELS: Record<string, string> = {
 export const generateUnpaidDossierPDF = async (data: UnpaidDossierData) => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
-  let yPos = 20;
+
+  let yPos = await addPDFHeader(doc, data.agency, "DOSSIER D'IMPAYÉ");
 
   const checkPage = (needed: number) => {
-    if (yPos + needed > 275) {
+    if (yPos + needed > 260) {
       doc.addPage();
       yPos = 20;
     }
   };
-
-  // Title
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(26, 54, 93);
-  doc.text("DOSSIER D'IMPAYÉ", pageWidth / 2, yPos, { align: "center" });
-
-  yPos += 8;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(100);
-  doc.text(`Généré le ${format(new Date(), "d MMMM yyyy à HH:mm", { locale: fr })}`, pageWidth / 2, yPos, { align: "center" });
-
-  yPos += 15;
-  doc.setTextColor(0);
 
   // Section: Locataire
   doc.setFillColor(240, 240, 240);
@@ -190,10 +178,7 @@ export const generateUnpaidDossierPDF = async (data: UnpaidDossierData) => {
     }
   }
 
-  // Footer
-  doc.setFontSize(8);
-  doc.setTextColor(150);
-  doc.text("Document confidentiel - Dossier d'impayé généré automatiquement", pageWidth / 2, 285, { align: "center" });
+  addPDFFooter(doc, data.agency, "Dossier d'impayé - Document confidentiel");
 
   doc.save(`dossier-impaye-${data.tenantName.replace(/\s+/g, "-")}.pdf`);
 };

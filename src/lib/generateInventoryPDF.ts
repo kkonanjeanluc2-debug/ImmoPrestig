@@ -1,16 +1,17 @@
 import { createPDFDocument } from "@/lib/pdfFont";
+import { addPDFHeader, addPDFFooter, type PDFAgencyInfo } from "@/lib/pdfHeader";
 import type { PropertyInventory, InventoryItem } from "@/hooks/usePropertyInventory";
 
 const CONDITION_LABELS: Record<string, string> = {
   neuf: "Neuf",
-  bon: "Bon etat",
-  use: "Use",
-  a_reparer: "A reparer",
+  bon: "Bon état",
+  use: "Usé",
+  a_reparer: "À réparer",
   hors_service: "Hors service",
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  entree: "Entree",
+  entree: "Entrée",
   sortie: "Sortie",
 };
 
@@ -19,6 +20,7 @@ interface InventoryPDFData {
   items: InventoryItem[];
   propertyTitle: string;
   propertyAddress: string;
+  agency?: PDFAgencyInfo | null;
 }
 
 export const generateInventoryPDF = async (data: InventoryPDFData) => {
@@ -31,30 +33,14 @@ export const generateInventoryPDF = async (data: InventoryPDFData) => {
   const primaryColor: [number, number, number] = [26, 54, 93];
   const textColor: [number, number, number] = [51, 51, 51];
 
-  let yPos = margin;
-
-  // Title
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("INVENTAIRE DU BIEN", pageWidth / 2, yPos, { align: "center" });
-  yPos += 8;
-
-  doc.setFontSize(12);
-  doc.text(`(Location meublee - ${TYPE_LABELS[data.inventory.type] || data.inventory.type})`, pageWidth / 2, yPos, { align: "center" });
-  yPos += 15;
-
-  // Separator
-  doc.setDrawColor(200, 200, 200);
-  doc.setLineWidth(0.5);
-  doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 10;
+  const typeLabel = TYPE_LABELS[data.inventory.type] || data.inventory.type;
+  let yPos = await addPDFHeader(doc, data.agency, "INVENTAIRE DU BIEN", `Location meublée - ${typeLabel}`);
 
   // General info
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("1. Informations generales", margin, yPos);
+  doc.text("1. Informations générales", margin, yPos);
   yPos += 8;
 
   doc.setFontSize(10);
@@ -65,7 +51,7 @@ export const generateInventoryPDF = async (data: InventoryPDFData) => {
     `Bien : ${data.propertyTitle}`,
     `Adresse : ${data.propertyAddress}`,
     `Date de l'inventaire : ${new Date(data.inventory.inventory_date).toLocaleDateString("fr-FR")}`,
-    `Type : ${TYPE_LABELS[data.inventory.type] || data.inventory.type}`,
+    `Type : ${typeLabel}`,
   ];
 
   for (const line of infoLines) {
@@ -85,11 +71,10 @@ export const generateInventoryPDF = async (data: InventoryPDFData) => {
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("2. Liste des pieces et equipements", margin, yPos);
+  doc.text("2. Liste des pièces et équipements", margin, yPos);
   yPos += 10;
 
   for (const [room, roomItems] of Object.entries(grouped)) {
-    // Check page break
     if (yPos > pageHeight - 60) {
       doc.addPage();
       yPos = margin;
@@ -108,10 +93,10 @@ export const generateInventoryPDF = async (data: InventoryPDFData) => {
     doc.setTextColor(100, 100, 100);
 
     const colX = [margin, margin + 65, margin + 85, margin + 115, margin + 145];
-    doc.text("Element", colX[0], yPos);
-    doc.text("Qte", colX[1], yPos);
-    doc.text("Marque/Modele", colX[2], yPos);
-    doc.text("Etat", colX[3], yPos);
+    doc.text("Élément", colX[0], yPos);
+    doc.text("Qté", colX[1], yPos);
+    doc.text("Marque/Modèle", colX[2], yPos);
+    doc.text("État", colX[3], yPos);
     doc.text("Observations", colX[4], yPos);
     yPos += 4;
 
@@ -154,7 +139,7 @@ export const generateInventoryPDF = async (data: InventoryPDFData) => {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
-    doc.text("Notes generales", margin, yPos);
+    doc.text("Notes générales", margin, yPos);
     yPos += 7;
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...textColor);
@@ -185,7 +170,7 @@ export const generateInventoryPDF = async (data: InventoryPDFData) => {
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text("Le present inventaire est annexe au contrat de bail et signe par les deux parties.", margin, yPos);
+  doc.text("Le présent inventaire est annexé au contrat de bail et signé par les deux parties.", margin, yPos);
   yPos += 15;
 
   const sigColWidth = (pageWidth - margin * 2 - 20) / 2;
@@ -196,12 +181,14 @@ export const generateInventoryPDF = async (data: InventoryPDFData) => {
   yPos += 5;
 
   doc.setFont("helvetica", "normal");
-  doc.text('Signature precedee de "Lu et approuve"', margin, yPos);
-  doc.text('Signature precedee de "Lu et approuve"', margin + sigColWidth + 20, yPos);
+  doc.text('Signature précédée de "Lu et approuvé"', margin, yPos);
+  doc.text('Signature précédée de "Lu et approuvé"', margin + sigColWidth + 20, yPos);
   yPos += 25;
 
   doc.line(margin, yPos, margin + sigColWidth, yPos);
   doc.line(margin + sigColWidth + 20, yPos, margin + sigColWidth * 2 + 20, yPos);
+
+  addPDFFooter(doc, data.agency, "Inventaire du bien");
 
   return doc;
 };

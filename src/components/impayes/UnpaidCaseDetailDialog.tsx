@@ -52,6 +52,7 @@ import { generateFormalNoticePDF } from "@/lib/generateFormalNoticePDF";
 import { generateUnpaidDossierPDF } from "@/lib/generateUnpaidDossierPDF";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAgency } from "@/hooks/useAgency";
 
 const STATUS_STEPS = [
   { key: "detected", label: "Détecté", icon: AlertTriangle },

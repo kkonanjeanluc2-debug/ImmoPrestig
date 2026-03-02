@@ -1,15 +1,9 @@
 import { createPDFDocument } from "@/lib/pdfFont";
 import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
+import { addPDFHeader, addPDFFooter, type PDFAgencyInfo } from "@/lib/pdfHeader";
 import type { BienAchat } from "@/hooks/useBiensAchat";
 import type { OffreAchat } from "@/hooks/useOffresAchat";
 import type { AchatImmobilier } from "@/hooks/useAchatsImmobiliers";
-
-interface AgencyInfo {
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-}
 
 const STATUS_LABELS: Record<string, string> = {
   prospection: "Prospection",
@@ -28,9 +22,8 @@ const OFFRE_STATUS_LABELS: Record<string, string> = {
   expiree: "Expirée",
 };
 
-// Helper to check page break
 function checkPageBreak(doc: any, y: number, needed: number = 30): number {
-  if (y + needed > 275) {
+  if (y + needed > 260) {
     doc.addPage();
     return 20;
   }
@@ -44,31 +37,14 @@ export async function generateFicheRecapBien(
   bien: BienAchat,
   offres: OffreAchat[],
   achat: AchatImmobilier | null,
-  agency?: AgencyInfo | null
+  agency?: PDFAgencyInfo | null
 ) {
   const doc = await createPDFDocument();
-  let y = 15;
-
-  // Header
-  if (agency) {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(agency.name, 14, y);
-    y += 5;
-    if (agency.address) { doc.text(agency.address, 14, y); y += 4; }
-    if (agency.phone) { doc.text(`Tél: ${agency.phone}`, 14, y); y += 4; }
-    if (agency.email) { doc.text(agency.email, 14, y); y += 4; }
-    y += 4;
-  }
-
-  // Title
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("FICHE RÉCAPITULATIVE", 105, y, { align: "center" });
-  y += 10;
+  let y = await addPDFHeader(doc, agency, "FICHE RÉCAPITULATIVE");
 
   // Bien info
   doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
   doc.text(bien.title, 14, y);
   y += 8;
 
@@ -180,18 +156,7 @@ export async function generateFicheRecapBien(
     }
   }
 
-  // Footer
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.text(
-      `Généré le ${new Date().toLocaleDateString("fr-FR")} - Page ${i}/${pageCount}`,
-      105, 290, { align: "center" }
-    );
-  }
-
+  addPDFFooter(doc, agency, "Fiche récapitulative");
   doc.save(`Fiche_${bien.title.replace(/\s+/g, "_")}.pdf`);
 }
 
@@ -202,34 +167,10 @@ export async function generateOffreAchatPDF(
   offre: OffreAchat,
   bien: BienAchat,
   vendeurName: string,
-  agency?: AgencyInfo | null
+  agency?: PDFAgencyInfo | null
 ) {
   const doc = await createPDFDocument();
-  let y = 15;
-
-  // Header agency
-  if (agency) {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(agency.name, 14, y);
-    y += 5;
-    if (agency.address) { doc.text(agency.address, 14, y); y += 4; }
-    if (agency.phone) { doc.text(`Tél: ${agency.phone}`, 14, y); y += 4; }
-    if (agency.email) { doc.text(agency.email, 14, y); y += 4; }
-    y += 6;
-  }
-
-  // Date
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Fait le ${new Date(offre.offer_date).toLocaleDateString("fr-FR")}`, 196, y, { align: "right" });
-  y += 10;
-
-  // Title
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("OFFRE D'ACHAT", 105, y, { align: "center" });
-  y += 12;
+  let y = await addPDFHeader(doc, agency, "OFFRE D'ACHAT");
 
   // Body
   doc.setFontSize(11);
@@ -289,11 +230,7 @@ export async function generateOffreAchatPDF(
   doc.text("Signature :", 14, y);
   doc.text("Signature :", 130, y);
 
-  // Footer
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "italic");
-  doc.text(`Généré le ${new Date().toLocaleDateString("fr-FR")}`, 105, 290, { align: "center" });
-
+  addPDFFooter(doc, agency, "Offre d'achat");
   doc.save(`Offre_Achat_${bien.title.replace(/\s+/g, "_")}.pdf`);
 }
 
@@ -305,27 +242,10 @@ export async function generateDossierAchatPDF(
   offres: OffreAchat[],
   achat: AchatImmobilier,
   echeances: Array<{ due_date: string; amount: number; status: string; paid_date?: string | null }>,
-  agency?: AgencyInfo | null
+  agency?: PDFAgencyInfo | null
 ) {
   const doc = await createPDFDocument();
-  let y = 15;
-
-  // Header
-  if (agency) {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(agency.name, 14, y);
-    y += 5;
-    if (agency.address) { doc.text(agency.address, 14, y); y += 4; }
-    if (agency.phone) { doc.text(`Tél: ${agency.phone}`, 14, y); y += 4; }
-    y += 4;
-  }
-
-  // Title
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("DOSSIER D'ACHAT COMPLET", 105, y, { align: "center" });
-  y += 12;
+  let y = await addPDFHeader(doc, agency, "DOSSIER D'ACHAT COMPLET");
 
   // === Section 1: Bien ===
   doc.setFontSize(13);
@@ -422,7 +342,6 @@ export async function generateDossierAchatPDF(
     y += 8;
 
     doc.setFontSize(9);
-    // Table header
     doc.setFont("helvetica", "bold");
     doc.text("N°", 18, y);
     doc.text("Date", 35, y);
@@ -470,17 +389,6 @@ export async function generateDossierAchatPDF(
     doc.text(noteLines, 14, y);
   }
 
-  // Footer
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.text(
-      `Dossier d'achat - ${bien.title} - Généré le ${new Date().toLocaleDateString("fr-FR")} - Page ${i}/${pageCount}`,
-      105, 290, { align: "center" }
-    );
-  }
-
+  addPDFFooter(doc, agency, `Dossier d'achat - ${bien.title}`);
   doc.save(`Dossier_Achat_${bien.title.replace(/\s+/g, "_")}.pdf`);
 }

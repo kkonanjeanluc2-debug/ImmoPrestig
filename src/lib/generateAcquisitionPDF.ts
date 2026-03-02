@@ -1,48 +1,15 @@
 import { createPDFDocument } from "@/lib/pdfFont";
 import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
+import { addPDFHeader, addPDFFooter, type PDFAgencyInfo } from "@/lib/pdfHeader";
 import type { Acquisition } from "@/hooks/useAcquisitions";
 import { TYPE_ACQUISITION_LABELS, ACQUISITION_STATUS_LABELS } from "@/hooks/useAcquisitions";
 
-interface AgencyInfo {
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-}
-
 function checkPageBreak(doc: any, y: number, needed: number = 30): number {
-  if (y + needed > 275) {
+  if (y + needed > 260) {
     doc.addPage();
     return 20;
   }
   return y;
-}
-
-function addHeader(doc: any, agency: AgencyInfo | null | undefined, y: number): number {
-  if (agency) {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(agency.name, 14, y);
-    y += 5;
-    if (agency.address) { doc.text(agency.address, 14, y); y += 4; }
-    if (agency.phone) { doc.text(`Tél: ${agency.phone}`, 14, y); y += 4; }
-    if (agency.email) { doc.text(agency.email, 14, y); y += 4; }
-    y += 4;
-  }
-  return y;
-}
-
-function addFooter(doc: any, title: string) {
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.text(
-      `${title} - Généré le ${new Date().toLocaleDateString("fr-FR")} - Page ${i}/${pageCount}`,
-      105, 290, { align: "center" }
-    );
-  }
 }
 
 function addLabelValue(doc: any, label: string, value: string, y: number, labelX = 18, valueX = 75): number {
@@ -155,15 +122,9 @@ function addSignatureBlock(doc: any, y: number, leftLabel: string, rightLabel: s
 // =============================================
 // 1. FICHE RÉCAPITULATIVE (tous types)
 // =============================================
-export async function generateFicheAcquisitionPDF(acq: Acquisition, agency?: AgencyInfo | null) {
+export async function generateFicheAcquisitionPDF(acq: Acquisition, agency?: PDFAgencyInfo | null) {
   const doc = await createPDFDocument();
-  let y = addHeader(doc, agency, 15);
-
-  // Title
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("FICHE RÉCAPITULATIVE D'ACQUISITION", 105, y, { align: "center" });
-  y += 12;
+  let y = await addPDFHeader(doc, agency, "FICHE RÉCAPITULATIVE", "Acquisition");
 
   // General info
   doc.setFontSize(10);
@@ -193,12 +154,8 @@ export async function generateFicheAcquisitionPDF(acq: Acquisition, agency?: Age
     if (acq.type_apport) y = addLabelValue(doc, "Type d'apport", acq.type_apport, y);
   }
   if (acq.type_acquisition === "echange") {
-    if (acq.bien_echange_description) {
-      y = addLabelValue(doc, "Bien échangé", acq.bien_echange_description, y);
-    }
-    if (acq.valeur_bien_echange) {
-      y = addLabelValue(doc, "Valeur bien échangé", formatAmountWithCurrency(acq.valeur_bien_echange), y);
-    }
+    if (acq.bien_echange_description) y = addLabelValue(doc, "Bien échangé", acq.bien_echange_description, y);
+    if (acq.valeur_bien_echange) y = addLabelValue(doc, "Valeur bien échangé", formatAmountWithCurrency(acq.valeur_bien_echange), y);
   }
 
   y = addNotaireSection(doc, acq, y);
@@ -215,26 +172,16 @@ export async function generateFicheAcquisitionPDF(acq: Acquisition, agency?: Age
     doc.text(lines, 14, y);
   }
 
-  addFooter(doc, "Fiche acquisition");
+  addPDFFooter(doc, agency, "Fiche acquisition");
   doc.save(`Fiche_Acquisition_${acq.biens_achat?.title?.replace(/\s+/g, "_") || "bien"}.pdf`);
 }
 
 // =============================================
 // 2. ACTE DE DONATION
 // =============================================
-export async function generateActeDonationPDF(acq: Acquisition, agency?: AgencyInfo | null) {
+export async function generateActeDonationPDF(acq: Acquisition, agency?: PDFAgencyInfo | null) {
   const doc = await createPDFDocument();
-  let y = addHeader(doc, agency, 15);
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Fait le ${new Date(acq.date_acquisition).toLocaleDateString("fr-FR")}`, 196, y, { align: "right" });
-  y += 10;
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("ACTE DE DONATION", 105, y, { align: "center" });
-  y += 12;
+  let y = await addPDFHeader(doc, agency, "ACTE DE DONATION");
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
@@ -298,26 +245,16 @@ export async function generateActeDonationPDF(acq: Acquisition, agency?: AgencyI
 
   y = addSignatureBlock(doc, y, "Le Donateur", "Le Donataire");
 
-  addFooter(doc, "Acte de donation");
+  addPDFFooter(doc, agency, "Acte de donation");
   doc.save(`Acte_Donation_${acq.biens_achat?.title?.replace(/\s+/g, "_") || "bien"}.pdf`);
 }
 
 // =============================================
 // 3. ATTESTATION DE SUCCESSION
 // =============================================
-export async function generateAttestationSuccessionPDF(acq: Acquisition, agency?: AgencyInfo | null) {
+export async function generateAttestationSuccessionPDF(acq: Acquisition, agency?: PDFAgencyInfo | null) {
   const doc = await createPDFDocument();
-  let y = addHeader(doc, agency, 15);
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Fait le ${new Date().toLocaleDateString("fr-FR")}`, 196, y, { align: "right" });
-  y += 10;
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("ATTESTATION DE SUCCESSION", 105, y, { align: "center" });
-  y += 12;
+  let y = await addPDFHeader(doc, agency, "ATTESTATION DE SUCCESSION");
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
@@ -364,26 +301,16 @@ export async function generateAttestationSuccessionPDF(acq: Acquisition, agency?
 
   y = addSignatureBlock(doc, y, "L'Héritier", "Le Notaire");
 
-  addFooter(doc, "Attestation de succession");
+  addPDFFooter(doc, agency, "Attestation de succession");
   doc.save(`Attestation_Succession_${acq.biens_achat?.title?.replace(/\s+/g, "_") || "bien"}.pdf`);
 }
 
 // =============================================
 // 4. ACTE D'APPORT EN SOCIÉTÉ
 // =============================================
-export async function generateActeApportSocietePDF(acq: Acquisition, agency?: AgencyInfo | null) {
+export async function generateActeApportSocietePDF(acq: Acquisition, agency?: PDFAgencyInfo | null) {
   const doc = await createPDFDocument();
-  let y = addHeader(doc, agency, 15);
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Fait le ${new Date(acq.date_acquisition).toLocaleDateString("fr-FR")}`, 196, y, { align: "right" });
-  y += 10;
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("ACTE D'APPORT EN SOCIÉTÉ", 105, y, { align: "center" });
-  y += 12;
+  let y = await addPDFHeader(doc, agency, "ACTE D'APPORT EN SOCIÉTÉ");
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
@@ -450,26 +377,16 @@ export async function generateActeApportSocietePDF(acq: Acquisition, agency?: Ag
 
   y = addSignatureBlock(doc, y, "L'Apporteur", "La Société");
 
-  addFooter(doc, "Acte d'apport en société");
+  addPDFFooter(doc, agency, "Acte d'apport en société");
   doc.save(`Acte_Apport_${acq.biens_achat?.title?.replace(/\s+/g, "_") || "bien"}.pdf`);
 }
 
 // =============================================
 // 5. ACTE D'ÉCHANGE
 // =============================================
-export async function generateActeEchangePDF(acq: Acquisition, agency?: AgencyInfo | null) {
+export async function generateActeEchangePDF(acq: Acquisition, agency?: PDFAgencyInfo | null) {
   const doc = await createPDFDocument();
-  let y = addHeader(doc, agency, 15);
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Fait le ${new Date(acq.date_acquisition).toLocaleDateString("fr-FR")}`, 196, y, { align: "right" });
-  y += 10;
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("ACTE D'ÉCHANGE IMMOBILIER", 105, y, { align: "center" });
-  y += 12;
+  let y = await addPDFHeader(doc, agency, "ACTE D'ÉCHANGE IMMOBILIER");
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
@@ -539,26 +456,16 @@ export async function generateActeEchangePDF(acq: Acquisition, agency?: AgencyIn
 
   y = addSignatureBlock(doc, y, "Première partie", "Seconde partie");
 
-  addFooter(doc, "Acte d'échange");
+  addPDFFooter(doc, agency, "Acte d'échange");
   doc.save(`Acte_Echange_${acq.biens_achat?.title?.replace(/\s+/g, "_") || "bien"}.pdf`);
 }
 
 // =============================================
 // 6. ATTESTATION DE MUTATION (tous types)
 // =============================================
-export async function generateAttestationMutationPDF(acq: Acquisition, agency?: AgencyInfo | null) {
+export async function generateAttestationMutationPDF(acq: Acquisition, agency?: PDFAgencyInfo | null) {
   const doc = await createPDFDocument();
-  let y = addHeader(doc, agency, 15);
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Fait le ${new Date().toLocaleDateString("fr-FR")}`, 196, y, { align: "right" });
-  y += 10;
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("ATTESTATION DE MUTATION DE PROPRIÉTÉ", 105, y, { align: "center" });
-  y += 12;
+  let y = await addPDFHeader(doc, agency, "ATTESTATION DE MUTATION", "Transfert de propriété");
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
@@ -600,6 +507,6 @@ export async function generateAttestationMutationPDF(acq: Acquisition, agency?: 
   doc.setFont("helvetica", "bold");
   doc.text("Cachet et signature", 14, y);
 
-  addFooter(doc, "Attestation de mutation");
+  addPDFFooter(doc, agency, "Attestation de mutation");
   doc.save(`Attestation_Mutation_${acq.biens_achat?.title?.replace(/\s+/g, "_") || "bien"}.pdf`);
 }

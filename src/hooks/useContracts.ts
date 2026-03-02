@@ -51,6 +51,27 @@ export const useCreateContract = () => {
   return useMutation({
     mutationFn: async (contract: Omit<ContractInsert, "user_id">) => {
       if (!user) throw new Error("User not authenticated");
+
+      // Check for existing active contract on same property+unit
+      let query = supabase
+        .from("contracts")
+        .select("id, tenant:tenants(name)")
+        .eq("property_id", contract.property_id)
+        .eq("status", "active");
+
+      if (contract.unit_id) {
+        query = query.eq("unit_id", contract.unit_id);
+      }
+
+      const { data: existing } = await query;
+
+      if (existing && existing.length > 0) {
+        const tenantName = (existing[0] as any)?.tenant?.name || "un autre locataire";
+        const msg = contract.unit_id
+          ? `Cette unité est déjà occupée par ${tenantName} avec un contrat actif.`
+          : `Ce bien est déjà occupé par ${tenantName} avec un contrat actif.`;
+        throw new Error(msg);
+      }
       
       const { data, error } = await supabase
         .from("contracts")

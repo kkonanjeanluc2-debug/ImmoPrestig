@@ -239,11 +239,11 @@ const Pricing = () => {
                       "Contrats numériques avec signature",
                       "Paiements en ligne (Mobile Money, wave, CB)",
                       "Quittances automatiques",
-                      "Point mensuel du bailleur"
+                      "Point mensuel du bailleur",
                       "Suivi et relance des impayés",
                       "États des lieux digitaux",
-                      "Inventaire du bien pour location meublée"
-                      "Quittances et contrats personnalisables"
+                      "Inventaire du bien pour location meublée",
+                      "Quittances et contrats personnalisables",
                       "Rappels WhatsApp automatiques",
                     ].map((f, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">

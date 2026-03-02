@@ -1,14 +1,25 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, Edit, Gift, Users, Building, ArrowLeftRight } from "lucide-react";
+import { Loader2, Trash2, Edit, Gift, Users, Building, ArrowLeftRight, FileText, ChevronDown } from "lucide-react";
 import { useAcquisitions, useDeleteAcquisition, TYPE_ACQUISITION_LABELS, ACQUISITION_STATUS_LABELS } from "@/hooks/useAcquisitions";
 import { AcquisitionFormDialog } from "./AcquisitionFormDialog";
 import { AcquisitionEditDialog } from "./AcquisitionEditDialog";
 import { formatCurrency } from "@/lib/pdfFormat";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useAgency } from "@/hooks/useAgency";
 import type { Acquisition } from "@/hooks/useAcquisitions";
+import {
+  generateFicheAcquisitionPDF,
+  generateActeDonationPDF,
+  generateAttestationSuccessionPDF,
+  generateActeApportSocietePDF,
+  generateActeEchangePDF,
+  generateAttestationMutationPDF,
+} from "@/lib/generateAcquisitionPDF";
+import { toast } from "sonner";
 
 const TYPE_ICONS: Record<string, typeof Gift> = {
   donation: Gift,
@@ -25,10 +36,47 @@ const STATUS_COLORS: Record<string, string> = {
   annule: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
+const ACTE_LABELS: Record<string, string> = {
+  donation: "Acte de donation",
+  heritage: "Attestation de succession",
+  apport_societe: "Acte d'apport en société",
+  echange: "Acte d'échange",
+};
+
 export function AcquisitionsList() {
   const { data: acquisitions = [], isLoading } = useAcquisitions();
   const deleteAcquisition = useDeleteAcquisition();
+  const { data: agency } = useAgency();
   const [editItem, setEditItem] = useState<Acquisition | null>(null);
+
+  const getAgencyInfo = () => agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined } : null;
+
+  const handleGenerateFiche = async (acq: Acquisition) => {
+    try {
+      await generateFicheAcquisitionPDF(acq, getAgencyInfo());
+      toast.success("Fiche récapitulative générée");
+    } catch { toast.error("Erreur lors de la génération du PDF"); }
+  };
+
+  const handleGenerateActe = async (acq: Acquisition) => {
+    try {
+      const agencyInfo = getAgencyInfo();
+      switch (acq.type_acquisition) {
+        case "donation": await generateActeDonationPDF(acq, agencyInfo); break;
+        case "heritage": await generateAttestationSuccessionPDF(acq, agencyInfo); break;
+        case "apport_societe": await generateActeApportSocietePDF(acq, agencyInfo); break;
+        case "echange": await generateActeEchangePDF(acq, agencyInfo); break;
+      }
+      toast.success("Document généré");
+    } catch { toast.error("Erreur lors de la génération du PDF"); }
+  };
+
+  const handleGenerateMutation = async (acq: Acquisition) => {
+    try {
+      await generateAttestationMutationPDF(acq, getAgencyInfo());
+      toast.success("Attestation de mutation générée");
+    } catch { toast.error("Erreur lors de la génération du PDF"); }
+  };
 
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -82,6 +130,27 @@ export function AcquisitionsList() {
                       </div>
                     </div>
                     <div className="flex gap-2 items-start">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <FileText className="h-4 w-4 mr-1" />
+                            PDF
+                            <ChevronDown className="h-3 w-3 ml-1" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleGenerateFiche(acq)}>
+                            Fiche récapitulative
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleGenerateActe(acq)}>
+                            {ACTE_LABELS[acq.type_acquisition] || "Acte"}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleGenerateMutation(acq)}>
+                            Attestation de mutation
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button size="sm" variant="outline" onClick={() => setEditItem(acq)}>
                         <Edit className="h-4 w-4" />
                       </Button>

@@ -12,7 +12,7 @@ export const useProperties = () => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["properties", user?.id],
+    queryKey: ["properties", "v2", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
@@ -24,6 +24,8 @@ export const useProperties = () => {
       return data as Property[];
     },
     enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 };
 

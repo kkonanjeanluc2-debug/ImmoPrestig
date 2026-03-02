@@ -122,7 +122,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.address || !formData.price || !formData.area) {
+    if (!formData.title || !formData.address || !formData.price) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -140,7 +140,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         daily_rent_discount: formData.rent_type === "journalier" && formData.daily_rent_discount ? Number(formData.daily_rent_discount) : 0,
         bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
-        area: Number(formData.area),
+        area: formData.area ? Number(formData.area) : null,
         description: formData.description || null,
         image_url: formData.image_url || null,
         status: formData.status,
@@ -305,7 +305,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="area">Surface (m²) *</Label>
+              <Label htmlFor="area">Surface (m²)</Label>
               <Input
                 id="area"
                 type="number"
@@ -316,7 +316,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
             </div>
           </div>
 
-          {formData.property_type !== "terrain" && (
+          {formData.property_type !== "terrain" && formData.property_type !== "maison" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="bedrooms">Chambres</Label>

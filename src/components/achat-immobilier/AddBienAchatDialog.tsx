@@ -104,7 +104,7 @@ export function AddBienAchatDialog({ children }: Props) {
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ajouter un bien à acheter</DialogTitle>
-          <DialogDescription>Renseignez les informations du bien prospecté</DialogDescription>
+          <DialogDescription>Renseignez les informations du bien</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">

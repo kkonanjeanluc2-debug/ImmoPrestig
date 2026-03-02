@@ -697,10 +697,11 @@ const TenantDetails = () => {
                         await generateAgencyFeesReceipt({
                           tenantName: tenant.name,
                           tenantEmail: tenant.email,
-                          propertyTitle: tenant.property?.title || "Bien immobilier",
+                          propertyTitle: tenant.unit?.unit_number || tenant.property?.title || "Bien immobilier",
                           propertyAddress: tenant.property?.address,
                           amount: Number(tenant.agency_fees),
                           date: tenant.created_at,
+                          signerName: user?.user_metadata?.full_name || agency?.name || "le bailleur",
                           agency: agency ? {
                             name: agency.name,
                             email: agency.email,

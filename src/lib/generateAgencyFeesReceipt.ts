@@ -8,6 +8,7 @@ interface AgencyFeesReceiptData {
   propertyAddress?: string;
   amount: number;
   date: string;
+  signerName?: string;
   agency?: {
     name: string;
     email?: string;
@@ -166,7 +167,7 @@ export const generateAgencyFeesReceipt = async (data: AgencyFeesReceiptData): Pr
   // Declaration
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  const signerName = data.agency?.name || "le bailleur";
+  const signerName = data.signerName || data.agency?.name || "le bailleur";
   const locationPart = data.propertyAddress ? ` situé à ${data.propertyAddress}` : "";
   const declaration = `Je soussigné(e) ${signerName}, reconnais avoir reçu de ${data.tenantName} la somme de ${formatAmountWithCurrency(data.amount)} au titre des frais d'agence pour le bien ${data.propertyTitle}${locationPart}.`;
   const splitDecl = doc.splitTextToSize(declaration, pageWidth - 30);

@@ -23,7 +23,7 @@ import { generateFicheRecapBien, generateOffreAchatPDF, generateDossierAchatPDF 
 
 
 const STATUS_COLORS: Record<string, string> = {
-  prospection: "bg-blue-100 text-blue-800",
+  
   en_negociation: "bg-amber-100 text-amber-800",
   offre_faite: "bg-purple-100 text-purple-800",
   sous_compromis: "bg-orange-100 text-orange-800",
@@ -32,7 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  prospection: "Prospection",
+  
   en_negociation: "En négociation",
   offre_faite: "Offre faite",
   sous_compromis: "Sous compromis",

@@ -138,15 +138,9 @@ export function AddBienAchatDialog({ children }: Props) {
           </div>
           {/* Champs adaptatifs selon le type */}
           {form.property_type === "terrain" ? (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Superficie totale (m²)</Label>
-                <Input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} placeholder="Ex: 500" />
-              </div>
-              <div className="space-y-2">
-                <Label>Superficie lotie (m²)</Label>
-                <Input type="number" value={form.lotArea} onChange={(e) => setForm({ ...form, lotArea: e.target.value })} placeholder="Ex: 400" />
-              </div>
+            <div className="space-y-2">
+              <Label>Superficie (m²)</Label>
+              <Input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} placeholder="Ex: 500" />
             </div>
           ) : form.property_type === "immeuble" ? (
             <div className="grid grid-cols-2 gap-4">

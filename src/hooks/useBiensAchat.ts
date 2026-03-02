@@ -22,6 +22,7 @@ export interface BienAchat {
   deleted_at: string | null;
   latitude: number | null;
   longitude: number | null;
+  features: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
   vendeurs?: { name: string; phone: string | null } | null;
@@ -59,16 +60,17 @@ export interface BienAchatInput {
   status?: string;
   latitude?: number;
   longitude?: number;
+  features?: Record<string, unknown>;
 }
 
 export function useCreateBienAchat() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (input: BienAchatInput) => {
+    mutationFn: async ({ features, ...input }: BienAchatInput) => {
       const { data, error } = await supabase
         .from("biens_achat")
-        .insert({ ...input, user_id: user!.id, assigned_to: user!.id })
+        .insert({ ...input, features: features as any, user_id: user!.id, assigned_to: user!.id })
         .select()
         .single();
       if (error) throw error;

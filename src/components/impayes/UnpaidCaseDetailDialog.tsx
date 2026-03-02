@@ -70,6 +70,7 @@ interface Props {
 
 export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props) {
   const { user } = useAuth();
+  const { data: agency } = useAgency();
   const { data: actions, isLoading: actionsLoading } = useUnpaidCaseActions(unpaidCase.id);
   const updateCase = useUpdateUnpaidCase();
   const addAction = useAddUnpaidCaseAction();
@@ -128,6 +129,7 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
   const handleGenerateFormalNotice = async () => {
     setIsGeneratingPDF(true);
     try {
+      const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined, city: agency.city || undefined, country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret || undefined } : null;
       await generateFormalNoticePDF({
         tenantName,
         tenantAddress: propertyAddress,
@@ -136,6 +138,7 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
         amount: Number(unpaidCase.amount_due),
         dueDate: unpaidCase.due_date,
         daysLate: unpaidCase.days_late,
+        agency: agencyInfo,
       });
 
       if (user) {
@@ -168,6 +171,7 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
   const handleExportDossier = async () => {
     setIsGeneratingPDF(true);
     try {
+      const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined, city: agency.city || undefined, country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret || undefined } : null;
       await generateUnpaidDossierPDF({
         tenantName,
         tenantEmail,
@@ -183,6 +187,7 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
         lawyerName: unpaidCase.lawyer_name,
         courtReference: unpaidCase.court_reference,
         actions: actions || [],
+        agency: agencyInfo,
       });
       toast.success("Dossier exporté avec succès");
     } catch {

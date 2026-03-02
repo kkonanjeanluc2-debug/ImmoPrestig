@@ -48,15 +48,18 @@ const conditionColors: Record<string, string> = {
 
 export function ViewEtatDesLieuxDialog({ etat, open, onOpenChange, tenantName, propertyTitle, unitNumber }: ViewEtatDesLieuxDialogProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const { data: agency } = useAgency();
 
   const handleDownloadPDF = async () => {
     setIsGenerating(true);
     try {
+      const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined, city: agency.city || undefined, country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret || undefined } : null;
       await generateEtatDesLieuxPDF({
         etat,
         tenantName: tenantName || "Locataire",
         propertyTitle,
         unitNumber,
+        agency: agencyInfo,
       });
       toast.success("PDF généré avec succès");
     } catch (error) {

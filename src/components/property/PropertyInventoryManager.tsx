@@ -47,6 +47,7 @@ import {
 } from "@/hooks/usePropertyInventory";
 import { generateInventoryPDF } from "@/lib/generateInventoryPDF";
 import { SignInventoryDialog } from "./SignInventoryDialog";
+import { useAgency } from "@/hooks/useAgency";
 
 const ROOMS = [
   "Salon",
@@ -123,6 +124,7 @@ export const PropertyInventoryManager = ({
   canEdit,
   tenantName,
 }: PropertyInventoryManagerProps) => {
+  const { data: agency } = useAgency();
   const { data: inventories = [], isLoading } = usePropertyInventories(propertyId);
   const createInventory = useCreatePropertyInventory();
   const deleteInventory = useDeletePropertyInventory();
@@ -151,11 +153,13 @@ export const PropertyInventoryManager = ({
         .eq("inventory_id", inventory.id)
         .order("room", { ascending: true });
 
+      const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined, city: agency.city || undefined, country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret || undefined } : null;
       const doc = await generateInventoryPDF({
         inventory,
         items: (items || []) as InventoryItem[],
         propertyTitle,
         propertyAddress,
+        agency: agencyInfo,
       });
       doc.save(`inventaire_${propertyTitle.replace(/\s+/g, "_")}_${inventory.type}.pdf`);
       toast.success("PDF généré avec succès");

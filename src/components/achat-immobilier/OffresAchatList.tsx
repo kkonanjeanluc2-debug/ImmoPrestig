@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FileText, Plus, Loader2, Mail } from "lucide-react";
+import { FileText, Plus, Loader2, Mail, UserPlus } from "lucide-react";
 import { useOffresAchat, useCreateOffreAchat, useUpdateOffreAchat } from "@/hooks/useOffresAchat";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useCreateAchatImmobilier, useAchatsImmobiliers } from "@/hooks/useAchatsImmobiliers";
+import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -37,13 +38,17 @@ const STATUS_LABELS: Record<string, string> = {
 export function OffresAchatList() {
   const { data: offres, isLoading } = useOffresAchat();
   const { data: biens = [] } = useBiensAchat();
+  const { data: acquereurs = [] } = useAcquereurs();
+  const createAcquereur = useCreateAcquereur();
   const createMutation = useCreateOffreAchat();
   const updateMutation = useUpdateOffreAchat();
   const createAchatMutation = useCreateAchatImmobilier();
   const { data: achatsData } = useAchatsImmobiliers();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ bien_id: "", offer_amount: "", conditions: "" });
+  const [form, setForm] = useState({ bien_id: "", offer_amount: "", conditions: "", acquereur_id: "" });
+  const [showNewAcquereur, setShowNewAcquereur] = useState(false);
+  const [newAcquereur, setNewAcquereur] = useState({ name: "", phone: "", email: "" });
   const [contreOffreId, setContreOffreId] = useState<string | null>(null);
   const [counterAmount, setCounterAmount] = useState("");
   const [counterConditions, setCounterConditions] = useState("");
@@ -53,13 +58,33 @@ export function OffresAchatList() {
   });
 
   const handleSubmit = async () => {
+    let acquereurId = form.acquereur_id || undefined;
+
+    // Create new acquéreur if needed
+    if (showNewAcquereur && newAcquereur.name.trim()) {
+      try {
+        const created = await createAcquereur.mutateAsync({
+          name: newAcquereur.name.trim(),
+          phone: newAcquereur.phone.trim() || null,
+          email: newAcquereur.email.trim() || null,
+        });
+        acquereurId = created.id;
+      } catch (e: any) {
+        toast.error("Erreur création acquéreur: " + e.message);
+        return;
+      }
+    }
+
     const result = await createMutation.mutateAsync({
       bien_id: form.bien_id,
       offer_amount: Number(form.offer_amount),
       conditions: form.conditions || undefined,
+      acquereur_id: acquereurId,
     });
     setOpen(false);
-    setForm({ bien_id: "", offer_amount: "", conditions: "" });
+    setForm({ bien_id: "", offer_amount: "", conditions: "", acquereur_id: "" });
+    setShowNewAcquereur(false);
+    setNewAcquereur({ name: "", phone: "", email: "" });
 
     // Auto-send email to vendor
     if (result?.id) {
@@ -193,6 +218,34 @@ export function OffresAchatList() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Acquéreur */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Acquéreur</Label>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewAcquereur(!showNewAcquereur)}>
+                    <UserPlus className="h-3.5 w-3.5 mr-1" />
+                    {showNewAcquereur ? "Existant" : "Nouveau"}
+                  </Button>
+                </div>
+                {showNewAcquereur ? (
+                  <div className="space-y-2 p-3 border rounded-md bg-muted/30">
+                    <Input placeholder="Nom complet *" value={newAcquereur.name} onChange={(e) => setNewAcquereur({ ...newAcquereur, name: e.target.value })} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="Téléphone" value={newAcquereur.phone} onChange={(e) => setNewAcquereur({ ...newAcquereur, phone: e.target.value })} />
+                      <Input placeholder="Email" type="email" value={newAcquereur.email} onChange={(e) => setNewAcquereur({ ...newAcquereur, email: e.target.value })} />
+                    </div>
+                  </div>
+                ) : (
+                  <Select value={form.acquereur_id} onValueChange={(v) => setForm({ ...form, acquereur_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner un acquéreur (optionnel)" /></SelectTrigger>
+                    <SelectContent>
+                      {acquereurs.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label>Montant de l'offre (FCFA) *</Label>
                 <Input type="number" value={form.offer_amount} onChange={(e) => setForm({ ...form, offer_amount: e.target.value })} />
@@ -323,6 +376,7 @@ export function OffresAchatList() {
                 <div>
                   <p className="font-semibold">{offre.biens_achat?.title || "Bien inconnu"}</p>
                   <p className="text-sm text-muted-foreground">{offre.biens_achat?.address}</p>
+                  {offre.acquereurs && <p className="text-sm text-muted-foreground">Acquéreur: {offre.acquereurs.name}</p>}
                   <p className="text-lg font-bold mt-1">{Number(offre.offer_amount).toLocaleString("fr-FR")} FCFA</p>
                   {offre.status === "contre_offre" && offre.counter_amount && (
                     <p className="text-sm font-semibold text-purple-700">Contre-offre : {Number(offre.counter_amount).toLocaleString("fr-FR")} FCFA</p>

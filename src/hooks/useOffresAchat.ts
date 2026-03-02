@@ -7,6 +7,7 @@ export interface OffreAchat {
   id: string;
   user_id: string;
   bien_id: string;
+  acquereur_id: string | null;
   offer_amount: number;
   offer_date: string;
   status: string;
@@ -19,6 +20,7 @@ export interface OffreAchat {
   vendor_responded_at: string | null;
   created_at: string;
   biens_achat?: { title: string; address: string; vendeur_id: string | null } | null;
+  acquereurs?: { name: string; phone: string | null } | null;
 }
 
 export function useOffresAchat() {
@@ -28,7 +30,7 @@ export function useOffresAchat() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("offres_achat")
-        .select("*, biens_achat(title, address, vendeur_id)")
+        .select("*, biens_achat(title, address, vendeur_id), acquereurs(name, phone)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as OffreAchat[];
@@ -39,6 +41,7 @@ export function useOffresAchat() {
 
 export interface OffreAchatInput {
   bien_id: string;
+  acquereur_id?: string;
   offer_amount: number;
   offer_date?: string;
   status?: string;

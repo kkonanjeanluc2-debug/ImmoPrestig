@@ -2058,6 +2058,7 @@ export type Database = {
       }
       offres_achat: {
         Row: {
+          acquereur_id: string | null
           bien_id: string
           conditions: string | null
           counter_amount: number | null
@@ -2076,6 +2077,7 @@ export type Database = {
           vendor_token_expires_at: string | null
         }
         Insert: {
+          acquereur_id?: string | null
           bien_id: string
           conditions?: string | null
           counter_amount?: number | null
@@ -2094,6 +2096,7 @@ export type Database = {
           vendor_token_expires_at?: string | null
         }
         Update: {
+          acquereur_id?: string | null
           bien_id?: string
           conditions?: string | null
           counter_amount?: number | null
@@ -2112,6 +2115,13 @@ export type Database = {
           vendor_token_expires_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "offres_achat_acquereur_id_fkey"
+            columns: ["acquereur_id"]
+            isOneToOne: false
+            referencedRelation: "acquereurs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "offres_achat_bien_id_fkey"
             columns: ["bien_id"]

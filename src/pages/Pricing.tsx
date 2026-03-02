@@ -83,6 +83,7 @@ const Pricing = () => {
                 size="sm"
                 className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
               />
+              <Button variant="ghost" size="sm" onClick={openPricing}>Tarification</Button>
               {user ? (
                 <Link to="/dashboard">
                   <Button size="sm">Tableau de bord</Button>
@@ -103,6 +104,7 @@ const Pricing = () => {
               <SheetContent side="top" className="pt-12">
                 <div className="flex flex-col gap-3">
                   <DemoRequestButton variant="outline" className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200" onClick={() => setMobileMenuOpen(false)} />
+                  <Button variant="ghost" className="w-full" onClick={() => { setMobileMenuOpen(false); openPricing(); }}>Tarification</Button>
                   {user ? (
                     <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}><Button className="w-full">Tableau de bord</Button></Link>
                   ) : (
@@ -162,9 +164,6 @@ const Pricing = () => {
             <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" onClick={openPricing}>
               Commencer gratuitement
               <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6" onClick={openPricing}>
-              Voir les tarifs
             </Button>
           </motion.div>
 
@@ -567,11 +566,9 @@ const Pricing = () => {
               Commencer gratuitement
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <DemoRequestButton
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-6 text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
-            />
+            <Button variant="outline" size="lg" className="text-lg px-8 py-6" onClick={openPricing}>
+              Tarification
+            </Button>
           </div>
         </div>
       </section>

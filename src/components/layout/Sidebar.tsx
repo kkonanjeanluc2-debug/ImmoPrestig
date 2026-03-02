@@ -23,7 +23,8 @@ import {
   HandCoins,
   KeyRound,
   ShoppingCart,
-  Briefcase
+  Briefcase,
+  PackagePlus
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,7 @@ const gestionLocativeItems = [
 const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
   { name: "Ventes Immobilières", href: "/ventes-immobilieres", icon: HandCoins, featureKey: "ventes_immobilieres" },
   { name: "Achats Immobiliers", href: "/achats-immobiliers", icon: ShoppingCart, featureKey: "achats_immobiliers" },
+  { name: "Acquisitions", href: "/acquisitions", icon: PackagePlus, featureKey: "achats_immobiliers" },
 ];
 
 const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [

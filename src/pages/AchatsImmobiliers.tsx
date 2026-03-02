@@ -46,7 +46,7 @@ export default function AchatsImmobiliers() {
           <div>
             <h1 className="text-xl sm:text-2xl font-bold font-display">Achats Immobiliers</h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Gérez vos prospections d'achat, offres, vendeurs et paiements
+              Transactions d'achat-vente pour vos clients particuliers et investisseurs
             </p>
           </div>
         </div>

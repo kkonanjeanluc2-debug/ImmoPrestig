@@ -145,6 +145,14 @@ export type Database = {
         Row: {
           acte_notarie: boolean | null
           attestation_fiscale: boolean | null
+          beneficiaire_address: string | null
+          beneficiaire_cni: string | null
+          beneficiaire_email: string | null
+          beneficiaire_name: string | null
+          beneficiaire_phone: string | null
+          beneficiaire_rccm: string | null
+          beneficiaire_representant: string | null
+          beneficiaire_type: string | null
           bien_echange_description: string | null
           bien_id: string
           certificat_localisation: boolean | null
@@ -181,6 +189,14 @@ export type Database = {
         Insert: {
           acte_notarie?: boolean | null
           attestation_fiscale?: boolean | null
+          beneficiaire_address?: string | null
+          beneficiaire_cni?: string | null
+          beneficiaire_email?: string | null
+          beneficiaire_name?: string | null
+          beneficiaire_phone?: string | null
+          beneficiaire_rccm?: string | null
+          beneficiaire_representant?: string | null
+          beneficiaire_type?: string | null
           bien_echange_description?: string | null
           bien_id: string
           certificat_localisation?: boolean | null
@@ -217,6 +233,14 @@ export type Database = {
         Update: {
           acte_notarie?: boolean | null
           attestation_fiscale?: boolean | null
+          beneficiaire_address?: string | null
+          beneficiaire_cni?: string | null
+          beneficiaire_email?: string | null
+          beneficiaire_name?: string | null
+          beneficiaire_phone?: string | null
+          beneficiaire_rccm?: string | null
+          beneficiaire_representant?: string | null
+          beneficiaire_type?: string | null
           bien_echange_description?: string | null
           bien_id?: string
           certificat_localisation?: boolean | null

@@ -432,8 +432,8 @@ const Signup = () => {
               to="/" 
               className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
             >
-              <CreditCard className="h-4 w-4" />
-              Voir nos tarifs
+              <Home className="h-4 w-4" />
+              Accueil
             </Link>
           </CardFooter>
         </form>

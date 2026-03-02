@@ -125,6 +125,125 @@ export type Database = {
         }
         Relationships: []
       }
+      acquisitions: {
+        Row: {
+          acte_notarie: boolean | null
+          attestation_fiscale: boolean | null
+          bien_echange_description: string | null
+          bien_id: string
+          certificat_localisation: boolean | null
+          counterpart_address: string | null
+          counterpart_email: string | null
+          counterpart_name: string | null
+          counterpart_phone: string | null
+          created_at: string
+          date_acquisition: string
+          date_acte_signe: string | null
+          date_deces: string | null
+          date_enregistrement: string | null
+          id: string
+          lien_parente: string | null
+          notaire_address: string | null
+          notaire_email: string | null
+          notaire_name: string | null
+          notaire_phone: string | null
+          notes: string | null
+          numero_succession: string | null
+          pieces_identite: boolean | null
+          societe_name: string | null
+          societe_siret: string | null
+          status: string
+          titre_propriete: boolean | null
+          type_acquisition: string
+          type_apport: string | null
+          type_donation: string | null
+          updated_at: string
+          user_id: string
+          valeur_bien_echange: number | null
+          valeur_estimee: number | null
+        }
+        Insert: {
+          acte_notarie?: boolean | null
+          attestation_fiscale?: boolean | null
+          bien_echange_description?: string | null
+          bien_id: string
+          certificat_localisation?: boolean | null
+          counterpart_address?: string | null
+          counterpart_email?: string | null
+          counterpart_name?: string | null
+          counterpart_phone?: string | null
+          created_at?: string
+          date_acquisition?: string
+          date_acte_signe?: string | null
+          date_deces?: string | null
+          date_enregistrement?: string | null
+          id?: string
+          lien_parente?: string | null
+          notaire_address?: string | null
+          notaire_email?: string | null
+          notaire_name?: string | null
+          notaire_phone?: string | null
+          notes?: string | null
+          numero_succession?: string | null
+          pieces_identite?: boolean | null
+          societe_name?: string | null
+          societe_siret?: string | null
+          status?: string
+          titre_propriete?: boolean | null
+          type_acquisition?: string
+          type_apport?: string | null
+          type_donation?: string | null
+          updated_at?: string
+          user_id: string
+          valeur_bien_echange?: number | null
+          valeur_estimee?: number | null
+        }
+        Update: {
+          acte_notarie?: boolean | null
+          attestation_fiscale?: boolean | null
+          bien_echange_description?: string | null
+          bien_id?: string
+          certificat_localisation?: boolean | null
+          counterpart_address?: string | null
+          counterpart_email?: string | null
+          counterpart_name?: string | null
+          counterpart_phone?: string | null
+          created_at?: string
+          date_acquisition?: string
+          date_acte_signe?: string | null
+          date_deces?: string | null
+          date_enregistrement?: string | null
+          id?: string
+          lien_parente?: string | null
+          notaire_address?: string | null
+          notaire_email?: string | null
+          notaire_name?: string | null
+          notaire_phone?: string | null
+          notes?: string | null
+          numero_succession?: string | null
+          pieces_identite?: boolean | null
+          societe_name?: string | null
+          societe_siret?: string | null
+          status?: string
+          titre_propriete?: boolean | null
+          type_acquisition?: string
+          type_apport?: string | null
+          type_donation?: string | null
+          updated_at?: string
+          user_id?: string
+          valeur_bien_echange?: number | null
+          valeur_estimee?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acquisitions_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens_achat"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_logs: {
         Row: {
           action_type: string

@@ -391,7 +391,7 @@ const Pricing = () => {
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
               Rejoignez des centaines de propriétaires et agences qui ont dit adieu à la paperasse et aux loyers impayés.
             </p>
-            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 mb-4" onClick={openPricing}>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 mb-4" onClick={startFree}>
               Commencer gratuitement
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

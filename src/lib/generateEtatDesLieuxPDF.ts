@@ -1,4 +1,5 @@
 import { createPDFDocument } from "@/lib/pdfFont";
+import { addPDFHeader, addPDFFooter, type PDFAgencyInfo } from "@/lib/pdfHeader";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { EtatDesLieux } from "@/hooks/useEtatsDesLieux";
@@ -20,6 +21,8 @@ interface EtatDesLieuxPDFOptions {
   tenantName: string;
   propertyTitle?: string;
   unitNumber?: string;
+  agency?: PDFAgencyInfo | null;
+  /** @deprecated Use agency instead */
   agencyName?: string;
 }
 
@@ -36,23 +39,18 @@ export const generateEtatDesLieuxPDF = async ({
   tenantName,
   propertyTitle,
   unitNumber,
+  agency,
   agencyName,
 }: EtatDesLieuxPDFOptions) => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = 20;
 
-  // Title
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text(typeLabels[etat.type] || "État des lieux", pageWidth / 2, y, { align: "center" });
-  y += 12;
+  const title = typeLabels[etat.type] || "État des lieux";
 
-  // Separator
-  doc.setDrawColor(200);
-  doc.setLineWidth(0.5);
-  doc.line(20, y, pageWidth - 20, y);
-  y += 10;
+  // Use agency object if provided, otherwise build from agencyName for backwards compat
+  const agencyInfo: PDFAgencyInfo | null = agency || (agencyName ? { name: agencyName } : null);
+
+  let y = await addPDFHeader(doc, agencyInfo, title.toUpperCase());
 
   // General info
   doc.setFontSize(10);
@@ -71,7 +69,6 @@ export const generateEtatDesLieuxPDF = async ({
   addInfoLine("Locataire :", tenantName);
   if (propertyTitle) addInfoLine("Bien :", propertyTitle);
   if (unitNumber) addInfoLine("Unité :", unitNumber);
-  if (agencyName) addInfoLine("Agence :", agencyName);
   if (etat.general_condition) {
     addInfoLine("État général :", conditionLabels[etat.general_condition] || "-");
   }
@@ -101,7 +98,6 @@ export const generateEtatDesLieuxPDF = async ({
     for (const room of etat.rooms) {
       y = checkPageBreak(doc, y, 50);
       
-      // Room header
       doc.setFillColor(240, 240, 240);
       doc.rect(20, y - 4, pageWidth - 40, 8, "F");
       doc.setFontSize(11);
@@ -181,7 +177,6 @@ export const generateEtatDesLieuxPDF = async ({
     y += 8;
     doc.setFontSize(10);
 
-    // Table header
     doc.setFillColor(230, 230, 230);
     doc.rect(20, y - 4, pageWidth - 40, 8, "F");
     doc.setFont("helvetica", "bold");
@@ -211,7 +206,6 @@ export const generateEtatDesLieuxPDF = async ({
   doc.setFontSize(10);
   const sigBoxWidth = (pageWidth - 50) / 2;
 
-  // Landlord signature
   doc.setDrawColor(180);
   doc.rect(20, y, sigBoxWidth, 30);
   doc.setFont("helvetica", "bold");
@@ -222,7 +216,6 @@ export const generateEtatDesLieuxPDF = async ({
     doc.text(`Signé le ${format(new Date(etat.landlord_signed_at), "dd/MM/yyyy")}`, 20 + sigBoxWidth / 2, y + 25, { align: "center" });
   }
 
-  // Tenant signature
   doc.rect(30 + sigBoxWidth, y, sigBoxWidth, 30);
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
@@ -233,7 +226,8 @@ export const generateEtatDesLieuxPDF = async ({
     doc.text(`Signé le ${format(new Date(etat.tenant_signed_at), "dd/MM/yyyy")}`, 30 + sigBoxWidth + sigBoxWidth / 2, y + 25, { align: "center" });
   }
 
-  // Save
+  addPDFFooter(doc, agencyInfo, "État des lieux");
+
   const fileName = `etat-des-lieux-${etat.type}-${format(new Date(etat.inspection_date), "yyyy-MM-dd")}.pdf`;
   doc.save(fileName);
 };

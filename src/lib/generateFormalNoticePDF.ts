@@ -1,5 +1,6 @@
 import { createPDFDocument } from "./pdfFont";
 import { formatAmountWithCurrency } from "./pdfFormat";
+import { addPDFHeader, addPDFFooter, type PDFAgencyInfo } from "./pdfHeader";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -11,29 +12,22 @@ interface FormalNoticeData {
   amount: number;
   dueDate: string;
   daysLate: number;
+  agency?: PDFAgencyInfo | null;
 }
 
 export const generateFormalNoticePDF = async (data: FormalNoticeData) => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
-  let yPos = 20;
 
-  // Header
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(200, 0, 0);
-  doc.text("MISE EN DEMEURE", pageWidth / 2, yPos, { align: "center" });
-
-  yPos += 15;
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+  let yPos = await addPDFHeader(doc, data.agency, "MISE EN DEMEURE");
 
   // Date
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
   const today = format(new Date(), "d MMMM yyyy", { locale: fr });
   doc.text(`Fait le ${today}`, pageWidth - 15, yPos, { align: "right" });
 
-  yPos += 15;
+  yPos += 12;
 
   // Destinataire
   doc.setFont("helvetica", "bold");
@@ -85,7 +79,7 @@ export const generateFormalNoticePDF = async (data: FormalNoticeData) => {
     }
     const splitLines = doc.splitTextToSize(line, pageWidth - 30);
     for (const sl of splitLines) {
-      if (yPos > 270) {
+      if (yPos > 260) {
         doc.addPage();
         yPos = 20;
       }
@@ -127,10 +121,7 @@ export const generateFormalNoticePDF = async (data: FormalNoticeData) => {
   doc.setDrawColor(150);
   doc.line(pageWidth - 80, yPos, pageWidth - 15, yPos);
 
-  // Footer
-  doc.setFontSize(8);
-  doc.setTextColor(150);
-  doc.text("Document généré automatiquement - Ce document a valeur de mise en demeure", pageWidth / 2, 285, { align: "center" });
+  addPDFFooter(doc, data.agency, "Mise en demeure");
 
   doc.save(`mise-en-demeure-${data.tenantName.replace(/\s+/g, "-")}.pdf`);
 };

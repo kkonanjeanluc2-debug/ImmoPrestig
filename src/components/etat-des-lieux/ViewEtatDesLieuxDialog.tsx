@@ -16,6 +16,7 @@ import { KeysForm } from "./KeysForm";
 import { Zap, Droplets, Flame, Key, Home, Calendar, User, Download, Loader2 } from "lucide-react";
 import { generateEtatDesLieuxPDF } from "@/lib/generateEtatDesLieuxPDF";
 import { toast } from "sonner";
+import { useAgency } from "@/hooks/useAgency";
 
 interface ViewEtatDesLieuxDialogProps {
   etat: EtatDesLieux;

@@ -56,7 +56,7 @@ export function OccupancyChart({ properties }: OccupancyChartProps) {
     });
 
     const typeLabels: Record<string, string> = {
-      maison: "Maisons",
+      maison: "Maisons à porte multiple",
       appartement: "Apparts",
       terrain: "Terrains",
     };

@@ -10,7 +10,7 @@ interface PropertyTypesChartProps {
 }
 
 const typeLabels: Record<string, string> = {
-  maison: "Maisons",
+  maison: "Maisons à porte multiple",
   appartement: "Appartements",
   terrain: "Terrains",
 };
@@ -23,7 +23,7 @@ const typeColors: Record<string, string> = {
 
 const chartConfig = {
   maison: {
-    label: "Maisons",
+    label: "Maisons à porte multiple",
     color: "hsl(var(--primary))",
   },
   appartement: {

@@ -22,7 +22,7 @@ import { Loader2, ImageIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const PROPERTY_TYPES = [
-  { value: "maison", label: "Maison" },
+  { value: "maison", label: "Maison à porte multiple" },
   { value: "appartement", label: "Appartement" },
   { value: "villa", label: "Villa" },
   { value: "terrain", label: "Terrain" },

@@ -64,7 +64,7 @@ export function PropertyCard({
   };
 
   const typeLabels: Record<string, string> = {
-    maison: "Maison",
+    maison: "Maison à porte multiple",
     appartement: "Appartement",
     terrain: "Terrain",
   };

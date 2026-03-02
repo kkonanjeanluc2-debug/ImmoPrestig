@@ -101,7 +101,7 @@ export function BiensAchatList() {
   }
 
   const PROPERTY_TYPE_LABELS: Record<string, string> = {
-    appartement: "Appartement", maison: "Maison", villa: "Villa", terrain: "Terrain",
+    appartement: "Appartement", maison: "Maison à porte multiple", villa: "Villa", terrain: "Terrain",
     bureau: "Bureau", commerce: "Commerce", immeuble: "Immeuble", autre: "Autre",
   };
 

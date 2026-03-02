@@ -49,7 +49,7 @@ export function AcquisitionsList() {
   const { data: agency } = useAgency();
   const [editItem, setEditItem] = useState<Acquisition | null>(null);
 
-  const getAgencyInfo = () => agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined } : null;
+  const getAgencyInfo = () => agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined, city: agency.city || undefined, country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret || undefined } : null;
 
   const handleGenerateFiche = async (acq: Acquisition) => {
     try {

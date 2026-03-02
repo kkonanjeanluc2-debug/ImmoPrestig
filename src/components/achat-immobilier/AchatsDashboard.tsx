@@ -37,7 +37,12 @@ export function AchatsDashboard({ period, onPeriodChange }: AchatsDashboardProps
 
     const downPayments = achats
       .filter((a) => isInPeriod(a.sale_date))
-      .reduce((sum, a) => sum + (a.down_payment || 0), 0);
+      .reduce((sum, a) => {
+        if (a.payment_type === "comptant" && !a.down_payment) {
+          return sum + a.sale_price;
+        }
+        return sum + (a.down_payment || 0);
+      }, 0);
 
     const paidInstallments = echeances
       .filter((e) => e.status === "paye" && isInPeriod(e.paid_date))

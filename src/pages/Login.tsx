@@ -59,7 +59,11 @@ const Login = () => {
       loginEmail = trimmed;
       setIsLoading(true);
     } else {
-      toast({ variant: "destructive", title: "Identifiant invalide", description: "Veuillez entrer un email valide ou un numéro de téléphone" });
+      toast({
+        variant: "destructive",
+        title: "Identifiant invalide",
+        description: "Veuillez entrer un email valide ou un numéro de téléphone",
+      });
       return;
     }
 
@@ -71,9 +75,7 @@ const Login = () => {
       toast({
         variant: "destructive",
         title: "Erreur de connexion",
-        description: error.message === "Invalid login credentials" 
-          ? "Email ou mot de passe incorrect" 
-          : error.message,
+        description: error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect" : error.message,
       });
       setIsLoading(false);
       return;
@@ -95,9 +97,7 @@ const Login = () => {
             <Building2 className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
-          <CardDescription>
-            Connectez-vous pour accéder à votre espace de gestion immobilière
-          </CardDescription>
+          <CardDescription>Connectez-vous pour accéder à votre espace de gestion immobilière</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -135,18 +135,11 @@ const Login = () => {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   tabIndex={-1}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               <div className="text-right">
-                <Link 
-                  to="/forgot-password" 
-                  className="text-sm text-primary hover:underline"
-                >
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                   Mot de passe oublié ?
                 </Link>
               </div>
@@ -163,16 +156,16 @@ const Login = () => {
                 S'inscrire
               </Link>
             </p>
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               <CreditCard className="h-4 w-4" />
-              Voir nos tarifs
+              Accueil
             </Link>
-            <DemoRequestButton 
-              variant="outline" 
-              size="sm" 
+            <DemoRequestButton
+              variant="outline"
+              size="sm"
               className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
             />
           </CardFooter>

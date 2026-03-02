@@ -173,7 +173,7 @@ const Properties = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les types</SelectItem>
-                <SelectItem value="maison">Maison</SelectItem>
+                <SelectItem value="maison">Maison à porte multiple</SelectItem>
                 <SelectItem value="appartement">Appartement</SelectItem>
                 <SelectItem value="meuble">Location meublée</SelectItem>
                 

@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 const PROPERTY_TYPES = [
   { value: "appartement", label: "Appartement" },
-  { value: "maison", label: "Maison" },
+  { value: "maison", label: "Maison à porte multiple" },
   { value: "villa", label: "Villa" },
   { value: "terrain", label: "Terrain" },
   { value: "bureau", label: "Bureau" },

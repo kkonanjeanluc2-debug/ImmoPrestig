@@ -8,6 +8,7 @@ export interface AchatImmobilier {
   user_id: string;
   bien_id: string;
   vendeur_id: string | null;
+  acquereur_id: string | null;
   sale_price: number;
   sale_date: string;
   payment_type: string;
@@ -15,10 +16,13 @@ export interface AchatImmobilier {
   down_payment: number | null;
   notary_fees: number | null;
   agency_fees: number | null;
+  commission_percentage: number | null;
+  commission_amount: number | null;
   notes: string | null;
   created_at: string;
   biens_achat?: { title: string; address: string } | null;
   vendeurs?: { name: string; phone: string | null } | null;
+  acquereurs?: { name: string; phone: string | null } | null;
 }
 
 export function useAchatsImmobiliers() {
@@ -28,7 +32,7 @@ export function useAchatsImmobiliers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("achats_immobiliers")
-        .select("*, biens_achat(title, address), vendeurs(name, phone)")
+        .select("*, biens_achat(title, address), vendeurs(name, phone), acquereurs(name, phone)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as AchatImmobilier[];
@@ -40,6 +44,7 @@ export function useAchatsImmobiliers() {
 export interface AchatImmobilierInput {
   bien_id: string;
   vendeur_id?: string;
+  acquereur_id?: string;
   sale_price: number;
   sale_date?: string;
   payment_type: string;
@@ -47,6 +52,8 @@ export interface AchatImmobilierInput {
   down_payment?: number;
   notary_fees?: number;
   agency_fees?: number;
+  commission_percentage?: number;
+  commission_amount?: number;
   notes?: string;
 }
 

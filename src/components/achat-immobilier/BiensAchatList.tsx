@@ -65,6 +65,7 @@ export function BiensAchatList() {
   const [deleteBienId, setDeleteBienId] = useState<string | null>(null);
   const [docsBien, setDocsBien] = useState<BienAchat | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const handleVendeurChange = (bienId: string, vendeurId: string) => {
     const bien = biens?.find((b) => b.id === bienId);
@@ -99,7 +100,16 @@ export function BiensAchatList() {
     return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
 
-  const filteredBiens = statusFilter === "all" ? biens : biens?.filter(b => b.status === statusFilter);
+  const PROPERTY_TYPE_LABELS: Record<string, string> = {
+    appartement: "Appartement", maison: "Maison", villa: "Villa", terrain: "Terrain",
+    bureau: "Bureau", commerce: "Commerce", immeuble: "Immeuble", autre: "Autre",
+  };
+
+  const filteredBiens = biens?.filter(b => {
+    if (statusFilter !== "all" && b.status !== statusFilter) return false;
+    if (typeFilter !== "all" && b.property_type !== typeFilter) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-4">
@@ -113,6 +123,17 @@ export function BiensAchatList() {
             <SelectContent>
               <SelectItem value="all">Tous les statuts</SelectItem>
               {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[160px] h-9 text-sm">
+              <SelectValue placeholder="Tous les types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les types</SelectItem>
+              {Object.entries(PROPERTY_TYPE_LABELS).map(([key, label]) => (
                 <SelectItem key={key} value={key}>{label}</SelectItem>
               ))}
             </SelectContent>

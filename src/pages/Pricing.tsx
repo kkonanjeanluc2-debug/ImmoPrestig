@@ -67,6 +67,14 @@ const Pricing = () => {
     setPricingOpen(true);
   };
 
+  const startFree = () => {
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      navigate("/signup?plan=gratuit");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -93,7 +101,7 @@ const Pricing = () => {
                   <Link to="/login">
                     <Button variant="ghost" size="sm">Se connecter</Button>
                   </Link>
-                  <Button size="sm" onClick={openPricing}>Commencer</Button>
+                  <Button size="sm" onClick={startFree}>Commencer</Button>
                 </>
               )}
             </div>
@@ -110,7 +118,7 @@ const Pricing = () => {
                   ) : (
                     <>
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)}><Button variant="ghost" className="w-full">Se connecter</Button></Link>
-                      <Button className="w-full" onClick={() => { setMobileMenuOpen(false); openPricing(); }}>Commencer</Button>
+                      <Button className="w-full" onClick={() => { setMobileMenuOpen(false); startFree(); }}>Commencer</Button>
                     </>
                   )}
                 </div>
@@ -161,7 +169,7 @@ const Pricing = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
             initial="hidden" animate="visible" variants={fadeUp} custom={4}
           >
-            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" onClick={openPricing}>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" onClick={startFree}>
               Commencer gratuitement
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -562,7 +570,7 @@ const Pricing = () => {
             Rejoignez des centaines de propriétaires et agences qui font confiance à ImmoPrestige.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25" onClick={openPricing}>
+            <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25" onClick={startFree}>
               Commencer gratuitement
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

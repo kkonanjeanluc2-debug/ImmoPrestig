@@ -55,16 +55,34 @@ export function TenantPayRentDialog({
   const queryClient = useQueryClient();
   
   // Check if the agency has KKiaPay configured (agency-level toggle)
+  // Look up agency by direct ownership OR through membership (for gestionnaire-created payments)
   const { data: agency, isLoading: isLoadingAgency } = useQuery({
     queryKey: ["agency-kkiapay-config", agencyUserId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!agencyUserId) return null;
+      // First try direct agency ownership
+      const { data: directAgency } = await supabase
         .from("agencies")
         .select("kkiapay_public_key, online_rent_enabled")
         .eq("user_id", agencyUserId)
         .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (directAgency) return directAgency;
+
+      // If not found, the payment creator might be a member — find their agency
+      const { data: membership } = await supabase
+        .from("agency_members")
+        .select("agency_id")
+        .eq("user_id", agencyUserId)
+        .eq("status", "active")
+        .maybeSingle();
+      if (!membership) return null;
+
+      const { data: memberAgency } = await supabase
+        .from("agencies")
+        .select("kkiapay_public_key, online_rent_enabled")
+        .eq("id", membership.agency_id)
+        .maybeSingle();
+      return memberAgency;
     },
     enabled: !!agencyUserId,
   });

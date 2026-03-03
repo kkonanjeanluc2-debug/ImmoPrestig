@@ -444,6 +444,7 @@ const SuperAdmin = () => {
                       <TableHead className="text-center">Locataires</TableHead>
                       <TableHead className="text-center">Propriétaires</TableHead>
                       <TableHead className="text-center">Lotissements</TableHead>
+                      <TableHead className="text-center">Biens Vente</TableHead>
                       <TableHead className="text-center">Ventes Immo</TableHead>
                       <TableHead className="text-right">Revenus</TableHead>
                       <TableHead>Rôle</TableHead>
@@ -499,6 +500,9 @@ const SuperAdmin = () => {
                           </TableCell>
                           <TableCell className="text-center">
                             <span className="font-medium">{agency.stats?.lotissements_count || 0}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="font-medium">{agency.stats?.biens_vente_count || 0}</span>
                           </TableCell>
                           <TableCell className="text-center">
                             <span className="font-medium">{agency.stats?.ventes_immobilieres_count || 0}</span>

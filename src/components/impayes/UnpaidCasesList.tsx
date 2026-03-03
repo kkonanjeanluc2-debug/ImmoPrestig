@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useUnpaidCases, STATUS_LABELS, type UnpaidCase } from "@/hooks/useUnpaidCases";
 import { usePayments } from "@/hooks/usePayments";
+import { usePermissions } from "@/hooks/usePermissions";
 import { UnpaidCaseDetailDialog } from "./UnpaidCaseDetailDialog";
 import { CreateUnpaidCaseDialog } from "./CreateUnpaidCaseDialog";
 import { differenceInDays } from "date-fns";
@@ -58,6 +59,9 @@ interface DetectedLatePayment {
 export function UnpaidCasesList() {
   const { data: cases, isLoading } = useUnpaidCases();
   const { data: payments, isLoading: isLoadingPayments } = usePayments();
+  const { hasPermission } = usePermissions();
+  const canViewImpayes = hasPermission("can_view_impayes");
+  const canCreateImpayes = hasPermission("can_create_impayes");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCase, setSelectedCase] = useState<UnpaidCase | null>(null);
@@ -211,10 +215,12 @@ export function UnpaidCasesList() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau dossier
-        </Button>
+        {canCreateImpayes && (
+          <Button onClick={() => setShowCreateDialog(true)} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau dossier
+          </Button>
+        )}
       </div>
 
       {/* Auto-detected late payments */}
@@ -267,18 +273,20 @@ export function UnpaidCasesList() {
                       <span className="text-lg font-bold text-destructive whitespace-nowrap">
                         {item.totalAmount.toLocaleString("fr-FR")} F CFA
                       </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => {
-                          setPreselectedTenantId(item.tenantId);
-                          setShowCreateDialog(true);
-                        }}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Créer dossier
-                      </Button>
+                      {canCreateImpayes && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => {
+                            setPreselectedTenantId(item.tenantId);
+                            setShowCreateDialog(true);
+                          }}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Créer dossier
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

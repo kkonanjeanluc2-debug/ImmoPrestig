@@ -15,6 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Users, Plus, Loader2, Phone, Mail, Building2, ChevronDown, MapPin, User, CreditCard, Pencil, Trash2 } from "lucide-react";
 import { useVendeurs, useCreateVendeur, useDeleteVendeur, Vendeur } from "@/hooks/useVendeurs";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
+import { usePermissions } from "@/hooks/usePermissions";
 import { VendeurEditDialog } from "./VendeurEditDialog";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -44,21 +45,20 @@ export function VendeursList() {
   const { data: biens = [] } = useBiensAchat();
   const createMutation = useCreateVendeur();
   const deleteMutation = useDeleteVendeur();
+  const { hasPermission } = usePermissions();
   const [open, setOpen] = useState(false);
   const [editVendeur, setEditVendeur] = useState<Vendeur | null>(null);
   const [deleteVendeur, setDeleteVendeur] = useState<Vendeur | null>(null);
 
+  const canCreate = hasPermission("can_create_achats");
+  const canEdit = hasPermission("can_edit_achats");
+  const canDelete = hasPermission("can_delete_achats");
+
   const form = useForm<VendeurFormData>({
     resolver: zodResolver(vendeurSchema),
     defaultValues: {
-      name: "",
-      phone: "",
-      email: "",
-      address: "",
-      birth_date: undefined,
-      birth_place: "",
-      profession: "",
-      cni_number: "",
+      name: "", phone: "", email: "", address: "",
+      birth_date: undefined, birth_place: "", profession: "", cni_number: "",
     },
   });
 
@@ -88,93 +88,40 @@ export function VendeursList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Vendeurs</h2>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) form.reset(); }}>
-          <DialogTrigger asChild>
-            <Button size="sm"><Plus className="h-4 w-4 mr-2" />Ajouter un vendeur</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Nouveau vendeur</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom complet *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Jean Dupont" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {canCreate && (
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) form.reset(); }}>
+            <DialogTrigger asChild>
+              <Button size="sm"><Plus className="h-4 w-4 mr-2" />Ajouter un vendeur</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Nouveau vendeur</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="phone"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Téléphone</FormLabel>
+                        <FormLabel>Nom complet *</FormLabel>
                         <FormControl>
-                          <Input placeholder="+225 07 00 00 00 00" {...field} />
+                          <Input placeholder="Jean Dupont" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="jean@exemple.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Adresse</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Abidjan, Cocody" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Informations complémentaires */}
-                <div className="border-t pt-4 mt-2">
-                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Informations complémentaires
-                  </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="birth_date"
+                      name="phone"
                       render={({ field }) => (
-                        <FormItem className="flex flex-col sm:col-span-2">
-                          <FormLabel>Date de naissance</FormLabel>
+                        <FormItem>
+                          <FormLabel>Téléphone</FormLabel>
                           <FormControl>
-                            <DateSelect
-                              value={field.value}
-                              onChange={field.onChange}
-                              maxYear={new Date().getFullYear()}
-                              minYear={1900}
-                            />
+                            <Input placeholder="+225 07 00 00 00 00" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -182,12 +129,12 @@ export function VendeursList() {
                     />
                     <FormField
                       control={form.control}
-                      name="birth_place"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Lieu de naissance</FormLabel>
+                          <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="Abidjan" {...field} />
+                            <Input type="email" placeholder="jean@exemple.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -195,52 +142,107 @@ export function VendeursList() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                    <FormField
-                      control={form.control}
-                      name="profession"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Profession</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Entrepreneur" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="cni_number"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4" />
-                            Numéro CNI
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="CI00000000" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Adresse</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Abidjan, Cocody" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Ajouter
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+                  {/* Informations complémentaires */}
+                  <div className="border-t pt-4 mt-2">
+                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Informations complémentaires
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="birth_date"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col sm:col-span-2">
+                            <FormLabel>Date de naissance</FormLabel>
+                            <FormControl>
+                              <DateSelect
+                                value={field.value}
+                                onChange={field.onChange}
+                                maxYear={new Date().getFullYear()}
+                                minYear={1900}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="birth_place"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Lieu de naissance</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Abidjan" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      <FormField
+                        control={form.control}
+                        name="profession"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Profession</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Entrepreneur" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="cni_number"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <CreditCard className="h-4 w-4" />
+                              Numéro CNI
+                            </FormLabel>
+                            <FormControl>
+                              <Input placeholder="CI00000000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit" disabled={createMutation.isPending}>
+                      {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Ajouter
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {!vendeurs?.length ? (
@@ -264,12 +266,16 @@ export function VendeursList() {
                     <div className="flex items-center justify-between">
                       <p className="font-medium truncate">{v.name}</p>
                       <div className="flex items-center gap-1 shrink-0">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditVendeur(v)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteVendeur(v)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {canEdit && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditVendeur(v)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteVendeur(v)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                     {v.phone && (

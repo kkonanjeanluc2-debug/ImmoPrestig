@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, UserCog } from "lucide-react";
+import { Loader2, UserCog, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,10 +30,12 @@ export function EditMemberDialog({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
+    newPassword: "",
   });
 
   const profileData = member?.profile as { email?: string | null; full_name?: string | null } | undefined;
@@ -43,7 +45,9 @@ export function EditMemberDialog({
       setFormData({
         full_name: profileData.full_name || "",
         email: profileData.email || "",
+        newPassword: "",
       });
+      setShowPassword(false);
     }
   }, [member, profileData]);
 
@@ -52,8 +56,35 @@ export function EditMemberDialog({
 
     setIsLoading(true);
     try {
-      // Update profile
-      const { error } = await supabase
+      const originalEmail = profileData?.email || "";
+      const emailChanged = formData.email !== originalEmail && formData.email.trim() !== "";
+      const passwordChanged = formData.newPassword.trim().length > 0;
+
+      // Validate password if provided
+      if (passwordChanged && formData.newPassword.length < 8) {
+        toast({
+          title: "Erreur",
+          description: "Le mot de passe doit contenir au moins 8 caractères",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Update auth credentials via edge function if email or password changed
+      if (emailChanged || passwordChanged) {
+        const body: Record<string, string> = { userId: member.user_id };
+        if (emailChanged) body.newEmail = formData.email;
+        if (passwordChanged) body.newPassword = formData.newPassword;
+
+        const { data, error } = await supabase.functions.invoke("update-user-email", { body });
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+      }
+
+      // Update profile (name + email)
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           full_name: formData.full_name,
@@ -61,11 +92,11 @@ export function EditMemberDialog({
         })
         .eq("user_id", member.user_id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
       toast({
         title: "Membre mis à jour",
-        description: "Les informations du membre ont été modifiées.",
+        description: "Les informations du membre ont été modifiées avec succès.",
       });
       
       queryClient.invalidateQueries({ queryKey: ["agency-members"] });
@@ -90,7 +121,7 @@ export function EditMemberDialog({
             Modifier le membre
           </DialogTitle>
           <DialogDescription>
-            Modifiez les informations de ce membre de l'équipe
+            Modifiez les informations et les identifiants de connexion de ce membre
           </DialogDescription>
         </DialogHeader>
 
@@ -105,7 +136,7 @@ export function EditMemberDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit_email">Email</Label>
+            <Label htmlFor="edit_email">Email de connexion</Label>
             <Input
               id="edit_email"
               type="email"
@@ -114,7 +145,30 @@ export function EditMemberDialog({
               placeholder="jean@example.com"
             />
             <p className="text-xs text-muted-foreground">
-              Note: Ceci modifie l'email dans le profil, pas l'email de connexion
+              Modifie l'email de connexion et du profil
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit_password">Nouveau mot de passe</Label>
+            <div className="relative">
+              <Input
+                id="edit_password"
+                type={showPassword ? "text" : "password"}
+                value={formData.newPassword}
+                onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                placeholder="Laisser vide pour ne pas modifier"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Minimum 8 caractères. Laisser vide pour conserver le mot de passe actuel.
             </p>
           </div>
         </div>

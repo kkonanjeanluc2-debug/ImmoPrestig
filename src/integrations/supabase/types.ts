@@ -4283,6 +4283,10 @@ export type Database = {
       is_agency_member: { Args: { agency_uuid: string }; Returns: boolean }
       is_agency_owner_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      tenant_belongs_to_agency: {
+        Args: { _agency_id: string; _portal_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       account_type: "agence" | "proprietaire"

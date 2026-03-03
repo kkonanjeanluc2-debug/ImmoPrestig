@@ -135,6 +135,13 @@ export function useAllAgencies() {
 
       if (paymentsError) throw paymentsError;
 
+      // Get all agency members to include gestionnaire-created records
+      const { data: agencyMembers, error: membersError } = await supabase
+        .from("agency_members")
+        .select("agency_id, user_id, status");
+
+      if (membersError) throw membersError;
+
       // Combine data with stats
       const agenciesWithProfiles: AgencyWithProfile[] = (agencies || []).map(
         (agency) => {
@@ -145,15 +152,23 @@ export function useAllAgencies() {
             (r) => r.user_id === agency.user_id
           );
           
-          // Calculate stats for this agency
-          const agencyProperties = (properties || []).filter(p => p.user_id === agency.user_id);
-          const agencyTenants = (tenants || []).filter(t => t.user_id === agency.user_id);
-          const agencyOwners = (owners || []).filter(o => o.user_id === agency.user_id);
-          const agencyLotissements = (lotissements || []).filter(l => l.user_id === agency.user_id);
-          const agencyBiensVente = (biensVente || []).filter(b => b.user_id === agency.user_id);
-          const agencyVentesImmo = (ventesImmobilieres || []).filter(v => v.user_id === agency.user_id);
-          const agencyEcheancesVentes = (echeancesVentes || []).filter(e => e.user_id === agency.user_id);
-          const agencyPayments = (payments || []).filter(p => p.user_id === agency.user_id);
+          // Build a set of all user IDs belonging to this agency (owner + members)
+          const agencyUserIds = new Set<string>([agency.user_id]);
+          (agencyMembers || []).forEach(m => {
+            if (m.agency_id === agency.id) {
+              agencyUserIds.add(m.user_id);
+            }
+          });
+
+          // Calculate stats for this agency (including gestionnaire-created records)
+          const agencyProperties = (properties || []).filter(p => agencyUserIds.has(p.user_id));
+          const agencyTenants = (tenants || []).filter(t => agencyUserIds.has(t.user_id));
+          const agencyOwners = (owners || []).filter(o => agencyUserIds.has(o.user_id));
+          const agencyLotissements = (lotissements || []).filter(l => agencyUserIds.has(l.user_id));
+          const agencyBiensVente = (biensVente || []).filter(b => agencyUserIds.has(b.user_id));
+          const agencyVentesImmo = (ventesImmobilieres || []).filter(v => agencyUserIds.has(v.user_id));
+          const agencyEcheancesVentes = (echeancesVentes || []).filter(e => agencyUserIds.has(e.user_id));
+          const agencyPayments = (payments || []).filter(p => agencyUserIds.has(p.user_id));
           
           // Calculate revenue: paid rent payments + down payments + paid sale installments
           const paidPayments = agencyPayments.filter(p => p.status === 'paid');

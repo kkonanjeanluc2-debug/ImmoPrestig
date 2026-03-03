@@ -54,35 +54,20 @@ export function TenantPayRentDialog({
   const [payAmount, setPayAmount] = useState(remainingAmount);
   const queryClient = useQueryClient();
   
-  // Check if the agency has KKiaPay configured (agency-level toggle)
-  // Look up agency by direct ownership OR through membership (for gestionnaire-created payments)
+  // Check if the agency has online payment enabled
+  // Uses SECURITY DEFINER function to bypass RLS (tenants can't query agencies/agency_members directly)
   const { data: agency, isLoading: isLoadingAgency } = useQuery({
-    queryKey: ["agency-kkiapay-config", agencyUserId],
+    queryKey: ["agency-payment-config", agencyUserId],
     queryFn: async () => {
       if (!agencyUserId) return null;
-      // First try direct agency ownership
-      const { data: directAgency } = await supabase
-        .from("agencies")
-        .select("kkiapay_public_key, online_rent_enabled")
-        .eq("user_id", agencyUserId)
-        .maybeSingle();
-      if (directAgency) return directAgency;
-
-      // If not found, the payment creator might be a member — find their agency
-      const { data: membership } = await supabase
-        .from("agency_members")
-        .select("agency_id")
-        .eq("user_id", agencyUserId)
-        .eq("status", "active")
-        .maybeSingle();
-      if (!membership) return null;
-
-      const { data: memberAgency } = await supabase
-        .from("agencies")
-        .select("kkiapay_public_key, online_rent_enabled")
-        .eq("id", membership.agency_id)
-        .maybeSingle();
-      return memberAgency;
+      const { data, error } = await supabase.rpc("get_agency_payment_config", {
+        _agency_user_id: agencyUserId,
+      });
+      if (error) {
+        console.error("Error fetching agency payment config:", error);
+        return null;
+      }
+      return data?.[0] || null;
     },
     enabled: !!agencyUserId,
   });

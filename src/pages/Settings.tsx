@@ -39,9 +39,10 @@ const Settings = () => {
   const canManageBranding = hasPermission("can_manage_branding");
   const canManageTemplates = hasPermission("can_manage_templates");
   const isAdmin = role === "admin" || role === "super_admin";
+  const canAccessSettings = hasPermission("can_access_settings");
   
-  // Default tab: gestionnaires go to profile, others to agency
-  const [activeTab, setActiveTab] = useState(isSuperAdmin ? "profile" : (isGestionnaire ? "profile" : "agency"));
+  // Default tab: non-admin without settings access go to profile
+  const [activeTab, setActiveTab] = useState(isSuperAdmin ? "profile" : ((isGestionnaire || !canAccessSettings) ? "profile" : "agency"));
 
   // Super Admin: simplified settings
   if (isSuperAdmin) {
@@ -114,7 +115,7 @@ const Settings = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-1 p-1 overflow-x-auto">
-            {!isGestionnaire && (
+            {canAccessSettings && (
               <TabsTrigger
                 value="agency"
                 className="flex items-center gap-1.5 sm:gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm"
@@ -123,7 +124,7 @@ const Settings = () => {
                 <span className="hidden sm:inline">Agence</span>
               </TabsTrigger>
             )}
-            {!isGestionnaire && (
+            {canAccessSettings && (
               <TabsTrigger
                 value="management-types"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -159,7 +160,7 @@ const Settings = () => {
                 <span>Contrats</span>
               </TabsTrigger>
             )}
-            {hasVentesImmobilieres && !isGestionnaire && (
+            {hasVentesImmobilieres && canAccessSettings && (
               <TabsTrigger
                 value="sale-contracts"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -168,7 +169,7 @@ const Settings = () => {
                 <span>Contrats de vente</span>
               </TabsTrigger>
             )}
-            {hasLotissement && !isGestionnaire && (
+            {hasLotissement && canAccessSettings && (
               <TabsTrigger
                 value="promesse-vente"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -177,7 +178,7 @@ const Settings = () => {
                 <span>Promesses de vente</span>
               </TabsTrigger>
             )}
-            {(hasLotissement || hasVentesImmobilieres) && !isGestionnaire && (
+            {(hasLotissement || hasVentesImmobilieres) && canAccessSettings && (
               <TabsTrigger
                 value="reservation-forms"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -186,7 +187,7 @@ const Settings = () => {
                 <span>Fiches de réservation</span>
               </TabsTrigger>
             )}
-            {!isGestionnaire && (
+            {canAccessSettings && (
               <TabsTrigger
                 value="subscription"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -227,7 +228,7 @@ const Settings = () => {
               <Palette className="h-4 w-4" />
               <span>Affichage</span>
             </TabsTrigger>
-            {!isGestionnaire && (
+            {canAccessSettings && (
               <TabsTrigger
                 value="notifications"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -236,7 +237,7 @@ const Settings = () => {
                 <span>Alertes</span>
               </TabsTrigger>
             )}
-            {!isGestionnaire && (
+            {canAccessSettings && (
               <TabsTrigger
                 value="notification-history"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -245,7 +246,7 @@ const Settings = () => {
                 <span>Historique</span>
               </TabsTrigger>
             )}
-            {!isFreePlan && !isGestionnaire && (
+            {!isFreePlan && canAccessSettings && (
               <TabsTrigger
                 value="whatsapp"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -272,13 +273,13 @@ const Settings = () => {
             </TabsTrigger>
           </TabsList>
 
-          {!isGestionnaire && (
+          {canAccessSettings && (
             <TabsContent value="agency">
               <AgencySettings />
             </TabsContent>
           )}
 
-          {!isGestionnaire && (
+          {canAccessSettings && (
             <TabsContent value="management-types">
               <ManagementTypesSettings />
             </TabsContent>
@@ -300,25 +301,25 @@ const Settings = () => {
             </TabsContent>
           )}
 
-          {hasVentesImmobilieres && !isGestionnaire && (
+          {hasVentesImmobilieres && canAccessSettings && (
             <TabsContent value="sale-contracts">
               <SaleContractTemplateManager />
             </TabsContent>
           )}
 
-          {hasLotissement && !isGestionnaire && (
+          {hasLotissement && canAccessSettings && (
             <TabsContent value="promesse-vente">
               <PromesseVenteTemplateManager />
             </TabsContent>
           )}
 
-          {(hasLotissement || hasVentesImmobilieres) && !isGestionnaire && (
+          {(hasLotissement || hasVentesImmobilieres) && canAccessSettings && (
             <TabsContent value="reservation-forms">
               <ReservationFormTemplateManager />
             </TabsContent>
           )}
 
-          {!isGestionnaire && (
+          {canAccessSettings && (
             <TabsContent value="subscription">
               <SubscriptionSettings />
             </TabsContent>
@@ -340,19 +341,19 @@ const Settings = () => {
             <DisplaySettings />
           </TabsContent>
 
-          {!isGestionnaire && (
+          {canAccessSettings && (
             <TabsContent value="notifications">
               <NotificationSettings />
             </TabsContent>
           )}
 
-          {!isGestionnaire && (
+          {canAccessSettings && (
             <TabsContent value="notification-history">
               <NotificationHistory />
             </TabsContent>
           )}
 
-          {!isFreePlan && !isGestionnaire && (
+          {!isFreePlan && canAccessSettings && (
             <TabsContent value="whatsapp">
               <WhatsAppSettings />
             </TabsContent>

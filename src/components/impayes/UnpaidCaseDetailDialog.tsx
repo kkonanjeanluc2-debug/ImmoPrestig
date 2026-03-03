@@ -53,6 +53,7 @@ import { generateUnpaidDossierPDF } from "@/lib/generateUnpaidDossierPDF";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/hooks/useAgency";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const STATUS_STEPS = [
   { key: "detected", label: "Détecté", icon: AlertTriangle },
@@ -71,6 +72,10 @@ interface Props {
 export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props) {
   const { user } = useAuth();
   const { data: agency } = useAgency();
+  const { hasPermission } = usePermissions();
+  const canEditImpayes = hasPermission("can_edit_impayes");
+  const canDeleteImpayes = hasPermission("can_delete_impayes");
+  const canCreateActions = hasPermission("can_create_impayes_actions");
   const { data: actions, isLoading: actionsLoading } = useUnpaidCaseActions(unpaidCase.id);
   const updateCase = useUpdateUnpaidCase();
   const addAction = useAddUnpaidCaseAction();
@@ -364,24 +369,28 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
               {/* Actions Tab */}
               <TabsContent value="actions" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    className="justify-start"
-                    disabled={isSendingReminder || !tenantEmail}
-                    onClick={handleSendEmailReminder}
-                  >
-                    {isSendingReminder ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
-                    Relancer par e-mail
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="justify-start"
-                    disabled={isGeneratingPDF}
-                    onClick={handleGenerateFormalNotice}
-                  >
-                    {isGeneratingPDF ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
-                    Mise en demeure (PDF)
-                  </Button>
+                  {canCreateActions && (
+                    <Button
+                      variant="outline"
+                      className="justify-start"
+                      disabled={isSendingReminder || !tenantEmail}
+                      onClick={handleSendEmailReminder}
+                    >
+                      {isSendingReminder ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                      Relancer par e-mail
+                    </Button>
+                  )}
+                  {canCreateActions && (
+                    <Button
+                      variant="outline"
+                      className="justify-start"
+                      disabled={isGeneratingPDF}
+                      onClick={handleGenerateFormalNotice}
+                    >
+                      {isGeneratingPDF ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                      Mise en demeure (PDF)
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="justify-start"
@@ -391,14 +400,16 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
                     <Download className="h-4 w-4 mr-2" />
                     Exporter le dossier
                   </Button>
-                  <Button
-                    variant="destructive"
-                    className="justify-start"
-                    onClick={handleDelete}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Supprimer le dossier
-                  </Button>
+                  {canDeleteImpayes && (
+                    <Button
+                      variant="destructive"
+                      className="justify-start"
+                      onClick={handleDelete}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer le dossier
+                    </Button>
+                  )}
                 </div>
 
               </TabsContent>
@@ -422,10 +433,12 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
                     <Label>Référence du tribunal</Label>
                     <Input value={courtReference} onChange={(e) => setCourtReference(e.target.value)} placeholder="Réf. TGI-2024-..." />
                   </div>
-                  <Button onClick={handleSendLegalEmail} disabled={isSendingReminder || !lawyerEmail}>
-                    {isSendingReminder ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                    Transmettre au service juridique
-                  </Button>
+                  {canEditImpayes && (
+                    <Button onClick={handleSendLegalEmail} disabled={isSendingReminder || !lawyerEmail}>
+                      {isSendingReminder ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                      Transmettre au service juridique
+                    </Button>
+                  )}
                 </div>
               </TabsContent>
 
@@ -473,10 +486,12 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleStatusUpdate} disabled={newStatus === unpaidCase.status || updateCase.isPending}>
-                  {updateCase.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Mettre à jour le statut
-                </Button>
+                {canEditImpayes && (
+                  <Button onClick={handleStatusUpdate} disabled={newStatus === unpaidCase.status || updateCase.isPending}>
+                    {updateCase.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Mettre à jour le statut
+                  </Button>
+                )}
               </TabsContent>
             </Tabs>
           </div>

@@ -66,36 +66,70 @@ Deno.serve(async (req) => {
       .eq("user_id", callingUserId)
       .maybeSingle();
 
-    let isAdmin = false;
-    if (!agency) {
+    let isAuthorized = false;
+
+    // Direct owner of the tenant
+    if (tenant.user_id === callingUserId) {
+      isAuthorized = true;
+    }
+
+    // Agency owner: tenant created by a member of their agency
+    if (!isAuthorized && agency) {
+      const { data: memberCheck } = await supabaseAdmin
+        .from("agency_members")
+        .select("id")
+        .eq("agency_id", agency.id)
+        .eq("user_id", tenant.user_id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (memberCheck) {
+        isAuthorized = true;
+      }
+    }
+
+    // Admin member of the same agency as tenant creator
+    if (!isAuthorized && !agency) {
       const { data: membership } = await supabaseAdmin
         .from("agency_members")
-        .select("agency_id, role")
+        .select("agency_id")
         .eq("user_id", callingUserId)
         .eq("role", "admin")
         .eq("status", "active")
         .maybeSingle();
-      
+
       if (membership) {
-        isAdmin = true;
+        // Check if tenant creator is the agency owner or a member
+        const { data: agencyOwner } = await supabaseAdmin
+          .from("agencies")
+          .select("user_id")
+          .eq("id", membership.agency_id)
+          .single();
+
+        if (agencyOwner?.user_id === tenant.user_id) {
+          isAuthorized = true;
+        } else {
+          const { data: peerCheck } = await supabaseAdmin
+            .from("agency_members")
+            .select("id")
+            .eq("agency_id", membership.agency_id)
+            .eq("user_id", tenant.user_id)
+            .maybeSingle();
+          if (peerCheck) isAuthorized = true;
+        }
       }
     }
 
-    const { data: tenantOwner } = await supabaseAdmin
-      .from("tenants")
-      .select("user_id")
-      .eq("id", tenant_id)
-      .single();
-
-    if (tenantOwner?.user_id !== callingUserId && !isAdmin) {
+    // Super admin fallback
+    if (!isAuthorized) {
       const { data: isSuperAdmin } = await supabaseAdmin.rpc("is_super_admin", { _user_id: callingUserId });
-      
-      if (!isSuperAdmin) {
-        return new Response(
-          JSON.stringify({ error: "Vous n'êtes pas autorisé à créer un accès pour ce locataire" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      if (isSuperAdmin) isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return new Response(
+        JSON.stringify({ error: "Vous n'êtes pas autorisé à créer un accès pour ce locataire" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Check if tenant already has portal access

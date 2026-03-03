@@ -552,8 +552,7 @@ export const printContractPDF = async (
 // - Gestion simple: propriétaire uniquement
 // - Gestion partagée: propriétaire + agence mandatée
 // - Gestion professionnelle: agence uniquement
-export const DEFAULT_CONTRACT_TEMPLATE = `# CONTRAT DE BAIL À USAGE D'HABITATION
-
+export const DEFAULT_CONTRACT_TEMPLATE = `
 Conformément aux dispositions de la Loi n° 2019-576 du 26 juin 2019 instituant le Code de la Construction et de l'Habitat en République de Côte d'Ivoire.
 
 Type de gestion : {type_gestion}

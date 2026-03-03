@@ -42,11 +42,12 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
-      // Disable precaching of JS/CSS to ensure fresh content
+      // Offline-first: precache essential assets for full offline navigation
       workbox: {
-        // Don't precache JS/CSS files - they change frequently
-        globPatterns: ["**/*.{ico,png,svg,woff,woff2}"],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        globPatterns: ["**/*.{ico,png,svg,woff,woff2,html,js,css}"],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         // Skip waiting and claim clients immediately for instant updates
         skipWaiting: true,
         clientsClaim: true,

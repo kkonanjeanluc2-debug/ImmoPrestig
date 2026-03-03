@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -8,15 +8,20 @@ interface PendingOperation {
   operation: "INSERT" | "UPDATE" | "DELETE";
   data: Record<string, unknown>;
   timestamp: number;
+  retryCount: number;
 }
 
 const PENDING_OPS_KEY = "immoprestige_pending_operations";
+const MAX_RETRIES = 5;
+const RETRY_DELAY_MS = 3000;
 
 export const useOfflineSync = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [syncProgress, setSyncProgress] = useState({ done: 0, total: 0 });
   const { toast } = useToast();
+  const syncingRef = useRef(false);
 
   // Get pending operations from localStorage
   const getPendingOperations = useCallback((): PendingOperation[] => {
@@ -44,61 +49,102 @@ export const useOfflineSync = () => {
         operation,
         data,
         timestamp: Date.now(),
+        retryCount: 0,
       };
       ops.push(newOp);
       savePendingOperations(ops);
+
+      toast({
+        title: "Opération mise en file d'attente",
+        description: "Elle sera synchronisée dès le retour de la connexion.",
+      });
+
       return newOp.id;
     },
-    [getPendingOperations, savePendingOperations]
+    [getPendingOperations, savePendingOperations, toast]
   );
+
+  // Execute a single sync operation
+  const executeSyncOperation = useCallback(async (op: PendingOperation, accessToken: string | undefined): Promise<boolean> => {
+    try {
+      const method = op.operation === 'DELETE' ? 'DELETE' : op.operation === 'UPDATE' ? 'PATCH' : 'POST';
+      const url = new URL(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/${op.table}`);
+      
+      if (op.operation === 'UPDATE' || op.operation === 'DELETE') {
+        if (op.data.id) {
+          url.searchParams.set('id', `eq.${op.data.id}`);
+        }
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        'Prefer': 'return=minimal',
+      };
+
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      const response = await fetch(url.toString(), {
+        method,
+        headers,
+        body: op.operation !== 'DELETE' ? JSON.stringify(op.data) : undefined,
+      });
+
+      return response.ok || response.status === 201 || response.status === 204;
+    } catch {
+      return false;
+    }
+  }, []);
 
   // Sync pending operations when back online
   const syncPendingOperations = useCallback(async () => {
+    if (syncingRef.current) return;
+    
     const ops = getPendingOperations();
     if (ops.length === 0) return;
 
+    syncingRef.current = true;
     setIsSyncing(true);
-    const successfulIds: string[] = [];
-    const failedOps: PendingOperation[] = [];
+    setSyncProgress({ done: 0, total: ops.length });
 
     const session = await supabase.auth.getSession();
     const accessToken = session.data.session?.access_token;
 
-    for (const op of ops) {
-      try {
-        const method = op.operation === 'DELETE' ? 'DELETE' : op.operation === 'UPDATE' ? 'PATCH' : 'POST';
-        const url = new URL(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/${op.table}`);
-        
-        if (op.operation === 'UPDATE' || op.operation === 'DELETE') {
-          url.searchParams.set('id', `eq.${op.data.id}`);
-        }
+    const successfulIds: string[] = [];
+    const failedOps: PendingOperation[] = [];
 
-        const response = await fetch(url.toString(), {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': `Bearer ${accessToken}`,
-            'Prefer': 'return=minimal'
-          },
-          body: op.operation !== 'DELETE' ? JSON.stringify(op.data) : undefined
-        });
+    // Sort by timestamp to maintain order
+    const sortedOps = [...ops].sort((a, b) => a.timestamp - b.timestamp);
 
-        if (response.ok || response.status === 201 || response.status === 204) {
-          successfulIds.push(op.id);
-        } else {
-          console.error(`Failed to sync operation ${op.id}:`, await response.text());
-          failedOps.push(op);
+    for (let i = 0; i < sortedOps.length; i++) {
+      const op = sortedOps[i];
+      const success = await executeSyncOperation(op, accessToken);
+
+      if (success) {
+        successfulIds.push(op.id);
+      } else {
+        const updatedOp = { ...op, retryCount: (op.retryCount || 0) + 1 };
+        if (updatedOp.retryCount < MAX_RETRIES) {
+          failedOps.push(updatedOp);
         }
-      } catch (error) {
-        console.error(`Failed to sync operation ${op.id}:`, error);
-        failedOps.push(op);
+        // If max retries exceeded, drop the operation silently
+      }
+
+      setSyncProgress({ done: i + 1, total: sortedOps.length });
+
+      // Small delay between operations to avoid overwhelming the server
+      if (i < sortedOps.length - 1) {
+        await new Promise((r) => setTimeout(r, 200));
       }
     }
 
     // Keep only failed operations
     savePendingOperations(failedOps);
+    syncingRef.current = false;
     setIsSyncing(false);
+    setSyncProgress({ done: 0, total: 0 });
 
     if (successfulIds.length > 0) {
       toast({
@@ -109,29 +155,45 @@ export const useOfflineSync = () => {
 
     if (failedOps.length > 0) {
       toast({
-        title: "Erreur de synchronisation",
-        description: `${failedOps.length} opération(s) en attente`,
+        title: "Synchronisation partielle",
+        description: `${failedOps.length} opération(s) en attente de réessai`,
         variant: "destructive",
       });
+
+      // Retry failed operations after a delay
+      setTimeout(() => {
+        if (navigator.onLine) {
+          syncPendingOperations();
+        }
+      }, RETRY_DELAY_MS);
     }
-  }, [getPendingOperations, savePendingOperations, toast]);
+  }, [getPendingOperations, savePendingOperations, executeSyncOperation, toast]);
 
   // Listen for online/offline events
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      toast({
-        title: "Connexion rétablie",
-        description: "Synchronisation des données en cours...",
-      });
-      syncPendingOperations();
+      const pending = getPendingOperations();
+      if (pending.length > 0) {
+        toast({
+          title: "Connexion rétablie",
+          description: `Synchronisation de ${pending.length} opération(s)...`,
+        });
+        // Small delay to let the connection stabilize
+        setTimeout(() => syncPendingOperations(), 1500);
+      } else {
+        toast({
+          title: "Connexion rétablie",
+          description: "Toutes les données sont à jour.",
+        });
+      }
     };
 
     const handleOffline = () => {
       setIsOnline(false);
       toast({
-        title: "Hors ligne",
-        description: "Les modifications seront synchronisées à la reconnexion",
+        title: "Mode hors ligne activé",
+        description: "Vos modifications seront enregistrées et synchronisées automatiquement.",
         variant: "destructive",
       });
     };
@@ -148,10 +210,25 @@ export const useOfflineSync = () => {
     };
   }, [syncPendingOperations, getPendingOperations, toast]);
 
+  // Periodic check: try to sync if online and has pending ops
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (navigator.onLine && !syncingRef.current) {
+        const ops = getPendingOperations();
+        if (ops.length > 0) {
+          syncPendingOperations();
+        }
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [getPendingOperations, syncPendingOperations]);
+
   return {
     isOnline,
     isSyncing,
     pendingCount,
+    syncProgress,
     addPendingOperation,
     syncPendingOperations,
   };

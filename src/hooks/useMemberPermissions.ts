@@ -74,6 +74,14 @@ export interface MemberPermissions {
   can_send_reminders: boolean;
   // Settings management
   can_access_settings: boolean;
+  can_access_agency_tab: boolean;
+  can_access_management_tab: boolean;
+  can_access_subscription_tab: boolean;
+  can_access_notifications_tab: boolean;
+  can_access_whatsapp_tab: boolean;
+  can_access_sale_contracts_tab: boolean;
+  can_access_promesse_vente_tab: boolean;
+  can_access_reservation_forms_tab: boolean;
   can_manage_team: boolean;
   can_manage_automations: boolean;
   can_manage_branding: boolean;
@@ -142,11 +150,19 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_view_reports: "Voir les rapports",
   can_export_data: "Exporter les données",
   can_send_reminders: "Envoyer des rappels",
-  can_access_settings: "Accéder aux paramètres",
-  can_manage_team: "Gérer l'équipe",
-  can_manage_automations: "Gérer les automatisations",
-  can_manage_branding: "Gérer le branding",
-  can_manage_templates: "Gérer les modèles",
+  can_access_settings: "Accéder aux paramètres (global)",
+  can_access_agency_tab: "Onglet Agence",
+  can_access_management_tab: "Onglet Gestion",
+  can_access_subscription_tab: "Onglet Abonnement",
+  can_access_notifications_tab: "Onglet Alertes",
+  can_access_whatsapp_tab: "Onglet WhatsApp",
+  can_access_sale_contracts_tab: "Onglet Contrats de vente",
+  can_access_promesse_vente_tab: "Onglet Promesses de vente",
+  can_access_reservation_forms_tab: "Onglet Fiches de réservation",
+  can_manage_team: "Onglet Équipe",
+  can_manage_automations: "Onglet Automatisations",
+  can_manage_branding: "Onglet Couleurs",
+  can_manage_templates: "Onglet Modèles (Quittances/Contrats)",
 };
 
 export const PERMISSION_GROUPS = {
@@ -192,7 +208,7 @@ export const PERMISSION_GROUPS = {
   },
   settings: {
     label: "Paramètres",
-    permissions: ["can_access_settings", "can_manage_team", "can_manage_automations", "can_manage_branding", "can_manage_templates"] as PermissionKey[],
+    permissions: ["can_access_settings", "can_access_agency_tab", "can_access_management_tab", "can_access_subscription_tab", "can_access_notifications_tab", "can_access_whatsapp_tab", "can_access_sale_contracts_tab", "can_access_promesse_vente_tab", "can_access_reservation_forms_tab", "can_manage_team", "can_manage_automations", "can_manage_branding", "can_manage_templates"] as PermissionKey[],
   },
   other: {
     label: "Autres",
@@ -258,6 +274,14 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_data: true,
     can_send_reminders: true,
     can_access_settings: true,
+    can_access_agency_tab: true,
+    can_access_management_tab: true,
+    can_access_subscription_tab: true,
+    can_access_notifications_tab: true,
+    can_access_whatsapp_tab: true,
+    can_access_sale_contracts_tab: true,
+    can_access_promesse_vente_tab: true,
+    can_access_reservation_forms_tab: true,
     can_manage_team: true,
     can_manage_automations: true,
     can_manage_branding: true,
@@ -319,6 +343,14 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_data: false,
     can_send_reminders: true,
     can_access_settings: false,
+    can_access_agency_tab: false,
+    can_access_management_tab: false,
+    can_access_subscription_tab: false,
+    can_access_notifications_tab: false,
+    can_access_whatsapp_tab: false,
+    can_access_sale_contracts_tab: false,
+    can_access_promesse_vente_tab: false,
+    can_access_reservation_forms_tab: false,
     can_manage_team: false,
     can_manage_automations: false,
     can_manage_branding: false,
@@ -380,6 +412,14 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_data: false,
     can_send_reminders: false,
     can_access_settings: false,
+    can_access_agency_tab: false,
+    can_access_management_tab: false,
+    can_access_subscription_tab: false,
+    can_access_notifications_tab: false,
+    can_access_whatsapp_tab: false,
+    can_access_sale_contracts_tab: false,
+    can_access_promesse_vente_tab: false,
+    can_access_reservation_forms_tab: false,
     can_manage_team: false,
     can_manage_automations: false,
     can_manage_branding: false,

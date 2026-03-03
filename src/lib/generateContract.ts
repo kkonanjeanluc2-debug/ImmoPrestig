@@ -321,11 +321,11 @@ export const generateContractPDF = async (
   // Title - detect furnished type and rent type
   const isFurnished = data.propertyType === "meuble" || templateContent.toLowerCase().includes("meublé") || templateContent.toLowerCase().includes("meublee") || templateContent.toLowerCase().includes("inventaire");
   const isDaily = data.rentType === "journalier";
-  let contractTitle = "CONTRAT DE LOCATION";
+  let contractTitle = "CONTRAT DE BAIL À USAGE D'HABITATION";
   if (isFurnished && isDaily) {
-    contractTitle = "CONTRAT DE LOCATION MEUBLÉE JOURNALIÈRE";
+    contractTitle = "CONTRAT DE BAIL MEUBLÉ JOURNALIER À USAGE D'HABITATION";
   } else if (isFurnished) {
-    contractTitle = "CONTRAT DE LOCATION MEUBLÉE";
+    contractTitle = "CONTRAT DE BAIL MEUBLÉ À USAGE D'HABITATION";
   }
   
   doc.setFontSize(18);

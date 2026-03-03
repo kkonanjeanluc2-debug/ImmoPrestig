@@ -1735,7 +1735,15 @@ export type Database = {
       }
       member_permissions: {
         Row: {
+          can_access_agency_tab: boolean
+          can_access_management_tab: boolean
+          can_access_notifications_tab: boolean
+          can_access_promesse_vente_tab: boolean
+          can_access_reservation_forms_tab: boolean
+          can_access_sale_contracts_tab: boolean
           can_access_settings: boolean
+          can_access_subscription_tab: boolean
+          can_access_whatsapp_tab: boolean
           can_create_achats: boolean
           can_create_achats_documents: boolean
           can_create_biens_vente: boolean | null
@@ -1800,7 +1808,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          can_access_agency_tab?: boolean
+          can_access_management_tab?: boolean
+          can_access_notifications_tab?: boolean
+          can_access_promesse_vente_tab?: boolean
+          can_access_reservation_forms_tab?: boolean
+          can_access_sale_contracts_tab?: boolean
           can_access_settings?: boolean
+          can_access_subscription_tab?: boolean
+          can_access_whatsapp_tab?: boolean
           can_create_achats?: boolean
           can_create_achats_documents?: boolean
           can_create_biens_vente?: boolean | null
@@ -1865,7 +1881,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          can_access_agency_tab?: boolean
+          can_access_management_tab?: boolean
+          can_access_notifications_tab?: boolean
+          can_access_promesse_vente_tab?: boolean
+          can_access_reservation_forms_tab?: boolean
+          can_access_sale_contracts_tab?: boolean
           can_access_settings?: boolean
+          can_access_subscription_tab?: boolean
+          can_access_whatsapp_tab?: boolean
           can_create_achats?: boolean
           can_create_achats_documents?: boolean
           can_create_biens_vente?: boolean | null

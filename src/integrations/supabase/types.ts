@@ -4182,6 +4182,10 @@ export type Database = {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
+      can_access_owner: {
+        Args: { _owner_user_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_access_parcelle: {
         Args: {
           _assigned_to: string

@@ -4281,8 +4281,16 @@ export type Database = {
         Returns: boolean
       }
       is_agency_member: { Args: { agency_uuid: string }; Returns: boolean }
+      is_agency_owner: {
+        Args: { _agency_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_agency_owner_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_team_member_of_owned_agency: {
+        Args: { _owner_user_id: string; _target_user_id: string }
+        Returns: boolean
+      }
       tenant_belongs_to_agency: {
         Args: { _agency_id: string; _portal_user_id: string }
         Returns: boolean

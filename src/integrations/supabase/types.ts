@@ -4260,6 +4260,13 @@ export type Database = {
         Args: { p_agency_id: string }
         Returns: number
       }
+      get_agency_payment_config: {
+        Args: { _agency_user_id: string }
+        Returns: {
+          kkiapay_public_key: string
+          online_rent_enabled: boolean
+        }[]
+      }
       get_agency_tenant_portal_count: {
         Args: { p_agency_id: string }
         Returns: number

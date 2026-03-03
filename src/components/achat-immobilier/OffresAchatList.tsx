@@ -14,6 +14,7 @@ import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useCreateAchatImmobilier, useAchatsImmobiliers } from "@/hooks/useAchatsImmobiliers";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useNavigate } from "react-router-dom";
+import { usePermissions } from "@/hooks/usePermissions";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,10 @@ export function OffresAchatList() {
   const createAchatMutation = useCreateAchatImmobilier();
   const { data: achatsData } = useAchatsImmobiliers();
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
+  const canCreateOffre = hasPermission("can_create_offres_achat");
+  const canEditAchats = hasPermission("can_edit_achats");
+  const canCreateAchats = hasPermission("can_create_achats");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ bien_id: "", offer_amount: "", conditions: "", acquereur_id: "" });
   const [showNewAcquereur, setShowNewAcquereur] = useState(false);
@@ -198,9 +203,11 @@ export function OffresAchatList() {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Offres d'achat</h2>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" disabled={!availableBiens.length}><Plus className="h-4 w-4 mr-2" />Nouvelle offre</Button>
-          </DialogTrigger>
+          {canCreateOffre && (
+            <DialogTrigger asChild>
+              <Button size="sm" disabled={!availableBiens.length}><Plus className="h-4 w-4 mr-2" />Nouvelle offre</Button>
+            </DialogTrigger>
+          )}
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Nouvelle offre d'achat</DialogTitle>
@@ -392,10 +399,10 @@ export function OffresAchatList() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge className={STATUS_COLORS[offre.status] || ""}>{STATUS_LABELS[offre.status] || offre.status}</Badge>
-                  {offre.status === "acceptee" && !achatsData?.some(a => a.bien_id === offre.bien_id) && (
+                  {canCreateAchats && offre.status === "acceptee" && !achatsData?.some(a => a.bien_id === offre.bien_id) && (
                     <Button size="sm" onClick={() => setAcceptOffre(offre)}>Finaliser l'achat</Button>
                   )}
-                  {(offre.status === "en_attente" || offre.status === "contre_offre") && (
+                  {canEditAchats && (offre.status === "en_attente" || offre.status === "contre_offre") && (
                     <div className="flex gap-1 flex-wrap">
                       <TooltipProvider>
                         <Tooltip>

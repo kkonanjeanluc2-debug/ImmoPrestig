@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useEcheancesAchats, usePayEcheanceAchat } from "@/hooks/useEcheancesAchats";
 import { useAgency } from "@/hooks/useAgency";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
@@ -39,6 +40,8 @@ export function EcheancesAchatsList() {
   const { data: echeances, isLoading } = useEcheancesAchats();
   const { data: agency } = useAgency();
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canEditAchats = hasPermission("can_edit_achats");
   const payMutation = usePayEcheanceAchat();
   const [payDialog, setPayDialog] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState("especes");
@@ -142,7 +145,7 @@ export function EcheancesAchatsList() {
                     Reçu
                   </Button>
                 )}
-                {ech.status !== "paye" && (
+                {canEditAchats && ech.status !== "paye" && (
                   <Button 
                     size="sm" 
                     onClick={() => handleOpenPayDialog(ech)}

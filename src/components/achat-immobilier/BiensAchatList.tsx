@@ -14,8 +14,7 @@ import { useAchatsImmobiliers } from "@/hooks/useAchatsImmobiliers";
 import { useEcheancesAchats } from "@/hooks/useEcheancesAchats";
 import { useAgency } from "@/hooks/useAgency";
 import { useAgencyMembers } from "@/hooks/useAgencyMembers";
-import { useCurrentUserRole } from "@/hooks/useUserRoles";
-import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { AddBienAchatDialog } from "./AddBienAchatDialog";
 import { EditBienAchatDialog } from "./EditBienAchatDialog";
 import { DocumentsAchatDialog } from "./DocumentsAchatDialog";
@@ -48,12 +47,15 @@ export function BiensAchatList() {
   const { data: echeances = [] } = useEcheancesAchats();
   const { data: agency } = useAgency();
   const { data: members = [] } = useAgencyMembers();
-  const { data: userRole } = useCurrentUserRole();
-  const { user } = useAuth();
+  const { hasPermission, role } = usePermissions();
   const updateMutation = useUpdateBienAchat();
   const deleteMutation = useDeleteBienAchat();
 
-  const isAdmin = userRole?.role === "admin" || agency?.user_id === user?.id;
+  const isAdmin = role === "admin" || role === "super_admin";
+  const canCreate = hasPermission("can_create_achats");
+  const canEdit = hasPermission("can_edit_achats");
+  const canDelete = hasPermission("can_delete_achats");
+  const canCreateDocs = hasPermission("can_create_achats_documents");
 
   const bienHasOffreOrAchat = (bienId: string) => {
     const hasOffre = offres.some(o => o.bien_id === bienId && o.status !== "refusee" && o.status !== "expiree");
@@ -138,9 +140,11 @@ export function BiensAchatList() {
               ))}
             </SelectContent>
           </Select>
-          <AddBienAchatDialog>
-            <Button size="sm"><Plus className="h-4 w-4 mr-2" />Ajouter un bien</Button>
-          </AddBienAchatDialog>
+          {canCreate && (
+            <AddBienAchatDialog>
+              <Button size="sm"><Plus className="h-4 w-4 mr-2" />Ajouter un bien</Button>
+            </AddBienAchatDialog>
+          )}
         </div>
       </div>
 
@@ -160,30 +164,34 @@ export function BiensAchatList() {
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold truncate flex-1">{bien.title}</h3>
                     <div className="flex items-center gap-1 ml-2 shrink-0">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditBien(bien)} disabled={bienHasOffreOrAchat(bien.id)}>
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          {bienHasOffreOrAchat(bien.id) && <TooltipContent>Ce bien est lié à une offre ou un achat</TooltipContent>}
-                        </Tooltip>
-                      </TooltipProvider>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteBienId(bien.id)} disabled={bienHasOffreOrAchat(bien.id)}>
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          {bienHasOffreOrAchat(bien.id) && <TooltipContent>Ce bien est lié à une offre ou un achat</TooltipContent>}
-                        </Tooltip>
-                      </TooltipProvider>
+                      {canEdit && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditBien(bien)} disabled={bienHasOffreOrAchat(bien.id)}>
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            {bienHasOffreOrAchat(bien.id) && <TooltipContent>Ce bien est lié à une offre ou un achat</TooltipContent>}
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {canDelete && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteBienId(bien.id)} disabled={bienHasOffreOrAchat(bien.id)}>
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            {bienHasOffreOrAchat(bien.id) && <TooltipContent>Ce bien est lié à une offre ou un achat</TooltipContent>}
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                 </div>
                 <Badge className={STATUS_COLORS[bien.status] || ""}>{STATUS_LABELS[bien.status] || bien.status}</Badge>
@@ -212,28 +220,30 @@ export function BiensAchatList() {
                   </a>
                 )}
 
-                <div className="mt-3 pt-3 border-t">
-                  <label className="text-xs text-muted-foreground mb-1 block">Vendeur</label>
-                  <Select
-                    value={bien.vendeur_id || "__none__"}
-                    onValueChange={(v) => handleVendeurChange(bien.id, v)}
-                    disabled={updateMutation.isPending}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Aucun vendeur" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">
-                        <span className="flex items-center gap-1 text-muted-foreground">
-                          <UserX className="h-3 w-3" /> Aucun vendeur
-                        </span>
-                      </SelectItem>
-                      {vendeurs.map((v) => (
-                        <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {canEdit && (
+                  <div className="mt-3 pt-3 border-t">
+                    <label className="text-xs text-muted-foreground mb-1 block">Vendeur</label>
+                    <Select
+                      value={bien.vendeur_id || "__none__"}
+                      onValueChange={(v) => handleVendeurChange(bien.id, v)}
+                      disabled={updateMutation.isPending}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Aucun vendeur" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <UserX className="h-3 w-3" /> Aucun vendeur
+                          </span>
+                        </SelectItem>
+                        {vendeurs.map((v) => (
+                          <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {/* Gestionnaire assignment - admin only */}
                 {isAdmin && activeMembers.length > 0 && (
@@ -267,10 +277,12 @@ export function BiensAchatList() {
 
                 {/* Documents & PDF buttons */}
                 <div className="flex gap-2 mt-3 pt-3 border-t">
-                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setDocsBien(bien)}>
-                    <FileText className="h-3.5 w-3.5 mr-1" />
-                    Documents
-                  </Button>
+                  {canCreateDocs && (
+                    <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setDocsBien(bien)}>
+                      <FileText className="h-3.5 w-3.5 mr-1" />
+                      Documents
+                    </Button>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs">

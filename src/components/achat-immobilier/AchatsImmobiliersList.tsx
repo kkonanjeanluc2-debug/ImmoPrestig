@@ -13,6 +13,7 @@ import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useAgency } from "@/hooks/useAgency";
+import { usePermissions } from "@/hooks/usePermissions";
 import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -28,6 +29,8 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
   const { data: vendeurs = [] } = useVendeurs();
   const { data: acquereurs = [] } = useAcquereurs();
   const { data: agency } = useAgency();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("can_create_achats");
   const createMutation = useCreateAchatImmobilier();
   const createAcquereur = useCreateAcquereur();
   const [open, setOpen] = useState(false);
@@ -117,9 +120,11 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Achats réalisés</h2>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button size="sm" disabled={!availableBiens.length}><Plus className="h-4 w-4 mr-2" />Enregistrer un achat</Button>
-          </DialogTrigger>
+          {canCreate && (
+            <DialogTrigger asChild>
+              <Button size="sm" disabled={!availableBiens.length}><Plus className="h-4 w-4 mr-2" />Enregistrer un achat</Button>
+            </DialogTrigger>
+          )}
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Enregistrer un achat</DialogTitle>

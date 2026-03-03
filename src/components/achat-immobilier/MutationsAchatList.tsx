@@ -7,6 +7,7 @@ import { Loader2, Plus, FileCheck, Trash2, Eye } from "lucide-react";
 import { useMutationsAchats, useDeleteMutationAchat, type MutationAchat } from "@/hooks/useMutationsAchats";
 import { useAchatsImmobiliers } from "@/hooks/useAchatsImmobiliers";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
+import { usePermissions } from "@/hooks/usePermissions";
 import { AddMutationDialog } from "./AddMutationDialog";
 import { MutationDetailDialog } from "./MutationDetailDialog";
 
@@ -38,6 +39,10 @@ export function MutationsAchatList() {
   const { data: achats = [] } = useAchatsImmobiliers();
   const { data: biens = [] } = useBiensAchat();
   const deleteMutation = useDeleteMutationAchat();
+  const { hasPermission } = usePermissions();
+
+  const canManageMutations = hasPermission("can_manage_mutations");
+  const canDelete = hasPermission("can_delete_achats");
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailMutation, setDetailMutation] = useState<MutationAchat | null>(null);
@@ -60,7 +65,7 @@ export function MutationsAchatList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Mutations foncières</h2>
-        {achatsWithoutMutation.length > 0 && (
+        {canManageMutations && achatsWithoutMutation.length > 0 && (
           <AddMutationDialog achats={achatsWithoutMutation} biens={biens}>
             <Button size="sm"><Plus className="h-4 w-4 mr-2" />Nouvelle mutation</Button>
           </AddMutationDialog>
@@ -95,9 +100,11 @@ export function MutationsAchatList() {
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailMutation(mut)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(mut.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      {canDelete && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(mut.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 

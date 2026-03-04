@@ -22,11 +22,17 @@ function isPhoneNumber(value: string): boolean {
   return /^[+]?[0-9]{8,15}$/.test(cleaned);
 }
 
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 60_000; // 1 minute
+
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [honeypot, setHoneypot] = useState(""); // Bot trap
+  const [attempts, setAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,8 +43,25 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const trimmed = identifier.trim();
+    // Anti-bot: honeypot check
+    if (honeypot) {
+      console.warn("[Auth] Bot detected via honeypot");
+      return;
+    }
+
+    // Rate limiting
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const secondsLeft = Math.ceil((lockedUntil - Date.now()) / 1000);
+      toast({
+        variant: "destructive",
+        title: "Trop de tentatives",
+        description: `Veuillez patienter ${secondsLeft} secondes avant de réessayer.`,
+      });
+      return;
+    }
+
     let loginEmail: string;
+    const trimmed = identifier.trim();
 
     if (isPhoneNumber(trimmed)) {
       // Phone-based login: resolve actual auth email via edge function
@@ -72,6 +95,12 @@ const Login = () => {
     const { error } = await signIn(loginEmail, password);
 
     if (error) {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      if (newAttempts >= MAX_ATTEMPTS) {
+        setLockedUntil(Date.now() + LOCKOUT_DURATION);
+        setAttempts(0);
+      }
       toast({
         variant: "destructive",
         title: "Erreur de connexion",
@@ -80,6 +109,8 @@ const Login = () => {
       setIsLoading(false);
       return;
     }
+    setAttempts(0);
+    setLockedUntil(null);
 
     toast({
       title: "Connexion réussie",
@@ -99,8 +130,21 @@ const Login = () => {
           <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
           <CardDescription>Connectez-vous pour accéder à votre espace de gestion immobilière</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <CardContent className="space-y-4">
+            {/* Honeypot anti-bot field - invisible to users */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+              <label htmlFor="website">Website</label>
+              <input
+                type="text"
+                id="website"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="identifier">Email ou téléphone</Label>
               <div className="relative">

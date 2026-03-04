@@ -24,9 +24,8 @@ interface SubscriptionCheckoutDialogProps {
   billingCycle: "monthly" | "yearly";
 }
 
-// Payment methods - Wave Direct and KKiaPay only
+// Payment methods - KKiaPay only
 const paymentMethods = [
-  { id: "wave_direct", name: "Wave Direct", icon: Wallet, color: "bg-blue-600", fedapayMode: null, provider: "wave_ci", description: "Paiement direct Wave" },
   { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-primary", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
 ];
 
@@ -285,14 +284,6 @@ export function SubscriptionCheckoutDialog({
             new_plan_prorata_cost: proration.newPlanProrataCost,
             amount_due: proration.amountDue,
           } : null,
-        };
-      } else if (provider === "wave_ci") {
-        edgeFunctionName = "wave-checkout";
-        requestBody = {
-          plan_id: plan.id,
-          billing_cycle: billingCycle,
-          customer_phone: phoneNumber,
-          return_url: window.location.origin + "/settings?tab=subscription",
         };
       } else {
         edgeFunctionName = "fedapay-checkout";

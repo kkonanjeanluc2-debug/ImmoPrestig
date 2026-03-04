@@ -70,10 +70,13 @@ Deno.serve(async (req) => {
       : "https://pay.genius.ci/api/v1/merchant/payments";
 
     // Create GeniusPay checkout session via API
+    console.log(`GeniusPay checkout: sandbox=${isSandbox}, url=${baseUrl}, amount=${Math.round(amount)}`);
+
     const geniusPayResponse = await fetch(baseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "X-API-Key": GENIUSPAY_PUBLIC_KEY,
         "X-API-Secret": GENIUSPAY_SECRET_KEY,
       },

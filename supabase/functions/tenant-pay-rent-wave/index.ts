@@ -98,10 +98,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get agency info for the payment owner
+    // Get agency info for the payment owner - include Wave keys
     const { data: agency, error: agencyError } = await supabase
       .from("agencies")
-      .select("id, name, email, phone, mobile_money_number, mobile_money_provider")
+      .select("id, name, email, phone, mobile_money_number, mobile_money_provider, wave_api_key, wave_sandbox")
       .eq("user_id", tenant.user_id)
       .single();
 
@@ -112,8 +112,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get Wave API key
-    const waveApiKey = Deno.env.get("WAVE_API_KEY");
+    // Use agency-level Wave API key, fallback to global secret
+    const waveApiKey = agency.wave_api_key || Deno.env.get("WAVE_API_KEY");
     if (!waveApiKey) {
       return new Response(
         JSON.stringify({ error: "Configuration Wave CI manquante" }),
@@ -121,14 +121,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check Wave provider config for sandbox mode
-    const { data: waveConfig } = await supabase
-      .from("payment_provider_configs")
-      .select("*")
-      .eq("provider_name", "wave_ci")
-      .single();
-
-    const isSandbox = waveConfig?.is_sandbox ?? true;
+    // Use agency-level sandbox setting, fallback to provider config
+    const isSandbox = agency.wave_sandbox ?? true;
     const waveBaseUrl = "https://api.wave.com/v1";
 
     // Format phone number for Wave CI (+225)

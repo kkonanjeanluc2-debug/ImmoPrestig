@@ -45,10 +45,10 @@ Deno.serve(async (req) => {
 
     const userId = userData.user.id;
 
-    // Get agency for this user
+    // Get agency for this user - include Wave keys
     const { data: agency, error: agencyError } = await supabase
       .from("agencies")
-      .select("*")
+      .select("*, wave_api_key, wave_sandbox")
       .eq("user_id", userId)
       .single();
 
@@ -114,8 +114,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get Wave API key
-    const waveApiKey = Deno.env.get("WAVE_API_KEY");
+    // Use agency-level Wave API key, fallback to global secret
+    const waveApiKey = agency.wave_api_key || Deno.env.get("WAVE_API_KEY");
     if (!waveApiKey) {
       return new Response(
         JSON.stringify({ error: "Configuration Wave CI manquante. Contactez l'administrateur." }),
@@ -123,17 +123,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check Wave provider config
-    const { data: waveConfig } = await supabase
-      .from("payment_provider_configs")
-      .select("*")
-      .eq("provider_name", "wave_ci")
-      .single();
-
-    const isSandbox = waveConfig?.is_sandbox ?? true;
-    const waveBaseUrl = isSandbox
-      ? "https://api.wave.com/v1" // Wave doesn't have separate sandbox URL - use test API key instead
-      : "https://api.wave.com/v1";
+    // Use agency-level sandbox setting
+    const isSandbox = agency.wave_sandbox ?? true;
+    const waveBaseUrl = "https://api.wave.com/v1";
 
     // Format phone number for Wave CI (+225)
     const formatWavePhone = (phone: string): string => {

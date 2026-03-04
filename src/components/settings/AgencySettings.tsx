@@ -58,6 +58,8 @@ export function AgencySettings() {
     geniuspay_public_key: "",
     geniuspay_secret_key: "",
     geniuspay_sandbox: false,
+    wave_api_key: "",
+    wave_sandbox: true,
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -66,6 +68,7 @@ export function AgencySettings() {
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
   const [showGeniusPaySecret, setShowGeniusPaySecret] = useState(false);
+  const [showWaveApiKey, setShowWaveApiKey] = useState(false);
   const [onlineRentToggle, setOnlineRentToggle] = useState(false);
 
   // Initialize form when agency data loads
@@ -91,6 +94,8 @@ export function AgencySettings() {
         geniuspay_public_key: (agency as any).geniuspay_public_key || "",
         geniuspay_secret_key: (agency as any).geniuspay_secret_key || "",
         geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
+        wave_api_key: (agency as any).wave_api_key || "",
+        wave_sandbox: (agency as any).wave_sandbox ?? true,
       });
       setLogoUrl(agency.logo_url);
       setOnlineRentToggle(!!(agency as any).online_rent_enabled);
@@ -120,6 +125,8 @@ export function AgencySettings() {
         geniuspay_public_key: (agency as any).geniuspay_public_key || "",
         geniuspay_secret_key: (agency as any).geniuspay_secret_key || "",
         geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
+        wave_api_key: (agency as any).wave_api_key || "",
+        wave_sandbox: (agency as any).wave_sandbox ?? true,
       });
       setLogoUrl(agency.logo_url);
       setOnlineRentToggle(!!(agency as any).online_rent_enabled);
@@ -208,6 +215,8 @@ export function AgencySettings() {
             geniuspay_public_key: formData.geniuspay_public_key || null,
             geniuspay_secret_key: formData.geniuspay_secret_key || null,
             geniuspay_sandbox: formData.geniuspay_sandbox,
+            wave_api_key: formData.wave_api_key || null,
+            wave_sandbox: formData.wave_sandbox,
             online_rent_enabled: onlineRentToggle,
           })
           .eq('user_id', user.id);
@@ -239,6 +248,8 @@ export function AgencySettings() {
             geniuspay_public_key: formData.geniuspay_public_key || null,
             geniuspay_secret_key: formData.geniuspay_secret_key || null,
             geniuspay_sandbox: formData.geniuspay_sandbox,
+            wave_api_key: formData.wave_api_key || null,
+            wave_sandbox: formData.wave_sandbox,
             online_rent_enabled: onlineRentToggle,
           });
 
@@ -733,6 +744,65 @@ export function AgencySettings() {
               {!formData.geniuspay_public_key && (
                 <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
                   <strong className="text-foreground">Note :</strong> Configurez vos clés GeniusPay pour offrir Wave, Orange Money, MTN et les paiements par carte à vos locataires.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Wave CI Configuration */}
+        {onlineRentToggle && (
+          <div className="space-y-4 border-t pt-6">
+            <div className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-blue-500" />
+              <h3 className="font-medium">Configuration Wave CI</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Entrez votre clé API Wave pour activer les paiements via Wave. Obtenez votre clé sur <a href="https://business.wave.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">business.wave.com</a>.
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="wave-api-key">Clé API Wave</Label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="wave-api-key"
+                    type={showWaveApiKey ? "text" : "password"}
+                    value={formData.wave_api_key}
+                    onChange={(e) => handleChange("wave_api_key", e.target.value)}
+                    placeholder="wave_ci_xxxxxxxxxxxxxxx"
+                    className="pl-10 pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                    onClick={() => setShowWaveApiKey(!showWaveApiKey)}
+                  >
+                    {showWaveApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="wave-sandbox"
+                  checked={formData.wave_sandbox}
+                  onCheckedChange={(checked) => {
+                    setFormData(prev => ({ ...prev, wave_sandbox: checked }));
+                    setHasChanges(true);
+                  }}
+                />
+                <Label htmlFor="wave-sandbox" className="cursor-pointer">
+                  Mode Sandbox (test)
+                </Label>
+              </div>
+
+              {!formData.wave_api_key && (
+                <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+                  <strong className="text-foreground">Note :</strong> Configurez votre clé API Wave pour offrir le paiement Wave à vos locataires.
                 </div>
               )}
             </div>

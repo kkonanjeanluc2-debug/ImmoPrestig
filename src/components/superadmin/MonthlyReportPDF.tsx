@@ -116,7 +116,6 @@ export function MonthlyReportPDF() {
       const methodLabels: Record<string, string> = {
         orange_money: "Orange Money",
         mtn_money: "MTN Money",
-        wave: "Wave",
         moov: "Moov Money",
         card: "Carte bancaire",
       };

@@ -34,7 +34,6 @@ const planIcons: Record<string, React.ReactNode> = {
 const paymentMethodLabels: Record<string, string> = {
   orange_money: "Orange Money",
   mtn_money: "MTN Money",
-  wave: "Wave",
   moov: "Moov Money",
   card: "Carte bancaire",
 };

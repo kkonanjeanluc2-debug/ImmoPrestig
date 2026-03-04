@@ -28,7 +28,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PROVIDER_ICONS: Record<string, React.ReactNode> = {
   fedapay: <CreditCard className="h-5 w-5" />,
-  wave_ci: <Smartphone className="h-5 w-5" />,
   pawapay: <Smartphone className="h-5 w-5" />,
   kkiapay: <CreditCard className="h-5 w-5" />,
   geniuspay: <CreditCard className="h-5 w-5" />,
@@ -36,7 +35,6 @@ const PROVIDER_ICONS: Record<string, React.ReactNode> = {
 
 const PROVIDER_COLORS: Record<string, string> = {
   fedapay: "bg-green-500",
-  wave_ci: "bg-blue-500",
   pawapay: "bg-purple-500",
   kkiapay: "bg-red-500",
   geniuspay: "bg-emerald-500",
@@ -45,10 +43,8 @@ const PROVIDER_COLORS: Record<string, string> = {
 const METHOD_LABELS: Record<string, string> = {
   orange_money: "Orange Money",
   mtn_money: "MTN Money",
-  wave: "Wave (via FedaPay)",
   moov: "Moov Money",
   card: "Carte bancaire",
-  wave_direct: "Wave Direct",
 };
 
 export function PaymentProvidersSettings() {
@@ -197,16 +193,6 @@ export function PaymentProvidersSettings() {
           description: "Configurez vos clés API FedaPay.",
           docsUrl: "https://docs.fedapay.com/",
           webhookInfo: "Cette clé secrète est également utilisée pour vérifier les signatures des webhooks de paiement.",
-        };
-      case "wave_ci":
-        return {
-          secretName: "WAVE_WEBHOOK_SECRET",
-          publicKeyName: "WAVE_API_KEY",
-          publicKeyLabel: "Clé API",
-          secretKeyLabel: "Secret Webhook",
-          description: "Configurez vos clés API Wave CI.",
-          docsUrl: "https://docs.wave.com/",
-          webhookInfo: "Ce secret est utilisé pour vérifier l'authenticité des notifications webhook.",
         };
       case "pawapay":
         return {
@@ -385,8 +371,6 @@ export function PaymentProvidersSettings() {
               <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
                 <li><code className="bg-background px-1 rounded">FEDAPAY_SECRET_KEY</code> - Clé secrète FedaPay</li>
                 <li><code className="bg-background px-1 rounded">FEDAPAY_PUBLIC_KEY</code> - Clé publique FedaPay</li>
-                <li><code className="bg-background px-1 rounded">WAVE_API_KEY</code> - Clé API Wave CI</li>
-                <li><code className="bg-background px-1 rounded">WAVE_WEBHOOK_SECRET</code> - Secret webhook Wave CI</li>
                 <li><code className="bg-background px-1 rounded">PAWAPAY_API_TOKEN</code> - Token API PawaPay</li>
                 <li><code className="bg-background px-1 rounded">KKIAPAY_PUBLIC_KEY</code> - Clé publique KKiaPay</li>
                 <li><code className="bg-background px-1 rounded">KKIAPAY_PRIVATE_KEY</code> - Clé privée KKiaPay</li>

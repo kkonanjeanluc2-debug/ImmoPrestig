@@ -16,13 +16,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const waveWebhookSecret = Deno.env.get("WAVE_WEBHOOK_SECRET");
 
-    if (!waveWebhookSecret) {
-      console.error("WAVE_WEBHOOK_SECRET not configured");
-      return new Response(
-        JSON.stringify({ error: "Webhook not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Note: agency-level webhook secret will be checked per-payment below
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

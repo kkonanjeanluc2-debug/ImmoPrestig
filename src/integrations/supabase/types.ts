@@ -352,6 +352,7 @@ export type Database = {
           user_id: string
           wave_api_key: string | null
           wave_sandbox: boolean | null
+          wave_webhook_secret: string | null
           whatsapp_property_template: string | null
         }
         Insert: {
@@ -388,6 +389,7 @@ export type Database = {
           user_id: string
           wave_api_key?: string | null
           wave_sandbox?: boolean | null
+          wave_webhook_secret?: string | null
           whatsapp_property_template?: string | null
         }
         Update: {
@@ -424,6 +426,7 @@ export type Database = {
           user_id?: string
           wave_api_key?: string | null
           wave_sandbox?: boolean | null
+          wave_webhook_secret?: string | null
           whatsapp_property_template?: string | null
         }
         Relationships: []

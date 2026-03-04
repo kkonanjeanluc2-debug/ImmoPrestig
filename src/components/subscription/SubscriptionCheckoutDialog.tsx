@@ -24,9 +24,10 @@ interface SubscriptionCheckoutDialogProps {
   billingCycle: "monthly" | "yearly";
 }
 
-// Payment methods - KKiaPay only
+// Payment methods - KKiaPay & GeniusPay
 const paymentMethods = [
   { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-primary", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
+  { id: "geniuspay", name: "GeniusPay", icon: Wallet, color: "bg-emerald-600", fedapayMode: null, provider: "geniuspay", description: "Wave, Orange, MTN & Carte" },
 ];
 
 export function SubscriptionCheckoutDialog({
@@ -262,13 +263,28 @@ export function SubscriptionCheckoutDialog({
           plan_id: plan.id,
           billing_cycle: billingCycle,
           payment_method: paymentMethod,
-          customer_name: "", // Will be filled from user profile
-          customer_email: "", // Will be filled from session
+          customer_name: "",
+          customer_email: "",
           customer_phone: phoneNumber,
+        };
+      } else if (provider === "geniuspay") {
+        edgeFunctionName = "geniuspay-checkout";
+        requestBody = {
+          plan_id: plan.id,
+          billing_cycle: billingCycle,
+          amount: finalAmount,
+          description: `Abonnement ${plan.name} - ${billingCycle === "yearly" ? "Annuel" : "Mensuel"}`,
+          customer_phone: phoneNumber,
+          proration: proration ? {
+            remaining_days: proration.remainingDays,
+            total_days: proration.totalDays,
+            current_plan_credit: proration.currentPlanCredit,
+            new_plan_prorata_cost: proration.newPlanProrataCost,
+            amount_due: proration.amountDue,
+          } : null,
         };
       } else if (provider === "pawapay") {
         edgeFunctionName = "pawapay-checkout";
-        // Extract actual payment method from pawapay_mtn -> mtn_money
         const actualMethod = paymentMethod.replace("pawapay_", "") + "_money";
         requestBody = {
           plan_id: plan.id,
@@ -434,6 +450,23 @@ export function SubscriptionCheckoutDialog({
          return;
        }
 
+       // GeniusPay redirect
+       if (provider === "geniuspay" && data?.success && data?.checkout_url) {
+         // Open in new tab for GeniusPay
+         window.open(data.checkout_url, "_blank");
+         toast({
+           title: "Redirection vers GeniusPay",
+           description: "Finalisez votre paiement dans l'onglet ouvert.",
+         });
+         onOpenChange(false);
+         
+         // Poll for subscription update
+         if (plan) {
+           pollSubscriptionUpdate(plan.id);
+         }
+         return;
+       }
+
        // Handle PawaPay USSD push (no redirect URL)
        if (data.provider === "pawapay" && data.success && !data.payment_url) {
          toast({
@@ -445,10 +478,8 @@ export function SubscriptionCheckoutDialog({
        }
 
        if (data.payment_url) {
-         // Redirect to payment page (FedaPay or Wave)
          window.location.href = data.payment_url;
        } else if (data.success) {
-         // Handle cases where payment is initiated but no redirect needed
          toast({
            title: "Paiement initié",
            description: data.message || "Veuillez suivre les instructions sur votre téléphone.",
@@ -699,7 +730,7 @@ export function SubscriptionCheckoutDialog({
 
           {!isFree && (
             <p className="text-xs text-center text-muted-foreground">
-              Paiement sécurisé via FedaPay. Vos informations sont protégées.
+              Paiement sécurisé. Vos informations sont protégées.
             </p>
           )}
         </div>

@@ -36,15 +36,14 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claims?.claims?.sub) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    const userId = claims.claims.sub;
+    const userId = user.id;
 
     const { amount, description, plan_id, billing_cycle } = await req.json();
 
@@ -96,9 +95,23 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const geniusPayData = await geniusPayResponse.json();
+    const responseText = await geniusPayResponse.text();
+    let geniusPayData: any;
+    try {
+      geniusPayData = JSON.parse(responseText);
+    } catch {
+      console.error("GeniusPay returned non-JSON:", responseText.substring(0, 500));
+      return new Response(
+        JSON.stringify({ error: "Réponse invalide du service de paiement. Vérifiez les clés API." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    if (!geniusPayResponse.ok || !geniusPayData.checkout_url) {
+    // GeniusPay may wrap response in data
+    const paymentData = geniusPayData.data || geniusPayData;
+    const checkoutUrl = paymentData.checkout_url;
+
+    if (!geniusPayResponse.ok || !checkoutUrl) {
       console.error("GeniusPay checkout error:", geniusPayData);
       return new Response(
         JSON.stringify({ error: geniusPayData.message || "Erreur lors de la création du paiement" }),
@@ -113,19 +126,19 @@ Deno.serve(async (req) => {
       type: "subscription",
       status: "pending",
       payment_method: "geniuspay",
-      reference: geniusPayData.reference || geniusPayData.id || "",
+      reference: paymentData.reference || paymentData.id || "",
       details: {
         plan_id,
         billing_cycle,
-        geniuspay_reference: geniusPayData.reference || geniusPayData.id,
+        geniuspay_reference: paymentData.reference || paymentData.id,
       },
     });
 
     return new Response(
       JSON.stringify({
         success: true,
-        checkout_url: geniusPayData.checkout_url,
-        reference: geniusPayData.reference || geniusPayData.id,
+        checkout_url: checkoutUrl,
+        reference: paymentData.reference || paymentData.id,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

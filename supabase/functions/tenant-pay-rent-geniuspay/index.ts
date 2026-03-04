@@ -40,12 +40,34 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get agency GeniusPay config
-    const { data: agency } = await adminClient
+    // Get agency GeniusPay config - check direct ownership first, then membership
+    let agency: any = null;
+    const { data: ownedAgency } = await adminClient
       .from("agencies")
       .select("geniuspay_public_key, geniuspay_secret_key, geniuspay_sandbox")
       .eq("user_id", payment.user_id)
       .maybeSingle();
+
+    if (ownedAgency) {
+      agency = ownedAgency;
+    } else {
+      // Payment created by team member - find agency via membership
+      const { data: membership } = await adminClient
+        .from("agency_members")
+        .select("agency_id")
+        .eq("user_id", payment.user_id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (membership) {
+        const { data: memberAgency } = await adminClient
+          .from("agencies")
+          .select("geniuspay_public_key, geniuspay_secret_key, geniuspay_sandbox")
+          .eq("id", membership.agency_id)
+          .maybeSingle();
+        agency = memberAgency;
+      }
+    }
 
     // Use agency keys if configured, otherwise fall back to platform keys
     const secretKey = agency?.geniuspay_secret_key || Deno.env.get("GENIUSPAY_SECRET_KEY");

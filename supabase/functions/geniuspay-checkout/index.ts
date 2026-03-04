@@ -93,8 +93,8 @@ Deno.serve(async (req) => {
           billing_cycle: billing_cycle || "monthly",
           type: "subscription",
         },
-        success_url: `${Deno.env.get("VITE_APP_URL") || "https://property-grace.lovable.app"}/settings?payment=success`,
-        cancel_url: `${Deno.env.get("VITE_APP_URL") || "https://property-grace.lovable.app"}/settings?payment=cancelled`,
+        success_url: `https://immoprestigeci.com/settings?payment=success`,
+        cancel_url: `https://immoprestigeci.com/settings?payment=cancelled`,
       }),
     });
 

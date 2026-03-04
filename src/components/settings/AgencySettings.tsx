@@ -59,6 +59,7 @@ export function AgencySettings() {
     geniuspay_secret_key: "",
     geniuspay_sandbox: false,
     wave_api_key: "",
+    wave_webhook_secret: "",
     wave_sandbox: true,
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -69,6 +70,7 @@ export function AgencySettings() {
   const [showSecret, setShowSecret] = useState(false);
   const [showGeniusPaySecret, setShowGeniusPaySecret] = useState(false);
   const [showWaveApiKey, setShowWaveApiKey] = useState(false);
+  const [showWaveWebhookSecret, setShowWaveWebhookSecret] = useState(false);
   const [onlineRentToggle, setOnlineRentToggle] = useState(false);
 
   // Initialize form when agency data loads
@@ -95,6 +97,7 @@ export function AgencySettings() {
         geniuspay_secret_key: (agency as any).geniuspay_secret_key || "",
         geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
         wave_api_key: (agency as any).wave_api_key || "",
+        wave_webhook_secret: (agency as any).wave_webhook_secret || "",
         wave_sandbox: (agency as any).wave_sandbox ?? true,
       });
       setLogoUrl(agency.logo_url);
@@ -126,6 +129,7 @@ export function AgencySettings() {
         geniuspay_secret_key: (agency as any).geniuspay_secret_key || "",
         geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
         wave_api_key: (agency as any).wave_api_key || "",
+        wave_webhook_secret: (agency as any).wave_webhook_secret || "",
         wave_sandbox: (agency as any).wave_sandbox ?? true,
       });
       setLogoUrl(agency.logo_url);
@@ -216,6 +220,7 @@ export function AgencySettings() {
             geniuspay_secret_key: formData.geniuspay_secret_key || null,
             geniuspay_sandbox: formData.geniuspay_sandbox,
             wave_api_key: formData.wave_api_key || null,
+            wave_webhook_secret: formData.wave_webhook_secret || null,
             wave_sandbox: formData.wave_sandbox,
             online_rent_enabled: onlineRentToggle,
           })
@@ -249,6 +254,7 @@ export function AgencySettings() {
             geniuspay_secret_key: formData.geniuspay_secret_key || null,
             geniuspay_sandbox: formData.geniuspay_sandbox,
             wave_api_key: formData.wave_api_key || null,
+            wave_webhook_secret: formData.wave_webhook_secret || null,
             wave_sandbox: formData.wave_sandbox,
             online_rent_enabled: onlineRentToggle,
           });
@@ -782,6 +788,30 @@ export function AgencySettings() {
                     onClick={() => setShowWaveApiKey(!showWaveApiKey)}
                   >
                     {showWaveApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="wave-webhook-secret">Secret Webhook Wave</Label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="wave-webhook-secret"
+                    type={showWaveWebhookSecret ? "text" : "password"}
+                    value={formData.wave_webhook_secret}
+                    onChange={(e) => handleChange("wave_webhook_secret", e.target.value)}
+                    placeholder="whsec_xxxxxxxxxxxxxxx"
+                    className="pl-10 pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                    onClick={() => setShowWaveWebhookSecret(!showWaveWebhookSecret)}
+                  >
+                    {showWaveWebhookSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>

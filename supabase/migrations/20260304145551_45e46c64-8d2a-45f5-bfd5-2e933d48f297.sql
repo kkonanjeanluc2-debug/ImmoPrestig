@@ -1,0 +1,1 @@
+ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS wave_webhook_secret text DEFAULT NULL;

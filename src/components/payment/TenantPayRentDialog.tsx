@@ -164,7 +164,11 @@ export function TenantPayRentDialog({
 
       const { data, error } = await supabase.functions.invoke(functionName, { body });
 
-      if (error) throw error;
+      if (error) {
+        // Try to extract detailed error from response
+        const errorMsg = data?.error || error.message || "Erreur lors du paiement";
+        throw new Error(errorMsg);
+      }
 
       // KKiaPay Widget
       if (provider === "kkiapay" && data?.success && data?.public_key) {

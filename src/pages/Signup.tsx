@@ -155,7 +155,12 @@ const Signup = () => {
         description: "Votre compte a été créé avec succès !",
       });
 
-      navigate("/dashboard");
+      // If a paid plan was selected, redirect to settings to complete payment
+      if (selectedPlanId && selectedPlanId !== "gratuit") {
+        navigate(`/settings?tab=subscription&upgrade_plan=${encodeURIComponent(selectedPlanId)}`);
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",

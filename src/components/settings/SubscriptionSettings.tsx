@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,12 +54,29 @@ const transactionStatusConfig: Record<string, { label: string; variant: "default
 };
 
 export function SubscriptionSettings() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: subscription, isLoading: subLoading } = useAgencySubscription();
   const { data: transactions, isLoading: txLoading } = useAgencyPaymentHistory();
   const { data: plans } = useSubscriptionPlans();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+
+  // Auto-open checkout if upgrade_plan param is present (from signup flow)
+  useEffect(() => {
+    const upgradePlanId = searchParams.get("upgrade_plan");
+    if (upgradePlanId && plans && plans.length > 0) {
+      const planToUpgrade = plans.find(p => p.id === upgradePlanId);
+      if (planToUpgrade) {
+        setSelectedPlan(planToUpgrade);
+        setBillingCycle("monthly");
+        setCheckoutOpen(true);
+        // Clean up URL params
+        searchParams.delete("upgrade_plan");
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [plans, searchParams]);
 
   const formatPrice = (amount: number, currency: string = "XOF") => {
     return new Intl.NumberFormat("fr-CI", {

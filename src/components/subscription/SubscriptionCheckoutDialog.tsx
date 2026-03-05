@@ -24,10 +24,11 @@ interface SubscriptionCheckoutDialogProps {
   billingCycle: "monthly" | "yearly";
 }
 
-// Payment methods - KKiaPay & GeniusPay
+// Payment methods - KKiaPay, GeniusPay & Wave
 const paymentMethods = [
   { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-primary", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
   { id: "geniuspay", name: "GeniusPay", icon: Wallet, color: "bg-emerald-600", fedapayMode: null, provider: "geniuspay", description: "Wave, Orange, MTN & Carte" },
+  { id: "wave", name: "Wave", icon: Smartphone, color: "bg-blue-500", fedapayMode: null, provider: "wave_ci", description: "Wave CI Direct" },
 ];
 
 export function SubscriptionCheckoutDialog({
@@ -283,6 +284,14 @@ export function SubscriptionCheckoutDialog({
             amount_due: proration.amountDue,
           } : null,
         };
+      } else if (provider === "wave_ci") {
+        edgeFunctionName = "wave-checkout";
+        requestBody = {
+          plan_id: plan.id,
+          billing_cycle: billingCycle,
+          customer_phone: phoneNumber,
+          return_url: window.location.origin + "/settings?tab=subscription",
+        };
       } else if (provider === "pawapay") {
         edgeFunctionName = "pawapay-checkout";
         const actualMethod = paymentMethod.replace("pawapay_", "") + "_money";
@@ -461,6 +470,20 @@ export function SubscriptionCheckoutDialog({
          onOpenChange(false);
          
          // Poll for subscription update
+         if (plan) {
+           pollSubscriptionUpdate(plan.id);
+         }
+         return;
+       }
+
+       // Wave CI redirect
+       if (provider === "wave_ci" && data?.success && data?.payment_url) {
+         window.open(data.payment_url, "_blank");
+         toast({
+           title: "Redirection vers Wave",
+           description: "Finalisez votre paiement dans l'onglet ouvert.",
+         });
+         onOpenChange(false);
          if (plan) {
            pollSubscriptionUpdate(plan.id);
          }

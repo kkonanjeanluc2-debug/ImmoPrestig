@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield, TrendingUp, Users, ArrowRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoImage from "@/assets/immoprestige-logo.png";
+import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 
 interface WelcomeScreenProps {
   onComplete: () => void;
@@ -43,6 +44,7 @@ const WelcomeScreen = ({ onComplete, minDuration = 4000 }: WelcomeScreenProps) =
   const [messageIndex, setMessageIndex] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
   const [canSkip, setCanSkip] = useState(false);
+  const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
 
   // Phase progression
   useEffect(() => {
@@ -165,8 +167,8 @@ const WelcomeScreen = ({ onComplete, minDuration = 4000 }: WelcomeScreenProps) =
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
                   <img 
-                    src={logoImage} 
-                    alt="ImmoPrestige Logo" 
+                    src={platformLogo} 
+                    alt={`${platformAppName} Logo`} 
                     className="w-full h-full object-cover"
                   />
                 </motion.div>
@@ -180,7 +182,7 @@ const WelcomeScreen = ({ onComplete, minDuration = 4000 }: WelcomeScreenProps) =
               transition={{ delay: 0.3, duration: 0.6 }}
               className="font-display text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight"
             >
-              ImmoPrestige
+              {platformAppName}
             </motion.h1>
 
             {/* Dynamic welcome messages */}

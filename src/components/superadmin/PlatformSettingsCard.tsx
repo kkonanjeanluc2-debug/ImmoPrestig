@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePlatformSettings, useUpdatePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
 import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { PlatformBrandingSection } from "./PlatformBrandingSection";
 
 export function PlatformSettingsCard() {
   const { data: settings, isLoading } = usePlatformSettings();
@@ -23,6 +24,8 @@ export function PlatformSettingsCard() {
   const [mailerooEmailEnabled, setMailerooEmailEnabled] = useState(true);
   const [emailProvider, setEmailProvider] = useState("resend");
   const [smsEnabled, setSmsEnabled] = useState(true);
+  const [appLogoUrl, setAppLogoUrl] = useState("");
+  const [appName, setAppName] = useState("ImmoPrestige");
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -53,6 +56,12 @@ export function PlatformSettingsCard() {
 
       const smsSetting = settings.find(s => s.key === "sms_enabled");
       if (smsSetting?.value !== undefined) setSmsEnabled(smsSetting.value === "true");
+
+      const logoSetting = settings.find(s => s.key === "app_logo_url");
+      if (logoSetting?.value) setAppLogoUrl(logoSetting.value);
+
+      const nameSetting = settings.find(s => s.key === "app_name");
+      if (nameSetting?.value) setAppName(nameSetting.value);
     }
   }, [settings]);
 
@@ -68,6 +77,8 @@ export function PlatformSettingsCard() {
         upsertSetting.mutateAsync({ key: "maileroo_email_enabled", value: String(mailerooEmailEnabled), description: "Activer ou désactiver l'envoi d'emails via Maileroo" }),
         upsertSetting.mutateAsync({ key: "email_provider", value: emailProvider, description: "Fournisseur d'emails actif: resend ou maileroo" }),
         upsertSetting.mutateAsync({ key: "sms_enabled", value: String(smsEnabled), description: "Activer ou désactiver l'envoi de SMS via Twilio" }),
+        upsertSetting.mutateAsync({ key: "app_logo_url", value: appLogoUrl, description: "URL du logo de l'application" }),
+        upsertSetting.mutateAsync({ key: "app_name", value: appName, description: "Nom de l'application affiché partout" }),
       ]);
       setHasChanges(false);
       toast.success("Paramètres enregistrés");
@@ -100,6 +111,14 @@ export function PlatformSettingsCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <PlatformBrandingSection
+          logoUrl={appLogoUrl}
+          appName={appName}
+          onLogoChange={setAppLogoUrl}
+          onAppNameChange={setAppName}
+          onChanged={setChanged}
+        />
+
         <div className="space-y-4">
           {/* WhatsApp */}
           <div className="space-y-2">

@@ -120,8 +120,11 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const { data: defaultTemplate } = useDefaultContractTemplate();
   const limits = useSubscriptionLimits();
 
-  // Filter only available properties and refetch when dialog opens
-  const availableProperties = properties?.filter(p => p.status === 'disponible' || p.type === 'location') || [];
+  // Filter only available properties (or multi-unit properties with at least one available unit)
+  const availableProperties = properties?.filter(p => 
+    p.status === 'disponible' || 
+    (p.property_type === 'Maison à porte multiple' && p.status !== 'disponible')
+  ) || [];
   
   // Filter available units (only those with status 'disponible')
   const availableUnits = propertyUnits.filter(u => u.status === 'disponible');
@@ -669,12 +672,12 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-background border z-50">
-                        {availableProperties.filter(p => p.status === 'disponible' || p.type === 'location').length === 0 ? (
+                      {availableProperties.length === 0 ? (
                           <div className="p-2 text-sm text-muted-foreground text-center">
                             Aucun bien disponible
                           </div>
                         ) : (
-                          availableProperties.filter(p => p.status === 'disponible' || p.type === 'location').map((property) => (
+                          availableProperties.map((property) => (
                             <SelectItem key={property.id} value={property.id}>
                               <div className="flex flex-col">
                                 <div className="flex items-center justify-between gap-2">

@@ -23,7 +23,7 @@ const routePrefetchMap: Record<string, (queryClient: any) => void> = {
     qc.prefetchQuery({ queryKey: ["payments"], queryFn: () => supabase.from("payments").select("*").order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
   },
   "/contracts": (qc) => {
-    qc.prefetchQuery({ queryKey: ["contracts"], queryFn: () => supabase.from("contracts").select("*, property:properties(name, address), tenant:tenants(first_name, last_name)").order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["contracts"], queryFn: () => supabase.from("contracts").select("*, property:properties(title, address), tenant:tenants(name)").order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
   },
   "/ventes-immobilieres": (qc) => {
     qc.prefetchQuery({ queryKey: ["biens-vente"], queryFn: () => supabase.from("biens_vente").select("*").is("deleted_at", null).order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });

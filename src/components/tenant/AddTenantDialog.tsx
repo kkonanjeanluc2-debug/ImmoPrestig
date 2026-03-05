@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -218,6 +219,28 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       const unitId = values.unit_id && values.unit_id !== "none" ? values.unit_id : null;
       const selectedProp = properties?.find(p => p.id === values.property_id);
       const selectedUnit = unitId ? propertyUnits.find(u => u.id === unitId) : null;
+
+      // Check for existing active contract BEFORE creating tenant
+      let conflictQuery = supabase
+        .from("contracts")
+        .select("id, tenant:tenants(name)")
+        .eq("property_id", values.property_id)
+        .eq("status", "active");
+
+      if (unitId) {
+        conflictQuery = conflictQuery.eq("unit_id", unitId);
+      }
+
+      const { data: existingContracts } = await conflictQuery;
+
+      if (existingContracts && existingContracts.length > 0) {
+        const tenantName = (existingContracts[0] as any)?.tenant?.name || "un autre locataire";
+        const msg = unitId
+          ? `Cette unité est déjà occupée par ${tenantName} avec un contrat actif.`
+          : `Ce bien est déjà occupé par ${tenantName} avec un contrat actif.`;
+        toast.error(msg);
+        return;
+      }
       
       // Create tenant with unit_id if applicable
       const tenant = await createTenant.mutateAsync({

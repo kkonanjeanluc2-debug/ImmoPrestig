@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2, Mail, Lock, User, Phone, MapPin, Building, Home, CreditCard, Eye, EyeOff } from "lucide-react";
+import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { supabase } from "@/integrations/supabase/client";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
@@ -42,6 +43,7 @@ const Signup = () => {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
 
   const validateStep1 = () => {
     if (!agencyName.trim()) {
@@ -162,8 +164,8 @@ const Signup = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-lg shadow-xl">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-primary" />
+          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center overflow-hidden">
+            <img src={platformLogo} alt={platformAppName} className="h-10 w-10 object-contain" />
           </div>
           <CardTitle className="text-2xl font-bold">Créer un compte</CardTitle>
           <CardDescription>

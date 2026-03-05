@@ -27,6 +27,7 @@ import {
   PackagePlus
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
+import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { hasFeature } = useFeatureAccess();
   const { hasPermission } = usePermissions();
   const prefetchRoute = usePrefetchRoute();
+  const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
   const canAccessSettings = hasPermission("can_access_settings");
   
   const isLocataire = userRole?.role === "locataire";
@@ -208,19 +210,19 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           {(!collapsed || mobileOpen) && (
             <div className="flex items-center gap-2">
               <img 
-                src={immoPrestigeLogo} 
-                alt="ImmoPrestige" 
+                src={platformLogo} 
+                alt={platformAppName} 
                 className="h-10 w-auto object-contain"
               />
               <span className="font-display text-xl text-primary-foreground font-semibold">
-                ImmoPrestige
+                {platformAppName}
               </span>
             </div>
           )}
           {collapsed && !mobileOpen && (
             <img 
-              src={immoPrestigeLogo} 
-              alt="ImmoPrestige" 
+              src={platformLogo} 
+              alt={platformAppName} 
               className="h-8 w-8 object-contain mx-auto"
             />
           )}

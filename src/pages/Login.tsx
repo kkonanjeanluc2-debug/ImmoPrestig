@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2, User, Lock, CreditCard, Eye, EyeOff } from "lucide-react";
+import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
 
@@ -34,6 +35,7 @@ const Login = () => {
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const { signIn } = useAuth();
+  const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -131,8 +133,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-primary" />
+          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center overflow-hidden">
+            <img src={platformLogo} alt={platformAppName} className="h-10 w-10 object-contain" />
           </div>
           <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
           <CardDescription>Connectez-vous pour accéder à votre espace de gestion immobilière</CardDescription>

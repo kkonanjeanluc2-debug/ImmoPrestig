@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Building2 } from "lucide-react";
+import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -8,6 +9,7 @@ interface SplashScreenProps {
 
 const SplashScreen = ({ onComplete, minDuration = 2000 }: SplashScreenProps) => {
   const [isExiting, setIsExiting] = useState(false);
+  const { logoUrl: platformLogo, appName: platformAppName, hasCustomLogo } = usePlatformBranding();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,8 +44,12 @@ const SplashScreen = ({ onComplete, minDuration = 2000 }: SplashScreenProps) => 
           
           {/* Icon container */}
           <div className="w-28 h-28 flex items-center justify-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-emerald to-emerald-dark rounded-2xl flex items-center justify-center shadow-2xl animate-[scale-in_0.5s_ease-out_forwards] transform">
-              <Building2 className="w-10 h-10 text-white animate-[fade-in_0.8s_ease-out_0.3s_forwards] opacity-0" />
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald to-emerald-dark rounded-2xl flex items-center justify-center shadow-2xl animate-[scale-in_0.5s_ease-out_forwards] transform overflow-hidden">
+              {hasCustomLogo ? (
+                <img src={platformLogo} alt={platformAppName} className="w-12 h-12 object-contain animate-[fade-in_0.8s_ease-out_0.3s_forwards] opacity-0" />
+              ) : (
+                <Building2 className="w-10 h-10 text-white animate-[fade-in_0.8s_ease-out_0.3s_forwards] opacity-0" />
+              )}
             </div>
           </div>
         </div>
@@ -51,7 +57,7 @@ const SplashScreen = ({ onComplete, minDuration = 2000 }: SplashScreenProps) => 
         {/* App name with staggered animation */}
         <div className="flex flex-col items-center space-y-2">
           <h1 className="font-display text-4xl font-bold text-white animate-[fade-in_0.6s_ease-out_0.4s_forwards] opacity-0">
-            PropertyGrace
+            {platformAppName}
           </h1>
           <p className="text-sand-light/80 text-sm font-body tracking-wider uppercase animate-[fade-in_0.6s_ease-out_0.6s_forwards] opacity-0">
             Gestion Immobilière

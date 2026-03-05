@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import logoImage from "@/assets/immoprestige-logo.png";
+import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { motion } from "framer-motion";
@@ -42,6 +43,7 @@ const Pricing = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
 
   const yearlyDiscountPercent = parseInt(discountSetting?.value || "20", 10);
   const activePlans = plans?.filter((plan) => plan.is_active) || [];
@@ -82,8 +84,8 @@ const Pricing = () => {
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between gap-3">
             <Link to="/" className="flex items-center gap-2 shrink-0">
-              <img src={logoImage} alt="ImmoPrestige" className="h-10 md:h-12" />
-              <span className="font-bold text-lg md:text-xl">ImmoPrestige</span>
+              <img src={platformLogo} alt={platformAppName} className="h-10 md:h-12" />
+              <span className="font-bold text-lg md:text-xl">{platformAppName}</span>
             </Link>
             <div className="hidden sm:flex items-center gap-3">
               <DemoRequestButton
@@ -155,7 +157,7 @@ const Pricing = () => {
             initial="hidden" animate="visible" variants={fadeUp} custom={2}
           >
             Loyers impayés, contrats égarés, locataires introuvables ?
-            <strong className="text-foreground"> C'est terminé.</strong> ImmoPrestige centralise toute votre gestion immobilière en une seule application pensée pour l'Afrique.
+            <strong className="text-foreground"> C'est terminé.</strong> {platformAppName} centralise toute votre gestion immobilière en une seule application pensée pour l'Afrique.
           </motion.p>
 
           <motion.p
@@ -331,7 +333,7 @@ const Pricing = () => {
         <div className="container mx-auto px-4">
           <motion.div className="text-center mb-14" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-              Pourquoi choisir ImmoPrestige ?
+              Pourquoi choisir {platformAppName} ?
             </h2>
             <p className="text-primary-foreground/70 text-lg max-w-2xl mx-auto">
               Pensée pour les réalités africaines, notre solution vous fait gagner du temps, sécurise vos transactions et professionnalise vos activités.
@@ -567,7 +569,7 @@ const Pricing = () => {
             👉 Adoptez dès aujourd'hui l'application qui transforme votre quotidien immobilier.
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Rejoignez des centaines de propriétaires et agences qui font confiance à ImmoPrestige.
+            Rejoignez des centaines de propriétaires et agences qui font confiance à {platformAppName}.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25" onClick={startFree}>
@@ -584,7 +586,7 @@ const Pricing = () => {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 ImmoPrestige. Tous droits réservés.</p>
+          <p>© 2025 {platformAppName}. Tous droits réservés.</p>
         </div>
       </footer>
 

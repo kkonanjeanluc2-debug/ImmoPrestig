@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck } from "lucide-react";
@@ -51,8 +52,13 @@ const Settings = () => {
   // Check if user has access to any settings tab
   const hasAnySettingsAccess = canAccessAgencyTab || canAccessManagementTab || canAccessSubscriptionTab || canAccessNotificationsTab || canAccessWhatsappTab || canAccessSaleContractsTab || canAccessPromesseVenteTab || canAccessReservationFormsTab || canManageTeam || canManageAutomations || canManageBranding || canManageTemplates;
   
+  // Read tab from URL params
+  const [searchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab");
+
   // Default tab: pick first accessible tab
   const getDefaultTab = () => {
+    if (urlTab) return urlTab;
     if (isSuperAdmin) return "profile";
     if (canAccessAgencyTab) return "agency";
     if (canAccessManagementTab) return "management-types";

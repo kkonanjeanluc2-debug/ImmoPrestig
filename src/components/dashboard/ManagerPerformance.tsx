@@ -141,13 +141,15 @@ export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceP
       tenants: acc.tenants + stat.tenantsCount,
       totalRevenue: acc.totalRevenue + stat.totalRevenue,
       collectedRevenue: acc.collectedRevenue + stat.collectedRevenue,
+      totalPayments: acc.totalPayments + stat.totalPayments,
+      paidPayments: acc.paidPayments + stat.paidPayments,
     }),
-    { properties: 0, tenants: 0, totalRevenue: 0, collectedRevenue: 0 }
+    { properties: 0, tenants: 0, totalRevenue: 0, collectedRevenue: 0, totalPayments: 0, paidPayments: 0 }
   );
 
   const overallCollectionRate =
-    totals.totalRevenue > 0
-      ? (totals.collectedRevenue / totals.totalRevenue) * 100
+    totals.totalPayments > 0
+      ? (totals.paidPayments / totals.totalPayments) * 100
       : 0;
 
   const getCollectionRateColor = (rate: number) => {

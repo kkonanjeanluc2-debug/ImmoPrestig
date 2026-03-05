@@ -59,7 +59,7 @@ const Pricing = () => {
       setSelectedPlan(plan);
       setCheckoutOpen(true);
     } else {
-      navigate("/signup");
+      navigate(`/signup?plan=${encodeURIComponent(plan.id)}&plan_name=${encodeURIComponent(plan.name)}`);
     }
   };
 

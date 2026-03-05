@@ -24,11 +24,10 @@ interface SubscriptionCheckoutDialogProps {
   billingCycle: "monthly" | "yearly";
 }
 
-// Payment methods - KKiaPay, GeniusPay & Wave
+// Payment methods - KKiaPay & GeniusPay
 const paymentMethods = [
   { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-primary", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
   { id: "geniuspay", name: "GeniusPay", icon: Wallet, color: "bg-emerald-600", fedapayMode: null, provider: "geniuspay", description: "Wave, Orange, MTN & Carte" },
-  { id: "wave", name: "Wave", icon: Smartphone, color: "bg-blue-500", fedapayMode: null, provider: "wave_ci", description: "Wave CI Direct" },
 ];
 
 export function SubscriptionCheckoutDialog({

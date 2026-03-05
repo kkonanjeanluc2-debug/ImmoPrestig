@@ -213,7 +213,7 @@ const Index = () => {
         <div className="grid grid-cols-1 gap-4 sm:gap-6">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             <MyAssignedItems />
-            <ManagerPerformance />
+            <ManagerPerformance periodFrom={period.from} periodTo={period.to} />
             <RecentPayments />
           </div>
         </div>

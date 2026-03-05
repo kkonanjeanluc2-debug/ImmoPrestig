@@ -32,7 +32,12 @@ interface ManagerStats {
   collectedRevenue: number;
 }
 
-export function ManagerPerformance() {
+interface ManagerPerformanceProps {
+  periodFrom?: Date;
+  periodTo?: Date;
+}
+
+export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceProps) {
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
   const { data: assignableUsers = [], isLoading: usersLoading } = useAssignableUsers();
   const { data: properties = [], isLoading: propertiesLoading } = useProperties();
@@ -56,8 +61,15 @@ export function ManagerPerformance() {
       // Get tenant IDs for payment calculation
       const tenantIds = new Set(userTenants.map((t: any) => t.id));
 
-      // Get payments for assigned tenants
-      const userPayments = payments.filter((p: any) => tenantIds.has(p.tenant_id));
+      // Get payments for assigned tenants, filtered by period
+      let userPayments = payments.filter((p: any) => tenantIds.has(p.tenant_id));
+      
+      if (periodFrom && periodTo) {
+        userPayments = userPayments.filter((p: any) => {
+          const paymentDate = new Date(p.due_date || p.created_at);
+          return paymentDate >= periodFrom && paymentDate <= periodTo;
+        });
+      }
 
       const paidPayments = userPayments.filter((p: any) => p.status === "paid");
       const pendingPayments = userPayments.filter((p: any) => p.status === "pending");
@@ -95,7 +107,7 @@ export function ManagerPerformance() {
 
     // Sort by properties count descending
     return stats.sort((a, b) => b.propertiesCount - a.propertiesCount);
-  }, [assignableUsers, properties, tenants, payments]);
+  }, [assignableUsers, properties, tenants, payments, periodFrom, periodTo]);
 
   const isLoading = usersLoading || propertiesLoading || tenantsLoading || paymentsLoading;
 

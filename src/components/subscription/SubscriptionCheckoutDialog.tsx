@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -48,10 +48,14 @@ export function SubscriptionCheckoutDialog({
   // Get current subscription to detect plan change
   const { data: currentSubscription } = useAgencySubscription();
 
+  // Track external payment waiting state
+  const waitingForExternalPayment = useRef(false);
+  const expectedPlanIdRef = useRef<string | null>(null);
+
   // Function to poll and check if subscription was updated by webhook
-  const pollSubscriptionUpdate = async (expectedPlanId: string, maxAttempts = 10) => {
+  const pollSubscriptionUpdate = async (expectedPlanId: string, maxAttempts = 60) => {
     for (let i = 0; i < maxAttempts; i++) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Refetch subscription
       await queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
@@ -65,6 +69,7 @@ export function SubscriptionCheckoutDialog({
           .single();
         
         if (updatedSub?.plan_id === expectedPlanId) {
+          waitingForExternalPayment.current = false;
           toast({
             title: "Forfait activé !",
             description: "Votre nouveau forfait a été activé avec succès.",
@@ -75,6 +80,34 @@ export function SubscriptionCheckoutDialog({
     }
     return false;
   };
+
+  // When user returns to tab after GeniusPay payment, check subscription immediately
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState === "visible" && waitingForExternalPayment.current && expectedPlanIdRef.current && agency?.id) {
+      supabase
+        .from("agency_subscriptions")
+        .select("plan_id")
+        .eq("agency_id", agency.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.plan_id === expectedPlanIdRef.current) {
+            waitingForExternalPayment.current = false;
+            toast({
+              title: "Forfait activé !",
+              description: "Votre nouveau forfait a été activé avec succès.",
+            });
+            queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+            queryClient.invalidateQueries({ queryKey: ["agency-payment-history"] });
+            queryClient.invalidateQueries({ queryKey: ["all-transactions"] });
+          }
+        });
+    }
+  }, [agency?.id, queryClient, toast]);
+
+  useEffect(() => {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [handleVisibilityChange]);
 
   // Normalize phone number to international format for display
   const normalizeIvorianPhone = (phone: string): string | null => {
@@ -464,13 +497,15 @@ export function SubscriptionCheckoutDialog({
          window.open(data.checkout_url, "_blank");
          toast({
            title: "Redirection vers GeniusPay",
-           description: "Finalisez votre paiement dans l'onglet ouvert.",
+           description: "Finalisez votre paiement dans l'onglet ouvert. Les données se mettront à jour automatiquement.",
          });
          onOpenChange(false);
          
-         // Poll for subscription update
+         // Set external payment tracking
          if (plan) {
-           pollSubscriptionUpdate(plan.id);
+           waitingForExternalPayment.current = true;
+           expectedPlanIdRef.current = plan.id;
+           pollSubscriptionUpdate(plan.id, 60);
          }
          return;
        }

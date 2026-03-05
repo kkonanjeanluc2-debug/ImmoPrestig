@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -102,8 +102,8 @@ export function TenantPayRentDialog({
     }
   };
 
-  const waitForPaymentUpdate = async () => {
-    for (let i = 0; i < 10; i++) {
+  const waitForPaymentUpdate = async (maxAttempts = 60) => {
+    for (let i = 0; i < maxAttempts; i++) {
       const { data, error } = await supabase
         .from("payments")
         .select("status, paid_amount")
@@ -117,6 +117,36 @@ export function TenantPayRentDialog({
 
     return false;
   };
+
+  // Track if we're waiting for an external payment (GeniusPay)
+  const waitingForExternalPayment = useRef(false);
+  const originalPaidAmount = useRef(paidAmount);
+
+  // When user returns to tab after external payment, check for updates
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState === "visible" && waitingForExternalPayment.current) {
+      // Check payment status immediately
+      supabase
+        .from("payments")
+        .select("status, paid_amount")
+        .eq("id", paymentId)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && (data?.status === "paid" || Number(data?.paid_amount || 0) > originalPaidAmount.current)) {
+            waitingForExternalPayment.current = false;
+            toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");
+            queryClient.invalidateQueries({ queryKey: ["payments"] });
+          }
+        });
+    }
+  }, [paymentId, queryClient]);
+
+  useEffect(() => {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [handleVisibilityChange]);
 
   const handlePayment = async () => {
     if (!phone.trim()) {
@@ -248,14 +278,19 @@ export function TenantPayRentDialog({
 
       // GeniusPay redirect flow - open in new tab and poll for updates
       if (provider === "geniuspay" && data?.payment_url) {
-        toast.success("Redirection vers le paiement...");
+        toast.success("Redirection vers le paiement... Revenez sur cette page après avoir payé.");
         window.open(data.payment_url, "_blank");
         setIsLoading(false);
         setOpen(false);
 
-        // Poll for payment update like KKiaPay
-        const paid = await waitForPaymentUpdate();
+        // Mark that we're waiting for an external payment
+        waitingForExternalPayment.current = true;
+        originalPaidAmount.current = paidAmount;
+
+        // Extended polling (2 minutes) + visibility listener as backup
+        const paid = await waitForPaymentUpdate(60);
         if (paid) {
+          waitingForExternalPayment.current = false;
           toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");
           queryClient.invalidateQueries({ queryKey: ["payments"] });
         }

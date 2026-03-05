@@ -152,8 +152,8 @@ export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceP
   );
 
   const overallCollectionRate =
-    totals.totalRevenue > 0
-      ? (totals.collectedRevenue / totals.totalRevenue) * 100
+    managerStats.length > 0
+      ? managerStats.reduce((sum, manager) => sum + manager.collectionRate, 0) / managerStats.length
       : 0;
 
   const getCollectionRateColor = (rate: number) => {

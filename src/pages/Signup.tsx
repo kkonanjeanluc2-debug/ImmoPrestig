@@ -132,22 +132,8 @@ const Signup = () => {
           console.error("Agency creation error:", agencyError);
         }
 
-        // If a specific plan was selected from pricing page, assign it
-        if (agencyData && selectedPlanId && selectedPlanId !== "gratuit") {
-          const { error: subError } = await supabase
-            .from('agency_subscriptions')
-            .update({
-              plan_id: selectedPlanId,
-              status: 'active',
-              starts_at: new Date().toISOString(),
-            })
-            .eq('agency_id', agencyData.id);
-
-          if (subError) {
-            console.error("Subscription update error:", subError);
-          }
-        }
         // Note: Free subscription is automatically created by database trigger
+        // Plan upgrade will happen after successful payment in the checkout dialog
       }
 
       toast({

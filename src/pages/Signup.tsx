@@ -150,17 +150,17 @@ const Signup = () => {
         // Note: Free subscription is automatically created by database trigger
       }
 
+      // Store selected plan in localStorage for after email confirmation + login
+      if (selectedPlanId && selectedPlanId !== "gratuit") {
+        localStorage.setItem("pending_upgrade_plan", selectedPlanId);
+      }
+
       toast({
         title: "Inscription réussie",
-        description: "Votre compte a été créé avec succès !",
+        description: "Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception pour activer votre compte.",
       });
 
-      // If a paid plan was selected, redirect to settings to complete payment
-      if (selectedPlanId && selectedPlanId !== "gratuit") {
-        navigate(`/settings?tab=subscription&upgrade_plan=${encodeURIComponent(selectedPlanId)}`);
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/login");
     } catch (error: any) {
       toast({
         variant: "destructive",

@@ -76,17 +76,23 @@ export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceP
       const latePayments = userPayments.filter((p: any) => p.status === "late");
 
       const totalRevenue = userPayments.reduce(
-        (sum: number, p: any) => sum + Number(p.amount),
-        0
-      );
-      const collectedRevenue = paidPayments.reduce(
-        (sum: number, p: any) => sum + Number(p.amount),
+        (sum: number, p: any) => sum + Number(p.amount || 0),
         0
       );
 
+      const collectedRevenue = userPayments.reduce((sum: number, p: any) => {
+        const amount = Number(p.amount || 0);
+        const paidAmount = Number(p.paid_amount || 0);
+
+        // Un paiement totalement payé compte pour 100% du montant.
+        // Sinon, on prend le montant partiel réellement encaissé.
+        const collected = p.status === "paid" ? amount : Math.min(Math.max(paidAmount, 0), amount);
+        return sum + collected;
+      }, 0);
+
       const collectionRate =
-        userPayments.length > 0
-          ? (paidPayments.length / userPayments.length) * 100
+        totalRevenue > 0
+          ? (collectedRevenue / totalRevenue) * 100
           : 0;
 
       return {
@@ -146,8 +152,8 @@ export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceP
   );
 
   const overallCollectionRate =
-    managerStats.length > 0
-      ? managerStats.reduce((sum, manager) => sum + manager.collectionRate, 0) / managerStats.length
+    totals.totalRevenue > 0
+      ? (totals.collectedRevenue / totals.totalRevenue) * 100
       : 0;
 
   const getCollectionRateColor = (rate: number) => {

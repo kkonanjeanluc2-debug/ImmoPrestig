@@ -84,6 +84,7 @@ export const useCreateContract = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
     },
   });
 };

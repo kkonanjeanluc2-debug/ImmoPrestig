@@ -218,10 +218,23 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const isSubmitting = createTenant.isPending || createContract.isPending || updateProperty.isPending || updatePropertyUnit.isPending;
 
   const onSubmit = async (values: FormValues) => {
+    let createdTenantId: string | null = null;
+    let contractCreated = false;
+
     try {
+      if (new Date(values.end_date) <= new Date(values.start_date)) {
+        toast.error("La date de fin doit être postérieure à la date de début");
+        return;
+      }
+
       const unitId = values.unit_id && values.unit_id !== "none" ? values.unit_id : null;
       const selectedProp = properties?.find(p => p.id === values.property_id);
       const selectedUnit = unitId ? propertyUnits.find(u => u.id === unitId) : null;
+
+      if (selectedProp?.property_type === "Maison à porte multiple" && !unitId) {
+        toast.error("Veuillez sélectionner une porte disponible");
+        return;
+      }
 
       // Check for existing active contract BEFORE creating tenant
       let conflictQuery = supabase
@@ -259,6 +272,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         emergency_contact_phone: values.emergency_contact_phone || null,
         agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
       });
+      createdTenantId = tenant.id;
 
       // Update tenant with unit_id if needed
       if (unitId) {
@@ -279,6 +293,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         deposit: values.deposit ? parseFloat(values.deposit) : null,
         status: 'active',
       });
+      contractCreated = true;
 
       // Create advance payment if advance_months > 0
       const advanceMonths = parseInt(values.advance_months || "0", 10);
@@ -382,14 +397,31 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       onSuccess?.();
     } catch (error: any) {
       console.error("Error creating tenant:", error);
-      if (error?.message?.includes("duplicate") || error?.code === "23505") {
-        if (error?.message?.includes("email")) {
+
+      // Rollback tenant if contract creation failed after tenant insert
+      if (createdTenantId && !contractCreated) {
+        const { error: rollbackError } = await supabase
+          .from("tenants")
+          .update({ deleted_at: new Date().toISOString() })
+          .eq("id", createdTenantId);
+
+        if (rollbackError) {
+          console.error("Rollback failed for tenant:", rollbackError);
+        }
+      }
+
+      const backendMessage = typeof error?.message === "string" ? error.message : "";
+
+      if (backendMessage.includes("duplicate") || error?.code === "23505") {
+        if (backendMessage.includes("email")) {
           toast.error("Un locataire avec cet email existe déjà");
-        } else if (error?.message?.includes("phone")) {
+        } else if (backendMessage.includes("phone")) {
           toast.error("Un locataire avec ce numéro de téléphone existe déjà");
         } else {
           toast.error("Ce locataire existe déjà");
         }
+      } else if (backendMessage) {
+        toast.error(backendMessage);
       } else {
         toast.error("Erreur lors de la création du locataire");
       }

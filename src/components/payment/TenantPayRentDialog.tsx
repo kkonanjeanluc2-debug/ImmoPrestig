@@ -28,13 +28,12 @@ interface TenantPayRentDialogProps {
   agencyUserId: string;
 }
 
-type PaymentMethod = "kkiapay" | "geniuspay" | "wave";
+type PaymentMethod = "kkiapay" | "geniuspay";
 
 // Available payment methods - KKiaPay and GeniusPay
 const allPaymentMethods: { value: PaymentMethod; label: string; color: string; provider: string; description?: string }[] = [
   { value: "kkiapay", label: "KKiaPay", color: "bg-primary", provider: "kkiapay", description: "Mobile Money & Carte" },
   { value: "geniuspay", label: "GeniusPay", color: "bg-emerald-600", provider: "geniuspay", description: "Wave, Orange, MTN, Carte" },
-  { value: "wave", label: "Wave", color: "bg-blue-500", provider: "wave_ci", description: "Wave CI Direct" },
 ];
 
 export function TenantPayRentDialog({

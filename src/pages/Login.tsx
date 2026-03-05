@@ -117,7 +117,14 @@ const Login = () => {
       description: "Bienvenue !",
     });
 
-    navigate(from, { replace: true });
+    // Check if there's a pending plan upgrade from signup
+    const pendingPlan = localStorage.getItem("pending_upgrade_plan");
+    if (pendingPlan) {
+      localStorage.removeItem("pending_upgrade_plan");
+      navigate(`/settings?tab=subscription&upgrade_plan=${encodeURIComponent(pendingPlan)}`, { replace: true });
+    } else {
+      navigate(from, { replace: true });
+    }
   };
 
   return (

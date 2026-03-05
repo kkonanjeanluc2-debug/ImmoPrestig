@@ -133,8 +133,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center overflow-hidden p-2">
-            <img src={platformLogo} alt={platformAppName} className="h-14 w-14 object-contain" />
+          <div className="mx-auto w-20 h-20 rounded-full overflow-hidden shadow-md">
+            <img src={platformLogo} alt={platformAppName} className="w-full h-full object-cover" />
           </div>
           <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
           <CardDescription>Connectez-vous pour accéder à votre espace de gestion immobilière</CardDescription>

@@ -12,7 +12,7 @@ export interface PlatformSetting {
 
 export function usePlatformSettings() {
   return useQuery({
-    queryKey: ["platform-settings"],
+    queryKey: ["platform-settings", "public-v2"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("platform_settings")
@@ -21,12 +21,15 @@ export function usePlatformSettings() {
       if (error) throw error;
       return data as PlatformSetting[];
     },
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 
 export function usePlatformSetting(key: string) {
   return useQuery({
-    queryKey: ["platform-settings", key],
+    queryKey: ["platform-settings", "public-v2", key],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("platform_settings")
@@ -37,6 +40,10 @@ export function usePlatformSetting(key: string) {
       if (error) throw error;
       return data as PlatformSetting | null;
     },
+    enabled: Boolean(key),
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 

@@ -38,7 +38,7 @@ export interface AgencySubscription {
 // Fetch all subscription plans
 export function useSubscriptionPlans() {
   return useQuery({
-    queryKey: ["subscription-plans"],
+    queryKey: ["subscription-plans", "public-v2"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subscription_plans")
@@ -48,6 +48,9 @@ export function useSubscriptionPlans() {
       if (error) throw error;
       return data as SubscriptionPlan[];
     },
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 

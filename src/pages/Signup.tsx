@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,10 @@ import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
 type AccountType = "agence" | "proprietaire";
 
 const Signup = () => {
+  const [searchParams] = useSearchParams();
+  const selectedPlanId = searchParams.get("plan");
+  const selectedPlanName = searchParams.get("plan_name");
+  
   const [step, setStep] = useState(1);
   const [accountType, setAccountType] = useState<AccountType>("agence");
   
@@ -126,7 +130,22 @@ const Signup = () => {
 
         if (agencyError) {
           console.error("Agency creation error:", agencyError);
-          // Don't throw - user is created, agency can be added later
+        }
+
+        // If a specific plan was selected from pricing page, assign it
+        if (agencyData && selectedPlanId && selectedPlanId !== "gratuit") {
+          const { error: subError } = await supabase
+            .from('agency_subscriptions')
+            .update({
+              plan_id: selectedPlanId,
+              status: 'active',
+              starts_at: new Date().toISOString(),
+            })
+            .eq('agency_id', agencyData.id);
+
+          if (subError) {
+            console.error("Subscription update error:", subError);
+          }
         }
         // Note: Free subscription is automatically created by database trigger
       }
@@ -386,6 +405,9 @@ const Signup = () => {
                     <p><span className="font-medium">Email :</span> {email}</p>
                     <p><span className="font-medium">Tél :</span> {phone}</p>
                     {city && <p><span className="font-medium">Ville :</span> {city}, {country}</p>}
+                    {selectedPlanName && (
+                      <p><span className="font-medium">Forfait :</span> {decodeURIComponent(selectedPlanName)}</p>
+                    )}
                   </div>
                 </div>
               </>

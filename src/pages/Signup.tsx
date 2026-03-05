@@ -164,8 +164,8 @@ const Signup = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-lg shadow-xl">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center overflow-hidden">
-            <img src={platformLogo} alt={platformAppName} className="h-10 w-10 object-contain" />
+          <div className="mx-auto w-20 h-20 rounded-full overflow-hidden shadow-md">
+            <img src={platformLogo} alt={platformAppName} className="w-full h-full object-cover" />
           </div>
           <CardTitle className="text-2xl font-bold">Créer un compte</CardTitle>
           <CardDescription>

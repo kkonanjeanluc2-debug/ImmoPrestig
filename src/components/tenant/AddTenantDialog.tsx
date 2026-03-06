@@ -123,7 +123,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   // Filter only available properties (or multi-unit properties with at least one available unit)
   const availableProperties = properties?.filter(p => 
     p.status === 'disponible' || 
-    (p.property_type === 'Maison à porte multiple' && p.status !== 'disponible')
+    (p.property_type === 'maison')
   ) || [];
   
   // Filter available units (only those with status 'disponible')
@@ -231,7 +231,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       const selectedProp = properties?.find(p => p.id === values.property_id);
       const selectedUnit = unitId ? propertyUnits.find(u => u.id === unitId) : null;
 
-      if (selectedProp?.property_type === "Maison à porte multiple" && !unitId) {
+      if (selectedProp?.property_type === "maison" && !unitId) {
         toast.error("Veuillez sélectionner une porte disponible");
         return;
       }
@@ -475,7 +475,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
     return count || availableProperties.filter(p => p.status === 'disponible').length;
   };
 
-  const noPropertiesAvailable = availableProperties.filter(p => p.status === 'disponible').length === 0;
+  const noPropertiesAvailable = availableProperties.length === 0;
   const isButtonDisabled = !limits.canCreateTenant || noPropertiesAvailable;
 
   return (
@@ -491,9 +491,9 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Ajouter un locataire
-                  {availableProperties.filter(p => p.status === 'disponible').length > 0 && (
+                  {availableProperties.length > 0 && (
                     <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-white/20 rounded-full">
-                      {availableProperties.filter(p => p.status === 'disponible').length} bien{availableProperties.filter(p => p.status === 'disponible').length > 1 ? 's' : ''}
+                      {availableProperties.length} bien{availableProperties.length > 1 ? 's' : ''}
                     </span>
                   )}
                 </Button>

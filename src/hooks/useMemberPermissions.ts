@@ -536,9 +536,69 @@ export function useUpsertMemberPermissions() {
         if (error) throw error;
       }
     },
+    onMutate: async ({ memberId, permissions }) => {
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: ["member-permissions", memberId] }),
+        queryClient.cancelQueries({ queryKey: ["current-member-permissions"] }),
+        queryClient.cancelQueries({ queryKey: ["my-member-permissions"] }),
+      ]);
+
+      const previousMemberPermissions = queryClient.getQueryData<MemberPermissions | null>([
+        "member-permissions",
+        memberId,
+      ]);
+
+      if (previousMemberPermissions) {
+        queryClient.setQueryData(["member-permissions", memberId], {
+          ...previousMemberPermissions,
+          ...permissions,
+        });
+      }
+
+      const previousCurrentMemberPermissions = queryClient.getQueriesData<Partial<MemberPermissions>>({
+        queryKey: ["current-member-permissions"],
+      });
+
+      previousCurrentMemberPermissions.forEach(([queryKey, data]) => {
+        if (data?.member_id === memberId) {
+          queryClient.setQueryData(queryKey, { ...data, ...permissions });
+        }
+      });
+
+      const previousMyMemberPermissions = queryClient.getQueriesData<Partial<MemberPermissions> & { _memberId?: string }>({
+        queryKey: ["my-member-permissions"],
+      });
+
+      previousMyMemberPermissions.forEach(([queryKey, data]) => {
+        if ((data?.member_id && data.member_id === memberId) || (data?._memberId && data._memberId === memberId)) {
+          queryClient.setQueryData(queryKey, { ...data, ...permissions });
+        }
+      });
+
+      return {
+        memberId,
+        previousMemberPermissions,
+        previousCurrentMemberPermissions,
+        previousMyMemberPermissions,
+      };
+    },
+    onError: (_error, variables, context) => {
+      if (!context) return;
+
+      queryClient.setQueryData(["member-permissions", variables.memberId], context.previousMemberPermissions ?? null);
+
+      context.previousCurrentMemberPermissions.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data ?? null);
+      });
+
+      context.previousMyMemberPermissions.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data ?? null);
+      });
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["member-permissions", variables.memberId] });
       queryClient.invalidateQueries({ queryKey: ["current-member-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["my-member-permissions"] });
     },
   });
 }

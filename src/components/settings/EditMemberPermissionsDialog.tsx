@@ -58,6 +58,7 @@ export function EditMemberPermissionsDialog({
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savedKey, setSavedKey] = useState<string | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const latestPermissionsRef = useRef<Partial<MemberPermissions>>({});
 
   useEffect(() => {
     if (!member) return;
@@ -65,12 +66,19 @@ export function EditMemberPermissionsDialog({
     const normalizedExisting = Array.isArray(existingPermissions)
       ? (existingPermissions[0] ?? null)
       : existingPermissions;
-    if (normalizedExisting) {
-      setPermissions({ ...roleDefaults, ...normalizedExisting });
-    } else {
-      setPermissions(roleDefaults);
-    }
+    const nextPermissions = normalizedExisting
+      ? { ...roleDefaults, ...normalizedExisting }
+      : roleDefaults;
+
+    setPermissions(nextPermissions);
+    latestPermissionsRef.current = nextPermissions;
   }, [member, existingPermissions]);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
 
   const savePermissions = useCallback(async (newPerms: Partial<MemberPermissions>, feedbackKey: string) => {
     if (!member) return;
@@ -95,19 +103,30 @@ export function EditMemberPermissionsDialog({
   }, [member, upsertPermissions, toast]);
 
   const handlePermissionChange = (key: PermissionKey, value: boolean) => {
-    const newPerms = { ...permissions, [key]: value };
-    setPermissions(newPerms);
-    savePermissions(newPerms, key);
+    setPermissions((prev) => {
+      const newPerms = { ...prev, [key]: value };
+      latestPermissionsRef.current = newPerms;
+      void savePermissions(newPerms, key);
+      return newPerms;
+    });
   };
 
   const handleSelectAll = (groupKey: string, value: boolean) => {
     const group = PERMISSION_GROUPS[groupKey as keyof typeof PERMISSION_GROUPS];
     if (!group) return;
-    const updates: Partial<MemberPermissions> = {};
-    group.permissions.forEach((perm) => { updates[perm] = value; });
-    const newPerms = { ...permissions, ...updates };
-    setPermissions(newPerms);
-    savePermissions(newPerms, `group_${groupKey}`);
+
+    setPermissions((prev) => {
+      const updates: Partial<MemberPermissions> = {};
+      group.permissions.forEach((perm) => { updates[perm] = value; });
+      const newPerms = { ...prev, ...updates };
+      latestPermissionsRef.current = newPerms;
+      void savePermissions(newPerms, `group_${groupKey}`);
+      return newPerms;
+    });
+  };
+
+  const handleManualSave = () => {
+    void savePermissions(latestPermissionsRef.current, "manual_save");
   };
 
   const isGroupAllSelected = (groupKey: string) => {
@@ -222,7 +241,12 @@ export function EditMemberPermissionsDialog({
           </ScrollArea>
         )}
 
-        <div className="flex items-center justify-end border-t pt-4 mt-4">
+        <div className="flex items-center justify-end gap-2 border-t pt-4 mt-4">
+          {savingKey === "manual_save" && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+          {savedKey === "manual_save" && <CheckCircle2 className="h-4 w-4 text-primary" />}
+          <Button variant="default" onClick={handleManualSave} disabled={savingKey !== null || isLoading}>
+            Enregistrer
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fermer
           </Button>

@@ -43,7 +43,6 @@ const STATUS_CONFIG: Record<string, { icon: typeof AlertTriangle; className: str
   eviction_executed: { icon: Gavel, className: "bg-red-700/10 text-red-700 border-red-700/20" },
   eviction_cancelled: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
   resolved: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
-  loyer_a_jour: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
 };
 
 interface DetectedLatePayment {

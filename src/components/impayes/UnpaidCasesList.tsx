@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,9 +26,8 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUnpaidCases, useUpdateUnpaidCase, useAddUnpaidCaseAction, STATUS_LABELS, type UnpaidCase } from "@/hooks/useUnpaidCases";
+import { useUnpaidCases, STATUS_LABELS, type UnpaidCase } from "@/hooks/useUnpaidCases";
 import { usePayments } from "@/hooks/usePayments";
-import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { UnpaidCaseDetailDialog } from "./UnpaidCaseDetailDialog";
 import { CreateUnpaidCaseDialog } from "./CreateUnpaidCaseDialog";

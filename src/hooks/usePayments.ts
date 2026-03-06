@@ -104,6 +104,40 @@ export const useUpdatePayment = () => {
 
       if (error) throw error;
 
+      // Auto-resolve unpaid cases when payment is fully paid
+      if (updates.status === 'paid' && data.tenant_id) {
+        try {
+          // Find active unpaid cases for this tenant
+          const { data: activeCases } = await supabase
+            .from("unpaid_cases" as any)
+            .select("id")
+            .eq("tenant_id", data.tenant_id)
+            .not("status", "in", '("resolved","loyer_a_jour","eviction_cancelled")');
+
+          if (activeCases && activeCases.length > 0) {
+            for (const activeCase of activeCases) {
+              // Update case status to "loyer_a_jour"
+              await supabase
+                .from("unpaid_cases" as any)
+                .update({ status: "loyer_a_jour" } as any)
+                .eq("id", (activeCase as any).id);
+
+              // Log the action
+              if (user) {
+                await supabase.from("unpaid_case_actions" as any).insert({
+                  case_id: (activeCase as any).id,
+                  user_id: user.id,
+                  action_type: "status_update",
+                  description: "Loyer à jour — Dossier clôturé automatiquement suite au paiement intégral du loyer",
+                } as any);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error auto-resolving unpaid case:", e);
+        }
+      }
+
       // Log activity - check if this is a payment collection
       if (user) {
         const actionType = updates.status === 'paid' ? 'payment_collected' : 'update';

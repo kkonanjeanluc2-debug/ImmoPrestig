@@ -164,21 +164,6 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="type">Type de transaction *</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="location">Location</SelectItem>
-                  <SelectItem value="vente">Vente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="propertyType">Type de bien *</Label>
               <Select
                 value={formData.property_type}
@@ -294,7 +279,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">
-                {formData.type === "location" ? "Loyer mensuel (F CFA) *" : "Prix de vente (F CFA) *"}
+                Loyer mensuel (F CFA) *
               </Label>
               <Input
                 id="price"

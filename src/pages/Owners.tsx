@@ -27,6 +27,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOwners, useDeleteOwner, Owner } from "@/hooks/useOwners";
 import { useProperties, Property } from "@/hooks/useProperties";
+import { usePayments } from "@/hooks/usePayments";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { toast } from "sonner";
@@ -49,6 +50,7 @@ const Owners = () => {
   const { data: currentUserRole } = useCurrentUserRole();
   const { data: owners, isLoading, error } = useOwners();
   const { data: properties } = useProperties();
+  const { data: payments } = usePayments();
   const deleteOwner = useDeleteOwner();
   const { hasPermission } = usePermissions();
   const canCreate = hasPermission("can_create_owners");
@@ -67,6 +69,45 @@ const Owners = () => {
     ? (properties || []).filter(p => p.assigned_to === user.id)
     : (properties || []);
 
+  type OwnerPayment = {
+    amount: number;
+    paid_amount: number | null;
+    paid_date: string | null;
+    status: string;
+    tenant?: {
+      property?: {
+        owner_id: string | null;
+        assigned_to: string | null;
+      } | null;
+    } | null;
+  };
+
+  const roleFilteredPayments = isGestionnaire && user
+    ? ((payments || []) as OwnerPayment[]).filter((payment) => payment.tenant?.property?.assigned_to === user.id)
+    : ((payments || []) as OwnerPayment[]);
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthlyCollectedByOwner = roleFilteredPayments
+    .filter((payment) => {
+      if (!payment.paid_date) return false;
+      const paidDate = new Date(payment.paid_date);
+      return paidDate.getMonth() === currentMonth && paidDate.getFullYear() === currentYear;
+    })
+    .reduce((acc, payment) => {
+      const ownerId = payment.tenant?.property?.owner_id;
+      if (!ownerId) return acc;
+
+      const collectedAmount = payment.status === "paid"
+        ? Number(payment.amount || 0)
+        : Math.min(Number(payment.paid_amount || 0), Number(payment.amount || 0));
+
+      acc[ownerId] = (acc[ownerId] || 0) + collectedAmount;
+      return acc;
+    }, {} as Record<string, number>);
+
   // Group properties by owner
   const propertiesByOwner = filteredProperties.reduce((acc, property) => {
     if (property.owner_id) {
@@ -82,14 +123,10 @@ const Owners = () => {
   const totalOwners = owners?.length || 0;
   const activeOwners = owners?.filter(o => o.status === "actif").length || 0;
   const totalProperties = properties?.length || 0;
+  const totalMonthlyCollected = Object.values(monthlyCollectedByOwner).reduce((sum, amount) => sum + amount, 0);
 
-  // Calculate monthly revenue per owner (from location properties)
-  const getOwnerRevenue = (ownerId: string) => {
-    const ownerProperties = propertiesByOwner[ownerId] || [];
-    return ownerProperties
-      .filter(p => p.type === "location")
-      .reduce((sum, p) => sum + (p.price || 0), 0);
-  };
+  // Calculate monthly collected revenue per owner
+  const getOwnerRevenue = (ownerId: string) => monthlyCollectedByOwner[ownerId] || 0;
 
   const toggleExpanded = (ownerId: string) => {
     setExpandedOwners(prev => {
@@ -173,8 +210,8 @@ const Owners = () => {
           </Card>
           <Card>
             <CardContent className="p-3 sm:p-4">
-              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Revenus mensuels</p>
-              <p className="text-base sm:text-xl font-bold text-foreground mt-0.5">0 F</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Revenus mensuels encaissés</p>
+              <p className="text-base sm:text-xl font-bold text-foreground mt-0.5">{totalMonthlyCollected.toLocaleString('fr-FR')} F</p>
             </CardContent>
           </Card>
         </div>

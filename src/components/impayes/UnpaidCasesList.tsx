@@ -61,9 +61,6 @@ export function UnpaidCasesList() {
   const { data: cases, isLoading } = useUnpaidCases();
   const { data: payments, isLoading: isLoadingPayments } = usePayments();
   const { hasPermission } = usePermissions();
-  const { user } = useAuth();
-  const updateUnpaidCase = useUpdateUnpaidCase();
-  const addAction = useAddUnpaidCaseAction();
   const canViewImpayes = hasPermission("can_view_impayes");
   const canCreateImpayes = hasPermission("can_create_impayes");
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,38 +68,6 @@ export function UnpaidCasesList() {
   const [selectedCase, setSelectedCase] = useState<UnpaidCase | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [preselectedTenantId, setPreselectedTenantId] = useState<string | null>(null);
-  const autoResolvedRef = useRef<Set<string>>(new Set());
-
-  // Auto-resolve active unpaid cases where tenant has fully paid
-  useEffect(() => {
-    if (!cases || !payments || !user) return;
-
-    const activeCases = cases.filter(c => 
-      !["resolved", "loyer_a_jour", "eviction_cancelled"].includes(c.status)
-    );
-
-    for (const unpaidCase of activeCases) {
-      if (autoResolvedRef.current.has(unpaidCase.id)) continue;
-
-      // Check if all payments for this tenant are paid
-      const tenantPayments = payments.filter(p => p.tenant_id === unpaidCase.tenant_id);
-      const hasLatePayments = tenantPayments.some(p => 
-        p.status !== "paid" && p.status !== "cancelled" && new Date(p.due_date) < new Date()
-      );
-
-      if (!hasLatePayments && tenantPayments.length > 0) {
-        autoResolvedRef.current.add(unpaidCase.id);
-        updateUnpaidCase.mutate({ id: unpaidCase.id, status: "loyer_a_jour" });
-        addAction.mutate({
-          case_id: unpaidCase.id,
-          action_type: "status_update",
-          description: "Loyer à jour — Dossier clôturé automatiquement suite au paiement intégral du loyer",
-          metadata: null,
-          document_url: null,
-        });
-      }
-    }
-  }, [cases, payments, user]);
 
   // Auto-detect late payments not yet converted to unpaid cases
   const latePaymentsDetected = useMemo<DetectedLatePayment[]>(() => {

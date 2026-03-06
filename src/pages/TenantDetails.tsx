@@ -88,7 +88,9 @@ const TenantDetails = () => {
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
   const { data: ownAgency } = useAgency();
   const deleteTenant = useDeleteTenant();
-  const { canEdit, canDelete } = usePermissions();
+  const { canEdit, canDelete, hasPermission } = usePermissions();
+  const canCollectPayment = hasPermission("can_edit_payments");
+  const canSendReminders = hasPermission("can_delete_payments");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [whatsappHistoryOpen, setWhatsappHistoryOpen] = useState(false);
@@ -492,30 +494,30 @@ const TenantDetails = () => {
                               </Button>
                             )}
                             {/* Admin-only actions for pending/late payments */}
-                            {!isLocataire && (payment.status === 'pending' || payment.status === 'late') && (
-                              <>
-                                <CollectPaymentDialog
-                                  paymentId={payment.id}
-                                  tenantName={tenant.name}
-                                  tenantEmail={tenant.email}
-                                  amount={Number(payment.amount)}
-                                  dueDate={payment.due_date}
-                                  propertyTitle={tenant.property?.title || "Bien immobilier"}
-                                  propertyAddress={tenant.property?.address}
-                                  currentMethod={payment.method}
-                                />
-                                <SendReminderDialog
-                                  paymentId={payment.id}
-                                  tenantId={tenant.id}
-                                  tenantName={tenant.name}
-                                  tenantEmail={tenant.email}
-                                  tenantPhone={tenant.phone}
-                                  propertyTitle={tenant.property?.title || "Bien non assigné"}
-                                  amount={Number(payment.amount)}
-                                  dueDate={payment.due_date}
-                                  status={payment.status}
-                                />
-                              </>
+                            {!isLocataire && (payment.status === 'pending' || payment.status === 'late') && canCollectPayment && (
+                              <CollectPaymentDialog
+                                paymentId={payment.id}
+                                tenantName={tenant.name}
+                                tenantEmail={tenant.email}
+                                amount={Number(payment.amount)}
+                                dueDate={payment.due_date}
+                                propertyTitle={tenant.property?.title || "Bien immobilier"}
+                                propertyAddress={tenant.property?.address}
+                                currentMethod={payment.method}
+                              />
+                            )}
+                            {!isLocataire && (payment.status === 'pending' || payment.status === 'late') && canSendReminders && (
+                              <SendReminderDialog
+                                paymentId={payment.id}
+                                tenantId={tenant.id}
+                                tenantName={tenant.name}
+                                tenantEmail={tenant.email}
+                                tenantPhone={tenant.phone}
+                                propertyTitle={tenant.property?.title || "Bien non assigné"}
+                                amount={Number(payment.amount)}
+                                dueDate={payment.due_date}
+                                status={payment.status}
+                              />
                             )}
                           </div>
                         </div>

@@ -88,7 +88,9 @@ const TenantDetails = () => {
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
   const { data: ownAgency } = useAgency();
   const deleteTenant = useDeleteTenant();
-  const { canEdit, canDelete, hasPermission } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission("can_edit_tenants");
+  const canDelete = hasPermission("can_delete_tenants");
   const canCollectPayment = hasPermission("can_edit_payments");
   const canSendReminders = hasPermission("can_delete_payments");
   const [editDialogOpen, setEditDialogOpen] = useState(false);

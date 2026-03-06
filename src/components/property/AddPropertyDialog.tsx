@@ -115,7 +115,8 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.address || !formData.price) {
+    const isPriceRequired = formData.property_type !== "maison";
+    if (!formData.title || !formData.address || (isPriceRequired && !formData.price)) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -124,7 +125,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
       await createProperty.mutateAsync({
         title: formData.title,
         address: formData.address,
-        price: Number(formData.price),
+        price: formData.price ? Number(formData.price) : 0,
         type: formData.type,
         property_type: formData.property_type,
         rent_type: "mensuel",
@@ -252,7 +253,9 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Loyer mensuel (F CFA) *</Label>
+              <Label htmlFor="price">
+                {formData.property_type === "maison" ? "Revenu mensuel (F CFA)" : "Loyer mensuel (F CFA) *"}
+              </Label>
               <Input
                 id="price"
                 type="number"

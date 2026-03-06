@@ -46,8 +46,7 @@ const STATUS_LABELS: Record<string, string> = {
   eviction_validated: "Expulsion validée",
   eviction_executed: "Expulsion exécutée",
   eviction_cancelled: "Expulsion annulée",
-  resolved: "Résolu",
-  loyer_a_jour: "Loyer à jour",
+  resolved: "Loyer à jour",
 };
 
 const ACTION_LABELS: Record<string, string> = {

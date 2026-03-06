@@ -26,8 +26,9 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUnpaidCases, STATUS_LABELS, type UnpaidCase } from "@/hooks/useUnpaidCases";
+import { useUnpaidCases, useUpdateUnpaidCase, useAddUnpaidCaseAction, STATUS_LABELS, type UnpaidCase } from "@/hooks/useUnpaidCases";
 import { usePayments } from "@/hooks/usePayments";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { UnpaidCaseDetailDialog } from "./UnpaidCaseDetailDialog";
 import { CreateUnpaidCaseDialog } from "./CreateUnpaidCaseDialog";

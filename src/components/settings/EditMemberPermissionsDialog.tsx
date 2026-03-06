@@ -1,19 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Shield, Eye, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { Loader2, Shield, Eye, Plus, Pencil, Trash2, Check, X, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   useMemberPermissions,
@@ -57,69 +55,59 @@ export function EditMemberPermissionsDialog({
   const upsertPermissions = useUpsertMemberPermissions();
 
   const [permissions, setPermissions] = useState<Partial<MemberPermissions>>({});
-  const [hasChanges, setHasChanges] = useState(false);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [savedKey, setSavedKey] = useState<string | null>(null);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Initialize permissions when member or existing permissions change
   useEffect(() => {
     if (!member) return;
-
     const roleDefaults = DEFAULT_PERMISSIONS[member.role] || DEFAULT_PERMISSIONS.gestionnaire;
-
-    // Defensive: in case the hook returns an array (or null), normalize and always merge with defaults
     const normalizedExisting = Array.isArray(existingPermissions)
       ? (existingPermissions[0] ?? null)
       : existingPermissions;
-
     if (normalizedExisting) {
-      setPermissions({
-        ...roleDefaults,
-        ...normalizedExisting,
-      });
+      setPermissions({ ...roleDefaults, ...normalizedExisting });
     } else {
-      // Use default permissions for the role
       setPermissions(roleDefaults);
     }
-
-    setHasChanges(false);
   }, [member, existingPermissions]);
 
-  const handlePermissionChange = (key: PermissionKey, value: boolean) => {
-    setPermissions((prev) => ({ ...prev, [key]: value }));
-    setHasChanges(true);
-  };
-
-  const handleSave = async () => {
+  const savePermissions = useCallback(async (newPerms: Partial<MemberPermissions>, feedbackKey: string) => {
     if (!member) return;
-
+    setSavingKey(feedbackKey);
     try {
       await upsertPermissions.mutateAsync({
         memberId: member.id,
-        permissions,
+        permissions: newPerms,
       });
-      toast({
-        title: "Permissions mises à jour",
-        description: "Les permissions du membre ont été enregistrées.",
-      });
-      onOpenChange(false);
+      setSavedKey(feedbackKey);
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setSavedKey(null), 1500);
     } catch (error: any) {
       toast({
         title: "Erreur",
-        description: error.message || "Impossible de mettre à jour les permissions",
+        description: error.message || "Impossible de mettre à jour la permission",
         variant: "destructive",
       });
+    } finally {
+      setSavingKey(null);
     }
+  }, [member, upsertPermissions, toast]);
+
+  const handlePermissionChange = (key: PermissionKey, value: boolean) => {
+    const newPerms = { ...permissions, [key]: value };
+    setPermissions(newPerms);
+    savePermissions(newPerms, key);
   };
 
   const handleSelectAll = (groupKey: string, value: boolean) => {
     const group = PERMISSION_GROUPS[groupKey as keyof typeof PERMISSION_GROUPS];
     if (!group) return;
-
     const updates: Partial<MemberPermissions> = {};
-    group.permissions.forEach((perm) => {
-      updates[perm] = value;
-    });
-    setPermissions((prev) => ({ ...prev, ...updates }));
-    setHasChanges(true);
+    group.permissions.forEach((perm) => { updates[perm] = value; });
+    const newPerms = { ...permissions, ...updates };
+    setPermissions(newPerms);
+    savePermissions(newPerms, `group_${groupKey}`);
   };
 
   const isGroupAllSelected = (groupKey: string) => {
@@ -145,7 +133,7 @@ export function EditMemberPermissionsDialog({
             Permissions de {profileData?.full_name || "l'utilisateur"}
           </DialogTitle>
           <DialogDescription>
-            Définissez précisément ce que ce membre peut faire dans l'application
+            Les modifications sont appliquées instantanément
           </DialogDescription>
         </DialogHeader>
 
@@ -159,14 +147,22 @@ export function EditMemberPermissionsDialog({
               {Object.entries(PERMISSION_GROUPS).map(([groupKey, group]) => (
                 <div key={groupKey} className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-sm">{group.label}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-sm">{group.label}</h4>
+                      {savingKey === `group_${groupKey}` && (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                      )}
+                      {savedKey === `group_${groupKey}` && (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-7 px-2 text-xs"
                         onClick={() => handleSelectAll(groupKey, true)}
-                        disabled={isGroupAllSelected(groupKey)}
+                        disabled={isGroupAllSelected(groupKey) || savingKey !== null}
                       >
                         <Check className="h-3 w-3 mr-1" />
                         Tout
@@ -176,7 +172,7 @@ export function EditMemberPermissionsDialog({
                         size="sm"
                         className="h-7 px-2 text-xs"
                         onClick={() => handleSelectAll(groupKey, false)}
-                        disabled={isGroupNoneSelected(groupKey)}
+                        disabled={isGroupNoneSelected(groupKey) || savingKey !== null}
                       >
                         <X className="h-3 w-3 mr-1" />
                         Aucun
@@ -203,11 +199,18 @@ export function EditMemberPermissionsDialog({
                           >
                             {PERMISSION_LABELS[permKey]}
                           </Label>
+                          {savingKey === permKey && (
+                            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                          )}
+                          {savedKey === permKey && (
+                            <CheckCircle2 className="h-3 w-3 text-green-500" />
+                          )}
                         </div>
                         <Switch
                           id={permKey}
                           checked={permissions[permKey] || false}
                           onCheckedChange={(checked) => handlePermissionChange(permKey, checked)}
+                          disabled={savingKey !== null}
                         />
                       </div>
                     ))}
@@ -219,29 +222,11 @@ export function EditMemberPermissionsDialog({
           </ScrollArea>
         )}
 
-        <DialogFooter className="flex items-center justify-between border-t pt-4 mt-4">
-          <div className="flex items-center gap-2">
-            {hasChanges && (
-              <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
-                Modifications non enregistrées
-              </Badge>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={upsertPermissions.isPending || !hasChanges}
-            >
-              {upsertPermissions.isPending && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              )}
-              Enregistrer
-            </Button>
-          </div>
-        </DialogFooter>
+        <div className="flex items-center justify-end border-t pt-4 mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

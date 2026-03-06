@@ -182,10 +182,6 @@ export const PERMISSION_GROUPS = {
     label: "Propriétaires",
     permissions: ["can_view_owners", "can_create_owners", "can_edit_owners", "can_delete_owners"] as PermissionKey[],
   },
-  contracts: {
-    label: "Contrats",
-    permissions: ["can_view_contracts", "can_create_contracts", "can_edit_contracts", "can_delete_contracts"] as PermissionKey[],
-  },
   lotissements: {
     label: "Lotissements",
     permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements", "can_create_parcelles", "can_create_ilots", "can_create_lotissement_documents", "can_create_demarches", "can_create_lotissement_prospects"] as PermissionKey[],

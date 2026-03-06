@@ -85,6 +85,7 @@ export default function Payments() {
   const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_payments");
   const canEdit = hasPermission("can_edit_payments");
+  const canSendReminders = hasPermission("can_delete_payments");
   const isLocataire = role === "locataire";
   const isGestionnaire = role === "gestionnaire";
   const showAdvancedTabs = !isLocataire && !isGestionnaire;
@@ -615,8 +616,7 @@ export default function Payments() {
                                     agencyUserId={payment.user_id}
                                   />
                                 )}
-                                {payment.status !== "paid" && canEdit && !isLocataire && (
-                                  <>
+                                {payment.status !== "paid" && canSendReminders && !isLocataire && (
                                     <SendReminderDialog
                                       paymentId={payment.id}
                                       tenantId={payment.tenant_id}
@@ -628,6 +628,8 @@ export default function Payments() {
                                       dueDate={payment.due_date}
                                       status={payment.status}
                                     />
+                                )}
+                                {payment.status !== "paid" && canEdit && !isLocataire && (
                                     <CollectPaymentDialog
                                       paymentId={payment.id}
                                       tenantName={tenantName}
@@ -641,7 +643,6 @@ export default function Payments() {
                                       commissionAmount={commissionInfo.amount}
                                       paymentMonths={(payment as any).payment_months || undefined}
                                     />
-                                  </>
                                 )}
                               </div>
                             </div>

@@ -43,6 +43,7 @@ const STATUS_CONFIG: Record<string, { icon: typeof AlertTriangle; className: str
   eviction_executed: { icon: Gavel, className: "bg-red-700/10 text-red-700 border-red-700/20" },
   eviction_cancelled: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
   resolved: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
+  loyer_a_jour: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
 };
 
 interface DetectedLatePayment {
@@ -125,10 +126,10 @@ export function UnpaidCasesList() {
   });
 
   // Stats
-  const totalCaseAmount = (cases || []).filter(c => c.status !== "resolved").reduce((s, c) => s + Number(c.amount_due), 0);
+  const totalCaseAmount = (cases || []).filter(c => !["resolved", "loyer_a_jour"].includes(c.status)).reduce((s, c) => s + Number(c.amount_due), 0);
   const totalDetectedAmount = latePaymentsDetected.reduce((s, p) => s + p.totalAmount, 0);
   const totalAmount = totalCaseAmount + totalDetectedAmount;
-  const activeCount = (cases || []).filter(c => !["resolved", "eviction_cancelled"].includes(c.status)).length;
+  const activeCount = (cases || []).filter(c => !["resolved", "eviction_cancelled", "loyer_a_jour"].includes(c.status)).length;
   const detectedCount = latePaymentsDetected.length;
   const formalNoticeCount = (cases || []).filter(c => ["formal_notice", "legal_proceedings", "awaiting_judgment"].includes(c.status)).length;
 

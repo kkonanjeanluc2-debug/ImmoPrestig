@@ -491,9 +491,9 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Ajouter un locataire
-                  {availableProperties.filter(p => p.status === 'disponible').length > 0 && (
+                  {availableProperties.length > 0 && (
                     <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-white/20 rounded-full">
-                      {availableProperties.filter(p => p.status === 'disponible').length} bien{availableProperties.filter(p => p.status === 'disponible').length > 1 ? 's' : ''}
+                      {availableProperties.length} bien{availableProperties.length > 1 ? 's' : ''}
                     </span>
                   )}
                 </Button>

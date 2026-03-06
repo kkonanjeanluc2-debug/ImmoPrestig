@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole, AppRole } from "./useUserRoles";
@@ -64,6 +65,7 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role" |
 export function usePermissions(): Permissions {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
+  const queryClient = useQueryClient();
 
   // Fetch custom permissions if user is a member
   const { data: customPermissions, isLoading: permLoading } = useQuery({
@@ -97,13 +99,47 @@ export function usePermissions(): Permissions {
           ...DEFAULT_PERMISSIONS[membership.role] || DEFAULT_PERMISSIONS.lecture_seule,
           _isDefault: true,
           _role: membership.role,
-        } as Partial<MemberPermissions> & { _isDefault?: boolean; _role?: string };
+          _memberId: membership.id,
+        } as Partial<MemberPermissions> & { _isDefault?: boolean; _role?: string; _memberId?: string };
       }
 
-      return { ...permissions, _role: membership.role } as MemberPermissions & { _role?: string };
+      return {
+        ...permissions,
+        _role: membership.role,
+        _memberId: membership.id,
+      } as MemberPermissions & { _role?: string; _memberId?: string };
     },
     enabled: !!user?.id,
+    refetchInterval: 1500,
+    refetchOnWindowFocus: true,
   });
+
+  const memberIdForRealtime = (customPermissions as (Partial<MemberPermissions> & { _memberId?: string }) | null)?._memberId;
+
+  useEffect(() => {
+    if (!user?.id || !memberIdForRealtime) return;
+
+    const channel = supabase
+      .channel(`member-permissions-live-${memberIdForRealtime}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "member_permissions",
+          filter: `member_id=eq.${memberIdForRealtime}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["my-member-permissions", user.id] });
+          queryClient.invalidateQueries({ queryKey: ["current-member-permissions", user.id] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [memberIdForRealtime, queryClient, user?.id]);
 
   const isLoading = roleLoading || permLoading;
 

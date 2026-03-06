@@ -75,29 +75,38 @@ const Owners = () => {
     paid_date: string | null;
     status: string;
     tenant?: {
+      property_id?: string | null;
       property?: {
+        id?: string;
         owner_id: string | null;
         assigned_to: string | null;
       } | null;
     } | null;
   };
 
-  const roleFilteredPayments = isGestionnaire && user
-    ? ((payments || []) as OwnerPayment[]).filter((payment) => payment.tenant?.property?.assigned_to === user.id)
-    : ((payments || []) as OwnerPayment[]);
+  // RLS already filters payments by role, no need for client-side filter
+  const allPayments = (payments || []) as OwnerPayment[];
 
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
-  const monthlyCollectedByOwner = roleFilteredPayments
+  // Build a map of property_id -> owner_id from our already-loaded properties
+  const propertyOwnerMap = (properties || []).reduce((acc, p) => {
+    if (p.owner_id) acc[p.id] = p.owner_id;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const monthlyCollectedByOwner = allPayments
     .filter((payment) => {
       if (!payment.paid_date) return false;
       const paidDate = new Date(payment.paid_date);
       return paidDate.getMonth() === currentMonth && paidDate.getFullYear() === currentYear;
     })
     .reduce((acc, payment) => {
-      const ownerId = payment.tenant?.property?.owner_id;
+      // Try to get owner_id from nested property, or fallback to our local map
+      const ownerId = payment.tenant?.property?.owner_id 
+        || (payment.tenant?.property_id ? propertyOwnerMap[payment.tenant.property_id] : null);
       if (!ownerId) return acc;
 
       const collectedAmount = payment.status === "paid"

@@ -296,10 +296,6 @@ const PropertyDetails = () => {
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Type de transaction</span>
-                    <span className="font-medium capitalize">{property.type}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Type de bien</span>
                     <span className="font-medium">{typeLabels[property.property_type] || property.property_type}</span>
                   </div>

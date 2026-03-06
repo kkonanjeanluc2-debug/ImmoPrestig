@@ -98,6 +98,7 @@ interface TenantCardProps {
   onCreateAccess: (tenant: TenantWithDetails) => void;
   onRevokeAccess: (tenant: TenantWithDetails) => void;
   canEdit: boolean;
+  canDelete: boolean;
   isDeleting: boolean;
   isRevokingAccess: boolean;
   isAgencyOwner: boolean;
@@ -111,7 +112,7 @@ const requestStatusConfig: Record<string, { label: string; className: string }> 
   rejete: { label: "Rejeté", className: "bg-red-500/10 text-red-500 border-red-500/20" },
 };
 
-function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevokeAccess, canEdit, isDeleting, isRevokingAccess, isAgencyOwner, tenantRequests = [] }: TenantCardProps) {
+function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevokeAccess, canEdit, canDelete, isDeleting, isRevokingAccess, isAgencyOwner, tenantRequests = [] }: TenantCardProps) {
   const [expanded, setExpanded] = useState(false);
   
   // Get active contract - prioritize active contracts
@@ -279,7 +280,6 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
                 )}
                 
                 {canEdit && (
-                  <>
                     <Button
                       variant="outline"
                       size="sm"
@@ -289,6 +289,9 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
                       <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       <span className="hidden xs:inline">Modifier</span>
                     </Button>
+                )}
+                
+                {canDelete && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
@@ -323,8 +326,8 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  </>
                 )}
+
               </div>
             </div>
 
@@ -721,6 +724,7 @@ export default function Tenants() {
                   onCreateAccess={handleCreateAccess}
                   onRevokeAccess={handleRevokeAccess}
                   canEdit={canEdit}
+                  canDelete={canDelete}
                   isDeleting={deleteTenantMutation.isPending}
                   isRevokingAccess={revokeAccessMutation.isPending}
                   isAgencyOwner={isAgencyOwner}

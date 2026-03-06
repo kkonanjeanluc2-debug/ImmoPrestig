@@ -105,22 +105,26 @@ export const useUpdatePayment = () => {
       if (error) throw error;
 
       // Auto-resolve unpaid cases when payment is fully paid
-      if (updates.status === 'paid' && data.tenant_id) {
+      if (updates.status === "paid" && data.tenant_id) {
         try {
           // Find active unpaid cases for this tenant
-          const { data: activeCases } = await supabase
+          const { data: activeCases, error: activeCasesError } = await supabase
             .from("unpaid_cases" as any)
             .select("id")
             .eq("tenant_id", data.tenant_id)
-            .not("status", "in", '("resolved","loyer_a_jour","eviction_cancelled")');
+            .not("status", "in", '("resolved","eviction_cancelled")');
+
+          if (activeCasesError) throw activeCasesError;
 
           if (activeCases && activeCases.length > 0) {
             for (const activeCase of activeCases) {
-              // Update case status to "loyer_a_jour"
-              await supabase
+              // Update case status to resolved (displayed as "Loyer à jour")
+              const { error: caseUpdateError } = await supabase
                 .from("unpaid_cases" as any)
-                .update({ status: "loyer_a_jour" } as any)
+                .update({ status: "resolved" } as any)
                 .eq("id", (activeCase as any).id);
+
+              if (caseUpdateError) throw caseUpdateError;
 
               // Log the action
               if (user) {

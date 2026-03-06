@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,9 +26,8 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUnpaidCases, useUpdateUnpaidCase, useAddUnpaidCaseAction, STATUS_LABELS, type UnpaidCase } from "@/hooks/useUnpaidCases";
+import { useUnpaidCases, STATUS_LABELS, type UnpaidCase } from "@/hooks/useUnpaidCases";
 import { usePayments } from "@/hooks/usePayments";
-import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { UnpaidCaseDetailDialog } from "./UnpaidCaseDetailDialog";
 import { CreateUnpaidCaseDialog } from "./CreateUnpaidCaseDialog";
@@ -44,7 +43,6 @@ const STATUS_CONFIG: Record<string, { icon: typeof AlertTriangle; className: str
   eviction_executed: { icon: Gavel, className: "bg-red-700/10 text-red-700 border-red-700/20" },
   eviction_cancelled: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
   resolved: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
-  loyer_a_jour: { icon: CheckCircle, className: "bg-emerald/10 text-emerald border-emerald/20" },
 };
 
 interface DetectedLatePayment {
@@ -62,9 +60,6 @@ export function UnpaidCasesList() {
   const { data: cases, isLoading } = useUnpaidCases();
   const { data: payments, isLoading: isLoadingPayments } = usePayments();
   const { hasPermission } = usePermissions();
-  const { user } = useAuth();
-  const updateUnpaidCase = useUpdateUnpaidCase();
-  const addAction = useAddUnpaidCaseAction();
   const canViewImpayes = hasPermission("can_view_impayes");
   const canCreateImpayes = hasPermission("can_create_impayes");
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,38 +67,6 @@ export function UnpaidCasesList() {
   const [selectedCase, setSelectedCase] = useState<UnpaidCase | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [preselectedTenantId, setPreselectedTenantId] = useState<string | null>(null);
-  const autoResolvedRef = useRef<Set<string>>(new Set());
-
-  // Auto-resolve active unpaid cases where tenant has fully paid
-  useEffect(() => {
-    if (!cases || !payments || !user) return;
-
-    const activeCases = cases.filter(c => 
-      !["resolved", "loyer_a_jour", "eviction_cancelled"].includes(c.status)
-    );
-
-    for (const unpaidCase of activeCases) {
-      if (autoResolvedRef.current.has(unpaidCase.id)) continue;
-
-      // Check if all payments for this tenant are paid
-      const tenantPayments = payments.filter(p => p.tenant_id === unpaidCase.tenant_id);
-      const hasLatePayments = tenantPayments.some(p => 
-        p.status !== "paid" && p.status !== "cancelled" && new Date(p.due_date) < new Date()
-      );
-
-      if (!hasLatePayments && tenantPayments.length > 0) {
-        autoResolvedRef.current.add(unpaidCase.id);
-        updateUnpaidCase.mutate({ id: unpaidCase.id, status: "loyer_a_jour" });
-        addAction.mutate({
-          case_id: unpaidCase.id,
-          action_type: "status_update",
-          description: "Loyer à jour — Dossier clôturé automatiquement suite au paiement intégral du loyer",
-          metadata: null,
-          document_url: null,
-        });
-      }
-    }
-  }, [cases, payments, user]);
 
   // Auto-detect late payments not yet converted to unpaid cases
   const latePaymentsDetected = useMemo<DetectedLatePayment[]>(() => {
@@ -162,10 +125,10 @@ export function UnpaidCasesList() {
   });
 
   // Stats
-  const totalCaseAmount = (cases || []).filter(c => !["resolved", "loyer_a_jour"].includes(c.status)).reduce((s, c) => s + Number(c.amount_due), 0);
+  const totalCaseAmount = (cases || []).filter(c => c.status !== "resolved").reduce((s, c) => s + Number(c.amount_due), 0);
   const totalDetectedAmount = latePaymentsDetected.reduce((s, p) => s + p.totalAmount, 0);
   const totalAmount = totalCaseAmount + totalDetectedAmount;
-  const activeCount = (cases || []).filter(c => !["resolved", "eviction_cancelled", "loyer_a_jour"].includes(c.status)).length;
+  const activeCount = (cases || []).filter(c => !["resolved", "eviction_cancelled"].includes(c.status)).length;
   const detectedCount = latePaymentsDetected.length;
   const formalNoticeCount = (cases || []).filter(c => ["formal_notice", "legal_proceedings", "awaiting_judgment"].includes(c.status)).length;
 

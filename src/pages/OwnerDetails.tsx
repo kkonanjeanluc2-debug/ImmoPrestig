@@ -70,7 +70,9 @@ const OwnerDetails = () => {
   const { data: tenants = [] } = useTenants();
   const { data: agency } = useAgency();
   const deleteOwner = useDeleteOwner();
-  const { canEdit, canDelete } = usePermissions();
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission("can_edit_owners");
+  const canDelete = hasPermission("can_delete_owners");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [periodDialogOpen, setPeriodDialogOpen] = useState(false);

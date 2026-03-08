@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Home, Building, MapPin, X, ImageIcon, Loader2, User } from "lucide-react";
+import { Plus, Home, Building, X, ImageIcon, Loader2, User } from "lucide-react";
 import { toast } from "sonner";
+import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 import { supabase } from "@/integrations/supabase/client";
 import { useCreateProperty } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
@@ -34,6 +35,8 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     description: "",
     image_url: "",
     owner_id: "",
+    latitude: "",
+    longitude: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -108,6 +111,8 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
       description: "",
       image_url: "",
       owner_id: "",
+      latitude: "",
+      longitude: "",
     });
     setImagePreview(null);
   };
@@ -137,6 +142,8 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
         description: formData.description || null,
         image_url: formData.image_url || null,
         owner_id: formData.owner_id || null,
+        latitude: formData.latitude ? Number(formData.latitude) : null,
+        longitude: formData.longitude ? Number(formData.longitude) : null,
       });
 
       toast.success("Bien ajouté avec succès !");
@@ -300,6 +307,12 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
               </div>
             </div>
           )}
+
+          <GpsPositionInput
+            latitude={formData.latitude}
+            longitude={formData.longitude}
+            onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
+          />
 
           <div className="space-y-2">
             <Label>Photo du bien</Label>

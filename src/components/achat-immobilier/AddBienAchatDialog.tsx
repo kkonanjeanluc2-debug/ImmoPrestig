@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, MapPin, Navigation } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 import { useCreateBienAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { toast } from "sonner";
@@ -29,8 +30,6 @@ export function AddBienAchatDialog({ children }: Props) {
   const [open, setOpen] = useState(false);
   const createMutation = useCreateBienAchat();
   const { data: vendeurs = [] } = useVendeurs();
-  const [gettingLocation, setGettingLocation] = useState(false);
-
   const [form, setForm] = useState({
     title: "",
     property_type: "appartement",
@@ -48,29 +47,8 @@ export function AddBienAchatDialog({ children }: Props) {
     floors: "",
   });
 
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error("La géolocalisation n'est pas supportée par votre navigateur");
-      return;
-    }
-    setGettingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setForm((prev) => ({
-          ...prev,
-          latitude: String(position.coords.latitude),
-          longitude: String(position.coords.longitude),
-        }));
-        setGettingLocation(false);
-        toast.success("Position GPS capturée");
-      },
-      (error) => {
-        setGettingLocation(false);
-        toast.error("Impossible d'obtenir la position GPS");
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  };
+
+
 
   const handleSubmit = async () => {
     const features: Record<string, unknown> = {};
@@ -189,46 +167,11 @@ export function AddBienAchatDialog({ children }: Props) {
             </div>
           )}
 
-          {/* GPS Position */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Position GPS
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                type="number"
-                step="any"
-                placeholder="Latitude"
-                value={form.latitude}
-                onChange={(e) => setForm({ ...form, latitude: e.target.value })}
-                className="flex-1"
-              />
-              <Input
-                type="number"
-                step="any"
-                placeholder="Longitude"
-                value={form.longitude}
-                onChange={(e) => setForm({ ...form, longitude: e.target.value })}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleGetLocation}
-                disabled={gettingLocation}
-                title="Capturer ma position"
-              >
-                {gettingLocation ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Navigation className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">Cliquez sur le bouton pour capturer votre position actuelle</p>
-          </div>
+          <GpsPositionInput
+            latitude={form.latitude}
+            longitude={form.longitude}
+            onChange={(lat, lng) => setForm({ ...form, latitude: lat, longitude: lng })}
+          />
 
           <div className="space-y-2">
             <Label>Vendeur</Label>

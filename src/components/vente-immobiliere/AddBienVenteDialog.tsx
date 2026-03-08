@@ -21,6 +21,7 @@ import { useCreateBienVente } from "@/hooks/useBiensVente";
 import { toast } from "sonner";
 import { Plus, Loader2, ImageIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 
 const PROPERTY_TYPES = [
   { value: "maison", label: "Maison à porte multiple" },
@@ -49,6 +50,8 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,6 +127,8 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         description: description || null,
         image_url: imageUrl || null,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
       });
 
       toast.success("Bien ajouté avec succès");
@@ -146,6 +151,8 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
     setDescription("");
     setImageUrl("");
     setImagePreview(null);
+    setLatitude("");
+    setLongitude("");
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -253,6 +260,14 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
                 value={bathrooms}
                 onChange={(e) => setBathrooms(e.target.value)}
                 placeholder="0"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <GpsPositionInput
+                latitude={latitude}
+                longitude={longitude}
+                onChange={(lat, lng) => { setLatitude(lat); setLongitude(lng); }}
               />
             </div>
 

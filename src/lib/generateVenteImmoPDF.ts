@@ -4,6 +4,15 @@ import { formatAmountWithCurrency, numberToWordsPDF, formatAmountForPDF } from "
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
+export interface VenteSignatureForPDF {
+  signerType: "vendor" | "buyer";
+  signerName: string;
+  signatureType: "drawn" | "typed";
+  signatureData?: string | null;
+  signatureText?: string | null;
+  signedAt: string;
+}
+
 interface VenteImmobiliereData {
   bien: {
     title: string;
@@ -147,8 +156,9 @@ const addAgencyHeader = async (doc: jsPDF, agency: AgencyData, yPos: number): Pr
  */
 export const generatePromesseVenteImmo = async (
   vente: VenteImmobiliereData,
-  agency: AgencyData,
-  validityDays: number = 90
+  agency: AgencyData & { city?: string | null },
+  validityDays: number = 90,
+  signatures?: VenteSignatureForPDF[]
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -304,17 +314,85 @@ export const generatePromesseVenteImmo = async (
   yPos += validiteLines.length * 6 + 15;
 
   // Signatures - need space for signature block
-  yPos = checkPageBreak(doc, yPos, 50);
+  yPos = checkPageBreak(doc, yPos, 80);
   doc.setFont("helvetica", "bold");
-  doc.text("Fait à _________________, le " + format(dateSignature, "dd MMMM yyyy", { locale: fr }), margin, yPos);
+  const lieu = agency.city || "_________________";
+  doc.text(`Fait à ${lieu}, le ${format(dateSignature, "dd MMMM yyyy", { locale: fr })}`, margin, yPos);
+  yPos += 3;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("En deux exemplaires originaux", margin, yPos);
   yPos += 15;
 
-  doc.text("LE VENDEUR", margin + 10, yPos);
-  doc.text("L'ACQUÉREUR", pageWidth - margin - 40, yPos);
-  yPos += 25;
+  const colWidth = (pageWidth - margin * 2 - 20) / 2;
+  const rightX = margin + colWidth + 20;
+  const signatureY = yPos;
 
-  doc.text("Signature :", margin + 10, yPos);
-  doc.text("Signature :", pageWidth - margin - 40, yPos);
+  const vendorSig = signatures?.find(s => s.signerType === "vendor");
+  const buyerSig = signatures?.find(s => s.signerType === "buyer");
+
+  // Vendor signature
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("LE VENDEUR", margin, signatureY);
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8);
+  doc.text("(Lu et approuvé)", margin, signatureY + 5);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  if (vendorSig) {
+    doc.text(vendorSig.signerName, margin, signatureY + 12);
+    if (vendorSig.signatureType === "drawn" && vendorSig.signatureData) {
+      try { doc.addImage(vendorSig.signatureData, "PNG", margin, signatureY + 15, 60, 30); } catch {}
+    } else if (vendorSig.signatureText) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(16);
+      doc.text(vendorSig.signatureText, margin, signatureY + 30);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+    }
+    const vDate = new Date(vendorSig.signedAt);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Signé le ${vDate.toLocaleDateString("fr-FR")} à ${vDate.toLocaleTimeString("fr-FR")}`, margin, signatureY + 48);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+  } else {
+    doc.text("Signature :", margin, signatureY + 15);
+    doc.line(margin, signatureY + 40, margin + colWidth, signatureY + 40);
+  }
+
+  // Buyer signature
+  doc.setFont("helvetica", "bold");
+  doc.text("L'ACQUÉREUR", rightX, signatureY);
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8);
+  doc.text("(Lu et approuvé)", rightX, signatureY + 5);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  if (buyerSig) {
+    doc.text(buyerSig.signerName, rightX, signatureY + 12);
+    if (buyerSig.signatureType === "drawn" && buyerSig.signatureData) {
+      try { doc.addImage(buyerSig.signatureData, "PNG", rightX, signatureY + 15, 60, 30); } catch {}
+    } else if (buyerSig.signatureText) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(16);
+      doc.text(buyerSig.signatureText, rightX, signatureY + 30);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+    }
+    const bDate = new Date(buyerSig.signedAt);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Signé le ${bDate.toLocaleDateString("fr-FR")} à ${bDate.toLocaleTimeString("fr-FR")}`, rightX, signatureY + 48);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+  } else {
+    doc.text("Signature :", rightX, signatureY + 15);
+    doc.line(rightX, signatureY + 40, rightX + colWidth, signatureY + 40);
+  }
 
   return doc;
 };
@@ -658,7 +736,8 @@ export const generateContratReservationImmo = async (
  */
 export const generateContratVenteImmo = async (
   vente: VenteImmobiliereData,
-  agency: AgencyData
+  agency: AgencyData & { city?: string | null },
+  signatures?: VenteSignatureForPDF[]
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -845,32 +924,86 @@ export const generateContratVenteImmo = async (
   yPos += 15;
 
   // Signatures - need space for signature block
-  yPos = checkPageBreak(doc, yPos, 60);
+  yPos = checkPageBreak(doc, yPos, 80);
   const dateVente = new Date(vente.sale_date);
+  const lieuVente = agency.city || "_________________";
   doc.setFont("helvetica", "bold");
-  doc.text("Fait à _________________, le " + format(dateVente, "dd MMMM yyyy", { locale: fr }), margin, yPos);
+  doc.text(`Fait à ${lieuVente}, le ${format(dateVente, "dd MMMM yyyy", { locale: fr })}`, margin, yPos);
   yPos += 3;
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text("En deux exemplaires originaux", margin, yPos);
   yPos += 15;
 
+  const colWidth = (pageWidth - margin * 2 - 20) / 2;
+  const rightX = margin + colWidth + 20;
+  const signatureY = yPos;
+
+  const vendorSig = signatures?.find(s => s.signerType === "vendor");
+  const buyerSig = signatures?.find(s => s.signerType === "buyer");
+
+  // Vendor signature
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text("LE VENDEUR", margin + 10, yPos);
-  doc.text("L'ACQUÉREUR", pageWidth - margin - 40, yPos);
-  yPos += 5;
-
+  doc.text("LE VENDEUR", margin, signatureY);
   doc.setFont("helvetica", "italic");
   doc.setFontSize(8);
-  doc.text("(Lu et approuvé)", margin + 10, yPos);
-  doc.text("(Lu et approuvé)", pageWidth - margin - 40, yPos);
-  yPos += 20;
-
+  doc.text("(Lu et approuvé)", margin, signatureY + 5);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("Signature :", margin + 10, yPos);
-  doc.text("Signature :", pageWidth - margin - 40, yPos);
+
+  if (vendorSig) {
+    doc.text(vendorSig.signerName, margin, signatureY + 12);
+    if (vendorSig.signatureType === "drawn" && vendorSig.signatureData) {
+      try { doc.addImage(vendorSig.signatureData, "PNG", margin, signatureY + 15, 60, 30); } catch {}
+    } else if (vendorSig.signatureText) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(16);
+      doc.text(vendorSig.signatureText, margin, signatureY + 30);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+    }
+    const vDate = new Date(vendorSig.signedAt);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Signé le ${vDate.toLocaleDateString("fr-FR")} à ${vDate.toLocaleTimeString("fr-FR")}`, margin, signatureY + 48);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+  } else {
+    doc.text("Signature :", margin, signatureY + 15);
+    doc.line(margin, signatureY + 40, margin + colWidth, signatureY + 40);
+  }
+
+  // Buyer signature
+  doc.setFont("helvetica", "bold");
+  doc.text("L'ACQUÉREUR", rightX, signatureY);
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8);
+  doc.text("(Lu et approuvé)", rightX, signatureY + 5);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  if (buyerSig) {
+    doc.text(buyerSig.signerName, rightX, signatureY + 12);
+    if (buyerSig.signatureType === "drawn" && buyerSig.signatureData) {
+      try { doc.addImage(buyerSig.signatureData, "PNG", rightX, signatureY + 15, 60, 30); } catch {}
+    } else if (buyerSig.signatureText) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(16);
+      doc.text(buyerSig.signatureText, rightX, signatureY + 30);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+    }
+    const bDate = new Date(buyerSig.signedAt);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Signé le ${bDate.toLocaleDateString("fr-FR")} à ${bDate.toLocaleTimeString("fr-FR")}`, rightX, signatureY + 48);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+  } else {
+    doc.text("Signature :", rightX, signatureY + 15);
+    doc.line(rightX, signatureY + 40, rightX + colWidth, signatureY + 40);
+  }
 
   return doc;
 };

@@ -152,6 +152,7 @@ export function OffresAchatList() {
       agency_fees: agencyFeesAmount,
       notes: achatForm.notes || undefined,
       vendeur_id: acceptOffre.biens_achat?.vendeur_id || undefined,
+      acquereur_id: acceptOffre.acquereur_id || undefined,
     });
 
     // Auto-generate payment installments

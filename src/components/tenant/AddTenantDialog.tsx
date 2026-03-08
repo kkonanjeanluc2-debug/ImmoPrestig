@@ -390,6 +390,9 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       Promise.all(backgroundTasks).catch(err => {
         console.error("Background task error:", err);
       });
+    } catch (error: any) {
+      console.error("Error creating tenant:", error);
+
       // Rollback tenant if contract creation failed after tenant insert
       if (createdTenantId && !contractCreated) {
         const { error: rollbackError } = await supabase
@@ -402,6 +405,22 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         }
       }
 
+      const backendMessage = typeof error?.message === "string" ? error.message : "";
+
+      if (backendMessage.includes("duplicate") || error?.code === "23505") {
+        if (backendMessage.includes("email")) {
+          toast.error("Un locataire avec cet email existe déjà");
+        } else if (backendMessage.includes("phone")) {
+          toast.error("Un locataire avec ce numéro de téléphone existe déjà");
+        } else {
+          toast.error("Ce locataire existe déjà");
+        }
+      } else if (backendMessage) {
+        toast.error(backendMessage);
+      } else {
+        toast.error("Erreur lors de la création du locataire");
+      }
+    }
       const backendMessage = typeof error?.message === "string" ? error.message : "";
 
       if (backendMessage.includes("duplicate") || error?.code === "23505") {

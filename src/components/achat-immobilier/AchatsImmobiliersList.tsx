@@ -295,13 +295,19 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
                   {achat.acquereurs && <p className="text-sm text-muted-foreground">Acquéreur: {achat.acquereurs.name}</p>}
                   {achat.vendeurs && <p className="text-sm text-muted-foreground">Vendeur: {achat.vendeurs.name}</p>}
                 </div>
-                <div className="text-right">
+                <div className="text-right space-y-1">
                   <p className="text-lg font-bold">{Number(achat.sale_price).toLocaleString("fr-FR")} FCFA</p>
-                  <Badge variant="outline">{achat.payment_type === "comptant" ? "Comptant" : "Échelonné"}</Badge>
+                  <div className="flex items-center gap-2 justify-end">
+                    <Badge variant="outline">{achat.payment_type === "comptant" ? "Comptant" : "Échelonné"}</Badge>
+                    <Button variant="outline" size="sm" onClick={() => setDocsAchat(achat)}>
+                      <FileText className="h-4 w-4 mr-1" />
+                      Documents
+                    </Button>
+                  </div>
                   {achat.commission_amount && achat.commission_amount > 0 && (
-                    <p className="text-xs text-primary mt-1">Commission: {Number(achat.commission_amount).toLocaleString("fr-FR")} FCFA</p>
+                    <p className="text-xs text-primary">Commission: {Number(achat.commission_amount).toLocaleString("fr-FR")} FCFA</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">{format(new Date(achat.sale_date), "dd MMM yyyy", { locale: fr })}</p>
+                  <p className="text-xs text-muted-foreground">{format(new Date(achat.sale_date), "dd MMM yyyy", { locale: fr })}</p>
                 </div>
               </div>
             </Card>

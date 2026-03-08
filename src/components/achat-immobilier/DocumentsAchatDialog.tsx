@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { FileText, Plus, Trash2, Download, Loader2, Upload } from "lucide-react";
+import { FileText, Plus, Trash2, Download, Loader2, Upload, Image as ImageIcon } from "lucide-react";
 import { useDocumentsAchats, useCreateDocumentAchat, useDeleteDocumentAchat, DOCUMENT_TYPES } from "@/hooks/useDocumentsAchats";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { BienAchat } from "@/hooks/useBiensAchat";
 
 interface Props {

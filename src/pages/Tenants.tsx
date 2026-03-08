@@ -155,9 +155,11 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
                 <h3 className="font-semibold text-sm sm:text-base text-foreground truncate max-w-[180px] sm:max-w-none">{tenant.name}</h3>
-                <Badge variant="outline" className={cn("text-[10px] sm:text-xs", statusConfig.className)}>
-                  {statusConfig.label}
-                </Badge>
+                {statusConfig && (
+                  <Badge variant="outline" className={cn("text-[10px] sm:text-xs", statusConfig.className)}>
+                    {statusConfig.label}
+                  </Badge>
+                )}
                 {assignedTo && <AssignmentBadge userId={assignedTo} />}
                 {isAgencyOwner && (
                   <Badge 

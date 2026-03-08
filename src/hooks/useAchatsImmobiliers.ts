@@ -43,7 +43,8 @@ export function useAchatsImmobiliers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("achats_immobiliers")
-        .select("*, biens_achat(title, address), vendeurs(name, phone), acquereurs(name, phone)")
+        .select("*, biens_achat(title, address), vendeurs(name, phone, email, address, birth_date, birth_place, cni_number, profession), acquereurs(name, phone, email, address, birth_date, birth_place, cni_number, profession)")
+        .order("created_at", { ascending: false });
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as AchatImmobilier[];

@@ -172,7 +172,7 @@ export const generatePromesseVenteImmo = async (
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("ENTRE LES SOUSSIGNES :", margin, yPos);
+  doc.text("ENTRE LES SOUSSIGNÉS :", margin, yPos);
   yPos += 10;
 
   doc.setFontSize(10);
@@ -185,7 +185,7 @@ export const generatePromesseVenteImmo = async (
     agency.phone ? `Tel : ${agency.phone}` : null,
     `Email : ${agency.email}`,
     agency.siret ? `RCCM : ${agency.siret}` : null,
-    `Ci-apres denomme "LE VENDEUR"`,
+    `Ci-après dénommé "LE VENDEUR"`,
   ].filter(Boolean) as string[];
 
   vendeurLines.forEach((line) => {
@@ -204,13 +204,13 @@ export const generatePromesseVenteImmo = async (
   // Acquereur
   const acquereurLines = [
     `${vente.acquereur.name}`,
-    vente.acquereur.cni_number ? `CNI N : ${vente.acquereur.cni_number}` : null,
-    vente.acquereur.birth_date ? `Ne(e) le : ${format(new Date(vente.acquereur.birth_date), "dd MMMM yyyy", { locale: fr })}` : null,
-    vente.acquereur.birth_place ? `A : ${vente.acquereur.birth_place}` : null,
+    vente.acquereur.cni_number ? `CNI N° : ${vente.acquereur.cni_number}` : null,
+    vente.acquereur.birth_date ? `Né(e) le : ${format(new Date(vente.acquereur.birth_date), "dd MMMM yyyy", { locale: fr })}` : null,
+    vente.acquereur.birth_place ? `À : ${vente.acquereur.birth_place}` : null,
     vente.acquereur.profession ? `Profession : ${vente.acquereur.profession}` : null,
-    vente.acquereur.address ? `Domicilie(e) a : ${vente.acquereur.address}` : null,
-    vente.acquereur.phone ? `Tel : ${vente.acquereur.phone}` : null,
-    `Ci-apres denomme "L'ACQUEREUR"`,
+    vente.acquereur.address ? `Domicilié(e) à : ${vente.acquereur.address}` : null,
+    vente.acquereur.phone ? `Tél : ${vente.acquereur.phone}` : null,
+    `Ci-après dénommé "L'ACQUÉREUR"`,
   ].filter(Boolean) as string[];
 
   acquereurLines.forEach((line) => {
@@ -227,15 +227,15 @@ export const generatePromesseVenteImmo = async (
   yPos += 8;
 
   doc.setFont("helvetica", "normal");
-  const objetText = `Le Vendeur s'engage a vendre a l'Acquereur, qui accepte, le bien immobilier suivant :`;
+  const objetText = `Le Vendeur s'engage à vendre à l'Acquéreur, qui accepte, le bien immobilier suivant :`;
   doc.text(objetText, margin, yPos);
   yPos += 8;
 
   const bienLines = [
-    `- Designation : ${vente.bien.title}`,
+    `- Désignation : ${vente.bien.title}`,
     `- Type : ${vente.bien.property_type.charAt(0).toUpperCase() + vente.bien.property_type.slice(1)}`,
     `- Adresse : ${vente.bien.address}${vente.bien.city ? `, ${vente.bien.city}` : ""}`,
-    vente.bien.area ? `- Superficie : ${vente.bien.area} m2` : null,
+    vente.bien.area ? `- Superficie : ${vente.bien.area} m²` : null,
   ].filter(Boolean) as string[];
 
   bienLines.forEach((line) => {
@@ -252,7 +252,7 @@ export const generatePromesseVenteImmo = async (
   yPos += 8;
 
   doc.setFont("helvetica", "normal");
-  const prixText = `Le prix de vente est fixe a la somme de ${formatAmountWithCurrency(vente.total_price)} (${numberToWordsPDF(vente.total_price)} francs CFA).`;
+  const prixText = `Le prix de vente est fixé à la somme de ${formatAmountWithCurrency(vente.total_price)} (${numberToWordsPDF(vente.total_price)} francs CFA).`;
   const prixLines = doc.splitTextToSize(prixText, pageWidth - 2 * margin);
   yPos = checkPageBreak(doc, yPos, prixLines.length * 6 + 10);
   doc.text(prixLines, margin, yPos);
@@ -261,21 +261,21 @@ export const generatePromesseVenteImmo = async (
   // Article 3 - Modalites
   yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
-  doc.text("ARTICLE 3 - MODALITES DE PAIEMENT", margin, yPos);
+  doc.text("ARTICLE 3 - MODALITÉS DE PAIEMENT", margin, yPos);
   yPos += 8;
 
   doc.setFont("helvetica", "normal");
   
   if (vente.payment_type === "comptant") {
-    doc.text("Le paiement sera effectue au comptant lors de la signature de l'acte de vente.", margin, yPos);
+    doc.text("Le paiement sera effectué au comptant lors de la signature de l'acte de vente.", margin, yPos);
     yPos += 6;
   } else {
     const acompte = vente.down_payment || 0;
     const modalitesLines = [
-      `- Acompte verse ce jour : ${formatAmountWithCurrency(acompte)}`,
+      `- Acompte versé ce jour : ${formatAmountWithCurrency(acompte)}`,
       `- Solde : ${formatAmountWithCurrency(vente.total_price - acompte)}`,
-      vente.monthly_payment ? `- Mensualite : ${formatAmountWithCurrency(vente.monthly_payment)}` : null,
-      vente.total_installments ? `- Nombre d'echeances : ${vente.total_installments}` : null,
+      vente.monthly_payment ? `- Mensualité : ${formatAmountWithCurrency(vente.monthly_payment)}` : null,
+      vente.total_installments ? `- Nombre d'échéances : ${vente.total_installments}` : null,
     ].filter(Boolean) as string[];
 
     modalitesLines.forEach((line) => {
@@ -289,7 +289,7 @@ export const generatePromesseVenteImmo = async (
   // Article 4 - Validite
   yPos = checkPageBreak(doc, yPos, 40);
   doc.setFont("helvetica", "bold");
-  doc.text("ARTICLE 4 - DUREE DE VALIDITE", margin, yPos);
+  doc.text("ARTICLE 4 - DURÉE DE VALIDITÉ", margin, yPos);
   yPos += 8;
 
   doc.setFont("helvetica", "normal");
@@ -297,7 +297,7 @@ export const generatePromesseVenteImmo = async (
   const dateExpiration = new Date(dateSignature);
   dateExpiration.setDate(dateExpiration.getDate() + validityDays);
 
-  const validiteText = `Cette promesse de vente est valable pour une duree de ${validityDays} jours a compter de sa signature, soit jusqu'au ${format(dateExpiration, "dd MMMM yyyy", { locale: fr })}.`;
+  const validiteText = `Cette promesse de vente est valable pour une durée de ${validityDays} jours à compter de sa signature, soit jusqu'au ${format(dateExpiration, "dd MMMM yyyy", { locale: fr })}.`;
   const validiteLines = doc.splitTextToSize(validiteText, pageWidth - 2 * margin);
   yPos = checkPageBreak(doc, yPos, validiteLines.length * 6 + 20);
   doc.text(validiteLines, margin, yPos);
@@ -306,11 +306,11 @@ export const generatePromesseVenteImmo = async (
   // Signatures - need space for signature block
   yPos = checkPageBreak(doc, yPos, 50);
   doc.setFont("helvetica", "bold");
-  doc.text("Fait a _________________, le " + format(dateSignature, "dd MMMM yyyy", { locale: fr }), margin, yPos);
+  doc.text("Fait à _________________, le " + format(dateSignature, "dd MMMM yyyy", { locale: fr }), margin, yPos);
   yPos += 15;
 
   doc.text("LE VENDEUR", margin + 10, yPos);
-  doc.text("L'ACQUEREUR", pageWidth - margin - 40, yPos);
+  doc.text("L'ACQUÉREUR", pageWidth - margin - 40, yPos);
   yPos += 25;
 
   doc.text("Signature :", margin + 10, yPos);

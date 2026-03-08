@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Home, Building, MapPin, X, ImageIcon, Loader2, User } from "lucide-react";
+import { Home, Building, X, ImageIcon, Loader2, User } from "lucide-react";
+import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUpdateProperty, Property } from "@/hooks/useProperties";
@@ -37,6 +38,8 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
     status: "disponible",
     owner_id: "",
     assigned_to: null as string | null,
+    latitude: "",
+    longitude: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -64,6 +67,8 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         status: property.status || "disponible",
         owner_id: property.owner_id || "",
         assigned_to: (property as any).assigned_to || null,
+        latitude: (property as any).latitude?.toString() || "",
+        longitude: (property as any).longitude?.toString() || "",
       });
       setImagePreview(property.image_url || null);
     }
@@ -147,6 +152,8 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         status: formData.status,
         owner_id: formData.owner_id || null,
         assigned_to: formData.assigned_to,
+        latitude: formData.latitude ? Number(formData.latitude) : null,
+        longitude: formData.longitude ? Number(formData.longitude) : null,
       });
 
       toast.success("Bien modifié avec succès !");
@@ -326,6 +333,12 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
               </div>
             </div>
           )}
+
+          <GpsPositionInput
+            latitude={formData.latitude}
+            longitude={formData.longitude}
+            onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
+          />
 
           <div className="space-y-2">
             <Label>Photo du bien</Label>

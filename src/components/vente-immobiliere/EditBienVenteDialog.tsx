@@ -20,6 +20,7 @@ import { useUpdateBienVente, BienVente } from "@/hooks/useBiensVente";
 import { toast } from "sonner";
 import { Loader2, ImageIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 
 const PROPERTY_TYPES = [
   { value: "maison", label: "Maison à porte multiple" },
@@ -49,6 +50,8 @@ export function EditBienVenteDialog({ bien, open, onOpenChange }: EditBienVenteD
   const [description, setDescription] = useState(bien.description || "");
   const [imageUrl, setImageUrl] = useState(bien.image_url || "");
   const [imagePreview, setImagePreview] = useState<string | null>(bien.image_url);
+  const [latitude, setLatitude] = useState(bien.latitude?.toString() || "");
+  const [longitude, setLongitude] = useState(bien.longitude?.toString() || "");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,6 +70,8 @@ export function EditBienVenteDialog({ bien, open, onOpenChange }: EditBienVenteD
       setDescription(bien.description || "");
       setImageUrl(bien.image_url || "");
       setImagePreview(bien.image_url);
+      setLatitude(bien.latitude?.toString() || "");
+      setLongitude(bien.longitude?.toString() || "");
     }
   }, [open, bien]);
 
@@ -141,6 +146,8 @@ export function EditBienVenteDialog({ bien, open, onOpenChange }: EditBienVenteD
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         description: description || null,
         image_url: imageUrl || null,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
       });
 
       toast.success("Bien modifié avec succès");
@@ -244,6 +251,14 @@ export function EditBienVenteDialog({ bien, open, onOpenChange }: EditBienVenteD
                 value={bathrooms}
                 onChange={(e) => setBathrooms(e.target.value)}
                 placeholder="0"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <GpsPositionInput
+                latitude={latitude}
+                longitude={longitude}
+                onChange={(lat, lng) => { setLatitude(lat); setLongitude(lng); }}
               />
             </div>
 

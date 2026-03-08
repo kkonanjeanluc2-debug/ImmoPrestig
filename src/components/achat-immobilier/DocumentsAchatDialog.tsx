@@ -142,43 +142,69 @@ export function DocumentsAchatDialog({ bien, open, onOpenChange }: Props) {
             </div>
           ) : (
             <div className="space-y-2">
-              {documents.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="font-medium text-sm truncate">{doc.name}</span>
-                      <Badge variant="secondary" className="text-xs shrink-0">
-                        {TYPE_LABELS[doc.type] || doc.type}
-                      </Badge>
+              {documents.map((doc) => {
+                const isImage = doc.file_url && /\.(jpg|jpeg|png|webp)$/i.test(doc.file_url);
+                const isPdf = doc.file_url && /\.pdf$/i.test(doc.file_url);
+
+                const handleDownload = async () => {
+                  if (!doc.file_url) return;
+                  // Check if it's a full URL (legacy) or a storage path
+                  if (doc.file_url.startsWith('http')) {
+                    window.open(doc.file_url, '_blank');
+                  } else {
+                    const { data, error } = await supabase.storage
+                      .from("documents-achats")
+                      .createSignedUrl(doc.file_url, 300);
+                    if (error || !data?.signedUrl) {
+                      toast.error("Impossible de télécharger le fichier");
+                      return;
+                    }
+                    window.open(data.signedUrl, '_blank');
+                  }
+                };
+
+                return (
+                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {isImage ? (
+                          <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" />
+                        ) : isPdf ? (
+                          <FileText className="h-4 w-4 text-red-500 shrink-0" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                        )}
+                        <span className="font-medium text-sm truncate">{doc.name}</span>
+                        <Badge variant="secondary" className="text-xs shrink-0">
+                          {TYPE_LABELS[doc.type] || doc.type}
+                        </Badge>
+                      </div>
+                      {doc.notes && (
+                        <p className="text-xs text-muted-foreground mt-1 ml-6 truncate">{doc.notes}</p>
+                      )}
+                      <div className="flex gap-3 text-xs text-muted-foreground mt-1 ml-6">
+                        {doc.file_size && <span>{doc.file_size}</span>}
+                        <span>{new Date(doc.created_at).toLocaleDateString("fr-FR")}</span>
+                      </div>
                     </div>
-                    {doc.notes && (
-                      <p className="text-xs text-muted-foreground mt-1 ml-6 truncate">{doc.notes}</p>
-                    )}
-                    <div className="flex gap-3 text-xs text-muted-foreground mt-1 ml-6">
-                      {doc.file_size && <span>{doc.file_size}</span>}
-                      <span>{new Date(doc.created_at).toLocaleDateString("fr-FR")}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 ml-2">
-                    {doc.file_url && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                    <div className="flex items-center gap-1 ml-2">
+                      {doc.file_url && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload}>
                           <Download className="h-4 w-4" />
-                        </a>
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => setDeleteId(doc.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => setDeleteId(doc.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

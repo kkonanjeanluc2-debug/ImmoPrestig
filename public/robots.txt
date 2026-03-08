@@ -1,8 +1,10 @@
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 2
 
 User-agent: Twitterbot
 Allow: /
@@ -12,5 +14,24 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /properties
+Disallow: /tenants
+Disallow: /payments
+Disallow: /contracts
+Disallow: /settings
+Disallow: /owners
+Disallow: /lotissements
+Disallow: /ventes-immobilieres
+Disallow: /achats-immobiliers
+Disallow: /acquisitions
+Disallow: /impayes
+Disallow: /super-admin
+Disallow: /trash
+Disallow: /sign-contract
+Disallow: /sign-vente
+Disallow: /sign-achat
+Disallow: /reset-password
+Disallow: /forgot-password
 
 Sitemap: https://property-grace.lovable.app/sitemap.xml

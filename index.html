@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     
     <title>ImmoPrestige - Logiciel de Gestion Immobilière et Locative en Afrique</title>
-    <meta name="description" content="ImmoPrestige : logiciel de gestion immobilière et locative en Côte d'Ivoire et en Afrique. Gérez vos biens, locataires, loyers, quittances, contrats, lotissements et ventes immobilières en ligne." />
+    <meta name="description" content="ImmoPrestige : le logiciel N°1 de gestion immobilière et locative en Côte d'Ivoire et en Afrique. Gérez vos biens, locataires, loyers, quittances, contrats, lotissements, ventes et achats immobiliers. Paiement Mobile Money, Wave, Orange Money." />
     <meta name="author" content="ImmoPrestige" />
-    <meta name="keywords" content="gestion immobilière, gestion locative, logiciel immobilier, agence immobilière, gestion des loyers, quittance de loyer, contrat de bail, gestion des locataires, gestion des propriétés, lotissement, vente immobilière, Côte d'Ivoire, Afrique, paiement mobile money, gestion des biens, propriétaire bailleur, syndic, ImmoPrestige" />
+    <meta name="keywords" content="gestion immobilière, gestion locative, logiciel immobilier, agence immobilière, gestion des loyers, quittance de loyer, contrat de bail, gestion des locataires, gestion des propriétés, lotissement, vente immobilière, achat immobilier, CRM immobilier, Côte d'Ivoire, Abidjan, Afrique, Sénégal, Cameroun, paiement mobile money, paiement Orange Money, paiement Wave, gestion des biens, propriétaire bailleur, syndic, logiciel gestion locative Afrique, application immobilière, rappel loyer WhatsApp, état des lieux numérique, signature électronique contrat bail, ImmoPrestige" />
     <link rel="canonical" href="https://property-grace.lovable.app/" />
+
+    <!-- Geo targeting -->
+    <meta name="geo.region" content="CI" />
+    <meta name="geo.placename" content="Abidjan" />
+    <meta name="geo.position" content="5.3600;-4.0083" />
+    <meta name="ICBM" content="5.3600, -4.0083" />
+    <meta name="language" content="fr" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1F3A93" />
@@ -26,38 +34,72 @@
     <link rel="manifest" href="/manifest.webmanifest" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="ImmoPrestige - Logiciel de Gestion Immobilière et Locative" />
-    <meta property="og:description" content="Gérez vos biens immobiliers, locataires, loyers, quittances, contrats et lotissements en ligne. La solution complète pour les agences immobilières en Afrique." />
+    <meta property="og:title" content="ImmoPrestige - Logiciel N°1 de Gestion Immobilière en Afrique" />
+    <meta property="og:description" content="Gérez vos biens immobiliers, locataires, loyers, quittances, contrats et lotissements en ligne. Paiement Mobile Money intégré. La solution complète pour les agences immobilières en Côte d'Ivoire et en Afrique." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://property-grace.lovable.app/" />
     <meta property="og:image" content="https://property-grace.lovable.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ImmoPrestige - Logiciel de gestion immobilière et locative pour l'Afrique" />
     <meta property="og:site_name" content="ImmoPrestige" />
     <meta property="og:locale" content="fr_FR" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@ImmoPrestige" />
-    <meta name="twitter:title" content="ImmoPrestige - Gestion Immobilière Premium" />
-    <meta name="twitter:description" content="Logiciel de gestion immobilière et locative. Gérez vos biens, locataires, loyers et contrats en ligne." />
+    <meta name="twitter:title" content="ImmoPrestige - Gestion Immobilière Premium en Afrique" />
+    <meta name="twitter:description" content="Logiciel de gestion immobilière et locative N°1 en Afrique. Gérez vos biens, locataires, loyers, contrats et lotissements. Paiement Mobile Money intégré." />
     <meta name="twitter:image" content="https://property-grace.lovable.app/og-image.png" />
+    <meta name="twitter:image:alt" content="ImmoPrestige - Logiciel de gestion immobilière" />
 
-    <!-- JSON-LD Structured Data -->
+    <!-- JSON-LD: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ImmoPrestige",
+      "url": "https://property-grace.lovable.app",
+      "logo": "https://property-grace.lovable.app/pwa-512x512.png",
+      "description": "ImmoPrestige est le logiciel de gestion immobilière et locative N°1 en Afrique, conçu pour les agences et propriétaires en Côte d'Ivoire.",
+      "foundingDate": "2024",
+      "areaServed": [
+        { "@type": "Country", "name": "Côte d'Ivoire" },
+        { "@type": "Country", "name": "Sénégal" },
+        { "@type": "Country", "name": "Cameroun" },
+        { "@type": "Country", "name": "Mali" },
+        { "@type": "Country", "name": "Burkina Faso" },
+        { "@type": "Country", "name": "Guinée" },
+        { "@type": "Country", "name": "Togo" },
+        { "@type": "Country", "name": "Bénin" },
+        { "@type": "Country", "name": "Congo" }
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": "French"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- JSON-LD: SoftwareApplication -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "name": "ImmoPrestige",
       "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "description": "Logiciel de gestion immobilière et locative pour les agences et propriétaires en Côte d'Ivoire et en Afrique. Gestion des biens, locataires, loyers, quittances, contrats, lotissements et ventes.",
+      "applicationSubCategory": "Gestion Immobilière",
+      "operatingSystem": "Web, iOS, Android (PWA)",
+      "description": "Logiciel de gestion immobilière et locative pour les agences et propriétaires en Côte d'Ivoire et en Afrique. Gestion des biens, locataires, loyers, quittances, contrats numériques, lotissements, ventes et achats immobiliers. Paiement Mobile Money, Wave, Orange Money intégré.",
       "url": "https://property-grace.lovable.app",
       "image": "https://property-grace.lovable.app/og-image.png",
+      "inLanguage": "fr",
       "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "XOF",
-        "description": "Plan gratuit disponible"
+        "description": "Plan gratuit disponible - Commencez sans carte bancaire"
       },
       "author": {
         "@type": "Organization",
@@ -67,8 +109,121 @@
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "4.8",
-        "ratingCount": "150"
-      }
+        "ratingCount": "150",
+        "bestRating": "5"
+      },
+      "featureList": [
+        "Gestion locative complète",
+        "Contrats numériques avec signature électronique",
+        "Quittances automatiques",
+        "Paiement en ligne Mobile Money, Wave, Orange Money",
+        "Rappels automatiques WhatsApp et email",
+        "CRM immobilier",
+        "Gestion des lotissements et parcelles",
+        "Suivi des impayés et relances",
+        "États des lieux numériques",
+        "Tableaux de bord et statistiques en temps réel",
+        "Application mobile PWA hors ligne",
+        "Gestion multi-biens et multi-locataires"
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Qu'est-ce qu'ImmoPrestige ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ImmoPrestige est un logiciel de gestion immobilière et locative en ligne, conçu spécifiquement pour les agences immobilières, propriétaires et bailleurs en Côte d'Ivoire et en Afrique. Il permet de gérer les biens, locataires, loyers, contrats, quittances, lotissements et ventes immobilières depuis un seul outil."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment fonctionne le paiement des loyers en ligne ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ImmoPrestige intègre les paiements Mobile Money (Orange Money, MTN Money, Moov Money), Wave et les cartes bancaires. Les locataires peuvent payer directement en ligne et les quittances sont générées automatiquement."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "ImmoPrestige est-il gratuit ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui, ImmoPrestige propose un plan gratuit pour démarrer sans engagement et sans carte bancaire. Des forfaits payants sont disponibles pour les besoins plus importants avec plus de biens, locataires et fonctionnalités avancées."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Puis-je utiliser ImmoPrestige sur mon téléphone ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui, ImmoPrestige est une application web progressive (PWA) qui fonctionne sur tous les appareils : ordinateur, tablette et smartphone. Vous pouvez l'installer sur votre téléphone et l'utiliser même hors connexion."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "ImmoPrestige fonctionne-t-il en Côte d'Ivoire ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui, ImmoPrestige est spécialement conçu pour le marché immobilier ivoirien et africain. Il prend en charge le Franc CFA (FCFA), les moyens de paiement locaux (Orange Money, Wave, MTN Money) et les réalités du terrain."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment gérer un lotissement avec ImmoPrestige ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ImmoPrestige offre un module complet de gestion de lotissements : création d'îlots et parcelles, gestion des ventes, suivi des échéanciers de paiement, démarches administratives, documents juridiques et signatures numériques."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Accueil",
+          "item": "https://property-grace.lovable.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Inscription",
+          "item": "https://property-grace.lovable.app/signup"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Connexion",
+          "item": "https://property-grace.lovable.app/login"
+        }
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: WebSite with SearchAction -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ImmoPrestige",
+      "url": "https://property-grace.lovable.app",
+      "description": "Logiciel de gestion immobilière et locative N°1 en Afrique",
+      "inLanguage": "fr"
     }
     </script>
 

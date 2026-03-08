@@ -677,6 +677,8 @@ export type Database = {
       }
       automation_schedules: {
         Row: {
+          commission_report_day: number
+          commission_report_time: string
           created_at: string
           id: string
           late_payment_days_after: number
@@ -695,6 +697,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          commission_report_day?: number
+          commission_report_time?: string
           created_at?: string
           id?: string
           late_payment_days_after?: number
@@ -713,6 +717,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          commission_report_day?: number
+          commission_report_time?: string
           created_at?: string
           id?: string
           late_payment_days_after?: number

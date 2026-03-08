@@ -21,6 +21,9 @@ export interface AutomationSchedule {
   monthly_receipt_enabled: boolean;
   monthly_receipt_day: number;
   monthly_receipt_time: string;
+  // Rapports de commissions
+  commission_report_day: number;
+  commission_report_time: string;
   created_at: string;
   updated_at: string;
 }
@@ -38,6 +41,8 @@ export const DEFAULT_SCHEDULE: Omit<AutomationSchedule, 'id' | 'user_id' | 'crea
   monthly_receipt_enabled: true,
   monthly_receipt_day: 2,
   monthly_receipt_time: '08:00:00',
+  commission_report_day: 5,
+  commission_report_time: '09:00:00',
 };
 
 export function useAutomationSchedules() {

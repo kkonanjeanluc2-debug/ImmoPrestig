@@ -3951,6 +3951,71 @@ export type Database = {
           },
         ]
       }
+      vente_signatures: {
+        Row: {
+          created_at: string
+          document_type: string
+          id: string
+          ip_address: string | null
+          signature_data: string | null
+          signature_text: string | null
+          signature_token: string | null
+          signature_type: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          signer_type: string
+          token_expires_at: string | null
+          user_agent: string | null
+          user_id: string
+          vente_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          id?: string
+          ip_address?: string | null
+          signature_data?: string | null
+          signature_text?: string | null
+          signature_token?: string | null
+          signature_type: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          signer_type: string
+          token_expires_at?: string | null
+          user_agent?: string | null
+          user_id: string
+          vente_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          id?: string
+          ip_address?: string | null
+          signature_data?: string | null
+          signature_text?: string | null
+          signature_token?: string | null
+          signature_type?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          signer_type?: string
+          token_expires_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+          vente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vente_signatures_vente_id_fkey"
+            columns: ["vente_id"]
+            isOneToOne: false
+            referencedRelation: "ventes_immobilieres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ventes_immobilieres: {
         Row: {
           acquereur_id: string
@@ -3964,6 +4029,7 @@ export type Database = {
           payment_method: string | null
           payment_type: Database["public"]["Enums"]["payment_type"]
           sale_date: string
+          signature_status: string | null
           sold_by: string | null
           status: Database["public"]["Enums"]["sale_payment_status"]
           total_installments: number | null
@@ -3983,6 +4049,7 @@ export type Database = {
           payment_method?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
           sale_date?: string
+          signature_status?: string | null
           sold_by?: string | null
           status?: Database["public"]["Enums"]["sale_payment_status"]
           total_installments?: number | null
@@ -4002,6 +4069,7 @@ export type Database = {
           payment_method?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
           sale_date?: string
+          signature_status?: string | null
           sold_by?: string | null
           status?: Database["public"]["Enums"]["sale_payment_status"]
           total_installments?: number | null

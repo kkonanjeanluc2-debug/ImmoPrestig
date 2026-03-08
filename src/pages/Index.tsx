@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
+import { SubscriptionExpiryBanner } from "@/components/dashboard/SubscriptionExpiryBanner";
 
 const Index = () => {
   const { user } = useAuth();
@@ -134,6 +135,9 @@ const Index = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
+        {/* Subscription Expiry Banner */}
+        <SubscriptionExpiryBanner />
+
         {/* Header */}
         <div className="flex flex-col gap-4">
           <div>

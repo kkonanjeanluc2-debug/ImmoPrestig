@@ -786,7 +786,7 @@ export const generateContratVenteImmo = async (
     yPos += 10;
   } else {
     const acompte = vente.down_payment || 0;
-    doc.text("Le paiement du prix est effectue comme suit :", margin, yPos);
+    doc.text("Le paiement du prix est effectué comme suit :", margin, yPos);
     yPos += 8;
     
     const modalitesLines = [

@@ -47,6 +47,8 @@ export function AutomationSettings() {
         monthly_receipt_enabled: schedule.monthly_receipt_enabled,
         monthly_receipt_day: schedule.monthly_receipt_day,
         monthly_receipt_time: schedule.monthly_receipt_time,
+        commission_report_day: schedule.commission_report_day,
+        commission_report_time: schedule.commission_report_time,
       });
       setHasChanges(false);
     }
@@ -361,7 +363,7 @@ export function AutomationSettings() {
                 <div>
                   <Label className="text-base font-medium">Rapports de commissions</Label>
                   <p className="text-sm text-muted-foreground">
-                    Envoi automatique le 5 de chaque mois aux propriétaires
+                    Envoi automatique aux propriétaires
                   </p>
                 </div>
               </div>
@@ -379,6 +381,36 @@ export function AutomationSettings() {
                 )}
                 Envoyer maintenant
               </Button>
+            </div>
+            
+            <div className="ml-8 grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="commission-day">Jour du mois</Label>
+                <Select
+                  value={formData.commission_report_day.toString()}
+                  onValueChange={(value) => handleChange('commission_report_day', parseInt(value))}
+                >
+                  <SelectTrigger id="commission-day">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                      <SelectItem key={day} value={day.toString()}>
+                        Le {day}{day === 1 ? 'er' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="commission-time">Heure d'envoi</Label>
+                <Input
+                  id="commission-time"
+                  type="time"
+                  value={formatTimeForInput(formData.commission_report_time)}
+                  onChange={(e) => handleChange('commission_report_time', formatTimeForDb(e.target.value))}
+                />
+              </div>
             </div>
           </div>
 

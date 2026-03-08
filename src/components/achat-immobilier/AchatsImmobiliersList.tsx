@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,17 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, Plus, Loader2, UserPlus } from "lucide-react";
+import { ShoppingCart, Plus, Loader2, UserPlus, FileText } from "lucide-react";
+import { DocumentsAchatTransactionDialog } from "./DocumentsAchatTransactionDialog";
 import { useAchatsImmobiliers, useCreateAchatImmobilier } from "@/hooks/useAchatsImmobiliers";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
+import { useOffresAchat } from "@/hooks/useOffresAchat";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
 import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
+import type { AchatImmobilier } from "@/hooks/useAchatsImmobiliers";
 
 interface AchatsImmobiliersListProps {
   period?: PeriodValue;
@@ -28,12 +31,14 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
   const { data: biens = [] } = useBiensAchat();
   const { data: vendeurs = [] } = useVendeurs();
   const { data: acquereurs = [] } = useAcquereurs();
+  const { data: offres = [] } = useOffresAchat();
   const { data: agency } = useAgency();
   const { hasPermission } = usePermissions();
   const canCreate = hasPermission("can_create_achats");
   const createMutation = useCreateAchatImmobilier();
   const createAcquereur = useCreateAcquereur();
   const [open, setOpen] = useState(false);
+  const [docsAchat, setDocsAchat] = useState<AchatImmobilier | null>(null);
   const [showNewAcquereur, setShowNewAcquereur] = useState(false);
   const [newAcquereur, setNewAcquereur] = useState({ name: "", phone: "", email: "", address: "", cni_number: "", birth_date: "", birth_place: "", profession: "" });
   const [form, setForm] = useState({
@@ -290,13 +295,19 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
                   {achat.acquereurs && <p className="text-sm text-muted-foreground">Acquéreur: {achat.acquereurs.name}</p>}
                   {achat.vendeurs && <p className="text-sm text-muted-foreground">Vendeur: {achat.vendeurs.name}</p>}
                 </div>
-                <div className="text-right">
+                <div className="text-right space-y-1">
                   <p className="text-lg font-bold">{Number(achat.sale_price).toLocaleString("fr-FR")} FCFA</p>
-                  <Badge variant="outline">{achat.payment_type === "comptant" ? "Comptant" : "Échelonné"}</Badge>
+                  <div className="flex items-center gap-2 justify-end">
+                    <Badge variant="outline">{achat.payment_type === "comptant" ? "Comptant" : "Échelonné"}</Badge>
+                    <Button variant="outline" size="sm" onClick={() => setDocsAchat(achat)}>
+                      <FileText className="h-4 w-4 mr-1" />
+                      Documents
+                    </Button>
+                  </div>
                   {achat.commission_amount && achat.commission_amount > 0 && (
-                    <p className="text-xs text-primary mt-1">Commission: {Number(achat.commission_amount).toLocaleString("fr-FR")} FCFA</p>
+                    <p className="text-xs text-primary">Commission: {Number(achat.commission_amount).toLocaleString("fr-FR")} FCFA</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">{format(new Date(achat.sale_date), "dd MMM yyyy", { locale: fr })}</p>
+                  <p className="text-xs text-muted-foreground">{format(new Date(achat.sale_date), "dd MMM yyyy", { locale: fr })}</p>
                 </div>
               </div>
             </Card>
@@ -304,6 +315,16 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
           </div>
         );
       })()}
+
+      {docsAchat && (
+        <DocumentsAchatTransactionDialog
+          achat={docsAchat}
+          bien={biens.find(b => b.id === docsAchat.bien_id) || null}
+          offres={offres}
+          open={!!docsAchat}
+          onOpenChange={(o) => { if (!o) setDocsAchat(null); }}
+        />
+      )}
     </div>
   );
 }

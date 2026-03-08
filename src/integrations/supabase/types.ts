@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      achat_signatures: {
+        Row: {
+          achat_id: string
+          created_at: string
+          document_type: string
+          id: string
+          ip_address: string | null
+          signature_data: string | null
+          signature_text: string | null
+          signature_token: string | null
+          signature_type: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          signer_type: string
+          token_expires_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          achat_id: string
+          created_at?: string
+          document_type: string
+          id?: string
+          ip_address?: string | null
+          signature_data?: string | null
+          signature_text?: string | null
+          signature_token?: string | null
+          signature_type: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          signer_type: string
+          token_expires_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          achat_id?: string
+          created_at?: string
+          document_type?: string
+          id?: string
+          ip_address?: string | null
+          signature_data?: string | null
+          signature_text?: string | null
+          signature_token?: string | null
+          signature_type?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          signer_type?: string
+          token_expires_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achat_signatures_achat_id_fkey"
+            columns: ["achat_id"]
+            isOneToOne: false
+            referencedRelation: "achats_immobiliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       achats_immobiliers: {
         Row: {
           acquereur_id: string | null

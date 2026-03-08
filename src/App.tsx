@@ -40,6 +40,7 @@ const pageImports = {
   Trash: () => import("./pages/Trash"),
   SignContract: () => import("./pages/SignContract"),
   SignVente: () => import("./pages/SignVente"),
+  SignAchat: () => import("./pages/SignAchat"),
   Lotissements: () => import("./pages/Lotissements"),
   LotissementDetails: () => import("./pages/LotissementDetails"),
   VentesImmobilieres: () => import("./pages/VentesImmobilieres"),
@@ -72,6 +73,7 @@ const Pricing = lazy(pageImports.Pricing);
 const Trash = lazy(pageImports.Trash);
 const SignContract = lazy(pageImports.SignContract);
 const SignVente = lazy(pageImports.SignVente);
+const SignAchat = lazy(pageImports.SignAchat);
 const Lotissements = lazy(pageImports.Lotissements);
 const LotissementDetails = lazy(pageImports.LotissementDetails);
 const VentesImmobilieres = lazy(pageImports.VentesImmobilieres);
@@ -177,6 +179,7 @@ const App = () => {
                   <Route path="/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />
                   <Route path="/sign-vente" element={<SignVente />} />
+                  <Route path="/sign-achat" element={<SignAchat />} />
                   <Route path="/offre-vendeur/:token" element={<VendorOfferResponse />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

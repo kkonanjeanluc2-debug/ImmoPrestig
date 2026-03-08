@@ -120,11 +120,8 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
   const { data: defaultTemplate } = useDefaultContractTemplate();
   const limits = useSubscriptionLimits();
 
-  // Filter only available properties (or multi-unit properties with at least one available unit)
-  const availableProperties = properties?.filter(p => 
-    p.status === 'disponible' || 
-    (p.property_type === 'maison')
-  ) || [];
+  // Filter only available properties
+  const availableProperties = properties?.filter(p => p.status === 'disponible') || [];
   
   // Filter available units (only those with status 'disponible')
   const availableUnits = propertyUnits.filter(u => u.status === 'disponible');

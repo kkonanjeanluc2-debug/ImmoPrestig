@@ -89,6 +89,18 @@ export function EcheancesAchatsList() {
         agencyAddress: [agency?.address, agency?.city, agency?.country].filter(Boolean).join(", ") || undefined,
         agencyLogoUrl: agency?.logo_url,
         validatedBy: name,
+        vendeur: ech.achats_immobiliers?.vendeurs ? {
+          name: ech.achats_immobiliers.vendeurs.name,
+          phone: ech.achats_immobiliers.vendeurs.phone,
+          address: ech.achats_immobiliers.vendeurs.address,
+          cniNumber: ech.achats_immobiliers.vendeurs.cni_number,
+        } : undefined,
+        acquereur: ech.achats_immobiliers?.acquereurs ? {
+          name: ech.achats_immobiliers.acquereurs.name,
+          phone: ech.achats_immobiliers.acquereurs.phone,
+          address: ech.achats_immobiliers.acquereurs.address,
+          cniNumber: ech.achats_immobiliers.acquereurs.cni_number,
+        } : undefined,
       });
     } catch (e) {
       toast.error("Erreur lors de la génération du reçu");

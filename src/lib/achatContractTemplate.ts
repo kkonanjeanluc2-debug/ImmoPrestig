@@ -340,7 +340,7 @@ export function replaceAchatContractVariables(
 
   // Payment modalities
   let modalites = "";
-  if (data.paymentType === "comptant") {
+  if ((data.paymentType as string) === "comptant") {
     modalites = "Le prix est payable au comptant, et le vendeur reconnaît en avoir reçu le montant intégral ce jour même, dont quittance.";
   } else {
     modalites = "Le prix est payable selon les modalités suivantes :\n";

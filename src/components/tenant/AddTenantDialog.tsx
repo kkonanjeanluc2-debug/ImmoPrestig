@@ -422,7 +422,6 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       }
     }
   };
-  };
 
   const handleDownloadContract = async () => {
     if (!createdContractData) return;

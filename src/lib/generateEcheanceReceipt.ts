@@ -63,13 +63,13 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text(data.agencyName || "Recu de paiement", headerX, 15);
+  doc.text(data.agencyName || "Reçu de paiement", headerX, 15);
 
   if (data.agencyPhone || data.agencyEmail) {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     let cy = 22;
-    if (data.agencyPhone) { doc.text(`Tel: ${data.agencyPhone}`, headerX, cy); cy += 5; }
+    if (data.agencyPhone) { doc.text(`Tél: ${data.agencyPhone}`, headerX, cy); cy += 5; }
     if (data.agencyEmail) { doc.text(data.agencyEmail, headerX, cy); cy += 5; }
     if (data.agencyAddress) { doc.text(data.agencyAddress, headerX, cy); }
   }
@@ -77,13 +77,13 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   // Title right
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("RECU DE PAIEMENT", pageWidth - 15, 18, { align: "right" });
+  doc.text("REÇU DE PAIEMENT", pageWidth - 15, 18, { align: "right" });
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text(`N° ${data.echeanceId.substring(0, 8).toUpperCase()}`, pageWidth - 15, 26, { align: "right" });
 
   if (data.echeanceNumber && data.totalEcheances) {
-    doc.text(`Echeance ${data.echeanceNumber} / ${data.totalEcheances}`, pageWidth - 15, 33, { align: "right" });
+    doc.text(`Échéance ${data.echeanceNumber} / ${data.totalEcheances}`, pageWidth - 15, 33, { align: "right" });
   }
 
   doc.setTextColor(...textColor);
@@ -122,7 +122,7 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  doc.text("Montant paye", pageWidth / 2, yPos + 12, { align: "center" });
+  doc.text("Montant payé", pageWidth / 2, yPos + 12, { align: "center" });
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(data.amount), pageWidth / 2, yPos + 26, { align: "center", charSpace: 0.5 });
@@ -141,7 +141,7 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(...textColor);
-  doc.text("DETAILS DU PAIEMENT", 20, yPos + 5.5);
+  doc.text("DÉTAILS DU PAIEMENT", 20, yPos + 5.5);
   yPos += 12;
 
   doc.setFont("helvetica", "normal");
@@ -150,12 +150,12 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
 
   const details: [string, string][] = [
     ["Prix total du bien", formatAmountWithCurrency(data.totalSalePrice)],
-    ["Date d'echeance", dueDateFormatted],
+    ["Date d'échéance", dueDateFormatted],
     ["Date de paiement", paidDateFormatted],
-    ["Mode de paiement", data.paymentMethod || "Non specifie"],
+    ["Mode de paiement", data.paymentMethod || "Non spécifié"],
   ];
   if (data.validatedBy) {
-    details.push(["Valide par", data.validatedBy]);
+    details.push(["Validé par", data.validatedBy]);
   }
 
   details.forEach(([label, value]) => {
@@ -190,7 +190,7 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   doc.setFont("helvetica", "normal");
   doc.setTextColor(128, 128, 128);
   doc.text(
-    "Ce document est un recu de paiement genere automatiquement.",
+    "Ce document est un reçu de paiement généré automatiquement.",
     pageWidth / 2,
     doc.internal.pageSize.getHeight() - 10,
     { align: "center" }

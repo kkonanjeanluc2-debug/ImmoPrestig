@@ -1,10 +1,13 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/hooks/useAgency";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
-import { Loader2, Ban } from "lucide-react";
+import { useAgencySubscription } from "@/hooks/useAgencySubscription";
+import { Loader2, Ban, AlertTriangle, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo } from "react";
+import { differenceInDays, parseISO } from "date-fns";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

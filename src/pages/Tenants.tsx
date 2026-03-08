@@ -119,8 +119,8 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
   const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
   
   // Determine contract status based on actual contract data
-  const getContractStatus = () => {
-    if (!activeContract) return 'expired';
+  const getContractStatus = (): string | null => {
+    if (!activeContract) return null;
     if (activeContract.status === 'active') {
       // Check if ending soon (within 30 days)
       const endDate = new Date(activeContract.end_date);
@@ -129,11 +129,12 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
       if (daysUntilEnd <= 30 && daysUntilEnd > 0) return 'ending_soon';
       return 'active';
     }
-    return activeContract.status as keyof typeof contractStatusConfig || 'expired';
+    if (activeContract.status === 'expired') return 'expired';
+    return null;
   };
   
   const contractStatus = getContractStatus();
-  const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
+  const statusConfig = contractStatus ? contractStatusConfig[contractStatus as keyof typeof contractStatusConfig] : null;
   const assignedTo = tenant.assigned_to;
   const hasPortalAccess = tenant.has_portal_access;
 
@@ -154,9 +155,11 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
                 <h3 className="font-semibold text-sm sm:text-base text-foreground truncate max-w-[180px] sm:max-w-none">{tenant.name}</h3>
-                <Badge variant="outline" className={cn("text-[10px] sm:text-xs", statusConfig.className)}>
-                  {statusConfig.label}
-                </Badge>
+                {statusConfig && (
+                  <Badge variant="outline" className={cn("text-[10px] sm:text-xs", statusConfig.className)}>
+                    {statusConfig.label}
+                  </Badge>
+                )}
                 {assignedTo && <AssignmentBadge userId={assignedTo} />}
                 {isAgencyOwner && (
                   <Badge 

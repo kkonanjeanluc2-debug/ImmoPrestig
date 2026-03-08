@@ -3,6 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
+export interface AchatPartyInfo {
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  birth_date: string | null;
+  birth_place: string | null;
+  cni_number: string | null;
+  profession: string | null;
+}
+
 export interface AchatImmobilier {
   id: string;
   user_id: string;
@@ -21,8 +32,8 @@ export interface AchatImmobilier {
   notes: string | null;
   created_at: string;
   biens_achat?: { title: string; address: string } | null;
-  vendeurs?: { name: string; phone: string | null } | null;
-  acquereurs?: { name: string; phone: string | null } | null;
+  vendeurs?: AchatPartyInfo | null;
+  acquereurs?: AchatPartyInfo | null;
 }
 
 export function useAchatsImmobiliers() {

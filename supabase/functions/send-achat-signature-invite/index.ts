@@ -12,15 +12,23 @@ serve(async (req) => {
 
   try {
     const {
-      buyerName,
-      buyerEmail,
+      signerName,
+      signerEmail,
+      signerType,
       signatureLink,
       propertyTitle,
       salePrice,
       documentType,
       agencyName,
       agencyEmail,
+      // Legacy support
+      buyerName,
+      buyerEmail,
     } = await req.json();
+
+    const finalSignerName = signerName || buyerName;
+    const finalSignerEmail = signerEmail || buyerEmail;
+    const finalSignerType = signerType || "buyer";
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
@@ -32,6 +40,7 @@ serve(async (req) => {
 
     const docLabel = documentType === "acte_achat" ? "Acte d'achat" : "Compromis d'achat";
     const formattedPrice = Number(salePrice).toLocaleString("fr-FR");
+    const roleLabel = finalSignerType === "vendor" ? "vendeur" : "acquéreur";
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -40,8 +49,8 @@ serve(async (req) => {
         </div>
         <div style="padding: 30px; background: #f9f9f9;">
           <h2 style="color: #1A365D;">Invitation à signer - ${docLabel}</h2>
-          <p>Bonjour <strong>${buyerName}</strong>,</p>
-          <p>${agencyName} vous invite à signer électroniquement le <strong>${docLabel}</strong> concernant le bien :</p>
+          <p>Bonjour <strong>${finalSignerName}</strong>,</p>
+          <p>${agencyName} vous invite à signer électroniquement le <strong>${docLabel}</strong> en tant que <strong>${roleLabel}</strong> concernant le bien :</p>
           <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #1A365D;">
             <p style="margin: 5px 0;"><strong>Bien :</strong> ${propertyTitle}</p>
             <p style="margin: 5px 0;"><strong>Prix :</strong> ${formattedPrice} FCFA</p>
@@ -67,7 +76,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: `${agencyName} <noreply@immoprestigeci.com>`,
-        to: [buyerEmail],
+        to: [finalSignerEmail],
         subject: `${docLabel} à signer - ${propertyTitle}`,
         html,
       }),

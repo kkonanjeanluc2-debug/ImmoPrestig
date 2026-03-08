@@ -103,7 +103,7 @@ export default function SignAchat() {
           </div>
           <CardTitle>Signature - {docLabel}</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Vous êtes invité(e) à signer ce document en tant qu'acquéreur.
+            Vous êtes invité(e) à signer ce document en tant que {signatureData?.signer_type === "vendor" ? "vendeur" : "acquéreur"}.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">

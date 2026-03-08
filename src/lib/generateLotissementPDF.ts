@@ -514,7 +514,7 @@ export const generateContratVente = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   
-  let article2 = `La presente vente est consentie et acceptee moyennant le prix principal de ${formatAmountWithCurrency(vente.total_price)} (${numberToWordsPDF(vente.total_price)} francs CFA).`;
+  let article2 = `La présente vente est consentie et acceptée moyennant le prix principal de ${formatAmountWithCurrency(vente.total_price)} (${numberToWordsPDF(vente.total_price)} francs CFA).`;
   
   if (vente.payment_type === "echelonne") {
     article2 += `\n\nCe montant sera payé selon les modalités suivantes :\n- Apport initial : ${formatAmountWithCurrency(vente.down_payment || 0)}\n- Mensualités : ${vente.total_installments} versements de ${formatAmountWithCurrency(vente.monthly_payment || 0)}`;
@@ -735,15 +735,15 @@ export const generatePromesseVente = async (
   const calculatedDeposit = depositAmount > 0 ? depositAmount : Math.round(parcelle.price * depositPercentage / 100);
   const remainingBalance = parcelle.price - calculatedDeposit;
   
-  let article2 = `La vente sera consentie moyennant le prix de ${formatAmountWithCurrency(parcelle.price)} (${numberToWordsPDF(parcelle.price)} francs CFA).\n\nA titre de depot de garantie et en contrepartie de l'immobilisation du bien, le Beneficiaire verse ce jour au Promettant la somme de ${formatAmountWithCurrency(calculatedDeposit)} (${numberToWordsPDF(calculatedDeposit)} francs CFA).`;
+  let article2 = `La vente sera consentie moyennant le prix de ${formatAmountWithCurrency(parcelle.price)} (${numberToWordsPDF(parcelle.price)} francs CFA).\n\nÀ titre de dépôt de garantie et en contrepartie de l'immobilisation du bien, le Bénéficiaire verse ce jour au Promettant la somme de ${formatAmountWithCurrency(calculatedDeposit)} (${numberToWordsPDF(calculatedDeposit)} francs CFA).`;
   
   if (paymentInfo?.payment_type === "echelonne" && paymentInfo.total_installments && paymentInfo.monthly_payment) {
-    article2 += `\n\nLe solde restant a payer s'eleve a ${formatAmountWithCurrency(remainingBalance)} (${numberToWordsPDF(remainingBalance)} francs CFA), payable en ${paymentInfo.total_installments} echeances mensuelles de ${formatAmountWithCurrency(paymentInfo.monthly_payment)} (${numberToWordsPDF(paymentInfo.monthly_payment)} francs CFA) chacune.`;
+    article2 += `\n\nLe solde restant à payer s'élève à ${formatAmountWithCurrency(remainingBalance)} (${numberToWordsPDF(remainingBalance)} francs CFA), payable en ${paymentInfo.total_installments} échéances mensuelles de ${formatAmountWithCurrency(paymentInfo.monthly_payment)} (${numberToWordsPDF(paymentInfo.monthly_payment)} francs CFA) chacune.`;
   } else {
-    article2 += `\n\nLe solde restant a payer s'eleve a ${formatAmountWithCurrency(remainingBalance)} (${numberToWordsPDF(remainingBalance)} francs CFA), payable au comptant lors de la signature de l'acte definitif.`;
+    article2 += `\n\nLe solde restant à payer s'élève à ${formatAmountWithCurrency(remainingBalance)} (${numberToWordsPDF(remainingBalance)} francs CFA), payable au comptant lors de la signature de l'acte définitif.`;
   }
   
-  article2 += `\n\nCette somme sera imputee sur le prix de vente lors de la signature de l'acte definitif.`;
+  article2 += `\n\nCette somme sera imputée sur le prix de vente lors de la signature de l'acte définitif.`;
 
   const article2Lines = doc.splitTextToSize(article2, maxWidth);
   article2Lines.forEach((line: string) => {

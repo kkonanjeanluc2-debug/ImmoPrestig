@@ -24,7 +24,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 
 const PROPERTY_TYPES = [
-  { value: "maison", label: "Maison à porte multiple" },
   { value: "appartement", label: "Appartement" },
   { value: "villa", label: "Villa" },
   { value: "terrain", label: "Terrain" },

@@ -315,6 +315,16 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
           </div>
         );
       })()}
+
+      {docsAchat && (
+        <DocumentsAchatTransactionDialog
+          achat={docsAchat}
+          bien={biens.find(b => b.id === docsAchat.bien_id) || null}
+          offres={offres}
+          open={!!docsAchat}
+          onOpenChange={(o) => { if (!o) setDocsAchat(null); }}
+        />
+      )}
     </div>
   );
 }

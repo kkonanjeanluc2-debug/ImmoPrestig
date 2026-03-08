@@ -79,8 +79,8 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+      {/* Header / Nav */}
+      <nav role="navigation" aria-label="Navigation principale" className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between gap-3">
             <Link to="/" className="flex items-center gap-2 shrink-0">
@@ -130,8 +130,9 @@ const Pricing = () => {
         </div>
       </header>
 
+      <main>
       {/* ===== HERO SECTION ===== */}
-      <section className="relative overflow-hidden py-20 md:py-32 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      <section aria-label="Présentation ImmoPrestige" className="relative overflow-hidden py-20 md:py-32 bg-gradient-to-br from-primary/5 via-background to-accent/5">
         {/* Decorative blobs */}
         <div className="absolute top-0 left-0 w-72 h-72 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
@@ -543,20 +544,26 @@ const Pricing = () => {
       </Dialog>
 
       {/* FAQ Section */}
-      <section className="py-16 bg-muted/30">
+      <section aria-label="Questions fréquentes" className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Questions fréquentes</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Questions fréquentes sur la gestion immobilière</h2>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
+              { q: "Qu'est-ce qu'ImmoPrestige ?", a: "ImmoPrestige est un logiciel de gestion immobilière et locative en ligne, conçu pour les agences immobilières, propriétaires et bailleurs en Côte d'Ivoire et en Afrique. Il centralise la gestion des biens, locataires, loyers, contrats et lotissements." },
+              { q: "Comment fonctionne le paiement des loyers en ligne ?", a: "ImmoPrestige intègre les paiements Mobile Money (Orange Money, MTN Money, Moov Money), Wave et les cartes bancaires. Les locataires peuvent payer directement en ligne et les quittances sont générées automatiquement." },
+              { q: "ImmoPrestige est-il gratuit ?", a: "Oui, ImmoPrestige propose un plan gratuit pour démarrer sans engagement et sans carte bancaire. Des forfaits payants sont disponibles pour les besoins plus importants." },
+              { q: "Puis-je utiliser ImmoPrestige sur mon téléphone ?", a: "Oui, ImmoPrestige est une application web progressive (PWA) qui fonctionne sur tous les appareils : ordinateur, tablette et smartphone, même hors connexion." },
               { q: "Puis-je changer de forfait ?", a: "Oui, vous pouvez passer à un forfait supérieur à tout moment. La différence sera calculée au prorata." },
-              { q: "Comment fonctionne le paiement ?", a: "Nous acceptons Orange Money, MTN Money, Wave, Moov Money et les cartes bancaires pour votre confort." },
-              { q: "Y a-t-il un engagement ?", a: "Non, tous nos forfaits sont sans engagement. Vous pouvez annuler à tout moment." },
-              { q: "Mes données sont-elles sécurisées ?", a: "Absolument. Vos données sont chiffrées et hébergées sur des serveurs sécurisés." },
+              { q: "Mes données sont-elles sécurisées ?", a: "Absolument. Vos données sont chiffrées et hébergées sur des serveurs sécurisés avec des sauvegardes régulières." },
+              { q: "Comment gérer un lotissement ?", a: "ImmoPrestige offre un module complet : création d'îlots et parcelles, gestion des ventes, suivi des échéanciers, démarches administratives et signatures numériques." },
+              { q: "ImmoPrestige fonctionne-t-il en Côte d'Ivoire ?", a: "Oui, ImmoPrestige est spécialement conçu pour le marché ivoirien et africain avec le Franc CFA et les moyens de paiement locaux." },
             ].map((item, i) => (
-              <div key={i}>
-                <h3 className="font-semibold mb-2">{item.q}</h3>
-                <p className="text-muted-foreground text-sm">{item.a}</p>
-              </div>
+              <article key={i} itemScope itemType="https://schema.org/Question">
+                <h3 className="font-semibold mb-2" itemProp="name">{item.q}</h3>
+                <div itemScope itemType="https://schema.org/Answer" itemProp="acceptedAnswer">
+                  <p className="text-muted-foreground text-sm" itemProp="text">{item.a}</p>
+                </div>
+              </article>
             ))}
           </div>
         </div>
@@ -583,10 +590,55 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 {platformAppName}. Tous droits réservés.</p>
+      </main>
+
+      {/* Footer SEO-rich */}
+      <footer className="border-t bg-muted/20 py-12" role="contentinfo">
+        <div className="container mx-auto px-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h4 className="font-semibold text-foreground mb-3">ImmoPrestige</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Le logiciel de gestion immobilière et locative N°1 en Afrique. Conçu pour les agences immobilières, propriétaires et bailleurs en Côte d'Ivoire.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3">Gestion Locative</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>Gestion des biens immobiliers</li>
+                <li>Suivi des locataires et loyers</li>
+                <li>Quittances de loyer automatiques</li>
+                <li>Contrats de bail numériques</li>
+                <li>États des lieux digitaux</li>
+                <li>Rappels WhatsApp automatiques</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3">Ventes & Achats</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>CRM immobilier</li>
+                <li>Gestion des offres d'achat</li>
+                <li>Suivi des transactions</li>
+                <li>Échéanciers de paiement</li>
+                <li>Gestion des lotissements</li>
+                <li>Parcelles et îlots</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3">Paiements acceptés</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>Orange Money</li>
+                <li>Wave</li>
+                <li>MTN Mobile Money</li>
+                <li>Moov Money</li>
+                <li>Cartes bancaires (Visa, Mastercard)</li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} {platformAppName}. Tous droits réservés.</p>
+            <p>Logiciel de gestion immobilière pour la Côte d'Ivoire, le Sénégal, le Cameroun et toute l'Afrique.</p>
+          </div>
         </div>
       </footer>
 

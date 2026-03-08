@@ -239,17 +239,17 @@ export const generateFicheReservation = async (
   const vendeurDetails = [agency?.address, agency?.city, agency?.country].filter(Boolean).join(", ");
   const rccm = agency?.siret ? `, RCCM : ${agency.siret}` : "";
 
-  let preambule = `Entre les soussignes :\n\n${vendeurName}`;
-  if (vendeurDetails) preambule += `, sis a ${vendeurDetails}`;
-  preambule += `${rccm}, ci-apres denomme "LE VENDEUR",\n\nD'une part,\n\nEt\n\n`;
+  let preambule = `Entre les soussignés :\n\n${vendeurName}`;
+  if (vendeurDetails) preambule += `, sis à ${vendeurDetails}`;
+  preambule += `${rccm}, ci-après dénommé "LE VENDEUR",\n\nD'une part,\n\nEt\n\n`;
   preambule += `Monsieur/Madame ${acquereur.name}`;
-  if (acquereur.birth_date) preambule += `, ne(e) le ${formatDate(acquereur.birth_date)}`;
-  if (acquereur.birth_place) preambule += ` a ${acquereur.birth_place}`;
+  if (acquereur.birth_date) preambule += `, né(e) le ${formatDate(acquereur.birth_date)}`;
+  if (acquereur.birth_place) preambule += ` à ${acquereur.birth_place}`;
   if (acquereur.profession) preambule += `, ${acquereur.profession}`;
   if (acquereur.cni_number) preambule += `, CNI N° ${acquereur.cni_number}`;
-  if (acquereur.phone) preambule += `, Tel : ${acquereur.phone}`;
-  if (acquereur.address) preambule += `, domicilie(e) a ${acquereur.address}`;
-  preambule += `, ci-apres denomme "LE RESERVATAIRE",\n\nD'autre part,\n\nIl a ete convenu et arrete ce qui suit :`;
+  if (acquereur.phone) preambule += `, Tél : ${acquereur.phone}`;
+  if (acquereur.address) preambule += `, domicilié(e) à ${acquereur.address}`;
+  preambule += `, ci-après dénommé "LE RÉSERVATAIRE",\n\nD'autre part,\n\nIl a été convenu et arrêté ce qui suit :`;
 
   const preLines = doc.splitTextToSize(preambule, maxWidth);
   preLines.forEach((line: string) => {
@@ -264,12 +264,12 @@ export const generateFicheReservation = async (
   yPos = checkPage(40, yPos);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 1 : OBJET DE LA RESERVATION", margin, yPos);
+  doc.text("ARTICLE 1 : OBJET DE LA RÉSERVATION", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const art1 = `Par la presente, le Reservataire declare reserver aupres du Vendeur la parcelle de terrain ci-apres designee :\n\n- Lotissement : ${lotissement.name}, sis a ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}\n- Numero de lot : ${parcelle.plot_number}\n- Superficie : ${formatAmountForPDF(parcelle.area)} m2\n- Prix de vente : ${formatAmountWithCurrency(parcelle.price)} (${numberToWordsPDF(parcelle.price)} francs CFA)`;
+  const art1 = `Par la présente, le Réservataire déclare réserver auprès du Vendeur la parcelle de terrain ci-après désignée :\n\n- Lotissement : ${lotissement.name}, sis à ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}\n- Numéro de lot : ${parcelle.plot_number}\n- Superficie : ${formatAmountForPDF(parcelle.area)} m²\n- Prix de vente : ${formatAmountWithCurrency(parcelle.price)} (${numberToWordsPDF(parcelle.price)} francs CFA)`;
 
   const art1Lines = doc.splitTextToSize(art1, maxWidth);
   art1Lines.forEach((line: string) => {
@@ -284,12 +284,12 @@ export const generateFicheReservation = async (
   yPos = checkPage(50, yPos);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 2 : MONTANT DE LA RESERVATION", margin, yPos);
+  doc.text("ARTICLE 2 : MONTANT DE LA RÉSERVATION", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const art2 = `Le Reservataire verse au Vendeur, a la signature des presentes, la somme de ${formatAmountWithCurrency(reservation.deposit_amount)} (${numberToWordsPDF(reservation.deposit_amount)} francs CFA) a titre de montant de reservation.\n\nMode de paiement : ${getPaymentMethodLabel(reservation.payment_method)}\n\nCe montant sera impute sur le prix total de la parcelle en cas de conclusion de la vente definitive.`;
+  const art2 = `Le Réservataire verse au Vendeur, à la signature des présentes, la somme de ${formatAmountWithCurrency(reservation.deposit_amount)} (${numberToWordsPDF(reservation.deposit_amount)} francs CFA) à titre de montant de réservation.\n\nMode de paiement : ${getPaymentMethodLabel(reservation.payment_method)}\n\nCe montant sera imputé sur le prix total de la parcelle en cas de conclusion de la vente définitive.`;
 
   const art2Lines = doc.splitTextToSize(art2, maxWidth);
   art2Lines.forEach((line: string) => {
@@ -304,12 +304,12 @@ export const generateFicheReservation = async (
   yPos = checkPage(50, yPos);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 3 : CARACTERE NON REMBOURSABLE", margin, yPos);
+  doc.text("ARTICLE 3 : CARACTÈRE NON REMBOURSABLE", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const art3 = `Le montant de la reservation vise a l'article 2 est NON REMBOURSABLE, quels que soient les motifs d'annulation ou de desistement du Reservataire.\n\nEn cas de renonciation du Reservataire a l'acquisition de la parcelle reservee, le montant de la reservation reste definitivement acquis au Vendeur a titre d'indemnite forfaitaire, conformement aux dispositions des articles 1134 et suivants du Code civil applicable en Cote d'Ivoire.\n\nEn cas de defaut du Vendeur a honorer ses engagements, le montant de la reservation sera integralement restitue au Reservataire, sans prejudice de dommages et interets eventuels.`;
+  const art3 = `Le montant de la réservation visé à l'article 2 est NON REMBOURSABLE, quels que soient les motifs d'annulation ou de désistement du Réservataire.\n\nEn cas de renonciation du Réservataire à l'acquisition de la parcelle réservée, le montant de la réservation reste définitivement acquis au Vendeur à titre d'indemnité forfaitaire, conformément aux dispositions des articles 1134 et suivants du Code civil applicable en Côte d'Ivoire.\n\nEn cas de défaut du Vendeur à honorer ses engagements, le montant de la réservation sera intégralement restitué au Réservataire, sans préjudice de dommages et intérêts éventuels.`;
 
   const art3Lines = doc.splitTextToSize(art3, maxWidth);
   art3Lines.forEach((line: string) => {
@@ -324,12 +324,12 @@ export const generateFicheReservation = async (
   yPos = checkPage(40, yPos);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 4 : DUREE DE VALIDITE", margin, yPos);
+  doc.text("ARTICLE 4 : DURÉE DE VALIDITÉ", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const art4 = `La presente reservation est valable pour une duree de ${reservation.validity_days} (${numberToWordsPDF(reservation.validity_days)}) jours a compter de sa date de signature, soit jusqu'au ${formatDate(reservation.expiry_date)}.\n\nA l'expiration de ce delai, si la vente definitive n'a pas ete conclue du fait du Reservataire, la reservation sera caduque de plein droit et le montant verse restera acquis au Vendeur conformement a l'article 3 ci-dessus.`;
+  const art4 = `La présente réservation est valable pour une durée de ${reservation.validity_days} (${numberToWordsPDF(reservation.validity_days)}) jours à compter de sa date de signature, soit jusqu'au ${formatDate(reservation.expiry_date)}.\n\nÀ l'expiration de ce délai, si la vente définitive n'a pas été conclue du fait du Réservataire, la réservation sera caduque de plein droit et le montant versé restera acquis au Vendeur conformément à l'article 3 ci-dessus.`;
 
   const art4Lines = doc.splitTextToSize(art4, maxWidth);
   art4Lines.forEach((line: string) => {
@@ -349,7 +349,7 @@ export const generateFicheReservation = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const art5 = `Le Vendeur s'engage a :\n- Retirer la parcelle de la vente pendant la duree de validite de la reservation\n- Informer le Reservataire de toute modification affectant le lotissement\n- Conclure la vente definitive dans les conditions convenues\n\nLe Reservataire s'engage a :\n- Conclure la vente definitive dans le delai de validite de la reservation\n- Fournir tous les documents necessaires a la regularisation de la vente\n- Respecter le calendrier de paiement qui sera fixe dans l'acte de vente`;
+  const art5 = `Le Vendeur s'engage à :\n- Retirer la parcelle de la vente pendant la durée de validité de la réservation\n- Informer le Réservataire de toute modification affectant le lotissement\n- Conclure la vente définitive dans les conditions convenues\n\nLe Réservataire s'engage à :\n- Conclure la vente définitive dans le délai de validité de la réservation\n- Fournir tous les documents nécessaires à la régularisation de la vente\n- Respecter le calendrier de paiement qui sera fixé dans l'acte de vente`;
 
   const art5Lines = doc.splitTextToSize(art5, maxWidth);
   art5Lines.forEach((line: string) => {
@@ -364,12 +364,12 @@ export const generateFicheReservation = async (
   yPos = checkPage(30, yPos);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ARTICLE 6 : REGLEMENT DES LITIGES", margin, yPos);
+  doc.text("ARTICLE 6 : RÈGLEMENT DES LITIGES", margin, yPos);
   yPos += 7;
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const art6 = `Tout differend ne de l'interpretation ou de l'execution de la presente fiche de reservation sera regle a l'amiable. A defaut, il sera soumis aux juridictions competentes d'Abidjan, Republique de Cote d'Ivoire.`;
+  const art6 = `Tout différend né de l'interprétation ou de l'exécution de la présente fiche de réservation sera réglé à l'amiable. À défaut, il sera soumis aux juridictions compétentes d'Abidjan, République de Côte d'Ivoire.`;
 
   const art6Lines = doc.splitTextToSize(art6, maxWidth);
   art6Lines.forEach((line: string) => {
@@ -389,7 +389,7 @@ export const generateFicheReservation = async (
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  const art7 = `La presente fiche de reservation est etablie en deux (2) exemplaires originaux, un pour chaque partie.\n\nLes frais de notaire, d'enregistrement et toutes taxes afferentes a la vente definitive seront a la charge du Reservataire.`;
+  const art7 = `La présente fiche de réservation est établie en deux (2) exemplaires originaux, un pour chaque partie.\n\nLes frais de notaire, d'enregistrement et toutes taxes afférentes à la vente définitive seront à la charge du Réservataire.`;
 
   const art7Lines = doc.splitTextToSize(art7, maxWidth);
   art7Lines.forEach((line: string) => {
@@ -409,7 +409,7 @@ export const generateFicheReservation = async (
 
   // === SIGNATURES ===
   yPos = checkPage(40, yPos);
-  const sigDate = `Fait a ${agency?.city || "Abidjan"}, le ${formatDate(reservation.reservation_date)}`;
+  const sigDate = `Fait à ${agency?.city || "Abidjan"}, le ${formatDate(reservation.reservation_date)}`;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.text(sigDate, margin, yPos);
@@ -418,13 +418,13 @@ export const generateFicheReservation = async (
   const colWidth = (maxWidth - 20) / 2;
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
-  doc.text("Le Reservataire", margin, yPos);
+  doc.text("Le Réservataire", margin, yPos);
   doc.text("Le Vendeur", margin + colWidth + 20, yPos);
 
   yPos += 5;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text("(Signature precedee de \"Lu et approuve\")", margin, yPos);
+  doc.text("(Signature précédée de \"Lu et approuvé\")", margin, yPos);
   doc.text("(Signature et cachet)", margin + colWidth + 20, yPos);
 
   yPos += 25;

@@ -85,20 +85,22 @@ export const useCreateAchatSignature = () => {
   });
 };
 
-export const useCreateAchatBuyerSignatureRequest = () => {
+export const useCreateAchatSignatureRequest = () => {
   const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
       achatId,
       documentType,
-      buyerName,
-      buyerEmail,
+      signerType,
+      signerName,
+      signerEmail,
     }: {
       achatId: string;
       documentType: "acte_achat" | "compromis_achat";
-      buyerName: string;
-      buyerEmail: string;
+      signerType: "vendor" | "buyer";
+      signerName: string;
+      signerEmail: string;
     }) => {
       if (!user) throw new Error("User not authenticated");
 
@@ -111,9 +113,9 @@ export const useCreateAchatBuyerSignatureRequest = () => {
         .insert({
           achat_id: achatId,
           document_type: documentType,
-          signer_type: "buyer",
-          signer_name: buyerName,
-          signer_email: buyerEmail,
+          signer_type: signerType,
+          signer_name: signerName,
+          signer_email: signerEmail,
           signature_type: "typed",
           signature_token: token,
           token_expires_at: expiresAt.toISOString(),

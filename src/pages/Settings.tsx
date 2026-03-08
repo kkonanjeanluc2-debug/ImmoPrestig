@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck, ShoppingCart } from "lucide-react";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -18,6 +18,7 @@ import { ContractTemplateManager } from "@/components/settings/ContractTemplateM
 import { SaleContractTemplateManager } from "@/components/settings/SaleContractTemplateManager";
 import { PromesseVenteTemplateManager } from "@/components/settings/PromesseVenteTemplateManager";
 import { ReservationFormTemplateManager } from "@/components/settings/ReservationFormTemplateManager";
+import { AchatContractTemplateManager } from "@/components/settings/AchatContractTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
@@ -31,6 +32,7 @@ const Settings = () => {
   const { hasPermission, role } = usePermissions();
   const hasVentesImmobilieres = hasFeature("ventes_immobilieres");
   const hasLotissement = hasFeature("lotissement");
+  const hasAchatsImmobiliers = hasFeature("achats_immobiliers");
   const isFreePlan = planName === "Gratuit";
   
   
@@ -47,6 +49,7 @@ const Settings = () => {
   const canAccessSaleContractsTab = hasPermission("can_access_sale_contracts_tab");
   const canAccessPromesseVenteTab = hasPermission("can_access_promesse_vente_tab");
   const canAccessReservationFormsTab = hasPermission("can_access_reservation_forms_tab");
+  const canAccessAchatContractsTab = hasPermission("can_access_achat_contracts_tab");
   const isAdmin = role === "admin" || role === "super_admin";
   
   // Check if user has access to any settings tab
@@ -213,6 +216,15 @@ const Settings = () => {
                 <span>Fiches de réservation</span>
               </TabsTrigger>
             )}
+            {hasAchatsImmobiliers && canAccessAchatContractsTab && (
+              <TabsTrigger
+                value="achat-contracts"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span>Documents d'achat</span>
+              </TabsTrigger>
+            )}
             {canAccessSubscriptionTab && (
               <TabsTrigger
                 value="subscription"
@@ -342,6 +354,12 @@ const Settings = () => {
           {(hasLotissement || hasVentesImmobilieres) && canAccessReservationFormsTab && (
             <TabsContent value="reservation-forms">
               <ReservationFormTemplateManager />
+            </TabsContent>
+          )}
+
+          {hasAchatsImmobiliers && canAccessAchatContractsTab && (
+            <TabsContent value="achat-contracts">
+              <AchatContractTemplateManager />
             </TabsContent>
           )}
 

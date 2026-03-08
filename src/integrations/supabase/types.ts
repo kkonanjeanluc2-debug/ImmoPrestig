@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      achat_contract_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          template_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          template_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          template_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       achat_signatures: {
         Row: {
           achat_id: string
@@ -1809,6 +1842,7 @@ export type Database = {
       }
       member_permissions: {
         Row: {
+          can_access_achat_contracts_tab: boolean
           can_access_agency_tab: boolean
           can_access_management_tab: boolean
           can_access_notifications_tab: boolean
@@ -1882,6 +1916,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          can_access_achat_contracts_tab?: boolean
           can_access_agency_tab?: boolean
           can_access_management_tab?: boolean
           can_access_notifications_tab?: boolean
@@ -1955,6 +1990,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          can_access_achat_contracts_tab?: boolean
           can_access_agency_tab?: boolean
           can_access_management_tab?: boolean
           can_access_notifications_tab?: boolean

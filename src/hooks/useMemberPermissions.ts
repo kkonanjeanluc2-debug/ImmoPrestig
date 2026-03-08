@@ -82,6 +82,7 @@ export interface MemberPermissions {
   can_access_sale_contracts_tab: boolean;
   can_access_promesse_vente_tab: boolean;
   can_access_reservation_forms_tab: boolean;
+  can_access_achat_contracts_tab: boolean;
   can_manage_team: boolean;
   can_manage_automations: boolean;
   can_manage_branding: boolean;
@@ -159,6 +160,7 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_access_sale_contracts_tab: "Onglet Contrats de vente",
   can_access_promesse_vente_tab: "Onglet Promesses de vente",
   can_access_reservation_forms_tab: "Onglet Fiches de réservation",
+  can_access_achat_contracts_tab: "Onglet Documents d'achat",
   can_manage_team: "Onglet Équipe",
   can_manage_automations: "Onglet Automatisations",
   can_manage_branding: "Onglet Couleurs",
@@ -204,7 +206,7 @@ export const PERMISSION_GROUPS = {
   },
   settings: {
     label: "Paramètres",
-    permissions: ["can_access_settings", "can_access_agency_tab", "can_access_management_tab", "can_access_subscription_tab", "can_access_notifications_tab", "can_access_whatsapp_tab", "can_access_sale_contracts_tab", "can_access_promesse_vente_tab", "can_access_reservation_forms_tab", "can_manage_team", "can_manage_automations", "can_manage_branding", "can_manage_templates"] as PermissionKey[],
+    permissions: ["can_access_settings", "can_access_agency_tab", "can_access_management_tab", "can_access_subscription_tab", "can_access_notifications_tab", "can_access_whatsapp_tab", "can_access_sale_contracts_tab", "can_access_promesse_vente_tab", "can_access_reservation_forms_tab", "can_access_achat_contracts_tab", "can_manage_team", "can_manage_automations", "can_manage_branding", "can_manage_templates"] as PermissionKey[],
   },
   other: {
     label: "Autres",
@@ -278,6 +280,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_access_sale_contracts_tab: true,
     can_access_promesse_vente_tab: true,
     can_access_reservation_forms_tab: true,
+    can_access_achat_contracts_tab: true,
     can_manage_team: true,
     can_manage_automations: true,
     can_manage_branding: true,
@@ -347,6 +350,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_access_sale_contracts_tab: false,
     can_access_promesse_vente_tab: false,
     can_access_reservation_forms_tab: false,
+    can_access_achat_contracts_tab: false,
     can_manage_team: false,
     can_manage_automations: false,
     can_manage_branding: false,
@@ -416,6 +420,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_access_sale_contracts_tab: false,
     can_access_promesse_vente_tab: false,
     can_access_reservation_forms_tab: false,
+    can_access_achat_contracts_tab: false,
     can_manage_team: false,
     can_manage_automations: false,
     can_manage_branding: false,

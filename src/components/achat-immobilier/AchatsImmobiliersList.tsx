@@ -31,12 +31,14 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
   const { data: biens = [] } = useBiensAchat();
   const { data: vendeurs = [] } = useVendeurs();
   const { data: acquereurs = [] } = useAcquereurs();
+  const { data: offres = [] } = useOffresAchat();
   const { data: agency } = useAgency();
   const { hasPermission } = usePermissions();
   const canCreate = hasPermission("can_create_achats");
   const createMutation = useCreateAchatImmobilier();
   const createAcquereur = useCreateAcquereur();
   const [open, setOpen] = useState(false);
+  const [docsAchat, setDocsAchat] = useState<AchatImmobilier | null>(null);
   const [showNewAcquereur, setShowNewAcquereur] = useState(false);
   const [newAcquereur, setNewAcquereur] = useState({ name: "", phone: "", email: "", address: "", cni_number: "", birth_date: "", birth_place: "", profession: "" });
   const [form, setForm] = useState({

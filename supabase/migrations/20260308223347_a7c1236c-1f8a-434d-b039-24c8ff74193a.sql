@@ -1,0 +1,1 @@
+UPDATE achats_immobiliers SET acquereur_id = 'bb23c532-982d-452a-a75d-4f27b695db15' WHERE id = '4fdc3243-8903-4f16-a5fb-76bb42fd4863' AND acquereur_id IS NULL;

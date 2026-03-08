@@ -421,22 +421,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
         toast.error("Erreur lors de la création du locataire");
       }
     }
-      const backendMessage = typeof error?.message === "string" ? error.message : "";
-
-      if (backendMessage.includes("duplicate") || error?.code === "23505") {
-        if (backendMessage.includes("email")) {
-          toast.error("Un locataire avec cet email existe déjà");
-        } else if (backendMessage.includes("phone")) {
-          toast.error("Un locataire avec ce numéro de téléphone existe déjà");
-        } else {
-          toast.error("Ce locataire existe déjà");
-        }
-      } else if (backendMessage) {
-        toast.error(backendMessage);
-      } else {
-        toast.error("Erreur lors de la création du locataire");
-      }
-    }
+  };
   };
 
   const handleDownloadContract = async () => {

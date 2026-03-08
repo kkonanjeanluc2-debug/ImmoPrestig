@@ -294,7 +294,7 @@ export function BiensAchatList() {
                       <DropdownMenuItem onClick={() => {
                         const bienOffres = offres.filter(o => o.bien_id === bien.id);
                         const bienAchat = achats.find(a => a.bien_id === bien.id) || null;
-                        const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined } : null;
+                        const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined, city: agency.city || undefined, country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret } : null;
                         generateFicheRecapBien(bien, bienOffres, bienAchat, agencyInfo);
                       }}>
                         Fiche récapitulative
@@ -303,7 +303,7 @@ export function BiensAchatList() {
                         <DropdownMenuItem onClick={() => {
                           const lastOffre = offres.filter(o => o.bien_id === bien.id)[0];
                           const vendeurName = bien.vendeurs?.name || "Vendeur";
-                          const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined } : null;
+                          const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined, city: agency.city || undefined, country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret } : null;
                           generateOffreAchatPDF(lastOffre, bien, vendeurName, agencyInfo);
                         }}>
                           Offre d'achat
@@ -314,7 +314,7 @@ export function BiensAchatList() {
                           const bienAchat = achats.find(a => a.bien_id === bien.id)!;
                           const bienOffres = offres.filter(o => o.bien_id === bien.id);
                           const bienEcheances = echeances.filter(e => e.achat_id === bienAchat.id);
-                          const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined } : null;
+                          const agencyInfo = agency ? { name: agency.name, email: agency.email, phone: agency.phone || undefined, address: agency.address || undefined, city: agency.city || undefined, country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret } : null;
                           generateDossierAchatPDF(bien, bienOffres, bienAchat, bienEcheances, agencyInfo);
                         }}>
                           Dossier d'achat complet

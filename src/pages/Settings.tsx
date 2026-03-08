@@ -357,6 +357,12 @@ const Settings = () => {
             </TabsContent>
           )}
 
+          {hasAchatsImmobiliers && canAccessAchatContractsTab && (
+            <TabsContent value="achat-contracts">
+              <AchatContractTemplateManager />
+            </TabsContent>
+          )}
+
           {canAccessSubscriptionTab && (
             <TabsContent value="subscription">
               <SubscriptionSettings />

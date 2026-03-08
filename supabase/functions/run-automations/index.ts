@@ -69,37 +69,31 @@ Deno.serve(async (req) => {
 
       try {
         // Payment reminders
-        if (schedule.payment_reminder_enabled) {
-          const scheduleHour = parseTimeHour(schedule.payment_reminder_time);
-          if (scheduleHour === currentHour) {
-            await runPaymentReminders(supabase, userId, schedule.payment_reminder_days_before, emailEnabled, results);
-          }
+        if (schedule.payment_reminder_enabled && isScheduledTime(schedule.payment_reminder_time, currentHour, currentMinute)) {
+          await runPaymentReminders(supabase, userId, schedule.payment_reminder_days_before, emailEnabled, results);
         }
 
         // Late payment detection
-        if (schedule.late_payment_enabled) {
-          const scheduleHour = parseTimeHour(schedule.late_payment_time);
-          if (scheduleHour === currentHour) {
-            await runLatePaymentDetection(supabase, userId, schedule.late_payment_days_after, emailEnabled, results);
-          }
+        if (schedule.late_payment_enabled && isScheduledTime(schedule.late_payment_time, currentHour, currentMinute)) {
+          await runLatePaymentDetection(supabase, userId, schedule.late_payment_days_after, emailEnabled, results);
         }
 
         // SMS reminders
         if (schedule.sms_reminder_enabled) {
-          const scheduleHour = parseTimeHour(schedule.sms_reminder_time);
           const allowedDays = schedule.sms_reminder_weekdays || [1, 2, 3, 4, 5];
-          if (scheduleHour === currentHour && allowedDays.includes(currentDayOfWeek)) {
+          if (isScheduledTime(schedule.sms_reminder_time, currentHour, currentMinute) && allowedDays.includes(currentDayOfWeek)) {
             await runSmsReminders(supabase, userId, results);
           }
         }
 
         // Monthly receipts
-        if (schedule.monthly_receipt_enabled) {
-          const scheduleHour = parseTimeHour(schedule.monthly_receipt_time);
-          if (schedule.monthly_receipt_day === currentDayOfMonth && scheduleHour === currentHour) {
-            if (emailEnabled) {
-              await runMonthlyReceipts(supabase, userId, results);
-            }
+        if (
+          schedule.monthly_receipt_enabled &&
+          schedule.monthly_receipt_day === currentDayOfMonth &&
+          isScheduledTime(schedule.monthly_receipt_time, currentHour, currentMinute)
+        ) {
+          if (emailEnabled) {
+            await runMonthlyReceipts(supabase, userId, results);
           }
         }
       } catch (err) {

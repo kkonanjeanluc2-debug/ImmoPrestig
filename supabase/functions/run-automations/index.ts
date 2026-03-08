@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
   try {
     // 1. Always run contract expiration check (once per day at hour 0)
-    if (currentHour === 0) {
+    if (currentHour === 0 && currentMinute === 0) {
       await runContractExpiration(supabase, results);
     }
 

@@ -134,7 +134,7 @@ export async function generateActeAchatPDF(
   doc.text("LE VENDEUR :", 14, y);
   y += 6;
   doc.setFontSize(9);
-  const vendeurParty = achat.vendeurs || bien.vendeurs as AchatPartyInfo | null;
+  const vendeurParty = (achat.vendeurs || bien.vendeurs || null) as AchatPartyInfo | null;
   y = renderPartyIdentity(doc, vendeurParty, "-", y, 20);
   doc.setFont("helvetica", "normal");
   doc.text("Ci-après dénommé(e) « LE VENDEUR »", 20, y);

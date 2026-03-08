@@ -113,11 +113,22 @@ Deno.serve(async (req) => {
   }
 });
 
-function parseTimeHour(timeStr: string): number {
-  // timeStr is like "09:00:00" or "09:00"
-  if (!timeStr) return 8; // default
-  const parts = timeStr.split(":");
-  return parseInt(parts[0], 10);
+function parseScheduleTime(timeStr: string): { hour: number; minute: number } {
+  // timeStr is like "09:50:00" or "09:50"
+  if (!timeStr) return { hour: 8, minute: 0 };
+  const [hourRaw, minuteRaw] = timeStr.split(":");
+  const hour = Number.parseInt(hourRaw ?? "8", 10);
+  const minute = Number.parseInt(minuteRaw ?? "0", 10);
+
+  return {
+    hour: Number.isNaN(hour) ? 8 : hour,
+    minute: Number.isNaN(minute) ? 0 : minute,
+  };
+}
+
+function isScheduledTime(timeStr: string, currentHour: number, currentMinute: number): boolean {
+  const { hour, minute } = parseScheduleTime(timeStr);
+  return hour === currentHour && minute === currentMinute;
 }
 
 function jsonResponse(data: any, status = 200) {

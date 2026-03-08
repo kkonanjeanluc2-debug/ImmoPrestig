@@ -128,7 +128,7 @@ const Pricing = () => {
             </Sheet>
           </div>
         </div>
-      </header>
+      </nav>
 
       <main>
       {/* ===== HERO SECTION ===== */}

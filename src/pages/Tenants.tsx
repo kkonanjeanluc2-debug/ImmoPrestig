@@ -119,8 +119,8 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
   const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
   
   // Determine contract status based on actual contract data
-  const getContractStatus = () => {
-    if (!activeContract) return 'expired';
+  const getContractStatus = (): string | null => {
+    if (!activeContract) return null;
     if (activeContract.status === 'active') {
       // Check if ending soon (within 30 days)
       const endDate = new Date(activeContract.end_date);
@@ -129,7 +129,8 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
       if (daysUntilEnd <= 30 && daysUntilEnd > 0) return 'ending_soon';
       return 'active';
     }
-    return activeContract.status as keyof typeof contractStatusConfig || 'expired';
+    if (activeContract.status === 'expired') return 'expired';
+    return null;
   };
   
   const contractStatus = getContractStatus();

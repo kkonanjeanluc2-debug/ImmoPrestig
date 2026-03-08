@@ -134,7 +134,7 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
   };
   
   const contractStatus = getContractStatus();
-  const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
+  const statusConfig = contractStatus ? contractStatusConfig[contractStatus as keyof typeof contractStatusConfig] : null;
   const assignedTo = tenant.assigned_to;
   const hasPortalAccess = tenant.has_portal_access;
 

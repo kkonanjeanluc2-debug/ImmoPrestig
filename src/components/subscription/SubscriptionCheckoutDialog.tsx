@@ -226,8 +226,9 @@ export function SubscriptionCheckoutDialog({
   const price = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
   const isFree = price === 0;
   
-  // Detect if this is a plan change (upgrade/downgrade)
+  // Detect if this is a plan change (upgrade/downgrade) or renewal
   const isChangingPlan = currentSubscription && currentSubscription.plan_id !== plan.id;
+  const isRenewal = currentSubscription && currentSubscription.plan_id === plan.id && (currentSubscription.status === "expired" || currentSubscription.status === "cancelled" || (currentSubscription.ends_at && new Date(currentSubscription.ends_at) < new Date()));
   const currentPlanName = currentSubscription?.plan?.name;
   const isUpgrade = currentSubscription && plan.price_monthly > currentSubscription.plan.price_monthly;
   const isDowngrade = currentSubscription && plan.price_monthly < currentSubscription.plan.price_monthly;
@@ -562,9 +563,11 @@ export function SubscriptionCheckoutDialog({
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isChangingPlan 
-              ? `Changer vers le forfait ${plan.name}` 
-              : `Souscrire au forfait ${plan.name}`}
+            {isRenewal
+              ? `Renouvellement du forfait ${plan.name}`
+              : isChangingPlan 
+                ? `Changer vers le forfait ${plan.name}` 
+                : `Souscrire au forfait ${plan.name}`}
           </DialogTitle>
           <DialogDescription>
             {isFree

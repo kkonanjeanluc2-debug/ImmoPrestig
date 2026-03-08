@@ -127,7 +127,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           <CardContent className="flex flex-col items-center gap-3">
             {isAdmin && (
               <Button 
-                onClick={() => navigate("/settings?tab=subscription")}
+                onClick={() => navigate(`/settings?tab=subscription&upgrade_plan=${encodeURIComponent(subscription?.plan_id || "")}`)}
                 className="gap-2"
               >
                 <Crown className="h-4 w-4" />

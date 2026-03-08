@@ -37,8 +37,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const isSubscriptionExpired = useMemo(() => {
     if (!subscription) return false;
     if (subscription.status === "expired" || subscription.status === "cancelled") return true;
+    // Check ends_at
     if (subscription.ends_at) {
       return differenceInDays(parseISO(subscription.ends_at), new Date()) < 0;
+    }
+    // For paid plans without ends_at, compute from starts_at + billing cycle
+    if (subscription.billing_cycle !== "lifetime" && subscription.plan.price_monthly > 0 && subscription.starts_at) {
+      const start = parseISO(subscription.starts_at);
+      const expectedEnd = subscription.billing_cycle === "yearly"
+        ? new Date(start.getFullYear() + 1, start.getMonth(), start.getDate())
+        : new Date(start.getFullYear(), start.getMonth() + 1, start.getDate());
+      return differenceInDays(expectedEnd, new Date()) < 0;
     }
     return false;
   }, [subscription]);

@@ -140,13 +140,22 @@ export function SubscriptionSettings() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge 
-                    variant={statusConfig[subscription.status]?.variant || "secondary"}
-                    className="gap-1"
-                  >
-                    {statusConfig[subscription.status]?.icon}
-                    {statusConfig[subscription.status]?.label || subscription.status}
-                  </Badge>
+                  {(() => {
+                    // Compute effective status: if ends_at is past, show expired
+                    const effectiveStatus = 
+                      (subscription.status === "active" && subscription.ends_at && new Date(subscription.ends_at) < new Date())
+                        ? "expired"
+                        : subscription.status;
+                    return (
+                      <Badge 
+                        variant={statusConfig[effectiveStatus]?.variant || "secondary"}
+                        className="gap-1"
+                      >
+                        {statusConfig[effectiveStatus]?.icon}
+                        {statusConfig[effectiveStatus]?.label || effectiveStatus}
+                      </Badge>
+                    );
+                  })()}
                 </div>
               </div>
 

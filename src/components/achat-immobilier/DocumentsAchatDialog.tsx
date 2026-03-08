@@ -92,12 +92,17 @@ export function DocumentsAchatDialog({ bien, open, onOpenChange }: Props) {
                 </div>
               </div>
               <div>
-                <Label>Fichier (optionnel)</Label>
+                <Label>Fichier (PDF ou image)</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <label className="flex items-center gap-2 px-3 py-2 border rounded-md cursor-pointer hover:bg-accent text-sm">
                     <Upload className="h-4 w-4" />
                     {file ? file.name : "Choisir un fichier"}
-                    <input type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp,image/*,application/pdf"
+                      onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    />
                   </label>
                   {file && (
                     <Button variant="ghost" size="sm" onClick={() => setFile(null)}>
@@ -105,6 +110,7 @@ export function DocumentsAchatDialog({ bien, open, onOpenChange }: Props) {
                     </Button>
                   )}
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">PDF, JPG, PNG, WEBP (max 10 Mo)</p>
               </div>
               <div>
                 <Label>Notes</Label>

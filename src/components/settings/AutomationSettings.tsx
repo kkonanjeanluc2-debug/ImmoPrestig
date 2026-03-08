@@ -47,8 +47,8 @@ export function AutomationSettings() {
         monthly_receipt_enabled: schedule.monthly_receipt_enabled,
         monthly_receipt_day: schedule.monthly_receipt_day,
         monthly_receipt_time: schedule.monthly_receipt_time,
-        commission_report_day: schedule.commission_report_day,
-        commission_report_time: schedule.commission_report_time,
+        commission_report_day: schedule.commission_report_day ?? 5,
+        commission_report_time: schedule.commission_report_time ?? '09:00:00',
       });
       setHasChanges(false);
     }

@@ -166,7 +166,10 @@ export function AgencySubscriptionsManager() {
                 {agencies?.map((agency) => {
                   const subscription = getAgencySubscription(agency.id);
                   const plan = subscription ? getPlanById(subscription.plan_id) : null;
-                  const status = subscription?.status || "none";
+                  const rawStatus = subscription?.status || "none";
+                  const status = (rawStatus === "active" && subscription?.ends_at && new Date(subscription.ends_at) < new Date())
+                    ? "expired"
+                    : rawStatus;
 
                   return (
                     <TableRow key={agency.id}>

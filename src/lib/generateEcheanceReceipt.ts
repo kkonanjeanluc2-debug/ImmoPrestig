@@ -1,6 +1,13 @@
 import { createPDFDocument } from "@/lib/pdfFont";
 import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
+interface PartyInfo {
+  name: string;
+  phone?: string | null;
+  address?: string | null;
+  cniNumber?: string | null;
+}
+
 interface EcheanceReceiptData {
   echeanceId: string;
   propertyTitle: string;
@@ -19,6 +26,8 @@ interface EcheanceReceiptData {
   agencyAddress?: string;
   agencyLogoUrl?: string | null;
   validatedBy?: string;
+  vendeur?: PartyInfo | null;
+  acquereur?: PartyInfo | null;
 }
 
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -35,6 +44,43 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
     return null;
   }
 };
+
+function renderPartyBlock(
+  doc: any,
+  title: string,
+  party: PartyInfo,
+  x: number,
+  y: number,
+  primaryColor: [number, number, number],
+  textColor: [number, number, number]
+): number {
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text(title, x, y);
+  y += 5;
+  doc.setTextColor(...textColor);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text(party.name, x, y);
+  y += 4.5;
+  if (party.cniNumber) {
+    doc.setFontSize(8);
+    doc.text(`CNI : ${party.cniNumber}`, x, y);
+    y += 4.5;
+  }
+  if (party.address) {
+    doc.setFontSize(8);
+    doc.text(`Adresse : ${party.address}`, x, y);
+    y += 4.5;
+  }
+  if (party.phone) {
+    doc.setFontSize(8);
+    doc.text(`Tél : ${party.phone}`, x, y);
+    y += 4.5;
+  }
+  return y;
+}
 
 export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promise<void> => {
   const doc = await createPDFDocument();
@@ -95,25 +141,32 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text(data.propertyTitle, pageWidth / 2, yPos + 12, { align: "center" });
-  yPos += 30;
+  yPos += 28;
 
   if (data.propertyAddress) {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text(data.propertyAddress, 15, yPos);
-    yPos += 10;
+    yPos += 8;
   }
 
-  // Vendor
-  if (data.vendeurName) {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...primaryColor);
-    doc.text("VENDEUR", 15, yPos);
-    doc.setTextColor(...textColor);
-    doc.setFont("helvetica", "normal");
-    doc.text(data.vendeurName, 15, yPos + 7);
-    yPos += 20;
+  // Parties section - side by side
+  const vendeur = data.vendeur || (data.vendeurName ? { name: data.vendeurName } : null);
+  const acquereur = data.acquereur;
+
+  if (vendeur || acquereur) {
+    const midX = pageWidth / 2 + 5;
+    let leftY = yPos;
+    let rightY = yPos;
+
+    if (vendeur) {
+      leftY = renderPartyBlock(doc, "VENDEUR", vendeur, 15, yPos, primaryColor, textColor);
+    }
+    if (acquereur) {
+      rightY = renderPartyBlock(doc, "ACQUÉREUR", acquereur, midX, yPos, primaryColor, textColor);
+    }
+
+    yPos = Math.max(leftY, rightY) + 6;
   }
 
   // Amount box

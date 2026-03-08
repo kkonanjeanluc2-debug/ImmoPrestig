@@ -18,7 +18,9 @@ export interface EcheanceAchat {
   created_at: string;
   achats_immobiliers?: { 
     sale_price: number; 
-    biens_achat: { title: string; address: string } | null 
+    biens_achat: { title: string; address: string } | null;
+    vendeurs: { name: string; phone: string | null; address: string | null; cni_number: string | null } | null;
+    acquereurs: { name: string; phone: string | null; address: string | null; cni_number: string | null } | null;
   } | null;
 }
 
@@ -29,7 +31,7 @@ export function useEcheancesAchats() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_achats")
-        .select("*, achats_immobiliers(sale_price, biens_achat(title, address))")
+        .select("*, achats_immobiliers(sale_price, biens_achat(title, address), vendeurs(name, phone, address, cni_number), acquereurs(name, phone, address, cni_number))")
         .order("due_date", { ascending: true });
       if (error) throw error;
       return data as EcheanceAchat[];

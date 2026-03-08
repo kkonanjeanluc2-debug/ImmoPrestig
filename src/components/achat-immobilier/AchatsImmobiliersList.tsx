@@ -13,12 +13,14 @@ import { useAchatsImmobiliers, useCreateAchatImmobilier } from "@/hooks/useAchat
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
+import { useOffresAchat } from "@/hooks/useOffresAchat";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
 import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
+import type { AchatImmobilier } from "@/hooks/useAchatsImmobiliers";
 
 interface AchatsImmobiliersListProps {
   period?: PeriodValue;

@@ -1,4 +1,4 @@
-import { Check, Star, Zap, Building2, Crown, Menu, Home, ShoppingCart, MapPin, Shield, Clock, Smartphone, Users, FileText, CreditCard, BarChart3, Bell, ArrowRight, X } from "lucide-react";
+import { Check, Star, Zap, Building2, Crown, Menu, Home, ShoppingCart, MapPin, Shield, Clock, Smartphone, Users, FileText, CreditCard, BarChart3, Bell, ArrowRight, X, Layers, PenTool, Globe, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -384,15 +384,101 @@ const Pricing = () => {
         </div>
       </section>
 
+      {/* ===== SEO CONTENT: USE CASES ===== */}
+      <section aria-label="Fonctionnalités de gestion immobilière" className="py-16 md:py-24 bg-muted/20">
+        <div className="container mx-auto px-4">
+          <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
+            <Badge variant="secondary" className="mb-4">La solution complète pour l'immobilier en Afrique</Badge>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+              Un logiciel immobilier pour chaque besoin
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
+              Que vous soyez propriétaire bailleur, agence immobilière ou promoteur, {platformAppName} s'adapte à votre activité immobilière en Côte d'Ivoire et en Afrique.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {[
+              {
+                icon: Home,
+                title: "Gestion locative simplifiée",
+                desc: "Automatisez la gestion locative de vos biens immobiliers. Suivi des loyers, génération automatique de quittances de loyer, contrats de bail numériques, rappels de paiement par WhatsApp et email. Idéal pour les propriétaires bailleurs et agences de gestion locative en Côte d'Ivoire.",
+                keywords: ["Gestion des locataires", "Suivi des loyers", "Quittances automatiques", "Contrats de bail", "États des lieux"]
+              },
+              {
+                icon: Layers,
+                title: "Application de gestion de lotissements",
+                desc: "Le module lotissement le plus complet d'Afrique. Créez et gérez vos lotissements, îlots et parcelles. Suivez les ventes de terrains, les échéanciers de paiement, les démarches administratives et les documents juridiques. Parfait pour les promoteurs immobiliers et lotisseurs.",
+                keywords: ["Création d'îlots", "Gestion de parcelles", "Vente de terrains", "Échéanciers", "Documents juridiques"]
+              },
+              {
+                icon: ShoppingCart,
+                title: "Ventes immobilières et CRM",
+                desc: "Gérez toutes vos ventes immobilières avec un CRM immobilier puissant. Suivi des prospects et acquéreurs, offres d'achat, négociations, encaissements et mutations notariales. L'outil indispensable pour les agences immobilières qui veulent professionnaliser leurs transactions.",
+                keywords: ["CRM immobilier", "Gestion des prospects", "Offres d'achat", "Transactions immobilières", "Mutations notariales"]
+              },
+              {
+                icon: Globe,
+                title: "Application immobilière mobile",
+                desc: "Accédez à votre application immobilière depuis n'importe quel appareil. {platformAppName} fonctionne sur smartphone, tablette et ordinateur, même sans connexion internet. Paiements en ligne via Orange Money, Wave, MTN Money intégrés pour le marché africain.",
+                keywords: ["Application mobile", "Hors connexion", "Mobile Money", "Wave", "Orange Money"]
+              },
+            ].map((item, i) => (
+              <motion.article key={i} className="bg-card rounded-xl p-6 border shadow-sm hover:shadow-md transition-shadow" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
+                <div className="flex items-start gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">{item.desc.replace('{platformAppName}', platformAppName)}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {item.keywords.map((kw, j) => (
+                        <span key={j} className="text-xs bg-muted px-2 py-1 rounded-md text-muted-foreground">{kw}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SEO: CITIES & COUNTRIES ===== */}
+      <section aria-label="Zones couvertes" className="py-12 md:py-16">
+        <div className="container mx-auto px-4">
+          <motion.div className="text-center mb-10" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
+              Gestion immobilière partout en Afrique
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {platformAppName} est utilisé par des agences immobilières et propriétaires dans toute l'Afrique francophone.
+            </p>
+          </motion.div>
+          <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
+            {[
+              "Côte d'Ivoire", "Abidjan", "Sénégal", "Dakar", "Cameroun", "Douala",
+              "Mali", "Bamako", "Burkina Faso", "Ouagadougou", "Guinée", "Conakry",
+              "Togo", "Lomé", "Bénin", "Cotonou", "Congo", "Brazzaville", "Gabon", "Niger"
+            ].map((place, i) => (
+              <span key={i} className="text-sm bg-muted/60 border px-3 py-1.5 rounded-full text-muted-foreground hover:bg-muted transition-colors">
+                {place}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ===== CTA BEFORE PRICING ===== */}
-      <section className="py-16 md:py-20 bg-gradient-to-r from-primary/5 to-accent/5">
+      <section aria-label="Appel à l'action" className="py-16 md:py-20 bg-gradient-to-r from-primary/5 to-accent/5">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
               Prêt à transformer votre gestion immobilière ?
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              Rejoignez des centaines de propriétaires et agences qui ont dit adieu à la paperasse et aux loyers impayés.
+              Rejoignez des centaines de propriétaires et agences immobilières qui ont digitalisé leur gestion locative, leurs lotissements et leurs ventes immobilières avec {platformAppName}.
             </p>
             <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 mb-4" onClick={startFree}>
               Commencer gratuitement

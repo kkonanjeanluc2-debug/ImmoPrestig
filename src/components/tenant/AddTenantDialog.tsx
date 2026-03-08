@@ -271,89 +271,25 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       });
       createdTenantId = tenant.id;
 
-      // Update tenant with unit_id if needed
-      if (unitId) {
-        await updateTenant.mutateAsync({
-          id: tenant.id,
+      // Update tenant with unit_id AND create contract in parallel
+      const [, contract] = await Promise.all([
+        unitId ? updateTenant.mutateAsync({ id: tenant.id, unit_id: unitId }) : Promise.resolve(null),
+        createContract.mutateAsync({
+          tenant_id: tenant.id,
+          property_id: values.property_id,
           unit_id: unitId,
-        });
-      }
-
-      // Create associated contract with unit_id
-      const contract = await createContract.mutateAsync({
-        tenant_id: tenant.id,
-        property_id: values.property_id,
-        unit_id: unitId,
-        start_date: values.start_date,
-        end_date: values.end_date,
-        rent_amount: parseFloat(values.rent_amount),
-        deposit: values.deposit ? parseFloat(values.deposit) : null,
-        status: 'active',
-      });
+          start_date: values.start_date,
+          end_date: values.end_date,
+          rent_amount: parseFloat(values.rent_amount),
+          deposit: values.deposit ? parseFloat(values.deposit) : null,
+          status: 'active',
+        }),
+      ]);
       contractCreated = true;
 
-      // Create advance payment if advance_months > 0
+      // Close dialog immediately - remaining updates happen in background
       const advanceMonths = parseInt(values.advance_months || "0", 10);
-      if (advanceMonths > 0) {
-        const startDate = new Date(values.start_date);
-        const rentAmount = parseFloat(values.rent_amount);
-        const totalAdvanceAmount = rentAmount * advanceMonths;
-        
-        // Generate payment_months array (e.g., ["2026-02", "2026-03", ...])
-        const paymentMonthsArray: string[] = [];
-        for (let i = 0; i < advanceMonths; i++) {
-          const monthDate = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-          paymentMonthsArray.push(`${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`);
-        }
-
-        // Create advance payment as paid
-        await createPayment.mutateAsync({
-          tenant_id: tenant.id,
-          contract_id: contract.id,
-          amount: totalAdvanceAmount,
-          due_date: values.start_date,
-          paid_date: new Date().toISOString().split('T')[0],
-          status: 'paid',
-          method: 'especes',
-          payment_months: paymentMonthsArray,
-          tenantName: values.name,
-        });
-      }
-
-      // Update property with rent type info if furnished
-      if (selectedProp?.property_type === "meuble") {
-        await updateProperty.mutateAsync({
-          id: values.property_id,
-          rent_type: rentType,
-          daily_rent_days: rentType === "journalier" && dailyRentDays ? Number(dailyRentDays) : null,
-          daily_rent_discount: rentType === "journalier" && dailyRentDiscount ? Number(dailyRentDiscount) : 0,
-        });
-      }
-
-      // Update unit status to 'loué' if a unit was selected
-      if (unitId) {
-        await updatePropertyUnit.mutateAsync({
-          id: unitId,
-          status: 'loué',
-        });
-        
-        // Check if all units are now occupied
-        const remainingAvailableUnits = availableUnits.filter(u => u.id !== unitId);
-        if (remainingAvailableUnits.length === 0) {
-          // All units occupied, mark property as rented
-          await updateProperty.mutateAsync({
-            id: values.property_id,
-            status: 'loué',
-          });
-        }
-      } else {
-        // No units, update property status to 'loué'
-        await updateProperty.mutateAsync({
-          id: values.property_id,
-          status: 'loué',
-        });
-      }
-
+      
       // Get owner name if property has an owner
       let ownerName: string | undefined;
       if (selectedProp?.owner_id) {
@@ -392,9 +328,68 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       setOpen(false);
       setShowSuccessDialog(true);
       onSuccess?.();
-    } catch (error: any) {
-      console.error("Error creating tenant:", error);
 
+      // Run remaining updates in background (non-blocking)
+      const backgroundTasks: Promise<any>[] = [];
+
+      // Advance payment
+      if (advanceMonths > 0) {
+        const startDate = new Date(values.start_date);
+        const rentAmount = parseFloat(values.rent_amount);
+        const totalAdvanceAmount = rentAmount * advanceMonths;
+        const paymentMonthsArray: string[] = [];
+        for (let i = 0; i < advanceMonths; i++) {
+          const monthDate = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+          paymentMonthsArray.push(`${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`);
+        }
+        backgroundTasks.push(
+          createPayment.mutateAsync({
+            tenant_id: tenant.id,
+            contract_id: contract.id,
+            amount: totalAdvanceAmount,
+            due_date: values.start_date,
+            paid_date: new Date().toISOString().split('T')[0],
+            status: 'paid',
+            method: 'especes',
+            payment_months: paymentMonthsArray,
+            tenantName: values.name,
+          })
+        );
+      }
+
+      // Property rent type update for furnished
+      if (selectedProp?.property_type === "meuble") {
+        backgroundTasks.push(
+          updateProperty.mutateAsync({
+            id: values.property_id,
+            rent_type: rentType,
+            daily_rent_days: rentType === "journalier" && dailyRentDays ? Number(dailyRentDays) : null,
+            daily_rent_discount: rentType === "journalier" && dailyRentDiscount ? Number(dailyRentDiscount) : 0,
+          })
+        );
+      }
+
+      // Update unit/property status
+      if (unitId) {
+        backgroundTasks.push(
+          updatePropertyUnit.mutateAsync({ id: unitId, status: 'loué' })
+        );
+        const remainingAvailableUnits = availableUnits.filter(u => u.id !== unitId);
+        if (remainingAvailableUnits.length === 0) {
+          backgroundTasks.push(
+            updateProperty.mutateAsync({ id: values.property_id, status: 'loué' })
+          );
+        }
+      } else {
+        backgroundTasks.push(
+          updateProperty.mutateAsync({ id: values.property_id, status: 'loué' })
+        );
+      }
+
+      // Execute all background tasks in parallel
+      Promise.all(backgroundTasks).catch(err => {
+        console.error("Background task error:", err);
+      });
       // Rollback tenant if contract creation failed after tenant insert
       if (createdTenantId && !contractCreated) {
         const { error: rollbackError } = await supabase

@@ -47,29 +47,8 @@ export function AddBienAchatDialog({ children }: Props) {
     floors: "",
   });
 
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error("La géolocalisation n'est pas supportée par votre navigateur");
-      return;
-    }
-    setGettingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setForm((prev) => ({
-          ...prev,
-          latitude: String(position.coords.latitude),
-          longitude: String(position.coords.longitude),
-        }));
-        setGettingLocation(false);
-        toast.success("Position GPS capturée");
-      },
-      (error) => {
-        setGettingLocation(false);
-        toast.error("Impossible d'obtenir la position GPS");
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  };
+
+
 
   const handleSubmit = async () => {
     const features: Record<string, unknown> = {};

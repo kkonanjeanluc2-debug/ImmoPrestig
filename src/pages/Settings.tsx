@@ -216,6 +216,15 @@ const Settings = () => {
                 <span>Fiches de réservation</span>
               </TabsTrigger>
             )}
+            {hasAchatsImmobiliers && canAccessAchatContractsTab && (
+              <TabsTrigger
+                value="achat-contracts"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span>Documents d'achat</span>
+              </TabsTrigger>
+            )}
             {canAccessSubscriptionTab && (
               <TabsTrigger
                 value="subscription"

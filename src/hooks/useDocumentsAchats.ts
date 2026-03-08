@@ -76,6 +76,14 @@ export function useCreateDocumentAchat() {
       let file_size: string | null = null;
 
       if (file) {
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error("Format non supporté. Utilisez PDF, JPG, PNG ou WEBP.");
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error("Le fichier ne doit pas dépasser 10 Mo.");
+        }
+
         const filePath = `${user.id}/${bien_id}/${Date.now()}_${file.name}`;
         const { error: uploadError } = await supabase.storage
           .from("documents-achats")
@@ -83,12 +91,11 @@ export function useCreateDocumentAchat() {
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage
-          .from("documents-achats")
-          .getPublicUrl(filePath);
-
-        file_url = urlData.publicUrl;
-        file_size = `${(file.size / 1024).toFixed(1)} Ko`;
+        // Store the path, not the public URL (bucket is private)
+        file_url = filePath;
+        file_size = file.size >= 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} Mo`
+          : `${(file.size / 1024).toFixed(1)} Ko`;
       }
 
       const { data, error } = await supabase

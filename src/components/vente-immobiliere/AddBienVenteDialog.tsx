@@ -241,27 +241,31 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
               />
             </div>
 
-            <div>
-              <Label htmlFor="bedrooms">Chambres</Label>
-              <Input
-                id="bedrooms"
-                type="number"
-                value={bedrooms}
-                onChange={(e) => setBedrooms(e.target.value)}
-                placeholder="0"
-              />
-            </div>
+            {propertyType !== "terrain" && (
+              <>
+                <div>
+                  <Label htmlFor="bedrooms">Chambres</Label>
+                  <Input
+                    id="bedrooms"
+                    type="number"
+                    value={bedrooms}
+                    onChange={(e) => setBedrooms(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="bathrooms">Salles de bain</Label>
-              <Input
-                id="bathrooms"
-                type="number"
-                value={bathrooms}
-                onChange={(e) => setBathrooms(e.target.value)}
-                placeholder="0"
-              />
-            </div>
+                <div>
+                  <Label htmlFor="bathrooms">Salles de bain</Label>
+                  <Input
+                    id="bathrooms"
+                    type="number"
+                    value={bathrooms}
+                    onChange={(e) => setBathrooms(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              </>
+            )}
 
             <div className="col-span-2">
               <GpsPositionInput

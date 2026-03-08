@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { VenteWithDetails } from "@/hooks/useVentesImmobilieres";
 import { useEcheancesVentes } from "@/hooks/useEcheancesVentes";
-import { generatePromesseVenteImmo, generateRecuVenteImmo, generateContratVenteImmo } from "@/lib/generateVenteImmoPDF";
+import { generatePromesseVenteImmo, generateRecuVenteImmo, generateContratVenteImmo, VenteSignatureForPDF } from "@/lib/generateVenteImmoPDF";
 import { useAgency } from "@/hooks/useAgency";
 import { useVenteSignatures } from "@/hooks/useVenteSignatures";
 import { FileText, Receipt, Download, FileCheck, PenTool, CheckCircle2 } from "lucide-react";
@@ -48,6 +48,17 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
   const contratStatus = getSignatureStatus("contrat_vente");
   const promesseStatus = getSignatureStatus("promesse_vente");
 
+  const getSignaturesForPDF = (docType: "contrat_vente" | "promesse_vente"): VenteSignatureForPDF[] => {
+    return (allSignatures?.filter((s) => s.document_type === docType && (s.signature_data || s.signature_text)) || []).map((s) => ({
+      signerType: s.signer_type as "vendor" | "buyer",
+      signerName: s.signer_name,
+      signatureType: s.signature_type as "drawn" | "typed",
+      signatureData: s.signature_data,
+      signatureText: s.signature_text,
+      signedAt: s.signed_at,
+    }));
+  };
+
   const openSignDialog = (docType: "contrat_vente" | "promesse_vente") => {
     setSignDocumentType(docType);
     setSignDialogOpen(true);
@@ -60,6 +71,7 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
     }
 
     try {
+      const sigs = getSignaturesForPDF("promesse_vente");
       const doc = await generatePromesseVenteImmo(
         {
           bien: vente.bien,
@@ -71,7 +83,9 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
           monthly_payment: vente.monthly_payment,
           total_installments: vente.total_installments,
         },
-        agency
+        agency,
+        90,
+        sigs
       );
       doc.save(`promesse-vente-${vente.bien.title}.pdf`);
       toast.success("Promesse de vente téléchargée");
@@ -87,6 +101,7 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
     }
 
     try {
+      const sigs = getSignaturesForPDF("contrat_vente");
       const doc = await generateContratVenteImmo(
         {
           bien: vente.bien,
@@ -98,7 +113,8 @@ export function DocumentsVenteDialog({ vente, open, onOpenChange }: DocumentsVen
           monthly_payment: vente.monthly_payment,
           total_installments: vente.total_installments,
         },
-        agency
+        agency,
+        sigs
       );
       doc.save(`contrat-vente-${vente.bien.title}.pdf`);
       toast.success("Contrat de vente téléchargé");

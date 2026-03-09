@@ -420,8 +420,8 @@ const Pricing = () => {
               {
                 icon: Globe,
                 title: "Application immobilière mobile",
-                desc: "Accédez à votre application immobilière depuis n'importe quel appareil. {platformAppName} fonctionne sur smartphone, tablette et ordinateur, même sans connexion internet. Paiements en ligne via Orange Money, Wave, MTN Money intégrés pour le marché africain.",
-                keywords: ["Application mobile", "Hors connexion", "Mobile Money", "Wave", "Orange Money"]
+                desc: "Accédez à votre application immobilière depuis n'importe quel appareil. {platformAppName} fonctionne sur smartphone, tablette et ordinateur. Paiements en ligne via Orange Money, Wave, MTN Money intégrés pour le marché africain.",
+                keywords: ["Application mobile", "Mobile Money", "Wave", "Orange Money"]
               },
             ].map((item, i) => (
               <motion.article key={i} className="bg-card rounded-xl p-6 border shadow-sm hover:shadow-md transition-shadow" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>

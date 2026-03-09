@@ -1,4 +1,4 @@
-import { Check, Star, Zap, Building2, Crown, Menu, Home, ShoppingCart, MapPin, Shield, Clock, Smartphone, Users, FileText, CreditCard, BarChart3, Bell, ArrowRight, X, Layers, PenTool, Globe, Landmark } from "lucide-react";
+import { Check, Star, Zap, Building2, Crown, Menu, Home, ShoppingCart, MapPin, Shield, Clock, Smartphone, Users, FileText, CreditCard, BarChart3, Bell, ArrowRight, X, Layers, PenTool, Globe, Landmark, Scale, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

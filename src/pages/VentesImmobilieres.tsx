@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -176,6 +177,7 @@ export default function VentesImmobilieres() {
           )}
         </Tabs>
       </div>
+      <AIAdvisorChat context="sales" title="Conseiller Ventes" />
     </DashboardLayout>
   );
 }

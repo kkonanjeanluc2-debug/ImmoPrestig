@@ -379,16 +379,16 @@ const Pricing = () => {
                 <p className="text-muted-foreground text-lg mb-6">
                   Notre assistant intelligent analyse vos données en temps réel et vous donne des <strong className="text-foreground">recommandations personnalisées</strong> pour maximiser vos revenus et accélérer vos transactions.
                 </p>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-4 mb-8">
                   {[
-                    { emoji: "💰", text: "Stratégies de recouvrement des impayés adaptées au droit OHADA" },
-                    { emoji: "🏠", text: "Conseils de négociation et optimisation des ventes immobilières" },
-                    { emoji: "📊", text: "Analyse des parcelles et recommandations de commercialisation" },
-                    { emoji: "⚡", text: "Réponses instantanées basées sur vos données réelles" },
+                    { icon: <Scale className="h-5 w-5" />, text: "Stratégies de recouvrement des impayés adaptées au droit OHADA" },
+                    { icon: <TrendingUp className="h-5 w-5" />, text: "Conseils de négociation et optimisation des ventes immobilières" },
+                    { icon: <BarChart3 className="h-5 w-5" />, text: "Analyse des parcelles et recommandations de commercialisation" },
+                    { icon: <Zap className="h-5 w-5" />, text: "Réponses instantanées basées sur vos données réelles" },
                   ].map((item, i) => (
                     <motion.li key={i} className="flex items-start gap-3" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i + 1}>
-                      <span className="text-xl mt-0.5">{item.emoji}</span>
-                      <span className="text-sm text-foreground">{item.text}</span>
+                      <span className="flex-shrink-0 mt-0.5 h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">{item.icon}</span>
+                      <span className="text-sm text-foreground leading-relaxed pt-1">{item.text}</span>
                     </motion.li>
                   ))}
                 </ul>

@@ -360,6 +360,82 @@ const Pricing = () => {
         </div>
       </section>
 
+      {/* ===== AI ADVISOR HIGHLIGHT ===== */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-accent/5 via-background to-primary/5 relative overflow-hidden">
+        <div className="absolute top-10 right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 w-48 h-48 bg-accent/5 rounded-full blur-3xl" />
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div className="max-w-5xl mx-auto" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
+            <div className="grid lg:grid-cols-2 gap-10 items-center">
+              {/* Text */}
+              <div>
+                <Badge variant="secondary" className="mb-4 text-sm px-4 py-1.5">
+                  🤖 Intelligence Artificielle intégrée
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-display font-bold mb-4 leading-tight">
+                  Un conseiller IA<br />
+                  <span className="text-primary">à vos côtés 24h/24</span>
+                </h2>
+                <p className="text-muted-foreground text-lg mb-6">
+                  Notre assistant intelligent analyse vos données en temps réel et vous donne des <strong className="text-foreground">recommandations personnalisées</strong> pour maximiser vos revenus et accélérer vos transactions.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    { emoji: "💰", text: "Stratégies de recouvrement des impayés adaptées au droit OHADA" },
+                    { emoji: "🏠", text: "Conseils de négociation et optimisation des ventes immobilières" },
+                    { emoji: "📊", text: "Analyse des parcelles et recommandations de commercialisation" },
+                    { emoji: "⚡", text: "Réponses instantanées basées sur vos données réelles" },
+                  ].map((item, i) => (
+                    <motion.li key={i} className="flex items-start gap-3" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i + 1}>
+                      <span className="text-xl mt-0.5">{item.emoji}</span>
+                      <span className="text-sm text-foreground">{item.text}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+                <Button size="lg" className="shadow-lg shadow-primary/25" onClick={startFree}>
+                  Essayer l'assistant IA
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
+              {/* Visual card mockup */}
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}>
+                <Card className="border-none shadow-2xl bg-card/80 backdrop-blur-sm">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Zap className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">Conseiller IA</p>
+                        <p className="text-xs text-muted-foreground">En ligne · Analyse en cours</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="bg-muted/50 rounded-xl rounded-tl-none p-3 text-sm max-w-[85%]">
+                        <p className="font-medium text-foreground mb-1">📋 Analyse de vos impayés</p>
+                        <p className="text-muted-foreground text-xs">3 locataires ont plus de 2 mois d'impayés. Je recommande d'envoyer une mise en demeure formelle conforme au droit OHADA, puis de proposer un plan d'apurement sur 3 mois.</p>
+                      </div>
+                      <div className="bg-muted/50 rounded-xl rounded-tl-none p-3 text-sm max-w-[85%]">
+                        <p className="font-medium text-foreground mb-1">🏠 Optimisation ventes</p>
+                        <p className="text-muted-foreground text-xs">Votre bien à Cocody est en vente depuis 45 jours. Suggestion : réduire le prix de 5% ou proposer un paiement échelonné pour attirer plus d'acquéreurs.</p>
+                      </div>
+                      <div className="bg-primary/10 rounded-xl rounded-tr-none p-3 text-sm ml-auto max-w-[75%]">
+                        <p className="text-foreground text-xs">Comment optimiser le recouvrement ce mois-ci ?</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      {["💰 Impayés", "🏠 Ventes", "📊 Parcelles"].map((tag) => (
+                        <span key={tag} className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium">{tag}</span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ===== SOCIAL PROOF ===== */}
       <section className="py-16 md:py-20">
         <div className="container mx-auto px-4">

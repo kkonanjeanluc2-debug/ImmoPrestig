@@ -412,11 +412,11 @@ const Pricing = () => {
                     </div>
                     <div className="space-y-3">
                       <div className="bg-muted/50 rounded-xl rounded-tl-none p-3 text-sm max-w-[85%]">
-                        <p className="font-medium text-foreground mb-1">📋 Analyse de vos impayés</p>
+                        <p className="font-medium text-foreground mb-1 flex items-center gap-1.5"><Scale className="h-3.5 w-3.5 text-primary" /> Analyse de vos impayés</p>
                         <p className="text-muted-foreground text-xs">3 locataires ont plus de 2 mois d'impayés. Je recommande d'envoyer une mise en demeure formelle conforme au droit OHADA, puis de proposer un plan d'apurement sur 3 mois.</p>
                       </div>
                       <div className="bg-muted/50 rounded-xl rounded-tl-none p-3 text-sm max-w-[85%]">
-                        <p className="font-medium text-foreground mb-1">🏠 Optimisation ventes</p>
+                        <p className="font-medium text-foreground mb-1 flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5 text-primary" /> Optimisation ventes</p>
                         <p className="text-muted-foreground text-xs">Votre bien à Cocody est en vente depuis 45 jours. Suggestion : réduire le prix de 5% ou proposer un paiement échelonné pour attirer plus d'acquéreurs.</p>
                       </div>
                       <div className="bg-primary/10 rounded-xl rounded-tr-none p-3 text-sm ml-auto max-w-[75%]">
@@ -424,8 +424,8 @@ const Pricing = () => {
                       </div>
                     </div>
                     <div className="flex gap-2 pt-2">
-                      {["💰 Impayés", "🏠 Ventes", "📊 Parcelles"].map((tag) => (
-                        <span key={tag} className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium">{tag}</span>
+                      {[{ icon: <Scale className="h-3 w-3" />, label: "Impayés" }, { icon: <TrendingUp className="h-3 w-3" />, label: "Ventes" }, { icon: <BarChart3 className="h-3 w-3" />, label: "Parcelles" }].map((tag) => (
+                        <span key={tag.label} className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium flex items-center gap-1">{tag.icon} {tag.label}</span>
                       ))}
                     </div>
                   </CardContent>

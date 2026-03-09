@@ -445,30 +445,6 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* ===== SEO: CITIES & COUNTRIES ===== */}
-      <section aria-label="Zones couvertes" className="py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <motion.div className="text-center mb-10" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
-              Gestion immobilière partout en Afrique
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              {platformAppName} est utilisé par des agences immobilières et propriétaires dans toute l'Afrique francophone.
-            </p>
-          </motion.div>
-          <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
-            {[
-              "Côte d'Ivoire", "Abidjan", "Sénégal", "Dakar", "Cameroun", "Douala",
-              "Mali", "Bamako", "Burkina Faso", "Ouagadougou", "Guinée", "Conakry",
-              "Togo", "Lomé", "Bénin", "Cotonou", "Congo", "Brazzaville", "Gabon", "Niger"
-            ].map((place, i) => (
-              <span key={i} className="text-sm bg-muted/60 border px-3 py-1.5 rounded-full text-muted-foreground hover:bg-muted transition-colors">
-                {place}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ===== CTA BEFORE PRICING ===== */}
       <section aria-label="Appel à l'action" className="py-16 md:py-20 bg-gradient-to-r from-primary/5 to-accent/5">

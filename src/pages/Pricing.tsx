@@ -343,7 +343,7 @@ const Pricing = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {[
-              { icon: Smartphone, title: "Web et Mobile", desc: "Gérez tout depuis votre PC ou téléphone, même hors connexion" },
+              { icon: Smartphone, title: "Web et Mobile", desc: "Gérez tout depuis votre PC ou téléphone" },
               { icon: Shield, title: "Données sécurisées", desc: "Chiffrement de bout en bout, hébergement cloud fiable" },
               { icon: Bell, title: "Rappels automatiques", desc: "WhatsApp et email pour ne rien oublier" },
               { icon: BarChart3, title: "Tableaux de bord", desc: "Statistiques en temps réel pour piloter votre activité" },
@@ -638,7 +638,7 @@ const Pricing = () => {
               { q: "Qu'est-ce qu'ImmoPrestige ?", a: "ImmoPrestige est un logiciel de gestion immobilière et locative en ligne, conçu pour les agences immobilières, propriétaires et bailleurs en Côte d'Ivoire et en Afrique. Il centralise la gestion des biens, locataires, loyers, contrats et lotissements." },
               { q: "Comment fonctionne le paiement des loyers en ligne ?", a: "ImmoPrestige intègre les paiements Mobile Money (Orange Money, MTN Money, Moov Money), Wave et les cartes bancaires. Les locataires peuvent payer directement en ligne et les quittances sont générées automatiquement." },
               { q: "ImmoPrestige est-il gratuit ?", a: "Oui, ImmoPrestige propose un plan gratuit pour démarrer sans engagement et sans carte bancaire. Des forfaits payants sont disponibles pour les besoins plus importants." },
-              { q: "Puis-je utiliser ImmoPrestige sur mon téléphone ?", a: "Oui, ImmoPrestige est une application web progressive (PWA) qui fonctionne sur tous les appareils : ordinateur, tablette et smartphone, même hors connexion." },
+              { q: "Puis-je utiliser ImmoPrestige sur mon téléphone ?", a: "Oui, ImmoPrestige est une application web progressive (PWA) qui fonctionne sur tous les appareils : ordinateur, tablette et smartphone." },
               { q: "Puis-je changer de forfait ?", a: "Oui, vous pouvez passer à un forfait supérieur à tout moment. La différence sera calculée au prorata." },
               { q: "Mes données sont-elles sécurisées ?", a: "Absolument. Vos données sont chiffrées et hébergées sur des serveurs sécurisés avec des sauvegardes régulières." },
               { q: "Comment gérer un lotissement ?", a: "ImmoPrestige offre un module complet : création d'îlots et parcelles, gestion des ventes, suivi des échéanciers, démarches administratives et signatures numériques." },

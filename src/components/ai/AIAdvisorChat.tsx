@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bot, Send, Loader2, Sparkles, X, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = { role: "user" | "assistant"; content: string };
 type AdvisorContext = "unpaid" | "sales" | "parcels" | "all";

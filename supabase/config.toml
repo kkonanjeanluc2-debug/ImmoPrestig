@@ -131,3 +131,6 @@ verify_jwt = false
 
 [functions.vendor-offer-response]
 verify_jwt = false
+
+[functions.ai-advisor]
+verify_jwt = false

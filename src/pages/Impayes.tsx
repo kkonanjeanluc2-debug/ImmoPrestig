@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
+import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 
 export default function Impayes() {
   return (
@@ -15,6 +16,7 @@ export default function Impayes() {
         </div>
         <UnpaidCasesList />
       </div>
+      <AIAdvisorChat context="unpaid" title="Conseiller Recouvrement" />
     </DashboardLayout>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -430,6 +431,7 @@ const LotissementDetails = () => {
           onOpenChange={setShowGenerateDocument}
         />
       )}
+      <AIAdvisorChat context="parcels" title="Conseiller Parcelles" />
     </DashboardLayout>
   );
 };

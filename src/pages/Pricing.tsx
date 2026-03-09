@@ -407,7 +407,7 @@ const Pricing = () => {
               },
               {
                 icon: Layers,
-                title: "Application de gestion de lotissements",
+                title: "Gestion de lotissements",
                 desc: "Le module lotissement le plus complet d'Afrique. Créez et gérez vos lotissements, îlots et parcelles. Suivez les ventes de terrains, les échéanciers de paiement, les démarches administratives et les documents juridiques. Parfait pour les promoteurs immobiliers et lotisseurs.",
                 keywords: ["Création d'îlots", "Gestion de parcelles", "Vente de terrains", "Échéanciers", "Documents juridiques"]
               },

@@ -11,7 +11,7 @@ export function useInactivityTimeout({
   onTimeout,
   enabled = true,
 }: UseInactivityTimeoutOptions) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onTimeoutRef = useRef(onTimeout);
 
   // Keep the callback reference up to date

@@ -10,8 +10,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const GOOGLE_AI_KEY = Deno.env.get("GOOGLE_AI_STUDIO_KEY");
-    if (!GOOGLE_AI_KEY) throw new Error("GOOGLE_AI_STUDIO_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const authHeader = req.headers.get("Authorization");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -132,36 +132,21 @@ Règles :
 Voici les données actuelles de l'agence :
 ${contextData || "Aucune donnée disponible pour le moment."}`;
 
-    const fetchOptions = {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GOOGLE_AI_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gemini-2.0-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
         ],
         stream: true,
       }),
-    };
-
-    let response: Response | null = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      console.log(`AI request attempt ${attempt + 1}/3`);
-      response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", fetchOptions);
-      console.log(`AI response status: ${response.status}`);
-      if (response.status !== 429) break;
-      // Google AI Studio free tier: wait longer (15s, 30s, 60s)
-      const retryAfter = response.headers.get("Retry-After");
-      const delayMs = retryAfter ? parseInt(retryAfter) * 1000 : (attempt + 1) * 15000;
-      console.log(`Rate limited, waiting ${delayMs}ms (attempt ${attempt + 1})`);
-      await new Promise((resolve) => setTimeout(resolve, Math.min(delayMs, 60000)));
-    }
-
-    if (!response) throw new Error("No response from AI");
+    });
 
     if (!response.ok) {
       if (response.status === 429) {

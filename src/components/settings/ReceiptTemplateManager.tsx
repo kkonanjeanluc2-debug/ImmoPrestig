@@ -526,7 +526,7 @@ export function ReceiptTemplateManager() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <ReceiptTemplateImportExport templates={templates} />
+            
             <Button onClick={handleOpenCreate} size="sm" className="text-xs sm:text-sm">
               <Plus className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden xs:inline">Nouveau</span> modèle

@@ -132,7 +132,7 @@ Règles :
 Voici les données actuelles de l'agence :
 ${contextData || "Aucune donnée disponible pour le moment."}`;
 
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const fetchOptions = {
       method: "POST",
       headers: {
         Authorization: `Bearer ${GOOGLE_AI_KEY}`,
@@ -146,7 +146,19 @@ ${contextData || "Aucune donnée disponible pour le moment."}`;
         ],
         stream: true,
       }),
-    });
+    };
+
+    let response: Response | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", fetchOptions);
+      if (response.status !== 429) break;
+      const retryAfter = response.headers.get("Retry-After");
+      const delayMs = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
+      console.log(`Rate limited, waiting ${delayMs}ms (attempt ${attempt + 1})`);
+      await new Promise((resolve) => setTimeout(resolve, Math.min(delayMs, 30000)));
+    }
+
+    if (!response) throw new Error("No response from AI");
 
     if (!response.ok) {
       if (response.status === 429) {

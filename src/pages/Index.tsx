@@ -221,7 +221,8 @@ const Index = () => {
             <ManagerPerformance periodFrom={period.from} periodTo={period.to} />
             <RecentPayments />
           </div>
-        </div>
+      </div>
+      <AIAdvisorChat context="all" />
       </div>
     </DashboardLayout>
   );

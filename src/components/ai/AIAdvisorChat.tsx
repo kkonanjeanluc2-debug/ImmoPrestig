@@ -191,7 +191,7 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
 
       <CardContent className="flex-1 flex flex-col gap-3 overflow-hidden p-3 pt-0">
         <ScrollArea className="flex-1" ref={scrollRef}>
-          <div className="space-y-3 pr-2">
+          <div className="space-y-3 pr-3">
             {messages.length === 0 && (
               <div className="space-y-3">
                 <div className="flex items-start gap-2">
@@ -207,11 +207,11 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
                       key={i}
                       variant="outline"
                       size="sm"
-                      className="w-full justify-start text-left h-auto py-2 text-xs"
+                      className="w-full justify-start text-left h-auto py-2 text-xs whitespace-normal break-words"
                       onClick={() => sendMessage(prompt)}
                     >
                       <MessageCircle className="h-3 w-3 mr-2 flex-shrink-0" />
-                      {prompt}
+                      <span className="line-clamp-2">{prompt}</span>
                     </Button>
                   ))}
                 </div>

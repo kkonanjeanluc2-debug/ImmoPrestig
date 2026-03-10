@@ -23,6 +23,7 @@ import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 import { SubscriptionExpiryBanner } from "@/components/dashboard/SubscriptionExpiryBanner";
+import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 
 const Index = () => {
   const { user } = useAuth();

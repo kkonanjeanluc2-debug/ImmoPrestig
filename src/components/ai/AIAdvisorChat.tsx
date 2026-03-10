@@ -173,17 +173,17 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 z-50 w-[95vw] max-w-[420px] h-[70vh] max-h-[600px] shadow-2xl flex flex-col border-primary/20">
+    <Card className="fixed z-50 shadow-2xl flex flex-col border-primary/20 bottom-0 right-0 w-full h-[100dvh] sm:bottom-6 sm:right-6 sm:w-[95vw] sm:max-w-[420px] sm:h-[70vh] sm:max-h-[600px] sm:rounded-lg rounded-none">
       <CardHeader className="pb-2 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
-            {title || "Assistant IA"}
-            <Badge variant="secondary" className="text-xs">
+          <CardTitle className="text-sm sm:text-base flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <Bot className="h-5 w-5 text-primary flex-shrink-0" />
+            <span className="truncate">{title || "Assistant IA"}</span>
+            <Badge variant="secondary" className="text-[10px] sm:text-xs flex-shrink-0">
               {CONTEXT_LABELS[context]}
             </Badge>
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8">
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8 flex-shrink-0">
             <X className="h-4 w-4" />
           </Button>
         </div>

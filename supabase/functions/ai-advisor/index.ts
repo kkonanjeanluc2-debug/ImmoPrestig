@@ -150,12 +150,15 @@ ${contextData || "Aucune donnée disponible pour le moment."}`;
 
     let response: Response | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
+      console.log(`AI request attempt ${attempt + 1}/3`);
       response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", fetchOptions);
+      console.log(`AI response status: ${response.status}`);
       if (response.status !== 429) break;
+      // Google AI Studio free tier: wait longer (15s, 30s, 60s)
       const retryAfter = response.headers.get("Retry-After");
-      const delayMs = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
+      const delayMs = retryAfter ? parseInt(retryAfter) * 1000 : (attempt + 1) * 15000;
       console.log(`Rate limited, waiting ${delayMs}ms (attempt ${attempt + 1})`);
-      await new Promise((resolve) => setTimeout(resolve, Math.min(delayMs, 30000)));
+      await new Promise((resolve) => setTimeout(resolve, Math.min(delayMs, 60000)));
     }
 
     if (!response) throw new Error("No response from AI");

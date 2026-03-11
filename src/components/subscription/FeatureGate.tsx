@@ -57,6 +57,10 @@ const FEATURE_LABELS: Record<FeatureKey, { title: string; description: string }>
     title: "Assistant IA",
     description: "Un conseiller intelligent pour vous aider dans la gestion de vos biens et le recouvrement.",
   },
+  gestion_impayes: {
+    title: "Gestion des impayés",
+    description: "Suivez les dossiers d'impayés et gérez les procédures de recouvrement de vos locataires.",
+  },
 };
 
 export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {

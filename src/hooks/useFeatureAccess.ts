@@ -38,10 +38,10 @@ const PLANS_WITH_ALL_FEATURES = ["Enterprise", "Premium"];
 // Define which plan level unlocks which features
 const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {
   "Gratuit": [],
-  "Starter": ["rappels_automatiques", "assistant_ia"],
-  "Pro": ["rappels_automatiques", "rappels_sms", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "ventes_immobilieres", "achats_immobiliers", "assistant_ia"],
-  "Premium": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia"],
-  "Enterprise": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia"],
+  "Starter": ["rappels_automatiques", "assistant_ia", "gestion_impayes"],
+  "Pro": ["rappels_automatiques", "rappels_sms", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "ventes_immobilieres", "achats_immobiliers", "assistant_ia", "gestion_impayes"],
+  "Premium": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia", "gestion_impayes"],
+  "Enterprise": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia", "gestion_impayes"],
 };
 
 export interface FeatureAccessResult {

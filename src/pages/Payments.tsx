@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 const statusConfig = {
   paid: { 
     label: "Payé", 

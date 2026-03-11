@@ -63,16 +63,16 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
   const { toast } = useToast();
   const { hasFeature, isLoading: featureLoading } = useFeatureAccess();
 
-  // Don't render at all if feature not available
-  if (!featureLoading && !hasFeature("assistant_ia")) {
-    return null;
-  }
-
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Don't render at all if feature not available
+  if (!featureLoading && !hasFeature("assistant_ia")) {
+    return null;
+  }
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;

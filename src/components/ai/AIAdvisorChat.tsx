@@ -8,6 +8,7 @@ import { Bot, Send, Loader2, Sparkles, X, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 type Message = { role: "user" | "assistant"; content: string };
 type AdvisorContext = "unpaid" | "sales" | "parcels" | "all";
@@ -60,12 +61,18 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { hasFeature, isLoading: featureLoading } = useFeatureAccess();
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Don't render at all if feature not available
+  if (!featureLoading && !hasFeature("assistant_ia")) {
+    return null;
+  }
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;

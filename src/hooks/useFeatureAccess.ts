@@ -12,7 +12,8 @@ export type FeatureKey =
   | "rapports_avances"
   | "support_prioritaire"
   | "support_dedie"
-  | "formation_personnalisee";
+  | "formation_personnalisee"
+  | "assistant_ia";
 
 // Map feature keys to strings that appear in subscription_plans.features
 const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
@@ -26,6 +27,7 @@ const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
   support_prioritaire: ["Support prioritaire", "Support dédié", "Toutes les fonctionnalités"],
   support_dedie: ["Support dédié", "Toutes les fonctionnalités"],
   formation_personnalisee: ["Formation personnalisée", "Toutes les fonctionnalités"],
+  assistant_ia: ["Assistant IA", "assistant ia", "Toutes les fonctionnalités"],
 };
 
 // Plans that have all features by default (for display purposes)
@@ -34,10 +36,10 @@ const PLANS_WITH_ALL_FEATURES = ["Enterprise", "Premium"];
 // Define which plan level unlocks which features
 const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {
   "Gratuit": [],
-  "Starter": ["rappels_automatiques"],
-  "Pro": ["rappels_automatiques", "rappels_sms", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "ventes_immobilieres", "achats_immobiliers"],
-  "Premium": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee"],
-  "Enterprise": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee"],
+  "Starter": ["rappels_automatiques", "assistant_ia"],
+  "Pro": ["rappels_automatiques", "rappels_sms", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "ventes_immobilieres", "achats_immobiliers", "assistant_ia"],
+  "Premium": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia"],
+  "Enterprise": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia"],
 };
 
 export interface FeatureAccessResult {

@@ -61,6 +61,12 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { hasFeature, isLoading: featureLoading } = useFeatureAccess();
+
+  // Don't render at all if feature not available
+  if (!featureLoading && !hasFeature("assistant_ia")) {
+    return null;
+  }
 
   useEffect(() => {
     if (scrollRef.current) {

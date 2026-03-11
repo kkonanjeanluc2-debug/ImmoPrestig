@@ -29,6 +29,7 @@ const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
   support_dedie: ["Support dédié", "Toutes les fonctionnalités"],
   formation_personnalisee: ["Formation personnalisée", "Toutes les fonctionnalités"],
   assistant_ia: ["Assistant IA", "assistant ia", "Toutes les fonctionnalités"],
+  gestion_impayes: ["Gestion des impayés", "gestion des impayes", "Toutes les fonctionnalités"],
 };
 
 // Plans that have all features by default (for display purposes)

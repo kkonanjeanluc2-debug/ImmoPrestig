@@ -274,10 +274,12 @@ export default function Payments() {
             </TabsTrigger>
             {showAdvancedTabs && (
               <>
-                <TabsTrigger value="impayes" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
-                  <AlertTriangleIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">Impayés</span>
-                </TabsTrigger>
+                {hasImpayes && (
+                  <TabsTrigger value="impayes" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
+                    <AlertTriangleIcon className="h-4 w-4" />
+                    <span className="hidden sm:inline">Impayés</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="commissions" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
                   <Percent className="h-4 w-4" />
                   <span className="hidden sm:inline">Commissions</span>

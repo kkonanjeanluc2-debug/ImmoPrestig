@@ -12,7 +12,8 @@ export type FeatureKey =
   | "rapports_avances"
   | "support_prioritaire"
   | "support_dedie"
-  | "formation_personnalisee";
+  | "formation_personnalisee"
+  | "assistant_ia";
 
 // Map feature keys to strings that appear in subscription_plans.features
 const FEATURE_MAPPING: Record<FeatureKey, string[]> = {

@@ -90,6 +90,8 @@ export default function Payments() {
   const isLocataire = role === "locataire";
   const isGestionnaire = role === "gestionnaire";
   const showAdvancedTabs = !isLocataire && !isGestionnaire;
+  const { hasFeature } = useFeatureAccess();
+  const hasImpayes = hasFeature("gestion_impayes");
 
   const { data: onlineAccountSetting } = usePlatformSetting("online_rent_account_enabled");
   const isAccountTabEnabled = onlineAccountSetting?.value !== "false";

@@ -174,7 +174,7 @@ const App = () => {
                   <Route path="/ventes-immobilieres/vente/:id" element={<ProtectedRoute><FeatureProtectedRoute feature="ventes_immobilieres"><VenteImmobiliereDetails /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/achats-immobiliers" element={<ProtectedRoute><FeatureProtectedRoute feature="achats_immobiliers"><AchatsImmobiliers /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/acquisitions" element={<ProtectedRoute><FeatureProtectedRoute feature="achats_immobiliers"><Acquisitions /></FeatureProtectedRoute></ProtectedRoute>} />
-                  <Route path="/impayes" element={<ProtectedRoute><Impayes /></ProtectedRoute>} />
+                  <Route path="/impayes" element={<ProtectedRoute><FeatureProtectedRoute feature="gestion_impayes"><Impayes /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />

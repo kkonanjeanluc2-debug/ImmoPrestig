@@ -53,6 +53,10 @@ const FEATURE_LABELS: Record<FeatureKey, { title: string; description: string }>
     title: "Formation personnalisée",
     description: "Une formation sur mesure pour maîtriser toutes les fonctionnalités.",
   },
+  assistant_ia: {
+    title: "Assistant IA",
+    description: "Un conseiller intelligent pour vous aider dans la gestion de vos biens et le recouvrement.",
+  },
 };
 
 export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {

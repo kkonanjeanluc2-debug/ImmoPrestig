@@ -41,6 +41,7 @@ import { useTrashCount } from "@/hooks/useTrashCount";
 import { useNewVenteProspectsCount, useNewAllLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
 import { useNewTenantRequestsCount } from "@/hooks/useNewTenantRequestsCount";
 import { useFeatureAccess, FeatureKey } from "@/hooks/useFeatureAccess";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";

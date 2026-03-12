@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck, ShoppingCart } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck, ShoppingCart, Blocks } from "lucide-react";
+import { ModulesSettings } from "@/components/settings/ModulesSettings";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -88,13 +89,20 @@ const Settings = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 h-auto gap-2 bg-transparent p-0 max-w-md">
+            <TabsList className="grid w-full grid-cols-4 h-auto gap-2 bg-transparent p-0 max-w-lg">
               <TabsTrigger
                 value="profile"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
               >
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Profil</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="modules"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+              >
+                <Blocks className="h-4 w-4" />
+                <span className="hidden sm:inline">Modules</span>
               </TabsTrigger>
               <TabsTrigger
                 value="display"
@@ -114,6 +122,10 @@ const Settings = () => {
 
             <TabsContent value="profile">
               <ProfileSettings />
+            </TabsContent>
+
+            <TabsContent value="modules">
+              <ModulesSettings />
             </TabsContent>
 
             <TabsContent value="display">

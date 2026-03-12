@@ -41,6 +41,7 @@ import { useTrashCount } from "@/hooks/useTrashCount";
 import { useNewVenteProspectsCount, useNewAllLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
 import { useNewTenantRequestsCount } from "@/hooks/useNewTenantRequestsCount";
 import { useFeatureAccess, FeatureKey } from "@/hooks/useFeatureAccess";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,6 +111,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { count: newLotProspectsCount } = useNewAllLotissementProspectsCount();
   const { count: newRequestsCount } = useNewTenantRequestsCount();
   const { hasFeature } = useFeatureAccess();
+  const { data: acquisitionsModuleSetting } = usePlatformSetting("module_acquisitions_enabled");
+  const isAcquisitionsEnabled = acquisitionsModuleSetting?.value === "true";
   const { hasPermission } = usePermissions();
   const prefetchRoute = usePrefetchRoute();
   const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
@@ -349,7 +352,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pl-3 space-y-1">
                     {crmImmobilierItems
-                      .filter((item) => hasFeature(item.featureKey))
+                      .filter((item) => hasFeature(item.featureKey) && (item.href !== "/acquisitions" || isAcquisitionsEnabled))
                       .map((item) => {
                         const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
                         const badgeCount = item.href === "/ventes-immobilieres" ? newVenteProspectsCount : 0;

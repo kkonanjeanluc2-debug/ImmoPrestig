@@ -635,6 +635,7 @@ const SuperAdmin = () => {
           {/* Payment Providers Tab */}
           <TabsContent value="payments" className="space-y-6">
             <PlatformSettingsCard />
+            <ModulesSettings />
             <PaymentProvidersSettings />
           </TabsContent>
 

@@ -1017,6 +1017,7 @@ export type Database = {
       contracts: {
         Row: {
           created_at: string
+          deleted_at: string | null
           deposit: number | null
           end_date: string
           id: string
@@ -1032,6 +1033,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           deposit?: number | null
           end_date: string
           id?: string
@@ -1047,6 +1049,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           deposit?: number | null
           end_date?: string
           id?: string

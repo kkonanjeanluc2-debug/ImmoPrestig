@@ -35,6 +35,7 @@ export const useRestoreTenant = () => {
 
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name?: string }) => {
+      // Restore tenant
       const { data, error } = await supabase
         .from("tenants")
         .update({ deleted_at: null })
@@ -43,6 +44,30 @@ export const useRestoreTenant = () => {
         .single();
 
       if (error) throw error;
+
+      // Restore all soft-deleted contracts for this tenant
+      const { data: restoredContracts, error: contractsError } = await supabase
+        .from("contracts")
+        .update({ deleted_at: null })
+        .eq("tenant_id", id)
+        .not("deleted_at", "is", null)
+        .select("id, property_id, unit_id");
+
+      if (contractsError) throw contractsError;
+
+      // Re-occupy properties/units for restored contracts
+      for (const contract of restoredContracts || []) {
+        if (contract.unit_id) {
+          await supabase
+            .from("property_units")
+            .update({ status: "loué" })
+            .eq("id", contract.unit_id);
+        }
+        await supabase
+          .from("properties")
+          .update({ status: "loué" })
+          .eq("id", contract.property_id);
+      }
 
       // Log activity
       if (user) {
@@ -61,6 +86,9 @@ export const useRestoreTenant = () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["deleted-tenants"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units"] });
     },
   });
 };

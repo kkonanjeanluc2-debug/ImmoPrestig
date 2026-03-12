@@ -20,6 +20,7 @@ import { TransactionsDashboard } from "@/components/superadmin/TransactionsDashb
 import { RevenueEvolutionChart } from "@/components/superadmin/RevenueEvolutionChart";
 import { PaymentProvidersSettings } from "@/components/superadmin/PaymentProvidersSettings";
 import { PlatformSettingsCard } from "@/components/superadmin/PlatformSettingsCard";
+import { ModulesSettings } from "@/components/settings/ModulesSettings";
 import { AppRole, ROLE_LABELS } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";

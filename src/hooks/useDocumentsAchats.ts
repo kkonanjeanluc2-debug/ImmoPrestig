@@ -20,11 +20,6 @@ const DOCUMENT_TYPES = [
   { value: "offre_achat", label: "Offre d'achat" },
   { value: "compromis_vente", label: "Compromis de vente" },
   { value: "acte_vente", label: "Acte de vente" },
-  { value: "diagnostic_dpe", label: "DPE" },
-  { value: "diagnostic_amiante", label: "Diagnostic amiante" },
-  { value: "diagnostic_plomb", label: "Diagnostic plomb" },
-  { value: "diagnostic_termites", label: "Diagnostic termites" },
-  { value: "diagnostic_autre", label: "Autre diagnostic" },
   { value: "autre", label: "Autre" },
 ] as const;
 

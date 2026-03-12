@@ -186,12 +186,6 @@ export const useDeleteTenant = () => {
 
       // Release property/unit for each active contract
       for (const contract of contracts || []) {
-        // Update contract status to terminated
-        await supabase
-          .from("contracts")
-          .update({ status: "terminated" })
-          .eq("id", contract.id);
-
         // If contract has a unit, release the unit
         if (contract.unit_id) {
           await supabase
@@ -221,6 +215,14 @@ export const useDeleteTenant = () => {
             .eq("id", contract.property_id);
         }
       }
+
+      // Delete ALL contracts for this tenant (active, expired, terminated)
+      const { error: deleteContractsError } = await supabase
+        .from("contracts")
+        .delete()
+        .eq("tenant_id", id);
+
+      if (deleteContractsError) throw deleteContractsError;
 
       // Soft delete - set deleted_at timestamp
       const { error } = await supabase

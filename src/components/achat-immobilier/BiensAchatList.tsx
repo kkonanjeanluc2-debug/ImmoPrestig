@@ -115,11 +115,18 @@ export function BiensAchatList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Biens à acheter</h2>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Biens à acheter</h2>
+          {canCreate && (
+            <AddBienAchatDialog>
+              <Button size="sm" className="shrink-0"><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+            </AddBienAchatDialog>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px] h-9 text-sm">
+            <SelectTrigger className="w-[140px] h-9 text-sm">
               <SelectValue placeholder="Tous les statuts" />
             </SelectTrigger>
             <SelectContent>
@@ -130,7 +137,7 @@ export function BiensAchatList() {
             </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[160px] h-9 text-sm">
+            <SelectTrigger className="w-[140px] h-9 text-sm">
               <SelectValue placeholder="Tous les types" />
             </SelectTrigger>
             <SelectContent>
@@ -140,11 +147,6 @@ export function BiensAchatList() {
               ))}
             </SelectContent>
           </Select>
-          {canCreate && (
-            <AddBienAchatDialog>
-              <Button size="sm"><Plus className="h-4 w-4 mr-2" />Ajouter un bien</Button>
-            </AddBienAchatDialog>
-          )}
         </div>
       </div>
 

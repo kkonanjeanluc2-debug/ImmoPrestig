@@ -86,6 +86,9 @@ export const useRestoreTenant = () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["deleted-tenants"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units"] });
     },
   });
 };

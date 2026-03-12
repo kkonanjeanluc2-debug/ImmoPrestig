@@ -216,10 +216,10 @@ export const useDeleteTenant = () => {
         }
       }
 
-      // Delete ALL contracts for this tenant (active, expired, terminated)
+      // Soft-delete ALL contracts for this tenant (active, expired, terminated)
       const { error: deleteContractsError } = await supabase
         .from("contracts")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("tenant_id", id);
 
       if (deleteContractsError) throw deleteContractsError;

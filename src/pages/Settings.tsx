@@ -89,13 +89,20 @@ const Settings = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 h-auto gap-2 bg-transparent p-0 max-w-md">
+            <TabsList className="grid w-full grid-cols-4 h-auto gap-2 bg-transparent p-0 max-w-lg">
               <TabsTrigger
                 value="profile"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
               >
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Profil</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="modules"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3"
+              >
+                <Blocks className="h-4 w-4" />
+                <span className="hidden sm:inline">Modules</span>
               </TabsTrigger>
               <TabsTrigger
                 value="display"
@@ -115,6 +122,10 @@ const Settings = () => {
 
             <TabsContent value="profile">
               <ProfileSettings />
+            </TabsContent>
+
+            <TabsContent value="modules">
+              <ModulesSettings />
             </TabsContent>
 
             <TabsContent value="display">

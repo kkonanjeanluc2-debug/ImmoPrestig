@@ -70,9 +70,9 @@ const ROLE_BADGE_COLORS: Record<AppRole, string> = {
 
 const gestionLocativeItems: { name: string; href: string; icon: typeof Building2; hiddenForTenant: boolean; hiddenForGestionnaire: boolean; featureKey?: FeatureKey }[] = [
   { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard, hiddenForTenant: true, hiddenForGestionnaire: false },
+  { name: "Propriétaires", href: "/owners", icon: Home, hiddenForTenant: true, hiddenForGestionnaire: false },
   { name: "Biens", href: "/properties", icon: Building2, hiddenForTenant: true, hiddenForGestionnaire: false },
   { name: "Locataires", href: "/tenants", icon: Users, hiddenForTenant: false, hiddenForGestionnaire: false },
-  { name: "Propriétaires", href: "/owners", icon: Home, hiddenForTenant: true, hiddenForGestionnaire: false },
   { name: "Contrats", href: "/contracts", icon: ScrollText, hiddenForTenant: false, hiddenForGestionnaire: true },
   { name: "Paiements", href: "/payments", icon: Wallet, hiddenForTenant: false, hiddenForGestionnaire: false },
   { name: "Impayés", href: "/impayes", icon: AlertTriangle, hiddenForTenant: true, hiddenForGestionnaire: false, featureKey: "gestion_impayes" },

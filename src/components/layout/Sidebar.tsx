@@ -352,7 +352,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pl-3 space-y-1">
                     {crmImmobilierItems
-                      .filter((item) => hasFeature(item.featureKey))
+                      .filter((item) => hasFeature(item.featureKey) && (item.href !== "/acquisitions" || isAcquisitionsEnabled))
                       .map((item) => {
                         const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
                         const badgeCount = item.href === "/ventes-immobilieres" ? newVenteProspectsCount : 0;

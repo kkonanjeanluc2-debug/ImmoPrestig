@@ -164,7 +164,7 @@ export function CollectPaymentDialog({
             : getPaymentPeriod(dueDate);
             
           const pdfBase64 = await generateRentReceiptBase64WithTemplate({
-            paymentId,
+            paymentId: realPaymentId,
             tenantName,
             tenantEmail,
             propertyTitle,

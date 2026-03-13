@@ -81,6 +81,13 @@ export const useCreateContract = () => {
         .single();
 
       if (error) throw error;
+
+      // Reset tenant status to "actif" when a new contract is created
+      await supabase
+        .from("tenants")
+        .update({ status: "actif" })
+        .eq("id", contract.tenant_id);
+
       return data;
     },
     onSuccess: () => {

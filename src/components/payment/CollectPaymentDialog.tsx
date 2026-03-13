@@ -78,6 +78,8 @@ export function CollectPaymentDialog({
   commissionAmount = 0,
   paymentMonths,
   onSuccess,
+  isVirtual = false,
+  tenantId,
 }: CollectPaymentDialogProps) {
   const [open, setOpen] = useState(false);
   const [method, setMethod] = useState(currentMethod || "especes");
@@ -88,6 +90,7 @@ export function CollectPaymentDialog({
   const remaining = amount - paidAmount;
   const [collectAmount, setCollectAmount] = useState<number>(remaining);
   const updatePayment = useUpdatePayment();
+  const createPayment = useCreatePayment();
   const { data: agency } = useAgency();
   const { toast } = useToast();
 

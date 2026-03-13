@@ -1,0 +1,1 @@
+ALTER TABLE public.agencies ADD COLUMN rent_due_day integer NOT NULL DEFAULT 10;

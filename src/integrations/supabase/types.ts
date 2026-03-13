@@ -442,6 +442,7 @@ export type Database = {
           online_rent_enabled: boolean
           phone: string | null
           primary_color: string | null
+          rent_due_day: number
           reservation_deposit_percentage: number
           sale_commission_percentage: number | null
           sidebar_color: string | null
@@ -479,6 +480,7 @@ export type Database = {
           online_rent_enabled?: boolean
           phone?: string | null
           primary_color?: string | null
+          rent_due_day?: number
           reservation_deposit_percentage?: number
           sale_commission_percentage?: number | null
           sidebar_color?: string | null
@@ -516,6 +518,7 @@ export type Database = {
           online_rent_enabled?: boolean
           phone?: string | null
           primary_color?: string | null
+          rent_due_day?: number
           reservation_deposit_percentage?: number
           sale_commission_percentage?: number | null
           sidebar_color?: string | null

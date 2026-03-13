@@ -81,6 +81,7 @@ const contractStatusConfig = {
   active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
   ending_soon: { label: "Fin proche", className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
   expired: { label: "Expiré", className: "bg-red-500/10 text-red-500 border-red-500/20" },
+  ancien: { label: "Ancien locataire", className: "bg-muted text-muted-foreground border-muted-foreground/20" },
 };
 
 const paymentStatusConfig = {

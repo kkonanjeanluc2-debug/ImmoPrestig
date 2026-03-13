@@ -48,6 +48,7 @@ export function AgencySettings() {
     country: "Côte d'Ivoire",
     siret: "",
     reservation_deposit_percentage: "30",
+    rent_due_day: "10",
     sale_commission_percentage: "5",
     mobile_money_number: "",
     mobile_money_provider: "" as MobileMoneyProvider | "",

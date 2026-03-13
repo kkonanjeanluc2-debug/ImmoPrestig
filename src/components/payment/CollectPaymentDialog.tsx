@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { useUpdatePayment } from "@/hooks/usePayments";
+import { useUpdatePayment, useCreatePayment } from "@/hooks/usePayments";
 import { useToast } from "@/hooks/use-toast";
 import { useAgency } from "@/hooks/useAgency";
 import { Loader2, CheckCircle, Banknote, Mail, FileText, Percent } from "lucide-react";

@@ -114,6 +114,7 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
       dates.sort((a, b) => a.getTime() - b.getTime());
       const lastDate = dates[dates.length - 1];
       const yyyy = lastDate.getFullYear();
+      const mm = String(lastDate.getMonth() + 1).padStart(2, "0");
       const dd = String(rentDueDay).padStart(2, "0");
       form.setValue("due_date", `${yyyy}-${mm}-${dd}`);
     }

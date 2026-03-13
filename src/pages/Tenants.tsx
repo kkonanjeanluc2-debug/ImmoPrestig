@@ -81,6 +81,7 @@ const contractStatusConfig = {
   active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
   ending_soon: { label: "Fin proche", className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
   expired: { label: "Expiré", className: "bg-red-500/10 text-red-500 border-red-500/20" },
+  ancien: { label: "Ancien locataire", className: "bg-muted text-muted-foreground border-muted-foreground/20" },
 };
 
 const paymentStatusConfig = {
@@ -118,8 +119,10 @@ function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevoke
   // Get active contract - prioritize active contracts
   const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
   
-  // Determine contract status based on actual contract data
+  // Determine contract status based on actual contract data and tenant status
   const getContractStatus = (): string | null => {
+    // Check if tenant is marked as "ancien" (former tenant)
+    if ((tenant as any).status === 'ancien') return 'ancien';
     if (!activeContract) return null;
     if (activeContract.status === 'active') {
       // Check if ending soon (within 30 days)

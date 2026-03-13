@@ -610,7 +610,7 @@ export default function Payments() {
                                     isTenantView={isLocataire}
                                   />
                                 )}
-                                {payment.status !== "paid" && isLocataire && (
+                                {payment.status !== "paid" && isLocataire && !(payment as any)._isVirtual && (
                                   <TenantPayRentDialog
                                     paymentId={payment.id}
                                     amount={Number(payment.amount)}

@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Revoke tenant portal access for tenants with no remaining active contracts
+    // Mark tenants as "ancien" and revoke portal access for tenants with no remaining active contracts
     const tenantIds = [...new Set(expiredContracts.map((c: any) => c.tenant_id).filter(Boolean))];
     for (const tenantId of tenantIds) {
       // Check if tenant has any other active contract
@@ -165,17 +165,16 @@ Deno.serve(async (req) => {
         .limit(1);
 
       if (!otherActive || otherActive.length === 0) {
-        // Revoke portal access
-        const { error: revokeErr } = await supabase
+        // Mark tenant as "ancien" (former tenant) and revoke portal access
+        const { error: updateErr } = await supabase
           .from("tenants")
-          .update({ has_portal_access: false })
-          .eq("id", tenantId)
-          .eq("has_portal_access", true);
+          .update({ status: "ancien", has_portal_access: false })
+          .eq("id", tenantId);
 
-        if (revokeErr) {
-          console.error(`Failed to revoke portal access for tenant ${tenantId}:`, revokeErr);
+        if (updateErr) {
+          console.error(`Failed to update tenant ${tenantId} to ancien:`, updateErr);
         } else {
-          console.log(`Portal access revoked for tenant ${tenantId}`);
+          console.log(`Tenant ${tenantId} marked as ancien, portal access revoked`);
         }
       }
     }

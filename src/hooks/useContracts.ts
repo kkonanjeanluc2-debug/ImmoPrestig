@@ -138,6 +138,15 @@ export const useExpireContract = () => {
       propertyId: string; 
       unitId?: string | null;
     }) => {
+      // Get the contract to find the tenant
+      const { data: contract, error: fetchError } = await supabase
+        .from("contracts")
+        .select("tenant_id")
+        .eq("id", contractId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       // Update contract status to expired
       const { error: contractError } = await supabase
         .from("contracts")
@@ -145,6 +154,16 @@ export const useExpireContract = () => {
         .eq("id", contractId);
 
       if (contractError) throw contractError;
+
+      // Mark tenant as "ancien" (former tenant) - keep property_id/unit_id for reference
+      if (contract?.tenant_id) {
+        const { error: tenantError } = await supabase
+          .from("tenants")
+          .update({ status: "ancien" })
+          .eq("id", contract.tenant_id);
+
+        if (tenantError) console.error("Error updating tenant status:", tenantError);
+      }
 
       // If contract has a unit, update unit status to disponible
       if (unitId) {

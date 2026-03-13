@@ -107,6 +107,32 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     },
     enabled: !!user?.id && isLocataire,
   });
+
+  // Check if tenant portal access has been revoked and force logout
+  const hasCheckedAccess = useRef(false);
+  useEffect(() => {
+    if (!user?.id || !isLocataire || hasCheckedAccess.current) return;
+    
+    const checkPortalAccess = async () => {
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("has_portal_access")
+        .eq("portal_user_id", user.id)
+        .maybeSingle();
+      
+      if (tenant && !tenant.has_portal_access) {
+        hasCheckedAccess.current = true;
+        await supabase.auth.signOut();
+        toast({
+          title: "Accès révoqué",
+          description: "Votre accès au portail a été désactivé. Veuillez contacter votre gestionnaire.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    checkPortalAccess();
+  }, [user?.id, isLocataire, toast]);
   
   // Use tenant's agency or the user's own agency
   const { data: ownAgency } = useAgency();

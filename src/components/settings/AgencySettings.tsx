@@ -247,6 +247,7 @@ export function AgencySettings() {
             siret: formData.siret || null,
             logo_url: logoUrl,
             reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
+            rent_due_day: parseInt(formData.rent_due_day) || 10,
             sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
             mobile_money_number: formData.mobile_money_number || null,
             mobile_money_provider: formData.mobile_money_provider || null,

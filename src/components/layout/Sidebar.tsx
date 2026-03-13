@@ -24,7 +24,8 @@ import {
   KeyRound,
   ShoppingCart,
   Briefcase,
-  PackagePlus
+  PackagePlus,
+  Calculator
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { usePlatformBranding } from "@/hooks/usePlatformBranding";

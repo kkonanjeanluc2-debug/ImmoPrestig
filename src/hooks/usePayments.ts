@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { logActivityDirect } from "@/lib/activityLogger";
+import { useAgency } from "@/hooks/useAgency";
 
 export type Payment = Tables<"payments">;
 export type PaymentInsert = TablesInsert<"payments">;

@@ -481,6 +481,28 @@ export function AgencySettings() {
           </div>
         </div>
 
+        {/* Rent Due Day */}
+        <div className="space-y-2">
+          <Label htmlFor="rent-due-day">Jour d'échéance du loyer</Label>
+          <p className="text-xs text-muted-foreground">
+            Jour du mois où le loyer est dû (ex: 5 = le 5 de chaque mois)
+          </p>
+          <div className="relative">
+            <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="rent-due-day"
+              type="number"
+              min="1"
+              max="28"
+              step="1"
+              value={formData.rent_due_day}
+              onChange={(e) => handleChange("rent_due_day", e.target.value)}
+              placeholder="10"
+              className="pl-10"
+            />
+          </div>
+        </div>
+
         {/* Sale Commission Percentage */}
         <div className="space-y-2">
           <Label htmlFor="sale-commission">Commission sur ventes immobilières (%)</Label>

@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { useTenants } from "@/hooks/useTenants";
+import { useAgency } from "@/hooks/useAgency";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { toast } from "sonner";
 import { MonthYearSelector } from "./MonthYearSelector";

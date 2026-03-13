@@ -33,6 +33,7 @@ export interface Agency {
   sidebar_color: string | null;
   whatsapp_property_template: string | null;
   reservation_deposit_percentage: number;
+  rent_due_day: number;
   mobile_money_number: string | null;
   mobile_money_provider: MobileMoneyProvider | null;
   is_active: boolean;

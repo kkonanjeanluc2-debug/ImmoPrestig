@@ -49,7 +49,7 @@ export const usePayments = () => {
       const nextMonth = now.getMonth() + 1 > 11 ? 0 : now.getMonth() + 1;
       const nextYear = now.getMonth() + 1 > 11 ? now.getFullYear() + 1 : now.getFullYear();
       const nextMonthLabel = `${FRENCH_MONTHS[nextMonth]} ${nextYear}`;
-      const nextMonthDueDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-10`;
+      const nextMonthDueDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(rentDueDay).padStart(2, '0')}`;
 
       // Fetch active contracts with tenant info
       const { data: activeContracts, error: contractsError } = await supabase

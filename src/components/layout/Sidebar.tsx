@@ -115,6 +115,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { hasFeature } = useFeatureAccess();
   const { data: acquisitionsModuleSetting } = usePlatformSetting("module_acquisitions_enabled");
   const isAcquisitionsEnabled = acquisitionsModuleSetting?.value === "true";
+  const { data: comptaModuleSetting } = usePlatformSetting("module_comptabilite_enabled");
+  const isComptaEnabled = comptaModuleSetting?.value === "true";
   const { hasPermission } = usePermissions();
   const prefetchRoute = usePrefetchRoute();
   const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
@@ -299,6 +301,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     .filter((item) => !(userRole?.role === "locataire" && item.hiddenForTenant))
                     .filter((item) => !(userRole?.role === "gestionnaire" && item.hiddenForGestionnaire))
                     .filter((item) => !item.featureKey || hasFeature(item.featureKey))
+                    .filter((item) => item.href !== "/comptabilite" || isComptaEnabled)
                     .map((item) => {
                       const isActive = location.pathname === item.href;
                       const badgeCount = item.href === "/tenants" ? newRequestsCount : 0;

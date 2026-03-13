@@ -3725,6 +3725,7 @@ export type Database = {
           portal_user_id: string | null
           profession: string | null
           property_id: string | null
+          status: string
           unit_id: string | null
           updated_at: string
           user_id: string
@@ -3748,6 +3749,7 @@ export type Database = {
           portal_user_id?: string | null
           profession?: string | null
           property_id?: string | null
+          status?: string
           unit_id?: string | null
           updated_at?: string
           user_id: string
@@ -3771,6 +3773,7 @@ export type Database = {
           portal_user_id?: string | null
           profession?: string | null
           property_id?: string | null
+          status?: string
           unit_id?: string | null
           updated_at?: string
           user_id?: string

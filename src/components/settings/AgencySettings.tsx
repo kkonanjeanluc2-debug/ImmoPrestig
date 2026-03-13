@@ -25,7 +25,8 @@ import {
   Smartphone,
   Key,
   Eye,
-  EyeOff
+  EyeOff,
+  CalendarDays
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";

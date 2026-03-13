@@ -1,4 +1,4 @@
-import { ReactNode, useState, useCallback, useEffect } from "react";
+import { ReactNode, useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Moon, MoonStar, Crown, UserCog, Eye, Calendar, Clock, User } from "lucide-react";

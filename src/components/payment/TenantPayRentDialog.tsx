@@ -40,16 +40,20 @@ const allPaymentMethods: { value: PaymentMethod; label: string; color: string; p
 ];
 
 export function TenantPayRentDialog({
-  paymentId,
+  paymentId: initialPaymentId,
   amount,
   paidAmount = 0,
   dueDate,
   propertyTitle,
   tenantPhone,
   agencyUserId,
+  isVirtual = false,
+  tenantId,
+  paymentMonths,
 }: Omit<TenantPayRentDialogProps, 'agencyMobileMoneyProvider'>) {
   const remainingAmount = amount - paidAmount;
   const [open, setOpen] = useState(false);
+  const [paymentId, setPaymentId] = useState(initialPaymentId);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
   const [phone, setPhone] = useState(tenantPhone || "");

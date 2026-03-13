@@ -301,6 +301,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     .filter((item) => !(userRole?.role === "locataire" && item.hiddenForTenant))
                     .filter((item) => !(userRole?.role === "gestionnaire" && item.hiddenForGestionnaire))
                     .filter((item) => !item.featureKey || hasFeature(item.featureKey))
+                    .filter((item) => item.href !== "/comptabilite" || isComptaEnabled)
                     .map((item) => {
                       const isActive = location.pathname === item.href;
                       const badgeCount = item.href === "/tenants" ? newRequestsCount : 0;

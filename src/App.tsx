@@ -50,6 +50,7 @@ const pageImports = {
   AchatsImmobiliers: () => import("./pages/AchatsImmobiliers"),
   Acquisitions: () => import("./pages/Acquisitions"),
   VendorOfferResponse: () => import("./pages/VendorOfferResponse"),
+  Comptabilite: () => import("./pages/Comptabilite"),
 };
 
 const Index = lazy(pageImports.Index);
@@ -83,6 +84,7 @@ const Impayes = lazy(pageImports.Impayes);
 const AchatsImmobiliers = lazy(pageImports.AchatsImmobiliers);
 const Acquisitions = lazy(pageImports.Acquisitions);
 const VendorOfferResponse = lazy(pageImports.VendorOfferResponse);
+const Comptabilite = lazy(pageImports.Comptabilite);
 
 // Preload all pages in background after initial render
 function usePreloadPages() {
@@ -175,6 +177,7 @@ const App = () => {
                   <Route path="/achats-immobiliers" element={<ProtectedRoute><FeatureProtectedRoute feature="achats_immobiliers"><AchatsImmobiliers /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/acquisitions" element={<ProtectedRoute><FeatureProtectedRoute feature="achats_immobiliers"><Acquisitions /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/impayes" element={<ProtectedRoute><FeatureProtectedRoute feature="gestion_impayes"><Impayes /></FeatureProtectedRoute></ProtectedRoute>} />
+                  <Route path="/comptabilite" element={<ProtectedRoute><Comptabilite /></ProtectedRoute>} />
                   <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />

@@ -24,7 +24,8 @@ import {
   KeyRound,
   ShoppingCart,
   Briefcase,
-  PackagePlus
+  PackagePlus,
+  Calculator
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { usePlatformBranding } from "@/hooks/usePlatformBranding";
@@ -76,6 +77,7 @@ const gestionLocativeItems: { name: string; href: string; icon: typeof Building2
   { name: "Contrats", href: "/contracts", icon: ScrollText, hiddenForTenant: false, hiddenForGestionnaire: true },
   { name: "Paiements", href: "/payments", icon: Wallet, hiddenForTenant: false, hiddenForGestionnaire: false },
   { name: "Impayés", href: "/impayes", icon: AlertTriangle, hiddenForTenant: true, hiddenForGestionnaire: false, featureKey: "gestion_impayes" },
+  { name: "Comptabilité", href: "/comptabilite", icon: Calculator, hiddenForTenant: true, hiddenForGestionnaire: false },
 ];
 
 const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [

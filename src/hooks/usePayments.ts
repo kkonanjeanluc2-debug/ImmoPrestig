@@ -13,12 +13,19 @@ export type PaymentWithDetails = Payment & {
   contract?: Tables<"contracts"> | null;
 };
 
+// French month names for payment_months format
+const FRENCH_MONTHS = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+];
+
 export const usePayments = () => {
   const { user } = useAuth();
 
   return useQuery({
     queryKey: ["payments", user?.id],
     queryFn: async () => {
+      // Fetch real payments
       const { data, error } = await supabase
         .from("payments")
         .select(`
@@ -28,7 +35,67 @@ export const usePayments = () => {
         .order("due_date", { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      const now = new Date();
+      const currentDay = now.getDate();
+
+      // Only generate virtual payments from the 15th of the month
+      if (currentDay < 15) return data;
+
+      // Determine next month
+      const nextMonth = now.getMonth() + 1 > 11 ? 0 : now.getMonth() + 1;
+      const nextYear = now.getMonth() + 1 > 11 ? now.getFullYear() + 1 : now.getFullYear();
+      const nextMonthLabel = `${FRENCH_MONTHS[nextMonth]} ${nextYear}`;
+      const nextMonthDueDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-10`;
+
+      // Fetch active contracts with tenant info
+      const { data: activeContracts, error: contractsError } = await supabase
+        .from("contracts")
+        .select(`
+          id, rent_amount, tenant_id, property_id, unit_id,
+          tenant:tenants(*, property:properties(*))
+        `)
+        .eq("status", "active")
+        .is("deleted_at", null);
+
+      if (contractsError) throw contractsError;
+
+      // Check which tenants already have a payment for next month
+      const existingTenantIds = new Set(
+        (data || [])
+          .filter(p => {
+            // Check if payment covers next month via payment_months
+            if (p.payment_months && Array.isArray(p.payment_months)) {
+              return p.payment_months.includes(nextMonthLabel);
+            }
+            // Or check by due_date month
+            const dueDate = new Date(p.due_date);
+            return dueDate.getMonth() === nextMonth && dueDate.getFullYear() === nextYear;
+          })
+          .map(p => p.tenant_id)
+      );
+
+      // Generate virtual pending payments for tenants without one
+      const virtualPayments = (activeContracts || [])
+        .filter(c => !existingTenantIds.has(c.tenant_id))
+        .map(contract => ({
+          id: `auto-${contract.tenant_id}-${nextMonthLabel}`,
+          user_id: user!.id,
+          tenant_id: contract.tenant_id,
+          amount: contract.rent_amount,
+          due_date: nextMonthDueDate,
+          status: "pending",
+          method: null,
+          paid_date: null,
+          paid_amount: null,
+          payment_months: [nextMonthLabel],
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+          tenant: contract.tenant,
+          _isVirtual: true,
+        }));
+
+      return [...(data || []), ...virtualPayments] as any;
     },
     enabled: !!user,
   });

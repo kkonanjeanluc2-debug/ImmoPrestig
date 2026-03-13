@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { useUpdatePayment } from "@/hooks/usePayments";
+import { useUpdatePayment, useCreatePayment } from "@/hooks/usePayments";
 import { useToast } from "@/hooks/use-toast";
 import { useAgency } from "@/hooks/useAgency";
 import { Loader2, CheckCircle, Banknote, Mail, FileText, Percent } from "lucide-react";
@@ -45,6 +45,8 @@ interface CollectPaymentDialogProps {
   commissionAmount?: number;
   paymentMonths?: string[] | null;
   onSuccess?: () => void;
+  isVirtual?: boolean;
+  tenantId?: string;
 }
 
 const paymentMethods = [
@@ -76,6 +78,8 @@ export function CollectPaymentDialog({
   commissionAmount = 0,
   paymentMonths,
   onSuccess,
+  isVirtual = false,
+  tenantId,
 }: CollectPaymentDialogProps) {
   const [open, setOpen] = useState(false);
   const [method, setMethod] = useState(currentMethod || "especes");
@@ -86,6 +90,7 @@ export function CollectPaymentDialog({
   const remaining = amount - paidAmount;
   const [collectAmount, setCollectAmount] = useState<number>(remaining);
   const updatePayment = useUpdatePayment();
+  const createPayment = useCreatePayment();
   const { data: agency } = useAgency();
   const { toast } = useToast();
 
@@ -116,14 +121,32 @@ export function CollectPaymentDialog({
     const isFullyPaid = newPaidAmount >= amount;
     
     try {
-      await updatePayment.mutateAsync({
-        id: paymentId,
-        status: isFullyPaid ? "paid" : undefined,
-        paid_date: paidDate,
-        paid_amount: newPaidAmount,
-        method: method,
-        tenantName: tenantName,
-      });
+      let realPaymentId = paymentId;
+
+      // If this is a virtual (auto-generated) payment, create it first
+      if (isVirtual && tenantId) {
+        const created = await createPayment.mutateAsync({
+          tenant_id: tenantId,
+          amount,
+          due_date: dueDate,
+          status: isFullyPaid ? "paid" : "pending",
+          method: method,
+          paid_date: paidDate,
+          paid_amount: collectAmount,
+          payment_months: paymentMonths || [],
+          tenantName,
+        });
+        realPaymentId = created.id;
+      } else {
+        await updatePayment.mutateAsync({
+          id: paymentId,
+          status: isFullyPaid ? "paid" : undefined,
+          paid_date: paidDate,
+          paid_amount: newPaidAmount,
+          method: method,
+          tenantName: tenantName,
+        });
+      }
 
       toast({
         title: isFullyPaid ? "Paiement encaissé en totalité" : "Paiement partiel enregistré",
@@ -141,7 +164,7 @@ export function CollectPaymentDialog({
             : getPaymentPeriod(dueDate);
             
           const pdfBase64 = await generateRentReceiptBase64WithTemplate({
-            paymentId,
+            paymentId: realPaymentId,
             tenantName,
             tenantEmail,
             propertyTitle,

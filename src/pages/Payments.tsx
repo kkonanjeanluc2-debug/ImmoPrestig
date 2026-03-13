@@ -610,7 +610,7 @@ export default function Payments() {
                                     isTenantView={isLocataire}
                                   />
                                 )}
-                                {payment.status !== "paid" && isLocataire && (
+                                {payment.status !== "paid" && isLocataire && !(payment as any)._isVirtual && (
                                   <TenantPayRentDialog
                                     paymentId={payment.id}
                                     amount={Number(payment.amount)}
@@ -647,6 +647,8 @@ export default function Payments() {
                                       commissionPercentage={commissionInfo.percentage}
                                       commissionAmount={commissionInfo.amount}
                                       paymentMonths={(payment as any).payment_months || undefined}
+                                      isVirtual={(payment as any)._isVirtual || false}
+                                      tenantId={payment.tenant_id}
                                     />
                                 )}
                               </div>

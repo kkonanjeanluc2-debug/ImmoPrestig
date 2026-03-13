@@ -26,6 +26,9 @@ interface TenantPayRentDialogProps {
   propertyTitle: string;
   tenantPhone?: string | null;
   agencyUserId: string;
+  isVirtual?: boolean;
+  tenantId?: string;
+  paymentMonths?: string[];
 }
 
 type PaymentMethod = "kkiapay" | "geniuspay";

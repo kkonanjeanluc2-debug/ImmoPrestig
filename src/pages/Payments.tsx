@@ -610,7 +610,7 @@ export default function Payments() {
                                     isTenantView={isLocataire}
                                   />
                                 )}
-                                {payment.status !== "paid" && isLocataire && !(payment as any)._isVirtual && (
+                                {payment.status !== "paid" && isLocataire && (
                                   <TenantPayRentDialog
                                     paymentId={payment.id}
                                     amount={Number(payment.amount)}
@@ -619,6 +619,9 @@ export default function Payments() {
                                     propertyTitle={propertyTitle}
                                     tenantPhone={tenant?.phone}
                                     agencyUserId={payment.user_id}
+                                    isVirtual={(payment as any)._isVirtual || false}
+                                    tenantId={payment.tenant_id}
+                                    paymentMonths={(payment as any).payment_months || undefined}
                                   />
                                 )}
                                 {payment.status !== "paid" && canSendReminders && !isLocataire && (

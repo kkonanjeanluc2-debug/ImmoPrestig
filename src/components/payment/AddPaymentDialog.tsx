@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { useTenants } from "@/hooks/useTenants";
+import { useAgency } from "@/hooks/useAgency";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { toast } from "sonner";
 import { MonthYearSelector } from "./MonthYearSelector";
@@ -53,6 +54,8 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const createPayment = useCreatePayment();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
+  const { data: agency } = useAgency();
+  const rentDueDay = agency?.rent_due_day ?? 10;
 
   const tenantsWithContracts = tenants?.filter(t => 
     t.contracts?.some(c => c.status === 'active')
@@ -98,7 +101,7 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
     const monthIndex = MONTHS_MAP[parts[0]];
     const year = parseInt(parts[1]);
     if (monthIndex === undefined || isNaN(year)) return null;
-    return new Date(year, monthIndex, 10);
+    return new Date(year, monthIndex, rentDueDay);
   };
 
   const handleMonthsChange = useCallback((months: string[]) => {
@@ -112,7 +115,8 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
       const lastDate = dates[dates.length - 1];
       const yyyy = lastDate.getFullYear();
       const mm = String(lastDate.getMonth() + 1).padStart(2, "0");
-      form.setValue("due_date", `${yyyy}-${mm}-10`);
+      const dd = String(rentDueDay).padStart(2, "0");
+      form.setValue("due_date", `${yyyy}-${mm}-${dd}`);
     }
   }, [form]);
 

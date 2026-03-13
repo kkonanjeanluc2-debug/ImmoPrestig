@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { logActivityDirect } from "@/lib/activityLogger";
+import { useAgency } from "@/hooks/useAgency";
 
 export type Payment = Tables<"payments">;
 export type PaymentInsert = TablesInsert<"payments">;
@@ -21,9 +22,11 @@ const FRENCH_MONTHS = [
 
 export const usePayments = () => {
   const { user } = useAuth();
+  const { data: agency } = useAgency();
+  const rentDueDay = agency?.rent_due_day ?? 10;
 
   return useQuery({
-    queryKey: ["payments", user?.id],
+    queryKey: ["payments", user?.id, rentDueDay],
     queryFn: async () => {
       // Fetch real payments
       const { data, error } = await supabase
@@ -46,7 +49,7 @@ export const usePayments = () => {
       const nextMonth = now.getMonth() + 1 > 11 ? 0 : now.getMonth() + 1;
       const nextYear = now.getMonth() + 1 > 11 ? now.getFullYear() + 1 : now.getFullYear();
       const nextMonthLabel = `${FRENCH_MONTHS[nextMonth]} ${nextYear}`;
-      const nextMonthDueDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-10`;
+      const nextMonthDueDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(rentDueDay).padStart(2, '0')}`;
 
       // Fetch active contracts with tenant info
       const { data: activeContracts, error: contractsError } = await supabase

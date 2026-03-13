@@ -25,7 +25,8 @@ import {
   Smartphone,
   Key,
   Eye,
-  EyeOff
+  EyeOff,
+  CalendarDays
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -48,6 +49,7 @@ export function AgencySettings() {
     country: "Côte d'Ivoire",
     siret: "",
     reservation_deposit_percentage: "30",
+    rent_due_day: "10",
     sale_commission_percentage: "5",
     mobile_money_number: "",
     mobile_money_provider: "" as MobileMoneyProvider | "",
@@ -86,6 +88,7 @@ export function AgencySettings() {
         country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
         reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
+        rent_due_day: ((agency as any).rent_due_day ?? 10).toString(),
         sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
         mobile_money_number: agency.mobile_money_number || "",
         mobile_money_provider: agency.mobile_money_provider || "",
@@ -118,6 +121,7 @@ export function AgencySettings() {
         country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
         reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
+        rent_due_day: ((agency as any).rent_due_day ?? 10).toString(),
         sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
         mobile_money_number: agency.mobile_money_number || "",
         mobile_money_provider: agency.mobile_money_provider || "",
@@ -209,6 +213,7 @@ export function AgencySettings() {
             siret: formData.siret || null,
             logo_url: logoUrl,
             reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
+            rent_due_day: parseInt(formData.rent_due_day) || 10,
             sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
             mobile_money_number: formData.mobile_money_number || null,
             mobile_money_provider: formData.mobile_money_provider || null,
@@ -243,6 +248,7 @@ export function AgencySettings() {
             siret: formData.siret || null,
             logo_url: logoUrl,
             reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
+            rent_due_day: parseInt(formData.rent_due_day) || 10,
             sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
             mobile_money_number: formData.mobile_money_number || null,
             mobile_money_provider: formData.mobile_money_provider || null,
@@ -471,6 +477,28 @@ export function AgencySettings() {
               value={formData.reservation_deposit_percentage}
               onChange={(e) => handleChange("reservation_deposit_percentage", e.target.value)}
               placeholder="30"
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Rent Due Day */}
+        <div className="space-y-2">
+          <Label htmlFor="rent-due-day">Jour d'échéance du loyer</Label>
+          <p className="text-xs text-muted-foreground">
+            Jour du mois où le loyer est dû (ex: 5 = le 5 de chaque mois)
+          </p>
+          <div className="relative">
+            <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="rent-due-day"
+              type="number"
+              min="1"
+              max="28"
+              step="1"
+              value={formData.rent_due_day}
+              onChange={(e) => handleChange("rent_due_day", e.target.value)}
+              placeholder="10"
               className="pl-10"
             />
           </div>

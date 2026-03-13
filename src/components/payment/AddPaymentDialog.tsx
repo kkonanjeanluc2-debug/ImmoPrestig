@@ -99,7 +99,7 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
     const monthIndex = MONTHS_MAP[parts[0]];
     const year = parseInt(parts[1]);
     if (monthIndex === undefined || isNaN(year)) return null;
-    return new Date(year, monthIndex, 10);
+    return new Date(year, monthIndex, rentDueDay);
   };
 
   const handleMonthsChange = useCallback((months: string[]) => {

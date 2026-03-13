@@ -167,7 +167,29 @@ export function TenantPayRentDialog({
     }
 
     setIsLoading(true);
+    let currentPaymentId = paymentId;
+    
     try {
+      // If this is a virtual payment, create a real one first
+      if (isVirtual && tenantId) {
+        const { data: created, error: createError } = await supabase
+          .from("payments")
+          .insert({
+            tenant_id: tenantId,
+            amount: amount,
+            due_date: dueDate,
+            status: "pending",
+            user_id: agencyUserId,
+            payment_months: paymentMonths || null,
+          })
+          .select()
+          .single();
+        
+        if (createError) throw createError;
+        currentPaymentId = created.id;
+        setPaymentId(currentPaymentId);
+      }
+
       const selectedMethodData = allPaymentMethods.find(m => m.value === selectedMethod);
       const provider = selectedMethodData?.provider;
       

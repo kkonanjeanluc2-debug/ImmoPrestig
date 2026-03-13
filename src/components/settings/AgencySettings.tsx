@@ -120,6 +120,7 @@ export function AgencySettings() {
         country: agency.country || "Côte d'Ivoire",
         siret: agency.siret || "",
         reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
+        rent_due_day: ((agency as any).rent_due_day ?? 10).toString(),
         sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
         mobile_money_number: agency.mobile_money_number || "",
         mobile_money_provider: agency.mobile_money_provider || "",

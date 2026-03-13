@@ -199,7 +199,7 @@ export function TenantPayRentDialog({
       if (provider === "kkiapay") {
         functionName = "tenant-pay-rent-kkiapay";
         body = { 
-          payment_id: paymentId, 
+          payment_id: currentPaymentId, 
           amount: payAmount,
           customer_name: "",
           customer_phone: phone,
@@ -208,20 +208,20 @@ export function TenantPayRentDialog({
         functionName = "tenant-pay-rent-pawapay";
         const actualMethod = selectedMethod.replace("pawapay_", "") + "_money";
         body = { 
-          payment_id: paymentId, 
+          payment_id: currentPaymentId, 
           customer_phone: phone,
           payment_method: actualMethod,
           country_code: "CI"
         };
       } else if (provider === "geniuspay") {
         functionName = "tenant-pay-rent-geniuspay";
-        body = { payment_id: paymentId, customer_phone: phone, amount: payAmount };
+        body = { payment_id: currentPaymentId, customer_phone: phone, amount: payAmount };
       } else if (provider === "wave_ci") {
         functionName = "tenant-pay-rent-wave";
-        body = { payment_id: paymentId, customer_phone: phone };
+        body = { payment_id: currentPaymentId, customer_phone: phone };
       } else {
         functionName = "tenant-pay-rent";
-        body = { payment_id: paymentId, payment_method: selectedMethod, customer_phone: phone };
+        body = { payment_id: currentPaymentId, payment_method: selectedMethod, customer_phone: phone };
       }
 
       const { data, error } = await supabase.functions.invoke(functionName, { body });

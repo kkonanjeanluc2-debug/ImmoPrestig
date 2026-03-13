@@ -121,14 +121,32 @@ export function CollectPaymentDialog({
     const isFullyPaid = newPaidAmount >= amount;
     
     try {
-      await updatePayment.mutateAsync({
-        id: paymentId,
-        status: isFullyPaid ? "paid" : undefined,
-        paid_date: paidDate,
-        paid_amount: newPaidAmount,
-        method: method,
-        tenantName: tenantName,
-      });
+      let realPaymentId = paymentId;
+
+      // If this is a virtual (auto-generated) payment, create it first
+      if (isVirtual && tenantId) {
+        const created = await createPayment.mutateAsync({
+          tenant_id: tenantId,
+          amount,
+          due_date: dueDate,
+          status: isFullyPaid ? "paid" : "pending",
+          method: method,
+          paid_date: paidDate,
+          paid_amount: collectAmount,
+          payment_months: paymentMonths || [],
+          tenantName,
+        });
+        realPaymentId = created.id;
+      } else {
+        await updatePayment.mutateAsync({
+          id: paymentId,
+          status: isFullyPaid ? "paid" : undefined,
+          paid_date: paidDate,
+          paid_amount: newPaidAmount,
+          method: method,
+          tenantName: tenantName,
+        });
+      }
 
       toast({
         title: isFullyPaid ? "Paiement encaissé en totalité" : "Paiement partiel enregistré",

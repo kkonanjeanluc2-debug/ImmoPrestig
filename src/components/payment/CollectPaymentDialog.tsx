@@ -45,6 +45,8 @@ interface CollectPaymentDialogProps {
   commissionAmount?: number;
   paymentMonths?: string[] | null;
   onSuccess?: () => void;
+  isVirtual?: boolean;
+  tenantId?: string;
 }
 
 const paymentMethods = [

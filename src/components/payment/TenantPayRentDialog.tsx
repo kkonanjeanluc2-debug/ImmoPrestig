@@ -26,6 +26,9 @@ interface TenantPayRentDialogProps {
   propertyTitle: string;
   tenantPhone?: string | null;
   agencyUserId: string;
+  isVirtual?: boolean;
+  tenantId?: string;
+  paymentMonths?: string[];
 }
 
 type PaymentMethod = "kkiapay" | "geniuspay";
@@ -37,16 +40,20 @@ const allPaymentMethods: { value: PaymentMethod; label: string; color: string; p
 ];
 
 export function TenantPayRentDialog({
-  paymentId,
+  paymentId: initialPaymentId,
   amount,
   paidAmount = 0,
   dueDate,
   propertyTitle,
   tenantPhone,
   agencyUserId,
+  isVirtual = false,
+  tenantId,
+  paymentMonths,
 }: Omit<TenantPayRentDialogProps, 'agencyMobileMoneyProvider'>) {
   const remainingAmount = amount - paidAmount;
   const [open, setOpen] = useState(false);
+  const [paymentId, setPaymentId] = useState(initialPaymentId);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
   const [phone, setPhone] = useState(tenantPhone || "");
@@ -160,7 +167,29 @@ export function TenantPayRentDialog({
     }
 
     setIsLoading(true);
+    let currentPaymentId = paymentId;
+    
     try {
+      // If this is a virtual payment, create a real one first
+      if (isVirtual && tenantId) {
+        const { data: created, error: createError } = await supabase
+          .from("payments")
+          .insert({
+            tenant_id: tenantId,
+            amount: amount,
+            due_date: dueDate,
+            status: "pending",
+            user_id: agencyUserId,
+            payment_months: paymentMonths || null,
+          })
+          .select()
+          .single();
+        
+        if (createError) throw createError;
+        currentPaymentId = created.id;
+        setPaymentId(currentPaymentId);
+      }
+
       const selectedMethodData = allPaymentMethods.find(m => m.value === selectedMethod);
       const provider = selectedMethodData?.provider;
       
@@ -170,7 +199,7 @@ export function TenantPayRentDialog({
       if (provider === "kkiapay") {
         functionName = "tenant-pay-rent-kkiapay";
         body = { 
-          payment_id: paymentId, 
+          payment_id: currentPaymentId, 
           amount: payAmount,
           customer_name: "",
           customer_phone: phone,
@@ -179,20 +208,20 @@ export function TenantPayRentDialog({
         functionName = "tenant-pay-rent-pawapay";
         const actualMethod = selectedMethod.replace("pawapay_", "") + "_money";
         body = { 
-          payment_id: paymentId, 
+          payment_id: currentPaymentId, 
           customer_phone: phone,
           payment_method: actualMethod,
           country_code: "CI"
         };
       } else if (provider === "geniuspay") {
         functionName = "tenant-pay-rent-geniuspay";
-        body = { payment_id: paymentId, customer_phone: phone, amount: payAmount };
+        body = { payment_id: currentPaymentId, customer_phone: phone, amount: payAmount };
       } else if (provider === "wave_ci") {
         functionName = "tenant-pay-rent-wave";
-        body = { payment_id: paymentId, customer_phone: phone };
+        body = { payment_id: currentPaymentId, customer_phone: phone };
       } else {
         functionName = "tenant-pay-rent";
-        body = { payment_id: paymentId, payment_method: selectedMethod, customer_phone: phone };
+        body = { payment_id: currentPaymentId, payment_method: selectedMethod, customer_phone: phone };
       }
 
       const { data, error } = await supabase.functions.invoke(functionName, { body });

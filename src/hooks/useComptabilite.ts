@@ -16,6 +16,9 @@ export interface ComptabiliteData {
   lotissementsEnAttente: number;
   // Impayés
   loyersImpayes: number;
+  // Expenses
+  totalExpenses: number;
+  expensesByCategory: { name: string; value: number; color: string }[];
   // Monthly breakdown
   monthlyData: MonthlyEntry[];
   // By category for pie chart
@@ -30,12 +33,20 @@ export interface MonthlyEntry {
   ventes: number;
   achats: number;
   lotissements: number;
+  depenses: number;
   total: number;
+  benefice: number;
 }
 
 const FRENCH_MONTHS = [
   "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
   "Juil", "Août", "Sep", "Oct", "Nov", "Déc"
+];
+
+const EXPENSE_COLORS = [
+  "#ef4444", "#f97316", "#eab308", "#8b5cf6", "#ec4899",
+  "#06b6d4", "#84cc16", "#f43f5e", "#a855f7", "#14b8a6",
+  "#6366f1", "#d946ef", "#0ea5e9", "#22c55e", "#f59e0b", "#64748b",
 ];
 
 export function useComptabilite(periodFrom: Date, periodTo: Date) {
@@ -97,6 +108,20 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  const { data: expenses } = useQuery({
+    queryKey: ["comptabilite-expenses", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("expenses")
+        .select("amount, category, expense_date")
+        .gte("expense_date", periodFrom.toISOString().split("T")[0])
+        .lte("expense_date", periodTo.toISOString().split("T")[0]);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   return useMemo(() => {
     const result: ComptabiliteData = {
       loyersEncaisses: 0,
@@ -108,6 +133,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       achatsEnAttente: 0,
       lotissementsEnAttente: 0,
       loyersImpayes: 0,
+      totalExpenses: 0,
+      expensesByCategory: [],
       monthlyData: [],
       revenueByCategory: [],
       byPaymentMethod: [],
@@ -125,7 +152,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         ventes: 0,
         achats: 0,
         lotissements: 0,
+        depenses: 0,
         total: 0,
+        benefice: 0,
       });
       cursor.setMonth(cursor.getMonth() + 1);
     }
@@ -151,7 +180,6 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             monthly[category] += amount;
             monthly.total += amount;
           }
-          // Payment method
           const method = e.payment_method || "Non spécifié";
           methodMap.set(method, (methodMap.get(method) || 0) + amount);
         } else if (e.status === "pending") {
@@ -168,6 +196,32 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");
 
+    // Process expenses
+    const expCategoryMap = new Map<string, number>();
+    if (expenses) {
+      expenses.forEach((exp) => {
+        const amount = Number(exp.amount);
+        result.totalExpenses += amount;
+        expCategoryMap.set(exp.category, (expCategoryMap.get(exp.category) || 0) + amount);
+
+        const date = new Date(exp.expense_date);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly.depenses += amount;
+        }
+      });
+    }
+
+    // Calculate benefice per month
+    monthlyMap.forEach((m) => {
+      m.benefice = m.total - m.depenses;
+    });
+
+    result.expensesByCategory = Array.from(expCategoryMap.entries())
+      .map(([name, value], i) => ({ name, value, color: EXPENSE_COLORS[i % EXPENSE_COLORS.length] }))
+      .sort((a, b) => b.value - a.value);
+
     result.monthlyData = Array.from(monthlyMap.values());
 
     const totalRevenue = result.loyersEncaisses + result.ventesEncaissees + result.achatsEncaisses + result.lotissementsEncaisses;
@@ -182,5 +236,5 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles, expenses, periodFrom, periodTo]);
 }

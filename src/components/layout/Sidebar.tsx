@@ -115,6 +115,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { hasFeature } = useFeatureAccess();
   const { data: acquisitionsModuleSetting } = usePlatformSetting("module_acquisitions_enabled");
   const isAcquisitionsEnabled = acquisitionsModuleSetting?.value === "true";
+  const { data: comptaModuleSetting } = usePlatformSetting("module_comptabilite_enabled");
+  const isComptaEnabled = comptaModuleSetting?.value === "true";
   const { hasPermission } = usePermissions();
   const prefetchRoute = usePrefetchRoute();
   const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();

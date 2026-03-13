@@ -22,9 +22,11 @@ const FRENCH_MONTHS = [
 
 export const usePayments = () => {
   const { user } = useAuth();
+  const { data: agency } = useAgency();
+  const rentDueDay = agency?.rent_due_day ?? 10;
 
   return useQuery({
-    queryKey: ["payments", user?.id],
+    queryKey: ["payments", user?.id, rentDueDay],
     queryFn: async () => {
       // Fetch real payments
       const { data, error } = await supabase

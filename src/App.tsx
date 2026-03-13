@@ -50,6 +50,7 @@ const pageImports = {
   AchatsImmobiliers: () => import("./pages/AchatsImmobiliers"),
   Acquisitions: () => import("./pages/Acquisitions"),
   VendorOfferResponse: () => import("./pages/VendorOfferResponse"),
+  Comptabilite: () => import("./pages/Comptabilite"),
 };
 
 const Index = lazy(pageImports.Index);

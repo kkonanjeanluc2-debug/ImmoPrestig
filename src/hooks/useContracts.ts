@@ -82,10 +82,21 @@ export const useCreateContract = () => {
 
       if (error) throw error;
 
-      // Reset tenant status to "actif" when a new contract is created
+      // Reset tenant status to "actif" and restore portal access if they had an account
+      const { data: tenantData } = await supabase
+        .from("tenants")
+        .select("portal_user_id")
+        .eq("id", contract.tenant_id)
+        .single();
+
+      const updatePayload: Record<string, any> = { status: "actif" };
+      if (tenantData?.portal_user_id) {
+        updatePayload.has_portal_access = true;
+      }
+
       await supabase
         .from("tenants")
-        .update({ status: "actif" })
+        .update(updatePayload)
         .eq("id", contract.tenant_id);
 
       return data;

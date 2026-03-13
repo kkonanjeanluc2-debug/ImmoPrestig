@@ -54,6 +54,8 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const createPayment = useCreatePayment();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
+  const { data: agency } = useAgency();
+  const rentDueDay = agency?.rent_due_day ?? 10;
 
   const tenantsWithContracts = tenants?.filter(t => 
     t.contracts?.some(c => c.status === 'active')

@@ -3,7 +3,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Download, FileText } from "lucide-react";
-import { ComptabiliteData } from "@/hooks/useComptabilite";
+import { ComptabiliteData, PaidRentDetail } from "@/hooks/useComptabilite";
 import { Expense, getSyscohadaAccount, REVENUE_ACCOUNTS } from "@/hooks/useExpenses";
 import { toast } from "sonner";
 import { createPDFDocument } from "@/lib/pdfFont";

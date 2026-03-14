@@ -191,7 +191,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       });
     };
 
-    processEntries(payments as any, "loyers", "loyersEncaisses", "loyersEnAttente");
+    processEntries((payments || []).map((p: any) => ({ ...p, payment_method: p.method })), "loyers", "loyersEncaisses", "loyersEnAttente");
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");

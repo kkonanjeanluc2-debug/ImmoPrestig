@@ -9,6 +9,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface ExpensesTableProps {
   expenses: Expense[];

@@ -71,11 +71,11 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">Chargement...</td>
+                    <td colSpan={isAdmin ? 7 : 6} className="py-8 text-center text-muted-foreground">Chargement...</td>
                   </tr>
                 ) : expenses.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={isAdmin ? 7 : 6} className="py-8 text-center text-muted-foreground">
                       Aucune dépense enregistrée pour cette période
                     </td>
                   </tr>

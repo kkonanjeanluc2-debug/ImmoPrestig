@@ -357,5 +357,5 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles, expenses, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles, expenses, managerProfiles, periodFrom, periodTo]);
 }

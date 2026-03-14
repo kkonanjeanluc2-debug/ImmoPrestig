@@ -174,10 +174,21 @@ export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceP
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          Performance par gestionnaire
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Performance par gestionnaire
+          </CardTitle>
+          {periodFrom && periodTo && (
+            <ExportManagerPerformance
+              managers={assignableUsers}
+              periodFrom={periodFrom}
+              periodTo={periodTo}
+              periodLabel={`${periodFrom.toLocaleDateString("fr-FR")} - ${periodTo.toLocaleDateString("fr-FR")}`}
+              agency={agency}
+            />
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary Stats */}

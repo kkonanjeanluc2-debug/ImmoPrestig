@@ -77,7 +77,6 @@ const gestionLocativeItems: { name: string; href: string; icon: typeof Building2
   { name: "Contrats", href: "/contracts", icon: ScrollText, hiddenForTenant: false, hiddenForGestionnaire: true },
   { name: "Paiements", href: "/payments", icon: Wallet, hiddenForTenant: false, hiddenForGestionnaire: false },
   { name: "Impayés", href: "/impayes", icon: AlertTriangle, hiddenForTenant: true, hiddenForGestionnaire: false, featureKey: "gestion_impayes" },
-  { name: "Comptabilité", href: "/comptabilite", icon: Calculator, hiddenForTenant: true, hiddenForGestionnaire: false },
 ];
 
 const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
@@ -86,8 +85,9 @@ const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; 
   { name: "Acquisitions", href: "/acquisitions", icon: PackagePlus, featureKey: "achats_immobiliers" },
 ];
 
-const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
+const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey?: FeatureKey }[] = [
   { name: "Lotissements", href: "/lotissements", icon: Building2, featureKey: "lotissement" },
+  { name: "Comptabilité", href: "/comptabilite", icon: Calculator },
 ];
 
 const superAdminNavigation = [
@@ -301,7 +301,6 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     .filter((item) => !(userRole?.role === "locataire" && item.hiddenForTenant))
                     .filter((item) => !(userRole?.role === "gestionnaire" && item.hiddenForGestionnaire))
                     .filter((item) => !item.featureKey || hasFeature(item.featureKey))
-                    .filter((item) => item.href !== "/comptabilite" || (isComptaEnabled && (userRole?.role !== "gestionnaire" || hasPermission("can_view_comptabilite"))))
                     .map((item) => {
                       const isActive = location.pathname === item.href;
                       const badgeCount = item.href === "/tenants" ? newRequestsCount : 0;
@@ -396,7 +395,12 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
 
               {/* Other navigation items (Lotissements) - only show if feature is available */}
               {otherNavigation
-                .filter((item) => hasFeature(item.featureKey))
+                .filter((item) => {
+                  if (item.href === "/comptabilite") {
+                    return isComptaEnabled && (userRole?.role !== "gestionnaire" || hasPermission("can_view_comptabilite"));
+                  }
+                  return !item.featureKey || hasFeature(item.featureKey);
+                })
                 .map((item) => {
                   const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
                   const badgeCount = item.href === "/lotissements" ? newLotProspectsCount : 0;

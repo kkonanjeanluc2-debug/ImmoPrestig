@@ -77,7 +77,6 @@ const gestionLocativeItems: { name: string; href: string; icon: typeof Building2
   { name: "Contrats", href: "/contracts", icon: ScrollText, hiddenForTenant: false, hiddenForGestionnaire: true },
   { name: "Paiements", href: "/payments", icon: Wallet, hiddenForTenant: false, hiddenForGestionnaire: false },
   { name: "Impayés", href: "/impayes", icon: AlertTriangle, hiddenForTenant: true, hiddenForGestionnaire: false, featureKey: "gestion_impayes" },
-  { name: "Comptabilité", href: "/comptabilite", icon: Calculator, hiddenForTenant: true, hiddenForGestionnaire: false },
 ];
 
 const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
@@ -86,8 +85,9 @@ const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; 
   { name: "Acquisitions", href: "/acquisitions", icon: PackagePlus, featureKey: "achats_immobiliers" },
 ];
 
-const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
+const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey?: FeatureKey }[] = [
   { name: "Lotissements", href: "/lotissements", icon: Building2, featureKey: "lotissement" },
+  { name: "Comptabilité", href: "/comptabilite", icon: Calculator },
 ];
 
 const superAdminNavigation = [

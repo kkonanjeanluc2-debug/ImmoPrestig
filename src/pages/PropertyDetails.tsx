@@ -251,6 +251,18 @@ const PropertyDetails = () => {
               <Share2 className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Partager</span>
             </WhatsAppButton>
+            {property.type === "location" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPeriodDialogOpen(true)}
+                disabled={generatingPDF}
+                className="bg-primary/10 border-primary/30 hover:bg-primary hover:text-primary-foreground"
+              >
+                <FileText className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Point mensuel</span>
+              </Button>
+            )}
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="h-4 w-4 sm:mr-2" />

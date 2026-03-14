@@ -23,6 +23,7 @@ import { TresorerieTab } from "@/components/comptabilite/TresorerieTab";
 import { ExportComptabilite } from "@/components/comptabilite/ExportComptabilite";
 import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
 import { useAgency } from "@/hooks/useAgency";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -61,6 +62,11 @@ const Comptabilite = () => {
   const { data, totalRevenue } = useComptabilite(period.from, period.to);
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
   const { data: agency } = useAgency();
+  const { hasPermission, role } = usePermissions();
+
+  const isAdminOrOwner = role === "super_admin" || role === "admin";
+  const canExport = isAdminOrOwner || hasPermission("can_export_comptabilite");
+  const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
   const beneficeNet = totalRevenue - data.totalExpenses;
@@ -143,18 +149,22 @@ const Comptabilite = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-lg sm:text-2xl font-bold text-foreground">Comptabilité</h1>
             <div className="flex items-center gap-2">
-              <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1 text-xs h-8 px-2 sm:px-3">
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Dépense</span>
-                <span className="sm:hidden">Dép.</span>
-              </Button>
-              <ExportComptabilite
-                data={data}
-                totalRevenue={totalRevenue}
-                expenses={expenses || []}
-                periodLabel={periodLabel.subtitle}
-                agency={agency}
-              />
+              {canCreateExpense && (
+                <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1 text-xs h-8 px-2 sm:px-3">
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Dépense</span>
+                  <span className="sm:hidden">Dép.</span>
+                </Button>
+              )}
+              {canExport && (
+                <ExportComptabilite
+                  data={data}
+                  totalRevenue={totalRevenue}
+                  expenses={expenses || []}
+                  periodLabel={periodLabel.subtitle}
+                  agency={agency}
+                />
+              )}
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -640,7 +650,7 @@ const Comptabilite = () => {
         </Tabs>
       </div>
 
-      <AddExpenseDialog open={addExpenseOpen} onOpenChange={setAddExpenseOpen} />
+      {canCreateExpense && <AddExpenseDialog open={addExpenseOpen} onOpenChange={setAddExpenseOpen} />}
     </DashboardLayout>
   );
 };

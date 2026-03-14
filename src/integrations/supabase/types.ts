@@ -1912,6 +1912,7 @@ export type Database = {
           can_create_contracts: boolean
           can_create_demarches: boolean | null
           can_create_documents: boolean
+          can_create_expenses: boolean
           can_create_ilots: boolean | null
           can_create_impayes: boolean
           can_create_impayes_actions: boolean
@@ -1946,6 +1947,7 @@ export type Database = {
           can_edit_properties: boolean
           can_edit_tenants: boolean
           can_edit_ventes: boolean
+          can_export_comptabilite: boolean
           can_export_data: boolean
           can_manage_automations: boolean
           can_manage_branding: boolean
@@ -1954,6 +1956,7 @@ export type Database = {
           can_manage_templates: boolean
           can_send_reminders: boolean
           can_view_achats: boolean
+          can_view_comptabilite: boolean
           can_view_contracts: boolean
           can_view_documents: boolean
           can_view_impayes: boolean
@@ -1986,6 +1989,7 @@ export type Database = {
           can_create_contracts?: boolean
           can_create_demarches?: boolean | null
           can_create_documents?: boolean
+          can_create_expenses?: boolean
           can_create_ilots?: boolean | null
           can_create_impayes?: boolean
           can_create_impayes_actions?: boolean
@@ -2020,6 +2024,7 @@ export type Database = {
           can_edit_properties?: boolean
           can_edit_tenants?: boolean
           can_edit_ventes?: boolean
+          can_export_comptabilite?: boolean
           can_export_data?: boolean
           can_manage_automations?: boolean
           can_manage_branding?: boolean
@@ -2028,6 +2033,7 @@ export type Database = {
           can_manage_templates?: boolean
           can_send_reminders?: boolean
           can_view_achats?: boolean
+          can_view_comptabilite?: boolean
           can_view_contracts?: boolean
           can_view_documents?: boolean
           can_view_impayes?: boolean
@@ -2060,6 +2066,7 @@ export type Database = {
           can_create_contracts?: boolean
           can_create_demarches?: boolean | null
           can_create_documents?: boolean
+          can_create_expenses?: boolean
           can_create_ilots?: boolean | null
           can_create_impayes?: boolean
           can_create_impayes_actions?: boolean
@@ -2094,6 +2101,7 @@ export type Database = {
           can_edit_properties?: boolean
           can_edit_tenants?: boolean
           can_edit_ventes?: boolean
+          can_export_comptabilite?: boolean
           can_export_data?: boolean
           can_manage_automations?: boolean
           can_manage_branding?: boolean
@@ -2102,6 +2110,7 @@ export type Database = {
           can_manage_templates?: boolean
           can_send_reminders?: boolean
           can_view_achats?: boolean
+          can_view_comptabilite?: boolean
           can_view_contracts?: boolean
           can_view_documents?: boolean
           can_view_impayes?: boolean

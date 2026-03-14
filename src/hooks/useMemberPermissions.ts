@@ -72,6 +72,10 @@ export interface MemberPermissions {
   can_view_reports: boolean;
   can_export_data: boolean;
   can_send_reminders: boolean;
+  // Comptabilité
+  can_view_comptabilite: boolean;
+  can_export_comptabilite: boolean;
+  can_create_expenses: boolean;
   // Settings management
   can_access_settings: boolean;
   can_access_agency_tab: boolean;
@@ -151,6 +155,9 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_view_reports: "Voir les rapports",
   can_export_data: "Exporter les données",
   can_send_reminders: "Envoyer des rappels",
+  can_view_comptabilite: "Accéder à la comptabilité",
+  can_export_comptabilite: "Exporter les rapports comptables",
+  can_create_expenses: "Enregistrer des dépenses",
   can_access_settings: "Accéder aux paramètres (global)",
   can_access_agency_tab: "Onglet Agence",
   can_access_management_tab: "Onglet Gestion",
@@ -207,6 +214,10 @@ export const PERMISSION_GROUPS = {
   settings: {
     label: "Paramètres",
     permissions: ["can_access_settings", "can_access_agency_tab", "can_access_management_tab", "can_access_subscription_tab", "can_access_notifications_tab", "can_access_whatsapp_tab", "can_access_sale_contracts_tab", "can_access_promesse_vente_tab", "can_access_reservation_forms_tab", "can_access_achat_contracts_tab", "can_manage_team", "can_manage_automations", "can_manage_branding", "can_manage_templates"] as PermissionKey[],
+  },
+  comptabilite: {
+    label: "Comptabilité",
+    permissions: ["can_view_comptabilite", "can_export_comptabilite", "can_create_expenses"] as PermissionKey[],
   },
   other: {
     label: "Autres",
@@ -271,6 +282,9 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_reports: true,
     can_export_data: true,
     can_send_reminders: true,
+    can_view_comptabilite: true,
+    can_export_comptabilite: true,
+    can_create_expenses: true,
     can_access_settings: true,
     can_access_agency_tab: true,
     can_access_management_tab: true,
@@ -341,6 +355,9 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_reports: false,
     can_export_data: false,
     can_send_reminders: true,
+    can_view_comptabilite: false,
+    can_export_comptabilite: false,
+    can_create_expenses: false,
     can_access_settings: false,
     can_access_agency_tab: false,
     can_access_management_tab: false,
@@ -411,6 +428,9 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_reports: false,
     can_export_data: false,
     can_send_reminders: false,
+    can_view_comptabilite: false,
+    can_export_comptabilite: false,
+    can_create_expenses: false,
     can_access_settings: false,
     can_access_agency_tab: false,
     can_access_management_tab: false,

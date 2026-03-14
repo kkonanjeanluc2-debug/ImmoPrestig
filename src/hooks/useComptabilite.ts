@@ -160,6 +160,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       revenueByCategory: [],
       byPaymentMethod: [],
       paidRentDetails: [],
+      paidRentsByManager: [],
     };
 
     // Build monthly buckets

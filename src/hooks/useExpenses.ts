@@ -83,7 +83,7 @@ export function useAddExpense() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["comptabilite"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-expenses"] });
       toast.success("Dépense ajoutée");
     },
     onError: (e: Error) => toast.error(e.message),

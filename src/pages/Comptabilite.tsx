@@ -23,6 +23,7 @@ import { TresorerieTab } from "@/components/comptabilite/TresorerieTab";
 import { ExportComptabilite } from "@/components/comptabilite/ExportComptabilite";
 import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
 import { useAgency } from "@/hooks/useAgency";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const COLORS = [
   "hsl(var(--primary))",

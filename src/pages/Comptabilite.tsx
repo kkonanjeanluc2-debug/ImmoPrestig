@@ -22,6 +22,7 @@ import { SyscohadaCompteResultat } from "@/components/comptabilite/SyscohadaComp
 import { TresorerieTab } from "@/components/comptabilite/TresorerieTab";
 import { ExportComptabilite } from "@/components/comptabilite/ExportComptabilite";
 import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
+import { useAgency } from "@/hooks/useAgency";
 
 const COLORS = [
   "hsl(var(--primary))",

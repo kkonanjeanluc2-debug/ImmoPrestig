@@ -124,6 +124,13 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
       doc.text(formatAmountWithCurrency(totalRevenue), pageWidth - 20, y + 6, { align: "right" });
       y += 18;
 
+      // Page break check before charges section
+      const pageHeight = doc.internal.pageSize.getHeight();
+      if (y + 40 > pageHeight - 30) {
+        doc.addPage();
+        y = 20;
+      }
+
       // Section Charges (Classe 6)
       doc.setTextColor(...primaryColor);
       doc.setFontSize(12);

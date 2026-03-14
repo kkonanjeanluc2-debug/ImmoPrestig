@@ -60,6 +60,7 @@ const Comptabilite = () => {
   const periodLabel = getPeriodLabel(period);
   const { data, totalRevenue } = useComptabilite(period.from, period.to);
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
+  const { data: agency } = useAgency();
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
   const beneficeNet = totalRevenue - data.totalExpenses;

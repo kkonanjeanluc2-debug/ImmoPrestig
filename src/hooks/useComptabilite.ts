@@ -164,6 +164,18 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
 
     const methodMap = new Map<string, number>();
 
+    const normalizeStatus = (status: string): string => {
+      const map: Record<string, string> = {
+        paye: "paid",
+        payé: "paid",
+        en_attente: "pending",
+        impaye: "overdue",
+        impayé: "overdue",
+        en_retard: "late",
+      };
+      return map[status.toLowerCase()] || status;
+    };
+
     const processEntries = (
       entries: { amount: number; status: string; due_date: string; paid_date: string | null; payment_method: string | null }[] | undefined,
       category: "loyers" | "ventes" | "achats" | "lotissements",
@@ -176,8 +188,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const date = new Date(e.due_date);
         const key = `${date.getFullYear()}-${date.getMonth()}`;
         const monthly = monthlyMap.get(key);
+        const status = normalizeStatus(e.status);
 
-        if (e.status === "paid") {
+        if (status === "paid") {
           result[paidField] += amount;
           if (monthly) {
             monthly[category] += amount;
@@ -185,9 +198,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           }
           const method = e.payment_method || "Non spécifié";
           methodMap.set(method, (methodMap.get(method) || 0) + amount);
-        } else if (e.status === "pending") {
+        } else if (status === "pending") {
           result[pendingField] += amount;
-        } else if (e.status === "overdue" || e.status === "late") {
+        } else if (status === "overdue" || status === "late") {
           if (category === "loyers") result.loyersImpayes += amount;
           else result[pendingField] += amount;
         }

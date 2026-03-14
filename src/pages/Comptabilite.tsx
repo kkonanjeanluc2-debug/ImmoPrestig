@@ -165,7 +165,7 @@ const Comptabilite = () => {
 
         {/* Main tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="w-full grid grid-cols-5 h-auto p-0.5 sm:p-1">
+          <TabsList className="w-auto inline-flex h-auto p-0.5 sm:p-1 gap-0">
             <TabsTrigger value="overview" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">Vue d'ensemble</span>

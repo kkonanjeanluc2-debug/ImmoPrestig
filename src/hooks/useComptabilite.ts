@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemo } from "react";
 
+export interface PaidRentDetail {
+  tenantName: string;
+  months: string[];
+  amount: number;
+  paidDate: string;
+}
+
 export interface ComptabiliteData {
   // Revenue sources
   loyersEncaisses: number;
@@ -25,6 +32,8 @@ export interface ComptabiliteData {
   revenueByCategory: { name: string; value: number; color: string }[];
   // Payment method breakdown
   byPaymentMethod: { name: string; value: number }[];
+  // Detailed paid rents
+  paidRentDetails: PaidRentDetail[];
 }
 
 export interface MonthlyEntry {
@@ -59,7 +68,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("amount, status, due_date, paid_date, method")
+        .select("amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name)")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
@@ -141,6 +150,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       monthlyData: [],
       revenueByCategory: [],
       byPaymentMethod: [],
+      paidRentDetails: [],
     };
 
     // Build monthly buckets
@@ -217,6 +227,25 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       "loyersEncaisses",
       "loyersEnAttente"
     );
+
+    // Build detailed paid rent entries
+    if (payments) {
+      payments.forEach((p: any) => {
+        if (normalizeStatus(p.status) === "paid") {
+          const tenantName = p.tenant?.name || "Locataire inconnu";
+          const months = p.payment_months || [];
+          const amount = Number(p.paid_amount) || Number(p.amount);
+          result.paidRentDetails.push({
+            tenantName,
+            months,
+            amount,
+            paidDate: p.paid_date || p.due_date,
+          });
+        }
+      });
+      // Sort by tenant name then date
+      result.paidRentDetails.sort((a, b) => a.tenantName.localeCompare(b.tenantName) || a.paidDate.localeCompare(b.paidDate));
+    }
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");

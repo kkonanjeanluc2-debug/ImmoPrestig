@@ -12,6 +12,8 @@ import {
   Clock,
 } from "lucide-react";
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { ExportManagerPerformance } from "./ExportManagerPerformance";
+import { useAgency } from "@/hooks/useAgency";
 import { useProperties } from "@/hooks/useProperties";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";

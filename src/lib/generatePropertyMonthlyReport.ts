@@ -112,8 +112,6 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text(data.period, pageWidth - 15, 26, { align: "right" });
-  doc.setFontSize(8);
-  doc.text("Par bien", pageWidth - 15, 32, { align: "right" });
 
   let yPos = 60;
 

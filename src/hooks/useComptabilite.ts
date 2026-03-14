@@ -8,6 +8,13 @@ export interface PaidRentDetail {
   months: string[];
   amount: number;
   paidDate: string;
+  managerName: string;
+}
+
+export interface ManagerRentGroup {
+  managerName: string;
+  details: PaidRentDetail[];
+  total: number;
 }
 
 export interface ComptabiliteData {
@@ -34,6 +41,8 @@ export interface ComptabiliteData {
   byPaymentMethod: { name: string; value: number }[];
   // Detailed paid rents
   paidRentDetails: PaidRentDetail[];
+  // Grouped by manager
+  paidRentsByManager: ManagerRentGroup[];
 }
 
 export interface MonthlyEntry {
@@ -68,7 +77,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name)")
+        .select("amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name), contract:contracts!payments_contract_id_fkey(property:properties!contracts_property_id_fkey(assigned_to))")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
@@ -134,6 +143,31 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  // Extract manager IDs from payments for profile resolution
+  const managerUserIds = useMemo(() => {
+    if (!payments) return [];
+    const ids = new Set<string>();
+    payments.forEach((p: any) => {
+      const assignedTo = p.contract?.property?.assigned_to;
+      if (assignedTo) ids.add(assignedTo);
+    });
+    return Array.from(ids);
+  }, [payments]);
+
+  const { data: managerProfiles } = useQuery({
+    queryKey: ["comptabilite-manager-profiles", managerUserIds],
+    queryFn: async () => {
+      if (managerUserIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", managerUserIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: managerUserIds.length > 0,
+  });
+
   return useMemo(() => {
     const result: ComptabiliteData = {
       loyersEncaisses: 0,
@@ -151,6 +185,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       revenueByCategory: [],
       byPaymentMethod: [],
       paidRentDetails: [],
+      paidRentsByManager: [],
     };
 
     // Build monthly buckets
@@ -229,9 +264,13 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     );
 
     // Build detailed paid rent entries
+    // Collect unique assigned_to user IDs for profile resolution
+    const managerIds = new Set<string>();
     if (payments) {
       payments.forEach((p: any) => {
         if (normalizeStatus(p.status) === "paid") {
+          const assignedTo = p.contract?.property?.assigned_to;
+          if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
           const months = p.payment_months || [];
           const amount = Number(p.paid_amount) || Number(p.amount);
@@ -240,11 +279,39 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             months,
             amount,
             paidDate: p.paid_date || p.due_date,
+            managerName: assignedTo || "__unassigned__",
           });
         }
       });
-      // Sort by tenant name then date
-      result.paidRentDetails.sort((a, b) => a.tenantName.localeCompare(b.tenantName) || a.paidDate.localeCompare(b.paidDate));
+      // Resolve manager names from profiles
+      const profileMap = new Map<string, string>();
+      managerProfiles?.forEach((p) => {
+        profileMap.set(p.user_id, p.full_name || "Gestionnaire");
+      });
+
+      result.paidRentDetails.forEach((d) => {
+        if (d.managerName !== "__unassigned__") {
+          d.managerName = profileMap.get(d.managerName) || "Gestionnaire";
+        } else {
+          d.managerName = "Non assigné";
+        }
+      });
+
+      // Sort by manager then tenant name then date
+      result.paidRentDetails.sort((a, b) => a.managerName.localeCompare(b.managerName) || a.tenantName.localeCompare(b.tenantName) || a.paidDate.localeCompare(b.paidDate));
+
+      // Group by manager
+      const managerGroupMap = new Map<string, PaidRentDetail[]>();
+      result.paidRentDetails.forEach((d) => {
+        const group = managerGroupMap.get(d.managerName) || [];
+        group.push(d);
+        managerGroupMap.set(d.managerName, group);
+      });
+      result.paidRentsByManager = Array.from(managerGroupMap.entries()).map(([managerName, details]) => ({
+        managerName,
+        details,
+        total: details.reduce((s, d) => s + d.amount, 0),
+      }));
     }
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
@@ -290,5 +357,5 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles, expenses, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles, expenses, managerProfiles, periodFrom, periodTo]);
 }

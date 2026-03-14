@@ -148,7 +148,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     if (!payments) return [];
     const ids = new Set<string>();
     payments.forEach((p: any) => {
-      const assignedTo = p.contract?.property?.assigned_to;
+      const assignedTo = p.tenant?.assigned_to;
       if (assignedTo) ids.add(assignedTo);
     });
     return Array.from(ids);

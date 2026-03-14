@@ -139,29 +139,28 @@ const Comptabilite = () => {
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         {/* Header */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Comptabilité</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                {periodLabel.subtitle} — Conforme SYSCOHADA
-              </p>
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground">Comptabilité</h1>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1 text-xs h-8 px-2 sm:px-3">
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Dépense</span>
+                <span className="sm:hidden">Dép.</span>
+              </Button>
+              <ExportComptabilite
+                data={data}
+                totalRevenue={totalRevenue}
+                expenses={expenses || []}
+                periodLabel={periodLabel.subtitle}
+                agency={agency}
+              />
             </div>
-            <PeriodFilter value={period} onChange={setPeriod} />
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1.5 text-xs sm:text-sm">
-              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Dépense
-            </Button>
-            <ExportComptabilite
-              data={data}
-              totalRevenue={totalRevenue}
-              expenses={expenses || []}
-              periodLabel={periodLabel.subtitle}
-              agency={agency}
-            />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {periodLabel.subtitle} — Conforme SYSCOHADA
+          </p>
+          <PeriodFilter value={period} onChange={setPeriod} />
         </div>
 
         {/* Main tabs */}

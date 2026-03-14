@@ -227,6 +227,25 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       "loyersEncaisses",
       "loyersEnAttente"
     );
+
+    // Build detailed paid rent entries
+    if (payments) {
+      payments.forEach((p: any) => {
+        if (normalizeStatus(p.status) === "paid") {
+          const tenantName = p.tenant?.name || "Locataire inconnu";
+          const months = p.payment_months || [];
+          const amount = Number(p.paid_amount) || Number(p.amount);
+          result.paidRentDetails.push({
+            tenantName,
+            months,
+            amount,
+            paidDate: p.paid_date || p.due_date,
+          });
+        }
+      });
+      // Sort by tenant name then date
+      result.paidRentDetails.sort((a, b) => a.tenantName.localeCompare(b.tenantName) || a.paidDate.localeCompare(b.paidDate));
+    }
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");

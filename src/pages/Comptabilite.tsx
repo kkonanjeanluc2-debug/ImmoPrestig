@@ -140,13 +140,13 @@ const Comptabilite = () => {
       <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         {/* Header */}
         <div className="space-y-3">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Comptabilité</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">
-              {periodLabel.subtitle} — Conforme SYSCOHADA
-            </p>
-          </div>
-          <div className="flex items-center justify-between sm:justify-start gap-2">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Comptabilité</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                {periodLabel.subtitle} — Conforme SYSCOHADA
+              </p>
+            </div>
             <PeriodFilter value={period} onChange={setPeriod} />
           </div>
           <div className="flex items-center gap-2">

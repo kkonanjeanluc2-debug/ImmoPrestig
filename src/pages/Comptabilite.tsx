@@ -22,6 +22,7 @@ import { SyscohadaCompteResultat } from "@/components/comptabilite/SyscohadaComp
 import { TresorerieTab } from "@/components/comptabilite/TresorerieTab";
 import { ExportComptabilite } from "@/components/comptabilite/ExportComptabilite";
 import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
+import { useAgency } from "@/hooks/useAgency";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -59,6 +60,7 @@ const Comptabilite = () => {
   const periodLabel = getPeriodLabel(period);
   const { data, totalRevenue } = useComptabilite(period.from, period.to);
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
+  const { data: agency } = useAgency();
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
   const beneficeNet = totalRevenue - data.totalExpenses;
@@ -154,6 +156,7 @@ const Comptabilite = () => {
               totalRevenue={totalRevenue}
               expenses={expenses || []}
               periodLabel={periodLabel.subtitle}
+              agency={agency}
             />
             <PeriodFilter value={period} onChange={setPeriod} />
           </div>

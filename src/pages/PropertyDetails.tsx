@@ -86,6 +86,95 @@ const PropertyDetails = () => {
     }
   };
 
+  const handleGeneratePropertyReport = async (month: number, year: number) => {
+    if (!property) return;
+    setGeneratingPDF(true);
+    try {
+      const selectedDate = new Date(year, month, 1);
+      const monthStart = startOfMonth(selectedDate);
+      const monthEnd = endOfMonth(selectedDate);
+      const periodLabel = format(selectedDate, "MMMM yyyy", { locale: fr });
+
+      // Get tenants for this property
+      const propertyTenants = tenants.filter(t => t.property_id === property.id);
+
+      const tenantPayments = propertyTenants.map(tenant => {
+        const tenantPaymentsThisMonth = payments.filter(p =>
+          p.tenant_id === tenant.id &&
+          p.due_date >= format(monthStart, "yyyy-MM-dd") &&
+          p.due_date <= format(monthEnd, "yyyy-MM-dd")
+        );
+
+        const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property.price || 0);
+        const totalPaid = tenantPaymentsThisMonth
+          .filter(p => p.status === "paid")
+          .reduce((sum, p) => sum + p.amount, 0);
+
+        const hasLate = tenantPaymentsThisMonth.some(p =>
+          p.status === "pending" && new Date(p.due_date) < new Date()
+        );
+
+        let status: "paid" | "pending" | "late" = "pending";
+        if (totalPaid >= totalDue && totalDue > 0) status = "paid";
+        else if (hasLate) status = "late";
+
+        const paidPayment = tenantPaymentsThisMonth.find(p => p.status === "paid");
+
+        return {
+          tenantName: tenant.name,
+          unitNumber: (tenant as any).unit?.unit_number || undefined,
+          rentAmount: totalDue,
+          paidAmount: totalPaid,
+          status,
+          paidDate: paidPayment?.paid_date || null,
+        };
+      }).filter(t => t.rentAmount > 0);
+
+      // Filter interventions for this month
+      const monthlyInterventions = propertyInterventions
+        .filter(intervention => {
+          if (!intervention.start_date) return false;
+          const startDate = new Date(intervention.start_date);
+          return startDate >= monthStart && startDate <= monthEnd;
+        })
+        .map(intervention => ({
+          title: intervention.title,
+          type: intervention.type,
+          cost: intervention.cost || 0,
+          status: intervention.status,
+        }));
+
+      const commissionPercentage = owner?.management_type?.percentage || 0;
+
+      await generatePropertyMonthlyReport({
+        propertyTitle: property.title,
+        propertyAddress: property.address,
+        propertyType: property.property_type,
+        ownerName: owner?.name,
+        period: periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1),
+        agency: agency ? {
+          name: agency.name,
+          email: agency.email,
+          phone: agency.phone || undefined,
+          address: agency.address || undefined,
+          logo_url: agency.logo_url,
+        } : null,
+        tenantPayments,
+        interventions: monthlyInterventions,
+        commissionPercentage,
+        managementTypeName: (owner as any)?.management_type?.name,
+      });
+
+      setPeriodDialogOpen(false);
+      toast.success("Point mensuel du bien généré avec succès");
+    } catch (error) {
+      console.error("Error generating property monthly report:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>

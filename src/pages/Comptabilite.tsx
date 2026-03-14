@@ -215,17 +215,17 @@ const Comptabilite = () => {
             </div>
 
             {/* Secondary KPIs */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {secondaryCards.map((card) => (
                 <Card key={card.title}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground">{card.title}</p>
-                        <p className="text-lg font-bold text-foreground">{card.value}</p>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">{card.title}</p>
+                        <p className="text-sm sm:text-lg font-bold text-foreground truncate">{card.value}</p>
                       </div>
-                      <div className={`p-2.5 rounded-xl ${card.bgColor}`}>
-                        <card.icon className={`h-5 w-5 ${card.color}`} />
+                      <div className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl ${card.bgColor} shrink-0 self-end sm:self-auto`}>
+                        <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${card.color}`} />
                       </div>
                     </div>
                   </CardContent>

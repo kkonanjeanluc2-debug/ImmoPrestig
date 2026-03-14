@@ -41,6 +41,8 @@ export interface ComptabiliteData {
   byPaymentMethod: { name: string; value: number }[];
   // Detailed paid rents
   paidRentDetails: PaidRentDetail[];
+  // Grouped by manager
+  paidRentsByManager: ManagerRentGroup[];
 }
 
 export interface MonthlyEntry {

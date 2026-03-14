@@ -77,7 +77,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name), contract:contracts!payments_contract_id_fkey(property:properties!contracts_property_id_fkey(assigned_to))")
+        .select("amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to)")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
@@ -148,7 +148,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     if (!payments) return [];
     const ids = new Set<string>();
     payments.forEach((p: any) => {
-      const assignedTo = p.contract?.property?.assigned_to;
+      const assignedTo = p.tenant?.assigned_to;
       if (assignedTo) ids.add(assignedTo);
     });
     return Array.from(ids);
@@ -269,7 +269,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     if (payments) {
       payments.forEach((p: any) => {
         if (normalizeStatus(p.status) === "paid") {
-          const assignedTo = p.contract?.property?.assigned_to;
+          const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
           const months = p.payment_months || [];

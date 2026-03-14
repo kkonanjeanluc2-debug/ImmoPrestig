@@ -57,7 +57,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("amount, status, due_date, paid_date, payment_method")
+        .select("amount, status, due_date, paid_date, method")
         .gte("due_date", periodFrom.toISOString().split("T")[0])
         .lte("due_date", periodTo.toISOString().split("T")[0]);
       if (error) throw error;

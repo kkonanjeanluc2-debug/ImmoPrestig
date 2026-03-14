@@ -91,6 +91,11 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
                         </Badge>
                       </td>
                       <td className="py-2 px-3 text-foreground max-w-[200px] truncate">{exp.description}</td>
+                      {isAdmin && (
+                        <td className="py-2 px-3 text-muted-foreground text-xs">
+                          {exp.creator_name || "—"}
+                        </td>
+                      )}
                       <td className="py-2 px-3 text-muted-foreground capitalize">{exp.payment_method || "—"}</td>
                       <td className="py-2 px-3 text-right font-semibold text-destructive">{formatCFA(Number(exp.amount))}</td>
                       <td className="py-2 px-3 text-right">

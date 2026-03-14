@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell,
-  ResponsiveContainer, Tooltip, LineChart, Line
+  ResponsiveContainer, Tooltip,
 } from "recharts";
 import {
   Wallet, TrendingUp, TrendingDown, Clock, AlertTriangle,
-  PieChart as PieChartIcon, BarChart3, Receipt, ArrowUpRight,
-  ArrowDownRight, Plus, DollarSign, Minus
+  BarChart3, Receipt, ArrowUpRight,
+  ArrowDownRight, Plus, DollarSign, Minus, BookOpen, Landmark,
 } from "lucide-react";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 import { useComptabilite } from "@/hooks/useComptabilite";
@@ -18,6 +18,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ExpensesTable } from "@/components/comptabilite/ExpensesTable";
 import { AddExpenseDialog } from "@/components/comptabilite/AddExpenseDialog";
+import { SyscohadaCompteResultat } from "@/components/comptabilite/SyscohadaCompteResultat";
+import { TresorerieTab } from "@/components/comptabilite/TresorerieTab";
+import { ExportComptabilite } from "@/components/comptabilite/ExportComptabilite";
 import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
 
 const COLORS = [
@@ -61,7 +64,6 @@ const Comptabilite = () => {
   const beneficeNet = totalRevenue - data.totalExpenses;
   const margePercent = totalRevenue > 0 ? Math.round((beneficeNet / totalRevenue) * 100) : 0;
 
-  // Custom pie label
   const renderPieLabel = ({ name, percent }: { name: string; percent: number }) => {
     if (percent < 0.05) return null;
     return `${name} ${(percent * 100).toFixed(0)}%`;
@@ -124,7 +126,6 @@ const Comptabilite = () => {
     },
   ];
 
-  // Breakdown cards
   const breakdownCards = [
     { label: "Loyers", encaisse: data.loyersEncaisses, attente: data.loyersEnAttente, color: "bg-primary" },
     { label: "Ventes Immo.", encaisse: data.ventesEncaissees, attente: data.ventesEnAttente, color: "bg-emerald" },
@@ -139,20 +140,28 @@ const Comptabilite = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Comptabilité</h1>
-            <p className="text-sm text-muted-foreground">{periodLabel.subtitle}</p>
+            <p className="text-sm text-muted-foreground">
+              {periodLabel.subtitle} — Conforme SYSCOHADA
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1.5">
               <Plus className="h-4 w-4" />
               Dépense
             </Button>
+            <ExportComptabilite
+              data={data}
+              totalRevenue={totalRevenue}
+              expenses={expenses || []}
+              periodLabel={periodLabel.subtitle}
+            />
             <PeriodFilter value={period} onChange={setPeriod} />
           </div>
         </div>
 
         {/* Main tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
+          <TabsList className="flex-wrap">
             <TabsTrigger value="overview" className="gap-1.5">
               <BarChart3 className="h-4 w-4" />
               Vue d'ensemble
@@ -164,6 +173,14 @@ const Comptabilite = () => {
             <TabsTrigger value="depenses" className="gap-1.5">
               <Receipt className="h-4 w-4" />
               Dépenses
+            </TabsTrigger>
+            <TabsTrigger value="tresorerie" className="gap-1.5">
+              <Landmark className="h-4 w-4" />
+              Trésorerie
+            </TabsTrigger>
+            <TabsTrigger value="syscohada" className="gap-1.5">
+              <BookOpen className="h-4 w-4" />
+              SYSCOHADA
             </TabsTrigger>
           </TabsList>
 
@@ -263,7 +280,7 @@ const Comptabilite = () => {
             {/* Summary Table */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">Compte de résultat</CardTitle>
+                <CardTitle className="text-base font-semibold">Compte de résultat simplifié</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -297,7 +314,6 @@ const Comptabilite = () => {
                           </td>
                         </tr>
                       ))}
-                      {/* Totals row */}
                       <tr className="bg-muted/50 font-semibold">
                         <td className="py-2 px-3 text-foreground">Total</td>
                         <td className="py-2 px-3 text-right text-foreground">
@@ -329,7 +345,6 @@ const Comptabilite = () => {
 
           {/* === REVENUS TAB === */}
           <TabsContent value="revenus" className="space-y-6">
-            {/* Revenue breakdown mini-cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {breakdownCards.map((card) => (
                 <Card key={card.label}>
@@ -363,9 +378,7 @@ const Comptabilite = () => {
               ))}
             </div>
 
-            {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Stacked Bar */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold">Revenus mensuels par catégorie</CardTitle>
@@ -396,7 +409,6 @@ const Comptabilite = () => {
                 </CardContent>
               </Card>
 
-              {/* Pie Chart */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold">Répartition des revenus</CardTitle>
@@ -451,7 +463,6 @@ const Comptabilite = () => {
               </Card>
             </div>
 
-            {/* Payment methods */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-semibold">Par mode de paiement</CardTitle>
@@ -494,7 +505,6 @@ const Comptabilite = () => {
 
           {/* === DEPENSES TAB === */}
           <TabsContent value="depenses" className="space-y-6">
-            {/* Expense KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="p-4">
@@ -541,7 +551,6 @@ const Comptabilite = () => {
               </Card>
             </div>
 
-            {/* Expenses by category */}
             {data.expensesByCategory.length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
@@ -564,7 +573,7 @@ const Comptabilite = () => {
                             paddingAngle={2}
                             dataKey="value"
                           >
-                            {data.expensesByCategory.map((entry, index) => (
+                            {data.expensesByCategory.map((entry) => (
                               <Cell key={entry.name} fill={entry.color} />
                             ))}
                           </Pie>
@@ -607,8 +616,17 @@ const Comptabilite = () => {
               </Card>
             )}
 
-            {/* Expenses list */}
             <ExpensesTable expenses={expenses || []} isLoading={expensesLoading} />
+          </TabsContent>
+
+          {/* === TRESORERIE TAB === */}
+          <TabsContent value="tresorerie">
+            <TresorerieTab data={data} totalRevenue={totalRevenue} />
+          </TabsContent>
+
+          {/* === SYSCOHADA TAB === */}
+          <TabsContent value="syscohada" className="space-y-6">
+            <SyscohadaCompteResultat data={data} totalRevenue={totalRevenue} />
           </TabsContent>
         </Tabs>
       </div>

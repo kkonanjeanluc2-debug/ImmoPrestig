@@ -29,8 +29,9 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deleteExpense = useDeleteExpense();
-  const { role } = usePermissions();
+  const { role, hasPermission, isLoading: permLoading } = usePermissions();
   const isAdmin = role === "admin" || role === "super_admin";
+  const canCreateExpense = isAdmin || hasPermission("can_create_expenses");
 
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
 

@@ -72,6 +72,10 @@ export interface MemberPermissions {
   can_view_reports: boolean;
   can_export_data: boolean;
   can_send_reminders: boolean;
+  // Comptabilité
+  can_view_comptabilite: boolean;
+  can_export_comptabilite: boolean;
+  can_create_expenses: boolean;
   // Settings management
   can_access_settings: boolean;
   can_access_agency_tab: boolean;

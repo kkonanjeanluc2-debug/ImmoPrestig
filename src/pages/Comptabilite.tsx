@@ -196,7 +196,7 @@ const Comptabilite = () => {
           {/* === OVERVIEW TAB === */}
           <TabsContent value="overview" className="space-y-6">
             {/* KPI Cards - Primary */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {statCards.map((card) => (
                 <Card key={card.title} className="relative overflow-hidden">
                   <CardContent className="p-4">

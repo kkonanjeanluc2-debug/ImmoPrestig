@@ -165,28 +165,29 @@ const Comptabilite = () => {
 
         {/* Main tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="w-full grid grid-cols-5 h-auto p-1">
-            <TabsTrigger value="overview" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <TabsList className="w-full grid grid-cols-5 h-auto p-0.5 sm:p-1">
+            <TabsTrigger value="overview" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">Vue d'ensemble</span>
               <span className="sm:hidden">Aperçu</span>
             </TabsTrigger>
-            <TabsTrigger value="revenus" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Revenus
+            <TabsTrigger value="revenus" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="hidden sm:inline">Revenus</span>
+              <span className="sm:hidden">Rev.</span>
             </TabsTrigger>
-            <TabsTrigger value="depenses" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <TabsTrigger value="depenses" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <Receipt className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">Dépenses</span>
               <span className="sm:hidden">Dép.</span>
             </TabsTrigger>
-            <TabsTrigger value="tresorerie" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <Landmark className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <TabsTrigger value="tresorerie" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <Landmark className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">Trésorerie</span>
               <span className="sm:hidden">Trés.</span>
             </TabsTrigger>
-            <TabsTrigger value="syscohada" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <TabsTrigger value="syscohada" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">SYSCOHADA</span>
               <span className="sm:hidden">SYS.</span>
             </TabsTrigger>

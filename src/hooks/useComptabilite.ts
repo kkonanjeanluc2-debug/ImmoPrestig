@@ -143,6 +143,31 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  // Extract manager IDs from payments for profile resolution
+  const managerUserIds = useMemo(() => {
+    if (!payments) return [];
+    const ids = new Set<string>();
+    payments.forEach((p: any) => {
+      const assignedTo = p.contract?.property?.assigned_to;
+      if (assignedTo) ids.add(assignedTo);
+    });
+    return Array.from(ids);
+  }, [payments]);
+
+  const { data: managerProfiles } = useQuery({
+    queryKey: ["comptabilite-manager-profiles", managerUserIds],
+    queryFn: async () => {
+      if (managerUserIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", managerUserIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: managerUserIds.length > 0,
+  });
+
   return useMemo(() => {
     const result: ComptabiliteData = {
       loyersEncaisses: 0,

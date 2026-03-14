@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemo } from "react";
 
+export interface PaidRentDetail {
+  tenantName: string;
+  months: string[];
+  amount: number;
+  paidDate: string;
+}
+
 export interface ComptabiliteData {
   // Revenue sources
   loyersEncaisses: number;
@@ -25,6 +32,8 @@ export interface ComptabiliteData {
   revenueByCategory: { name: string; value: number; color: string }[];
   // Payment method breakdown
   byPaymentMethod: { name: string; value: number }[];
+  // Detailed paid rents
+  paidRentDetails: PaidRentDetail[];
 }
 
 export interface MonthlyEntry {

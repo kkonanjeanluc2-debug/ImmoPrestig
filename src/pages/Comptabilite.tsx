@@ -514,46 +514,46 @@ const Comptabilite = () => {
 
           {/* === DEPENSES TAB === */}
           <TabsContent value="depenses" className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Total dépenses</p>
-                      <p className="text-lg font-bold text-foreground">{formatCFA(data.totalExpenses)}</p>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Total dépenses</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground truncate">{formatCFA(data.totalExpenses)}</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-destructive/10">
-                      <Minus className="h-5 w-5 text-destructive" />
+                    <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-destructive/10 shrink-0 self-end sm:self-auto">
+                      <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Nb transactions</p>
-                      <p className="text-lg font-bold text-foreground">{expenses?.length || 0}</p>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Nb transactions</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground">{expenses?.length || 0}</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-muted">
-                      <Receipt className="h-5 w-5 text-muted-foreground" />
+                    <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-muted shrink-0 self-end sm:self-auto">
+                      <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Dépense moyenne</p>
-                      <p className="text-lg font-bold text-foreground">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Dép. moyenne</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground truncate">
                         {expenses && expenses.length > 0
                           ? formatCFA(Math.round(data.totalExpenses / expenses.length))
                           : "—"}
                       </p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-sand/10">
-                      <Wallet className="h-5 w-5 text-sand" />
+                    <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-sand/10 shrink-0 self-end sm:self-auto">
+                      <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-sand" />
                     </div>
                   </div>
                 </CardContent>

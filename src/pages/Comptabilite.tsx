@@ -196,17 +196,17 @@ const Comptabilite = () => {
           {/* === OVERVIEW TAB === */}
           <TabsContent value="overview" className="space-y-6">
             {/* KPI Cards - Primary */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
               {statCards.map((card) => (
                 <Card key={card.title} className="relative overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground">{card.title}</p>
-                        <p className="text-lg font-bold text-foreground">{card.value}</p>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-start justify-between gap-1">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">{card.title}</p>
+                        <p className="text-sm sm:text-lg font-bold text-foreground truncate">{card.value}</p>
                       </div>
-                      <div className={`p-2.5 rounded-xl ${card.bgColor}`}>
-                        <card.icon className={`h-5 w-5 ${card.color}`} />
+                      <div className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl ${card.bgColor} shrink-0`}>
+                        <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${card.color}`} />
                       </div>
                     </div>
                   </CardContent>

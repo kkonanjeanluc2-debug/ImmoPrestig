@@ -4,6 +4,10 @@ import { useProperty, useDeleteProperty } from "@/hooks/useProperties";
 import { useContracts } from "@/hooks/useContracts";
 import { PropertyInventoryManager } from "@/components/property/PropertyInventoryManager";
 import { useOwners } from "@/hooks/useOwners";
+import { useTenants } from "@/hooks/useTenants";
+import { usePayments } from "@/hooks/usePayments";
+import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
+import { useAgency } from "@/hooks/useAgency";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +26,8 @@ import {
   Map,
   Loader2,
   User,
-  Share2
+  Share2,
+  FileText
 } from "lucide-react";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useWhatsAppPropertyMessage } from "@/hooks/useWhatsAppPropertyMessage";
@@ -33,6 +38,10 @@ import { PropertyImageGallery } from "@/components/property/PropertyImageGallery
 import { PropertyUnitsManager } from "@/components/property/PropertyUnitsManager";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { fr } from "date-fns/locale";
+import { generatePropertyMonthlyReport } from "@/lib/generatePropertyMonthlyReport";
+import { MonthlyReportPeriodDialog } from "@/components/owner/MonthlyReportPeriodDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,11 +59,17 @@ const PropertyDetails = () => {
   const { data: property, isLoading, error } = useProperty(id || "");
   const { data: owners = [] } = useOwners();
   const { data: contracts = [] } = useContracts();
+  const { data: tenants = [] } = useTenants();
+  const { data: payments = [] } = usePayments();
+  const { data: propertyInterventions = [] } = usePropertyInterventions(id);
+  const { data: agency } = useAgency();
   const deleteProperty = useDeleteProperty();
   const { canEdit, canDelete } = usePermissions();
   const { generateMessage } = useWhatsAppPropertyMessage();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   const owner = property?.owner_id ? owners.find(o => o.id === property.owner_id) : null;
   const activeContract = property ? contracts.find(c => c.property_id === property.id && c.status === "actif") : null;

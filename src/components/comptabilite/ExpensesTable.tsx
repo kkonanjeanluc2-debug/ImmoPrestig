@@ -62,6 +62,7 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
                   <th className="text-left py-2 px-3 text-muted-foreground font-medium">Date</th>
                   <th className="text-left py-2 px-3 text-muted-foreground font-medium">Catégorie</th>
                   <th className="text-left py-2 px-3 text-muted-foreground font-medium">Description</th>
+                  {isAdmin && <th className="text-left py-2 px-3 text-muted-foreground font-medium">Créé par</th>}
                   <th className="text-left py-2 px-3 text-muted-foreground font-medium">Paiement</th>
                   <th className="text-right py-2 px-3 text-muted-foreground font-medium">Montant</th>
                   <th className="text-right py-2 px-3 text-muted-foreground font-medium">Actions</th>

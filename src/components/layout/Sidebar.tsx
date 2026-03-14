@@ -395,7 +395,12 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
 
               {/* Other navigation items (Lotissements) - only show if feature is available */}
               {otherNavigation
-                .filter((item) => hasFeature(item.featureKey))
+                .filter((item) => {
+                  if (item.href === "/comptabilite") {
+                    return isComptaEnabled && (userRole?.role !== "gestionnaire" || hasPermission("can_view_comptabilite"));
+                  }
+                  return !item.featureKey || hasFeature(item.featureKey);
+                })
                 .map((item) => {
                   const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
                   const badgeCount = item.href === "/lotissements" ? newLotProspectsCount : 0;

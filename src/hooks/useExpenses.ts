@@ -51,6 +51,7 @@ export interface Expense {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  creator_name?: string;
 }
 
 export function getSyscohadaAccount(categoryValue: string) {

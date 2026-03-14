@@ -139,55 +139,55 @@ const Comptabilite = () => {
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         {/* Header */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Comptabilité</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                {periodLabel.subtitle} — Conforme SYSCOHADA
-              </p>
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground">Comptabilité</h1>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1 text-xs h-8 px-2 sm:px-3">
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Dépense</span>
+                <span className="sm:hidden">Dép.</span>
+              </Button>
+              <ExportComptabilite
+                data={data}
+                totalRevenue={totalRevenue}
+                expenses={expenses || []}
+                periodLabel={periodLabel.subtitle}
+                agency={agency}
+              />
             </div>
-            <PeriodFilter value={period} onChange={setPeriod} />
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1.5 text-xs sm:text-sm">
-              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Dépense
-            </Button>
-            <ExportComptabilite
-              data={data}
-              totalRevenue={totalRevenue}
-              expenses={expenses || []}
-              periodLabel={periodLabel.subtitle}
-              agency={agency}
-            />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {periodLabel.subtitle} — Conforme SYSCOHADA
+          </p>
+          <PeriodFilter value={period} onChange={setPeriod} />
         </div>
 
         {/* Main tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="w-full grid grid-cols-5 h-auto p-1">
-            <TabsTrigger value="overview" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <TabsList className="w-full grid grid-cols-5 h-auto p-0.5 sm:p-1">
+            <TabsTrigger value="overview" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">Vue d'ensemble</span>
               <span className="sm:hidden">Aperçu</span>
             </TabsTrigger>
-            <TabsTrigger value="revenus" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Revenus
+            <TabsTrigger value="revenus" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="hidden sm:inline">Revenus</span>
+              <span className="sm:hidden">Rev.</span>
             </TabsTrigger>
-            <TabsTrigger value="depenses" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <TabsTrigger value="depenses" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <Receipt className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">Dépenses</span>
               <span className="sm:hidden">Dép.</span>
             </TabsTrigger>
-            <TabsTrigger value="tresorerie" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <Landmark className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <TabsTrigger value="tresorerie" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <Landmark className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">Trésorerie</span>
               <span className="sm:hidden">Trés.</span>
             </TabsTrigger>
-            <TabsTrigger value="syscohada" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
-              <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <TabsTrigger value="syscohada" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">SYSCOHADA</span>
               <span className="sm:hidden">SYS.</span>
             </TabsTrigger>
@@ -196,17 +196,17 @@ const Comptabilite = () => {
           {/* === OVERVIEW TAB === */}
           <TabsContent value="overview" className="space-y-6">
             {/* KPI Cards - Primary */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
               {statCards.map((card) => (
                 <Card key={card.title} className="relative overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground">{card.title}</p>
-                        <p className="text-lg font-bold text-foreground">{card.value}</p>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-start justify-between gap-1">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">{card.title}</p>
+                        <p className="text-sm sm:text-lg font-bold text-foreground truncate">{card.value}</p>
                       </div>
-                      <div className={`p-2.5 rounded-xl ${card.bgColor}`}>
-                        <card.icon className={`h-5 w-5 ${card.color}`} />
+                      <div className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl ${card.bgColor} shrink-0`}>
+                        <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${card.color}`} />
                       </div>
                     </div>
                   </CardContent>
@@ -215,17 +215,17 @@ const Comptabilite = () => {
             </div>
 
             {/* Secondary KPIs */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {secondaryCards.map((card) => (
                 <Card key={card.title}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground">{card.title}</p>
-                        <p className="text-lg font-bold text-foreground">{card.value}</p>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">{card.title}</p>
+                        <p className="text-sm sm:text-lg font-bold text-foreground truncate">{card.value}</p>
                       </div>
-                      <div className={`p-2.5 rounded-xl ${card.bgColor}`}>
-                        <card.icon className={`h-5 w-5 ${card.color}`} />
+                      <div className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl ${card.bgColor} shrink-0 self-end sm:self-auto`}>
+                        <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${card.color}`} />
                       </div>
                     </div>
                   </CardContent>
@@ -514,46 +514,46 @@ const Comptabilite = () => {
 
           {/* === DEPENSES TAB === */}
           <TabsContent value="depenses" className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Total dépenses</p>
-                      <p className="text-lg font-bold text-foreground">{formatCFA(data.totalExpenses)}</p>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Total dépenses</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground truncate">{formatCFA(data.totalExpenses)}</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-destructive/10">
-                      <Minus className="h-5 w-5 text-destructive" />
+                    <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-destructive/10 shrink-0 self-end sm:self-auto">
+                      <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Nb transactions</p>
-                      <p className="text-lg font-bold text-foreground">{expenses?.length || 0}</p>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Nb transactions</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground">{expenses?.length || 0}</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-muted">
-                      <Receipt className="h-5 w-5 text-muted-foreground" />
+                    <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-muted shrink-0 self-end sm:self-auto">
+                      <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Dépense moyenne</p>
-                      <p className="text-lg font-bold text-foreground">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Dép. moyenne</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground truncate">
                         {expenses && expenses.length > 0
                           ? formatCFA(Math.round(data.totalExpenses / expenses.length))
                           : "—"}
                       </p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-sand/10">
-                      <Wallet className="h-5 w-5 text-sand" />
+                    <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-sand/10 shrink-0 self-end sm:self-auto">
+                      <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-sand" />
                     </div>
                   </div>
                 </CardContent>

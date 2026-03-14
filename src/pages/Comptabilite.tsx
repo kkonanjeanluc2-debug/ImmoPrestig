@@ -156,6 +156,7 @@ const Comptabilite = () => {
               totalRevenue={totalRevenue}
               expenses={expenses || []}
               periodLabel={periodLabel.subtitle}
+              agency={agency}
             />
             <PeriodFilter value={period} onChange={setPeriod} />
           </div>

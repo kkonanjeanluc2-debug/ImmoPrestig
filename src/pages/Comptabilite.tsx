@@ -650,7 +650,7 @@ const Comptabilite = () => {
         </Tabs>
       </div>
 
-      <AddExpenseDialog open={addExpenseOpen} onOpenChange={setAddExpenseOpen} />
+      {canCreateExpense && <AddExpenseDialog open={addExpenseOpen} onOpenChange={setAddExpenseOpen} />}
     </DashboardLayout>
   );
 };

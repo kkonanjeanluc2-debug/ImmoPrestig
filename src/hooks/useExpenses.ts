@@ -83,7 +83,7 @@ export function useAddExpense() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["comptabilite"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-expenses"] });
       toast.success("Dépense ajoutée");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -103,7 +103,7 @@ export function useUpdateExpense() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["comptabilite"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-expenses"] });
       toast.success("Dépense mise à jour");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -120,7 +120,7 @@ export function useDeleteExpense() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["comptabilite"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-expenses"] });
       toast.success("Dépense supprimée");
     },
     onError: (e: Error) => toast.error(e.message),

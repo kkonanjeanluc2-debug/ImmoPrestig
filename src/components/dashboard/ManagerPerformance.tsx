@@ -56,9 +56,10 @@ export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceP
         (p: any) => p.assigned_to === user.user_id
       );
 
-      // Get tenants assigned to this user
+      // Get tenants linked to assigned properties (same logic as manager's own view)
+      const assignedPropertyIds = new Set(userProperties.map((p: any) => p.id));
       const userTenants = tenants.filter(
-        (t: any) => t.assigned_to === user.user_id
+        (t: any) => t.property_id && assignedPropertyIds.has(t.property_id)
       );
 
       // Get tenant IDs for payment calculation

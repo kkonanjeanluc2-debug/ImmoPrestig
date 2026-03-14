@@ -62,6 +62,11 @@ const Comptabilite = () => {
   const { data, totalRevenue } = useComptabilite(period.from, period.to);
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
   const { data: agency } = useAgency();
+  const { hasPermission, role } = usePermissions();
+
+  const isAdminOrOwner = role === "super_admin" || role === "admin";
+  const canExport = isAdminOrOwner || hasPermission("can_export_comptabilite");
+  const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
   const beneficeNet = totalRevenue - data.totalExpenses;

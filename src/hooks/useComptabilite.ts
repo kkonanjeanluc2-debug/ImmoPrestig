@@ -68,7 +68,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("amount, status, due_date, paid_date, method")
+        .select("amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name)")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );

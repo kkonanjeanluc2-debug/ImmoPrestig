@@ -149,18 +149,22 @@ const Comptabilite = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-lg sm:text-2xl font-bold text-foreground">Comptabilité</h1>
             <div className="flex items-center gap-2">
-              <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1 text-xs h-8 px-2 sm:px-3">
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Dépense</span>
-                <span className="sm:hidden">Dép.</span>
-              </Button>
-              <ExportComptabilite
-                data={data}
-                totalRevenue={totalRevenue}
-                expenses={expenses || []}
-                periodLabel={periodLabel.subtitle}
-                agency={agency}
-              />
+              {canCreateExpense && (
+                <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1 text-xs h-8 px-2 sm:px-3">
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Dépense</span>
+                  <span className="sm:hidden">Dép.</span>
+                </Button>
+              )}
+              {canExport && (
+                <ExportComptabilite
+                  data={data}
+                  totalRevenue={totalRevenue}
+                  expenses={expenses || []}
+                  periodLabel={periodLabel.subtitle}
+                  agency={agency}
+                />
+              )}
             </div>
           </div>
           <p className="text-xs text-muted-foreground">

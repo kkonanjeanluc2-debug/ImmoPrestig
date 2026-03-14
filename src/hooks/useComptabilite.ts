@@ -269,7 +269,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     if (payments) {
       payments.forEach((p: any) => {
         if (normalizeStatus(p.status) === "paid") {
-          const assignedTo = p.contract?.property?.assigned_to;
+          const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
           const months = p.payment_months || [];

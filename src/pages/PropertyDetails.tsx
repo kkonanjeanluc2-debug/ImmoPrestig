@@ -491,6 +491,14 @@ const PropertyDetails = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Monthly Report Period Dialog */}
+      <MonthlyReportPeriodDialog
+        open={periodDialogOpen}
+        onOpenChange={setPeriodDialogOpen}
+        onGenerate={handleGeneratePropertyReport}
+        isLoading={generatingPDF}
+      />
     </DashboardLayout>
   );
 };

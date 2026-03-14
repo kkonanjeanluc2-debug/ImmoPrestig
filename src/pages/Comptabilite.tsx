@@ -137,18 +137,21 @@ const Comptabilite = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Comptabilité</h1>
-            <p className="text-sm text-muted-foreground">
-              {periodLabel.subtitle} — Conforme SYSCOHADA
-            </p>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Comptabilité</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                {periodLabel.subtitle} — Conforme SYSCOHADA
+              </p>
+            </div>
+            <PeriodFilter value={period} onChange={setPeriod} />
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1.5">
-              <Plus className="h-4 w-4" />
+            <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1.5 text-xs sm:text-sm">
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Dépense
             </Button>
             <ExportComptabilite
@@ -158,39 +161,42 @@ const Comptabilite = () => {
               periodLabel={periodLabel.subtitle}
               agency={agency}
             />
-            <PeriodFilter value={period} onChange={setPeriod} />
           </div>
         </div>
 
         {/* Main tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex-wrap">
-            <TabsTrigger value="overview" className="gap-1.5">
-              <BarChart3 className="h-4 w-4" />
-              Vue d'ensemble
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full grid grid-cols-5 h-auto p-1">
+            <TabsTrigger value="overview" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
+              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Vue d'ensemble</span>
+              <span className="sm:hidden">Aperçu</span>
             </TabsTrigger>
-            <TabsTrigger value="revenus" className="gap-1.5">
-              <ArrowUpRight className="h-4 w-4" />
+            <TabsTrigger value="revenus" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
+              <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Revenus
             </TabsTrigger>
-            <TabsTrigger value="depenses" className="gap-1.5">
-              <Receipt className="h-4 w-4" />
-              Dépenses
+            <TabsTrigger value="depenses" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
+              <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Dépenses</span>
+              <span className="sm:hidden">Dép.</span>
             </TabsTrigger>
-            <TabsTrigger value="tresorerie" className="gap-1.5">
-              <Landmark className="h-4 w-4" />
-              Trésorerie
+            <TabsTrigger value="tresorerie" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
+              <Landmark className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Trésorerie</span>
+              <span className="sm:hidden">Trés.</span>
             </TabsTrigger>
-            <TabsTrigger value="syscohada" className="gap-1.5">
-              <BookOpen className="h-4 w-4" />
-              SYSCOHADA
+            <TabsTrigger value="syscohada" className="gap-1 text-xs sm:text-sm px-1.5 sm:px-3 py-1.5">
+              <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">SYSCOHADA</span>
+              <span className="sm:hidden">SYS.</span>
             </TabsTrigger>
           </TabsList>
 
           {/* === OVERVIEW TAB === */}
           <TabsContent value="overview" className="space-y-6">
             {/* KPI Cards - Primary */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {statCards.map((card) => (
                 <Card key={card.title} className="relative overflow-hidden">
                   <CardContent className="p-4">

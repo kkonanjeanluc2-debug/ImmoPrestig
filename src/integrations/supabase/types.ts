@@ -4520,6 +4520,10 @@ export type Database = {
         Args: { _owner_id: string; _parcelle_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_team_profile: {
+        Args: { _target_user_id: string; _viewer_id: string }
+        Returns: boolean
+      }
       get_agency_member_count: {
         Args: { p_agency_id: string }
         Returns: number

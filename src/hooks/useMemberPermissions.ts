@@ -215,6 +215,10 @@ export const PERMISSION_GROUPS = {
     label: "Paramètres",
     permissions: ["can_access_settings", "can_access_agency_tab", "can_access_management_tab", "can_access_subscription_tab", "can_access_notifications_tab", "can_access_whatsapp_tab", "can_access_sale_contracts_tab", "can_access_promesse_vente_tab", "can_access_reservation_forms_tab", "can_access_achat_contracts_tab", "can_manage_team", "can_manage_automations", "can_manage_branding", "can_manage_templates"] as PermissionKey[],
   },
+  comptabilite: {
+    label: "Comptabilité",
+    permissions: ["can_view_comptabilite", "can_export_comptabilite", "can_create_expenses"] as PermissionKey[],
+  },
   other: {
     label: "Autres",
     permissions: ["can_view_reports", "can_export_data", "can_send_reminders"] as PermissionKey[],

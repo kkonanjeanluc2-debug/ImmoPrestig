@@ -4,6 +4,10 @@ import { useProperty, useDeleteProperty } from "@/hooks/useProperties";
 import { useContracts } from "@/hooks/useContracts";
 import { PropertyInventoryManager } from "@/components/property/PropertyInventoryManager";
 import { useOwners } from "@/hooks/useOwners";
+import { useTenants } from "@/hooks/useTenants";
+import { usePayments } from "@/hooks/usePayments";
+import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
+import { useAgency } from "@/hooks/useAgency";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +26,8 @@ import {
   Map,
   Loader2,
   User,
-  Share2
+  Share2,
+  FileText
 } from "lucide-react";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useWhatsAppPropertyMessage } from "@/hooks/useWhatsAppPropertyMessage";
@@ -33,6 +38,10 @@ import { PropertyImageGallery } from "@/components/property/PropertyImageGallery
 import { PropertyUnitsManager } from "@/components/property/PropertyUnitsManager";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { fr } from "date-fns/locale";
+import { generatePropertyMonthlyReport } from "@/lib/generatePropertyMonthlyReport";
+import { MonthlyReportPeriodDialog } from "@/components/owner/MonthlyReportPeriodDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,11 +59,17 @@ const PropertyDetails = () => {
   const { data: property, isLoading, error } = useProperty(id || "");
   const { data: owners = [] } = useOwners();
   const { data: contracts = [] } = useContracts();
+  const { data: tenants = [] } = useTenants();
+  const { data: payments = [] } = usePayments();
+  const { data: propertyInterventions = [] } = usePropertyInterventions(id);
+  const { data: agency } = useAgency();
   const deleteProperty = useDeleteProperty();
   const { canEdit, canDelete } = usePermissions();
   const { generateMessage } = useWhatsAppPropertyMessage();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   const owner = property?.owner_id ? owners.find(o => o.id === property.owner_id) : null;
   const activeContract = property ? contracts.find(c => c.property_id === property.id && c.status === "actif") : null;
@@ -68,6 +83,95 @@ const PropertyDetails = () => {
       navigate("/properties");
     } catch (error) {
       toast.error("Erreur lors de la suppression");
+    }
+  };
+
+  const handleGeneratePropertyReport = async (month: number, year: number) => {
+    if (!property) return;
+    setGeneratingPDF(true);
+    try {
+      const selectedDate = new Date(year, month, 1);
+      const monthStart = startOfMonth(selectedDate);
+      const monthEnd = endOfMonth(selectedDate);
+      const periodLabel = format(selectedDate, "MMMM yyyy", { locale: fr });
+
+      // Get tenants for this property
+      const propertyTenants = tenants.filter(t => t.property_id === property.id);
+
+      const tenantPayments = propertyTenants.map(tenant => {
+        const tenantPaymentsThisMonth = payments.filter(p =>
+          p.tenant_id === tenant.id &&
+          p.due_date >= format(monthStart, "yyyy-MM-dd") &&
+          p.due_date <= format(monthEnd, "yyyy-MM-dd")
+        );
+
+        const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property.price || 0);
+        const totalPaid = tenantPaymentsThisMonth
+          .filter(p => p.status === "paid")
+          .reduce((sum, p) => sum + p.amount, 0);
+
+        const hasLate = tenantPaymentsThisMonth.some(p =>
+          p.status === "pending" && new Date(p.due_date) < new Date()
+        );
+
+        let status: "paid" | "pending" | "late" = "pending";
+        if (totalPaid >= totalDue && totalDue > 0) status = "paid";
+        else if (hasLate) status = "late";
+
+        const paidPayment = tenantPaymentsThisMonth.find(p => p.status === "paid");
+
+        return {
+          tenantName: tenant.name,
+          unitNumber: (tenant as any).unit?.unit_number || undefined,
+          rentAmount: totalDue,
+          paidAmount: totalPaid,
+          status,
+          paidDate: paidPayment?.paid_date || null,
+        };
+      }).filter(t => t.rentAmount > 0);
+
+      // Filter interventions for this month
+      const monthlyInterventions = propertyInterventions
+        .filter(intervention => {
+          if (!intervention.start_date) return false;
+          const startDate = new Date(intervention.start_date);
+          return startDate >= monthStart && startDate <= monthEnd;
+        })
+        .map(intervention => ({
+          title: intervention.title,
+          type: intervention.type,
+          cost: intervention.cost || 0,
+          status: intervention.status,
+        }));
+
+      const commissionPercentage = owner?.management_type?.percentage || 0;
+
+      await generatePropertyMonthlyReport({
+        propertyTitle: property.title,
+        propertyAddress: property.address,
+        propertyType: property.property_type,
+        ownerName: owner?.name,
+        period: periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1),
+        agency: agency ? {
+          name: agency.name,
+          email: agency.email,
+          phone: agency.phone || undefined,
+          address: agency.address || undefined,
+          logo_url: agency.logo_url,
+        } : null,
+        tenantPayments,
+        interventions: monthlyInterventions,
+        commissionPercentage,
+        managementTypeName: (owner as any)?.management_type?.name,
+      });
+
+      setPeriodDialogOpen(false);
+      toast.success("Point mensuel du bien généré avec succès");
+    } catch (error) {
+      console.error("Error generating property monthly report:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
@@ -147,6 +251,18 @@ const PropertyDetails = () => {
               <Share2 className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Partager</span>
             </WhatsAppButton>
+            {property.type === "location" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPeriodDialogOpen(true)}
+                disabled={generatingPDF}
+                className="bg-primary/10 border-primary/30 hover:bg-primary hover:text-primary-foreground"
+              >
+                <FileText className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Point mensuel</span>
+              </Button>
+            )}
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="h-4 w-4 sm:mr-2" />
@@ -375,6 +491,14 @@ const PropertyDetails = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Monthly Report Period Dialog */}
+      <MonthlyReportPeriodDialog
+        open={periodDialogOpen}
+        onOpenChange={setPeriodDialogOpen}
+        onGenerate={handleGeneratePropertyReport}
+        isLoading={generatingPDF}
+      />
     </DashboardLayout>
   );
 };

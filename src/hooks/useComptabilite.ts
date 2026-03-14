@@ -194,7 +194,16 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       });
     };
 
-    processEntries((payments || []).map((p: any) => ({ ...p, payment_method: p.method })), "loyers", "loyersEncaisses", "loyersEnAttente");
+    processEntries(
+      (payments || []).map((p: any) => ({
+        ...p,
+        payment_method: p.method,
+        due_date: p.status === "paid" && p.paid_date ? p.paid_date : p.due_date,
+      })),
+      "loyers",
+      "loyersEncaisses",
+      "loyersEnAttente"
+    );
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");

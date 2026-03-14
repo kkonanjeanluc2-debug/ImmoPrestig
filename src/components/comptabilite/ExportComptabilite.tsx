@@ -72,6 +72,46 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
         doc.text(row.account.label, 50, y + 6);
         doc.text(formatAmountWithCurrency(row.amount), pageWidth - 20, y + 6, { align: "right" });
         y += 9;
+
+        // Add detailed rent breakdown for loyers
+        if (row.account === REVENUE_ACCOUNTS.loyers && data.paidRentDetails.length > 0) {
+          y += 2;
+          // Sub-header
+          doc.setFillColor(230, 237, 245);
+          doc.rect(25, y, pageWidth - 50, 7, "F");
+          doc.setTextColor(...primaryColor);
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "bold");
+          doc.text("Locataire", 28, y + 5);
+          doc.text("Mois concerné(s)", 90, y + 5);
+          doc.text("Montant", pageWidth - 30, y + 5, { align: "right" });
+          y += 7;
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+
+          data.paidRentDetails.forEach((detail, j) => {
+            // Page break check
+            if (y + 8 > doc.internal.pageSize.getHeight() - 30) {
+              doc.addPage();
+              y = 20;
+            }
+            if (j % 2 === 0) {
+              doc.setFillColor(245, 248, 252);
+              doc.rect(25, y, pageWidth - 50, 7, "F");
+            }
+            doc.setTextColor(...textColor);
+            const name = detail.tenantName.length > 25 ? detail.tenantName.substring(0, 23) + "..." : detail.tenantName;
+            doc.text(name, 28, y + 5);
+            const monthsText = detail.months.length > 0 ? detail.months.join(", ") : new Date(detail.paidDate).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+            const truncMonths = monthsText.length > 35 ? monthsText.substring(0, 33) + "..." : monthsText;
+            doc.text(truncMonths, 90, y + 5);
+            doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 5, { align: "right" });
+            y += 7;
+          });
+          y += 3;
+          doc.setFontSize(9);
+        }
       });
 
       // Total produits

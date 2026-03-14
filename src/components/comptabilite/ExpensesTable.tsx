@@ -49,10 +49,12 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
                 Total : {formatCFA(totalExpenses)}
               </p>
             </div>
-            <Button size="sm" onClick={() => setAddOpen(true)} className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              Ajouter
-            </Button>
+            {canCreateExpense && (
+              <Button size="sm" onClick={() => setAddOpen(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" />
+                Ajouter
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>

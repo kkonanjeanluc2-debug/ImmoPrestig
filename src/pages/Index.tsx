@@ -49,16 +49,15 @@ const Index = () => {
 
   const filteredTenants = useMemo(() => {
     if (!tenants) return [];
-    if (!isGestionnaire || !user) return tenants;
-    return tenants.filter(t => t.assigned_to === user.id);
-  }, [tenants, isGestionnaire, user]);
+    // useTenants est déjà scoped par rôle/assignation + RLS
+    return tenants;
+  }, [tenants]);
 
   const filteredPayments = useMemo(() => {
     if (!payments) return [];
-    if (!isGestionnaire || !user) return payments;
-    const assignedTenantIds = new Set(filteredTenants.map(t => t.id));
-    return payments.filter(p => assignedTenantIds.has(p.tenant_id));
-  }, [payments, isGestionnaire, user, filteredTenants]);
+    // usePayments est déjà scoped par rôle/assignation + RLS
+    return payments;
+  }, [payments]);
 
   // Apply period filter to payments
   const periodFilteredPayments = useMemo(() => {

@@ -51,6 +51,8 @@ const EXPENSE_COLORS = [
 
 export function useComptabilite(periodFrom: Date, periodTo: Date) {
   const { user } = useAuth();
+  const fromDate = periodFrom.toISOString().split("T")[0];
+  const toDate = periodTo.toISOString().split("T")[0];
 
   const { data: payments } = useQuery({
     queryKey: ["comptabilite-payments", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
@@ -58,8 +60,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       const { data, error } = await supabase
         .from("payments")
         .select("amount, status, due_date, paid_date, method")
-        .gte("due_date", periodFrom.toISOString().split("T")[0])
-        .lte("due_date", periodTo.toISOString().split("T")[0]);
+        .or(
+          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+        );
       if (error) throw error;
       return data;
     },
@@ -191,7 +194,16 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       });
     };
 
-    processEntries((payments || []).map((p: any) => ({ ...p, payment_method: p.method })), "loyers", "loyersEncaisses", "loyersEnAttente");
+    processEntries(
+      (payments || []).map((p: any) => ({
+        ...p,
+        payment_method: p.method,
+        due_date: p.status === "paid" && p.paid_date ? p.paid_date : p.due_date,
+      })),
+      "loyers",
+      "loyersEncaisses",
+      "loyersEnAttente"
+    );
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");

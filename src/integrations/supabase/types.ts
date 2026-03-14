@@ -4488,6 +4488,10 @@ export type Database = {
         Args: { _assigned_to: string; _bien_user_id: string; _user_id: string }
         Returns: boolean
       }
+      can_gestionnaire_access_echeance_achat: {
+        Args: { _achat_id: string; _echeance_user_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_gestionnaire_access_ilot: {
         Args: { _ilot_id: string; _owner_id: string; _user_id: string }
         Returns: boolean

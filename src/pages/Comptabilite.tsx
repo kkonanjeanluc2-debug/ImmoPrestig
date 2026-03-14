@@ -139,28 +139,28 @@ const Comptabilite = () => {
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         {/* Header */}
-        <div className="space-y-3 sm:space-y-0">
-          <div className="sm:flex sm:items-center sm:justify-between sm:gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Comptabilité</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                {periodLabel.subtitle} — Conforme SYSCOHADA
-              </p>
-            </div>
-            <div className="flex items-center gap-2 mt-3 sm:mt-0">
-              <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1.5 text-xs sm:text-sm">
-                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Dépense
-              </Button>
-              <ExportComptabilite
-                data={data}
-                totalRevenue={totalRevenue}
-                expenses={expenses || []}
-                periodLabel={periodLabel.subtitle}
-                agency={agency}
-              />
-              <PeriodFilter value={period} onChange={setPeriod} />
-            </div>
+        <div className="space-y-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Comptabilité</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
+              {periodLabel.subtitle} — Conforme SYSCOHADA
+            </p>
+          </div>
+          <div className="flex items-center justify-between sm:justify-start gap-2">
+            <PeriodFilter value={period} onChange={setPeriod} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1.5 text-xs sm:text-sm">
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Dépense
+            </Button>
+            <ExportComptabilite
+              data={data}
+              totalRevenue={totalRevenue}
+              expenses={expenses || []}
+              periodLabel={periodLabel.subtitle}
+              agency={agency}
+            />
           </div>
         </div>
 

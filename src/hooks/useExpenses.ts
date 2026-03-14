@@ -51,6 +51,7 @@ export interface Expense {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  creator_name?: string;
 }
 
 export function getSyscohadaAccount(categoryValue: string) {
@@ -65,7 +66,7 @@ export function useExpenses(periodFrom?: Date, periodTo?: Date) {
     queryFn: async () => {
       let query = supabase
         .from("expenses")
-        .select("*")
+        .select("*, profiles:user_id(full_name)")
         .order("expense_date", { ascending: false });
 
       if (periodFrom) {
@@ -77,7 +78,11 @@ export function useExpenses(periodFrom?: Date, periodTo?: Date) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Expense[];
+      return (data || []).map((e: any) => ({
+        ...e,
+        creator_name: e.profiles?.full_name || null,
+        profiles: undefined,
+      })) as Expense[];
     },
     enabled: !!user,
   });

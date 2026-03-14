@@ -9,6 +9,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface ExpensesTableProps {
   expenses: Expense[];
@@ -28,6 +29,8 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deleteExpense = useDeleteExpense();
+  const { role } = usePermissions();
+  const isAdmin = role === "admin" || role === "super_admin";
 
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
 
@@ -59,6 +62,7 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
                   <th className="text-left py-2 px-3 text-muted-foreground font-medium">Date</th>
                   <th className="text-left py-2 px-3 text-muted-foreground font-medium">Catégorie</th>
                   <th className="text-left py-2 px-3 text-muted-foreground font-medium">Description</th>
+                  {isAdmin && <th className="text-left py-2 px-3 text-muted-foreground font-medium">Créé par</th>}
                   <th className="text-left py-2 px-3 text-muted-foreground font-medium">Paiement</th>
                   <th className="text-right py-2 px-3 text-muted-foreground font-medium">Montant</th>
                   <th className="text-right py-2 px-3 text-muted-foreground font-medium">Actions</th>
@@ -67,11 +71,11 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">Chargement...</td>
+                    <td colSpan={isAdmin ? 7 : 6} className="py-8 text-center text-muted-foreground">Chargement...</td>
                   </tr>
                 ) : expenses.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={isAdmin ? 7 : 6} className="py-8 text-center text-muted-foreground">
                       Aucune dépense enregistrée pour cette période
                     </td>
                   </tr>
@@ -87,6 +91,11 @@ export function ExpensesTable({ expenses, isLoading }: ExpensesTableProps) {
                         </Badge>
                       </td>
                       <td className="py-2 px-3 text-foreground max-w-[200px] truncate">{exp.description}</td>
+                      {isAdmin && (
+                        <td className="py-2 px-3 text-muted-foreground text-xs">
+                          {exp.creator_name || "—"}
+                        </td>
+                      )}
                       <td className="py-2 px-3 text-muted-foreground capitalize">{exp.payment_method || "—"}</td>
                       <td className="py-2 px-3 text-right font-semibold text-destructive">{formatCFA(Number(exp.amount))}</td>
                       <td className="py-2 px-3 text-right">

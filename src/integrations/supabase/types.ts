@@ -4484,6 +4484,10 @@ export type Database = {
         Args: { p_agency_id: string }
         Returns: boolean
       }
+      can_gestionnaire_access_bien_achat: {
+        Args: { _assigned_to: string; _bien_user_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_gestionnaire_access_bien_vente: {
         Args: { _assigned_to: string; _bien_user_id: string; _user_id: string }
         Returns: boolean

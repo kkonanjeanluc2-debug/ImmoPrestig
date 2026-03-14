@@ -283,8 +283,35 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           });
         }
       });
-      // Sort by tenant name then date
-      result.paidRentDetails.sort((a, b) => a.tenantName.localeCompare(b.tenantName) || a.paidDate.localeCompare(b.paidDate));
+      // Resolve manager names from profiles
+      const profileMap = new Map<string, string>();
+      managerProfiles?.forEach((p) => {
+        profileMap.set(p.user_id, p.full_name || "Gestionnaire");
+      });
+
+      result.paidRentDetails.forEach((d) => {
+        if (d.managerName !== "__unassigned__") {
+          d.managerName = profileMap.get(d.managerName) || "Gestionnaire";
+        } else {
+          d.managerName = "Non assigné";
+        }
+      });
+
+      // Sort by manager then tenant name then date
+      result.paidRentDetails.sort((a, b) => a.managerName.localeCompare(b.managerName) || a.tenantName.localeCompare(b.tenantName) || a.paidDate.localeCompare(b.paidDate));
+
+      // Group by manager
+      const managerGroupMap = new Map<string, PaidRentDetail[]>();
+      result.paidRentDetails.forEach((d) => {
+        const group = managerGroupMap.get(d.managerName) || [];
+        group.push(d);
+        managerGroupMap.set(d.managerName, group);
+      });
+      result.paidRentsByManager = Array.from(managerGroupMap.entries()).map(([managerName, details]) => ({
+        managerName,
+        details,
+        total: details.reduce((s, d) => s + d.amount, 0),
+      }));
     }
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");

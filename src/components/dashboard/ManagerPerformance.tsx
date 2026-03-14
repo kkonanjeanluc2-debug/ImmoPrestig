@@ -45,6 +45,7 @@ export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceP
   const { data: properties = [], isLoading: propertiesLoading } = useProperties();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
   const { data: payments = [], isLoading: paymentsLoading } = usePayments();
+  const { data: agency } = useAgency();
 
   const managerStats = useMemo(() => {
     if (!assignableUsers.length) return [];

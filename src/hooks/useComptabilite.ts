@@ -239,9 +239,13 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     );
 
     // Build detailed paid rent entries
+    // Collect unique assigned_to user IDs for profile resolution
+    const managerIds = new Set<string>();
     if (payments) {
       payments.forEach((p: any) => {
         if (normalizeStatus(p.status) === "paid") {
+          const assignedTo = p.contract?.property?.assigned_to;
+          if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
           const months = p.payment_months || [];
           const amount = Number(p.paid_amount) || Number(p.amount);
@@ -250,6 +254,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             months,
             amount,
             paidDate: p.paid_date || p.due_date,
+            managerName: assignedTo || "__unassigned__",
           });
         }
       });

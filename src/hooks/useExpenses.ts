@@ -66,7 +66,7 @@ export function useExpenses(periodFrom?: Date, periodTo?: Date) {
     queryFn: async () => {
       let query = supabase
         .from("expenses")
-        .select("*, profiles:user_id(full_name)")
+        .select("*, profiles!expenses_user_id_profiles_fkey(full_name)")
         .order("expense_date", { ascending: false });
 
       if (periodFrom) {

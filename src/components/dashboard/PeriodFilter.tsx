@@ -48,7 +48,8 @@ export function getDefaultPeriod(): PeriodValue {
 export function getPeriodLabel(period: PeriodValue): { title: string; subtitle: string } {
   if (period.type === "month") {
     const monthName = period.from.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-    return { title: `Revenus de ${monthName}`, subtitle: `Total du mois` };
+    const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    return { title: `Revenus de ${monthName}`, subtitle: capitalizedMonth };
   }
   if (period.type === "3months") {
     return { title: "Revenus (3 mois)", subtitle: "Total des 3 derniers mois" };

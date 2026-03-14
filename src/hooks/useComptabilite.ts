@@ -8,6 +8,13 @@ export interface PaidRentDetail {
   months: string[];
   amount: number;
   paidDate: string;
+  managerName: string;
+}
+
+export interface ManagerRentGroup {
+  managerName: string;
+  details: PaidRentDetail[];
+  total: number;
 }
 
 export interface ComptabiliteData {

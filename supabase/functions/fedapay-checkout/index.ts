@@ -113,7 +113,15 @@ Deno.serve(async (req) => {
     }
 
     // Calculate amount based on billing cycle and proration
-    const fullAmount = billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+    const getPriceForCycle = (p: typeof plan, cycle: string) => {
+      switch (cycle) {
+        case "quarterly": return p.price_quarterly || p.price_monthly * 3;
+        case "semi_annual": return p.price_semi_annual || p.price_monthly * 6;
+        case "yearly": return p.price_yearly;
+        default: return p.price_monthly;
+      }
+    };
+    const fullAmount = getPriceForCycle(plan, billing_cycle);
     
     // Determine final amount to charge
     let amount = fullAmount;

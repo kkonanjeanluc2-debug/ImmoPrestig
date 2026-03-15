@@ -86,7 +86,15 @@ Deno.serve(async (req) => {
     }
 
     // Calculate amount based on billing cycle
-    const amount = billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+    const getPriceForCycle = (p: typeof plan, cycle: string) => {
+      switch (cycle) {
+        case "quarterly": return p.price_quarterly || p.price_monthly * 3;
+        case "semi_annual": return p.price_semi_annual || p.price_monthly * 6;
+        case "yearly": return p.price_yearly;
+        default: return p.price_monthly;
+      }
+    };
+    const amount = getPriceForCycle(plan, billing_cycle);
 
     // If free plan, activate directly
     if (amount === 0) {

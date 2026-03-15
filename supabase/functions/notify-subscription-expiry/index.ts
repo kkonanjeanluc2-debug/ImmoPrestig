@@ -127,7 +127,15 @@ Deno.serve(async (req) => {
 
       const agency = sub.agency;
       const plan = sub.plan;
-      const renewalPrice = sub.billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+      const getPriceForCycle = (p: typeof plan, cycle: string) => {
+        switch (cycle) {
+          case "quarterly": return p.price_quarterly || p.price_monthly * 3;
+          case "semi_annual": return p.price_semi_annual || p.price_monthly * 6;
+          case "yearly": return p.price_yearly;
+          default: return p.price_monthly;
+        }
+      };
+      const renewalPrice = getPriceForCycle(plan, sub.billing_cycle);
 
       // Create in-app notification
       const { data: agencyData } = await supabase

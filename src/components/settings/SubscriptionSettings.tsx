@@ -101,6 +101,7 @@ export function SubscriptionSettings() {
     setCheckoutOpen(true);
   };
 
+  const currentPlanId = subscription?.plan_id;
   // For proprietaire accounts, only show Starter plan (gestion locative only)
   const isProprietaire = agency?.account_type === "proprietaire";
   const activePlans = (plans?.filter(p => p.is_active) || []).filter(plan => {
@@ -109,7 +110,6 @@ export function SubscriptionSettings() {
     }
     return true;
   });
-  const currentPlanId = subscription?.plan_id;
 
   return (
     <div className="space-y-6">

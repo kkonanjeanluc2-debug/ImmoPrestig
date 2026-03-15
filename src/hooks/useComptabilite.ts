@@ -521,10 +521,35 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       return profileMap.get(id) || "Gestionnaire";
     };
 
+    // Build numbering maps from complete échéance data (all periods)
+    const buildNumberingMap = (allEcheances: { id: string; due_date: string }[] | undefined, parentIdKey: string) => {
+      const map = new Map<string, { num: number; total: number }>();
+      if (!allEcheances) return map;
+      const groups = new Map<string, typeof allEcheances>();
+      allEcheances.forEach((e: any) => {
+        const parentId = e[parentIdKey];
+        if (!parentId) return;
+        if (!groups.has(parentId)) groups.set(parentId, []);
+        groups.get(parentId)!.push(e);
+      });
+      groups.forEach((list) => {
+        list.sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""));
+        list.forEach((e, idx) => {
+          map.set(e.id, { num: idx + 1, total: list.length });
+        });
+      });
+      return map;
+    };
+
+    const ventesNumMap = buildNumberingMap(allEcheancesVentesNum as any, "vente_id");
+    const achatsNumMap = buildNumberingMap(allEcheancesAchatsNum as any, "achat_id");
+    const parcellesNumMap = buildNumberingMap(allEcheancesParcellesNum as any, "vente_id");
+
     // Group by manager helper - combines echeances + down_payments
     const groupByManagerWithDownPayments = (
       echeances: any[] | undefined,
       parentEntries: any[] | undefined,
+      numberingMap: Map<string, { num: number; total: number }>,
       getEcheanceAssignedTo: (e: any) => string | null,
       getEcheanceLabel: (e: any) => string,
       getEcheanceDesc: (e: any) => string,
@@ -536,27 +561,11 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       getParentDownPayment: (e: any) => number
     ): ManagerRevenueGroup[] => {
       const details: RevenueDetail[] = [];
-      // Paid echeances - compute échéance number per vente
       if (echeances) {
-        // Group all echeances by vente_id to determine numbering
-        const venteEcheanceMap = new Map<string, any[]>();
-        echeances.forEach((e: any) => {
-          const venteId = e.vente_id || e.achat_id;
-          if (!venteEcheanceMap.has(venteId)) venteEcheanceMap.set(venteId, []);
-          venteEcheanceMap.get(venteId)!.push(e);
-        });
-        // Sort each group by due_date to assign sequential numbers
-        venteEcheanceMap.forEach((list) => {
-          list.sort((a: any, b: any) => (a.due_date || "").localeCompare(b.due_date || ""));
-          list.forEach((e: any, idx: number) => {
-            e._echeanceNum = idx + 1;
-            e._echeanceTotal = list.length;
-          });
-        });
-
         echeances.forEach((e: any) => {
           if (normalizeStatus(e.status) !== "paid") return;
-          const echeanceLabel = `Éch. ${e._echeanceNum || "?"}/${e._echeanceTotal || "?"}`;
+          const numbering = numberingMap.get(e.id);
+          const echeanceLabel = numbering ? `Éch. ${numbering.num}/${numbering.total}` : "Échéance";
           details.push({
             label: getEcheanceLabel(e),
             description: getEcheanceDesc(e) + ` (${echeanceLabel})`,
@@ -566,7 +575,6 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           });
         });
       }
-      // Down payments from parent
       if (parentEntries) {
         parentEntries.forEach((e: any) => {
           const paymentType = getParentPaymentType(e);

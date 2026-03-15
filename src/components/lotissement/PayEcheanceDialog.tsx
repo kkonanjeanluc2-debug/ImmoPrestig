@@ -24,7 +24,10 @@ import { usePayEcheance, EcheanceWithDetails } from "@/hooks/useEcheancesParcell
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Banknote, CreditCard, Smartphone, Building } from "lucide-react";
+import { Banknote, CreditCard, Smartphone, Building, Download, CheckCircle2 } from "lucide-react";
+import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
+import { useAgency } from "@/hooks/useAgency";
+import { useAuth } from "@/contexts/AuthContext";
 
 const paymentSchema = z.object({
   paid_date: z.string().min(1, "La date de paiement est requise"),
@@ -48,8 +51,20 @@ const paymentMethods = [
   { value: "cheque", label: "Chèque", icon: CreditCard },
 ];
 
+const methodLabels: Record<string, string> = {
+  especes: "Espèces",
+  virement: "Virement bancaire",
+  mobile_money: "Mobile Money",
+  cheque: "Chèque",
+};
+
 export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceDialogProps) {
   const payEcheance = usePayEcheance();
+  const { data: agency } = useAgency();
+  const { profile } = useAuth();
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paidData, setPaidData] = useState<PaymentFormData | null>(null);
+  const [generating, setGenerating] = useState(false);
   
   const {
     register,
@@ -81,15 +96,90 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
       });
       
       toast.success("Paiement enregistré avec succès");
-      reset();
-      onOpenChange(false);
+      setPaidData(data);
+      setPaymentSuccess(true);
     } catch (error) {
       toast.error("Erreur lors de l'enregistrement du paiement");
     }
   };
 
+  const handleDownloadReceipt = async () => {
+    if (!paidData) return;
+    setGenerating(true);
+    try {
+      const lotName = echeance.vente?.parcelle?.lotissement?.name || "";
+      const plotNumber = echeance.vente?.parcelle?.plot_number || "";
+      const propertyTitle = lotName ? `${lotName} - Parcelle ${plotNumber}` : `Parcelle ${plotNumber}`;
+
+      await generateEcheanceReceipt({
+        echeanceId: echeance.id,
+        propertyTitle,
+        amount: paidData.paid_amount,
+        paidDate: paidData.paid_date,
+        dueDate: echeance.due_date,
+        paymentMethod: methodLabels[paidData.payment_method] || paidData.payment_method,
+        totalSalePrice: echeance.amount,
+        agencyName: agency?.name,
+        agencyPhone: agency?.phone || undefined,
+        agencyEmail: agency?.email,
+        agencyAddress: agency?.address || undefined,
+        agencyLogoUrl: agency?.logo_url,
+        validatedBy: profile?.full_name || undefined,
+        acquereur: echeance.vente?.acquereur ? {
+          name: echeance.vente.acquereur.name,
+          phone: echeance.vente.acquereur.phone,
+        } : undefined,
+      });
+      toast.success("Reçu téléchargé");
+    } catch (error) {
+      toast.error("Erreur lors de la génération du reçu");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleClose = (open: boolean) => {
+    if (!open) {
+      setPaymentSuccess(false);
+      setPaidData(null);
+      reset();
+    }
+    onOpenChange(open);
+  };
+
+  if (paymentSuccess) {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <div className="flex flex-col items-center text-center py-6 space-y-4">
+            <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center">
+              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Paiement enregistré</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {paidData?.paid_amount.toLocaleString("fr-FR")} F CFA encaissés pour la parcelle {echeance.vente?.parcelle?.plot_number}
+              </p>
+            </div>
+            <Button
+              onClick={handleDownloadReceipt}
+              disabled={generating}
+              className="gap-2 w-full"
+            >
+              <Download className="h-4 w-4" />
+              {generating ? "Génération..." : "Télécharger le reçu"}
+            </Button>
+            <Button variant="outline" onClick={() => handleClose(false)} className="w-full">
+              Fermer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Encaisser l'échéance</DialogTitle>
@@ -168,7 +258,7 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => handleClose(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={payEcheance.isPending}>

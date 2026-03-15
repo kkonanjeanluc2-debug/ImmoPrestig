@@ -325,6 +325,7 @@ const Comptabilite = () => {
                           <td className="py-2 px-3 text-right text-muted-foreground">{formatCFA(row.ventes)}</td>
                           <td className="py-2 px-3 text-right text-muted-foreground">{formatCFA(row.achats)}</td>
                           <td className="py-2 px-3 text-right text-muted-foreground">{formatCFA(row.lotissements)}</td>
+                          <td className="py-2 px-3 text-right text-muted-foreground">{formatCFA(row.cautions)}</td>
                           <td className="py-2 px-3 text-right font-medium text-emerald">{formatCFA(row.total)}</td>
                           <td className="py-2 px-3 text-right font-medium text-destructive">
                             {row.depenses > 0 ? `-${formatCFA(row.depenses)}` : formatCFA(0)}

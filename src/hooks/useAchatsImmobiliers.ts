@@ -30,6 +30,8 @@ export interface AchatImmobilier {
   commission_percentage: number | null;
   commission_amount: number | null;
   notes: string | null;
+  is_agency_purchase: boolean;
+  post_purchase_action: string | null;
   created_at: string;
   biens_achat?: { title: string; address: string } | null;
   vendeurs?: AchatPartyInfo | null;
@@ -66,6 +68,7 @@ export interface AchatImmobilierInput {
   commission_percentage?: number;
   commission_amount?: number;
   notes?: string;
+  is_agency_purchase?: boolean;
 }
 
 export function useCreateAchatImmobilier() {
@@ -86,6 +89,21 @@ export function useCreateAchatImmobilier() {
       queryClient.invalidateQueries({ queryKey: ["biens-achat"] });
       queryClient.invalidateQueries({ queryKey: ["echeances-achats"] });
       toast.success("Achat enregistré");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useUpdateAchatImmobilier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: Partial<AchatImmobilierInput> & { id: string; post_purchase_action?: string }) => {
+      const { error } = await supabase.from("achats_immobiliers").update(input).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["achats-immobiliers"] });
+      toast.success("Achat mis à jour");
     },
     onError: (e: Error) => toast.error(e.message),
   });

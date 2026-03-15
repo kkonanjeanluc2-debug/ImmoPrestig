@@ -122,9 +122,11 @@ export type Database = {
           created_at: string
           down_payment: number | null
           id: string
+          is_agency_purchase: boolean
           notary_fees: number | null
           notes: string | null
           payment_type: string
+          post_purchase_action: string | null
           sale_date: string
           sale_price: number
           total_installments: number | null
@@ -141,9 +143,11 @@ export type Database = {
           created_at?: string
           down_payment?: number | null
           id?: string
+          is_agency_purchase?: boolean
           notary_fees?: number | null
           notes?: string | null
           payment_type?: string
+          post_purchase_action?: string | null
           sale_date?: string
           sale_price: number
           total_installments?: number | null
@@ -160,9 +164,11 @@ export type Database = {
           created_at?: string
           down_payment?: number | null
           id?: string
+          is_agency_purchase?: boolean
           notary_fees?: number | null
           notes?: string | null
           payment_type?: string
+          post_purchase_action?: string | null
           sale_date?: string
           sale_price?: number
           total_installments?: number | null

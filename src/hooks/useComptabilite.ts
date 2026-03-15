@@ -123,6 +123,21 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  // Fetch ALL pending échéances (no period filter) for "en attente" totals
+  const { data: allPendingVentes } = useQuery({
+    queryKey: ["comptabilite-ventes-pending-all", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_ventes")
+        .select("amount, status")
+        .eq("status", "pending");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Fetch ventes_immobilieres for down_payments (acomptes)
   const { data: ventesImmobilieres } = useQuery({
     queryKey: ["comptabilite-ventes-immo", user?.id, periodFrom.toISOString(), periodTo.toISOString()],

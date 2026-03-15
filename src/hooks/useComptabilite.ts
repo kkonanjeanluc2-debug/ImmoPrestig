@@ -336,17 +336,20 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
-  // Fetch cautions (security deposits) from active contracts within the period
+  // Fetch cautions (security deposits) within the selected period.
+  // We consider both contract start_date and created_at to avoid missing deposits
+  // entered this month for contracts starting later (or backfilled contracts).
   const { data: cautions } = useQuery({
     queryKey: ["comptabilite-cautions", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contracts")
-        .select("id, deposit, start_date, tenant:tenants(name, assigned_to, property:properties(name))")
+        .select("id, deposit, start_date, created_at, tenant:tenants(name, assigned_to, property:properties(name))")
         .gt("deposit", 0)
         .is("deleted_at", null)
-        .gte("start_date", fromDate)
-        .lte("start_date", toDate);
+        .or(
+          `and(start_date.gte.${fromDate},start_date.lte.${toDate}),and(created_at.gte.${fromDate}T00:00:00,created_at.lte.${toDate}T23:59:59)`
+        );
       if (error) throw error;
       return data;
     },

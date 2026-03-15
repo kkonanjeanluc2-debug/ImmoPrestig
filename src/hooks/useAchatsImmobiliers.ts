@@ -93,3 +93,18 @@ export function useCreateAchatImmobilier() {
     onError: (e: Error) => toast.error(e.message),
   });
 }
+
+export function useUpdateAchatImmobilier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: Partial<AchatImmobilierInput> & { id: string; post_purchase_action?: string }) => {
+      const { error } = await supabase.from("achats_immobiliers").update(input).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["achats-immobiliers"] });
+      toast.success("Achat mis à jour");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}

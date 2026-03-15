@@ -180,13 +180,14 @@ export function SubscriptionSettings() {
                     ) : (
                       <>
                         {formatPrice(
-                          subscription.billing_cycle === "yearly" 
-                            ? subscription.plan.price_yearly 
-                            : subscription.plan.price_monthly,
+                          getPriceForCycle(
+                            subscription.plan,
+                            (subscription.billing_cycle || "monthly") as BillingCycle
+                          ),
                           subscription.plan.currency
                         )}
                         <span className="text-sm font-normal text-muted-foreground">
-                          /{subscription.billing_cycle === "yearly" ? "an" : "mois"}
+                          /{billingCyclePeriodLabels[(subscription.billing_cycle || "monthly") as BillingCycle] || subscription.billing_cycle}
                         </span>
                       </>
                     )}

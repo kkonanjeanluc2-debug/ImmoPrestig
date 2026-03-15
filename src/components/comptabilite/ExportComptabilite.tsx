@@ -168,6 +168,9 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
         } else if (row.account === REVENUE_ACCOUNTS.lotissements && data.lotissementsByManager.length > 0) {
           y = renderRevenueManagerGroups(data.lotissementsByManager, "Parcelle", "Acquéreur", doc, y);
           doc.setFontSize(9);
+        } else if (row.account === REVENUE_ACCOUNTS.cautions && data.cautionsByManager.length > 0) {
+          y = renderRevenueManagerGroups(data.cautionsByManager, "Locataire", "Bien", doc, y);
+          doc.setFontSize(9);
         }
       });
 

@@ -344,14 +344,21 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contracts")
-        .select("id, deposit, start_date, created_at, tenant:tenants(name, assigned_to, property:properties(name))")
+        .select("id, deposit, start_date, created_at, tenant:tenants!contracts_tenant_id_fkey(name, assigned_to, property:properties!tenants_property_id_fkey(name))")
         .gt("deposit", 0)
-        .is("deleted_at", null)
-        .or(
-          `and(start_date.gte.${fromDate},start_date.lte.${toDate}),and(created_at.gte.${fromDate}T00:00:00,created_at.lte.${toDate}T23:59:59)`
-        );
-      if (error) throw error;
-      return data;
+        .is("deleted_at", null);
+      if (error) {
+        console.error("Cautions query error:", error);
+        throw error;
+      }
+      // Filter client-side: include contracts where start_date OR created_at falls within the period
+      return (data || []).filter((c: any) => {
+        const startDate = c.start_date;
+        const createdDate = c.created_at ? String(c.created_at).split("T")[0] : null;
+        const inPeriodByStart = startDate >= fromDate && startDate <= toDate;
+        const inPeriodByCreation = createdDate ? createdDate >= fromDate && createdDate <= toDate : false;
+        return inPeriodByStart || inPeriodByCreation;
+      });
     },
     enabled: !!user,
   });

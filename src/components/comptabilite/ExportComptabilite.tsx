@@ -122,7 +122,7 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
           doc.setFontSize(7);
           doc.setFont("helvetica", "bold");
           doc.text(col1Label, 28, y + 5);
-          doc.text(col2Label, 90, y + 5);
+          doc.text(col2Label, 110, y + 5);
           doc.text("Montant", pageWidth - 30, y + 5, { align: "right" });
           y += 7;
           doc.setFont("helvetica", "normal");
@@ -131,10 +131,10 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
             if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
             doc.setTextColor(...textColor);
-            const label = detail.label.length > 25 ? detail.label.substring(0, 23) + "..." : detail.label;
+            const label = detail.label.length > 40 ? detail.label.substring(0, 38) + "..." : detail.label;
             doc.text(label, 28, y + 5);
-            const desc = detail.description.length > 35 ? detail.description.substring(0, 33) + "..." : detail.description;
-            doc.text(desc, 90, y + 5);
+            const desc = detail.description.length > 30 ? detail.description.substring(0, 28) + "..." : detail.description;
+            doc.text(desc, 110, y + 5);
             doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 5, { align: "right" });
             y += 7;
           });

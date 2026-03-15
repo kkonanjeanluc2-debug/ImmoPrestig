@@ -215,7 +215,7 @@ export function SubscriptionCheckoutDialog({
         newPlanPrice,
         startDate,
         endDate,
-        currentSubscription.billing_cycle as "monthly" | "yearly"
+        billingCycle
       );
     } catch (e) {
       console.error("Proration calculation failed", e);

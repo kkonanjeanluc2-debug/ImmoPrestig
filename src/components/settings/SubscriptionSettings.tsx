@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAgencySubscription, useAgencyPaymentHistory } from "@/hooks/useAgencySubscription";
 import { useSubscriptionPlans, SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
+import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle } from "@/lib/billingCycleUtils";
 import { useAgency } from "@/hooks/useAgency";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -62,7 +63,7 @@ export function SubscriptionSettings() {
   const { data: agency } = useAgency();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
 
   // Auto-open checkout if upgrade_plan param is present (from signup flow)
   useEffect(() => {
@@ -95,7 +96,7 @@ export function SubscriptionSettings() {
     return format(new Date(dateString), "dd MMM yyyy à HH:mm", { locale: fr });
   };
 
-  const handleUpgrade = (plan: SubscriptionPlan, cycle: "monthly" | "yearly") => {
+  const handleUpgrade = (plan: SubscriptionPlan, cycle: BillingCycle) => {
     setSelectedPlan(plan);
     setBillingCycle(cycle);
     setCheckoutOpen(true);
@@ -142,9 +143,7 @@ export function SubscriptionSettings() {
                     <p className="text-sm text-muted-foreground">
                       {subscription.billing_cycle === "lifetime" 
                         ? "Abonnement à vie" 
-                        : subscription.billing_cycle === "yearly" 
-                          ? "Facturation annuelle" 
-                          : "Facturation mensuelle"}
+                        : `Facturation ${billingCycleLabels[subscription.billing_cycle as BillingCycle]?.toLowerCase() || subscription.billing_cycle}`}
                     </p>
                   </div>
                 </div>
@@ -180,13 +179,14 @@ export function SubscriptionSettings() {
                     ) : (
                       <>
                         {formatPrice(
-                          subscription.billing_cycle === "yearly" 
-                            ? subscription.plan.price_yearly 
-                            : subscription.plan.price_monthly,
+                          getPriceForCycle(
+                            subscription.plan,
+                            (subscription.billing_cycle || "monthly") as BillingCycle
+                          ),
                           subscription.plan.currency
                         )}
                         <span className="text-sm font-normal text-muted-foreground">
-                          /{subscription.billing_cycle === "yearly" ? "an" : "mois"}
+                          /{billingCyclePeriodLabels[(subscription.billing_cycle || "monthly") as BillingCycle] || subscription.billing_cycle}
                         </span>
                       </>
                     )}
@@ -286,7 +286,7 @@ export function SubscriptionSettings() {
                     <span className="text-sm font-normal text-muted-foreground">/mois</span>
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">
-                    ou {formatPrice(plan.price_yearly, plan.currency)}/an
+                    ou {formatPrice(plan.price_quarterly, plan.currency)}/trim. · {formatPrice(plan.price_semi_annual, plan.currency)}/sem. · {formatPrice(plan.price_yearly, plan.currency)}/an
                   </p>
                   {!isCurrentPlan && (
                     <div className="space-y-2">
@@ -296,18 +296,34 @@ export function SubscriptionSettings() {
                       {isDowngrade && (
                         <p className="text-xs text-amber-600 font-medium text-center">↓ Rétrogradation</p>
                       )}
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-2 gap-1.5">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex-1 text-xs"
+                          className="text-xs"
                           onClick={() => handleUpgrade(plan, "monthly")}
                         >
                           Mensuel
                         </Button>
                         <Button
                           size="sm"
-                          className="flex-1 text-xs"
+                          variant="outline"
+                          className="text-xs"
+                          onClick={() => handleUpgrade(plan, "quarterly")}
+                        >
+                          Trimestre
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs"
+                          onClick={() => handleUpgrade(plan, "semi_annual")}
+                        >
+                          Semestre
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="text-xs"
                           onClick={() => handleUpgrade(plan, "yearly")}
                         >
                           Annuel
@@ -366,7 +382,11 @@ export function SubscriptionSettings() {
                               ? "À vie" 
                               : tx.billing_cycle === "yearly" 
                                 ? "Annuel" 
-                                : "Mensuel"}
+                                : tx.billing_cycle === "quarterly"
+                                  ? "Trimestriel"
+                                  : tx.billing_cycle === "semi_annual"
+                                    ? "Semestriel"
+                                    : "Mensuel"}
                           </p>
                         </div>
                       </TableCell>

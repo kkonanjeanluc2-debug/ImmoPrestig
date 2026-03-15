@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, Calculator, TrendingDown, TrendingUp } from "lucide-react";
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import type { SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
+import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle, getSavingsPercent } from "@/lib/billingCycleUtils";
 import { useAgencySubscription } from "@/hooks/useAgencySubscription";
 import { useAgency } from "@/hooks/useAgency";
 import { calculateProration, formatProrationSummary, type ProrationResult } from "@/lib/prorationUtils";
@@ -21,7 +22,7 @@ interface SubscriptionCheckoutDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   plan: SubscriptionPlan | null;
-  billingCycle: "monthly" | "yearly";
+  billingCycle: BillingCycle;
 }
 
 // Payment methods - KKiaPay & GeniusPay
@@ -192,14 +193,15 @@ export function SubscriptionCheckoutDialog({
       if (!plan || !currentSubscription || currentSubscription.plan_id === plan.id) return null;
       if (!currentSubscription.plan) return null;
 
-      const selectedPlanPrice = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+      const selectedPlanPrice = getPriceForCycle(plan, billingCycle);
       if (selectedPlanPrice === 0) return null; // Free plan
 
-      const currentPlanPrice = currentSubscription.billing_cycle === "yearly"
-        ? currentSubscription.plan.price_yearly
-        : currentSubscription.plan.price_monthly;
+      const currentPlanPrice = getPriceForCycle(
+        currentSubscription.plan as SubscriptionPlan,
+        (currentSubscription.billing_cycle || "monthly") as BillingCycle
+      );
 
-      const newPlanPrice = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+      const newPlanPrice = getPriceForCycle(plan, billingCycle);
 
       // Parse dates
       const startDate = new Date(currentSubscription.starts_at);
@@ -213,7 +215,7 @@ export function SubscriptionCheckoutDialog({
         newPlanPrice,
         startDate,
         endDate,
-        currentSubscription.billing_cycle as "monthly" | "yearly"
+        billingCycle
       );
     } catch (e) {
       console.error("Proration calculation failed", e);
@@ -223,7 +225,7 @@ export function SubscriptionCheckoutDialog({
 
   if (!plan) return null;
 
-  const price = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+  const price = getPriceForCycle(plan, billingCycle);
   const isFree = price === 0;
   
   // Detect if this is a plan change (upgrade/downgrade) or renewal
@@ -307,7 +309,7 @@ export function SubscriptionCheckoutDialog({
           plan_id: plan.id,
           billing_cycle: billingCycle,
           amount: finalAmount,
-          description: `Abonnement ${plan.name} - ${billingCycle === "yearly" ? "Annuel" : "Mensuel"}`,
+          description: `Abonnement ${plan.name} - ${billingCycleLabels[billingCycle]}`,
           customer_phone: phoneNumber,
           proration: proration ? {
             remaining_days: proration.remainingDays,
@@ -644,7 +646,7 @@ export function SubscriptionCheckoutDialog({
               <div>
                 <h4 className="font-semibold">{plan.name}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {billingCycle === "yearly" ? "Facturation annuelle" : "Facturation mensuelle"}
+                  Facturation {billingCycleLabels[billingCycle]?.toLowerCase()}
                 </p>
               </div>
               <div className="text-right">
@@ -662,9 +664,9 @@ export function SubscriptionCheckoutDialog({
                     {formatPrice(price)} <span className="text-sm font-normal">{plan.currency}</span>
                   </p>
                 )}
-                {billingCycle === "yearly" && !proration && (
+                {billingCycle !== "monthly" && !proration && (
                   <Badge variant="secondary" className="mt-1">
-                    Économisez {Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)}%
+                    Économisez {getSavingsPercent(plan, billingCycle)}%
                   </Badge>
                 )}
               </div>

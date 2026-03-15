@@ -8,6 +8,8 @@ export interface SubscriptionPlan {
   name: string;
   description: string | null;
   price_monthly: number;
+  price_quarterly: number;
+  price_semi_annual: number;
   price_yearly: number;
   currency: string;
   max_properties: number | null;
@@ -25,7 +27,7 @@ export interface AgencySubscription {
   id: string;
   agency_id: string;
   plan_id: string;
-  billing_cycle: "monthly" | "yearly" | "lifetime";
+  billing_cycle: string;
   status: "active" | "cancelled" | "expired" | "trial";
   starts_at: string;
   ends_at: string | null;
@@ -179,7 +181,7 @@ export function useAssignSubscription() {
     }: {
       agency_id: string;
       plan_id: string;
-      billing_cycle?: "monthly" | "yearly" | "lifetime";
+      billing_cycle?: string;
       ends_at?: string | null;
     }) => {
       // Upsert to handle existing subscriptions

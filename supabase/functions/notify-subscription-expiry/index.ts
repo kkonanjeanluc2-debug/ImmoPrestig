@@ -23,6 +23,8 @@ interface SubscriptionWithAgency {
   plan: {
     name: string;
     price_monthly: number;
+    price_quarterly: number;
+    price_semi_annual: number;
     price_yearly: number;
     currency: string;
   };
@@ -68,7 +70,7 @@ Deno.serve(async (req) => {
       .select(`
         *,
         agency:agencies!agency_subscriptions_agency_id_fkey(id, name, email, phone),
-        plan:subscription_plans!agency_subscriptions_plan_id_fkey(name, price_monthly, price_yearly, currency)
+        plan:subscription_plans!agency_subscriptions_plan_id_fkey(name, price_monthly, price_quarterly, price_semi_annual, price_yearly, currency)
       `)
       .eq("status", "active")
       .not("ends_at", "is", null)
@@ -127,7 +129,15 @@ Deno.serve(async (req) => {
 
       const agency = sub.agency;
       const plan = sub.plan;
-      const renewalPrice = sub.billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+      const getPriceForCycle = (p: typeof plan, cycle: string) => {
+        switch (cycle) {
+          case "quarterly": return p.price_quarterly || p.price_monthly * 3;
+          case "semi_annual": return p.price_semi_annual || p.price_monthly * 6;
+          case "yearly": return p.price_yearly;
+          default: return p.price_monthly;
+        }
+      };
+      const renewalPrice = getPriceForCycle(plan, sub.billing_cycle);
 
       // Create in-app notification
       const { data: agencyData } = await supabase

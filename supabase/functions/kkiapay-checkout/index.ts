@@ -80,17 +80,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Calculate amount
-    let amount = plan.price_monthly;
-    if (billing_cycle === "yearly") {
-      const { data: settings } = await adminClient
-        .from("platform_settings")
-        .select("value")
-        .eq("key", "yearly_discount_percentage")
-        .single();
-      const discount = settings?.value ? parseInt(settings.value) : 20;
-      amount = Math.round(plan.price_monthly * 12 * (1 - discount / 100));
-    }
+    // Calculate amount based on billing cycle
+    const getPriceForCycle = (p: typeof plan, cycle: string) => {
+      switch (cycle) {
+        case "quarterly": return p.price_quarterly || p.price_monthly * 3;
+        case "semi_annual": return p.price_semi_annual || p.price_monthly * 6;
+        case "yearly": return p.price_yearly || Math.round(p.price_monthly * 12 * 0.8);
+        default: return p.price_monthly;
+      }
+    };
+    let amount = getPriceForCycle(plan, billing_cycle);
 
     // Get KKiaPay configuration (Widget JS)
     const KKIAPAY_PUBLIC_KEY = Deno.env.get("KKIAPAY_PUBLIC_KEY");

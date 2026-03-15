@@ -3641,6 +3641,8 @@ export type Database = {
           max_users: number | null
           name: string
           price_monthly: number
+          price_quarterly: number
+          price_semi_annual: number
           price_yearly: number
           updated_at: string
         }
@@ -3658,6 +3660,8 @@ export type Database = {
           max_users?: number | null
           name: string
           price_monthly?: number
+          price_quarterly?: number
+          price_semi_annual?: number
           price_yearly?: number
           updated_at?: string
         }
@@ -3675,6 +3679,8 @@ export type Database = {
           max_users?: number | null
           name?: string
           price_monthly?: number
+          price_quarterly?: number
+          price_semi_annual?: number
           price_yearly?: number
           updated_at?: string
         }

@@ -390,7 +390,7 @@ export function TransactionsDashboard() {
                           <div>
                             <p className="font-medium text-sm">{tx.plan?.name || "—"}</p>
                             <p className="text-xs text-muted-foreground">
-                              {tx.billing_cycle === "yearly" ? "Annuel" : "Mensuel"}
+                              {tx.billing_cycle === "yearly" ? "Annuel" : tx.billing_cycle === "quarterly" ? "Trimestriel" : tx.billing_cycle === "semi_annual" ? "Semestriel" : "Mensuel"}
                             </p>
                           </div>
                         </TableCell>

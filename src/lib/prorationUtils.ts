@@ -2,6 +2,8 @@
  * Utilitaires pour le calcul au prorata des changements d'abonnement
  */
 
+import { type BillingCycle, billingCycleMonths } from "@/lib/billingCycleUtils";
+
 export interface ProrationResult {
   /** Jours restants sur l'abonnement actuel */
   remainingDays: number;
@@ -21,20 +23,13 @@ export interface ProrationResult {
 
 /**
  * Calcule le montant au prorata pour un changement de forfait
- * 
- * @param currentPlanPrice - Prix du forfait actuel (mensuel ou annuel selon cycle)
- * @param newPlanPrice - Prix du nouveau forfait (mensuel ou annuel selon cycle)
- * @param subscriptionStartDate - Date de début de l'abonnement actuel
- * @param subscriptionEndDate - Date de fin de l'abonnement actuel (si applicable)
- * @param billingCycle - Cycle de facturation ("monthly" | "yearly")
- * @returns ProrationResult - Détails du calcul au prorata
  */
 export function calculateProration(
   currentPlanPrice: number,
   newPlanPrice: number,
   subscriptionStartDate: Date,
   subscriptionEndDate: Date | null,
-  billingCycle: "monthly" | "yearly"
+  billingCycle: BillingCycle
 ): ProrationResult {
   const now = new Date();
   
@@ -42,11 +37,8 @@ export function calculateProration(
   let endDate = subscriptionEndDate;
   if (!endDate) {
     endDate = new Date(subscriptionStartDate);
-    if (billingCycle === "yearly") {
-      endDate.setFullYear(endDate.getFullYear() + 1);
-    } else {
-      endDate.setMonth(endDate.getMonth() + 1);
-    }
+    const months = billingCycleMonths[billingCycle] || 1;
+    endDate.setMonth(endDate.getMonth() + months);
   }
 
   // Calcul des jours

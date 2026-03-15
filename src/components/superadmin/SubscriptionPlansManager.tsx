@@ -53,7 +53,12 @@ interface PlanFormData {
   name: string;
   description: string;
   price_monthly: number;
+  price_quarterly: number;
+  price_semi_annual: number;
   price_yearly: number;
+  quarterly_discount: number;
+  semi_annual_discount: number;
+  yearly_discount: number;
   max_properties: number | null;
   max_tenants: number | null;
   max_users: number | null;
@@ -67,7 +72,12 @@ const defaultFormData: PlanFormData = {
   name: "",
   description: "",
   price_monthly: 0,
+  price_quarterly: 0,
+  price_semi_annual: 0,
   price_yearly: 0,
+  quarterly_discount: 5,
+  semi_annual_discount: 10,
+  yearly_discount: 17,
   max_properties: null,
   max_tenants: null,
   max_users: 1,
@@ -97,11 +107,20 @@ export function SubscriptionPlansManager() {
 
   const openEditDialog = (plan: SubscriptionPlan) => {
     setEditingPlan(plan);
+    // Calculate discount percentages from stored prices
+    const qDiscount = plan.price_monthly > 0 ? Math.round((1 - plan.price_quarterly / (plan.price_monthly * 3)) * 100) : 5;
+    const sDiscount = plan.price_monthly > 0 ? Math.round((1 - plan.price_semi_annual / (plan.price_monthly * 6)) * 100) : 10;
+    const yDiscount = plan.price_monthly > 0 ? Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100) : 17;
     setFormData({
       name: plan.name,
       description: plan.description || "",
       price_monthly: plan.price_monthly,
+      price_quarterly: plan.price_quarterly,
+      price_semi_annual: plan.price_semi_annual,
       price_yearly: plan.price_yearly,
+      quarterly_discount: Math.max(0, qDiscount),
+      semi_annual_discount: Math.max(0, sDiscount),
+      yearly_discount: Math.max(0, yDiscount),
       max_properties: plan.max_properties,
       max_tenants: plan.max_tenants,
       max_users: plan.max_users,
@@ -128,6 +147,8 @@ export function SubscriptionPlansManager() {
       name: formData.name,
       description: formData.description || null,
       price_monthly: formData.price_monthly,
+      price_quarterly: formData.price_quarterly,
+      price_semi_annual: formData.price_semi_annual,
       price_yearly: formData.price_yearly,
       currency: "XOF",
       max_properties: formData.max_properties,
@@ -205,8 +226,10 @@ export function SubscriptionPlansManager() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Forfait</TableHead>
-                  <TableHead className="text-right">Prix mensuel</TableHead>
-                  <TableHead className="text-right">Prix annuel</TableHead>
+                  <TableHead className="text-right">Mensuel</TableHead>
+                  <TableHead className="text-right">Trimestriel</TableHead>
+                  <TableHead className="text-right">Semestriel</TableHead>
+                  <TableHead className="text-right">Annuel</TableHead>
                   <TableHead className="text-center">Limites</TableHead>
                   <TableHead className="text-center">Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -231,10 +254,16 @@ export function SubscriptionPlansManager() {
                         </p>
                       )}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right font-medium text-sm">
                       {formatPrice(plan.price_monthly)} FCFA
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right font-medium text-sm">
+                      {formatPrice(plan.price_quarterly)} FCFA
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-sm">
+                      {formatPrice(plan.price_semi_annual)} FCFA
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-sm">
                       {formatPrice(plan.price_yearly)} FCFA
                     </TableCell>
                     <TableCell>
@@ -339,34 +368,99 @@ export function SubscriptionPlansManager() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price_monthly">Prix mensuel (FCFA)</Label>
-                <Input
-                  id="price_monthly"
-                  type="number"
-                  value={formData.price_monthly}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      price_monthly: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price_yearly">Prix annuel (FCFA)</Label>
-                <Input
-                  id="price_yearly"
-                  type="number"
-                  value={formData.price_yearly}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      price_yearly: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
+            {/* Prix mensuel */}
+            <div className="space-y-2">
+              <Label htmlFor="price_monthly">Prix mensuel (FCFA)</Label>
+              <Input
+                id="price_monthly"
+                type="number"
+                value={formData.price_monthly}
+                onChange={(e) => {
+                  const monthly = parseInt(e.target.value) || 0;
+                  setFormData({
+                    ...formData,
+                    price_monthly: monthly,
+                    price_quarterly: Math.round(monthly * 3 * (1 - formData.quarterly_discount / 100)),
+                    price_semi_annual: Math.round(monthly * 6 * (1 - formData.semi_annual_discount / 100)),
+                    price_yearly: Math.round(monthly * 12 * (1 - formData.yearly_discount / 100)),
+                  });
+                }}
+              />
+            </div>
+
+            {/* Réductions et prix calculés */}
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm font-medium">Réductions par période</p>
+              
+              <div className="grid grid-cols-3 gap-4">
+                {/* Trimestriel */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="quarterly_discount" className="text-xs">Réduction trimestrielle (%)</Label>
+                  <Input
+                    id="quarterly_discount"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={formData.quarterly_discount}
+                    onChange={(e) => {
+                      const discount = parseInt(e.target.value) || 0;
+                      setFormData({
+                        ...formData,
+                        quarterly_discount: discount,
+                        price_quarterly: Math.round(formData.price_monthly * 3 * (1 - discount / 100)),
+                      });
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    = {formatPrice(formData.price_quarterly)} FCFA/trim.
+                  </p>
+                </div>
+
+                {/* Semestriel */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="semi_annual_discount" className="text-xs">Réduction semestrielle (%)</Label>
+                  <Input
+                    id="semi_annual_discount"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={formData.semi_annual_discount}
+                    onChange={(e) => {
+                      const discount = parseInt(e.target.value) || 0;
+                      setFormData({
+                        ...formData,
+                        semi_annual_discount: discount,
+                        price_semi_annual: Math.round(formData.price_monthly * 6 * (1 - discount / 100)),
+                      });
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    = {formatPrice(formData.price_semi_annual)} FCFA/sem.
+                  </p>
+                </div>
+
+                {/* Annuel */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="yearly_discount" className="text-xs">Réduction annuelle (%)</Label>
+                  <Input
+                    id="yearly_discount"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={formData.yearly_discount}
+                    onChange={(e) => {
+                      const discount = parseInt(e.target.value) || 0;
+                      setFormData({
+                        ...formData,
+                        yearly_discount: discount,
+                        price_yearly: Math.round(formData.price_monthly * 12 * (1 - discount / 100)),
+                      });
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    = {formatPrice(formData.price_yearly)} FCFA/an
+                  </p>
+                </div>
               </div>
             </div>
 

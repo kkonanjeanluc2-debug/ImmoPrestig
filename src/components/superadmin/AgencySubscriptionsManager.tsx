@@ -30,6 +30,7 @@ import { CreditCard, Building2, Check, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle } from "@/lib/billingCycleUtils";
 import {
   useSubscriptionPlans,
   useAllAgencySubscriptions,
@@ -60,7 +61,7 @@ export function AgencySubscriptionsManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<AgencyWithProfile | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
-  const [selectedBillingCycle, setSelectedBillingCycle] = useState<"monthly" | "yearly" | "lifetime">("monthly");
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle | "lifetime">("monthly");
 
   const isLoading = agenciesLoading || plansLoading || subscriptionsLoading;
 
@@ -78,7 +79,7 @@ export function AgencySubscriptionsManager() {
     const currentSub = getAgencySubscription(agency.id);
     setSelectedAgency(agency);
     setSelectedPlanId(currentSub?.plan_id || "");
-    setSelectedBillingCycle(currentSub?.billing_cycle || "monthly");
+    setSelectedBillingCycle((currentSub?.billing_cycle || "monthly") as BillingCycle | "lifetime");
     setIsDialogOpen(true);
   };
 
@@ -122,7 +123,8 @@ export function AgencySubscriptionsManager() {
     if (sub.status !== "active") return acc;
     const plan = getPlanById(sub.plan_id);
     if (!plan) return acc;
-    return acc + (sub.billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly);
+    const cycle = sub.billing_cycle as BillingCycle;
+    return acc + getPriceForCycle(plan, cycle);
   }, 0) || 0;
 
   return (
@@ -190,9 +192,7 @@ export function AgencySubscriptionsManager() {
                             <p className="font-medium">{plan.name}</p>
                             <p className="text-sm text-muted-foreground">
                               {formatPrice(
-                                subscription?.billing_cycle === "yearly"
-                                  ? plan.price_yearly
-                                  : plan.price_monthly
+                                getPriceForCycle(plan, (subscription?.billing_cycle || "monthly") as BillingCycle)
                               )}{" "}
                               FCFA
                             </p>
@@ -206,9 +206,7 @@ export function AgencySubscriptionsManager() {
                           <Badge variant={subscription.billing_cycle === "lifetime" ? "default" : "outline"}>
                             {subscription.billing_cycle === "lifetime"
                               ? "À vie"
-                              : subscription.billing_cycle === "yearly"
-                                ? "Annuel"
-                                : "Mensuel"}
+                              : billingCycleLabels[subscription.billing_cycle as BillingCycle] || subscription.billing_cycle}
                           </Badge>
                         ) : (
                           "-"
@@ -293,13 +291,15 @@ export function AgencySubscriptionsManager() {
               <Label>Cycle de facturation</Label>
               <Select
                 value={selectedBillingCycle}
-                onValueChange={(v) => setSelectedBillingCycle(v as "monthly" | "yearly" | "lifetime")}
+                onValueChange={(v) => setSelectedBillingCycle(v as BillingCycle | "lifetime")}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="monthly">Mensuel</SelectItem>
+                  <SelectItem value="quarterly">Trimestriel (économisez ~5%)</SelectItem>
+                  <SelectItem value="semi_annual">Semestriel (économisez ~10%)</SelectItem>
                   <SelectItem value="yearly">Annuel (économisez ~17%)</SelectItem>
                   <SelectItem value="lifetime">Abonnement à vie</SelectItem>
                 </SelectContent>
@@ -317,11 +317,12 @@ export function AgencySubscriptionsManager() {
                     ) : (
                       <>
                         {formatPrice(
-                          selectedBillingCycle === "yearly"
-                            ? getPlanById(selectedPlanId)?.price_yearly || 0
-                            : getPlanById(selectedPlanId)?.price_monthly || 0
+                          getPriceForCycle(
+                            getPlanById(selectedPlanId)!,
+                            selectedBillingCycle as BillingCycle
+                          )
                         )}{" "}
-                        FCFA/{selectedBillingCycle === "yearly" ? "an" : "mois"}
+                        FCFA/{billingCyclePeriodLabels[selectedBillingCycle as BillingCycle] || selectedBillingCycle}
                       </>
                     )}
                   </span>

@@ -882,8 +882,14 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       (cautions as any[]).forEach((c: any) => {
         const amount = Number(c.deposit || 0);
         if (amount <= 0) return;
+
+        const createdDate = c.created_at ? String(c.created_at).split("T")[0] : null;
+        const cautionDate = createdDate && createdDate >= fromDate && createdDate <= toDate
+          ? createdDate
+          : c.start_date;
+
         result.cautionsEncaissees += amount;
-        const date = new Date(c.start_date);
+        const date = new Date(cautionDate);
         const key = `${date.getFullYear()}-${date.getMonth()}`;
         const monthly = monthlyMap.get(key);
         if (monthly) {
@@ -896,7 +902,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           label: tenantName,
           description: propertyName ? `${propertyName} (Caution)` : "Caution locative",
           amount,
-          paidDate: c.start_date,
+          paidDate: cautionDate,
           managerName: resolveManager(c.tenant?.assigned_to),
         });
       });

@@ -821,7 +821,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     );
 
     result.achatsByManager = groupByManagerWithDownPayments(
-      echeancesAchats as any, achatsImmobiliers as any, achatsNumMap,
+      echeancesAchatsIntermediation, achatsIntermediation, achatsNumMap,
       (e) => e.achat?.bien?.assigned_to,
       (e) => e.achat?.bien?.title || "Bien inconnu",
       (e) => e.achat?.acquereur?.name || "Acquéreur inconnu",

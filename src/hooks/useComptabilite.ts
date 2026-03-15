@@ -965,7 +965,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
 
     result.monthlyData = Array.from(monthlyMap.values());
 
-    const totalRevenue = result.loyersEncaisses + result.ventesEncaissees + result.achatsEncaisses + result.lotissementsEncaisses + result.reservationsEncaissees;
+    const totalRevenue = result.loyersEncaisses + result.ventesEncaissees + result.achatsEncaisses + result.lotissementsEncaisses + result.reservationsEncaissees + result.cautionsEncaissees;
 
     result.revenueByCategory = [
       { name: "Loyers", value: result.loyersEncaisses, color: "hsl(var(--primary))" },
@@ -973,6 +973,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       { name: "Achats Immo.", value: result.achatsEncaisses, color: "hsl(var(--sand))" },
       { name: "Lotissements", value: result.lotissementsEncaisses, color: "hsl(var(--navy-light))" },
       { name: "Réservations", value: result.reservationsEncaissees, color: "hsl(var(--accent))" },
+      { name: "Cautions", value: result.cautionsEncaissees, color: "hsl(var(--muted-foreground))" },
     ].filter((c) => c.value > 0);
 
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));

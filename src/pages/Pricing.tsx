@@ -597,8 +597,24 @@ const Pricing = () => {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {activePlans.map((plan) => {
-                  const calculatedYearlyPrice = Math.round(plan.price_monthly * 12 * (1 - yearlyDiscountPercent / 100));
-                  const price = billingCycle === "monthly" ? plan.price_monthly : calculatedYearlyPrice;
+                  const getPriceForCycle = () => {
+                    switch (billingCycle) {
+                      case "quarterly": return plan.price_quarterly || Math.round(plan.price_monthly * 3 * 0.95);
+                      case "semi_annual": return plan.price_semi_annual || Math.round(plan.price_monthly * 6 * 0.9);
+                      case "yearly": return plan.price_yearly || Math.round(plan.price_monthly * 12 * (1 - yearlyDiscountPercent / 100));
+                      default: return plan.price_monthly;
+                    }
+                  };
+                  const price = getPriceForCycle();
+                  const periodLabels: Record<string, string> = {
+                    monthly: "par mois",
+                    quarterly: "par trimestre",
+                    semi_annual: "par semestre",
+                    yearly: "par an",
+                  };
+                  const monthsInCycle: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
+                  const months = monthsInCycle[billingCycle];
+                  const savingsPercent = plan.price_monthly > 0 ? Math.round((1 - price / (plan.price_monthly * months)) * 100) : 0;
                   const features = Array.isArray(plan.features) ? plan.features : [];
 
                   return (
@@ -629,9 +645,9 @@ const Pricing = () => {
                             <span className="text-3xl font-bold">{formatPrice(price)}</span>
                             <span className="text-sm text-muted-foreground">{plan.currency}</span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">{billingCycle === "monthly" ? "par mois" : "par an"}</p>
-                          {billingCycle === "yearly" && plan.price_monthly > 0 && (
-                            <Badge variant="secondary" className="mt-1 text-xs">Économisez {yearlyDiscountPercent}%</Badge>
+                          <p className="text-xs text-muted-foreground mt-1">{periodLabels[billingCycle]}</p>
+                          {billingCycle !== "monthly" && savingsPercent > 0 && plan.price_monthly > 0 && (
+                            <Badge variant="secondary" className="mt-1 text-xs">Économisez {savingsPercent}%</Badge>
                           )}
                         </div>
                         <div className="space-y-2 text-left mb-4">

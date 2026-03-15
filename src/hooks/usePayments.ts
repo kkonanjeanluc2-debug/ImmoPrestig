@@ -55,7 +55,7 @@ export const usePayments = () => {
       const { data: activeContracts, error: contractsError } = await supabase
         .from("contracts")
         .select(`
-          id, rent_amount, tenant_id, property_id, unit_id,
+          id, user_id, rent_amount, tenant_id, property_id, unit_id,
           tenant:tenants(*, property:properties(*))
         `)
         .eq("status", "active")
@@ -81,22 +81,26 @@ export const usePayments = () => {
       // Generate virtual pending payments for tenants without one
       const virtualPayments = (activeContracts || [])
         .filter(c => !existingTenantIds.has(c.tenant_id))
-        .map(contract => ({
-          id: `auto-${contract.tenant_id}-${nextMonthLabel}`,
-          user_id: user!.id,
-          tenant_id: contract.tenant_id,
-          amount: contract.rent_amount,
-          due_date: nextMonthDueDate,
-          status: "pending",
-          method: null,
-          paid_date: null,
-          paid_amount: null,
-          payment_months: [nextMonthLabel],
-          created_at: now.toISOString(),
-          updated_at: now.toISOString(),
-          tenant: contract.tenant,
-          _isVirtual: true,
-        }));
+        .map(contract => {
+          const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
+
+          return {
+            id: `auto-${contract.tenant_id}-${nextMonthLabel}`,
+            user_id: agencyUserId,
+            tenant_id: contract.tenant_id,
+            amount: contract.rent_amount,
+            due_date: nextMonthDueDate,
+            status: "pending",
+            method: null,
+            paid_date: null,
+            paid_amount: null,
+            payment_months: [nextMonthLabel],
+            created_at: now.toISOString(),
+            updated_at: now.toISOString(),
+            tenant: contract.tenant,
+            _isVirtual: true,
+          };
+        });
 
       return [...(data || []), ...virtualPayments] as any;
     },

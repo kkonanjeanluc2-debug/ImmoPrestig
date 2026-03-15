@@ -103,6 +103,9 @@ export function EcheancesVentesList({ venteId }: EcheancesVentesListProps) {
       toast.error("Erreur lors de la génération du reçu");
     }
   };
+
+  // Generate list of months from echéances
+  const availableMonths = useMemo(() => {
     if (!echeances) return [];
     
     const monthsSet = new Set<string>();

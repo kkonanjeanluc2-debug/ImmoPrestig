@@ -124,7 +124,8 @@ export function AgencySubscriptionsManager() {
     if (sub.status !== "active") return acc;
     const plan = getPlanById(sub.plan_id);
     if (!plan) return acc;
-    return acc + (sub.billing_cycle === "yearly" ? plan.price_yearly : plan.price_monthly);
+    const cycle = sub.billing_cycle as BillingCycle;
+    return acc + getPriceForCycle(plan, cycle);
   }, 0) || 0;
 
   return (

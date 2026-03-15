@@ -111,8 +111,24 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       const { data, error } = await supabase
         .from("echeances_ventes")
         .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_immobilieres(bien:biens_vente(assigned_to, title), acquereur:acquereurs(name))")
-        .gte("due_date", periodFrom.toISOString().split("T")[0])
-        .lte("due_date", periodTo.toISOString().split("T")[0]);
+        .or(
+          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+        );
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch ventes_immobilieres for down_payments (acomptes)
+  const { data: ventesImmobilieres } = useQuery({
+    queryKey: ["comptabilite-ventes-immo", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ventes_immobilieres")
+        .select("id, down_payment, sale_date, payment_type, total_price, bien:biens_vente(assigned_to, title), acquereur:acquereurs(name)")
+        .gte("sale_date", fromDate)
+        .lte("sale_date", toDate);
       if (error) throw error;
       return data;
     },
@@ -125,8 +141,24 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       const { data, error } = await supabase
         .from("echeances_achats")
         .select("amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
-        .gte("due_date", periodFrom.toISOString().split("T")[0])
-        .lte("due_date", periodTo.toISOString().split("T")[0]);
+        .or(
+          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+        );
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch achats_immobiliers for down_payments (acomptes)
+  const { data: achatsImmobiliers } = useQuery({
+    queryKey: ["comptabilite-achats-immo", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("achats_immobiliers")
+        .select("id, down_payment, sale_date, payment_type, sale_price, bien:biens_achat(assigned_to, title), acquereur:acquereurs(name)")
+        .gte("sale_date", fromDate)
+        .lte("sale_date", toDate);
       if (error) throw error;
       return data;
     },
@@ -139,8 +171,24 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       const { data, error } = await supabase
         .from("echeances_parcelles")
         .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_parcelles(sold_by, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name))")
-        .gte("due_date", periodFrom.toISOString().split("T")[0])
-        .lte("due_date", periodTo.toISOString().split("T")[0]);
+        .or(
+          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+        );
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch ventes_parcelles for down_payments (acomptes)
+  const { data: ventesParcelles } = useQuery({
+    queryKey: ["comptabilite-ventes-parcelles", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ventes_parcelles")
+        .select("id, down_payment, sale_date, payment_type, total_price, sold_by, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name)")
+        .gte("sale_date", fromDate)
+        .lte("sale_date", toDate);
       if (error) throw error;
       return data;
     },

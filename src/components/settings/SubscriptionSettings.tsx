@@ -63,7 +63,7 @@ export function SubscriptionSettings() {
   const { data: agency } = useAgency();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
 
   // Auto-open checkout if upgrade_plan param is present (from signup flow)
   useEffect(() => {

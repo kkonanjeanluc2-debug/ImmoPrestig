@@ -817,32 +817,31 @@ const Pricing = () => {
 
             <div className="px-6 pb-6">
               {/* Billing Toggle */}
-              <div className="flex items-center justify-center gap-4 my-6">
-                <button
-                  onClick={() => setBillingCycle("monthly")}
-                  className={cn(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    billingCycle === "monthly"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Mensuel
-                </button>
-                <button
-                  onClick={() => setBillingCycle("yearly")}
-                  className={cn(
-                    "px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
-                    billingCycle === "yearly"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Annuel
+              <div className="flex items-center justify-center gap-2 my-6 flex-wrap">
+                {([
+                  { key: "monthly" as const, label: "Mensuel" },
+                  { key: "quarterly" as const, label: "Trimestriel" },
+                  { key: "semi_annual" as const, label: "Semestriel" },
+                  { key: "yearly" as const, label: "Annuel" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setBillingCycle(opt.key)}
+                    className={cn(
+                      "px-4 py-2 rounded-lg font-medium transition-colors",
+                      billingCycle === opt.key
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+                {billingCycle !== "monthly" && (
                   <Badge variant="secondary" className="text-xs">
                     Économisez jusqu'à {yearlyDiscountPercent}%
                   </Badge>
-                </button>
+                )}
               </div>
 
               {isLoading ? (

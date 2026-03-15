@@ -318,11 +318,12 @@ export function AgencySubscriptionsManager() {
                     ) : (
                       <>
                         {formatPrice(
-                          selectedBillingCycle === "yearly"
-                            ? getPlanById(selectedPlanId)?.price_yearly || 0
-                            : getPlanById(selectedPlanId)?.price_monthly || 0
+                          getPriceForCycle(
+                            getPlanById(selectedPlanId)!,
+                            selectedBillingCycle as BillingCycle
+                          )
                         )}{" "}
-                        FCFA/{selectedBillingCycle === "yearly" ? "an" : "mois"}
+                        FCFA/{billingCyclePeriodLabels[selectedBillingCycle as BillingCycle] || selectedBillingCycle}
                       </>
                     )}
                   </span>

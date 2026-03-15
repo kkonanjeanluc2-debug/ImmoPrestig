@@ -37,6 +37,7 @@ export const REVENUE_ACCOUNTS = {
   ventes: { label: "Ventes immobilières", syscohada: "702", classe: "Ventes de produits finis" },
   achats: { label: "Achats immobiliers", syscohada: "706", classe: "Ventes de services" },
   lotissements: { label: "Ventes lotissements", syscohada: "702", classe: "Ventes de produits finis" },
+  reservations: { label: "Dépôts de réservation", syscohada: "419", classe: "Avances et acomptes reçus" },
 } as const;
 
 export interface Expense {

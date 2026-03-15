@@ -173,10 +173,13 @@ const Properties = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les types</SelectItem>
-                <SelectItem value="maison">Maison à porte multiple</SelectItem>
                 <SelectItem value="appartement">Appartement</SelectItem>
+                <SelectItem value="maison">Maison à porte multiple</SelectItem>
+                <SelectItem value="villa">Villa</SelectItem>
+                <SelectItem value="bureau">Bureau</SelectItem>
+                <SelectItem value="commerce">Commerce</SelectItem>
+                <SelectItem value="immeuble">Immeuble</SelectItem>
                 <SelectItem value="meuble">Location meublée</SelectItem>
-                
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>

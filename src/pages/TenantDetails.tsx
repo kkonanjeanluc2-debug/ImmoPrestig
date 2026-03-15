@@ -42,6 +42,7 @@ import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { WhatsAppHistoryDialog } from "@/components/tenant/WhatsAppHistoryDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
+import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateAgencyFeesReceipt } from "@/lib/generateAgencyFeesReceipt";
 import { useAgency } from "@/hooks/useAgency";
@@ -494,6 +495,21 @@ const TenantDetails = () => {
                                   <Download className="h-4 w-4" />
                                 )}
                               </Button>
+                            )}
+                            {/* Tenant pay button for locataires */}
+                            {isLocataire && (payment.status === 'pending' || payment.status === 'late') && (
+                              <TenantPayRentDialog
+                                paymentId={payment.id}
+                                amount={Number(payment.amount)}
+                                paidAmount={Number((payment as any).paid_amount || 0)}
+                                dueDate={payment.due_date}
+                                propertyTitle={tenant.property?.title || "Bien immobilier"}
+                                tenantPhone={tenant.phone}
+                                agencyUserId={payment.user_id}
+                                isVirtual={false}
+                                tenantId={tenant.id}
+                                paymentMonths={(payment as any).payment_months || undefined}
+                              />
                             )}
                             {/* Admin-only actions for pending/late payments */}
                             {!isLocataire && (payment.status === 'pending' || payment.status === 'late') && canCollectPayment && (

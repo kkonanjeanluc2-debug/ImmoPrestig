@@ -301,6 +301,24 @@ export function EcheancesAchatsList() {
                       <TableCell>{getStatusBadge(ech)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {ech.status !== "paye" && (
+                            <SendAchatReminderDialog
+                              echeanceId={ech.id}
+                              vendeurName={ech.achats_immobiliers?.vendeurs?.name || "Vendeur"}
+                              vendeurPhone={ech.achats_immobiliers?.vendeurs?.phone}
+                              vendeurEmail={ech.achats_immobiliers?.vendeurs?.email}
+                              bienTitle={ech.achats_immobiliers?.biens_achat?.title || "Bien"}
+                              amount={ech.amount}
+                              dueDate={ech.due_date}
+                              isLate={isPast(new Date(ech.due_date)) && !isToday(new Date(ech.due_date))}
+                              trigger={
+                                <Button size="sm" variant="outline">
+                                  <Mail className="h-4 w-4 mr-1" />
+                                  Relancer
+                                </Button>
+                              }
+                            />
+                          )}
                           {ech.status !== "paye" && canEditAchats && (
                             <Button size="sm" onClick={() => handlePayClick(ech)} disabled={payMutation.isPending}>
                               <Check className="h-4 w-4 mr-2" />

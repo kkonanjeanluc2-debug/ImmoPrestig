@@ -61,6 +61,7 @@ export interface BienAchatInput {
   latitude?: number;
   longitude?: number;
   features?: Record<string, unknown>;
+  image_url?: string;
 }
 
 export function useCreateBienAchat() {

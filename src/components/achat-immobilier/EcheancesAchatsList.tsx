@@ -23,7 +23,8 @@ import { fr } from "date-fns/locale";
 import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Check, Clock, AlertTriangle, Loader2, Search, X, Download } from "lucide-react";
+import { Calendar, Check, Clock, AlertTriangle, Loader2, Search, X, Download, Mail } from "lucide-react";
+import { SendAchatReminderDialog } from "./SendAchatReminderDialog";
 
 const PAYMENT_METHODS = [
   { value: "especes", label: "Espèces" },

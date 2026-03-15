@@ -31,7 +31,6 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle } from "@/lib/billingCycleUtils";
-import { fr } from "date-fns/locale";
 import {
   useSubscriptionPlans,
   useAllAgencySubscriptions,

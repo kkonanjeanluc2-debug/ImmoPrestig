@@ -27,7 +27,7 @@ export interface AgencySubscription {
   id: string;
   agency_id: string;
   plan_id: string;
-  billing_cycle: "monthly" | "yearly" | "lifetime";
+  billing_cycle: string;
   status: "active" | "cancelled" | "expired" | "trial";
   starts_at: string;
   ends_at: string | null;

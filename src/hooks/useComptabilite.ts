@@ -692,5 +692,5 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, expenses, managerProfiles, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, periodFrom, periodTo]);
 }

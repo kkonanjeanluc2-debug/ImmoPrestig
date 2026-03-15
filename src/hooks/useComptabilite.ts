@@ -725,6 +725,98 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0)
     );
 
+    // Process reservation deposits (ventes + parcelles)
+    const reservationDetails: RevenueDetail[] = [];
+    if (reservationsVente) {
+      (reservationsVente as any[]).forEach((r: any) => {
+        const amount = Number(r.deposit_amount || 0);
+        if (amount <= 0) return;
+        result.reservationsEncaissees += amount;
+        const date = new Date(r.reservation_date);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly.ventes += amount;
+          monthly.total += amount;
+        }
+        const method = r.payment_method || "Non spécifié";
+        methodMap.set(method, (methodMap.get(method) || 0) + amount);
+        reservationDetails.push({
+          label: r.bien?.title || "Bien inconnu",
+          description: `${r.acquereur?.name || "Acquéreur inconnu"} (Réservation vente)`,
+          amount,
+          paidDate: r.reservation_date,
+          managerName: resolveManager(r.bien?.assigned_to),
+        });
+      });
+    }
+    if (reservationsParcelles) {
+      (reservationsParcelles as any[]).forEach((r: any) => {
+        const amount = Number(r.deposit_amount || 0);
+        if (amount <= 0) return;
+        result.reservationsEncaissees += amount;
+        const date = new Date(r.reservation_date);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly.lotissements += amount;
+          monthly.total += amount;
+        }
+        const method = r.payment_method || "Non spécifié";
+        methodMap.set(method, (methodMap.get(method) || 0) + amount);
+        const parcelle = r.parcelle;
+        const lotName = parcelle?.lotissement?.name || "";
+        reservationDetails.push({
+          label: parcelle ? `${lotName} - Parcelle ${parcelle.plot_number}` : "Parcelle inconnue",
+          description: `${r.acquereur?.name || "Acquéreur inconnu"} (Réservation parcelle)`,
+          amount,
+          paidDate: r.reservation_date,
+          managerName: resolveManager(parcelle?.assigned_to),
+        });
+      });
+    }
+    // Group reservations by manager
+    reservationDetails.sort((a, b) => a.managerName.localeCompare(b.managerName) || a.label.localeCompare(b.label));
+    const resGroupMap = new Map<string, RevenueDetail[]>();
+    reservationDetails.forEach((d) => {
+      const group = resGroupMap.get(d.managerName) || [];
+      group.push(d);
+      resGroupMap.set(d.managerName, group);
+    });
+    result.reservationsByManager = Array.from(resGroupMap.entries()).map(([managerName, dets]) => ({
+      managerName,
+      details: dets,
+      total: dets.reduce((s, d) => s + d.amount, 0),
+    }));
+
+    // Process online rent payments (not linked to regular payments)
+    if (onlinePayments) {
+      (onlinePayments as any[]).forEach((p: any) => {
+        const amount = Number(p.amount || 0);
+        if (amount <= 0) return;
+        result.onlinePaymentsEncaisses += amount;
+        result.loyersEncaisses += amount;
+        const date = new Date(p.paid_at);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly.loyers += amount;
+          monthly.total += amount;
+        }
+        const method = p.payment_method || "Mobile Money";
+        methodMap.set(method, (methodMap.get(method) || 0) + amount);
+        const assignedTo = p.tenant?.assigned_to;
+        const tenantName = p.tenant?.name || "Locataire inconnu";
+        result.paidRentDetails.push({
+          tenantName,
+          months: [],
+          amount,
+          paidDate: p.paid_at?.split("T")[0] || "",
+          managerName: resolveManager(assignedTo),
+        });
+      });
+    }
+
     // Process expenses
     const expCategoryMap = new Map<string, number>();
     if (expenses) {
@@ -753,17 +845,18 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
 
     result.monthlyData = Array.from(monthlyMap.values());
 
-    const totalRevenue = result.loyersEncaisses + result.ventesEncaissees + result.achatsEncaisses + result.lotissementsEncaisses;
+    const totalRevenue = result.loyersEncaisses + result.ventesEncaissees + result.achatsEncaisses + result.lotissementsEncaisses + result.reservationsEncaissees;
 
     result.revenueByCategory = [
       { name: "Loyers", value: result.loyersEncaisses, color: "hsl(var(--primary))" },
       { name: "Ventes Immo.", value: result.ventesEncaissees, color: "hsl(var(--emerald))" },
       { name: "Achats Immo.", value: result.achatsEncaisses, color: "hsl(var(--sand))" },
       { name: "Lotissements", value: result.lotissementsEncaisses, color: "hsl(var(--navy-light))" },
+      { name: "Réservations", value: result.reservationsEncaissees, color: "hsl(var(--accent))" },
     ].filter((c) => c.value > 0);
 
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, periodFrom, periodTo]);
 }

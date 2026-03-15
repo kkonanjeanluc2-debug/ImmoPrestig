@@ -904,7 +904,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           monthly.total += amount;
         }
         const tenantName = c.tenant?.name || "Locataire inconnu";
-        const propertyName = c.tenant?.property?.name || "";
+        const propertyName = c.tenant?.property?.title || "";
         cautionDetails.push({
           label: tenantName,
           description: propertyName ? `${propertyName} (Caution)` : "Caution locative",

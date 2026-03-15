@@ -111,8 +111,24 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       const { data, error } = await supabase
         .from("echeances_ventes")
         .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_immobilieres(bien:biens_vente(assigned_to, title), acquereur:acquereurs(name))")
-        .gte("due_date", periodFrom.toISOString().split("T")[0])
-        .lte("due_date", periodTo.toISOString().split("T")[0]);
+        .or(
+          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+        );
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch ventes_immobilieres for down_payments (acomptes)
+  const { data: ventesImmobilieres } = useQuery({
+    queryKey: ["comptabilite-ventes-immo", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ventes_immobilieres")
+        .select("id, down_payment, sale_date, payment_type, total_price, bien:biens_vente(assigned_to, title), acquereur:acquereurs(name)")
+        .gte("sale_date", fromDate)
+        .lte("sale_date", toDate);
       if (error) throw error;
       return data;
     },
@@ -125,8 +141,24 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       const { data, error } = await supabase
         .from("echeances_achats")
         .select("amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
-        .gte("due_date", periodFrom.toISOString().split("T")[0])
-        .lte("due_date", periodTo.toISOString().split("T")[0]);
+        .or(
+          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+        );
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch achats_immobiliers for down_payments (acomptes)
+  const { data: achatsImmobiliers } = useQuery({
+    queryKey: ["comptabilite-achats-immo", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("achats_immobiliers")
+        .select("id, down_payment, sale_date, payment_type, sale_price, bien:biens_achat(assigned_to, title), acquereur:acquereurs(name)")
+        .gte("sale_date", fromDate)
+        .lte("sale_date", toDate);
       if (error) throw error;
       return data;
     },
@@ -139,8 +171,24 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       const { data, error } = await supabase
         .from("echeances_parcelles")
         .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_parcelles(sold_by, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name))")
-        .gte("due_date", periodFrom.toISOString().split("T")[0])
-        .lte("due_date", periodTo.toISOString().split("T")[0]);
+        .or(
+          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+        );
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch ventes_parcelles for down_payments (acomptes)
+  const { data: ventesParcelles } = useQuery({
+    queryKey: ["comptabilite-ventes-parcelles", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ventes_parcelles")
+        .select("id, down_payment, sale_date, payment_type, total_price, sold_by, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name)")
+        .gte("sale_date", fromDate)
+        .lte("sale_date", toDate);
       if (error) throw error;
       return data;
     },
@@ -176,9 +224,21 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         if (assignedTo) ids.add(assignedTo);
       });
     }
+    if (ventesImmobilieres) {
+      (ventesImmobilieres as any[]).forEach((v: any) => {
+        const assignedTo = v.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
     if (echeancesAchats) {
       (echeancesAchats as any[]).forEach((e: any) => {
         const assignedTo = e.achat?.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (achatsImmobiliers) {
+      (achatsImmobiliers as any[]).forEach((a: any) => {
+        const assignedTo = a.bien?.assigned_to;
         if (assignedTo) ids.add(assignedTo);
       });
     }
@@ -188,8 +248,14 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         if (assignedTo) ids.add(assignedTo);
       });
     }
+    if (ventesParcelles) {
+      (ventesParcelles as any[]).forEach((v: any) => {
+        const assignedTo = v.sold_by || v.parcelle?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
     return Array.from(ids);
-  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles]);
 
   const { data: managerProfiles } = useQuery({
     queryKey: ["comptabilite-manager-profiles", managerUserIds],
@@ -357,6 +423,51 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");
 
+    // Add down_payments (acomptes) from parent tables
+    const addDownPayments = (
+      entries: any[] | undefined,
+      category: "ventes" | "achats" | "lotissements",
+      paidField: "ventesEncaissees" | "achatsEncaisses" | "lotissementsEncaisses",
+      getPaymentType: (e: any) => string,
+      getTotalPrice: (e: any) => number,
+      getDownPayment: (e: any) => number,
+      getSaleDate: (e: any) => string
+    ) => {
+      if (!entries) return;
+      entries.forEach((e: any) => {
+        const paymentType = getPaymentType(e);
+        const downPayment = getDownPayment(e);
+        const totalPrice = getTotalPrice(e);
+        // For cash payments (comptant), use total_price if no down_payment
+        const amount = paymentType === "comptant"
+          ? (downPayment || totalPrice || 0)
+          : (downPayment || 0);
+        if (amount <= 0) return;
+
+        result[paidField] += amount;
+        const date = new Date(getSaleDate(e));
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly[category] += amount;
+          monthly.total += amount;
+        }
+      });
+    };
+
+    addDownPayments(
+      ventesImmobilieres as any, "ventes", "ventesEncaissees",
+      (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0), (v) => v.sale_date
+    );
+    addDownPayments(
+      achatsImmobiliers as any, "achats", "achatsEncaisses",
+      (a) => a.payment_type, (a) => Number(a.sale_price), (a) => Number(a.down_payment || 0), (a) => a.sale_date
+    );
+    addDownPayments(
+      ventesParcelles as any, "lotissements", "lotissementsEncaisses",
+      (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0), (v) => v.sale_date
+    );
+
     // Build profile map for manager name resolution
     const profileMap = new Map<string, string>();
     managerProfiles?.forEach((p) => {
@@ -367,21 +478,51 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       return profileMap.get(id) || "Gestionnaire";
     };
 
-    // Group ventes by manager
-    const groupByManager = (entries: any[] | undefined, getAssignedTo: (e: any) => string | null, getLabel: (e: any) => string, getDescription: (e: any) => string): ManagerRevenueGroup[] => {
-      if (!entries) return [];
+    // Group by manager helper - combines echeances + down_payments
+    const groupByManagerWithDownPayments = (
+      echeances: any[] | undefined,
+      parentEntries: any[] | undefined,
+      getEcheanceAssignedTo: (e: any) => string | null,
+      getEcheanceLabel: (e: any) => string,
+      getEcheanceDesc: (e: any) => string,
+      getParentAssignedTo: (e: any) => string | null,
+      getParentLabel: (e: any) => string,
+      getParentDesc: (e: any) => string,
+      getParentPaymentType: (e: any) => string,
+      getParentTotalPrice: (e: any) => number,
+      getParentDownPayment: (e: any) => number
+    ): ManagerRevenueGroup[] => {
       const details: RevenueDetail[] = [];
-      entries.forEach((e: any) => {
-        if (normalizeStatus(e.status) !== "paid") return;
-        const assignedTo = getAssignedTo(e);
-        details.push({
-          label: getLabel(e),
-          description: getDescription(e),
-          amount: Number(e.paid_amount) || Number(e.amount),
-          paidDate: e.paid_date || e.due_date,
-          managerName: resolveManager(assignedTo),
+      // Paid echeances
+      if (echeances) {
+        echeances.forEach((e: any) => {
+          if (normalizeStatus(e.status) !== "paid") return;
+          details.push({
+            label: getEcheanceLabel(e),
+            description: getEcheanceDesc(e) + " (Échéance)",
+            amount: Number(e.paid_amount) || Number(e.amount),
+            paidDate: e.paid_date || e.due_date,
+            managerName: resolveManager(getEcheanceAssignedTo(e)),
+          });
         });
-      });
+      }
+      // Down payments from parent
+      if (parentEntries) {
+        parentEntries.forEach((e: any) => {
+          const paymentType = getParentPaymentType(e);
+          const dp = getParentDownPayment(e);
+          const total = getParentTotalPrice(e);
+          const amount = paymentType === "comptant" ? (dp || total || 0) : (dp || 0);
+          if (amount <= 0) return;
+          details.push({
+            label: getParentLabel(e),
+            description: getParentDesc(e) + (paymentType === "comptant" ? " (Comptant)" : " (Acompte)"),
+            amount,
+            paidDate: e.sale_date,
+            managerName: resolveManager(getParentAssignedTo(e)),
+          });
+        });
+      }
       details.sort((a, b) => a.managerName.localeCompare(b.managerName) || a.label.localeCompare(b.label));
       const groupMap = new Map<string, RevenueDetail[]>();
       details.forEach((d) => {
@@ -396,22 +537,30 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       }));
     };
 
-    result.ventesByManager = groupByManager(
-      echeancesVentes as any,
+    result.ventesByManager = groupByManagerWithDownPayments(
+      echeancesVentes as any, ventesImmobilieres as any,
       (e) => e.vente?.bien?.assigned_to,
       (e) => e.vente?.bien?.title || "Bien inconnu",
-      (e) => e.vente?.acquereur?.name || "Acquéreur inconnu"
+      (e) => e.vente?.acquereur?.name || "Acquéreur inconnu",
+      (v) => v.bien?.assigned_to,
+      (v) => v.bien?.title || "Bien inconnu",
+      (v) => v.acquereur?.name || "Acquéreur inconnu",
+      (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0)
     );
 
-    result.achatsByManager = groupByManager(
-      echeancesAchats as any,
+    result.achatsByManager = groupByManagerWithDownPayments(
+      echeancesAchats as any, achatsImmobiliers as any,
       (e) => e.achat?.bien?.assigned_to,
       (e) => e.achat?.bien?.title || "Bien inconnu",
-      (e) => e.achat?.acquereur?.name || "Acquéreur inconnu"
+      (e) => e.achat?.acquereur?.name || "Acquéreur inconnu",
+      (a) => a.bien?.assigned_to,
+      (a) => a.bien?.title || "Bien inconnu",
+      (a) => a.acquereur?.name || "Acquéreur inconnu",
+      (a) => a.payment_type, (a) => Number(a.sale_price), (a) => Number(a.down_payment || 0)
     );
 
-    result.lotissementsByManager = groupByManager(
-      echeancesParcelles as any,
+    result.lotissementsByManager = groupByManagerWithDownPayments(
+      echeancesParcelles as any, ventesParcelles as any,
       (e) => e.vente?.sold_by || e.vente?.parcelle?.assigned_to,
       (e) => {
         const parcelle = e.vente?.parcelle;
@@ -421,7 +570,18 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         }
         return "Parcelle inconnue";
       },
-      (e) => e.vente?.acquereur?.name || "Acquéreur inconnu"
+      (e) => e.vente?.acquereur?.name || "Acquéreur inconnu",
+      (v) => v.sold_by || v.parcelle?.assigned_to,
+      (v) => {
+        const parcelle = v.parcelle;
+        if (parcelle) {
+          const lotName = parcelle.lotissement?.name || "";
+          return `${lotName} - Parcelle ${parcelle.plot_number}`;
+        }
+        return "Parcelle inconnue";
+      },
+      (v) => v.acquereur?.name || "Acquéreur inconnu",
+      (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0)
     );
 
     // Process expenses
@@ -464,5 +624,5 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles, expenses, managerProfiles, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, expenses, managerProfiles, periodFrom, periodTo]);
 }

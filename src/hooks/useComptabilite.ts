@@ -145,7 +145,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         .from("echeances_achats")
         .select("id, achat_id, amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
         .or(
-          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+          `and(status.eq.paye,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.eq.en_attente,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
       if (error) throw error;
       return data;

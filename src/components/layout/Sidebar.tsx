@@ -397,6 +397,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               {otherNavigation
                 .filter((item) => {
                   if (item.href === "/comptabilite") {
+                    if (userRole?.role === "locataire") return false;
                     return isComptaEnabled && (userRole?.role !== "gestionnaire" || hasPermission("can_view_comptabilite"));
                   }
                   return !item.featureKey || hasFeature(item.featureKey);

@@ -46,8 +46,59 @@ export function AddBienAchatDialog({ children }: Props) {
     lotArea: "",
     floors: "",
   });
+  const [imageUrl, setImageUrl] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
+    if (!file.type.startsWith('image/')) {
+      toast.error("Veuillez sélectionner une image valide");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dépasser 5 Mo");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `biens-achat/${fileName}`;
+
+      const { error } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(filePath);
+
+      setImageUrl(urlData.publicUrl);
+      setImagePreview(urlData.publicUrl);
+      toast.success("Image importée avec succès !");
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error("Erreur lors de l'import de l'image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    setImageUrl("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
 
   const handleSubmit = async () => {

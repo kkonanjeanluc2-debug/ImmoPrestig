@@ -558,26 +558,31 @@ const Pricing = () => {
 
           <div className="px-6 pb-6">
             {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-4 my-6">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={cn(
-                  "px-4 py-2 rounded-lg font-medium transition-colors",
-                  billingCycle === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                Mensuel
-              </button>
-              <button
-                onClick={() => setBillingCycle("yearly")}
-                className={cn(
-                  "px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
-                  billingCycle === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                Annuel
-                <Badge variant="secondary" className="text-xs">Économisez jusqu'à {yearlyDiscountPercent}%</Badge>
-              </button>
+            <div className="flex items-center justify-center gap-2 my-6 flex-wrap">
+              {(["monthly", "quarterly", "semi_annual", "yearly"] as const).map((cycle) => {
+                const labels: Record<string, string> = {
+                  monthly: "Mensuel",
+                  quarterly: "Trimestriel",
+                  semi_annual: "Semestriel",
+                  yearly: "Annuel",
+                };
+                return (
+                  <button
+                    key={cycle}
+                    onClick={() => setBillingCycle(cycle)}
+                    className={cn(
+                      "px-4 py-2 rounded-lg font-medium transition-colors text-sm",
+                      billingCycle === cycle ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {labels[cycle]}
+                    {cycle === "yearly" && (
+                      <Badge variant="secondary" className="ml-2 text-xs">-{yearlyDiscountPercent}%</Badge>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
             </div>
 
             {isLoading ? (

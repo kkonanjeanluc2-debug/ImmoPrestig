@@ -884,7 +884,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const key = `${date.getFullYear()}-${date.getMonth()}`;
         const monthly = monthlyMap.get(key);
         if (monthly) {
-          monthly.loyers += amount;
+          monthly.cautions += amount;
           monthly.total += amount;
         }
         const tenantName = c.tenant?.name || "Locataire inconnu";

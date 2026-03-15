@@ -292,13 +292,15 @@ export function AgencySubscriptionsManager() {
               <Label>Cycle de facturation</Label>
               <Select
                 value={selectedBillingCycle}
-                onValueChange={(v) => setSelectedBillingCycle(v as "monthly" | "yearly" | "lifetime")}
+                onValueChange={(v) => setSelectedBillingCycle(v as BillingCycle | "lifetime")}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="monthly">Mensuel</SelectItem>
+                  <SelectItem value="quarterly">Trimestriel (économisez ~5%)</SelectItem>
+                  <SelectItem value="semi_annual">Semestriel (économisez ~10%)</SelectItem>
                   <SelectItem value="yearly">Annuel (économisez ~17%)</SelectItem>
                   <SelectItem value="lifetime">Abonnement à vie</SelectItem>
                 </SelectContent>

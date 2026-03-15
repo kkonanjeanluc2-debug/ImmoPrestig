@@ -161,7 +161,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_achats")
-        .select("id, achat_id, amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
+        .select("id, achat_id, amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(is_agency_purchase, bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
         .or(
           `and(status.eq.paye,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.eq.en_attente,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );

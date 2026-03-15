@@ -145,7 +145,6 @@ export function SubscriptionSettings() {
                         ? "Abonnement à vie" 
                         : `Facturation ${billingCycleLabels[subscription.billing_cycle as BillingCycle]?.toLowerCase() || subscription.billing_cycle}`}
                     </p>
-                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

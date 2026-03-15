@@ -648,7 +648,6 @@ export function SubscriptionCheckoutDialog({
                 <p className="text-sm text-muted-foreground">
                   Facturation {billingCycleLabels[billingCycle]?.toLowerCase()}
                 </p>
-                </p>
               </div>
               <div className="text-right">
                 {proration ? (

@@ -349,6 +349,9 @@ const Comptabilite = () => {
                         <td className="py-2 px-3 text-right text-foreground">
                           {formatCFA(data.monthlyData.reduce((s, r) => s + r.lotissements, 0))}
                         </td>
+                        <td className="py-2 px-3 text-right text-foreground">
+                          {formatCFA(data.monthlyData.reduce((s, r) => s + r.cautions, 0))}
+                        </td>
                         <td className="py-2 px-3 text-right text-emerald">{formatCFA(totalRevenue)}</td>
                         <td className="py-2 px-3 text-right text-destructive">
                           {data.totalExpenses > 0 ? `-${formatCFA(data.totalExpenses)}` : formatCFA(0)}

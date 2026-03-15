@@ -233,6 +233,7 @@ export const useUpdatePayment = () => {
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["unpaid-cases"] });
       queryClient.invalidateQueries({ queryKey: ["unpaid-case-actions"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-payments"] });
     },
   });
 };

@@ -226,8 +226,10 @@ export function SubscriptionPlansManager() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Forfait</TableHead>
-                  <TableHead className="text-right">Prix mensuel</TableHead>
-                  <TableHead className="text-right">Prix annuel</TableHead>
+                  <TableHead className="text-right">Mensuel</TableHead>
+                  <TableHead className="text-right">Trimestriel</TableHead>
+                  <TableHead className="text-right">Semestriel</TableHead>
+                  <TableHead className="text-right">Annuel</TableHead>
                   <TableHead className="text-center">Limites</TableHead>
                   <TableHead className="text-center">Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>

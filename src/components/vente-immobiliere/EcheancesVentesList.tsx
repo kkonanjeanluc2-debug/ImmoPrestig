@@ -30,8 +30,12 @@ import { formatCurrency } from "@/lib/pdfFormat";
 import { format, differenceInDays, isPast, isToday, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
-import { Calendar, Check, Clock, AlertTriangle, Loader2, Mail, Search, X } from "lucide-react";
+import { Calendar, Check, Clock, AlertTriangle, Loader2, Mail, Search, X, Download } from "lucide-react";
 import { SendVenteReminderDialog } from "./SendVenteReminderDialog";
+import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
+import { useAgency } from "@/hooks/useAgency";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EcheancesVentesListProps {
   venteId?: string;
@@ -49,6 +53,56 @@ export function EcheancesVentesList({ venteId }: EcheancesVentesListProps) {
 
   const { data: echeances, isLoading } = useEcheancesVentes(venteId);
   const payEcheance = usePayEcheanceVente();
+  const { data: agency } = useAgency();
+  const { user } = useAuth();
+
+  const fetchUserName = async () => {
+    if (!user) return "Agent";
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    return data?.full_name || "Agent";
+  };
+
+  const handleDownloadReceipt = async (echeance: EcheanceVenteWithDetails, validatedByName?: string) => {
+    try {
+      const sameVente = echeances?.filter(e => e.vente_id === echeance.vente_id).sort((a, b) => a.due_date.localeCompare(b.due_date)) || [];
+      const echeanceNumber = sameVente.findIndex(e => e.id === echeance.id) + 1;
+
+      let name = validatedByName;
+      if (!name) {
+        name = await fetchUserName();
+      }
+
+      await generateEcheanceReceipt({
+        echeanceId: echeance.id,
+        propertyTitle: echeance.vente?.bien?.title || "Bien",
+        propertyAddress: echeance.vente?.bien?.address,
+        amount: Number(echeance.paid_amount || echeance.amount),
+        paidDate: echeance.paid_date || new Date().toISOString(),
+        dueDate: echeance.due_date,
+        paymentMethod: echeance.payment_method || "Espèces",
+        totalSalePrice: 0,
+        echeanceNumber,
+        totalEcheances: sameVente.length,
+        agencyName: agency?.name,
+        agencyPhone: agency?.phone || undefined,
+        agencyEmail: agency?.email,
+        agencyAddress: [agency?.address, agency?.city, agency?.country].filter(Boolean).join(", ") || undefined,
+        agencyLogoUrl: agency?.logo_url,
+        validatedBy: name,
+        acquereur: echeance.vente?.acquereur ? {
+          name: echeance.vente.acquereur.name,
+          phone: echeance.vente.acquereur.phone,
+        } : undefined,
+      });
+      toast.success("Reçu téléchargé");
+    } catch {
+      toast.error("Erreur lors de la génération du reçu");
+    }
+  };
 
   // Generate list of months from echéances
   const availableMonths = useMemo(() => {
@@ -115,15 +169,27 @@ export function EcheancesVentesList({ venteId }: EcheancesVentesListProps) {
     if (!selectedEcheance) return;
 
     try {
+      const userName = await fetchUserName();
+      const methodLabel = paymentMethod || "Espèces";
       await payEcheance.mutateAsync({
         id: selectedEcheance.id,
         paid_date: paidDate,
         paid_amount: parseFloat(paidAmount),
-        payment_method: paymentMethod || undefined,
+        payment_method: methodLabel,
         receipt_number: receiptNumber || undefined,
       });
       toast.success("Échéance marquée comme payée");
       setPayDialogOpen(false);
+
+      // Auto-download receipt
+      const updatedEcheance: EcheanceVenteWithDetails = {
+        ...selectedEcheance,
+        status: "paid",
+        paid_amount: parseFloat(paidAmount),
+        paid_date: paidDate,
+        payment_method: methodLabel,
+      };
+      await handleDownloadReceipt(updatedEcheance, userName);
     } catch (error) {
       toast.error("Erreur lors de l'enregistrement du paiement");
     }
@@ -315,9 +381,15 @@ export function EcheancesVentesList({ venteId }: EcheancesVentesListProps) {
                             </>
                           )}
                           {echeance.status === "paid" && echeance.paid_date && (
-                            <span className="text-sm text-muted-foreground">
-                              Payé le {format(new Date(echeance.paid_date), "dd/MM/yyyy")}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">
+                                Payé le {format(new Date(echeance.paid_date), "dd/MM/yyyy")}
+                              </span>
+                              <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(echeance)}>
+                                <Download className="h-4 w-4 mr-1" />
+                                Reçu
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </TableCell>

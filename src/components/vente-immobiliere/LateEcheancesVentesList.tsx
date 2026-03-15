@@ -30,8 +30,13 @@ import { formatCurrency } from "@/lib/pdfFormat";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
-import { Calendar, Check, AlertTriangle, Loader2, Mail, Search, X } from "lucide-react";
+import { Calendar, Check, AlertTriangle, Loader2, Mail, Search, X, Download } from "lucide-react";
 import { SendVenteReminderDialog } from "./SendVenteReminderDialog";
+import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
+import { useAgency } from "@/hooks/useAgency";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEcheancesVentes } from "@/hooks/useEcheancesVentes";
 
 export function LateEcheancesVentesList() {
   const [payDialogOpen, setPayDialogOpen] = useState(false);
@@ -44,7 +49,47 @@ export function LateEcheancesVentesList() {
 
   // Use dedicated server-filtered hook instead of loading all + client filter
   const { data: overdueEcheances = [], isLoading } = useOverdueEcheancesVentes();
+  const { data: allEcheances } = useEcheancesVentes();
   const payEcheance = usePayEcheanceVente();
+  const { data: agency } = useAgency();
+  const { user } = useAuth();
+
+  const fetchUserName = async () => {
+    if (!user) return "Agent";
+    const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+    return data?.full_name || "Agent";
+  };
+
+  const handleDownloadReceipt = async (echeance: EcheanceVenteWithDetails, validatedByName?: string) => {
+    try {
+      const sameVente = allEcheances?.filter(e => e.vente_id === echeance.vente_id).sort((a, b) => a.due_date.localeCompare(b.due_date)) || [];
+      const echeanceNumber = sameVente.findIndex(e => e.id === echeance.id) + 1;
+      const name = validatedByName || await fetchUserName();
+
+      await generateEcheanceReceipt({
+        echeanceId: echeance.id,
+        propertyTitle: echeance.vente?.bien?.title || "Bien",
+        propertyAddress: echeance.vente?.bien?.address,
+        amount: Number(echeance.paid_amount || echeance.amount),
+        paidDate: echeance.paid_date || new Date().toISOString(),
+        dueDate: echeance.due_date,
+        paymentMethod: echeance.payment_method || "Espèces",
+        totalSalePrice: 0,
+        echeanceNumber,
+        totalEcheances: sameVente.length,
+        agencyName: agency?.name,
+        agencyPhone: agency?.phone || undefined,
+        agencyEmail: agency?.email,
+        agencyAddress: [agency?.address, agency?.city, agency?.country].filter(Boolean).join(", ") || undefined,
+        agencyLogoUrl: agency?.logo_url,
+        validatedBy: name,
+        acquereur: echeance.vente?.acquereur ? { name: echeance.vente.acquereur.name, phone: echeance.vente.acquereur.phone } : undefined,
+      });
+      toast.success("Reçu téléchargé");
+    } catch {
+      toast.error("Erreur lors de la génération du reçu");
+    }
+  };
 
   // Only apply client-side search filter on already server-filtered data
   const lateEcheances = useMemo(() => {
@@ -82,15 +127,26 @@ export function LateEcheancesVentesList() {
     if (!selectedEcheance) return;
 
     try {
+      const userName = await fetchUserName();
+      const methodLabel = paymentMethod || "Espèces";
       await payEcheance.mutateAsync({
         id: selectedEcheance.id,
         paid_date: paidDate,
         paid_amount: parseFloat(paidAmount),
-        payment_method: paymentMethod || undefined,
+        payment_method: methodLabel,
         receipt_number: receiptNumber || undefined,
       });
       toast.success("Échéance marquée comme payée");
       setPayDialogOpen(false);
+
+      const updatedEcheance: EcheanceVenteWithDetails = {
+        ...selectedEcheance,
+        status: "paid",
+        paid_amount: parseFloat(paidAmount),
+        paid_date: paidDate,
+        payment_method: methodLabel,
+      };
+      await handleDownloadReceipt(updatedEcheance, userName);
     } catch (error) {
       toast.error("Erreur lors de l'enregistrement du paiement");
     }

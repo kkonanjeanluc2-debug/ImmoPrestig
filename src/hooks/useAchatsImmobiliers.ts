@@ -30,6 +30,8 @@ export interface AchatImmobilier {
   commission_percentage: number | null;
   commission_amount: number | null;
   notes: string | null;
+  is_agency_purchase: boolean;
+  post_purchase_action: string | null;
   created_at: string;
   biens_achat?: { title: string; address: string } | null;
   vendeurs?: AchatPartyInfo | null;

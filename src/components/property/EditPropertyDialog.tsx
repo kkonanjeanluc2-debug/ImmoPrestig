@@ -193,6 +193,30 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
                       Maison à porte multiple
                     </div>
                   </SelectItem>
+                  <SelectItem value="villa">
+                    <div className="flex items-center gap-2">
+                      <Home className="h-4 w-4" />
+                      Villa
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="bureau">
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      Bureau
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="commerce">
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      Commerce
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="immeuble">
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      Immeuble
+                    </div>
+                  </SelectItem>
                   <SelectItem value="meuble">
                     <div className="flex items-center gap-2">
                       <Building className="h-4 w-4" />

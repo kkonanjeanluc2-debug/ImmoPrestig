@@ -71,7 +71,10 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
     }
   }, [messages]);
 
-  // Don't render at all if feature not available
+  // Don't render for gestionnaires or if feature not available
+  if (userRole?.role === "gestionnaire") {
+    return null;
+  }
   if (!featureLoading && !hasFeature("assistant_ia")) {
     return null;
   }

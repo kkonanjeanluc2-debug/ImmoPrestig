@@ -191,7 +191,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("achats_immobiliers")
-        .select("id, down_payment, sale_date, payment_type, sale_price, bien:biens_achat(assigned_to, title), acquereur:acquereurs(name)")
+        .select("id, down_payment, sale_date, payment_type, sale_price, is_agency_purchase, bien:biens_achat(assigned_to, title), acquereur:acquereurs(name)")
         .gte("sale_date", fromDate)
         .lte("sale_date", toDate);
       if (error) throw error;

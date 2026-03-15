@@ -23,6 +23,8 @@ interface SubscriptionWithAgency {
   plan: {
     name: string;
     price_monthly: number;
+    price_quarterly: number;
+    price_semi_annual: number;
     price_yearly: number;
     currency: string;
   };

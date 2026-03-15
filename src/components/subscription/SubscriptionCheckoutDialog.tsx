@@ -22,7 +22,7 @@ interface SubscriptionCheckoutDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   plan: SubscriptionPlan | null;
-  billingCycle: "monthly" | "yearly";
+  billingCycle: BillingCycle;
 }
 
 // Payment methods - KKiaPay & GeniusPay

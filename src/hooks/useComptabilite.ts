@@ -74,6 +74,7 @@ export interface MonthlyEntry {
   ventes: number;
   achats: number;
   lotissements: number;
+  cautions: number;
   depenses: number;
   total: number;
   benefice: number;

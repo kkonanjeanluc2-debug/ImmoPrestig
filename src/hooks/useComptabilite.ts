@@ -618,7 +618,26 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       }));
     }
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
-    processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
+    // Split achats: intermediation (non-agency) → revenue, agency purchases → expenses
+    const echeancesAchatsIntermediation = (echeancesAchats as any[] || []).filter((e: any) => !e.achat?.is_agency_purchase);
+    const echeancesAchatsAgence = (echeancesAchats as any[] || []).filter((e: any) => e.achat?.is_agency_purchase);
+    processEntries(echeancesAchatsIntermediation, "achats", "achatsEncaisses", "achatsEnAttente");
+    // Agency purchase échéances → add to expenses (sorties)
+    echeancesAchatsAgence.forEach((e: any) => {
+      const amount = Number(e.amount);
+      const status = normalizeStatus(e.status);
+      if (status === "paid") {
+        result.totalExpenses += amount;
+        const date = new Date(e.paid_date || e.due_date);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly.depenses += amount;
+        }
+        const method = e.payment_method || "Non spécifié";
+        methodMap.set(method, (methodMap.get(method) || 0) + amount);
+      }
+    });
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");
 
     // Override "en attente" totals with ALL pending échéances (no period filter)

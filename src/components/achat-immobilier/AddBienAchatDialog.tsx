@@ -243,7 +243,6 @@ export function AddBienAchatDialog({ children }: Props) {
               <p className="text-xs text-muted-foreground">Aucun vendeur enregistré. Ajoutez-en depuis l'onglet Vendeurs.</p>
             )}
           </div>
-          </div>
 
           <div className="space-y-2">
             <Label>Photo du bien</Label>

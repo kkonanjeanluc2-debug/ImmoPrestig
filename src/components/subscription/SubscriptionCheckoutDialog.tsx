@@ -665,9 +665,9 @@ export function SubscriptionCheckoutDialog({
                     {formatPrice(price)} <span className="text-sm font-normal">{plan.currency}</span>
                   </p>
                 )}
-                {billingCycle === "yearly" && !proration && (
+                {billingCycle !== "monthly" && !proration && (
                   <Badge variant="secondary" className="mt-1">
-                    Économisez {Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)}%
+                    Économisez {getSavingsPercent(plan, billingCycle)}%
                   </Badge>
                 )}
               </div>

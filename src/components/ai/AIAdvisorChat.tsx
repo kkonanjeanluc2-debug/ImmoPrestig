@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 type Message = { role: "user" | "assistant"; content: string };
 type AdvisorContext = "unpaid" | "sales" | "parcels" | "all";
@@ -62,6 +63,7 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { hasFeature, isLoading: featureLoading } = useFeatureAccess();
+  const { data: userRole } = useCurrentUserRole();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -69,7 +71,10 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
     }
   }, [messages]);
 
-  // Don't render at all if feature not available
+  // Don't render for gestionnaires or if feature not available
+  if (userRole?.role === "gestionnaire") {
+    return null;
+  }
   if (!featureLoading && !hasFeature("assistant_ia")) {
     return null;
   }

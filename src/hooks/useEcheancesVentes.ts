@@ -212,6 +212,8 @@ export const usePayEcheanceVente = () => {
       queryClient.invalidateQueries({ queryKey: ["echeances-ventes"] });
       queryClient.invalidateQueries({ queryKey: ["ventes-immobilieres"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-ventes"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-ventes-immo"] });
     },
   });
 };

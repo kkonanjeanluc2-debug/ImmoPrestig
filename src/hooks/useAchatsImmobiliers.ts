@@ -68,6 +68,7 @@ export interface AchatImmobilierInput {
   commission_percentage?: number;
   commission_amount?: number;
   notes?: string;
+  is_agency_purchase?: boolean;
 }
 
 export function useCreateAchatImmobilier() {

@@ -163,7 +163,17 @@ export function BiensAchatList() {
           {filteredBiens.map((bien) => (
             <Card key={bien.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
+                {bien.image_url && (
+                  <div className="mb-3 rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={bien.image_url}
+                      alt={`Photo du bien ${bien.title}`}
+                      loading="lazy"
+                      className="w-full h-40 object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold truncate flex-1">{bien.title}</h3>
                     <div className="flex items-center gap-1 ml-2 shrink-0">
                       {canEdit && (

@@ -408,9 +408,10 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
       doc.text(formatAmountForPDF(data.monthlyData.reduce((s, r) => s + r.ventes, 0)), cols[2], y + 6);
       doc.text(formatAmountForPDF(data.monthlyData.reduce((s, r) => s + r.achats, 0)), cols[3], y + 6);
       doc.text(formatAmountForPDF(data.monthlyData.reduce((s, r) => s + r.lotissements, 0)), cols[4], y + 6);
-      doc.text(formatAmountForPDF(totalEntrees), cols[5], y + 6);
-      doc.text(formatAmountForPDF(data.totalExpenses), cols[6], y + 6);
-      doc.text(formatAmountForPDF(benefice), cols[7], y + 6);
+      doc.text(formatAmountForPDF(data.monthlyData.reduce((s, r) => s + r.cautions, 0)), cols[5], y + 6);
+      doc.text(formatAmountForPDF(totalEntrees), cols[6], y + 6);
+      doc.text(formatAmountForPDF(data.totalExpenses), cols[7], y + 6);
+      doc.text(formatAmountForPDF(benefice), cols[8], y + 6);
       y += 20;
 
       // Solde cumulé box

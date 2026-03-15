@@ -57,6 +57,10 @@ export interface ComptabiliteData {
   paidRentDetails: PaidRentDetail[];
   // Grouped by manager
   paidRentsByManager: ManagerRentGroup[];
+  // Other revenue categories grouped by manager
+  ventesByManager: ManagerRevenueGroup[];
+  achatsByManager: ManagerRevenueGroup[];
+  lotissementsByManager: ManagerRevenueGroup[];
 }
 
 export interface MonthlyEntry {

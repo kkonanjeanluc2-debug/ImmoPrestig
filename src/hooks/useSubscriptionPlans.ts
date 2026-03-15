@@ -8,6 +8,8 @@ export interface SubscriptionPlan {
   name: string;
   description: string | null;
   price_monthly: number;
+  price_quarterly: number;
+  price_semi_annual: number;
   price_yearly: number;
   currency: string;
   max_properties: number | null;

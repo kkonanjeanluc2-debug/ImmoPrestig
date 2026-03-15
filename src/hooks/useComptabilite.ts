@@ -1009,6 +1009,24 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       });
     }
 
+    // Add agency purchases to expense categories
+    let agencyPurchaseTotal = 0;
+    echeancesAchatsAgence.forEach((e: any) => {
+      if (normalizeStatus(e.status) === "paid") {
+        agencyPurchaseTotal += Number(e.amount);
+      }
+    });
+    achatsAgence.forEach((a: any) => {
+      const paymentType = a.payment_type;
+      const dp = Number(a.down_payment || 0);
+      const total = Number(a.sale_price || 0);
+      const amount = paymentType === "comptant" ? (dp || total || 0) : (dp || 0);
+      if (amount > 0) agencyPurchaseTotal += amount;
+    });
+    if (agencyPurchaseTotal > 0) {
+      expCategoryMap.set("achat_agence", (expCategoryMap.get("achat_agence") || 0) + agencyPurchaseTotal);
+    }
+
     // Calculate benefice per month
     monthlyMap.forEach((m) => {
       m.benefice = m.total - m.depenses;

@@ -107,11 +107,20 @@ export function SubscriptionPlansManager() {
 
   const openEditDialog = (plan: SubscriptionPlan) => {
     setEditingPlan(plan);
+    // Calculate discount percentages from stored prices
+    const qDiscount = plan.price_monthly > 0 ? Math.round((1 - plan.price_quarterly / (plan.price_monthly * 3)) * 100) : 5;
+    const sDiscount = plan.price_monthly > 0 ? Math.round((1 - plan.price_semi_annual / (plan.price_monthly * 6)) * 100) : 10;
+    const yDiscount = plan.price_monthly > 0 ? Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100) : 17;
     setFormData({
       name: plan.name,
       description: plan.description || "",
       price_monthly: plan.price_monthly,
+      price_quarterly: plan.price_quarterly,
+      price_semi_annual: plan.price_semi_annual,
       price_yearly: plan.price_yearly,
+      quarterly_discount: Math.max(0, qDiscount),
+      semi_annual_discount: Math.max(0, sDiscount),
+      yearly_discount: Math.max(0, yDiscount),
       max_properties: plan.max_properties,
       max_tenants: plan.max_tenants,
       max_users: plan.max_users,

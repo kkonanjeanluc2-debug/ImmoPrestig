@@ -223,6 +223,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       byPaymentMethod: [],
       paidRentDetails: [],
       paidRentsByManager: [],
+      ventesByManager: [],
+      achatsByManager: [],
+      lotissementsByManager: [],
     };
 
     // Build monthly buckets

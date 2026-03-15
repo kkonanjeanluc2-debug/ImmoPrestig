@@ -38,6 +38,7 @@ export interface ComptabiliteData {
   achatsEncaisses: number;
   lotissementsEncaisses: number;
   reservationsEncaissees: number;
+  cautionsEncaissees: number;
   onlinePaymentsEncaisses: number;
   // Pending
   loyersEnAttente: number;
@@ -64,6 +65,7 @@ export interface ComptabiliteData {
   achatsByManager: ManagerRevenueGroup[];
   lotissementsByManager: ManagerRevenueGroup[];
   reservationsByManager: ManagerRevenueGroup[];
+  cautionsByManager: ManagerRevenueGroup[];
 }
 
 export interface MonthlyEntry {

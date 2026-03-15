@@ -192,10 +192,10 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
 
       const { error } = await supabase.from("properties").insert({
         user_id: user!.id,
-        name: bien.title,
+        title: bien.title,
         type: bien.property_type === "terrain" ? "terrain" : (bien.property_type === "immeuble" ? "immeuble" : "maison"),
+        property_type: bien.property_type,
         address: bien.address,
-        city: bien.city || "",
         price: 0,
         description: bien.description || `Bien acquis le ${format(new Date(achat.sale_date), "dd/MM/yyyy")} et mis en location.`,
         image_url: bien.image_url,

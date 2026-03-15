@@ -274,7 +274,7 @@ export function EcheancesAchatsList() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Bien</TableHead>
-                    <TableHead>Vendeur</TableHead>
+                    <TableHead>Acquéreur</TableHead>
                     <TableHead>Date d'échéance</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Statut</TableHead>
@@ -288,8 +288,8 @@ export function EcheancesAchatsList() {
                         <p className="font-medium">{ech.achats_immobiliers?.biens_achat?.title || "Bien"}</p>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium">{ech.achats_immobiliers?.vendeurs?.name || "-"}</p>
-                        <p className="text-sm text-muted-foreground">{ech.achats_immobiliers?.vendeurs?.phone || ""}</p>
+                        <p className="font-medium">{ech.achats_immobiliers?.acquereurs?.name || "-"}</p>
+                        <p className="text-sm text-muted-foreground">{ech.achats_immobiliers?.acquereurs?.phone || ""}</p>
                       </TableCell>
                       <TableCell>
                         {format(new Date(ech.due_date), "dd MMM yyyy", { locale: fr })}

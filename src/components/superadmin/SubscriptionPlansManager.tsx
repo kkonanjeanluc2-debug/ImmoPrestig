@@ -254,10 +254,16 @@ export function SubscriptionPlansManager() {
                         </p>
                       )}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right font-medium text-sm">
                       {formatPrice(plan.price_monthly)} FCFA
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right font-medium text-sm">
+                      {formatPrice(plan.price_quarterly)} FCFA
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-sm">
+                      {formatPrice(plan.price_semi_annual)} FCFA
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-sm">
                       {formatPrice(plan.price_yearly)} FCFA
                     </TableCell>
                     <TableCell>

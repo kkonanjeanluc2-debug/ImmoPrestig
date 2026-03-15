@@ -225,7 +225,7 @@ export function SubscriptionCheckoutDialog({
 
   if (!plan) return null;
 
-  const price = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+  const price = getPriceForCycle(plan, billingCycle);
   const isFree = price === 0;
   
   // Detect if this is a plan change (upgrade/downgrade) or renewal

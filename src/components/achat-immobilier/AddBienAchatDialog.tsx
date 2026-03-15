@@ -120,9 +120,13 @@ export function AddBienAchatDialog({ children }: Props) {
       latitude: form.latitude ? Number(form.latitude) : undefined,
       longitude: form.longitude ? Number(form.longitude) : undefined,
       features: Object.keys(features).length > 0 ? features : undefined,
+      image_url: imageUrl || undefined,
     });
     setOpen(false);
     setForm({ title: "", property_type: "appartement", address: "", city: "", price: "", area: "", bedrooms: "", bathrooms: "", description: "", vendeur_id: "", latitude: "", longitude: "", lotArea: "", floors: "" });
+    setImageUrl("");
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const isValid = form.title && form.address && form.price;

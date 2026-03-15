@@ -162,8 +162,8 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-[425px]">
           <div className="flex flex-col items-center text-center py-6 space-y-4">
-            <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center">
-              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+            <div className="h-16 w-16 rounded-full bg-emerald/10 flex items-center justify-center">
+              <CheckCircle2 className="h-8 w-8 text-emerald" />
             </div>
             <div>
               <h3 className="text-lg font-semibold">Paiement enregistré</h3>

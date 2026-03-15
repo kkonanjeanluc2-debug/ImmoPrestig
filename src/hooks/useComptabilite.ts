@@ -123,6 +123,21 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  // Fetch ALL pending échéances (no period filter) for "en attente" totals
+  const { data: allPendingVentes } = useQuery({
+    queryKey: ["comptabilite-ventes-pending-all", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_ventes")
+        .select("amount, status")
+        .eq("status", "pending");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Fetch ventes_immobilieres for down_payments (acomptes)
   const { data: ventesImmobilieres } = useQuery({
     queryKey: ["comptabilite-ventes-immo", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
@@ -153,6 +168,20 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  const { data: allPendingAchats } = useQuery({
+    queryKey: ["comptabilite-achats-pending-all", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_achats")
+        .select("amount, status")
+        .eq("status", "en_attente");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Fetch achats_immobiliers for down_payments (acomptes)
   const { data: achatsImmobiliers } = useQuery({
     queryKey: ["comptabilite-achats-immo", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
@@ -181,6 +210,20 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       return data;
     },
     enabled: !!user,
+  });
+
+  const { data: allPendingParcelles } = useQuery({
+    queryKey: ["comptabilite-parcelles-pending-all", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_parcelles")
+        .select("amount, status")
+        .eq("status", "pending");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Lightweight queries for échéance numbering (ALL échéances, no period filter)
@@ -539,6 +582,18 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");
 
+    // Override "en attente" totals with ALL pending échéances (no period filter)
+    // This matches the loyers behavior where virtual payments show all upcoming dues
+    if (allPendingVentes) {
+      result.ventesEnAttente = allPendingVentes.reduce((sum, e) => sum + Number(e.amount), 0);
+    }
+    if (allPendingAchats) {
+      result.achatsEnAttente = allPendingAchats.reduce((sum, e) => sum + Number(e.amount), 0);
+    }
+    if (allPendingParcelles) {
+      result.lotissementsEnAttente = allPendingParcelles.reduce((sum, e) => sum + Number(e.amount), 0);
+    }
+
     // Add down_payments (acomptes) from parent tables
     const addDownPayments = (
       entries: any[] | undefined,
@@ -858,5 +913,5 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, allPendingVentes, allPendingAchats, allPendingParcelles, periodFrom, periodTo]);
 }

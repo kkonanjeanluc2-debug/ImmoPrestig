@@ -224,9 +224,21 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         if (assignedTo) ids.add(assignedTo);
       });
     }
+    if (ventesImmobilieres) {
+      (ventesImmobilieres as any[]).forEach((v: any) => {
+        const assignedTo = v.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
     if (echeancesAchats) {
       (echeancesAchats as any[]).forEach((e: any) => {
         const assignedTo = e.achat?.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (achatsImmobiliers) {
+      (achatsImmobiliers as any[]).forEach((a: any) => {
+        const assignedTo = a.bien?.assigned_to;
         if (assignedTo) ids.add(assignedTo);
       });
     }
@@ -236,8 +248,14 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         if (assignedTo) ids.add(assignedTo);
       });
     }
+    if (ventesParcelles) {
+      (ventesParcelles as any[]).forEach((v: any) => {
+        const assignedTo = v.sold_by || v.parcelle?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
     return Array.from(ids);
-  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles]);
 
   const { data: managerProfiles } = useQuery({
     queryKey: ["comptabilite-manager-profiles", managerUserIds],

@@ -147,6 +147,8 @@ export function SubscriptionPlansManager() {
       name: formData.name,
       description: formData.description || null,
       price_monthly: formData.price_monthly,
+      price_quarterly: formData.price_quarterly,
+      price_semi_annual: formData.price_semi_annual,
       price_yearly: formData.price_yearly,
       currency: "XOF",
       max_properties: formData.max_properties,

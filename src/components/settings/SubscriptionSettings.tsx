@@ -96,7 +96,7 @@ export function SubscriptionSettings() {
     return format(new Date(dateString), "dd MMM yyyy à HH:mm", { locale: fr });
   };
 
-  const handleUpgrade = (plan: SubscriptionPlan, cycle: "monthly" | "yearly") => {
+  const handleUpgrade = (plan: SubscriptionPlan, cycle: BillingCycle) => {
     setSelectedPlan(plan);
     setBillingCycle(cycle);
     setCheckoutOpen(true);

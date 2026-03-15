@@ -134,7 +134,7 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
         agencyEmail: agency?.email,
         agencyAddress: agency?.address || undefined,
         agencyLogoUrl: agency?.logo_url,
-        validatedBy: profile?.full_name || undefined,
+        validatedBy: userProfile?.full_name || undefined,
         acquereur: echeance.vente?.acquereur ? {
           name: echeance.vente.acquereur.name,
           phone: echeance.vente.acquereur.phone,

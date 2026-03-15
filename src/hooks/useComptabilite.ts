@@ -628,7 +628,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     );
 
     result.lotissementsByManager = groupByManagerWithDownPayments(
-      echeancesParcelles as any, ventesParcelles as any,
+      echeancesParcelles as any, ventesParcelles as any, parcellesNumMap,
       (e) => e.vente?.sold_by || e.vente?.parcelle?.assigned_to,
       (e) => {
         const parcelle = e.vente?.parcelle;

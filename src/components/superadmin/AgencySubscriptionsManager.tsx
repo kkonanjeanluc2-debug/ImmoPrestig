@@ -207,9 +207,7 @@ export function AgencySubscriptionsManager() {
                           <Badge variant={subscription.billing_cycle === "lifetime" ? "default" : "outline"}>
                             {subscription.billing_cycle === "lifetime"
                               ? "À vie"
-                              : subscription.billing_cycle === "yearly"
-                                ? "Annuel"
-                                : "Mensuel"}
+                              : billingCycleLabels[subscription.billing_cycle as BillingCycle] || subscription.billing_cycle}
                           </Badge>
                         ) : (
                           "-"

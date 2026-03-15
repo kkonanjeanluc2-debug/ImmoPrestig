@@ -867,10 +867,23 @@ const Pricing = () => {
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {activePlans.map((plan) => {
-                    const calculatedYearlyPrice = Math.round(
-                      plan.price_monthly * 12 * (1 - yearlyDiscountPercent / 100),
-                    );
-                    const price = billingCycle === "monthly" ? plan.price_monthly : calculatedYearlyPrice;
+                    const priceMap: Record<string, number> = {
+                      monthly: plan.price_monthly,
+                      quarterly: plan.price_quarterly,
+                      semi_annual: plan.price_semi_annual,
+                      yearly: plan.price_yearly,
+                    };
+                    const price = priceMap[billingCycle] ?? plan.price_monthly;
+                    const periodLabel: Record<string, string> = {
+                      monthly: "par mois",
+                      quarterly: "par trimestre",
+                      semi_annual: "par semestre",
+                      yearly: "par an",
+                    };
+                    const months: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
+                    const savingsPercent = billingCycle !== "monthly" && plan.price_monthly > 0
+                      ? Math.round((1 - price / (plan.price_monthly * months[billingCycle])) * 100)
+                      : 0;
                     const features = Array.isArray(plan.features) ? plan.features : [];
 
                     return (
@@ -905,11 +918,11 @@ const Pricing = () => {
                               <span className="text-sm text-muted-foreground">{plan.currency}</span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {billingCycle === "monthly" ? "par mois" : "par an"}
+                              {periodLabel[billingCycle]}
                             </p>
-                            {billingCycle === "yearly" && plan.price_monthly > 0 && (
+                            {savingsPercent > 0 && (
                               <Badge variant="secondary" className="mt-1 text-xs">
-                                Économisez {yearlyDiscountPercent}%
+                                Économisez {savingsPercent}%
                               </Badge>
                             )}
                           </div>

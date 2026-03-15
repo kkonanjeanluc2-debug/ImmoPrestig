@@ -582,6 +582,18 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");
 
+    // Override "en attente" totals with ALL pending échéances (no period filter)
+    // This matches the loyers behavior where virtual payments show all upcoming dues
+    if (allPendingVentes) {
+      result.ventesEnAttente = allPendingVentes.reduce((sum, e) => sum + Number(e.amount), 0);
+    }
+    if (allPendingAchats) {
+      result.achatsEnAttente = allPendingAchats.reduce((sum, e) => sum + Number(e.amount), 0);
+    }
+    if (allPendingParcelles) {
+      result.lotissementsEnAttente = allPendingParcelles.reduce((sum, e) => sum + Number(e.amount), 0);
+    }
+
     // Add down_payments (acomptes) from parent tables
     const addDownPayments = (
       entries: any[] | undefined,

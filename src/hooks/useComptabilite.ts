@@ -913,5 +913,5 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, allPendingVentes, allPendingAchats, allPendingParcelles, periodFrom, periodTo]);
 }

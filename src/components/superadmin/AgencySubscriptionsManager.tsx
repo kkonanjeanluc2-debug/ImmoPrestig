@@ -62,7 +62,7 @@ export function AgencySubscriptionsManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<AgencyWithProfile | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
-  const [selectedBillingCycle, setSelectedBillingCycle] = useState<"monthly" | "yearly" | "lifetime">("monthly");
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle | "lifetime">("monthly");
 
   const isLoading = agenciesLoading || plansLoading || subscriptionsLoading;
 

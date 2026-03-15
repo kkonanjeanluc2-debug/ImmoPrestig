@@ -79,7 +79,7 @@ export function AgencySubscriptionsManager() {
     const currentSub = getAgencySubscription(agency.id);
     setSelectedAgency(agency);
     setSelectedPlanId(currentSub?.plan_id || "");
-    setSelectedBillingCycle(currentSub?.billing_cycle || "monthly");
+    setSelectedBillingCycle((currentSub?.billing_cycle || "monthly") as BillingCycle | "lifetime");
     setIsDialogOpen(true);
   };
 

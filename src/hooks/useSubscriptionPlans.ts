@@ -181,7 +181,7 @@ export function useAssignSubscription() {
     }: {
       agency_id: string;
       plan_id: string;
-      billing_cycle?: "monthly" | "yearly" | "lifetime";
+      billing_cycle?: string;
       ends_at?: string | null;
     }) => {
       // Upsert to handle existing subscriptions

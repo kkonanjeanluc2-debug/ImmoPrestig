@@ -30,8 +30,12 @@ import { formatCurrency } from "@/lib/pdfFormat";
 import { format, differenceInDays, isPast, isToday, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
-import { Calendar, Check, Clock, AlertTriangle, Loader2, Mail, Search, X } from "lucide-react";
+import { Calendar, Check, Clock, AlertTriangle, Loader2, Mail, Search, X, Download } from "lucide-react";
 import { SendVenteReminderDialog } from "./SendVenteReminderDialog";
+import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
+import { useAgency } from "@/hooks/useAgency";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EcheancesVentesListProps {
   venteId?: string;

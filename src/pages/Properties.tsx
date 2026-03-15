@@ -141,7 +141,7 @@ const Properties = () => {
               columns={[
                 { key: 'title', label: 'Titre' },
                 { key: 'address', label: 'Adresse' },
-                { key: 'property_type', label: 'Type', format: (v) => v === 'maison' ? 'Maison' : v === 'appartement' ? 'Appartement' : v === 'meuble' ? 'Location meublée' : 'Terrain' },
+                { key: 'property_type', label: 'Type', format: (v) => ({ maison: 'Maison', appartement: 'Appartement', villa: 'Villa', bureau: 'Bureau', commerce: 'Commerce', immeuble: 'Immeuble', meuble: 'Location meublée' }[v as string] || v) },
                 { key: 'type', label: 'Mode', format: (v) => v === 'location' ? 'Location' : 'Vente' },
                 { key: 'price', label: 'Prix (F CFA)', format: (v) => Number(v).toString() },
                 { key: 'area', label: 'Surface (m²)', format: (v) => v ? Number(v).toString() : '' },

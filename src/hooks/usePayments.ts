@@ -55,7 +55,7 @@ export const usePayments = () => {
       const { data: activeContracts, error: contractsError } = await supabase
         .from("contracts")
         .select(`
-          id, rent_amount, tenant_id, property_id, unit_id,
+          id, user_id, rent_amount, tenant_id, property_id, unit_id,
           tenant:tenants(*, property:properties(*))
         `)
         .eq("status", "active")

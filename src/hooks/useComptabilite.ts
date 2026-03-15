@@ -212,6 +212,20 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  const { data: allPendingParcelles } = useQuery({
+    queryKey: ["comptabilite-parcelles-pending-all", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_parcelles")
+        .select("amount, status")
+        .eq("status", "pending");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Lightweight queries for échéance numbering (ALL échéances, no period filter)
   const { data: allEcheancesVentesNum } = useQuery({
     queryKey: ["comptabilite-echeances-ventes-numbering", user?.id],

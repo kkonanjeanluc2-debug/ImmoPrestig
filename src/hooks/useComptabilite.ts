@@ -74,6 +74,7 @@ export interface MonthlyEntry {
   ventes: number;
   achats: number;
   lotissements: number;
+  cautions: number;
   depenses: number;
   total: number;
   benefice: number;
@@ -492,6 +493,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         ventes: 0,
         achats: 0,
         lotissements: 0,
+        cautions: 0,
         depenses: 0,
         total: 0,
         benefice: 0,
@@ -882,7 +884,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const key = `${date.getFullYear()}-${date.getMonth()}`;
         const monthly = monthlyMap.get(key);
         if (monthly) {
-          monthly.loyers += amount;
+          monthly.cautions += amount;
           monthly.total += amount;
         }
         const tenantName = c.tenant?.name || "Locataire inconnu";

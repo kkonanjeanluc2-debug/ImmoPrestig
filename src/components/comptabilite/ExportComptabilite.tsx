@@ -349,20 +349,21 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
       let y = await addPDFHeader(doc, agency, "FLUX DE TRÉSORERIE", `Période : ${periodLabel}`);
 
       // Table header
-      const cols = [18, 38, 60, 80, 100, 122, 145, 165];
+      const cols = [18, 36, 54, 72, 90, 108, 126, 145, 165];
       doc.setFillColor(...primaryColor);
       doc.rect(15, y, pageWidth - 30, 8, "F");
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(6.5);
+      doc.setFontSize(6);
       doc.setFont("helvetica", "bold");
       doc.text("Mois", cols[0], y + 5.5);
       doc.text("Loyers", cols[1], y + 5.5);
       doc.text("Ventes", cols[2], y + 5.5);
       doc.text("Achats", cols[3], y + 5.5);
       doc.text("Lotissem.", cols[4], y + 5.5);
-      doc.text("Entrées", cols[5], y + 5.5);
-      doc.text("Dépenses", cols[6], y + 5.5);
-      doc.text("Flux Net", cols[7], y + 5.5);
+      doc.text("Cautions", cols[5], y + 5.5);
+      doc.text("Entrées", cols[6], y + 5.5);
+      doc.text("Dépenses", cols[7], y + 5.5);
+      doc.text("Flux Net", cols[8], y + 5.5);
       y += 8;
 
       doc.setTextColor(...textColor);
@@ -371,7 +372,7 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
 
       let cumul = 0;
       data.monthlyData.forEach((m, i) => {
-        const entrees = m.loyers + m.ventes + m.achats + m.lotissements;
+        const entrees = m.loyers + m.ventes + m.achats + m.lotissements + m.cautions;
         const flux = entrees - m.depenses;
         cumul += flux;
 
@@ -385,12 +386,13 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
         doc.text(formatAmountForPDF(m.ventes), cols[2], y + 6);
         doc.text(formatAmountForPDF(m.achats), cols[3], y + 6);
         doc.text(formatAmountForPDF(m.lotissements), cols[4], y + 6);
-        doc.text(formatAmountForPDF(entrees), cols[5], y + 6);
+        doc.text(formatAmountForPDF(m.cautions), cols[5], y + 6);
+        doc.text(formatAmountForPDF(entrees), cols[6], y + 6);
         doc.setTextColor(...dangerColor);
-        doc.text(formatAmountForPDF(m.depenses), cols[6], y + 6);
+        doc.text(formatAmountForPDF(m.depenses), cols[7], y + 6);
         if (flux >= 0) doc.setTextColor(...successColor);
         else doc.setTextColor(...dangerColor);
-        doc.text(formatAmountForPDF(flux), cols[7], y + 6);
+        doc.text(formatAmountForPDF(flux), cols[8], y + 6);
         y += 9;
       });
 
@@ -406,9 +408,10 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
       doc.text(formatAmountForPDF(data.monthlyData.reduce((s, r) => s + r.ventes, 0)), cols[2], y + 6);
       doc.text(formatAmountForPDF(data.monthlyData.reduce((s, r) => s + r.achats, 0)), cols[3], y + 6);
       doc.text(formatAmountForPDF(data.monthlyData.reduce((s, r) => s + r.lotissements, 0)), cols[4], y + 6);
-      doc.text(formatAmountForPDF(totalEntrees), cols[5], y + 6);
-      doc.text(formatAmountForPDF(data.totalExpenses), cols[6], y + 6);
-      doc.text(formatAmountForPDF(benefice), cols[7], y + 6);
+      doc.text(formatAmountForPDF(data.monthlyData.reduce((s, r) => s + r.cautions, 0)), cols[5], y + 6);
+      doc.text(formatAmountForPDF(totalEntrees), cols[6], y + 6);
+      doc.text(formatAmountForPDF(data.totalExpenses), cols[7], y + 6);
+      doc.text(formatAmountForPDF(benefice), cols[8], y + 6);
       y += 20;
 
       // Solde cumulé box

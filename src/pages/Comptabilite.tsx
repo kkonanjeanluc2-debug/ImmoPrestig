@@ -311,6 +311,7 @@ const Comptabilite = () => {
                         <th className="text-right py-2 px-3 text-muted-foreground font-medium">Ventes</th>
                         <th className="text-right py-2 px-3 text-muted-foreground font-medium">Achats</th>
                         <th className="text-right py-2 px-3 text-muted-foreground font-medium">Lotissements</th>
+                        <th className="text-right py-2 px-3 text-muted-foreground font-medium">Cautions</th>
                         <th className="text-right py-2 px-3 font-medium text-emerald">Total revenus</th>
                         <th className="text-right py-2 px-3 font-medium text-destructive">Dépenses</th>
                         <th className="text-right py-2 px-3 font-semibold text-foreground">Bénéfice</th>
@@ -324,6 +325,7 @@ const Comptabilite = () => {
                           <td className="py-2 px-3 text-right text-muted-foreground">{formatCFA(row.ventes)}</td>
                           <td className="py-2 px-3 text-right text-muted-foreground">{formatCFA(row.achats)}</td>
                           <td className="py-2 px-3 text-right text-muted-foreground">{formatCFA(row.lotissements)}</td>
+                          <td className="py-2 px-3 text-right text-muted-foreground">{formatCFA(row.cautions)}</td>
                           <td className="py-2 px-3 text-right font-medium text-emerald">{formatCFA(row.total)}</td>
                           <td className="py-2 px-3 text-right font-medium text-destructive">
                             {row.depenses > 0 ? `-${formatCFA(row.depenses)}` : formatCFA(0)}
@@ -346,6 +348,9 @@ const Comptabilite = () => {
                         </td>
                         <td className="py-2 px-3 text-right text-foreground">
                           {formatCFA(data.monthlyData.reduce((s, r) => s + r.lotissements, 0))}
+                        </td>
+                        <td className="py-2 px-3 text-right text-foreground">
+                          {formatCFA(data.monthlyData.reduce((s, r) => s + r.cautions, 0))}
                         </td>
                         <td className="py-2 px-3 text-right text-emerald">{formatCFA(totalRevenue)}</td>
                         <td className="py-2 px-3 text-right text-destructive">

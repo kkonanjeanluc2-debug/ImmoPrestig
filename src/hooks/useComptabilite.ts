@@ -390,6 +390,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       ventesEncaissees: 0,
       achatsEncaisses: 0,
       lotissementsEncaisses: 0,
+      reservationsEncaissees: 0,
+      onlinePaymentsEncaisses: 0,
       loyersEnAttente: 0,
       ventesEnAttente: 0,
       achatsEnAttente: 0,
@@ -405,6 +407,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       ventesByManager: [],
       achatsByManager: [],
       lotissementsByManager: [],
+      reservationsByManager: [],
     };
 
     // Build monthly buckets

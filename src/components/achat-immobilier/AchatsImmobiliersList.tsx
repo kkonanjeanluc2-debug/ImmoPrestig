@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ interface AchatsImmobiliersListProps {
 }
 
 export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
+  const { user } = useAuth();
   const { data: achats, isLoading } = useAchatsImmobiliers();
   const { data: biens = [] } = useBiensAchat();
   const { data: vendeurs = [] } = useVendeurs();
@@ -90,7 +93,7 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
       }
     }
 
-    await createMutation.mutateAsync({
+    const achatResult = await createMutation.mutateAsync({
       bien_id: form.bien_id,
       vendeur_id: form.vendeur_id || undefined,
       acquereur_id: acquereurId,
@@ -104,6 +107,35 @@ export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
       commission_amount: form.commission_amount ? Number(form.commission_amount) : undefined,
       notes: form.notes || undefined,
     });
+
+    // Auto-generate echeances for échelonné payments
+    if (form.payment_type === "echelonne" && form.total_installments && Number(form.total_installments) > 0 && achatResult?.id) {
+      const totalInstallments = Number(form.total_installments);
+      const salePrice = Number(form.sale_price);
+      const downPayment = form.down_payment ? Number(form.down_payment) : 0;
+      const remainingAmount = salePrice - downPayment;
+      const installmentAmount = Math.floor(remainingAmount / totalInstallments);
+      const lastInstallment = remainingAmount - installmentAmount * (totalInstallments - 1);
+
+      const echeances = Array.from({ length: totalInstallments }, (_, i) => {
+        const dueDate = new Date();
+        dueDate.setMonth(dueDate.getMonth() + i + 1);
+        return {
+          achat_id: achatResult.id,
+          user_id: user!.id,
+          amount: i === totalInstallments - 1 ? lastInstallment : installmentAmount,
+          due_date: dueDate.toISOString().split("T")[0],
+          status: "en_attente",
+        };
+      });
+
+      const { error } = await supabase.from("echeances_achats").insert(echeances);
+      if (error) {
+        console.error("Erreur création échéances:", error);
+        toast.error("L'achat a été créé mais les échéances n'ont pas pu être générées");
+      }
+    }
+
     setOpen(false);
     resetForm();
   };

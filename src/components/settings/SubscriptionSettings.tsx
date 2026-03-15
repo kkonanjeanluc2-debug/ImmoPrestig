@@ -101,7 +101,14 @@ export function SubscriptionSettings() {
     setCheckoutOpen(true);
   };
 
-  const activePlans = plans?.filter(p => p.is_active) || [];
+  // For proprietaire accounts, only show Starter plan (gestion locative only)
+  const isProprietaire = agency?.account_type === "proprietaire";
+  const activePlans = (plans?.filter(p => p.is_active) || []).filter(plan => {
+    if (isProprietaire) {
+      return plan.name === "Starter" || plan.id === currentPlanId;
+    }
+    return true;
+  });
   const currentPlanId = subscription?.plan_id;
 
   return (

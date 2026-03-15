@@ -94,7 +94,7 @@ export default function AchatsImmobiliers() {
             <AchatsImmobiliersList period={period} />
           </TabsContent>
           <TabsContent value="echeances" className="mt-6">
-            <EcheancesAchatsList />
+            <EcheancesAchatsTabContent />
           </TabsContent>
           <TabsContent value="mutations" className="mt-6">
             <MutationsAchatList />

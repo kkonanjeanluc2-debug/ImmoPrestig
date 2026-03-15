@@ -62,7 +62,7 @@ const fadeUp = {
 const Pricing = () => {
   const { data: plans, isLoading } = useSubscriptionPlans();
   const { data: discountSetting } = usePlatformSetting("yearly_discount_percentage");
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "semi_annual" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
@@ -817,32 +817,31 @@ const Pricing = () => {
 
             <div className="px-6 pb-6">
               {/* Billing Toggle */}
-              <div className="flex items-center justify-center gap-4 my-6">
-                <button
-                  onClick={() => setBillingCycle("monthly")}
-                  className={cn(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    billingCycle === "monthly"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Mensuel
-                </button>
-                <button
-                  onClick={() => setBillingCycle("yearly")}
-                  className={cn(
-                    "px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
-                    billingCycle === "yearly"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Annuel
+              <div className="flex items-center justify-center gap-2 my-6 flex-wrap">
+                {([
+                  { key: "monthly" as const, label: "Mensuel" },
+                  { key: "quarterly" as const, label: "Trimestriel" },
+                  { key: "semi_annual" as const, label: "Semestriel" },
+                  { key: "yearly" as const, label: "Annuel" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setBillingCycle(opt.key)}
+                    className={cn(
+                      "px-4 py-2 rounded-lg font-medium transition-colors",
+                      billingCycle === opt.key
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+                {billingCycle !== "monthly" && (
                   <Badge variant="secondary" className="text-xs">
                     Économisez jusqu'à {yearlyDiscountPercent}%
                   </Badge>
-                </button>
+                )}
               </div>
 
               {isLoading ? (
@@ -868,10 +867,23 @@ const Pricing = () => {
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {activePlans.map((plan) => {
-                    const calculatedYearlyPrice = Math.round(
-                      plan.price_monthly * 12 * (1 - yearlyDiscountPercent / 100),
-                    );
-                    const price = billingCycle === "monthly" ? plan.price_monthly : calculatedYearlyPrice;
+                    const priceMap: Record<string, number> = {
+                      monthly: plan.price_monthly,
+                      quarterly: plan.price_quarterly,
+                      semi_annual: plan.price_semi_annual,
+                      yearly: plan.price_yearly,
+                    };
+                    const price = priceMap[billingCycle] ?? plan.price_monthly;
+                    const periodLabel: Record<string, string> = {
+                      monthly: "par mois",
+                      quarterly: "par trimestre",
+                      semi_annual: "par semestre",
+                      yearly: "par an",
+                    };
+                    const months: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
+                    const savingsPercent = billingCycle !== "monthly" && plan.price_monthly > 0
+                      ? Math.round((1 - price / (plan.price_monthly * months[billingCycle])) * 100)
+                      : 0;
                     const features = Array.isArray(plan.features) ? plan.features : [];
 
                     return (
@@ -906,11 +918,11 @@ const Pricing = () => {
                               <span className="text-sm text-muted-foreground">{plan.currency}</span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {billingCycle === "monthly" ? "par mois" : "par an"}
+                              {periodLabel[billingCycle]}
                             </p>
-                            {billingCycle === "yearly" && plan.price_monthly > 0 && (
+                            {savingsPercent > 0 && (
                               <Badge variant="secondary" className="mt-1 text-xs">
-                                Économisez {yearlyDiscountPercent}%
+                                Économisez {savingsPercent}%
                               </Badge>
                             )}
                           </div>

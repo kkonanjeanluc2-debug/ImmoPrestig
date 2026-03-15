@@ -49,7 +49,47 @@ export function LateEcheancesVentesList() {
 
   // Use dedicated server-filtered hook instead of loading all + client filter
   const { data: overdueEcheances = [], isLoading } = useOverdueEcheancesVentes();
+  const { data: allEcheances } = useEcheancesVentes();
   const payEcheance = usePayEcheanceVente();
+  const { data: agency } = useAgency();
+  const { user } = useAuth();
+
+  const fetchUserName = async () => {
+    if (!user) return "Agent";
+    const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+    return data?.full_name || "Agent";
+  };
+
+  const handleDownloadReceipt = async (echeance: EcheanceVenteWithDetails, validatedByName?: string) => {
+    try {
+      const sameVente = allEcheances?.filter(e => e.vente_id === echeance.vente_id).sort((a, b) => a.due_date.localeCompare(b.due_date)) || [];
+      const echeanceNumber = sameVente.findIndex(e => e.id === echeance.id) + 1;
+      const name = validatedByName || await fetchUserName();
+
+      await generateEcheanceReceipt({
+        echeanceId: echeance.id,
+        propertyTitle: echeance.vente?.bien?.title || "Bien",
+        propertyAddress: echeance.vente?.bien?.address,
+        amount: Number(echeance.paid_amount || echeance.amount),
+        paidDate: echeance.paid_date || new Date().toISOString(),
+        dueDate: echeance.due_date,
+        paymentMethod: echeance.payment_method || "Espèces",
+        totalSalePrice: 0,
+        echeanceNumber,
+        totalEcheances: sameVente.length,
+        agencyName: agency?.name,
+        agencyPhone: agency?.phone || undefined,
+        agencyEmail: agency?.email,
+        agencyAddress: [agency?.address, agency?.city, agency?.country].filter(Boolean).join(", ") || undefined,
+        agencyLogoUrl: agency?.logo_url,
+        validatedBy: name,
+        acquereur: echeance.vente?.acquereur ? { name: echeance.vente.acquereur.name, phone: echeance.vente.acquereur.phone } : undefined,
+      });
+      toast.success("Reçu téléchargé");
+    } catch {
+      toast.error("Erreur lors de la génération du reçu");
+    }
+  };
 
   // Only apply client-side search filter on already server-filtered data
   const lateEcheances = useMemo(() => {

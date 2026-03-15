@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAgencySubscription, useAgencyPaymentHistory } from "@/hooks/useAgencySubscription";
 import { useSubscriptionPlans, SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
+import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle } from "@/lib/billingCycleUtils";
 import { useAgency } from "@/hooks/useAgency";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";

@@ -30,8 +30,13 @@ import { formatCurrency } from "@/lib/pdfFormat";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
-import { Calendar, Check, AlertTriangle, Loader2, Mail, Search, X } from "lucide-react";
+import { Calendar, Check, AlertTriangle, Loader2, Mail, Search, X, Download } from "lucide-react";
 import { SendVenteReminderDialog } from "./SendVenteReminderDialog";
+import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
+import { useAgency } from "@/hooks/useAgency";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEcheancesVentes } from "@/hooks/useEcheancesVentes";
 
 export function LateEcheancesVentesList() {
   const [payDialogOpen, setPayDialogOpen] = useState(false);

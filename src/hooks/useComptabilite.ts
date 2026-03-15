@@ -110,7 +110,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_ventes")
-        .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_immobilieres(bien:biens_vente(assigned_to, title), acquereur:acquereurs(name))")
+        .select("id, vente_id, amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_immobilieres(bien:biens_vente(assigned_to, title), acquereur:acquereurs(name))")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
@@ -140,7 +140,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_achats")
-        .select("amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
+        .select("id, achat_id, amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
@@ -170,7 +170,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_parcelles")
-        .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_parcelles(sold_by, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name))")
+        .select("id, vente_id, amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_parcelles(sold_by, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name))")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
@@ -178,6 +178,49 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       return data;
     },
     enabled: !!user,
+  });
+
+  // Lightweight queries for échéance numbering (ALL échéances, no period filter)
+  const { data: allEcheancesVentesNum } = useQuery({
+    queryKey: ["comptabilite-echeances-ventes-numbering", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_ventes")
+        .select("id, vente_id, due_date")
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: allEcheancesAchatsNum } = useQuery({
+    queryKey: ["comptabilite-echeances-achats-numbering", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_achats")
+        .select("id, achat_id, due_date")
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: allEcheancesParcellesNum } = useQuery({
+    queryKey: ["comptabilite-echeances-parcelles-numbering", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_parcelles")
+        .select("id, vente_id, due_date")
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
   });
 
   // Fetch ventes_parcelles for down_payments (acomptes)

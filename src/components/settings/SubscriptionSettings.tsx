@@ -382,7 +382,11 @@ export function SubscriptionSettings() {
                               ? "À vie" 
                               : tx.billing_cycle === "yearly" 
                                 ? "Annuel" 
-                                : "Mensuel"}
+                                : tx.billing_cycle === "quarterly"
+                                  ? "Trimestriel"
+                                  : tx.billing_cycle === "semi_annual"
+                                    ? "Semestriel"
+                                    : "Mensuel"}
                           </p>
                         </div>
                       </TableCell>

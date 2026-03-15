@@ -871,6 +871,44 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       total: dets.reduce((s, d) => s + d.amount, 0),
     }));
 
+    // Process cautions (security deposits from contracts)
+    const cautionDetails: RevenueDetail[] = [];
+    if (cautions) {
+      (cautions as any[]).forEach((c: any) => {
+        const amount = Number(c.deposit || 0);
+        if (amount <= 0) return;
+        result.cautionsEncaissees += amount;
+        const date = new Date(c.start_date);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly.loyers += amount;
+          monthly.total += amount;
+        }
+        const tenantName = c.tenant?.name || "Locataire inconnu";
+        const propertyName = c.tenant?.property?.name || "";
+        cautionDetails.push({
+          label: tenantName,
+          description: propertyName ? `${propertyName} (Caution)` : "Caution locative",
+          amount,
+          paidDate: c.start_date,
+          managerName: resolveManager(c.tenant?.assigned_to),
+        });
+      });
+    }
+    cautionDetails.sort((a, b) => a.managerName.localeCompare(b.managerName) || a.label.localeCompare(b.label));
+    const cautionGroupMap = new Map<string, RevenueDetail[]>();
+    cautionDetails.forEach((d) => {
+      const group = cautionGroupMap.get(d.managerName) || [];
+      group.push(d);
+      cautionGroupMap.set(d.managerName, group);
+    });
+    result.cautionsByManager = Array.from(cautionGroupMap.entries()).map(([managerName, dets]) => ({
+      managerName,
+      details: dets,
+      total: dets.reduce((s, d) => s + d.amount, 0),
+    }));
+
     // Process online rent payments (not linked to regular payments)
     if (onlinePayments) {
       (onlinePayments as any[]).forEach((p: any) => {

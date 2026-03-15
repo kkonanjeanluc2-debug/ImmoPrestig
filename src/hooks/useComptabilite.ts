@@ -241,6 +241,55 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  // Fetch reservations_vente deposits
+  const { data: reservationsVente } = useQuery({
+    queryKey: ["comptabilite-reservations-vente", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reservations_vente")
+        .select("id, deposit_amount, payment_method, reservation_date, status, bien:biens_vente(assigned_to, title), acquereur:acquereurs(name)")
+        .in("status", ["active", "converted"])
+        .gte("reservation_date", fromDate)
+        .lte("reservation_date", toDate);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch reservations_parcelles deposits
+  const { data: reservationsParcelles } = useQuery({
+    queryKey: ["comptabilite-reservations-parcelles", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reservations_parcelles")
+        .select("id, deposit_amount, payment_method, reservation_date, status, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name)")
+        .in("status", ["active", "converted"])
+        .gte("reservation_date", fromDate)
+        .lte("reservation_date", toDate);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch online rent payments not linked to a regular payment
+  const { data: onlinePayments } = useQuery({
+    queryKey: ["comptabilite-online-payments", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("online_rent_payments")
+        .select("id, amount, paid_at, payment_method, status, payment_id, tenant:tenants(name, assigned_to)")
+        .eq("status", "completed")
+        .is("payment_id", null)
+        .gte("paid_at", fromDate)
+        .lte("paid_at", toDate + "T23:59:59");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const { data: expenses } = useQuery({
     queryKey: ["comptabilite-expenses", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
     queryFn: async () => {

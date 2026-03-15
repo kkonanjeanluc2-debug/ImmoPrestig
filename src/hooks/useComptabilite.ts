@@ -161,7 +161,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_achats")
-        .select("id, achat_id, amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
+        .select("id, achat_id, amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(is_agency_purchase, bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
         .or(
           `and(status.eq.paye,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.eq.en_attente,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
@@ -191,7 +191,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("achats_immobiliers")
-        .select("id, down_payment, sale_date, payment_type, sale_price, bien:biens_achat(assigned_to, title), acquereur:acquereurs(name)")
+        .select("id, down_payment, sale_date, payment_type, sale_price, is_agency_purchase, bien:biens_achat(assigned_to, title), acquereur:acquereurs(name)")
         .gte("sale_date", fromDate)
         .lte("sale_date", toDate);
       if (error) throw error;
@@ -618,7 +618,26 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       }));
     }
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
-    processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
+    // Split achats: intermediation (non-agency) → revenue, agency purchases → expenses
+    const echeancesAchatsIntermediation = (echeancesAchats as any[] || []).filter((e: any) => !e.achat?.is_agency_purchase);
+    const echeancesAchatsAgence = (echeancesAchats as any[] || []).filter((e: any) => e.achat?.is_agency_purchase);
+    processEntries(echeancesAchatsIntermediation, "achats", "achatsEncaisses", "achatsEnAttente");
+    // Agency purchase échéances → add to expenses (sorties)
+    echeancesAchatsAgence.forEach((e: any) => {
+      const amount = Number(e.amount);
+      const status = normalizeStatus(e.status);
+      if (status === "paid") {
+        result.totalExpenses += amount;
+        const date = new Date(e.paid_date || e.due_date);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly.depenses += amount;
+        }
+        const method = e.payment_method || "Non spécifié";
+        methodMap.set(method, (methodMap.get(method) || 0) + amount);
+      }
+    });
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");
 
     // Override "en attente" totals with ALL pending échéances (no period filter)
@@ -669,10 +688,28 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       ventesImmobilieres as any, "ventes", "ventesEncaissees",
       (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0), (v) => v.sale_date
     );
+    // Only intermediation achats as revenue
+    const achatsIntermediation = (achatsImmobiliers as any[] || []).filter((a: any) => !a.is_agency_purchase);
+    const achatsAgence = (achatsImmobiliers as any[] || []).filter((a: any) => a.is_agency_purchase);
     addDownPayments(
-      achatsImmobiliers as any, "achats", "achatsEncaisses",
+      achatsIntermediation, "achats", "achatsEncaisses",
       (a) => a.payment_type, (a) => Number(a.sale_price), (a) => Number(a.down_payment || 0), (a) => a.sale_date
     );
+    // Agency purchases down payments → expenses
+    achatsAgence.forEach((a: any) => {
+      const paymentType = a.payment_type;
+      const dp = Number(a.down_payment || 0);
+      const total = Number(a.sale_price || 0);
+      const amount = paymentType === "comptant" ? (dp || total || 0) : (dp || 0);
+      if (amount <= 0) return;
+      result.totalExpenses += amount;
+      const date = new Date(a.sale_date);
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      const monthly = monthlyMap.get(key);
+      if (monthly) {
+        monthly.depenses += amount;
+      }
+    });
     addDownPayments(
       ventesParcelles as any, "lotissements", "lotissementsEncaisses",
       (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0), (v) => v.sale_date
@@ -784,7 +821,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     );
 
     result.achatsByManager = groupByManagerWithDownPayments(
-      echeancesAchats as any, achatsImmobiliers as any, achatsNumMap,
+      echeancesAchatsIntermediation, achatsIntermediation, achatsNumMap,
       (e) => e.achat?.bien?.assigned_to,
       (e) => e.achat?.bien?.title || "Bien inconnu",
       (e) => e.achat?.acquereur?.name || "Acquéreur inconnu",
@@ -970,6 +1007,24 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           monthly.depenses += amount;
         }
       });
+    }
+
+    // Add agency purchases to expense categories
+    let agencyPurchaseTotal = 0;
+    echeancesAchatsAgence.forEach((e: any) => {
+      if (normalizeStatus(e.status) === "paid") {
+        agencyPurchaseTotal += Number(e.amount);
+      }
+    });
+    achatsAgence.forEach((a: any) => {
+      const paymentType = a.payment_type;
+      const dp = Number(a.down_payment || 0);
+      const total = Number(a.sale_price || 0);
+      const amount = paymentType === "comptant" ? (dp || total || 0) : (dp || 0);
+      if (amount > 0) agencyPurchaseTotal += amount;
+    });
+    if (agencyPurchaseTotal > 0) {
+      expCategoryMap.set("achat_agence", (expCategoryMap.get("achat_agence") || 0) + agencyPurchaseTotal);
     }
 
     // Calculate benefice per month

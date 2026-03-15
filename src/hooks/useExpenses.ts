@@ -27,6 +27,8 @@ export const EXPENSE_CATEGORIES = [
   { value: "formation", label: "Formation", syscohada: "6583", classe: "Charges de personnel" },
   // Classe 68 - Dotations aux amortissements
   { value: "equipement", label: "Équipement & matériel", syscohada: "681", classe: "Dotations aux amortissements" },
+  // Achats immobiliers pour l'agence
+  { value: "achat_agence", label: "Achats immobiliers (agence)", syscohada: "241", classe: "Immobilisations corporelles" },
   // Autre
   { value: "autre", label: "Autre", syscohada: "658", classe: "Autres charges" },
 ] as const;

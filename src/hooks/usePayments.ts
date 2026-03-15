@@ -91,15 +91,16 @@ export const usePayments = () => {
             amount: contract.rent_amount,
             due_date: nextMonthDueDate,
             status: "pending",
-          method: null,
-          paid_date: null,
-          paid_amount: null,
-          payment_months: [nextMonthLabel],
-          created_at: now.toISOString(),
-          updated_at: now.toISOString(),
-          tenant: contract.tenant,
-          _isVirtual: true,
-        }));
+            method: null,
+            paid_date: null,
+            paid_amount: null,
+            payment_months: [nextMonthLabel],
+            created_at: now.toISOString(),
+            updated_at: now.toISOString(),
+            tenant: contract.tenant,
+            _isVirtual: true,
+          };
+        });
 
       return [...(data || []), ...virtualPayments] as any;
     },

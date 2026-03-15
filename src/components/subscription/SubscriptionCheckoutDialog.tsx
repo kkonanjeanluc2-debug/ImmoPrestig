@@ -193,14 +193,15 @@ export function SubscriptionCheckoutDialog({
       if (!plan || !currentSubscription || currentSubscription.plan_id === plan.id) return null;
       if (!currentSubscription.plan) return null;
 
-      const selectedPlanPrice = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+      const selectedPlanPrice = getPriceForCycle(plan, billingCycle);
       if (selectedPlanPrice === 0) return null; // Free plan
 
-      const currentPlanPrice = currentSubscription.billing_cycle === "yearly"
-        ? currentSubscription.plan.price_yearly
-        : currentSubscription.plan.price_monthly;
+      const currentPlanPrice = getPriceForCycle(
+        currentSubscription.plan as SubscriptionPlan,
+        (currentSubscription.billing_cycle || "monthly") as BillingCycle
+      );
 
-      const newPlanPrice = billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+      const newPlanPrice = getPriceForCycle(plan, billingCycle);
 
       // Parse dates
       const startDate = new Date(currentSubscription.starts_at);

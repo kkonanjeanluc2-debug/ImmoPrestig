@@ -372,7 +372,7 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
 
       let cumul = 0;
       data.monthlyData.forEach((m, i) => {
-        const entrees = m.loyers + m.ventes + m.achats + m.lotissements;
+        const entrees = m.loyers + m.ventes + m.achats + m.lotissements + m.cautions;
         const flux = entrees - m.depenses;
         cumul += flux;
 
@@ -386,12 +386,13 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
         doc.text(formatAmountForPDF(m.ventes), cols[2], y + 6);
         doc.text(formatAmountForPDF(m.achats), cols[3], y + 6);
         doc.text(formatAmountForPDF(m.lotissements), cols[4], y + 6);
-        doc.text(formatAmountForPDF(entrees), cols[5], y + 6);
+        doc.text(formatAmountForPDF(m.cautions), cols[5], y + 6);
+        doc.text(formatAmountForPDF(entrees), cols[6], y + 6);
         doc.setTextColor(...dangerColor);
-        doc.text(formatAmountForPDF(m.depenses), cols[6], y + 6);
+        doc.text(formatAmountForPDF(m.depenses), cols[7], y + 6);
         if (flux >= 0) doc.setTextColor(...successColor);
         else doc.setTextColor(...dangerColor);
-        doc.text(formatAmountForPDF(flux), cols[7], y + 6);
+        doc.text(formatAmountForPDF(flux), cols[8], y + 6);
         y += 9;
       });
 

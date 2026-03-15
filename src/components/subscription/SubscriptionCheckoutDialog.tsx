@@ -646,7 +646,8 @@ export function SubscriptionCheckoutDialog({
               <div>
                 <h4 className="font-semibold">{plan.name}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {billingCycle === "yearly" ? "Facturation annuelle" : "Facturation mensuelle"}
+                  Facturation {billingCycleLabels[billingCycle]?.toLowerCase()}
+                </p>
                 </p>
               </div>
               <div className="text-right">

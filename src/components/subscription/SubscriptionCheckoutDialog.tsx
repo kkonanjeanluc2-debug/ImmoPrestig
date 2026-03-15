@@ -309,7 +309,7 @@ export function SubscriptionCheckoutDialog({
           plan_id: plan.id,
           billing_cycle: billingCycle,
           amount: finalAmount,
-          description: `Abonnement ${plan.name} - ${billingCycle === "yearly" ? "Annuel" : "Mensuel"}`,
+          description: `Abonnement ${plan.name} - ${billingCycleLabels[billingCycle]}`,
           customer_phone: phoneNumber,
           proration: proration ? {
             remaining_days: proration.remainingDays,

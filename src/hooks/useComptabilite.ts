@@ -161,16 +161,35 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
-  // Extract manager IDs from payments for profile resolution
+  // Extract manager IDs from all revenue sources for profile resolution
   const managerUserIds = useMemo(() => {
-    if (!payments) return [];
     const ids = new Set<string>();
-    payments.forEach((p: any) => {
-      const assignedTo = p.tenant?.assigned_to;
-      if (assignedTo) ids.add(assignedTo);
-    });
+    if (payments) {
+      payments.forEach((p: any) => {
+        const assignedTo = p.tenant?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (echeancesVentes) {
+      (echeancesVentes as any[]).forEach((e: any) => {
+        const assignedTo = e.vente?.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (echeancesAchats) {
+      (echeancesAchats as any[]).forEach((e: any) => {
+        const assignedTo = e.achat?.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (echeancesParcelles) {
+      (echeancesParcelles as any[]).forEach((e: any) => {
+        const assignedTo = e.vente?.sold_by || e.vente?.parcelle?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
     return Array.from(ids);
-  }, [payments]);
+  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles]);
 
   const { data: managerProfiles } = useQuery({
     queryKey: ["comptabilite-manager-profiles", managerUserIds],

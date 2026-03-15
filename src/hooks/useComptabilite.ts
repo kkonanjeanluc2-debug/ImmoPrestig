@@ -606,7 +606,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     };
 
     result.ventesByManager = groupByManagerWithDownPayments(
-      echeancesVentes as any, ventesImmobilieres as any,
+      echeancesVentes as any, ventesImmobilieres as any, ventesNumMap,
       (e) => e.vente?.bien?.assigned_to,
       (e) => e.vente?.bien?.title || "Bien inconnu",
       (e) => e.vente?.acquereur?.name || "Acquéreur inconnu",

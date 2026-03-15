@@ -357,6 +357,73 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");
 
+    // Build profile map for manager name resolution
+    const profileMap = new Map<string, string>();
+    managerProfiles?.forEach((p) => {
+      profileMap.set(p.user_id, p.full_name || "Gestionnaire");
+    });
+    const resolveManager = (id: string | null | undefined) => {
+      if (!id) return "Non assigné";
+      return profileMap.get(id) || "Gestionnaire";
+    };
+
+    // Group ventes by manager
+    const groupByManager = (entries: any[] | undefined, getAssignedTo: (e: any) => string | null, getLabel: (e: any) => string, getDescription: (e: any) => string): ManagerRevenueGroup[] => {
+      if (!entries) return [];
+      const details: RevenueDetail[] = [];
+      entries.forEach((e: any) => {
+        if (normalizeStatus(e.status) !== "paid") return;
+        const assignedTo = getAssignedTo(e);
+        details.push({
+          label: getLabel(e),
+          description: getDescription(e),
+          amount: Number(e.paid_amount) || Number(e.amount),
+          paidDate: e.paid_date || e.due_date,
+          managerName: resolveManager(assignedTo),
+        });
+      });
+      details.sort((a, b) => a.managerName.localeCompare(b.managerName) || a.label.localeCompare(b.label));
+      const groupMap = new Map<string, RevenueDetail[]>();
+      details.forEach((d) => {
+        const group = groupMap.get(d.managerName) || [];
+        group.push(d);
+        groupMap.set(d.managerName, group);
+      });
+      return Array.from(groupMap.entries()).map(([managerName, dets]) => ({
+        managerName,
+        details: dets,
+        total: dets.reduce((s, d) => s + d.amount, 0),
+      }));
+    };
+
+    result.ventesByManager = groupByManager(
+      echeancesVentes as any,
+      (e) => e.vente?.bien?.assigned_to,
+      (e) => e.vente?.bien?.title || "Bien inconnu",
+      (e) => e.vente?.acquereur?.name || "Acquéreur inconnu"
+    );
+
+    result.achatsByManager = groupByManager(
+      echeancesAchats as any,
+      (e) => e.achat?.bien?.assigned_to,
+      (e) => e.achat?.bien?.title || "Bien inconnu",
+      (e) => e.achat?.acquereur?.name || "Acquéreur inconnu"
+    );
+
+    result.lotissementsByManager = groupByManager(
+      echeancesParcelles as any,
+      (e) => e.vente?.sold_by || e.vente?.parcelle?.assigned_to,
+      (e) => {
+        const parcelle = e.vente?.parcelle;
+        if (parcelle) {
+          const lotName = parcelle.lotissement?.name || "";
+          return `${lotName} - Parcelle ${parcelle.plot_number}`;
+        }
+        return "Parcelle inconnue";
+      },
+      (e) => e.vente?.acquereur?.name || "Acquéreur inconnu"
+    );
+
     // Process expenses
     const expCategoryMap = new Map<string, number>();
     if (expenses) {

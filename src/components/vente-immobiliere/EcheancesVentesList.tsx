@@ -53,7 +53,7 @@ export function EcheancesVentesList({ venteId }: EcheancesVentesListProps) {
 
   const { data: echeances, isLoading } = useEcheancesVentes(venteId);
   const payEcheance = usePayEcheanceVente();
-  const { agency } = useAgency();
+  const { data: agency } = useAgency();
   const { user } = useAuth();
 
   const fetchUserName = async () => {

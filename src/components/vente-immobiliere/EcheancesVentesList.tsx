@@ -381,9 +381,15 @@ export function EcheancesVentesList({ venteId }: EcheancesVentesListProps) {
                             </>
                           )}
                           {echeance.status === "paid" && echeance.paid_date && (
-                            <span className="text-sm text-muted-foreground">
-                              Payé le {format(new Date(echeance.paid_date), "dd/MM/yyyy")}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">
+                                Payé le {format(new Date(echeance.paid_date), "dd/MM/yyyy")}
+                              </span>
+                              <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(echeance)}>
+                                <Download className="h-4 w-4 mr-1" />
+                                Reçu
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </TableCell>

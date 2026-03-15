@@ -29,6 +29,7 @@ interface AchatsImmobiliersListProps {
 }
 
 export function AchatsImmobiliersList({ period }: AchatsImmobiliersListProps) {
+  const { user } = useAuth();
   const { data: achats, isLoading } = useAchatsImmobiliers();
   const { data: biens = [] } = useBiensAchat();
   const { data: vendeurs = [] } = useVendeurs();

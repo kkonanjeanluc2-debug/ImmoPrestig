@@ -583,7 +583,6 @@ const Pricing = () => {
                 );
               })}
             </div>
-            </div>
 
             {isLoading ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">

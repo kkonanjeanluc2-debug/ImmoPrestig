@@ -81,13 +81,16 @@ export const usePayments = () => {
       // Generate virtual pending payments for tenants without one
       const virtualPayments = (activeContracts || [])
         .filter(c => !existingTenantIds.has(c.tenant_id))
-        .map(contract => ({
-          id: `auto-${contract.tenant_id}-${nextMonthLabel}`,
-          user_id: user!.id,
-          tenant_id: contract.tenant_id,
-          amount: contract.rent_amount,
-          due_date: nextMonthDueDate,
-          status: "pending",
+        .map(contract => {
+          const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
+
+          return {
+            id: `auto-${contract.tenant_id}-${nextMonthLabel}`,
+            user_id: agencyUserId,
+            tenant_id: contract.tenant_id,
+            amount: contract.rent_amount,
+            due_date: nextMonthDueDate,
+            status: "pending",
           method: null,
           paid_date: null,
           paid_amount: null,

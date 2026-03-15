@@ -493,6 +493,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         ventes: 0,
         achats: 0,
         lotissements: 0,
+        cautions: 0,
         depenses: 0,
         total: 0,
         benefice: 0,

@@ -15,7 +15,7 @@ import { BiensAchatList } from "@/components/achat-immobilier/BiensAchatList";
 import { VendeursList } from "@/components/achat-immobilier/VendeursList";
 import { OffresAchatList } from "@/components/achat-immobilier/OffresAchatList";
 import { AchatsImmobiliersList } from "@/components/achat-immobilier/AchatsImmobiliersList";
-import { EcheancesAchatsList } from "@/components/achat-immobilier/EcheancesAchatsList";
+import { EcheancesAchatsTabContent } from "@/components/achat-immobilier/EcheancesAchatsTabContent";
 import { AchatsDashboard } from "@/components/achat-immobilier/AchatsDashboard";
 import { MutationsAchatList } from "@/components/achat-immobilier/MutationsAchatList";
 
@@ -94,7 +94,7 @@ export default function AchatsImmobiliers() {
             <AchatsImmobiliersList period={period} />
           </TabsContent>
           <TabsContent value="echeances" className="mt-6">
-            <EcheancesAchatsList />
+            <EcheancesAchatsTabContent />
           </TabsContent>
           <TabsContent value="mutations" className="mt-6">
             <MutationsAchatList />

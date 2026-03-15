@@ -23,7 +23,8 @@ import { fr } from "date-fns/locale";
 import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Check, Clock, AlertTriangle, Loader2, Search, X, Download } from "lucide-react";
+import { Calendar, Check, Clock, AlertTriangle, Loader2, Search, X, Download, Mail } from "lucide-react";
+import { SendAchatReminderDialog } from "./SendAchatReminderDialog";
 
 const PAYMENT_METHODS = [
   { value: "especes", label: "Espèces" },
@@ -300,6 +301,24 @@ export function EcheancesAchatsList() {
                       <TableCell>{getStatusBadge(ech)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {ech.status !== "paye" && (
+                            <SendAchatReminderDialog
+                              echeanceId={ech.id}
+                              vendeurName={ech.achats_immobiliers?.vendeurs?.name || "Vendeur"}
+                              vendeurPhone={ech.achats_immobiliers?.vendeurs?.phone}
+                              vendeurEmail={ech.achats_immobiliers?.vendeurs?.email}
+                              bienTitle={ech.achats_immobiliers?.biens_achat?.title || "Bien"}
+                              amount={ech.amount}
+                              dueDate={ech.due_date}
+                              isLate={isPast(new Date(ech.due_date)) && !isToday(new Date(ech.due_date))}
+                              trigger={
+                                <Button size="sm" variant="outline">
+                                  <Mail className="h-4 w-4 mr-1" />
+                                  Relancer
+                                </Button>
+                              }
+                            />
+                          )}
                           {ech.status !== "paye" && canEditAchats && (
                             <Button size="sm" onClick={() => handlePayClick(ech)} disabled={payMutation.isPending}>
                               <Check className="h-4 w-4 mr-2" />

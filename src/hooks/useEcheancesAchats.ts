@@ -57,6 +57,8 @@ export function usePayEcheanceAchat() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["echeances-achats"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-achats"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-achats-immo"] });
       toast.success("Échéance payée");
     },
     onError: (e: Error) => toast.error(e.message),

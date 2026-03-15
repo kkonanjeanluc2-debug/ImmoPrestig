@@ -269,6 +269,8 @@ export const usePayEcheance = () => {
       queryClient.invalidateQueries({ queryKey: ["echeances-parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["ventes-parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-ventes-parcelles"] });
     },
   });
 };

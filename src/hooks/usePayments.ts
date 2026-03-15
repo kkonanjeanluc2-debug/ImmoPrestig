@@ -150,6 +150,7 @@ export const useCreatePayment = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-payments"] });
     },
   });
 };
@@ -232,6 +233,7 @@ export const useUpdatePayment = () => {
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["unpaid-cases"] });
       queryClient.invalidateQueries({ queryKey: ["unpaid-case-actions"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-payments"] });
     },
   });
 };
@@ -259,6 +261,7 @@ export const useDeletePayment = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["comptabilite-payments"] });
     },
   });
 };

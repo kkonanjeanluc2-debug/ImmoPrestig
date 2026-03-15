@@ -287,7 +287,7 @@ export function SubscriptionSettings() {
                     <span className="text-sm font-normal text-muted-foreground">/mois</span>
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">
-                    ou {formatPrice(plan.price_yearly, plan.currency)}/an
+                    ou {formatPrice(plan.price_quarterly, plan.currency)}/trim. · {formatPrice(plan.price_semi_annual, plan.currency)}/sem. · {formatPrice(plan.price_yearly, plan.currency)}/an
                   </p>
                   {!isCurrentPlan && (
                     <div className="space-y-2">
@@ -297,18 +297,34 @@ export function SubscriptionSettings() {
                       {isDowngrade && (
                         <p className="text-xs text-amber-600 font-medium text-center">↓ Rétrogradation</p>
                       )}
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-2 gap-1.5">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex-1 text-xs"
+                          className="text-xs"
                           onClick={() => handleUpgrade(plan, "monthly")}
                         >
                           Mensuel
                         </Button>
                         <Button
                           size="sm"
-                          className="flex-1 text-xs"
+                          variant="outline"
+                          className="text-xs"
+                          onClick={() => handleUpgrade(plan, "quarterly")}
+                        >
+                          Trimestre
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs"
+                          onClick={() => handleUpgrade(plan, "semi_annual")}
+                        >
+                          Semestre
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="text-xs"
                           onClick={() => handleUpgrade(plan, "yearly")}
                         >
                           Annuel

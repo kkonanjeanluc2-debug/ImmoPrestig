@@ -349,8 +349,26 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         if (assignedTo) ids.add(assignedTo);
       });
     }
+    if (reservationsVente) {
+      (reservationsVente as any[]).forEach((r: any) => {
+        const assignedTo = r.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (reservationsParcelles) {
+      (reservationsParcelles as any[]).forEach((r: any) => {
+        const assignedTo = r.parcelle?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (onlinePayments) {
+      (onlinePayments as any[]).forEach((p: any) => {
+        const assignedTo = p.tenant?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
     return Array.from(ids);
-  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments]);
 
   const { data: managerProfiles } = useQuery({
     queryKey: ["comptabilite-manager-profiles", managerUserIds],

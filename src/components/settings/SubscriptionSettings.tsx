@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAgencySubscription, useAgencyPaymentHistory } from "@/hooks/useAgencySubscription";
 import { useSubscriptionPlans, SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
+import { useAgency } from "@/hooks/useAgency";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { 
@@ -58,6 +59,7 @@ export function SubscriptionSettings() {
   const { data: subscription, isLoading: subLoading } = useAgencySubscription();
   const { data: transactions, isLoading: txLoading } = useAgencyPaymentHistory();
   const { data: plans } = useSubscriptionPlans();
+  const { data: agency } = useAgency();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
@@ -99,8 +101,15 @@ export function SubscriptionSettings() {
     setCheckoutOpen(true);
   };
 
-  const activePlans = plans?.filter(p => p.is_active) || [];
   const currentPlanId = subscription?.plan_id;
+  // For proprietaire accounts, only show Starter plan (gestion locative only)
+  const isProprietaire = agency?.account_type === "proprietaire";
+  const activePlans = (plans?.filter(p => p.is_active) || []).filter(plan => {
+    if (isProprietaire) {
+      return plan.name === "Starter" || plan.id === currentPlanId;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">

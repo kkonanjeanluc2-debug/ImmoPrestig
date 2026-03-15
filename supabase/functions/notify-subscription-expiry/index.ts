@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       .select(`
         *,
         agency:agencies!agency_subscriptions_agency_id_fkey(id, name, email, phone),
-        plan:subscription_plans!agency_subscriptions_plan_id_fkey(name, price_monthly, price_yearly, currency)
+        plan:subscription_plans!agency_subscriptions_plan_id_fkey(name, price_monthly, price_quarterly, price_semi_annual, price_yearly, currency)
       `)
       .eq("status", "active")
       .not("ends_at", "is", null)

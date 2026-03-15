@@ -169,15 +169,27 @@ export function EcheancesVentesList({ venteId }: EcheancesVentesListProps) {
     if (!selectedEcheance) return;
 
     try {
+      const userName = await fetchUserName();
+      const methodLabel = paymentMethod || "Espèces";
       await payEcheance.mutateAsync({
         id: selectedEcheance.id,
         paid_date: paidDate,
         paid_amount: parseFloat(paidAmount),
-        payment_method: paymentMethod || undefined,
+        payment_method: methodLabel,
         receipt_number: receiptNumber || undefined,
       });
       toast.success("Échéance marquée comme payée");
       setPayDialogOpen(false);
+
+      // Auto-download receipt
+      const updatedEcheance: EcheanceVenteWithDetails = {
+        ...selectedEcheance,
+        status: "paid",
+        paid_amount: parseFloat(paidAmount),
+        paid_date: paidDate,
+        payment_method: methodLabel,
+      };
+      await handleDownloadReceipt(updatedEcheance, userName);
     } catch (error) {
       toast.error("Erreur lors de l'enregistrement du paiement");
     }

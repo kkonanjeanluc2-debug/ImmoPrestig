@@ -17,6 +17,20 @@ export interface ManagerRentGroup {
   total: number;
 }
 
+export interface RevenueDetail {
+  label: string;
+  description: string;
+  amount: number;
+  paidDate: string;
+  managerName: string;
+}
+
+export interface ManagerRevenueGroup {
+  managerName: string;
+  details: RevenueDetail[];
+  total: number;
+}
+
 export interface ComptabiliteData {
   // Revenue sources
   loyersEncaisses: number;

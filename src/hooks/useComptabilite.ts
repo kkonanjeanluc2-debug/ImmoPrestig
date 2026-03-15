@@ -38,6 +38,7 @@ export interface ComptabiliteData {
   achatsEncaisses: number;
   lotissementsEncaisses: number;
   reservationsEncaissees: number;
+  cautionsEncaissees: number;
   onlinePaymentsEncaisses: number;
   // Pending
   loyersEnAttente: number;
@@ -64,6 +65,7 @@ export interface ComptabiliteData {
   achatsByManager: ManagerRevenueGroup[];
   lotissementsByManager: ManagerRevenueGroup[];
   reservationsByManager: ManagerRevenueGroup[];
+  cautionsByManager: ManagerRevenueGroup[];
 }
 
 export interface MonthlyEntry {
@@ -333,6 +335,23 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  // Fetch cautions (security deposits) from active contracts within the period
+  const { data: cautions } = useQuery({
+    queryKey: ["comptabilite-cautions", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contracts")
+        .select("id, deposit, start_date, tenant:tenants(name, assigned_to, property:properties(name))")
+        .gt("deposit", 0)
+        .is("deleted_at", null)
+        .gte("start_date", fromDate)
+        .lte("start_date", toDate);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const { data: expenses } = useQuery({
     queryKey: ["comptabilite-expenses", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
     queryFn: async () => {
@@ -410,8 +429,14 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         if (assignedTo) ids.add(assignedTo);
       });
     }
+    if (cautions) {
+      (cautions as any[]).forEach((c: any) => {
+        const assignedTo = c.tenant?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
     return Array.from(ids);
-  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, cautions]);
 
   const { data: managerProfiles } = useQuery({
     queryKey: ["comptabilite-manager-profiles", managerUserIds],
@@ -434,6 +459,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       achatsEncaisses: 0,
       lotissementsEncaisses: 0,
       reservationsEncaissees: 0,
+      cautionsEncaissees: 0,
       onlinePaymentsEncaisses: 0,
       loyersEnAttente: 0,
       ventesEnAttente: 0,
@@ -451,6 +477,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       achatsByManager: [],
       lotissementsByManager: [],
       reservationsByManager: [],
+      cautionsByManager: [],
     };
 
     // Build monthly buckets
@@ -844,6 +871,44 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       total: dets.reduce((s, d) => s + d.amount, 0),
     }));
 
+    // Process cautions (security deposits from contracts)
+    const cautionDetails: RevenueDetail[] = [];
+    if (cautions) {
+      (cautions as any[]).forEach((c: any) => {
+        const amount = Number(c.deposit || 0);
+        if (amount <= 0) return;
+        result.cautionsEncaissees += amount;
+        const date = new Date(c.start_date);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthly = monthlyMap.get(key);
+        if (monthly) {
+          monthly.loyers += amount;
+          monthly.total += amount;
+        }
+        const tenantName = c.tenant?.name || "Locataire inconnu";
+        const propertyName = c.tenant?.property?.name || "";
+        cautionDetails.push({
+          label: tenantName,
+          description: propertyName ? `${propertyName} (Caution)` : "Caution locative",
+          amount,
+          paidDate: c.start_date,
+          managerName: resolveManager(c.tenant?.assigned_to),
+        });
+      });
+    }
+    cautionDetails.sort((a, b) => a.managerName.localeCompare(b.managerName) || a.label.localeCompare(b.label));
+    const cautionGroupMap = new Map<string, RevenueDetail[]>();
+    cautionDetails.forEach((d) => {
+      const group = cautionGroupMap.get(d.managerName) || [];
+      group.push(d);
+      cautionGroupMap.set(d.managerName, group);
+    });
+    result.cautionsByManager = Array.from(cautionGroupMap.entries()).map(([managerName, dets]) => ({
+      managerName,
+      details: dets,
+      total: dets.reduce((s, d) => s + d.amount, 0),
+    }));
+
     // Process online rent payments (not linked to regular payments)
     if (onlinePayments) {
       (onlinePayments as any[]).forEach((p: any) => {
@@ -900,7 +965,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
 
     result.monthlyData = Array.from(monthlyMap.values());
 
-    const totalRevenue = result.loyersEncaisses + result.ventesEncaissees + result.achatsEncaisses + result.lotissementsEncaisses + result.reservationsEncaissees;
+    const totalRevenue = result.loyersEncaisses + result.ventesEncaissees + result.achatsEncaisses + result.lotissementsEncaisses + result.reservationsEncaissees + result.cautionsEncaissees;
 
     result.revenueByCategory = [
       { name: "Loyers", value: result.loyersEncaisses, color: "hsl(var(--primary))" },
@@ -908,10 +973,11 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       { name: "Achats Immo.", value: result.achatsEncaisses, color: "hsl(var(--sand))" },
       { name: "Lotissements", value: result.lotissementsEncaisses, color: "hsl(var(--navy-light))" },
       { name: "Réservations", value: result.reservationsEncaissees, color: "hsl(var(--accent))" },
+      { name: "Cautions", value: result.cautionsEncaissees, color: "hsl(var(--muted-foreground))" },
     ].filter((c) => c.value > 0);
 
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, allPendingVentes, allPendingAchats, allPendingParcelles, periodFrom, periodTo]);
+  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, cautions, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, allPendingVentes, allPendingAchats, allPendingParcelles, periodFrom, periodTo]);
 }

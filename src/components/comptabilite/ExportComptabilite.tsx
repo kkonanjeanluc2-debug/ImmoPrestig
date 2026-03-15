@@ -60,6 +60,7 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
         { account: REVENUE_ACCOUNTS.ventes, amount: data.ventesEncaissees },
         { account: REVENUE_ACCOUNTS.achats, amount: data.achatsEncaisses },
         { account: REVENUE_ACCOUNTS.lotissements, amount: data.lotissementsEncaisses },
+        { account: REVENUE_ACCOUNTS.cautions, amount: data.cautionsEncaissees },
       ].filter(r => r.amount > 0);
 
       // Helper to render manager sub-table for rent details

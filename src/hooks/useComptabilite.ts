@@ -493,13 +493,30 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       getParentDownPayment: (e: any) => number
     ): ManagerRevenueGroup[] => {
       const details: RevenueDetail[] = [];
-      // Paid echeances
+      // Paid echeances - compute échéance number per vente
       if (echeances) {
+        // Group all echeances by vente_id to determine numbering
+        const venteEcheanceMap = new Map<string, any[]>();
+        echeances.forEach((e: any) => {
+          const venteId = e.vente_id || e.achat_id;
+          if (!venteEcheanceMap.has(venteId)) venteEcheanceMap.set(venteId, []);
+          venteEcheanceMap.get(venteId)!.push(e);
+        });
+        // Sort each group by due_date to assign sequential numbers
+        venteEcheanceMap.forEach((list) => {
+          list.sort((a: any, b: any) => (a.due_date || "").localeCompare(b.due_date || ""));
+          list.forEach((e: any, idx: number) => {
+            e._echeanceNum = idx + 1;
+            e._echeanceTotal = list.length;
+          });
+        });
+
         echeances.forEach((e: any) => {
           if (normalizeStatus(e.status) !== "paid") return;
+          const echeanceLabel = `Éch. ${e._echeanceNum || "?"}/${e._echeanceTotal || "?"}`;
           details.push({
             label: getEcheanceLabel(e),
-            description: getEcheanceDesc(e) + " (Échéance)",
+            description: getEcheanceDesc(e) + ` (${echeanceLabel})`,
             amount: Number(e.paid_amount) || Number(e.amount),
             paidDate: e.paid_date || e.due_date,
             managerName: resolveManager(getEcheanceAssignedTo(e)),

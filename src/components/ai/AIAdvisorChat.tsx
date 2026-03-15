@@ -63,6 +63,7 @@ export function AIAdvisorChat({ context, title }: AIAdvisorChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { hasFeature, isLoading: featureLoading } = useFeatureAccess();
+  const { data: userRole } = useCurrentUserRole();
 
   useEffect(() => {
     if (scrollRef.current) {

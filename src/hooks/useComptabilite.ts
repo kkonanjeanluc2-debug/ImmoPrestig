@@ -335,6 +335,23 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  // Fetch cautions (security deposits) from active contracts within the period
+  const { data: cautions } = useQuery({
+    queryKey: ["comptabilite-cautions", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contracts")
+        .select("id, deposit, start_date, tenant:tenants(name, assigned_to, property:properties(name))")
+        .gt("deposit", 0)
+        .is("deleted_at", null)
+        .gte("start_date", fromDate)
+        .lte("start_date", toDate);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const { data: expenses } = useQuery({
     queryKey: ["comptabilite-expenses", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
     queryFn: async () => {

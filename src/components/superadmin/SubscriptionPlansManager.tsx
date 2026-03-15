@@ -53,7 +53,12 @@ interface PlanFormData {
   name: string;
   description: string;
   price_monthly: number;
+  price_quarterly: number;
+  price_semi_annual: number;
   price_yearly: number;
+  quarterly_discount: number;
+  semi_annual_discount: number;
+  yearly_discount: number;
   max_properties: number | null;
   max_tenants: number | null;
   max_users: number | null;
@@ -67,7 +72,12 @@ const defaultFormData: PlanFormData = {
   name: "",
   description: "",
   price_monthly: 0,
+  price_quarterly: 0,
+  price_semi_annual: 0,
   price_yearly: 0,
+  quarterly_discount: 5,
+  semi_annual_discount: 10,
+  yearly_discount: 17,
   max_properties: null,
   max_tenants: null,
   max_users: 1,

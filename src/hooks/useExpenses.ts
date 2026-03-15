@@ -35,7 +35,7 @@ export const EXPENSE_CATEGORIES = [
 export const REVENUE_ACCOUNTS = {
   loyers: { label: "Loyers encaissés", syscohada: "706", classe: "Ventes de services" },
   ventes: { label: "Ventes immobilières", syscohada: "702", classe: "Ventes de produits finis" },
-  achats: { label: "Commissions achats", syscohada: "706", classe: "Ventes de services" },
+  achats: { label: "Achats immobiliers", syscohada: "706", classe: "Ventes de services" },
   lotissements: { label: "Ventes lotissements", syscohada: "702", classe: "Ventes de produits finis" },
 } as const;
 

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
 type Message = { role: "user" | "assistant"; content: string };
 type AdvisorContext = "unpaid" | "sales" | "parcels" | "all";

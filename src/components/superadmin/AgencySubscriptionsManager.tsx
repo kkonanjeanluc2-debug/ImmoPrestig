@@ -193,9 +193,7 @@ export function AgencySubscriptionsManager() {
                             <p className="font-medium">{plan.name}</p>
                             <p className="text-sm text-muted-foreground">
                               {formatPrice(
-                                subscription?.billing_cycle === "yearly"
-                                  ? plan.price_yearly
-                                  : plan.price_monthly
+                                getPriceForCycle(plan, (subscription?.billing_cycle || "monthly") as BillingCycle)
                               )}{" "}
                               FCFA
                             </p>

@@ -688,10 +688,28 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       ventesImmobilieres as any, "ventes", "ventesEncaissees",
       (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0), (v) => v.sale_date
     );
+    // Only intermediation achats as revenue
+    const achatsIntermediation = (achatsImmobiliers as any[] || []).filter((a: any) => !a.is_agency_purchase);
+    const achatsAgence = (achatsImmobiliers as any[] || []).filter((a: any) => a.is_agency_purchase);
     addDownPayments(
-      achatsImmobiliers as any, "achats", "achatsEncaisses",
+      achatsIntermediation, "achats", "achatsEncaisses",
       (a) => a.payment_type, (a) => Number(a.sale_price), (a) => Number(a.down_payment || 0), (a) => a.sale_date
     );
+    // Agency purchases down payments → expenses
+    achatsAgence.forEach((a: any) => {
+      const paymentType = a.payment_type;
+      const dp = Number(a.down_payment || 0);
+      const total = Number(a.sale_price || 0);
+      const amount = paymentType === "comptant" ? (dp || total || 0) : (dp || 0);
+      if (amount <= 0) return;
+      result.totalExpenses += amount;
+      const date = new Date(a.sale_date);
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      const monthly = monthlyMap.get(key);
+      if (monthly) {
+        monthly.depenses += amount;
+      }
+    });
     addDownPayments(
       ventesParcelles as any, "lotissements", "lotissementsEncaisses",
       (v) => v.payment_type, (v) => Number(v.total_price), (v) => Number(v.down_payment || 0), (v) => v.sale_date

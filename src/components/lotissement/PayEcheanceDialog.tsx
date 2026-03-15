@@ -63,7 +63,15 @@ const methodLabels: Record<string, string> = {
 export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceDialogProps) {
   const payEcheance = usePayEcheance();
   const { data: agency } = useAgency();
-  const { profile } = useAuth();
+  const { user } = useAuth();
+  const { data: userProfile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user!.id).single();
+      return data;
+    },
+    enabled: !!user,
+  });
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paidData, setPaidData] = useState<PaymentFormData | null>(null);
   const [generating, setGenerating] = useState(false);

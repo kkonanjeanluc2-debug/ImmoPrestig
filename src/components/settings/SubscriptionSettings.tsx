@@ -143,9 +143,8 @@ export function SubscriptionSettings() {
                     <p className="text-sm text-muted-foreground">
                       {subscription.billing_cycle === "lifetime" 
                         ? "Abonnement à vie" 
-                        : subscription.billing_cycle === "yearly" 
-                          ? "Facturation annuelle" 
-                          : "Facturation mensuelle"}
+                        : `Facturation ${billingCycleLabels[subscription.billing_cycle as BillingCycle]?.toLowerCase() || subscription.billing_cycle}`}
+                    </p>
                     </p>
                   </div>
                 </div>

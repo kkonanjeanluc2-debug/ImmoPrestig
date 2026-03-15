@@ -3,7 +3,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Download, FileText } from "lucide-react";
-import { ComptabiliteData, PaidRentDetail, ManagerRentGroup } from "@/hooks/useComptabilite";
+import { ComptabiliteData, PaidRentDetail, ManagerRentGroup, ManagerRevenueGroup } from "@/hooks/useComptabilite";
 import { Expense, getSyscohadaAccount, REVENUE_ACCOUNTS } from "@/hooks/useExpenses";
 import { toast } from "sonner";
 import { createPDFDocument } from "@/lib/pdfFont";
@@ -62,6 +62,87 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
         { account: REVENUE_ACCOUNTS.lotissements, amount: data.lotissementsEncaisses },
       ].filter(r => r.amount > 0);
 
+      // Helper to render manager sub-table for rent details
+      const renderRentManagerGroups = (groups: ManagerRentGroup[], doc: any, startY: number): number => {
+        let y = startY + 2;
+        groups.forEach((group) => {
+          if (y + 20 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+          doc.setFillColor(26, 54, 93);
+          doc.rect(25, y, pageWidth - 50, 8, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(7.5);
+          doc.setFont("helvetica", "bold");
+          doc.text(`Gestionnaire : ${group.managerName}`, 28, y + 5.5);
+          doc.text(`Total : ${formatAmountWithCurrency(group.total)}`, pageWidth - 30, y + 5.5, { align: "right" });
+          y += 8;
+          doc.setFillColor(230, 237, 245);
+          doc.rect(25, y, pageWidth - 50, 7, "F");
+          doc.setTextColor(...primaryColor);
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "bold");
+          doc.text("Locataire", 28, y + 5);
+          doc.text("Mois concerné(s)", 90, y + 5);
+          doc.text("Montant", pageWidth - 30, y + 5, { align: "right" });
+          y += 7;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          group.details.forEach((detail, j) => {
+            if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+            if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
+            doc.setTextColor(...textColor);
+            const name = detail.tenantName.length > 25 ? detail.tenantName.substring(0, 23) + "..." : detail.tenantName;
+            doc.text(name, 28, y + 5);
+            const monthsText = detail.months.length > 0 ? detail.months.join(", ") : new Date(detail.paidDate).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+            const truncMonths = monthsText.length > 35 ? monthsText.substring(0, 33) + "..." : monthsText;
+            doc.text(truncMonths, 90, y + 5);
+            doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 5, { align: "right" });
+            y += 7;
+          });
+          y += 3;
+        });
+        return y;
+      };
+
+      // Helper to render manager sub-table for generic revenue details
+      const renderRevenueManagerGroups = (groups: ManagerRevenueGroup[], col1Label: string, col2Label: string, doc: any, startY: number): number => {
+        let y = startY + 2;
+        groups.forEach((group) => {
+          if (y + 20 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+          doc.setFillColor(26, 54, 93);
+          doc.rect(25, y, pageWidth - 50, 8, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(7.5);
+          doc.setFont("helvetica", "bold");
+          doc.text(`Gestionnaire : ${group.managerName}`, 28, y + 5.5);
+          doc.text(`Total : ${formatAmountWithCurrency(group.total)}`, pageWidth - 30, y + 5.5, { align: "right" });
+          y += 8;
+          doc.setFillColor(230, 237, 245);
+          doc.rect(25, y, pageWidth - 50, 7, "F");
+          doc.setTextColor(...primaryColor);
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "bold");
+          doc.text(col1Label, 28, y + 5);
+          doc.text(col2Label, 90, y + 5);
+          doc.text("Montant", pageWidth - 30, y + 5, { align: "right" });
+          y += 7;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          group.details.forEach((detail, j) => {
+            if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+            if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
+            doc.setTextColor(...textColor);
+            const label = detail.label.length > 25 ? detail.label.substring(0, 23) + "..." : detail.label;
+            doc.text(label, 28, y + 5);
+            const desc = detail.description.length > 35 ? detail.description.substring(0, 33) + "..." : detail.description;
+            doc.text(desc, 90, y + 5);
+            doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 5, { align: "right" });
+            y += 7;
+          });
+          y += 3;
+        });
+        return y;
+      };
+
       revenueRows.forEach((row, i) => {
         if (i % 2 === 0) {
           doc.setFillColor(...lightGray);
@@ -73,63 +154,18 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
         doc.text(formatAmountWithCurrency(row.amount), pageWidth - 20, y + 6, { align: "right" });
         y += 9;
 
-        // Add detailed rent breakdown by manager for loyers
+        // Add detailed breakdown by manager for each category
         if (row.account === REVENUE_ACCOUNTS.loyers && data.paidRentsByManager.length > 0) {
-          y += 2;
-
-          data.paidRentsByManager.forEach((group) => {
-            // Page break check
-            if (y + 20 > doc.internal.pageSize.getHeight() - 30) {
-              doc.addPage();
-              y = 20;
-            }
-
-            // Manager header
-            doc.setFillColor(26, 54, 93);
-            doc.rect(25, y, pageWidth - 50, 8, "F");
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(7.5);
-            doc.setFont("helvetica", "bold");
-            doc.text(`Gestionnaire : ${group.managerName}`, 28, y + 5.5);
-            doc.text(`Total : ${formatAmountWithCurrency(group.total)}`, pageWidth - 30, y + 5.5, { align: "right" });
-            y += 8;
-
-            // Sub-header
-            doc.setFillColor(230, 237, 245);
-            doc.rect(25, y, pageWidth - 50, 7, "F");
-            doc.setTextColor(...primaryColor);
-            doc.setFontSize(7);
-            doc.setFont("helvetica", "bold");
-            doc.text("Locataire", 28, y + 5);
-            doc.text("Mois concerné(s)", 90, y + 5);
-            doc.text("Montant", pageWidth - 30, y + 5, { align: "right" });
-            y += 7;
-
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(7);
-
-            group.details.forEach((detail, j) => {
-              // Page break check
-              if (y + 8 > doc.internal.pageSize.getHeight() - 30) {
-                doc.addPage();
-                y = 20;
-              }
-              if (j % 2 === 0) {
-                doc.setFillColor(245, 248, 252);
-                doc.rect(25, y, pageWidth - 50, 7, "F");
-              }
-              doc.setTextColor(...textColor);
-              const name = detail.tenantName.length > 25 ? detail.tenantName.substring(0, 23) + "..." : detail.tenantName;
-              doc.text(name, 28, y + 5);
-              const monthsText = detail.months.length > 0 ? detail.months.join(", ") : new Date(detail.paidDate).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-              const truncMonths = monthsText.length > 35 ? monthsText.substring(0, 33) + "..." : monthsText;
-              doc.text(truncMonths, 90, y + 5);
-              doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 5, { align: "right" });
-              y += 7;
-            });
-            y += 3;
-          });
-
+          y = renderRentManagerGroups(data.paidRentsByManager, doc, y);
+          doc.setFontSize(9);
+        } else if (row.account === REVENUE_ACCOUNTS.ventes && data.ventesByManager.length > 0) {
+          y = renderRevenueManagerGroups(data.ventesByManager, "Bien", "Acquéreur", doc, y);
+          doc.setFontSize(9);
+        } else if (row.account === REVENUE_ACCOUNTS.achats && data.achatsByManager.length > 0) {
+          y = renderRevenueManagerGroups(data.achatsByManager, "Bien", "Acquéreur", doc, y);
+          doc.setFontSize(9);
+        } else if (row.account === REVENUE_ACCOUNTS.lotissements && data.lotissementsByManager.length > 0) {
+          y = renderRevenueManagerGroups(data.lotissementsByManager, "Parcelle", "Acquéreur", doc, y);
           doc.setFontSize(9);
         }
       });

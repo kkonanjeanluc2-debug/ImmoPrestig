@@ -17,6 +17,20 @@ export interface ManagerRentGroup {
   total: number;
 }
 
+export interface RevenueDetail {
+  label: string;
+  description: string;
+  amount: number;
+  paidDate: string;
+  managerName: string;
+}
+
+export interface ManagerRevenueGroup {
+  managerName: string;
+  details: RevenueDetail[];
+  total: number;
+}
+
 export interface ComptabiliteData {
   // Revenue sources
   loyersEncaisses: number;
@@ -43,6 +57,10 @@ export interface ComptabiliteData {
   paidRentDetails: PaidRentDetail[];
   // Grouped by manager
   paidRentsByManager: ManagerRentGroup[];
+  // Other revenue categories grouped by manager
+  ventesByManager: ManagerRevenueGroup[];
+  achatsByManager: ManagerRevenueGroup[];
+  lotissementsByManager: ManagerRevenueGroup[];
 }
 
 export interface MonthlyEntry {
@@ -92,7 +110,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_ventes")
-        .select("amount, status, due_date, paid_date, payment_method")
+        .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_immobilieres(bien:biens_vente(assigned_to, title), acquereur:acquereurs(name))")
         .gte("due_date", periodFrom.toISOString().split("T")[0])
         .lte("due_date", periodTo.toISOString().split("T")[0]);
       if (error) throw error;
@@ -106,7 +124,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_achats")
-        .select("amount, status, due_date, paid_date, payment_method")
+        .select("amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
         .gte("due_date", periodFrom.toISOString().split("T")[0])
         .lte("due_date", periodTo.toISOString().split("T")[0]);
       if (error) throw error;
@@ -120,7 +138,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_parcelles")
-        .select("amount, status, due_date, paid_date, payment_method")
+        .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_parcelles(sold_by, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name))")
         .gte("due_date", periodFrom.toISOString().split("T")[0])
         .lte("due_date", periodTo.toISOString().split("T")[0]);
       if (error) throw error;
@@ -143,16 +161,35 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
-  // Extract manager IDs from payments for profile resolution
+  // Extract manager IDs from all revenue sources for profile resolution
   const managerUserIds = useMemo(() => {
-    if (!payments) return [];
     const ids = new Set<string>();
-    payments.forEach((p: any) => {
-      const assignedTo = p.tenant?.assigned_to;
-      if (assignedTo) ids.add(assignedTo);
-    });
+    if (payments) {
+      payments.forEach((p: any) => {
+        const assignedTo = p.tenant?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (echeancesVentes) {
+      (echeancesVentes as any[]).forEach((e: any) => {
+        const assignedTo = e.vente?.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (echeancesAchats) {
+      (echeancesAchats as any[]).forEach((e: any) => {
+        const assignedTo = e.achat?.bien?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
+    if (echeancesParcelles) {
+      (echeancesParcelles as any[]).forEach((e: any) => {
+        const assignedTo = e.vente?.sold_by || e.vente?.parcelle?.assigned_to;
+        if (assignedTo) ids.add(assignedTo);
+      });
+    }
     return Array.from(ids);
-  }, [payments]);
+  }, [payments, echeancesVentes, echeancesAchats, echeancesParcelles]);
 
   const { data: managerProfiles } = useQuery({
     queryKey: ["comptabilite-manager-profiles", managerUserIds],
@@ -186,6 +223,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       byPaymentMethod: [],
       paidRentDetails: [],
       paidRentsByManager: [],
+      ventesByManager: [],
+      achatsByManager: [],
+      lotissementsByManager: [],
     };
 
     // Build monthly buckets
@@ -316,6 +356,73 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     processEntries(echeancesVentes as any, "ventes", "ventesEncaissees", "ventesEnAttente");
     processEntries(echeancesAchats as any, "achats", "achatsEncaisses", "achatsEnAttente");
     processEntries(echeancesParcelles as any, "lotissements", "lotissementsEncaisses", "lotissementsEnAttente");
+
+    // Build profile map for manager name resolution
+    const profileMap = new Map<string, string>();
+    managerProfiles?.forEach((p) => {
+      profileMap.set(p.user_id, p.full_name || "Gestionnaire");
+    });
+    const resolveManager = (id: string | null | undefined) => {
+      if (!id) return "Non assigné";
+      return profileMap.get(id) || "Gestionnaire";
+    };
+
+    // Group ventes by manager
+    const groupByManager = (entries: any[] | undefined, getAssignedTo: (e: any) => string | null, getLabel: (e: any) => string, getDescription: (e: any) => string): ManagerRevenueGroup[] => {
+      if (!entries) return [];
+      const details: RevenueDetail[] = [];
+      entries.forEach((e: any) => {
+        if (normalizeStatus(e.status) !== "paid") return;
+        const assignedTo = getAssignedTo(e);
+        details.push({
+          label: getLabel(e),
+          description: getDescription(e),
+          amount: Number(e.paid_amount) || Number(e.amount),
+          paidDate: e.paid_date || e.due_date,
+          managerName: resolveManager(assignedTo),
+        });
+      });
+      details.sort((a, b) => a.managerName.localeCompare(b.managerName) || a.label.localeCompare(b.label));
+      const groupMap = new Map<string, RevenueDetail[]>();
+      details.forEach((d) => {
+        const group = groupMap.get(d.managerName) || [];
+        group.push(d);
+        groupMap.set(d.managerName, group);
+      });
+      return Array.from(groupMap.entries()).map(([managerName, dets]) => ({
+        managerName,
+        details: dets,
+        total: dets.reduce((s, d) => s + d.amount, 0),
+      }));
+    };
+
+    result.ventesByManager = groupByManager(
+      echeancesVentes as any,
+      (e) => e.vente?.bien?.assigned_to,
+      (e) => e.vente?.bien?.title || "Bien inconnu",
+      (e) => e.vente?.acquereur?.name || "Acquéreur inconnu"
+    );
+
+    result.achatsByManager = groupByManager(
+      echeancesAchats as any,
+      (e) => e.achat?.bien?.assigned_to,
+      (e) => e.achat?.bien?.title || "Bien inconnu",
+      (e) => e.achat?.acquereur?.name || "Acquéreur inconnu"
+    );
+
+    result.lotissementsByManager = groupByManager(
+      echeancesParcelles as any,
+      (e) => e.vente?.sold_by || e.vente?.parcelle?.assigned_to,
+      (e) => {
+        const parcelle = e.vente?.parcelle;
+        if (parcelle) {
+          const lotName = parcelle.lotissement?.name || "";
+          return `${lotName} - Parcelle ${parcelle.plot_number}`;
+        }
+        return "Parcelle inconnue";
+      },
+      (e) => e.vente?.acquereur?.name || "Acquéreur inconnu"
+    );
 
     // Process expenses
     const expCategoryMap = new Map<string, number>();

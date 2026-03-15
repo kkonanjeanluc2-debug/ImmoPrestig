@@ -168,6 +168,20 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
+  const { data: allPendingAchats } = useQuery({
+    queryKey: ["comptabilite-achats-pending-all", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("echeances_achats")
+        .select("amount, status")
+        .eq("status", "en_attente");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Fetch achats_immobiliers for down_payments (acomptes)
   const { data: achatsImmobiliers } = useQuery({
     queryKey: ["comptabilite-achats-immo", user?.id, periodFrom.toISOString(), periodTo.toISOString()],

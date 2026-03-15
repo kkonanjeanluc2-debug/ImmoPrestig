@@ -42,6 +42,7 @@ import { EmailHistoryDialog } from "@/components/tenant/EmailHistoryDialog";
 import { WhatsAppHistoryDialog } from "@/components/tenant/WhatsAppHistoryDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
+import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateAgencyFeesReceipt } from "@/lib/generateAgencyFeesReceipt";
 import { useAgency } from "@/hooks/useAgency";

@@ -36,7 +36,7 @@ const fadeUp = {
 const Pricing = () => {
   const { data: plans, isLoading } = useSubscriptionPlans();
   const { data: discountSetting } = usePlatformSetting("yearly_discount_percentage");
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "semi_annual" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);

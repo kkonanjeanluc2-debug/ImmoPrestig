@@ -110,7 +110,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_ventes")
-        .select("amount, status, due_date, paid_date, payment_method")
+        .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_immobilieres(bien:biens_vente(assigned_to, title), acquereur:acquereurs(name))")
         .gte("due_date", periodFrom.toISOString().split("T")[0])
         .lte("due_date", periodTo.toISOString().split("T")[0]);
       if (error) throw error;
@@ -124,7 +124,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_achats")
-        .select("amount, status, due_date, paid_date, payment_method")
+        .select("amount, status, due_date, paid_date, payment_method, paid_amount, achat:achats_immobiliers(bien:biens_achat(assigned_to, title), acquereur:acquereurs(name))")
         .gte("due_date", periodFrom.toISOString().split("T")[0])
         .lte("due_date", periodTo.toISOString().split("T")[0]);
       if (error) throw error;
@@ -138,7 +138,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("echeances_parcelles")
-        .select("amount, status, due_date, paid_date, payment_method")
+        .select("amount, status, due_date, paid_date, payment_method, paid_amount, vente:ventes_parcelles(sold_by, parcelle:parcelles(assigned_to, plot_number, lotissement:lotissements(name)), acquereur:acquereurs(name))")
         .gte("due_date", periodFrom.toISOString().split("T")[0])
         .lte("due_date", periodTo.toISOString().split("T")[0]);
       if (error) throw error;

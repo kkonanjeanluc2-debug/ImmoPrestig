@@ -27,6 +27,8 @@ import { fr } from "date-fns/locale";
 import { Banknote, CreditCard, Smartphone, Building, Download, CheckCircle2 } from "lucide-react";
 import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
 import { useAgency } from "@/hooks/useAgency";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const paymentSchema = z.object({

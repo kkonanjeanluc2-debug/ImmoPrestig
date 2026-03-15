@@ -59,6 +59,7 @@ export function SubscriptionSettings() {
   const { data: subscription, isLoading: subLoading } = useAgencySubscription();
   const { data: transactions, isLoading: txLoading } = useAgencyPaymentHistory();
   const { data: plans } = useSubscriptionPlans();
+  const { data: agency } = useAgency();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");

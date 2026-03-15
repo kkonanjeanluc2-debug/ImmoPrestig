@@ -39,7 +39,7 @@ export function EcheancesAchatsList() {
   const { data: agency } = useAgency();
   const { user } = useAuth();
   const { hasPermission } = usePermissions();
-  const canEditAchats = hasPermission("can_edit_achats");
+  const canEditAchats = hasPermission("can_edit_achats") || hasPermission("can_create_payments");
   const payMutation = usePayEcheanceAchat();
 
   const [payDialogOpen, setPayDialogOpen] = useState(false);

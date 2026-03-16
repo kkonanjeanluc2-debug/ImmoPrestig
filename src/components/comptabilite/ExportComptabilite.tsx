@@ -159,6 +159,75 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
         if (row.account === REVENUE_ACCOUNTS.loyers && data.paidRentsByManager.length > 0) {
           y = renderRentManagerGroups(data.paidRentsByManager, doc, y);
           doc.setFontSize(9);
+
+          // === Payment method summary (espèces vs en ligne) grouped by manager ===
+          if (data.paidRentDetails.length > 0) {
+            if (y + 30 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+            
+            // Build data: manager -> { especes, en_ligne }
+            const methodByManager = new Map<string, { especes: number; enLigne: number }>();
+            let totalEspeces = 0;
+            let totalEnLigne = 0;
+            data.paidRentDetails.forEach((d) => {
+              const entry = methodByManager.get(d.managerName) || { especes: 0, enLigne: 0 };
+              const isOnline = d.paymentMethod === "en_ligne" || d.paymentMethod === "mobile_money" || d.paymentMethod === "Mobile Money" || d.paymentMethod === "card" || d.paymentMethod === "wave" || d.paymentMethod === "kkiapay";
+              if (isOnline) {
+                entry.enLigne += d.amount;
+                totalEnLigne += d.amount;
+              } else {
+                entry.especes += d.amount;
+                totalEspeces += d.amount;
+              }
+              methodByManager.set(d.managerName, entry);
+            });
+
+            // Section header
+            doc.setFillColor(52, 152, 219);
+            doc.rect(25, y, pageWidth - 50, 8, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(7.5);
+            doc.setFont("helvetica", "bold");
+            doc.text("RÉCAPITULATIF PAR MODE DE PAIEMENT", 28, y + 5.5);
+            y += 8;
+
+            // Sub-header
+            doc.setFillColor(230, 237, 245);
+            doc.rect(25, y, pageWidth - 50, 7, "F");
+            doc.setTextColor(...primaryColor);
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "bold");
+            doc.text("Gestionnaire", 28, y + 5);
+            doc.text("Espèces", 110, y + 5);
+            doc.text("En ligne", pageWidth - 30, y + 5, { align: "right" });
+            y += 7;
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(7);
+            let rowIdx = 0;
+            Array.from(methodByManager.entries()).forEach(([manager, amounts]) => {
+              if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+              if (rowIdx % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
+              doc.setTextColor(...textColor);
+              const name = manager.length > 30 ? manager.substring(0, 28) + "..." : manager;
+              doc.text(name, 28, y + 5);
+              doc.text(formatAmountWithCurrency(amounts.especes), 110, y + 5);
+              doc.text(formatAmountWithCurrency(amounts.enLigne), pageWidth - 30, y + 5, { align: "right" });
+              y += 7;
+              rowIdx++;
+            });
+
+            // Totals row
+            if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+            doc.setFillColor(52, 152, 219);
+            doc.rect(25, y, pageWidth - 50, 7, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "bold");
+            doc.text("TOTAL", 28, y + 5);
+            doc.text(formatAmountWithCurrency(totalEspeces), 110, y + 5);
+            doc.text(formatAmountWithCurrency(totalEnLigne), pageWidth - 30, y + 5, { align: "right" });
+            y += 10;
+          }
         } else if (row.account === REVENUE_ACCOUNTS.ventes && data.ventesByManager.length > 0) {
           y = renderRevenueManagerGroups(data.ventesByManager, "Bien", "Acquéreur", doc, y);
           doc.setFontSize(9);

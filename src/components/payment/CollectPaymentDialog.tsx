@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,10 +20,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useUpdatePayment, useCreatePayment } from "@/hooks/usePayments";
 import { useToast } from "@/hooks/use-toast";
 import { useAgency } from "@/hooks/useAgency";
-import { Loader2, CheckCircle, Banknote, Mail, FileText, Percent } from "lucide-react";
+import { Loader2, CheckCircle, Banknote, Mail, FileText, Percent, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateRentReceiptBase64WithTemplate, getPaymentPeriod, getPaymentPeriodsFromMonths } from "@/lib/generateReceipt";
 import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";

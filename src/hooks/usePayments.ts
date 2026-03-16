@@ -63,10 +63,12 @@ export const usePayments = () => {
 
       if (contractsError) throw contractsError;
 
-      // Check which tenants already have a payment for next month
-      const existingTenantIds = new Set(
+      // Check which tenants already have a PAID payment for next month
+      // Only paid payments should block virtual payment generation
+      const paidTenantIds = new Set(
         (data || [])
           .filter(p => {
+            if (p.status !== "paid") return false;
             // Check if payment covers next month via payment_months
             if (p.payment_months && Array.isArray(p.payment_months)) {
               return p.payment_months.includes(nextMonthLabel);
@@ -77,6 +79,25 @@ export const usePayments = () => {
           })
           .map(p => p.tenant_id)
       );
+
+      // Also check tenants with existing real (non-virtual) pending/late payments for next month
+      // to avoid duplicating them
+      const existingRealPaymentTenantIds = new Set(
+        (data || [])
+          .filter(p => {
+            if (p.status === "paid") return false; // already handled above
+            // Check if payment covers next month
+            if (p.payment_months && Array.isArray(p.payment_months)) {
+              return p.payment_months.includes(nextMonthLabel);
+            }
+            const dueDate = new Date(p.due_date);
+            return dueDate.getMonth() === nextMonth && dueDate.getFullYear() === nextYear;
+          })
+          .map(p => p.tenant_id)
+      );
+
+      // Combine: skip if paid OR if a real pending/late payment already exists
+      const existingTenantIds = new Set([...paidTenantIds, ...existingRealPaymentTenantIds]);
 
       // Generate virtual pending payments for tenants without one
       const virtualPayments = (activeContracts || [])

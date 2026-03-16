@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,10 +20,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useUpdatePayment, useCreatePayment } from "@/hooks/usePayments";
 import { useToast } from "@/hooks/use-toast";
 import { useAgency } from "@/hooks/useAgency";
-import { Loader2, CheckCircle, Banknote, Mail, FileText, Percent } from "lucide-react";
+import { Loader2, CheckCircle, Banknote, Mail, FileText, Percent, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateRentReceiptBase64WithTemplate, getPaymentPeriod, getPaymentPeriodsFromMonths } from "@/lib/generateReceipt";
 import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
@@ -87,6 +88,8 @@ export function CollectPaymentDialog({
   const [isSendingReceipt, setIsSendingReceipt] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplate | null>(null);
+  const [latePayments, setLatePayments] = useState<any[]>([]);
+  const [checkingLate, setCheckingLate] = useState(false);
   const remaining = amount - paidAmount;
   const [collectAmount, setCollectAmount] = useState<number>(remaining);
   const updatePayment = useUpdatePayment();
@@ -99,12 +102,40 @@ export function CollectPaymentDialog({
     setSelectedTemplate(template);
   }, []);
 
+  // Check for late payments when dialog opens
+  const checkLatePayments = useCallback(async () => {
+    if (!tenantId) return;
+    setCheckingLate(true);
+    try {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, due_date, amount, payment_months, status")
+        .eq("tenant_id", tenantId)
+        .eq("status", "late")
+        .order("due_date", { ascending: true });
+
+      if (!error && data) {
+        // Exclude current payment from the late list
+        setLatePayments(data.filter(p => p.id !== paymentId));
+      }
+    } catch (e) {
+      console.error("Error checking late payments:", e);
+    } finally {
+      setCheckingLate(false);
+    }
+  }, [tenantId, paymentId]);
+
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
       setCollectAmount(remaining);
+      checkLatePayments();
+    } else {
+      setLatePayments([]);
     }
   };
+
+  const hasBlockingLatePayments = latePayments.length > 0;
 
   const handleCollect = async () => {
     if (collectAmount <= 0 || collectAmount > remaining) {
@@ -259,6 +290,29 @@ export function CollectPaymentDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Late payments warning */}
+          {checkingLate ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Vérification des arriérés...
+            </div>
+          ) : hasBlockingLatePayments && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium mb-1">Ce locataire a {latePayments.length} mois en retard non réglé{latePayments.length > 1 ? "s" : ""} :</p>
+                <ul className="list-disc list-inside text-xs space-y-0.5">
+                  {latePayments.map((lp) => (
+                    <li key={lp.id}>
+                      {lp.payment_months?.length > 0 ? lp.payment_months.join(", ") : new Date(lp.due_date + "T00:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" })} — {Number(lp.amount).toLocaleString("fr-FR")} F CFA
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs">Veuillez d'abord encaisser les mois en retard avant ce paiement.</p>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Locataire</span>
@@ -414,7 +468,7 @@ export function CollectPaymentDialog({
           </Button>
           <Button
             onClick={handleCollect}
-            disabled={isLoading || collectAmount <= 0}
+            disabled={isLoading || collectAmount <= 0 || hasBlockingLatePayments}
             className="bg-emerald hover:bg-emerald/90"
           >
             {isLoading ? (

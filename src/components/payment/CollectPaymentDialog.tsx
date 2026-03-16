@@ -290,8 +290,28 @@ export function CollectPaymentDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-            <div className="flex justify-between items-center">
+          {/* Late payments warning */}
+          {checkingLate ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Vérification des arriérés...
+            </div>
+          ) : hasBlockingLatePayments && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium mb-1">Ce locataire a {latePayments.length} mois en retard non réglé{latePayments.length > 1 ? "s" : ""} :</p>
+                <ul className="list-disc list-inside text-xs space-y-0.5">
+                  {latePayments.map((lp) => (
+                    <li key={lp.id}>
+                      {lp.payment_months?.length > 0 ? lp.payment_months.join(", ") : new Date(lp.due_date + "T00:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" })} — {Number(lp.amount).toLocaleString("fr-FR")} F CFA
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs">Veuillez d'abord encaisser les mois en retard avant ce paiement.</p>
+              </AlertDescription>
+            </Alert>
+          )}
               <span className="text-sm text-muted-foreground">Locataire</span>
               <span className="font-medium">{tenantName}</span>
             </div>

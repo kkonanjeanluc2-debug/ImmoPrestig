@@ -387,7 +387,7 @@ export function TenantPayRentDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" className="text-xs" disabled={isLoadingAgency}>
           <CreditCard className="h-3 w-3 mr-1" />

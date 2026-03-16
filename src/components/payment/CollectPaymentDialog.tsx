@@ -88,6 +88,8 @@ export function CollectPaymentDialog({
   const [isSendingReceipt, setIsSendingReceipt] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplate | null>(null);
+  const [latePayments, setLatePayments] = useState<any[]>([]);
+  const [checkingLate, setCheckingLate] = useState(false);
   const remaining = amount - paidAmount;
   const [collectAmount, setCollectAmount] = useState<number>(remaining);
   const updatePayment = useUpdatePayment();
@@ -100,12 +102,40 @@ export function CollectPaymentDialog({
     setSelectedTemplate(template);
   }, []);
 
+  // Check for late payments when dialog opens
+  const checkLatePayments = useCallback(async () => {
+    if (!tenantId) return;
+    setCheckingLate(true);
+    try {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, due_date, amount, payment_months, status")
+        .eq("tenant_id", tenantId)
+        .eq("status", "late")
+        .order("due_date", { ascending: true });
+
+      if (!error && data) {
+        // Exclude current payment from the late list
+        setLatePayments(data.filter(p => p.id !== paymentId));
+      }
+    } catch (e) {
+      console.error("Error checking late payments:", e);
+    } finally {
+      setCheckingLate(false);
+    }
+  }, [tenantId, paymentId]);
+
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
       setCollectAmount(remaining);
+      checkLatePayments();
+    } else {
+      setLatePayments([]);
     }
   };
+
+  const hasBlockingLatePayments = latePayments.length > 0;
 
   const handleCollect = async () => {
     if (collectAmount <= 0 || collectAmount > remaining) {

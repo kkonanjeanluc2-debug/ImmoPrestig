@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import { toast } from "sonner";
 import { Loader2, CreditCard, Smartphone, AlertCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 interface TenantPayRentDialogProps {
@@ -58,7 +60,42 @@ export function TenantPayRentDialog({
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
   const [phone, setPhone] = useState(tenantPhone || "");
   const [payAmount, setPayAmount] = useState(remainingAmount);
+  const [latePayments, setLatePayments] = useState<any[]>([]);
+  const [checkingLate, setCheckingLate] = useState(false);
   const queryClient = useQueryClient();
+
+  // Check for late payments when dialog opens
+  const checkLatePayments = useCallback(async () => {
+    if (!tenantId) return;
+    setCheckingLate(true);
+    try {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, due_date, amount, payment_months, status")
+        .eq("tenant_id", tenantId)
+        .eq("status", "late")
+        .order("due_date", { ascending: true });
+
+      if (!error && data) {
+        setLatePayments(data.filter(p => p.id !== initialPaymentId));
+      }
+    } catch (e) {
+      console.error("Error checking late payments:", e);
+    } finally {
+      setCheckingLate(false);
+    }
+  }, [tenantId, initialPaymentId]);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      checkLatePayments();
+    } else {
+      setLatePayments([]);
+    }
+  };
+
+  const hasBlockingLatePayments = latePayments.length > 0;
   
   // Check if the agency has online payment enabled
   // Uses SECURITY DEFINER function to bypass RLS (tenants can't query agencies/agency_members directly)
@@ -350,7 +387,7 @@ export function TenantPayRentDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" className="text-xs" disabled={isLoadingAgency}>
           <CreditCard className="h-3 w-3 mr-1" />
@@ -369,6 +406,29 @@ export function TenantPayRentDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Late payments warning */}
+          {checkingLate ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Vérification des arriérés...
+            </div>
+          ) : hasBlockingLatePayments && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium mb-1">Vous avez {latePayments.length} mois en retard non réglé{latePayments.length > 1 ? "s" : ""} :</p>
+                <ul className="list-disc list-inside text-xs space-y-0.5">
+                  {latePayments.map((lp) => (
+                    <li key={lp.id}>
+                      {lp.payment_months?.length > 0 ? lp.payment_months.join(", ") : new Date(lp.due_date + "T00:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" })} — {Number(lp.amount).toLocaleString("fr-FR")} F CFA
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs">Veuillez d'abord régler les mois en retard avant de payer ce mois.</p>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Summary */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
             <div className="flex justify-between items-center">
@@ -462,7 +522,7 @@ export function TenantPayRentDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>
             Annuler
           </Button>
-          <Button onClick={handlePayment} disabled={isLoading}>
+          <Button onClick={handlePayment} disabled={isLoading || hasBlockingLatePayments}>
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

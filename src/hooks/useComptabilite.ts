@@ -9,6 +9,7 @@ export interface PaidRentDetail {
   amount: number;
   paidDate: string;
   managerName: string;
+  paymentMethod: string;
 }
 
 export interface ManagerRentGroup {
@@ -584,6 +585,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             amount,
             paidDate: p.paid_date || p.due_date,
             managerName: assignedTo || "__unassigned__",
+            paymentMethod: p.method || "Non spécifié",
           });
         }
       });
@@ -988,6 +990,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           amount,
           paidDate: p.paid_at?.split("T")[0] || "",
           managerName: resolveManager(assignedTo),
+          paymentMethod: p.payment_method || "en_ligne",
         });
       });
     }

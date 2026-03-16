@@ -60,7 +60,42 @@ export function TenantPayRentDialog({
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
   const [phone, setPhone] = useState(tenantPhone || "");
   const [payAmount, setPayAmount] = useState(remainingAmount);
+  const [latePayments, setLatePayments] = useState<any[]>([]);
+  const [checkingLate, setCheckingLate] = useState(false);
   const queryClient = useQueryClient();
+
+  // Check for late payments when dialog opens
+  const checkLatePayments = useCallback(async () => {
+    if (!tenantId) return;
+    setCheckingLate(true);
+    try {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, due_date, amount, payment_months, status")
+        .eq("tenant_id", tenantId)
+        .eq("status", "late")
+        .order("due_date", { ascending: true });
+
+      if (!error && data) {
+        setLatePayments(data.filter(p => p.id !== initialPaymentId));
+      }
+    } catch (e) {
+      console.error("Error checking late payments:", e);
+    } finally {
+      setCheckingLate(false);
+    }
+  }, [tenantId, initialPaymentId]);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      checkLatePayments();
+    } else {
+      setLatePayments([]);
+    }
+  };
+
+  const hasBlockingLatePayments = latePayments.length > 0;
   
   // Check if the agency has online payment enabled
   // Uses SECURITY DEFINER function to bypass RLS (tenants can't query agencies/agency_members directly)

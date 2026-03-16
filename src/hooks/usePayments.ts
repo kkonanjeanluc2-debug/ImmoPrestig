@@ -63,20 +63,25 @@ export const usePayments = () => {
 
       if (contractsError) throw contractsError;
 
-      // Check which tenants already have a payment for next month
-      // Skip virtual generation if tenant has ANY existing payment (paid, pending, or late)
+      // Check which tenants already have a PAID payment for next month
+      // Supports both month formats: "Avril 2026" and "2026-04"
+      // Also avoids timezone shifts when due_date is stored as YYYY-MM-DD
+      const nextMonthIso = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}`;
       const existingTenantIds = new Set(
         (data || [])
-          .filter(p => {
-            // Check if payment covers next month via payment_months
-            if (p.payment_months && Array.isArray(p.payment_months)) {
-              return p.payment_months.includes(nextMonthLabel);
+          .filter((payment) => {
+            if (payment.status !== "paid" || !payment.tenant_id) return false;
+
+            if (payment.payment_months && Array.isArray(payment.payment_months)) {
+              return (
+                payment.payment_months.includes(nextMonthLabel) ||
+                payment.payment_months.includes(nextMonthIso)
+              );
             }
-            // Or check by due_date month
-            const dueDate = new Date(p.due_date);
-            return dueDate.getMonth() === nextMonth && dueDate.getFullYear() === nextYear;
+
+            return typeof payment.due_date === "string" && payment.due_date.startsWith(nextMonthIso);
           })
-          .map(p => p.tenant_id)
+          .map((payment) => payment.tenant_id)
       );
 
       // Generate virtual pending payments for tenants without one

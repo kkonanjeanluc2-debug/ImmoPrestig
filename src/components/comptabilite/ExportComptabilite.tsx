@@ -168,7 +168,6 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
               especes: "Espèces",
               cheque: "Chèque",
               virement: "Virement",
-              wave: "Wave",
               kkiapay: "KKiaPay",
               mobile_money: "Mobile Money",
               "Mobile Money": "Mobile Money",
@@ -177,6 +176,14 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
               orange_money: "Orange Money",
               mtn_money: "MTN Money",
               moov: "Moov Money",
+              geniuspay: "GeniusPay",
+            };
+
+            // Merge wave into mobile_money and normalize methods
+            const normalizeMethod = (m: string): string => {
+              if (m === "wave" || m === "Wave") return "mobile_money";
+              if (m === "Mobile Money") return "mobile_money";
+              return m;
             };
 
             // Collect all unique methods and build manager -> { method: amount }
@@ -185,7 +192,7 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             const totals: Record<string, number> = {};
 
             data.paidRentDetails.forEach((d) => {
-              const method = d.paymentMethod || "Non spécifié";
+              const method = normalizeMethod(d.paymentMethod || "Non spécifié");
               allMethods.add(method);
               const entry = methodByManager.get(d.managerName) || {};
               entry[method] = (entry[method] || 0) + d.amount;
@@ -193,17 +200,27 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
               totals[method] = (totals[method] || 0) + d.amount;
             });
 
-            const methods = Array.from(allMethods);
+            // Sort methods: especes first, then alphabetically
+            const methods = Array.from(allMethods).sort((a, b) => {
+              if (a === "especes") return -1;
+              if (b === "especes") return 1;
+              return (methodLabels[a] || a).localeCompare(methodLabels[b] || b);
+            });
 
-            // Calculate column positions dynamically
-            const startX = 28;
-            const managerColWidth = 70;
-            const availableWidth = pageWidth - 50 - managerColWidth;
-            const colWidth = methods.length > 0 ? Math.min(availableWidth / methods.length, 45) : 40;
+            // Calculate column positions to fit within page
+            const tableLeft = 25;
+            const tableRight = pageWidth - 25;
+            const tableWidth = tableRight - tableLeft;
+            const startX = tableLeft + 3;
+            const managerColWidth = 55;
+            const methodColCount = methods.length;
+            const methodAreaWidth = tableWidth - managerColWidth;
+            const colWidth = methodColCount > 0 ? methodAreaWidth / methodColCount : 40;
+            const fontSize = methodColCount > 3 ? 6 : 7;
 
             // Section header
             doc.setFillColor(52, 152, 219);
-            doc.rect(25, y, pageWidth - 50, 8, "F");
+            doc.rect(tableLeft, y, tableWidth, 8, "F");
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(7.5);
             doc.setFont("helvetica", "bold");
@@ -212,9 +229,9 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
 
             // Sub-header
             doc.setFillColor(230, 237, 245);
-            doc.rect(25, y, pageWidth - 50, 7, "F");
+            doc.rect(tableLeft, y, tableWidth, 7, "F");
             doc.setTextColor(...primaryColor);
-            doc.setFontSize(7);
+            doc.setFontSize(fontSize);
             doc.setFont("helvetica", "bold");
             doc.text("Gestionnaire", startX, y + 5);
             methods.forEach((m, idx) => {
@@ -225,17 +242,17 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             y += 7;
 
             doc.setFont("helvetica", "normal");
-            doc.setFontSize(7);
+            doc.setFontSize(fontSize);
             let rowIdx = 0;
             Array.from(methodByManager.entries()).forEach(([manager, amounts]) => {
               if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
-              if (rowIdx % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
+              if (rowIdx % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(tableLeft, y, tableWidth, 7, "F"); }
               doc.setTextColor(...textColor);
-              const name = manager.length > 25 ? manager.substring(0, 23) + "..." : manager;
+              const name = manager.length > 20 ? manager.substring(0, 18) + "..." : manager;
               doc.text(name, startX, y + 5);
               methods.forEach((m, idx) => {
                 const xPos = startX + managerColWidth + idx * colWidth;
-                doc.text(formatAmountWithCurrency(amounts[m] || 0), xPos, y + 5);
+                doc.text(formatAmountForPDF(amounts[m] || 0), xPos, y + 5);
               });
               y += 7;
               rowIdx++;
@@ -244,14 +261,14 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             // Totals row
             if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
             doc.setFillColor(52, 152, 219);
-            doc.rect(25, y, pageWidth - 50, 7, "F");
+            doc.rect(tableLeft, y, tableWidth, 7, "F");
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(7);
+            doc.setFontSize(fontSize);
             doc.setFont("helvetica", "bold");
             doc.text("TOTAL", startX, y + 5);
             methods.forEach((m, idx) => {
               const xPos = startX + managerColWidth + idx * colWidth;
-              doc.text(formatAmountWithCurrency(totals[m] || 0), xPos, y + 5);
+              doc.text(formatAmountForPDF(totals[m] || 0), xPos, y + 5);
             });
             y += 10;
           }

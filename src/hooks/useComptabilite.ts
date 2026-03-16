@@ -990,6 +990,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           amount,
           paidDate: p.paid_at?.split("T")[0] || "",
           managerName: resolveManager(assignedTo),
+          paymentMethod: p.payment_method || "en_ligne",
         });
       });
     }

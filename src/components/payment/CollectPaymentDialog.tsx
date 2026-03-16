@@ -312,6 +312,9 @@ export function CollectPaymentDialog({
               </AlertDescription>
             </Alert>
           )}
+
+          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+            <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Locataire</span>
               <span className="font-medium">{tenantName}</span>
             </div>

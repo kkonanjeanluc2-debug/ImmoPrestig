@@ -160,26 +160,46 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
           y = renderRentManagerGroups(data.paidRentsByManager, doc, y);
           doc.setFontSize(9);
 
-          // === Payment method summary (espèces vs en ligne) grouped by manager ===
+          // === Payment method summary grouped by manager ===
           if (data.paidRentDetails.length > 0) {
             if (y + 30 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
-            
-            // Build data: manager -> { especes, en_ligne }
-            const methodByManager = new Map<string, { especes: number; enLigne: number }>();
-            let totalEspeces = 0;
-            let totalEnLigne = 0;
+
+            const methodLabels: Record<string, string> = {
+              especes: "Espèces",
+              cheque: "Chèque",
+              virement: "Virement",
+              wave: "Wave",
+              kkiapay: "KKiaPay",
+              mobile_money: "Mobile Money",
+              "Mobile Money": "Mobile Money",
+              en_ligne: "En ligne",
+              card: "Carte bancaire",
+              orange_money: "Orange Money",
+              mtn_money: "MTN Money",
+              moov: "Moov Money",
+            };
+
+            // Collect all unique methods and build manager -> { method: amount }
+            const allMethods = new Set<string>();
+            const methodByManager = new Map<string, Record<string, number>>();
+            const totals: Record<string, number> = {};
+
             data.paidRentDetails.forEach((d) => {
-              const entry = methodByManager.get(d.managerName) || { especes: 0, enLigne: 0 };
-              const isOnline = d.paymentMethod === "en_ligne" || d.paymentMethod === "mobile_money" || d.paymentMethod === "Mobile Money" || d.paymentMethod === "card" || d.paymentMethod === "wave" || d.paymentMethod === "kkiapay";
-              if (isOnline) {
-                entry.enLigne += d.amount;
-                totalEnLigne += d.amount;
-              } else {
-                entry.especes += d.amount;
-                totalEspeces += d.amount;
-              }
+              const method = d.paymentMethod || "Non spécifié";
+              allMethods.add(method);
+              const entry = methodByManager.get(d.managerName) || {};
+              entry[method] = (entry[method] || 0) + d.amount;
               methodByManager.set(d.managerName, entry);
+              totals[method] = (totals[method] || 0) + d.amount;
             });
+
+            const methods = Array.from(allMethods);
+
+            // Calculate column positions dynamically
+            const startX = 28;
+            const managerColWidth = 70;
+            const availableWidth = pageWidth - 50 - managerColWidth;
+            const colWidth = methods.length > 0 ? Math.min(availableWidth / methods.length, 45) : 40;
 
             // Section header
             doc.setFillColor(52, 152, 219);
@@ -187,7 +207,7 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(7.5);
             doc.setFont("helvetica", "bold");
-            doc.text("RÉCAPITULATIF PAR MODE DE PAIEMENT", 28, y + 5.5);
+            doc.text("RÉCAPITULATIF PAR MODE DE PAIEMENT", startX, y + 5.5);
             y += 8;
 
             // Sub-header
@@ -196,9 +216,12 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             doc.setTextColor(...primaryColor);
             doc.setFontSize(7);
             doc.setFont("helvetica", "bold");
-            doc.text("Gestionnaire", 28, y + 5);
-            doc.text("Espèces", 110, y + 5);
-            doc.text("En ligne", pageWidth - 30, y + 5, { align: "right" });
+            doc.text("Gestionnaire", startX, y + 5);
+            methods.forEach((m, idx) => {
+              const label = methodLabels[m] || m;
+              const xPos = startX + managerColWidth + idx * colWidth;
+              doc.text(label, xPos, y + 5);
+            });
             y += 7;
 
             doc.setFont("helvetica", "normal");
@@ -208,10 +231,12 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
               if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
               if (rowIdx % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
               doc.setTextColor(...textColor);
-              const name = manager.length > 30 ? manager.substring(0, 28) + "..." : manager;
-              doc.text(name, 28, y + 5);
-              doc.text(formatAmountWithCurrency(amounts.especes), 110, y + 5);
-              doc.text(formatAmountWithCurrency(amounts.enLigne), pageWidth - 30, y + 5, { align: "right" });
+              const name = manager.length > 25 ? manager.substring(0, 23) + "..." : manager;
+              doc.text(name, startX, y + 5);
+              methods.forEach((m, idx) => {
+                const xPos = startX + managerColWidth + idx * colWidth;
+                doc.text(formatAmountWithCurrency(amounts[m] || 0), xPos, y + 5);
+              });
               y += 7;
               rowIdx++;
             });
@@ -223,9 +248,11 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(7);
             doc.setFont("helvetica", "bold");
-            doc.text("TOTAL", 28, y + 5);
-            doc.text(formatAmountWithCurrency(totalEspeces), 110, y + 5);
-            doc.text(formatAmountWithCurrency(totalEnLigne), pageWidth - 30, y + 5, { align: "right" });
+            doc.text("TOTAL", startX, y + 5);
+            methods.forEach((m, idx) => {
+              const xPos = startX + managerColWidth + idx * colWidth;
+              doc.text(formatAmountWithCurrency(totals[m] || 0), xPos, y + 5);
+            });
             y += 10;
           }
         } else if (row.account === REVENUE_ACCOUNTS.ventes && data.ventesByManager.length > 0) {

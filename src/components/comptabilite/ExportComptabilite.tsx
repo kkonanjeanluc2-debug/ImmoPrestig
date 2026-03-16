@@ -187,7 +187,8 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             };
 
             // Collect all unique methods and build manager -> { method: amount }
-            const allMethods = new Set<string>();
+            // Always include these base methods even if no data
+            const allMethods = new Set<string>(["especes", "mobile_money", "virement"]);
             const methodByManager = new Map<string, Record<string, number>>();
             const totals: Record<string, number> = {};
 

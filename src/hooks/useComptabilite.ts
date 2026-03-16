@@ -9,6 +9,7 @@ export interface PaidRentDetail {
   amount: number;
   paidDate: string;
   managerName: string;
+  paymentMethod: string;
 }
 
 export interface ManagerRentGroup {

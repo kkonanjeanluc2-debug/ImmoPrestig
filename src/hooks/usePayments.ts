@@ -64,6 +64,7 @@ export const usePayments = () => {
       if (contractsError) throw contractsError;
 
       // Check which tenants already have a payment for next month
+      // Skip virtual generation if tenant has ANY existing payment (paid, pending, or late)
       const existingTenantIds = new Set(
         (data || [])
           .filter(p => {

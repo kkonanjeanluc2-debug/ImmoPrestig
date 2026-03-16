@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import { toast } from "sonner";
 import { Loader2, CreditCard, Smartphone, AlertCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 interface TenantPayRentDialogProps {

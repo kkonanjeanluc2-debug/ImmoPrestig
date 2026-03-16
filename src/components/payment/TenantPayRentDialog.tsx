@@ -522,7 +522,7 @@ export function TenantPayRentDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>
             Annuler
           </Button>
-          <Button onClick={handlePayment} disabled={isLoading}>
+          <Button onClick={handlePayment} disabled={isLoading || hasBlockingLatePayments}>
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

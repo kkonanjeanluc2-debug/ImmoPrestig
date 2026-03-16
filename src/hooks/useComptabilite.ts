@@ -585,6 +585,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             amount,
             paidDate: p.paid_date || p.due_date,
             managerName: assignedTo || "__unassigned__",
+            paymentMethod: p.method || "Non spécifié",
           });
         }
       });

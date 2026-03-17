@@ -404,7 +404,7 @@ export async function generateActeAchatPDF(
     doc.text("Signature :", buyerX, y);
   }
 
-  const footerLabel = mode === "acte" ? "Acte de vente immobilière" : "Compromis de vente immobilière";
+  const footerLabel = mode === "acte" ? "Acte de vente immobilière" : "Compromis d'achat immobilier";
   addPDFFooter(doc, agency, `${footerLabel} - ${bien.title}`);
   doc.save(`${footerLabel.replace(/'/g, "_").replace(/\s+/g, "_")}_${bien.title.replace(/\s+/g, "_")}.pdf`);
 }

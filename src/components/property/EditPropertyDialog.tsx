@@ -333,7 +333,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
             </div>
           </div>
 
-          {formData.property_type !== "terrain" && formData.property_type !== "maison" && (
+          {formData.property_type !== "terrain" && formData.property_type !== "maison" && formData.property_type !== "immeuble" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="bedrooms">Chambres</Label>

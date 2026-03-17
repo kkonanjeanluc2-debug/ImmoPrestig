@@ -96,7 +96,7 @@ export async function generateActeAchatPDF(
 
   const title = mode === "acte"
     ? "ACTE DE VENTE IMMOBILIÈRE"
-    : "COMPROMIS DE VENTE IMMOBILIÈRE";
+    : "COMPROMIS D'ACHAT IMMOBILIER";
 
   let y = await addPDFHeader(doc, agency, title);
 
@@ -146,7 +146,33 @@ export async function generateActeAchatPDF(
   doc.text("L'ACQUÉREUR :", 14, y);
   y += 6;
   doc.setFontSize(9);
-  y = renderPartyIdentity(doc, achat.acquereurs, "-", y, 20);
+
+  if (achat.is_agency_purchase && agency) {
+    // L'agence est l'acquéreur
+    doc.setFont("helvetica", "bold");
+    doc.text(agency.name, 20, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    if (agency.siret) {
+      doc.text(`RCCM : ${agency.siret}`, 20, y);
+      y += 5;
+    }
+    if (agency.address) {
+      doc.text(`Siège social : ${agency.address}${agency.city ? `, ${agency.city}` : ""}`, 20, y);
+      y += 5;
+    }
+    if (agency.phone) {
+      doc.text(`Téléphone : ${agency.phone}`, 20, y);
+      y += 5;
+    }
+    if (agency.email) {
+      doc.text(`Email : ${agency.email}`, 20, y);
+      y += 5;
+    }
+  } else {
+    y = renderPartyIdentity(doc, achat.acquereurs, "-", y, 20);
+  }
+
   doc.setFont("helvetica", "normal");
   doc.text("Ci-après dénommé(e) « L'ACQUÉREUR »", 20, y);
   y += 10;
@@ -323,7 +349,7 @@ export async function generateActeAchatPDF(
   const vendorX = 14;
   const buyerX = pageWidth / 2 + 10;
   const vendeurName = vendeurParty?.name || "-";
-  const acquereurName = achat.acquereurs?.name || "-";
+  const acquereurName = achat.is_agency_purchase && agency ? agency.name : (achat.acquereurs?.name || "-");
 
   doc.setFont("helvetica", "bold");
   doc.text("LE VENDEUR", vendorX, y);
@@ -378,7 +404,7 @@ export async function generateActeAchatPDF(
     doc.text("Signature :", buyerX, y);
   }
 
-  const footerLabel = mode === "acte" ? "Acte de vente immobilière" : "Compromis de vente immobilière";
+  const footerLabel = mode === "acte" ? "Acte de vente immobilière" : "Compromis d'achat immobilier";
   addPDFFooter(doc, agency, `${footerLabel} - ${bien.title}`);
   doc.save(`${footerLabel.replace(/'/g, "_").replace(/\s+/g, "_")}_${bien.title.replace(/\s+/g, "_")}.pdf`);
 }

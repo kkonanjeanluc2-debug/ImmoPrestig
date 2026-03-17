@@ -228,7 +228,7 @@ export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
       const selectedProp = properties?.find(p => p.id === values.property_id);
       const selectedUnit = unitId ? propertyUnits.find(u => u.id === unitId) : null;
 
-      if (selectedProp?.property_type === "maison" && !unitId) {
+      if ((selectedProp?.property_type === "maison" || selectedProp?.property_type === "immeuble") && !unitId) {
         toast.error("Veuillez sélectionner une porte disponible");
         return;
       }

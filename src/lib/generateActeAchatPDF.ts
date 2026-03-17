@@ -96,7 +96,7 @@ export async function generateActeAchatPDF(
 
   const title = mode === "acte"
     ? "ACTE DE VENTE IMMOBILIÈRE"
-    : "COMPROMIS DE VENTE IMMOBILIÈRE";
+    : "COMPROMIS D'ACHAT IMMOBILIER";
 
   let y = await addPDFHeader(doc, agency, title);
 

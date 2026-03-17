@@ -285,7 +285,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">
-                {formData.property_type === "maison" ? "Revenu mensuel (F CFA)" : "Loyer mensuel (F CFA) *"}
+                {(formData.property_type === "maison" || formData.property_type === "immeuble") ? "Revenu mensuel (F CFA)" : "Loyer mensuel (F CFA) *"}
               </Label>
               <Input
                 id="price"
@@ -307,7 +307,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             </div>
           </div>
 
-          {formData.property_type !== "terrain" && formData.property_type !== "maison" && (
+          {formData.property_type !== "terrain" && formData.property_type !== "maison" && formData.property_type !== "immeuble" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="bedrooms">Chambres</Label>

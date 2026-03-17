@@ -349,7 +349,7 @@ export async function generateActeAchatPDF(
   const vendorX = 14;
   const buyerX = pageWidth / 2 + 10;
   const vendeurName = vendeurParty?.name || "-";
-  const acquereurName = achat.acquereurs?.name || "-";
+  const acquereurName = achat.is_agency_purchase && agency ? agency.name : (achat.acquereurs?.name || "-");
 
   doc.setFont("helvetica", "bold");
   doc.text("LE VENDEUR", vendorX, y);

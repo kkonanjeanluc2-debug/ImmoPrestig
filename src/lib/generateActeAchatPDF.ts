@@ -146,7 +146,33 @@ export async function generateActeAchatPDF(
   doc.text("L'ACQUÉREUR :", 14, y);
   y += 6;
   doc.setFontSize(9);
-  y = renderPartyIdentity(doc, achat.acquereurs, "-", y, 20);
+
+  if (achat.is_agency_purchase && agency) {
+    // L'agence est l'acquéreur
+    doc.setFont("helvetica", "bold");
+    doc.text(agency.name, 20, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    if (agency.siret) {
+      doc.text(`RCCM : ${agency.siret}`, 20, y);
+      y += 5;
+    }
+    if (agency.address) {
+      doc.text(`Siège social : ${agency.address}${agency.city ? `, ${agency.city}` : ""}`, 20, y);
+      y += 5;
+    }
+    if (agency.phone) {
+      doc.text(`Téléphone : ${agency.phone}`, 20, y);
+      y += 5;
+    }
+    if (agency.email) {
+      doc.text(`Email : ${agency.email}`, 20, y);
+      y += 5;
+    }
+  } else {
+    y = renderPartyIdentity(doc, achat.acquereurs, "-", y, 20);
+  }
+
   doc.setFont("helvetica", "normal");
   doc.text("Ci-après dénommé(e) « L'ACQUÉREUR »", 20, y);
   y += 10;

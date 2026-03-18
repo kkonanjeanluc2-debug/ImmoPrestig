@@ -44,7 +44,11 @@ import {
   Eye,
   Download,
   RefreshCw,
+  Upload,
+  Stamp,
+  X,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { ReceiptTemplateImportExport } from "./ReceiptTemplateImportExport";
 import { WatermarkThumbnail } from "./WatermarkThumbnail";
 import {

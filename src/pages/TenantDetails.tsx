@@ -145,6 +145,10 @@ const TenantDetails = () => {
   const contractStatus = activeContract?.status as keyof typeof contractStatusConfig || 'expired';
   const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
 
+  // Unit number and gestionnaire name for receipts
+  const unitNumber = tenant?.unit?.unit_number;
+  const { data: gestionnaireName } = useAssignedUserName(tenant?.property?.assigned_to);
+
 
   // Calculate statistics
   const totalPayments = tenant?.payments?.length || 0;

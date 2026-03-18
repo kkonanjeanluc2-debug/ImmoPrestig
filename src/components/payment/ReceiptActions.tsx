@@ -93,6 +93,8 @@ export function ReceiptActions({
     period,
     method,
     paymentMonths: paymentMonths || undefined,
+    unitNumber,
+    gestionnaireName,
     agency: agency ? {
       name: agency.name,
       email: agency.email,

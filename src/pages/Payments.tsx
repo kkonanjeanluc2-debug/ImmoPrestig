@@ -498,6 +498,10 @@ export default function Payments() {
                         const tenant = payment.tenant as any;
                         const tenantName = tenant?.name || 'Locataire inconnu';
                         const propertyTitle = tenant?.property?.title || 'Bien non assigné';
+                        const unitData = tenant?.unit;
+                        const unitNumber = Array.isArray(unitData) ? unitData[0]?.unit_number : unitData?.unit_number;
+                        const assignedTo = tenant?.property?.assigned_to;
+                        const gestionnaireName = assignedTo && gestionnaireProfiles ? gestionnaireProfiles.get(assignedTo) : undefined;
                         const commissionInfo = getCommissionInfo(payment);
                         
                         // Check if payment is due within the next 7 days

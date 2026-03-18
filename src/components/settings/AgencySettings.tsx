@@ -37,7 +37,9 @@ export function AgencySettings() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: onlineRentConfigSetting } = usePlatformSetting("online_rent_config_enabled");
+  const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
   const isOnlineRentConfigEnabled = onlineRentConfigSetting?.value !== "false";
+  const isKkiapayGloballyEnabled = kkiapayGlobalSetting?.value !== "false";
 
   const [formData, setFormData] = useState({
     account_type: "agence" as AccountType,

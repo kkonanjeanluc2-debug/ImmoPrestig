@@ -46,6 +46,7 @@ import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateAgencyFeesReceipt } from "@/lib/generateAgencyFeesReceipt";
 import { useAgency } from "@/hooks/useAgency";
+import { useAssignedUserName } from "@/hooks/useAssignedUserProfile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";

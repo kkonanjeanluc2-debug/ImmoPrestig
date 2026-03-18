@@ -27,7 +27,7 @@ interface SubscriptionCheckoutDialogProps {
 }
 
 // Payment methods - KKiaPay & GeniusPay
-const paymentMethods = [
+const allPaymentMethods = [
   { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-primary", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
   { id: "geniuspay", name: "GeniusPay", icon: Wallet, color: "bg-emerald-600", fedapayMode: null, provider: "geniuspay", description: "Wave, Orange, MTN & Carte" },
 ];
@@ -38,7 +38,13 @@ export function SubscriptionCheckoutDialog({
   plan,
   billingCycle,
 }: SubscriptionCheckoutDialogProps) {
-  const [paymentMethod, setPaymentMethod] = useState<string>("kkiapay");
+  const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
+  const isKkiapayEnabled = kkiapayGlobalSetting?.value !== "false";
+  const paymentMethods = useMemo(
+    () => isKkiapayEnabled ? allPaymentMethods : allPaymentMethods.filter(m => m.id !== "kkiapay"),
+    [isKkiapayEnabled]
+  );
+  const [paymentMethod, setPaymentMethod] = useState<string>(isKkiapayEnabled ? "kkiapay" : "geniuspay");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

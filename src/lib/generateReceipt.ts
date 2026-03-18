@@ -30,6 +30,8 @@ interface ReceiptData {
   paymentMonths?: string[]; // New field for multi-month payments
   totalRentAmount?: number; // Total rent amount for partial payment tracking
   remainingAmount?: number; // Remaining amount after this payment
+  unitNumber?: string; // Unit/door number for multi-unit properties
+  gestionnaireName?: string; // Property manager name
 }
 
 interface ReceiptDataWithTemplate extends ReceiptData {

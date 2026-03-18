@@ -83,6 +83,7 @@ const DEFAULT_TEMPLATE_VALUES: ReceiptTemplateInsert = {
   watermark_opacity: 15,
   watermark_angle: -45,
   watermark_position: "diagonal",
+  stamp_image_url: null,
 };
 
 const VARIABLE_HINTS: Record<string, string[]> = {

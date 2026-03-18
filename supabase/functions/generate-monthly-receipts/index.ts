@@ -297,6 +297,22 @@ Deno.serve(async (req) => {
       const ownerArray = property?.owner;
       const owner = Array.isArray(ownerArray) ? ownerArray[0] : null;
 
+      // Extract unit number
+      const unitArray = tenant.unit;
+      const unit = Array.isArray(unitArray) ? unitArray[0] : null;
+      const unitNumber = unit?.unit_number || null;
+
+      // Get gestionnaire name if property is assigned
+      let gestionnaireName: string | null = null;
+      if (property?.assigned_to) {
+        const { data: gProfile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", property.assigned_to)
+          .maybeSingle();
+        gestionnaireName = gProfile?.full_name || null;
+      }
+
       const period = getPaymentPeriod(payment.due_date);
       const propertyTitle = property?.title || "Bien loué";
       const propertyAddress = property?.address || "";
@@ -322,7 +338,9 @@ Deno.serve(async (req) => {
             propertyAddress,
             ownerName,
             period,
-            agency
+            agency,
+            unitNumber,
+            gestionnaireName
           ),
         });
 

@@ -58,6 +58,8 @@ export function ReceiptActions({
   method,
   paymentMonths,
   isTenantView = false,
+  unitNumber,
+  gestionnaireName,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);

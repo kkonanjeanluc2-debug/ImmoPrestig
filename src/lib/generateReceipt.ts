@@ -325,11 +325,14 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     yPos += 12;
     doc.setFont("helvetica", "normal");
     
-    const details = [
+    const details: [string, string][] = [
       ["Date d'échéance", formatDate(data.dueDate, templates.dateFormat)],
       ["Date de paiement", formatDate(data.paidDate, templates.dateFormat)],
       ["Mode de paiement", data.method || "Non spécifié"],
     ];
+    if (data.gestionnaireName) {
+      details.push(["Gestionnaire", data.gestionnaireName]);
+    }
     
     details.forEach(([label, value]) => {
       doc.text(label, 20, yPos);

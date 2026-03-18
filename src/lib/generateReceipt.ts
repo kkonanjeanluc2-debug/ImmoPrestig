@@ -251,6 +251,13 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.setFont("helvetica", "normal");
   yPos += 7;
   doc.text(data.propertyTitle, 15, yPos);
+  if (data.unitNumber) {
+    yPos += 5;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Porte : ${data.unitNumber}`, 15, yPos);
+    doc.setFont("helvetica", "normal");
+  }
   if (data.propertyAddress) {
     yPos += 5;
     doc.setFontSize(9);

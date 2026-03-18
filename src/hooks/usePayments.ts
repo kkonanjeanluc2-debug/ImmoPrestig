@@ -33,7 +33,7 @@ export const usePayments = () => {
         .from("payments")
         .select(`
           *,
-          tenant:tenants(*, property:properties(*))
+          tenant:tenants(*, property:properties(*), unit:property_units(unit_number))
         `)
         .order("due_date", { ascending: false });
 

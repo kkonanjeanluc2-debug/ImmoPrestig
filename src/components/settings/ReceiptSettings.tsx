@@ -55,6 +55,7 @@ const DEFAULT_TEMPLATES: ReceiptTemplates = {
   dateFormat: "long",
   currency: "F CFA",
   signatureLabel: "Signature du bailleur/gestionnaire",
+  stampImageUrl: null,
   // Watermark defaults
   watermarkEnabled: false,
   watermarkType: "text",

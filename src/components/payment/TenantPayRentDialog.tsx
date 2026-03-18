@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Loader2, CreditCard, Smartphone, AlertCircle } from "lucide-react";
 import { AlertTriangle } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 
 interface TenantPayRentDialogProps {
   paymentId: string;
@@ -53,11 +54,18 @@ export function TenantPayRentDialog({
   tenantId,
   paymentMonths,
 }: Omit<TenantPayRentDialogProps, 'agencyMobileMoneyProvider'>) {
+  const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
+  const isKkiapayEnabled = kkiapayGlobalSetting?.value !== "false";
+  const availablePaymentMethods = useMemo(
+    () => isKkiapayEnabled ? allPaymentMethods : allPaymentMethods.filter(m => m.value !== "kkiapay"),
+    [isKkiapayEnabled]
+  );
   const remainingAmount = amount - paidAmount;
   const [open, setOpen] = useState(false);
   const [paymentId, setPaymentId] = useState(initialPaymentId);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(isKkiapayEnabled ? "kkiapay" : "geniuspay");
+
   const [phone, setPhone] = useState(tenantPhone || "");
   const [payAmount, setPayAmount] = useState(remainingAmount);
   const [latePayments, setLatePayments] = useState<any[]>([]);
@@ -227,7 +235,7 @@ export function TenantPayRentDialog({
         setPaymentId(currentPaymentId);
       }
 
-      const selectedMethodData = allPaymentMethods.find(m => m.value === selectedMethod);
+      const selectedMethodData = availablePaymentMethods.find(m => m.value === selectedMethod);
       const provider = selectedMethodData?.provider;
       
       let functionName: string;
@@ -498,7 +506,7 @@ export function TenantPayRentDialog({
               onValueChange={(v) => setSelectedMethod(v as PaymentMethod)}
               className="grid grid-cols-2 gap-2"
             >
-              {allPaymentMethods.map((method) => (
+              {availablePaymentMethods.map((method) => (
                 <div key={method.value}>
                   <RadioGroupItem
                     value={method.value}

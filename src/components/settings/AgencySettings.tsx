@@ -37,7 +37,9 @@ export function AgencySettings() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: onlineRentConfigSetting } = usePlatformSetting("online_rent_config_enabled");
+  const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
   const isOnlineRentConfigEnabled = onlineRentConfigSetting?.value !== "false";
+  const isKkiapayGloballyEnabled = kkiapayGlobalSetting?.value !== "false";
 
   const [formData, setFormData] = useState({
     account_type: "agence" as AccountType,
@@ -614,7 +616,7 @@ export function AgencySettings() {
             />
           </div>
 
-          {onlineRentToggle && (
+          {onlineRentToggle && isKkiapayGloballyEnabled && (
             <div className="space-y-4 mt-4">
               <div className="flex items-center gap-2">
                 <Key className="h-5 w-5 text-primary" />

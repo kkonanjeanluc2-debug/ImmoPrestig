@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, Calculator, TrendingDown, TrendingUp } from "lucide-react";
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import type { SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle, getSavingsPercent } from "@/lib/billingCycleUtils";
 import { useAgencySubscription } from "@/hooks/useAgencySubscription";
 import { useAgency } from "@/hooks/useAgency";
@@ -26,7 +27,7 @@ interface SubscriptionCheckoutDialogProps {
 }
 
 // Payment methods - KKiaPay & GeniusPay
-const paymentMethods = [
+const allPaymentMethods = [
   { id: "kkiapay", name: "KKiaPay", icon: CreditCard, color: "bg-primary", fedapayMode: null, provider: "kkiapay", description: "Mobile Money & Carte" },
   { id: "geniuspay", name: "GeniusPay", icon: Wallet, color: "bg-emerald-600", fedapayMode: null, provider: "geniuspay", description: "Wave, Orange, MTN & Carte" },
 ];
@@ -37,7 +38,13 @@ export function SubscriptionCheckoutDialog({
   plan,
   billingCycle,
 }: SubscriptionCheckoutDialogProps) {
-  const [paymentMethod, setPaymentMethod] = useState<string>("kkiapay");
+  const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
+  const isKkiapayEnabled = kkiapayGlobalSetting?.value !== "false";
+  const paymentMethods = useMemo(
+    () => isKkiapayEnabled ? allPaymentMethods : allPaymentMethods.filter(m => m.id !== "kkiapay"),
+    [isKkiapayEnabled]
+  );
+  const [paymentMethod, setPaymentMethod] = useState<string>(isKkiapayEnabled ? "kkiapay" : "geniuspay");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

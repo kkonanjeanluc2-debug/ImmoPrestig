@@ -44,6 +44,7 @@ interface ExportedTemplate {
   watermark_opacity: number;
   watermark_angle: number;
   watermark_position: string;
+  stamp_image_url?: string | null;
 }
 
 interface ExportData {

@@ -264,6 +264,22 @@ export function ReceiptTemplateManager() {
       const signatureText = formData.signature_text.replace(/{bailleur}/g, sampleData.ownerName);
       doc.text(signatureText, pageWidth - 20, yPos, { align: "right" });
 
+      // Stamp image
+      if (formData.stamp_image_url) {
+        try {
+          const stampRes = await fetch(formData.stamp_image_url);
+          const stampBlob = await stampRes.blob();
+          const stampBase64: string = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(stampBlob);
+          });
+          const stampSize = 40;
+          doc.addImage(stampBase64, 'PNG', pageWidth - 20 - stampSize, yPos + 5, stampSize, stampSize);
+        } catch (e) {
+          // ignore
+        }
+      }
       // Watermark
       if (formData.watermark_enabled) {
         const opacity = formData.watermark_opacity / 100;

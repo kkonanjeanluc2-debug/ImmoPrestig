@@ -63,7 +63,9 @@ const generateReceiptHtml = (
   propertyAddress: string,
   ownerName: string | null,
   period: string,
-  agency: AgencyData | null
+  agency: AgencyData | null,
+  unitNumber?: string | null,
+  gestionnaireName?: string | null
 ): string => {
   const agencyName = agency?.name || "Votre gestionnaire immobilier";
   const agencyContact = [agency?.phone, agency?.email].filter(Boolean).join(" | ");
@@ -122,6 +124,7 @@ const generateReceiptHtml = (
           <div class="details">
             <p class="details-title">📍 Bien loué</p>
             <p style="margin: 0; font-weight: 500;">${propertyTitle}</p>
+            ${unitNumber ? `<p style="margin: 5px 0 0 0; font-weight: 600; color: #1a365d; font-size: 13px;">Porte : ${unitNumber}</p>` : ''}
             ${propertyAddress ? `<p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">${propertyAddress}</p>` : ''}
           </div>
           
@@ -144,6 +147,10 @@ const generateReceiptHtml = (
               <span class="label">💳 Mode de paiement</span>
               <span class="value">${method || 'Non spécifié'}</span>
             </div>
+            ${gestionnaireName ? `<div class="row">
+              <span class="label">👤 Gestionnaire</span>
+              <span class="value">${gestionnaireName}</span>
+            </div>` : ''}
           </div>
           
           <div class="declaration">
@@ -213,10 +220,13 @@ Deno.serve(async (req) => {
           id,
           name,
           email,
+          unit_id,
+          unit:property_units(unit_number),
           property:properties(
             id,
             title,
             address,
+            assigned_to,
             owner:owners(name)
           )
         )
@@ -287,6 +297,22 @@ Deno.serve(async (req) => {
       const ownerArray = property?.owner;
       const owner = Array.isArray(ownerArray) ? ownerArray[0] : null;
 
+      // Extract unit number
+      const unitArray = tenant.unit;
+      const unit = Array.isArray(unitArray) ? unitArray[0] : null;
+      const unitNumber = unit?.unit_number || null;
+
+      // Get gestionnaire name if property is assigned
+      let gestionnaireName: string | null = null;
+      if (property?.assigned_to) {
+        const { data: gProfile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", property.assigned_to)
+          .maybeSingle();
+        gestionnaireName = gProfile?.full_name || null;
+      }
+
       const period = getPaymentPeriod(payment.due_date);
       const propertyTitle = property?.title || "Bien loué";
       const propertyAddress = property?.address || "";
@@ -312,7 +338,9 @@ Deno.serve(async (req) => {
             propertyAddress,
             ownerName,
             period,
-            agency
+            agency,
+            unitNumber,
+            gestionnaireName
           ),
         });
 

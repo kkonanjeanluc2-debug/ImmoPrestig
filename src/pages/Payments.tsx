@@ -38,6 +38,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 import { useOwners } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
+import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
@@ -99,6 +100,12 @@ export default function Payments() {
   const { data: payments, isLoading, error } = usePayments();
   const { data: owners = [] } = useOwners();
   const { data: properties = [] } = useProperties();
+
+  // Collect assigned_to user IDs for gestionnaire name lookup
+  const gestionnaireIds = (payments || [])
+    .map((p: any) => p.tenant?.property?.assigned_to)
+    .filter(Boolean);
+  const { data: gestionnaireProfiles } = useUserProfiles(gestionnaireIds);
 
   // Helper to get commission info for a payment
   const getCommissionInfo = (payment: any) => {
@@ -491,6 +498,10 @@ export default function Payments() {
                         const tenant = payment.tenant as any;
                         const tenantName = tenant?.name || 'Locataire inconnu';
                         const propertyTitle = tenant?.property?.title || 'Bien non assigné';
+                        const unitData = tenant?.unit;
+                        const unitNumber = Array.isArray(unitData) ? unitData[0]?.unit_number : unitData?.unit_number;
+                        const assignedTo = tenant?.property?.assigned_to;
+                        const gestionnaireName = assignedTo && gestionnaireProfiles ? gestionnaireProfiles.get(assignedTo) : undefined;
                         const commissionInfo = getCommissionInfo(payment);
                         
                         // Check if payment is due within the next 7 days
@@ -608,6 +619,8 @@ export default function Payments() {
                                     method={payment.method || undefined}
                                     paymentMonths={(payment as any).payment_months || undefined}
                                     isTenantView={isLocataire}
+                                    unitNumber={unitNumber || undefined}
+                                    gestionnaireName={gestionnaireName || undefined}
                                   />
                                 )}
                                 {payment.status !== "paid" && isLocataire && (

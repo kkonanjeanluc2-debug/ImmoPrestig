@@ -30,6 +30,8 @@ interface ReceiptData {
   paymentMonths?: string[]; // New field for multi-month payments
   totalRentAmount?: number; // Total rent amount for partial payment tracking
   remainingAmount?: number; // Remaining amount after this payment
+  unitNumber?: string; // Unit/door number for multi-unit properties
+  gestionnaireName?: string; // Property manager name
 }
 
 interface ReceiptDataWithTemplate extends ReceiptData {
@@ -249,6 +251,13 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.setFont("helvetica", "normal");
   yPos += 7;
   doc.text(data.propertyTitle, 15, yPos);
+  if (data.unitNumber) {
+    yPos += 5;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Porte : ${data.unitNumber}`, 15, yPos);
+    doc.setFont("helvetica", "normal");
+  }
   if (data.propertyAddress) {
     yPos += 5;
     doc.setFontSize(9);
@@ -316,11 +325,14 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     yPos += 12;
     doc.setFont("helvetica", "normal");
     
-    const details = [
+    const details: [string, string][] = [
       ["Date d'échéance", formatDate(data.dueDate, templates.dateFormat)],
       ["Date de paiement", formatDate(data.paidDate, templates.dateFormat)],
       ["Mode de paiement", data.method || "Non spécifié"],
     ];
+    if (data.gestionnaireName) {
+      details.push(["Gestionnaire", data.gestionnaireName]);
+    }
     
     details.forEach(([label, value]) => {
       doc.text(label, 20, yPos);

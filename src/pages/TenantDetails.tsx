@@ -46,6 +46,7 @@ import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateAgencyFeesReceipt } from "@/lib/generateAgencyFeesReceipt";
 import { useAgency } from "@/hooks/useAgency";
+import { useAssignedUserName } from "@/hooks/useAssignedUserProfile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -143,6 +144,10 @@ const TenantDetails = () => {
   const activeContract = tenant?.contracts?.find(c => c.status === 'active') || tenant?.contracts?.[0];
   const contractStatus = activeContract?.status as keyof typeof contractStatusConfig || 'expired';
   const statusConfig = contractStatusConfig[contractStatus] || contractStatusConfig.expired;
+
+  // Unit number and gestionnaire name for receipts
+  const unitNumber = tenant?.unit?.unit_number;
+  const { data: gestionnaireName } = useAssignedUserName(tenant?.property?.assigned_to);
 
 
   // Calculate statistics
@@ -472,6 +477,8 @@ const TenantDetails = () => {
                                       dueDate: payment.due_date,
                                       period: getPaymentPeriod(payment.due_date),
                                       method: payment.method || undefined,
+                                      unitNumber: unitNumber || undefined,
+                                      gestionnaireName: gestionnaireName || undefined,
                                       agency: agency ? {
                                         name: agency.name,
                                         email: agency.email,

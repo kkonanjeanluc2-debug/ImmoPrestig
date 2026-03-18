@@ -40,6 +40,8 @@ interface ReceiptActionsProps {
   method?: string;
   paymentMonths?: string[] | null;
   isTenantView?: boolean;
+  unitNumber?: string;
+  gestionnaireName?: string;
 }
 
 export function ReceiptActions({
@@ -56,6 +58,8 @@ export function ReceiptActions({
   method,
   paymentMonths,
   isTenantView = false,
+  unitNumber,
+  gestionnaireName,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -89,6 +93,8 @@ export function ReceiptActions({
     period,
     method,
     paymentMonths: paymentMonths || undefined,
+    unitNumber,
+    gestionnaireName,
     agency: agency ? {
       name: agency.name,
       email: agency.email,

@@ -38,6 +38,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 import { useOwners } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
+import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";

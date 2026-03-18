@@ -18,10 +18,8 @@ import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kk
 import { toast } from "sonner";
 import { Loader2, CreditCard, Smartphone, AlertCircle } from "lucide-react";
 import { AlertTriangle } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { usePlatformSetting } from "@/hooks/usePlatformSettings";
-
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 
 interface TenantPayRentDialogProps {
   paymentId: string;

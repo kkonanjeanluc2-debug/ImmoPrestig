@@ -147,6 +147,10 @@ const generateReceiptHtml = (
               <span class="label">💳 Mode de paiement</span>
               <span class="value">${method || 'Non spécifié'}</span>
             </div>
+            ${gestionnaireName ? `<div class="row">
+              <span class="label">👤 Gestionnaire</span>
+              <span class="value">${gestionnaireName}</span>
+            </div>` : ''}
           </div>
           
           <div class="declaration">

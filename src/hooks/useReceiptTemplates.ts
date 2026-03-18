@@ -17,6 +17,7 @@ export interface ReceiptTemplate {
   show_amount_in_words: boolean;
   date_format: string;
   currency_symbol: string;
+  stamp_image_url: string | null;
   watermark_enabled: boolean;
   watermark_type: string;
   watermark_text: string | null;

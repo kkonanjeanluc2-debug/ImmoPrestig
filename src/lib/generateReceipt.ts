@@ -52,6 +52,7 @@ const convertDbTemplateToLegacy = (template: ReceiptTemplate): ReceiptTemplates 
     dateFormat: template.date_format === "long" ? "long" : "short",
     currency: template.currency_symbol,
     signatureLabel: template.signature_text,
+    stampImageUrl: template.stamp_image_url || null,
     watermarkEnabled: template.watermark_enabled,
     watermarkType: template.watermark_type as "text" | "image" | "agency_logo",
     watermarkText: template.watermark_text || "ORIGINAL",
@@ -370,6 +371,22 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.setFont("helvetica", "italic");
   const signatureLabel = replaceVariables(templates.signatureLabel, data, templates);
   doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
+  
+  // Stamp / signature image
+  if (templates.stampImageUrl) {
+    try {
+      const stampBase64 = await loadImageAsBase64(templates.stampImageUrl);
+      if (stampBase64) {
+        const stampSize = 40;
+        const stampX = pageWidth - 20 - stampSize;
+        const stampY = yPos + 5;
+        doc.addImage(stampBase64, 'PNG', stampX, stampY, stampSize, stampSize);
+        yPos += stampSize + 10;
+      }
+    } catch (e) {
+      console.error("Failed to load stamp image:", e);
+    }
+  }
   
   // Watermark (rendered before footer so it's behind content)
   if (templates.watermarkEnabled) {

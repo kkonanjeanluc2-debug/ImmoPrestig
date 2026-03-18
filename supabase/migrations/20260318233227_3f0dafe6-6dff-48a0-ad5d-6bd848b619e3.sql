@@ -1,0 +1,1 @@
+ALTER TABLE public.receipt_templates ADD COLUMN stamp_image_url TEXT DEFAULT NULL;

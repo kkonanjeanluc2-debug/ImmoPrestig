@@ -44,6 +44,7 @@ interface ExportedTemplate {
   watermark_opacity: number;
   watermark_angle: number;
   watermark_position: string;
+  stamp_image_url?: string | null;
 }
 
 interface ExportData {
@@ -79,6 +80,7 @@ export function ReceiptTemplateImportExport({ templates }: ReceiptTemplateImport
     watermark_opacity: template.watermark_opacity,
     watermark_angle: template.watermark_angle,
     watermark_position: template.watermark_position,
+    stamp_image_url: template.stamp_image_url || null,
   });
 
   const handleExportAll = () => {
@@ -196,6 +198,7 @@ export function ReceiptTemplateImportExport({ templates }: ReceiptTemplateImport
         watermark_opacity: template.watermark_opacity,
         watermark_angle: template.watermark_angle,
         watermark_position: template.watermark_position,
+        stamp_image_url: template.stamp_image_url || null,
       };
 
       try {

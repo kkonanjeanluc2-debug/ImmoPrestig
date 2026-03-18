@@ -44,7 +44,11 @@ import {
   Eye,
   Download,
   RefreshCw,
+  Upload,
+  Stamp,
+  X,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { ReceiptTemplateImportExport } from "./ReceiptTemplateImportExport";
 import { WatermarkThumbnail } from "./WatermarkThumbnail";
 import {
@@ -79,6 +83,7 @@ const DEFAULT_TEMPLATE_VALUES: ReceiptTemplateInsert = {
   watermark_opacity: 15,
   watermark_angle: -45,
   watermark_position: "diagonal",
+  stamp_image_url: null,
 };
 
 const VARIABLE_HINTS: Record<string, string[]> = {
@@ -259,6 +264,22 @@ export function ReceiptTemplateManager() {
       const signatureText = formData.signature_text.replace(/{bailleur}/g, sampleData.ownerName);
       doc.text(signatureText, pageWidth - 20, yPos, { align: "right" });
 
+      // Stamp image
+      if (formData.stamp_image_url) {
+        try {
+          const stampRes = await fetch(formData.stamp_image_url);
+          const stampBlob = await stampRes.blob();
+          const stampBase64: string = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(stampBlob);
+          });
+          const stampSize = 40;
+          doc.addImage(stampBase64, 'PNG', pageWidth - 20 - stampSize, yPos + 5, stampSize, stampSize);
+        } catch (e) {
+          // ignore
+        }
+      }
       // Watermark
       if (formData.watermark_enabled) {
         const opacity = formData.watermark_opacity / 100;
@@ -418,6 +439,7 @@ export function ReceiptTemplateManager() {
       watermark_opacity: template.watermark_opacity,
       watermark_angle: template.watermark_angle,
       watermark_position: template.watermark_position,
+      stamp_image_url: template.stamp_image_url || null,
     });
     setActiveTab("content");
     setIsDialogOpen(true);
@@ -444,6 +466,7 @@ export function ReceiptTemplateManager() {
       watermark_opacity: template.watermark_opacity,
       watermark_angle: template.watermark_angle,
       watermark_position: template.watermark_position,
+      stamp_image_url: template.stamp_image_url || null,
     });
     setActiveTab("content");
     setIsDialogOpen(true);
@@ -695,6 +718,75 @@ export function ReceiptTemplateManager() {
                       onChange={(e) => setFormData({ ...formData, signature_text: e.target.value })}
                     />
                     {renderVariableHints("signature_text")}
+                  </div>
+
+                  {/* Stamp / Signature image upload */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Stamp className="h-4 w-4" />
+                      Cachet et signature
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Importez l'image du cachet/signature pour l'apposer sur les quittances
+                    </p>
+                    {formData.stamp_image_url ? (
+                      <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                        <img
+                          src={formData.stamp_image_url}
+                          alt="Cachet/Signature"
+                          className="h-16 w-auto object-contain bg-background rounded border p-1"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, stamp_image_url: null })}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Supprimer
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                        <Stamp className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 2 * 1024 * 1024) {
+                                toast.error("L'image ne doit pas dépasser 2 Mo");
+                                return;
+                              }
+                              try {
+                                const fileName = `stamps/${Date.now()}_${file.name}`;
+                                const { data: uploadData, error: uploadError } = await supabase.storage
+                                  .from("agency-logos")
+                                  .upload(fileName, file, { upsert: true });
+                                if (uploadError) throw uploadError;
+                                const { data: urlData } = supabase.storage
+                                  .from("agency-logos")
+                                  .getPublicUrl(uploadData.path);
+                                setFormData({ ...formData, stamp_image_url: urlData.publicUrl });
+                                toast.success("Image importée");
+                              } catch (err) {
+                                console.error("Upload error:", err);
+                                toast.error("Erreur lors de l'importation");
+                              }
+                            }}
+                          />
+                          <Button variant="outline" size="sm" asChild>
+                            <span>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Importer
+                            </span>
+                          </Button>
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-1">PNG/JPEG, max 2 Mo</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">

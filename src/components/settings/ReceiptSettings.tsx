@@ -586,6 +586,85 @@ export function ReceiptSettings() {
 
             <Separator />
 
+            {/* Stamp / Signature image upload */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Stamp className="h-4 w-4" />
+                Cachet et signature
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Importez l'image du cachet et/ou de la signature de l'agence pour l'apposer sur les quittances
+              </p>
+              {templates.stampImageUrl ? (
+                <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                  <img
+                    src={templates.stampImageUrl}
+                    alt="Cachet/Signature"
+                    className="h-20 w-auto object-contain bg-background rounded border p-1"
+                  />
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs text-muted-foreground">Image du cachet/signature</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleChange("stampImageUrl", null)}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Supprimer
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                  <Stamp className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Aucun cachet/signature importé
+                  </p>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 2 * 1024 * 1024) {
+                          toast.error("L'image ne doit pas dépasser 2 Mo");
+                          return;
+                        }
+                        try {
+                          const fileName = `stamps/${Date.now()}_${file.name}`;
+                          const { data: uploadData, error: uploadError } = await supabase.storage
+                            .from("agency-logos")
+                            .upload(fileName, file, { upsert: true });
+                          if (uploadError) throw uploadError;
+                          const { data: urlData } = supabase.storage
+                            .from("agency-logos")
+                            .getPublicUrl(uploadData.path);
+                          handleChange("stampImageUrl", urlData.publicUrl);
+                          toast.success("Cachet/signature importé avec succès");
+                        } catch (err) {
+                          console.error("Upload error:", err);
+                          toast.error("Erreur lors de l'importation");
+                        }
+                      }}
+                    />
+                    <Button variant="outline" size="sm" asChild>
+                      <span>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Importer une image
+                      </span>
+                    </Button>
+                  </label>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    PNG ou JPEG, max 2 Mo. Fond transparent recommandé.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
             {/* Footer text */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">

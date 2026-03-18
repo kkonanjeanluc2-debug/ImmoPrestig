@@ -372,6 +372,22 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   const signatureLabel = replaceVariables(templates.signatureLabel, data, templates);
   doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
   
+  // Stamp / signature image
+  if (templates.stampImageUrl) {
+    try {
+      const stampBase64 = await loadImageAsBase64(templates.stampImageUrl);
+      if (stampBase64) {
+        const stampSize = 40;
+        const stampX = pageWidth - 20 - stampSize;
+        const stampY = yPos + 5;
+        doc.addImage(stampBase64, 'PNG', stampX, stampY, stampSize, stampSize);
+        yPos += stampSize + 10;
+      }
+    } catch (e) {
+      console.error("Failed to load stamp image:", e);
+    }
+  }
+  
   // Watermark (rendered before footer so it's behind content)
   if (templates.watermarkEnabled) {
     const pageHeight = doc.internal.pageSize.getHeight();

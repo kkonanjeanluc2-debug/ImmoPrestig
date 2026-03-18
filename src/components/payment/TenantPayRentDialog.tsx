@@ -506,7 +506,7 @@ export function TenantPayRentDialog({
               onValueChange={(v) => setSelectedMethod(v as PaymentMethod)}
               className="grid grid-cols-2 gap-2"
             >
-              {allPaymentMethods.map((method) => (
+              {availablePaymentMethods.map((method) => (
                 <div key={method.value}>
                   <RadioGroupItem
                     value={method.value}

@@ -3359,6 +3359,7 @@ export type Database = {
           show_contacts: boolean
           show_logo: boolean
           signature_text: string
+          stamp_image_url: string | null
           title: string
           updated_at: string
           user_id: string
@@ -3383,6 +3384,7 @@ export type Database = {
           show_contacts?: boolean
           show_logo?: boolean
           signature_text?: string
+          stamp_image_url?: string | null
           title?: string
           updated_at?: string
           user_id: string
@@ -3407,6 +3409,7 @@ export type Database = {
           show_contacts?: boolean
           show_logo?: boolean
           signature_text?: string
+          stamp_image_url?: string | null
           title?: string
           updated_at?: string
           user_id?: string

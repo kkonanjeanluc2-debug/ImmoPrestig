@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, RotateCcw, Save, Eye, Info, Download, Loader2, Droplets, ImageIcon, Type } from "lucide-react";
+import { FileText, RotateCcw, Save, Eye, Info, Download, Loader2, Droplets, ImageIcon, Type, Upload, Stamp, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";

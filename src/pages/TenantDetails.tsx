@@ -477,6 +477,8 @@ const TenantDetails = () => {
                                       dueDate: payment.due_date,
                                       period: getPaymentPeriod(payment.due_date),
                                       method: payment.method || undefined,
+                                      unitNumber: unitNumber || undefined,
+                                      gestionnaireName: gestionnaireName || undefined,
                                       agency: agency ? {
                                         name: agency.name,
                                         email: agency.email,

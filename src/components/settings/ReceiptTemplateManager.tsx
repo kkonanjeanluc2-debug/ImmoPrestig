@@ -450,6 +450,7 @@ export function ReceiptTemplateManager() {
       watermark_opacity: template.watermark_opacity,
       watermark_angle: template.watermark_angle,
       watermark_position: template.watermark_position,
+      stamp_image_url: template.stamp_image_url || null,
     });
     setActiveTab("content");
     setIsDialogOpen(true);

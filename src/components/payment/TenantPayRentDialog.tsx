@@ -235,7 +235,7 @@ export function TenantPayRentDialog({
         setPaymentId(currentPaymentId);
       }
 
-      const selectedMethodData = allPaymentMethods.find(m => m.value === selectedMethod);
+      const selectedMethodData = availablePaymentMethods.find(m => m.value === selectedMethod);
       const provider = selectedMethodData?.provider;
       
       let functionName: string;

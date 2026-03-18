@@ -619,6 +619,8 @@ export default function Payments() {
                                     method={payment.method || undefined}
                                     paymentMonths={(payment as any).payment_months || undefined}
                                     isTenantView={isLocataire}
+                                    unitNumber={unitNumber || undefined}
+                                    gestionnaireName={gestionnaireName || undefined}
                                   />
                                 )}
                                 {payment.status !== "paid" && isLocataire && (

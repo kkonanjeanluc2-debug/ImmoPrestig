@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Smartphone, CreditCard, Wallet, ArrowRight, Calculator, TrendingDown, TrendingUp } from "lucide-react";
 import { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } from "kkiapay";
 import type { SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
+import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle, getSavingsPercent } from "@/lib/billingCycleUtils";
 import { useAgencySubscription } from "@/hooks/useAgencySubscription";
 import { useAgency } from "@/hooks/useAgency";

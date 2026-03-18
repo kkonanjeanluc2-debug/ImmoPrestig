@@ -54,11 +54,18 @@ export function TenantPayRentDialog({
   tenantId,
   paymentMonths,
 }: Omit<TenantPayRentDialogProps, 'agencyMobileMoneyProvider'>) {
+  const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
+  const isKkiapayEnabled = kkiapayGlobalSetting?.value !== "false";
+  const availablePaymentMethods = useMemo(
+    () => isKkiapayEnabled ? allPaymentMethods : allPaymentMethods.filter(m => m.value !== "kkiapay"),
+    [isKkiapayEnabled]
+  );
   const remainingAmount = amount - paidAmount;
   const [open, setOpen] = useState(false);
   const [paymentId, setPaymentId] = useState(initialPaymentId);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("kkiapay");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(isKkiapayEnabled ? "kkiapay" : "geniuspay");
+
   const [phone, setPhone] = useState(tenantPhone || "");
   const [payAmount, setPayAmount] = useState(remainingAmount);
   const [latePayments, setLatePayments] = useState<any[]>([]);

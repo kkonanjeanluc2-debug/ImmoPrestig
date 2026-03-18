@@ -704,6 +704,75 @@ export function ReceiptTemplateManager() {
                     {renderVariableHints("signature_text")}
                   </div>
 
+                  {/* Stamp / Signature image upload */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Stamp className="h-4 w-4" />
+                      Cachet et signature
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Importez l'image du cachet/signature pour l'apposer sur les quittances
+                    </p>
+                    {formData.stamp_image_url ? (
+                      <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                        <img
+                          src={formData.stamp_image_url}
+                          alt="Cachet/Signature"
+                          className="h-16 w-auto object-contain bg-background rounded border p-1"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, stamp_image_url: null })}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Supprimer
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                        <Stamp className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 2 * 1024 * 1024) {
+                                toast.error("L'image ne doit pas dépasser 2 Mo");
+                                return;
+                              }
+                              try {
+                                const fileName = `stamps/${Date.now()}_${file.name}`;
+                                const { data: uploadData, error: uploadError } = await supabase.storage
+                                  .from("agency-logos")
+                                  .upload(fileName, file, { upsert: true });
+                                if (uploadError) throw uploadError;
+                                const { data: urlData } = supabase.storage
+                                  .from("agency-logos")
+                                  .getPublicUrl(uploadData.path);
+                                setFormData({ ...formData, stamp_image_url: urlData.publicUrl });
+                                toast.success("Image importée");
+                              } catch (err) {
+                                console.error("Upload error:", err);
+                                toast.error("Erreur lors de l'importation");
+                              }
+                            }}
+                          />
+                          <Button variant="outline" size="sm" asChild>
+                            <span>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Importer
+                            </span>
+                          </Button>
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-1">PNG/JPEG, max 2 Mo</p>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="footer">Texte de pied de page</Label>
                     <Input

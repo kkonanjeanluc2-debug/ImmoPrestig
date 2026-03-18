@@ -124,6 +124,7 @@ const generateReceiptHtml = (
           <div class="details">
             <p class="details-title">📍 Bien loué</p>
             <p style="margin: 0; font-weight: 500;">${propertyTitle}</p>
+            ${unitNumber ? `<p style="margin: 5px 0 0 0; font-weight: 600; color: #1a365d; font-size: 13px;">Porte : ${unitNumber}</p>` : ''}
             ${propertyAddress ? `<p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">${propertyAddress}</p>` : ''}
           </div>
           

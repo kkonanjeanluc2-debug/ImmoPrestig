@@ -101,6 +101,12 @@ export default function Payments() {
   const { data: owners = [] } = useOwners();
   const { data: properties = [] } = useProperties();
 
+  // Collect assigned_to user IDs for gestionnaire name lookup
+  const gestionnaireIds = (payments || [])
+    .map((p: any) => p.tenant?.property?.assigned_to)
+    .filter(Boolean);
+  const { data: gestionnaireProfiles } = useUserProfiles(gestionnaireIds);
+
   // Helper to get commission info for a payment
   const getCommissionInfo = (payment: any) => {
     const tenant = payment.tenant as any;

@@ -52,6 +52,7 @@ const convertDbTemplateToLegacy = (template: ReceiptTemplate): ReceiptTemplates 
     dateFormat: template.date_format === "long" ? "long" : "short",
     currency: template.currency_symbol,
     signatureLabel: template.signature_text,
+    stampImageUrl: template.stamp_image_url || null,
     watermarkEnabled: template.watermark_enabled,
     watermarkType: template.watermark_type as "text" | "image" | "agency_logo",
     watermarkText: template.watermark_text || "ORIGINAL",

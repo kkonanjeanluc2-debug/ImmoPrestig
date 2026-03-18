@@ -63,7 +63,9 @@ const generateReceiptHtml = (
   propertyAddress: string,
   ownerName: string | null,
   period: string,
-  agency: AgencyData | null
+  agency: AgencyData | null,
+  unitNumber?: string | null,
+  gestionnaireName?: string | null
 ): string => {
   const agencyName = agency?.name || "Votre gestionnaire immobilier";
   const agencyContact = [agency?.phone, agency?.email].filter(Boolean).join(" | ");

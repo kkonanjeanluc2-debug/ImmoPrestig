@@ -220,10 +220,13 @@ Deno.serve(async (req) => {
           id,
           name,
           email,
+          unit_id,
+          unit:property_units(unit_number),
           property:properties(
             id,
             title,
             address,
+            assigned_to,
             owner:owners(name)
           )
         )

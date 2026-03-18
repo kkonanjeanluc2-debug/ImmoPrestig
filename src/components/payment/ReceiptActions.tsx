@@ -40,6 +40,8 @@ interface ReceiptActionsProps {
   method?: string;
   paymentMonths?: string[] | null;
   isTenantView?: boolean;
+  unitNumber?: string;
+  gestionnaireName?: string;
 }
 
 export function ReceiptActions({

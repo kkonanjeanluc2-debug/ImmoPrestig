@@ -31,6 +31,7 @@ export interface ReceiptTemplates {
   dateFormat: "short" | "long";
   currency: string;
   signatureLabel: string;
+  stampImageUrl: string | null;
   // Watermark settings
   watermarkEnabled: boolean;
   watermarkType: "text" | "image" | "agency_logo";

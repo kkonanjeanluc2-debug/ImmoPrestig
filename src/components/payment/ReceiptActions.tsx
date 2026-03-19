@@ -121,6 +121,8 @@ export function ReceiptActions({
     unitNumber,
     gestionnaireName,
     ownerName,
+    totalRentAmount,
+    remainingAmount,
     agency: agency ? {
       name: agency.name,
       email: agency.email,

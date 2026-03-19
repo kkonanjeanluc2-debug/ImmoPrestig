@@ -62,6 +62,8 @@ export function ReceiptActions({
   isTenantView = false,
   unitNumber,
   gestionnaireName,
+  ownerName,
+  initialTemplate,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);

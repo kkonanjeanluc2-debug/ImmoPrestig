@@ -94,6 +94,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         status: owner.status as "actif" | "inactif",
         management_type_id: owner.management_type_id || "",
         default_contract_template_id: (owner as any).default_contract_template_id || "",
+        receipt_template_id: (owner as any).receipt_template_id || "",
         birth_date: (owner as any).birth_date ? new Date((owner as any).birth_date) : undefined,
         birth_place: (owner as any).birth_place || "",
         profession: (owner as any).profession || "",

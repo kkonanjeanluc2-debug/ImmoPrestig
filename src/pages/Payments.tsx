@@ -38,7 +38,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 import { useOwners } from "@/hooks/useOwners";
-import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
+import { useProperties } from "@/hooks/useProperties";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";

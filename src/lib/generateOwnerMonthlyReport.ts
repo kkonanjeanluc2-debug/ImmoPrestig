@@ -215,7 +215,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
       doc.setFontSize(8);
       const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
-      const propertyTitle = row.propertyTitle.length > 22 ? row.propertyTitle.substring(0, 20) + "..." : row.propertyTitle;
+      const propertyTitle = row.propertyTitle.length > 30 ? row.propertyTitle.substring(0, 28) + "..." : row.propertyTitle;
       
       doc.text(tenantName, 18, yPos + 6);
       doc.text(propertyTitle, 60, yPos + 6);

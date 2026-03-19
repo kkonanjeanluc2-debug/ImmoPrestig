@@ -463,12 +463,13 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   yPos += 15;
 
   // Summary section
+  const totalEncaisse = totalPaid + totalCautions;
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalPaid + totalCautions + totalAdvance - commissionAmount - totalInterventionsCost;
+  const netAmount = totalEncaisse + totalAdvance - commissionAmount - totalInterventionsCost;
 
-  checkPageBreak(85);
+  checkPageBreak(65);
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 85, 3, 3, "F");
+  doc.roundedRect(15, yPos, pageWidth - 30, 65, 3, 3, "F");
 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);

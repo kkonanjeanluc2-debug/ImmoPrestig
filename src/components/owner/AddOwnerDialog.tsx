@@ -369,6 +369,44 @@ export function AddOwnerDialog() {
               />
             )}
 
+            {receiptTemplates.length > 0 && (
+              <FormField
+                control={form.control}
+                name="receipt_template_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Modèle de quittance par défaut
+                    </FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                      value={field.value || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un modèle de quittance" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Aucun (utiliser le modèle par défaut)</SelectItem>
+                        {receiptTemplates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                            {template.is_default && " (par défaut)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Ce modèle sera utilisé pour générer les quittances de loyer de ce propriétaire
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"

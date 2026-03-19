@@ -813,6 +813,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
                 paidDate: paidDate || p.due_date,
                 managerName: assignedTo || "__unassigned__",
                 paymentMethod: p.method || "Non spécifié",
+                ownerName,
+                propertyTitle,
               });
             }
           } else if (isPaidInPeriod || (allMonths.length === 1 && paymentMonthsOverlapPeriod(allMonths, fromDate, toDate))) {

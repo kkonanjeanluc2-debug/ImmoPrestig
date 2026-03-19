@@ -82,9 +82,12 @@ export function useCommissions(startDate?: string, endDate?: string) {
   const { data: tenants = [] } = useTenants();
 
   const report = useMemo<CommissionReport>(() => {
-    // Filter paid payments within date range OR with payment_months overlapping the range
+    // Filter paid payments AND partial payments within date range
     const filteredPayments = payments.filter((p) => {
-      if (p.status !== "paid" || !p.paid_date) return false;
+      const isPaid = p.status === "paid" && !!p.paid_date;
+      const isPartial = p.status !== "paid" && ((p as any).paid_amount || 0) > 0;
+      
+      if (!isPaid && !isPartial) return false;
       
       const paymentMonths = (p as any).payment_months as string[] | null;
       const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 0;
@@ -94,9 +97,18 @@ export function useCommissions(startDate?: string, endDate?: string) {
         return paymentMonthsOverlapRange(paymentMonths, startDate, endDate);
       }
       
+      // For partial payments, use due_date
+      if (isPartial) {
+        const dueDate = (p as any).due_date;
+        if (!dueDate) return false;
+        if (startDate && dueDate < startDate) return false;
+        if (endDate && dueDate > endDate) return false;
+        return true;
+      }
+      
       // Otherwise filter by paid_date
-      if (startDate && p.paid_date < startDate) return false;
-      if (endDate && p.paid_date > endDate) return false;
+      if (startDate && p.paid_date! < startDate) return false;
+      if (endDate && p.paid_date! > endDate) return false;
       return true;
     });
 

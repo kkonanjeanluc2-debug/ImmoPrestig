@@ -63,6 +63,7 @@ interface OwnerMonthlyReportData {
   interventions: InterventionRow[];
   cautions: CautionRow[];
   advancePayments: AdvancePaymentRow[];
+  latePayments: LatePaymentRow[];
   commissionPercentage: number;
   managementTypeName?: string;
 }

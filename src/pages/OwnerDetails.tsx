@@ -192,8 +192,7 @@ const OwnerDetails = () => {
         })
         .filter(tenant => {
           const deposit = tenant.contracts?.find(c => c.status === "active")?.deposit || 0;
-          const agencyFees = Number(tenant.agency_fees) || 0;
-          return deposit > 0 || agencyFees > 0;
+          return deposit > 0;
         })
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
@@ -202,7 +201,6 @@ const OwnerDetails = () => {
             tenantName: tenant.name,
             propertyTitle: property?.title || "Bien inconnu",
             deposit: Number(deposit),
-            agencyFees: Number(tenant.agency_fees) || 0,
           };
         });
 

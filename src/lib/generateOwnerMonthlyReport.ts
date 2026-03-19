@@ -500,7 +500,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   summaryY += 10;
   doc.setTextColor(...textColor);
   doc.setFont("helvetica", "normal");
-  doc.text("Cautions et frais d'agence encaisses", 25, summaryY);
+  doc.text("Cautions encaissees", 25, summaryY);
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(totalCautions), pageWidth - 25, summaryY, { align: "right" });
 

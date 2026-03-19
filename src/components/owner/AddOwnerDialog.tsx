@@ -33,6 +33,7 @@ import { Plus, Loader2, Percent, User, CreditCard, FileText } from "lucide-react
 import { useCreateOwner } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
+import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { toast } from "sonner";
 
 const ownerSchema = z.object({

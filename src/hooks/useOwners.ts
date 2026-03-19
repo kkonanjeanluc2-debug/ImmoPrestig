@@ -36,7 +36,8 @@ export const useOwners = () => {
         .select(`
           *,
           management_type:management_types(id, name, percentage, type),
-          default_contract_template:contract_templates(id, name)
+          default_contract_template:contract_templates(id, name),
+          default_receipt_template:receipt_templates(id, name)
         `)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });

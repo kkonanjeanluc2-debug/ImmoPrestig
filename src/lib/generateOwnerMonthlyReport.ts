@@ -23,7 +23,6 @@ interface CautionRow {
   tenantName: string;
   propertyTitle: string;
   deposit: number;
-  agencyFees: number;
 }
 
 interface AdvancePaymentRow {
@@ -265,7 +264,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("CAUTIONS ET FRAIS D'AGENCE", 15, yPos);
+  doc.text("CAUTIONS", 15, yPos);
   yPos += 8;
 
   let totalCautions = 0;
@@ -287,8 +286,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.setFont("helvetica", "bold");
     doc.text("Locataire", 18, yPos + 5.5);
     doc.text("Bien", 70, yPos + 5.5);
-    doc.text("Caution", 125, yPos + 5.5);
-    doc.text("Frais agence", 155, yPos + 5.5);
+    doc.text("Montant", 155, yPos + 5.5);
     yPos += 8;
 
     doc.setTextColor(...textColor);
@@ -307,10 +305,9 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
       doc.text(tenantName, 18, yPos + 6);
       doc.text(propertyTitle, 70, yPos + 6);
-      doc.text(formatAmountForPDF(row.deposit), 125, yPos + 6);
-      doc.text(formatAmountForPDF(row.agencyFees), 155, yPos + 6);
+      doc.text(formatAmountForPDF(row.deposit), 155, yPos + 6);
 
-      totalCautions += row.deposit + row.agencyFees;
+      totalCautions += row.deposit;
       yPos += 9;
     });
 
@@ -320,7 +317,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text("TOTAL CAUTIONS / FRAIS", 18, yPos + 6);
+    doc.text("TOTAL CAUTIONS", 18, yPos + 6);
     doc.text(formatAmountForPDF(totalCautions), 155, yPos + 6);
     yPos += 9;
   }
@@ -503,7 +500,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   summaryY += 10;
   doc.setTextColor(...textColor);
   doc.setFont("helvetica", "normal");
-  doc.text("Cautions et frais d'agence encaisses", 25, summaryY);
+  doc.text("Cautions encaissees", 25, summaryY);
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(totalCautions), pageWidth - 25, summaryY, { align: "right" });
 

@@ -463,12 +463,13 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   yPos += 15;
 
   // Summary section
+  const totalEncaisse = totalPaid + totalCautions;
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalPaid + totalCautions + totalAdvance - commissionAmount - totalInterventionsCost;
+  const netAmount = totalEncaisse + totalAdvance - commissionAmount - totalInterventionsCost;
 
-  checkPageBreak(85);
+  checkPageBreak(65);
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 85, 3, 3, "F");
+  doc.roundedRect(15, yPos, pageWidth - 30, 65, 3, 3, "F");
 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);
@@ -481,10 +482,10 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   let summaryY = yPos + 20;
 
-  // Total encaisse
+  // Total encaisse (loyers + cautions)
   doc.text("Total loyers encaisses", 25, summaryY);
   doc.setFont("helvetica", "bold");
-  doc.text(formatAmountWithCurrency(totalPaid), pageWidth - 25, summaryY, { align: "right" });
+  doc.text(formatAmountWithCurrency(totalEncaisse), pageWidth - 25, summaryY, { align: "right" });
 
   // Commission
   summaryY += 10;
@@ -495,22 +496,6 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.text(commissionLabel, 25, summaryY);
   doc.setTextColor(...dangerColor);
   doc.text(`- ${formatAmountWithCurrency(commissionAmount)}`, pageWidth - 25, summaryY, { align: "right" });
-
-  // Cautions
-  summaryY += 10;
-  doc.setTextColor(...textColor);
-  doc.setFont("helvetica", "normal");
-  doc.text("Cautions encaissees", 25, summaryY);
-  doc.setFont("helvetica", "bold");
-  doc.text(formatAmountWithCurrency(totalCautions), pageWidth - 25, summaryY, { align: "right" });
-
-  // Advance payments
-  summaryY += 10;
-  doc.setTextColor(...textColor);
-  doc.setFont("helvetica", "normal");
-  doc.text("Mois d'avance encaisses", 25, summaryY);
-  doc.setFont("helvetica", "bold");
-  doc.text(formatAmountWithCurrency(totalAdvance), pageWidth - 25, summaryY, { align: "right" });
 
   // Interventions
   summaryY += 10;

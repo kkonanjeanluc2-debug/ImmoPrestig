@@ -210,10 +210,14 @@ const PropertyDetails = () => {
           }, 0);
           if (totalPaidCurrentMonth > monthlyRent && monthlyRent > 0) {
             const overpayment = totalPaidCurrentMonth - monthlyRent;
+            // Calculate next month name instead of "Surplus"
+            const nextMonth = addMonths(monthStart, 1);
+            const nextMonthLabel = format(nextMonth, "MMMM yyyy", { locale: fr });
+            const isPartial = overpayment < monthlyRent;
             results.push({
               tenantName: tenant.name,
               unitNumber: (tenant as any).unit?.unit_number || undefined,
-              monthsCovered: ["Surplus"],
+              monthsCovered: [isPartial ? `${nextMonthLabel} (partiel)` : nextMonthLabel],
               amount: overpayment,
             });
           }

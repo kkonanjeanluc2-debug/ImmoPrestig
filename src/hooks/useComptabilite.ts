@@ -734,16 +734,42 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
-          const months = p.payment_months || [];
-          const amount = Number(p.paid_amount) || Number(p.amount);
-          result.paidRentDetails.push({
-            tenantName,
-            months,
-            amount,
-            paidDate: p.paid_date || p.due_date,
-            managerName: assignedTo || "__unassigned__",
-            paymentMethod: p.method || "Non spécifié",
-          });
+          const allMonths = p.payment_months || [];
+          const totalAmount = Number(p.paid_amount) || Number(p.amount);
+          const isMultiMonth = allMonths.length > 1;
+          const paidDate = p.paid_date;
+          const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
+
+          if (isMultiMonth) {
+            // For multi-month advance payments, only count the portion within the period
+            const overlapping = countOverlappingMonths(allMonths, fromDate, toDate);
+            if (overlapping > 0) {
+              const perMonth = Math.round(totalAmount / allMonths.length);
+              // Filter months to only those in period
+              const monthsInPeriod = allMonths.filter((m: string) => {
+                const ym = toYearMonth(m);
+                if (!ym) return false;
+                return ym >= fromDate.substring(0, 7) && ym <= toDate.substring(0, 7);
+              });
+              result.paidRentDetails.push({
+                tenantName,
+                months: monthsInPeriod,
+                amount: perMonth * overlapping,
+                paidDate: paidDate || p.due_date,
+                managerName: assignedTo || "__unassigned__",
+                paymentMethod: p.method || "Non spécifié",
+              });
+            }
+          } else if (isPaidInPeriod || (allMonths.length === 1 && paymentMonthsOverlapPeriod(allMonths, fromDate, toDate))) {
+            result.paidRentDetails.push({
+              tenantName,
+              months: allMonths,
+              amount: totalAmount,
+              paidDate: paidDate || p.due_date,
+              managerName: assignedTo || "__unassigned__",
+              paymentMethod: p.method || "Non spécifié",
+            });
+          }
         }
       });
       // Resolve manager names from profiles

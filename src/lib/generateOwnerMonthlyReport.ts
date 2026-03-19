@@ -264,7 +264,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("CAUTIONS ET FRAIS D'AGENCE", 15, yPos);
+  doc.text("CAUTIONS", 15, yPos);
   yPos += 8;
 
   let totalCautions = 0;

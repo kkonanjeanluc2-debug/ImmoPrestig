@@ -23,7 +23,6 @@ interface CautionRow {
   tenantName: string;
   propertyTitle: string;
   deposit: number;
-  agencyFees: number;
 }
 
 interface AdvancePaymentRow {

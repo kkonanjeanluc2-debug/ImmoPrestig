@@ -185,7 +185,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       // but cover months within this period
       const { data: advancePayments, error: advError } = await supabase
         .from("payments")
-        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to)")
+        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .eq("status", "paid")
         .lt("paid_date", fromDate)
         .not("payment_months", "is", null);

@@ -157,11 +157,22 @@ const OwnerDetails = () => {
         const monthStartStr = format(monthStart, "yyyy-MM-dd");
         const monthEndStr = format(monthEnd, "yyyy-MM-dd");
 
+        // Payments with due_date in this month
         const tenantPaymentsThisMonth = payments.filter(p => 
           p.tenant_id === tenant.id &&
           p.due_date >= monthStartStr &&
           p.due_date <= monthEndStr
         );
+
+        // Late payments (due_date before this month) that were partially/fully collected this month
+        const latePaymentsCollectedThisMonth = payments.filter(p => {
+          if (p.tenant_id !== tenant.id) return false;
+          if (p.due_date >= monthStartStr) return false; // not a late payment
+          const paidDate = p.paid_date?.substring(0, 10);
+          if (!paidDate || paidDate < monthStartStr || paidDate > monthEndStr) return false;
+          // Must have some payment
+          return p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+        });
 
         // Calculate paid amount from regular payments (including partial payments)
         const regularPaid = tenantPaymentsThisMonth
@@ -171,6 +182,12 @@ const OwnerDetails = () => {
             if (p.paid_amount && p.paid_amount > 0) return sum + p.paid_amount;
             return sum;
           }, 0);
+
+        // Add late payments collected this month
+        const lateCollected = latePaymentsCollectedThisMonth.reduce((sum, p) => {
+          if (p.status === "paid") return sum + p.amount;
+          return sum + (p.paid_amount || 0);
+        }, 0);
 
         // Check for advance/future payments paid this month (fully paid OR partially paid)
         const advancePaymentsForTenant = payments.filter(p => {

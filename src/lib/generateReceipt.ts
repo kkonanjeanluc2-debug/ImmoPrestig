@@ -210,13 +210,15 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     doc.text(templates.title, pageWidth - 15, 14, { align: "right" });
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth - 15, 21, { align: "right" });
+    const displayNumber = data.receiptNumber || data.paymentId.substring(0, 8).toUpperCase();
+    doc.text(`N° ${displayNumber}`, pageWidth - 15, 21, { align: "right" });
   } else {
     doc.setFontSize(18);
     doc.text(templates.title, pageWidth / 2, 20, { align: "center" });
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth / 2, 28, { align: "center" });
+    const displayNumber = data.receiptNumber || data.paymentId.substring(0, 8).toUpperCase();
+    doc.text(`N° ${displayNumber}`, pageWidth / 2, 28, { align: "center" });
   }
   
   doc.setTextColor(...textColor);

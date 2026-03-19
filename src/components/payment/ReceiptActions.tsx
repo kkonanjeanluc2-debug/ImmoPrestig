@@ -76,8 +76,13 @@ export function ReceiptActions({
   const { data: agency } = useAgency();
   const { data: receiptTemplates = [] } = useReceiptTemplates();
 
-  // Auto-select default template on load
   useEffect(() => {
+    if (initialTemplate) {
+      setSelectedTemplateId(initialTemplate.id);
+      setSelectedTemplate(initialTemplate);
+      return;
+    }
+
     if (receiptTemplates.length > 0 && !selectedTemplateId) {
       const defaultTemplate = receiptTemplates.find(t => t.is_default) || receiptTemplates[0];
       if (defaultTemplate) {
@@ -85,7 +90,7 @@ export function ReceiptActions({
         setSelectedTemplate(defaultTemplate);
       }
     }
-  }, [receiptTemplates, selectedTemplateId]);
+  }, [initialTemplate, receiptTemplates, selectedTemplateId]);
 
   const handleTemplateChange = useCallback((templateId: string | null, template: ReceiptTemplate | null) => {
     setSelectedTemplateId(templateId);

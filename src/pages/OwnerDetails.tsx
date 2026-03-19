@@ -235,11 +235,15 @@ const OwnerDetails = () => {
       const advancePayments = ownerTenants
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
+          let propertyTitle = property?.title || "Bien inconnu";
+          const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
+          if (isMultiUnit && tenant.unit?.unit_number) {
+            propertyTitle = `${propertyTitle} - Porte ${tenant.unit.unit_number}`;
+          }
           const advPayments = payments.filter(p => {
             if (p.tenant_id !== tenant.id) return false;
             const pm = (p as any).payment_months as string[] | null;
             if (!pm || !Array.isArray(pm) || pm.length <= 1) return false;
-            // Check if payment was created/paid in the selected month
             const paidDate = p.paid_date?.substring(0, 10);
             const dueDate = p.due_date?.substring(0, 10);
             const createdDate = p.created_at?.substring(0, 10);
@@ -251,7 +255,7 @@ const OwnerDetails = () => {
           });
           return advPayments.map(ap => ({
             tenantName: tenant.name,
-            propertyTitle: property?.title || "Bien inconnu",
+            propertyTitle,
             monthsCovered: ((ap as any).payment_months as string[]) || [],
             amount: ap.amount,
           }));

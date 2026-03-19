@@ -54,19 +54,53 @@ export function CommissionEvolutionChart({ payments, period }: CommissionEvoluti
       }
     });
 
+    const FRENCH_MONTH_NAMES = [
+      "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+      "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+    ];
+
+    const toYM = (m: string): string | null => {
+      if (/^\d{4}-\d{2}$/.test(m)) return m;
+      const parts = m.split(" ");
+      if (parts.length === 2) {
+        const idx = FRENCH_MONTH_NAMES.indexOf(parts[0]);
+        if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}`;
+      }
+      return null;
+    };
+
     payments.forEach((payment) => {
       if (payment.status !== "paid" || !payment.paid_date) return;
 
-      const paidDate = new Date(payment.paid_date);
-      const monthData = months.find(
-        (m) => m.month === paidDate.getMonth() && m.year === paidDate.getFullYear()
-      );
+      const ownerId = payment.tenant?.property?.owner_id;
+      const percentage = ownerId ? ownerPercentageMap.get(ownerId) || 0 : 0;
+      const totalAmount = Number(payment.amount);
+      const paymentMonths = payment.payment_months;
+      const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
 
-      if (monthData) {
-        const ownerId = payment.tenant?.property?.owner_id;
-        const percentage = ownerId ? ownerPercentageMap.get(ownerId) || 0 : 0;
-        const commission = (Number(payment.amount) * percentage) / 100;
-        monthData.commissions += commission;
+      if (isMultiMonth) {
+        // Distribute advance payments across their covered months
+        const perMonth = totalAmount / paymentMonths.length;
+        paymentMonths.forEach((m) => {
+          const ym = toYM(m);
+          if (!ym) return;
+          const [y, mo] = ym.split("-");
+          const monthData = months.find(
+            (md) => md.month === parseInt(mo) - 1 && md.year === parseInt(y)
+          );
+          if (monthData) {
+            monthData.commissions += (perMonth * percentage) / 100;
+          }
+        });
+      } else {
+        const paidDate = new Date(payment.paid_date);
+        const monthData = months.find(
+          (m) => m.month === paidDate.getMonth() && m.year === paidDate.getFullYear()
+        );
+        if (monthData) {
+          const commission = (totalAmount * percentage) / 100;
+          monthData.commissions += commission;
+        }
       }
     });
 

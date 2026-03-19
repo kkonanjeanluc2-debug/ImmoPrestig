@@ -189,10 +189,13 @@ const PropertyDetails = () => {
           });
           advPayments.forEach(ap => {
             const amt = ap.status === "paid" ? ap.amount : (ap.paid_amount || 0);
+            const isPartialPayment = ap.status !== "paid" && ap.paid_amount && ap.paid_amount > 0 && ap.paid_amount < ap.amount;
+            const rawMonths = ((ap as any).payment_months as string[]) || [format(new Date(ap.due_date), "MMMM yyyy", { locale: fr })];
+            const monthsCovered = isPartialPayment ? rawMonths.map(m => `${m} (partiel)`) : rawMonths;
             results.push({
               tenantName: tenant.name,
               unitNumber: (tenant as any).unit?.unit_number || undefined,
-              monthsCovered: ((ap as any).payment_months as string[]) || [format(new Date(ap.due_date), "MMMM yyyy", { locale: fr })],
+              monthsCovered,
               amount: amt,
             });
           });

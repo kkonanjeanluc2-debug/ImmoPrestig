@@ -94,6 +94,7 @@ const VARIABLE_HINTS: Record<string, string[]> = {
 };
 
 export function ReceiptTemplateManager() {
+  const { user } = useAuth();
   const { data: templates = [], isLoading } = useReceiptTemplates();
   const { data: agency } = useAgency();
   const createTemplate = useCreateReceiptTemplate();

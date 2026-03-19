@@ -63,14 +63,13 @@ export const usePayments = () => {
 
       if (contractsError) throw contractsError;
 
-      // Check which tenants already have a PAID payment for next month
-      // Supports both month formats: "Avril 2026" and "2026-04"
-      // Also avoids timezone shifts when due_date is stored as YYYY-MM-DD
+      // Check which tenants already have ANY real payment for next month
+      // (paid, pending, partial, late — any status means no virtual needed)
       const nextMonthIso = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}`;
       const existingTenantIds = new Set(
         (data || [])
           .filter((payment) => {
-            if (payment.status !== "paid" || !payment.tenant_id) return false;
+            if (!payment.tenant_id) return false;
 
             if (payment.payment_months && Array.isArray(payment.payment_months)) {
               return (

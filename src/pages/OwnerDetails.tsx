@@ -154,10 +154,13 @@ const OwnerDetails = () => {
         const monthlyRent = activeContract?.rent_amount || property?.price || 0;
         const propertyTitle = buildPropertyTitle(property, tenant);
 
+        const monthStartStr = format(monthStart, "yyyy-MM-dd");
+        const monthEndStr = format(monthEnd, "yyyy-MM-dd");
+
         const tenantPaymentsThisMonth = payments.filter(p => 
           p.tenant_id === tenant.id &&
-          p.due_date >= format(monthStart, "yyyy-MM-dd") &&
-          p.due_date <= format(monthEnd, "yyyy-MM-dd")
+          p.due_date >= monthStartStr &&
+          p.due_date <= monthEndStr
         );
 
         // Calculate paid amount from regular payments (including partial payments)
@@ -169,14 +172,15 @@ const OwnerDetails = () => {
             return sum;
           }, 0);
 
-        // Check for advance payments paid this month but for future months
+        // Check for advance/future payments paid this month (fully paid OR partially paid)
         const advancePaymentsForTenant = payments.filter(p => {
-          if (p.tenant_id !== tenant.id || p.status !== "paid") return false;
-          // Must be paid or created this month
+          if (p.tenant_id !== tenant.id) return false;
+          // Must have some payment (fully paid or partial)
+          const hasPaid = p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+          if (!hasPaid) return false;
+          // Must be paid this month
           const paidDate = p.paid_date?.substring(0, 10);
           const createdDate = p.created_at?.substring(0, 10);
-          const monthStartStr = format(monthStart, "yyyy-MM-dd");
-          const monthEndStr = format(monthEnd, "yyyy-MM-dd");
           const paidThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
             (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr);
           if (!paidThisMonth) return false;
@@ -188,8 +192,11 @@ const OwnerDetails = () => {
           return isMultiMonth || isFutureMonth;
         });
 
-        // Total advance amount paid this month
-        const advancePaid = advancePaymentsForTenant.reduce((sum, p) => sum + p.amount, 0);
+        // Total advance amount paid this month (use paid_amount for partial, full amount for fully paid)
+        const advancePaid = advancePaymentsForTenant.reduce((sum, p) => {
+          if (p.status === "paid") return sum + p.amount;
+          return sum + (p.paid_amount || 0);
+        }, 0);
         
         // Total paid = regular payments + advance payments for this month
         const totalPaid = regularPaid + advancePaid;

@@ -2438,6 +2438,7 @@ export type Database = {
           name: string
           phone: string | null
           profession: string | null
+          receipt_template_id: string | null
           status: string
           updated_at: string
           user_id: string
@@ -2456,6 +2457,7 @@ export type Database = {
           name: string
           phone?: string | null
           profession?: string | null
+          receipt_template_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -2474,6 +2476,7 @@ export type Database = {
           name?: string
           phone?: string | null
           profession?: string | null
+          receipt_template_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -2491,6 +2494,13 @@ export type Database = {
             columns: ["management_type_id"]
             isOneToOne: false
             referencedRelation: "management_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owners_receipt_template_id_fkey"
+            columns: ["receipt_template_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_templates"
             referencedColumns: ["id"]
           },
         ]

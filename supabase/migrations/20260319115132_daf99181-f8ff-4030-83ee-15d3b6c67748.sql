@@ -1,0 +1,1 @@
+ALTER TABLE public.owners ADD COLUMN receipt_template_id UUID REFERENCES public.receipt_templates(id) ON DELETE SET NULL;

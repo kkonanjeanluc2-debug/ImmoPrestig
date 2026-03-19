@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,7 +24,7 @@ import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle } from "l
 import { generateRentReceipt, generateRentReceiptBase64WithTemplate, getPaymentPeriod, getPaymentPeriodsFromMonths } from "@/lib/generateReceipt";
 import { generateReceiptMessage, openWhatsApp, formatPhoneForWhatsApp } from "@/lib/whatsapp";
 import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
-import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
+import { useReceiptTemplates, type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
 
 interface ReceiptActionsProps {
   paymentId: string;
@@ -70,6 +70,18 @@ export function ReceiptActions({
   const createEmailLog = useCreateEmailLog();
   const logWhatsAppMessage = useLogWhatsAppMessage();
   const { data: agency } = useAgency();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
+
+  // Auto-select default template on load
+  useEffect(() => {
+    if (receiptTemplates.length > 0 && !selectedTemplateId) {
+      const defaultTemplate = receiptTemplates.find(t => t.is_default) || receiptTemplates[0];
+      if (defaultTemplate) {
+        setSelectedTemplateId(defaultTemplate.id);
+        setSelectedTemplate(defaultTemplate);
+      }
+    }
+  }, [receiptTemplates, selectedTemplateId]);
 
   const handleTemplateChange = useCallback((templateId: string | null, template: ReceiptTemplate | null) => {
     setSelectedTemplateId(templateId);
@@ -109,7 +121,7 @@ export function ReceiptActions({
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      await generateRentReceipt(getReceiptData());
+      await generateRentReceipt(getReceiptData(), selectedTemplate);
       toast({
         title: "Quittance générée",
         description: "Le PDF a été téléchargé avec succès.",

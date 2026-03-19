@@ -10,6 +10,7 @@ interface CommissionEvolutionChartProps {
     amount: number | string;
     paid_date: string | null;
     status: string;
+    payment_months?: string[] | null;
     tenant?: {
       property?: {
         owner_id: string | null;

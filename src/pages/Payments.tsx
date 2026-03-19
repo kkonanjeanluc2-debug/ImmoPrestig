@@ -622,6 +622,8 @@ export default function Payments() {
                                     isTenantView={isLocataire}
                                     unitNumber={unitNumber || undefined}
                                     gestionnaireName={gestionnaireName || undefined}
+                                    ownerName={owners.find(o => o.id === tenant?.property?.owner_id)?.name}
+                                    initialTemplate={receiptTemplates.find(t => t.id === owners.find(o => o.id === tenant?.property?.owner_id)?.receipt_template_id) || null}
                                   />
                                 )}
                                 {payment.status !== "paid" && isLocataire && (

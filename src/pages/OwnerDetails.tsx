@@ -125,18 +125,31 @@ const OwnerDetails = () => {
       const periodYear = year;
       const periodLabel = format(selectedDate, "MMMM yyyy", { locale: fr });
 
+      // Helper to get unit number (Supabase may return array or object)
+      const getUnitNumber = (tenant: any): string | null => {
+        const unit = tenant.unit;
+        if (!unit) return null;
+        if (Array.isArray(unit)) return unit[0]?.unit_number || null;
+        return unit.unit_number || null;
+      };
+
+      // Helper to build property title with unit number
+      const buildPropertyTitle = (property: any, tenant: any): string => {
+        let title = property?.title || "Bien inconnu";
+        const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
+        const unitNumber = getUnitNumber(tenant);
+        if (isMultiUnit && unitNumber) {
+          title = `${title} - Porte ${unitNumber}`;
+        }
+        return title;
+      };
+
       // Prepare tenant payments data
       const tenantPayments = ownerTenants.map(tenant => {
         const property = ownerProperties.find(p => p.id === tenant.property_id);
         const activeContract = tenant.contracts?.find(c => c.status === "active");
         const monthlyRent = activeContract?.rent_amount || property?.price || 0;
-        
-        // Build property title with unit number for multi-unit properties
-        let propertyTitle = property?.title || "Bien inconnu";
-        const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
-        if (isMultiUnit && tenant.unit?.unit_number) {
-          propertyTitle = `${propertyTitle} - Porte ${tenant.unit.unit_number}`;
-        }
+        const propertyTitle = buildPropertyTitle(property, tenant);
 
         const tenantPaymentsThisMonth = payments.filter(p => 
           p.tenant_id === tenant.id &&
@@ -144,22 +157,31 @@ const OwnerDetails = () => {
           p.due_date <= format(monthEnd, "yyyy-MM-dd")
         );
 
-        // Calculate paid amount including advance payments that cover this month
+        // Calculate paid amount from regular payments
+        const regularPaid = tenantPaymentsThisMonth
+          .filter(p => p.status === "paid")
+          .reduce((sum, p) => sum + p.amount, 0);
+
+        // Check for advance payments (multi-month) created/paid this month
         const advancePaymentsForTenant = payments.filter(p => {
           if (p.tenant_id !== tenant.id || p.status !== "paid") return false;
           const pm = (p as any).payment_months as string[] | null;
           if (!pm || !Array.isArray(pm) || pm.length <= 1) return false;
-          const monthKey = format(monthStart, "yyyy-MM");
-          return pm.includes(monthKey);
+          const paidDate = p.paid_date?.substring(0, 10);
+          const createdDate = p.created_at?.substring(0, 10);
+          const monthStartStr = format(monthStart, "yyyy-MM-dd");
+          const monthEndStr = format(monthEnd, "yyyy-MM-dd");
+          return (
+            (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
+            (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr)
+          );
         });
 
-        const regularPaid = tenantPaymentsThisMonth
-          .filter(p => p.status === "paid")
-          .reduce((sum, p) => sum + p.amount, 0);
+        // Total advance amount paid this month
+        const advancePaid = advancePaymentsForTenant.reduce((sum, p) => sum + p.amount, 0);
         
-        // If this month is covered by an advance payment, count the monthly rent as paid
-        const advancePaid = advancePaymentsForTenant.length > 0 ? monthlyRent : 0;
-        const totalPaid = regularPaid > 0 ? regularPaid : advancePaid;
+        // Total paid = regular payments + advance payments for this month
+        const totalPaid = regularPaid + advancePaid;
 
         const hasLate = tenantPaymentsThisMonth.some(p => 
           p.status === "pending" && new Date(p.due_date) < new Date()
@@ -219,11 +241,7 @@ const OwnerDetails = () => {
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const deposit = tenant.contracts?.find(c => c.status === "active")?.deposit || 0;
-          let propertyTitle = property?.title || "Bien inconnu";
-          const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
-          if (isMultiUnit && tenant.unit?.unit_number) {
-            propertyTitle = `${propertyTitle} - Porte ${tenant.unit.unit_number}`;
-          }
+          const propertyTitle = buildPropertyTitle(property, tenant);
           return {
             tenantName: tenant.name,
             propertyTitle,
@@ -235,11 +253,7 @@ const OwnerDetails = () => {
       const advancePayments = ownerTenants
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
-          let propertyTitle = property?.title || "Bien inconnu";
-          const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
-          if (isMultiUnit && tenant.unit?.unit_number) {
-            propertyTitle = `${propertyTitle} - Porte ${tenant.unit.unit_number}`;
-          }
+          const propertyTitle = buildPropertyTitle(property, tenant);
           const advPayments = payments.filter(p => {
             if (p.tenant_id !== tenant.id) return false;
             const pm = (p as any).payment_months as string[] | null;

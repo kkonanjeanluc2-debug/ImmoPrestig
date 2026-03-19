@@ -17,6 +17,22 @@ interface InterventionRow {
   status: string;
 }
 
+interface AdvancePaymentRow {
+  tenantName: string;
+  unitNumber?: string;
+  monthsCovered: string[];
+  amount: number;
+}
+
+interface LatePaymentRow {
+  tenantName: string;
+  unitNumber?: string;
+  dueMonth: string;
+  rentAmount: number;
+  paidAmount: number;
+  status: "paid" | "partial";
+}
+
 interface AgencyInfo {
   name: string;
   email?: string;
@@ -34,6 +50,8 @@ interface PropertyMonthlyReportData {
   agency?: AgencyInfo | null;
   tenantPayments: TenantPaymentRow[];
   interventions: InterventionRow[];
+  advancePayments?: AdvancePaymentRow[];
+  latePayments?: LatePaymentRow[];
   commissionPercentage: number;
   managementTypeName?: string;
 }
@@ -78,6 +96,26 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   const warningColor: [number, number, number] = [234, 179, 8];
   const dangerColor: [number, number, number] = [239, 68, 68];
 
+  const drawFooter = () => {
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, pageHeight - 20, pageWidth, 20, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    doc.text(`Document genere le ${today}`, pageWidth / 2, pageHeight - 10, { align: "center" });
+  };
+
+  let yPos = 0;
+
+  const checkPageBreak = (neededHeight: number) => {
+    if (yPos + neededHeight > pageHeight - 30) {
+      drawFooter();
+      doc.addPage();
+      yPos = 20;
+    }
+  };
+
   // Header
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, pageWidth, 50, "F");
@@ -113,7 +151,7 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   doc.setFont("helvetica", "normal");
   doc.text(data.period, pageWidth - 15, 26, { align: "right" });
 
-  let yPos = 60;
+  yPos = 60;
 
   // Property info box
   doc.setFillColor(...lightGray);
@@ -135,6 +173,7 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   yPos += 38;
 
   // Tenant payments table
+  checkPageBreak(30);
   doc.setTextColor(...primaryColor);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
@@ -167,6 +206,7 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
     yPos += 10;
   } else {
     data.tenantPayments.forEach((row, index) => {
+      checkPageBreak(9);
       if (index % 2 === 0) {
         doc.setFillColor(...lightGray);
         doc.rect(15, yPos, pageWidth - 30, 9, "F");
@@ -202,7 +242,149 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   doc.text(formatAmountForPDF(totalPaid), 140, yPos + 6);
   yPos += 18;
 
+  // Advance payments section
+  const advancePayments = data.advancePayments || [];
+  checkPageBreak(30);
+  doc.setTextColor(...primaryColor);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("MOIS D'AVANCE", 15, yPos);
+  yPos += 8;
+
+  let totalAdvance = 0;
+
+  if (advancePayments.length === 0) {
+    doc.setFillColor(...lightGray);
+    doc.rect(15, yPos, pageWidth - 30, 10, "F");
+    doc.setTextColor(...textColor);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Aucun paiement d'avance pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
+    yPos += 10;
+  } else {
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Locataire", 18, yPos + 5.5);
+    doc.text("Porte", 65, yPos + 5.5);
+    doc.text("Mois couverts", 95, yPos + 5.5);
+    doc.text("Montant", 165, yPos + 5.5);
+    yPos += 8;
+
+    doc.setTextColor(...textColor);
+    doc.setFont("helvetica", "normal");
+
+    advancePayments.forEach((row, index) => {
+      checkPageBreak(9);
+      if (index % 2 === 0) {
+        doc.setFillColor(...lightGray);
+        doc.rect(15, yPos, pageWidth - 30, 9, "F");
+      }
+      doc.setFontSize(8);
+      const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
+      const months = row.monthsCovered.join(", ");
+      const monthsDisplay = months.length > 30 ? months.substring(0, 28) + "..." : months;
+
+      doc.text(tenantName, 18, yPos + 6);
+      doc.text(row.unitNumber || "-", 65, yPos + 6);
+      doc.text(monthsDisplay, 95, yPos + 6);
+      doc.setTextColor(...successColor);
+      doc.text(formatAmountForPDF(row.amount), 165, yPos + 6);
+      doc.setTextColor(...textColor);
+
+      totalAdvance += row.amount;
+      yPos += 9;
+    });
+
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 9, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL AVANCES", 18, yPos + 6);
+    doc.text(formatAmountForPDF(totalAdvance), 165, yPos + 6);
+    yPos += 9;
+  }
+
+  yPos += 10;
+
+  // Late payments section
+  const latePayments = data.latePayments || [];
+  checkPageBreak(30);
+  doc.setTextColor(...primaryColor);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("DETAIL MOIS EN RETARD", 15, yPos);
+  yPos += 8;
+
+  let totalLateCollected = 0;
+
+  if (latePayments.length === 0) {
+    doc.setFillColor(...lightGray);
+    doc.rect(15, yPos, pageWidth - 30, 10, "F");
+    doc.setTextColor(...textColor);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Aucun encaissement de mois en retard pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
+    yPos += 10;
+  } else {
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Locataire", 18, yPos + 5.5);
+    doc.text("Porte", 60, yPos + 5.5);
+    doc.text("Mois du", 90, yPos + 5.5);
+    doc.text("Loyer", 130, yPos + 5.5);
+    doc.text("Encaisse", 165, yPos + 5.5);
+    yPos += 8;
+
+    doc.setTextColor(...textColor);
+    doc.setFont("helvetica", "normal");
+
+    latePayments.forEach((row, index) => {
+      checkPageBreak(9);
+      if (index % 2 === 0) {
+        doc.setFillColor(...lightGray);
+        doc.rect(15, yPos, pageWidth - 30, 9, "F");
+      }
+      doc.setFontSize(8);
+      const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
+
+      doc.text(tenantName, 18, yPos + 6);
+      doc.text(row.unitNumber || "-", 60, yPos + 6);
+      doc.text(row.dueMonth, 90, yPos + 6);
+      doc.text(formatAmountForPDF(row.rentAmount), 130, yPos + 6);
+
+      if (row.status === "partial") {
+        doc.setTextColor(...warningColor);
+      } else {
+        doc.setTextColor(...successColor);
+      }
+      doc.text(formatAmountForPDF(row.paidAmount), 165, yPos + 6);
+      doc.setTextColor(...textColor);
+
+      totalLateCollected += row.paidAmount;
+      yPos += 9;
+    });
+
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 9, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL RETARDS ENCAISSES", 18, yPos + 6);
+    doc.text(formatAmountForPDF(totalLateCollected), 165, yPos + 6);
+    yPos += 9;
+  }
+
+  yPos += 10;
+
   // Interventions
+  checkPageBreak(30);
   doc.setTextColor(...primaryColor);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
@@ -234,6 +416,7 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
     doc.setFont("helvetica", "normal");
 
     data.interventions.forEach((row, index) => {
+      checkPageBreak(9);
       if (index % 2 === 0) {
         doc.setFillColor(...lightGray);
         doc.rect(15, yPos, pageWidth - 30, 9, "F");
@@ -260,11 +443,12 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   yPos += 15;
 
   // Summary
+  checkPageBreak(75);
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalPaid - commissionAmount - totalInterventionsCost;
+  const netAmount = totalPaid + totalAdvance + totalLateCollected - commissionAmount - totalInterventionsCost;
 
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 65, 3, 3, "F");
+  doc.roundedRect(15, yPos, pageWidth - 30, 75, 3, 3, "F");
 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);
@@ -280,6 +464,18 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(totalPaid), pageWidth - 25, summaryY, { align: "right" });
 
+  summaryY += 8;
+  doc.setFont("helvetica", "normal");
+  doc.text("Total avances", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalAdvance), pageWidth - 25, summaryY, { align: "right" });
+
+  summaryY += 8;
+  doc.setFont("helvetica", "normal");
+  doc.text("Total retards encaisses", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalLateCollected), pageWidth - 25, summaryY, { align: "right" });
+
   summaryY += 10;
   doc.setFont("helvetica", "normal");
   const commissionLabel = data.managementTypeName
@@ -289,17 +485,17 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   doc.setTextColor(...dangerColor);
   doc.text(`- ${formatAmountWithCurrency(commissionAmount)}`, pageWidth - 25, summaryY, { align: "right" });
 
-  summaryY += 10;
+  summaryY += 8;
   doc.setTextColor(...textColor);
   doc.text("Couts interventions/reparations", 25, summaryY);
   doc.setTextColor(...dangerColor);
   doc.text(`- ${formatAmountWithCurrency(totalInterventionsCost)}`, pageWidth - 25, summaryY, { align: "right" });
 
-  summaryY += 8;
+  summaryY += 6;
   doc.setDrawColor(...primaryColor);
   doc.line(25, summaryY, pageWidth - 25, summaryY);
 
-  summaryY += 10;
+  summaryY += 8;
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
@@ -310,13 +506,7 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   doc.text(formatAmountWithCurrency(netAmount), pageWidth - 25, summaryY, { align: "right" });
 
   // Footer
-  doc.setFillColor(...primaryColor);
-  doc.rect(0, pageHeight - 20, pageWidth, 20, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-  doc.text(`Document genere le ${today}`, pageWidth / 2, pageHeight - 10, { align: "center" });
+  drawFooter();
 
   const fileName = `point_mensuel_${data.propertyTitle.replace(/\s+/g, "_")}_${data.period.replace(/\s+/g, "_")}.pdf`;
   doc.save(fileName);

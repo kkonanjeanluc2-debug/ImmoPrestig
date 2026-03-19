@@ -98,17 +98,36 @@ const PropertyDetails = () => {
       // Get tenants for this property
       const propertyTenants = tenants.filter(t => t.property_id === property.id);
 
+      const monthStartStr = format(monthStart, "yyyy-MM-dd");
+      const monthEndStr = format(monthEnd, "yyyy-MM-dd");
+
       const tenantPayments = propertyTenants.map(tenant => {
         const tenantPaymentsThisMonth = payments.filter(p =>
           p.tenant_id === tenant.id &&
-          p.due_date >= format(monthStart, "yyyy-MM-dd") &&
-          p.due_date <= format(monthEnd, "yyyy-MM-dd")
+          p.due_date >= monthStartStr &&
+          p.due_date <= monthEndStr
         );
 
+        // Late payments collected this month
+        const lateCollectedThisMonth = payments.filter(p => {
+          if (p.tenant_id !== tenant.id) return false;
+          if (p.due_date >= monthStartStr) return false;
+          const paidDate = p.paid_date?.substring(0, 10);
+          if (!paidDate || paidDate < monthStartStr || paidDate > monthEndStr) return false;
+          return p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+        });
+
         const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property.price || 0);
-        const totalPaid = tenantPaymentsThisMonth
-          .filter(p => p.status === "paid")
-          .reduce((sum, p) => sum + p.amount, 0);
+        const regularPaid = tenantPaymentsThisMonth.reduce((sum, p) => {
+          if (p.status === "paid") return sum + p.amount;
+          if (p.paid_amount && p.paid_amount > 0) return sum + p.paid_amount;
+          return sum;
+        }, 0);
+        const latePaid = lateCollectedThisMonth.reduce((sum, p) => {
+          if (p.status === "paid") return sum + p.amount;
+          return sum + (p.paid_amount || 0);
+        }, 0);
+        const totalPaid = regularPaid + latePaid;
 
         const hasLate = tenantPaymentsThisMonth.some(p =>
           p.status === "pending" && new Date(p.due_date) < new Date()
@@ -146,6 +165,88 @@ const PropertyDetails = () => {
 
       const commissionPercentage = owner?.management_type?.percentage || 0;
 
+      // Prepare advance payments
+      const advancePayments = propertyTenants
+        .map(tenant => {
+          const activeContract = (tenant as any).contracts?.find((c: any) => c.status === "active");
+          const monthlyRent = activeContract?.rent_amount || property.price || 0;
+          const results: { tenantName: string; unitNumber?: string; monthsCovered: string[]; amount: number }[] = [];
+
+          const advPayments = payments.filter(p => {
+            if (p.tenant_id !== tenant.id) return false;
+            const hasPaid = p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+            if (!hasPaid) return false;
+            const paidDate = p.paid_date?.substring(0, 10);
+            const createdDate = p.created_at?.substring(0, 10);
+            const paidThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
+              (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr);
+            if (!paidThisMonth) return false;
+            const dueDate = p.due_date?.substring(0, 10);
+            const pm = (p as any).payment_months as string[] | null;
+            const isMultiMonth = pm && Array.isArray(pm) && pm.length > 1;
+            const isFutureMonth = dueDate && dueDate > monthEndStr;
+            return isMultiMonth || isFutureMonth;
+          });
+          advPayments.forEach(ap => {
+            const amt = ap.status === "paid" ? ap.amount : (ap.paid_amount || 0);
+            results.push({
+              tenantName: tenant.name,
+              unitNumber: (tenant as any).unit?.unit_number || undefined,
+              monthsCovered: ((ap as any).payment_months as string[]) || [format(new Date(ap.due_date), "MMMM yyyy", { locale: fr })],
+              amount: amt,
+            });
+          });
+
+          // Overpayment on current month
+          const currentMonthPayments = payments.filter(p =>
+            p.tenant_id === tenant.id &&
+            p.due_date >= monthStartStr &&
+            p.due_date <= monthEndStr
+          );
+          const totalPaidCurrentMonth = currentMonthPayments.reduce((sum, p) => {
+            if (p.status === "paid") return sum + p.amount;
+            if (p.paid_amount && p.paid_amount > 0) return sum + p.paid_amount;
+            return sum;
+          }, 0);
+          if (totalPaidCurrentMonth > monthlyRent && monthlyRent > 0) {
+            const overpayment = totalPaidCurrentMonth - monthlyRent;
+            results.push({
+              tenantName: tenant.name,
+              unitNumber: (tenant as any).unit?.unit_number || undefined,
+              monthsCovered: ["Surplus"],
+              amount: overpayment,
+            });
+          }
+
+          return results;
+        })
+        .flat();
+
+      // Prepare late payments
+      const latePayments = propertyTenants
+        .map(tenant => {
+          const lateCollected = payments.filter(p => {
+            if (p.tenant_id !== tenant.id) return false;
+            if (p.due_date >= monthStartStr) return false;
+            const paidDate = p.paid_date?.substring(0, 10);
+            if (!paidDate || paidDate < monthStartStr || paidDate > monthEndStr) return false;
+            return p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+          });
+
+          return lateCollected.map(lp => {
+            const paidAmt = lp.status === "paid" ? lp.amount : (lp.paid_amount || 0);
+            return {
+              tenantName: tenant.name,
+              unitNumber: (tenant as any).unit?.unit_number || undefined,
+              dueMonth: format(new Date(lp.due_date), "MMMM yyyy", { locale: fr }),
+              rentAmount: lp.amount,
+              paidAmount: paidAmt,
+              status: (lp.status === "paid" ? "paid" : "partial") as "paid" | "partial",
+            };
+          });
+        })
+        .flat();
+
       await generatePropertyMonthlyReport({
         propertyTitle: property.title,
         propertyAddress: property.address,
@@ -161,6 +262,8 @@ const PropertyDetails = () => {
         } : null,
         tenantPayments,
         interventions: monthlyInterventions,
+        advancePayments,
+        latePayments,
         commissionPercentage,
         managementTypeName: (owner as any)?.management_type?.name,
       });

@@ -136,10 +136,13 @@ const OwnerDetails = () => {
       // Helper to build property title with unit number
       const buildPropertyTitle = (property: any, tenant: any): string => {
         let title = property?.title || "Bien inconnu";
-        const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
+        const propType = (property?.property_type || "").toLowerCase();
+        const isMultiUnit = propType === "maison à porte multiple" || propType === "immeuble";
         const unitNumber = getUnitNumber(tenant);
         if (isMultiUnit && unitNumber) {
-          title = `${title} - Porte ${unitNumber}`;
+          // Avoid "Porte Porte X" if unit_number already starts with "Porte"
+          const porteSuffix = unitNumber.toLowerCase().startsWith("porte") ? unitNumber : `Porte ${unitNumber}`;
+          title = `${title} - ${porteSuffix}`;
         }
         return title;
       };

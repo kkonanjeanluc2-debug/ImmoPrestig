@@ -66,6 +66,8 @@ export function ReceiptActions({
   gestionnaireName,
   ownerName,
   initialTemplate,
+  totalRentAmount,
+  remainingAmount,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);

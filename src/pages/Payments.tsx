@@ -45,11 +45,11 @@ import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog"
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { ReceiptActions } from "@/components/payment/ReceiptActions";
 import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
+import { CommissionReportCard } from "@/components/commission/CommissionReportCard";
 import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
-import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 const statusConfig = {
   paid: { 

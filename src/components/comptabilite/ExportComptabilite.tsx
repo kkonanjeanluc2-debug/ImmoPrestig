@@ -289,7 +289,47 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
           y = renderRevenueManagerGroups(data.lotissementsByManager, "Parcelle", "Acquéreur", doc, y);
           doc.setFontSize(9);
         } else if (row.account === REVENUE_ACCOUNTS.cautions && data.cautionsByManager.length > 0) {
-          y = renderRevenueManagerGroups(data.cautionsByManager, "Locataire", "Bien", doc, y);
+          // Custom 4-column renderer for cautions (Locataire, Propriétaire, Bien, Montant)
+          let cy = y + 2;
+          data.cautionsByManager.forEach((group) => {
+            if (cy + 20 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); cy = 20; }
+            doc.setFillColor(26, 54, 93);
+            doc.rect(25, cy, pageWidth - 50, 8, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(7.5);
+            doc.setFont("helvetica", "bold");
+            doc.text(`Gestionnaire : ${group.managerName}`, 28, cy + 5.5);
+            doc.text(`Total : ${formatAmountWithCurrency(group.total)}`, pageWidth - 30, cy + 5.5, { align: "right" });
+            cy += 8;
+            doc.setFillColor(230, 237, 245);
+            doc.rect(25, cy, pageWidth - 50, 7, "F");
+            doc.setTextColor(...primaryColor);
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "bold");
+            doc.text("Locataire", 28, cy + 5);
+            doc.text("Propriétaire", 68, cy + 5);
+            doc.text("Bien", 108, cy + 5);
+            doc.text("Montant", pageWidth - 30, cy + 5, { align: "right" });
+            cy += 7;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(7);
+            group.details.forEach((detail, j) => {
+              if (cy + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); cy = 20; }
+              if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, cy, pageWidth - 50, 7, "F"); }
+              doc.setTextColor(...textColor);
+              const lbl = detail.label.length > 22 ? detail.label.substring(0, 20) + "..." : detail.label;
+              doc.text(lbl, 28, cy + 5);
+              const ownerText = (detail.ownerName || "—").length > 22 ? (detail.ownerName || "—").substring(0, 20) + "..." : (detail.ownerName || "—");
+              doc.text(ownerText, 68, cy + 5);
+              const desc = detail.description.replace(" (Caution)", "");
+              const descTrunc = desc.length > 22 ? desc.substring(0, 20) + "..." : desc;
+              doc.text(descTrunc, 108, cy + 5);
+              doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, cy + 5, { align: "right" });
+              cy += 7;
+            });
+            cy += 3;
+          });
+          y = cy;
           doc.setFontSize(9);
         }
       });

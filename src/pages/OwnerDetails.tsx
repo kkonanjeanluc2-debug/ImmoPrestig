@@ -128,23 +128,45 @@ const OwnerDetails = () => {
       // Prepare tenant payments data
       const tenantPayments = ownerTenants.map(tenant => {
         const property = ownerProperties.find(p => p.id === tenant.property_id);
+        const activeContract = tenant.contracts?.find(c => c.status === "active");
+        const monthlyRent = activeContract?.rent_amount || property?.price || 0;
+        
+        // Build property title with unit number for multi-unit properties
+        let propertyTitle = property?.title || "Bien inconnu";
+        const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
+        if (isMultiUnit && tenant.unit?.unit_number) {
+          propertyTitle = `${propertyTitle} - Porte ${tenant.unit.unit_number}`;
+        }
+
         const tenantPaymentsThisMonth = payments.filter(p => 
           p.tenant_id === tenant.id &&
           p.due_date >= format(monthStart, "yyyy-MM-dd") &&
           p.due_date <= format(monthEnd, "yyyy-MM-dd")
         );
 
-        const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property?.price || 0);
-        const totalPaid = tenantPaymentsThisMonth
+        // Calculate paid amount including advance payments that cover this month
+        const advancePaymentsForTenant = payments.filter(p => {
+          if (p.tenant_id !== tenant.id || p.status !== "paid") return false;
+          const pm = (p as any).payment_months as string[] | null;
+          if (!pm || !Array.isArray(pm) || pm.length <= 1) return false;
+          const monthKey = format(monthStart, "yyyy-MM");
+          return pm.includes(monthKey);
+        });
+
+        const regularPaid = tenantPaymentsThisMonth
           .filter(p => p.status === "paid")
           .reduce((sum, p) => sum + p.amount, 0);
+        
+        // If this month is covered by an advance payment, count the monthly rent as paid
+        const advancePaid = advancePaymentsForTenant.length > 0 ? monthlyRent : 0;
+        const totalPaid = regularPaid > 0 ? regularPaid : advancePaid;
 
         const hasLate = tenantPaymentsThisMonth.some(p => 
           p.status === "pending" && new Date(p.due_date) < new Date()
         );
 
         let status: "paid" | "pending" | "late" = "pending";
-        if (totalPaid >= totalDue && totalDue > 0) {
+        if (totalPaid >= monthlyRent && monthlyRent > 0) {
           status = "paid";
         } else if (hasLate) {
           status = "late";
@@ -154,8 +176,8 @@ const OwnerDetails = () => {
 
         return {
           tenantName: tenant.name,
-          propertyTitle: property?.title || "Bien inconnu",
-          rentAmount: totalDue,
+          propertyTitle,
+          rentAmount: monthlyRent,
           paidAmount: totalPaid,
           status,
           paidDate: paidPayment?.paid_date || null,

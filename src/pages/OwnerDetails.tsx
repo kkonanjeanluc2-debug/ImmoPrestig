@@ -253,11 +253,7 @@ const OwnerDetails = () => {
       const advancePayments = ownerTenants
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
-          let propertyTitle = property?.title || "Bien inconnu";
-          const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
-          if (isMultiUnit && tenant.unit?.unit_number) {
-            propertyTitle = `${propertyTitle} - Porte ${tenant.unit.unit_number}`;
-          }
+          const propertyTitle = buildPropertyTitle(property, tenant);
           const advPayments = payments.filter(p => {
             if (p.tenant_id !== tenant.id) return false;
             const pm = (p as any).payment_months as string[] | null;

@@ -42,6 +42,8 @@ interface ReceiptActionsProps {
   isTenantView?: boolean;
   unitNumber?: string;
   gestionnaireName?: string;
+  ownerName?: string;
+  initialTemplate?: ReceiptTemplate | null;
 }
 
 export function ReceiptActions({

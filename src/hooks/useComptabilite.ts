@@ -755,17 +755,22 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     const managerIds = new Set<string>();
     if (payments) {
       payments.forEach((p: any) => {
-        if (normalizeStatus(p.status) === "paid") {
+        const status = normalizeStatus(p.status);
+        const isPaid = status === "paid";
+        const isPartial = !isPaid && (Number(p.paid_amount) || 0) > 0;
+        
+        if (isPaid || isPartial) {
           const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
           const allMonths = p.payment_months || [];
-          const totalAmount = Number(p.paid_amount) || Number(p.amount);
+          const totalAmount = isPaid ? (Number(p.paid_amount) || Number(p.amount)) : Number(p.paid_amount);
           const isMultiMonth = allMonths.length > 1;
           const paidDate = p.paid_date;
           const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
+          const suffix = isPartial ? " (partiel)" : "";
 
-          if (isMultiMonth) {
+          if (isMultiMonth && isPaid) {
             // For multi-month advance payments, only count the portion within the period
             const overlapping = countOverlappingMonths(allMonths, fromDate, toDate);
             if (overlapping > 0) {
@@ -781,6 +786,19 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
                 months: monthsInPeriod,
                 amount: perMonth * overlapping,
                 paidDate: paidDate || p.due_date,
+                managerName: assignedTo || "__unassigned__",
+                paymentMethod: p.method || "Non spécifié",
+              });
+            }
+          } else if (isPartial) {
+            // Partial payment - show the paid portion
+            const dueDate = p.due_date;
+            if (dueDate && dueDate >= fromDate && dueDate <= toDate) {
+              result.paidRentDetails.push({
+                tenantName: tenantName + suffix,
+                months: allMonths.length > 0 ? allMonths : (dueDate ? [dueDate.substring(0, 7)] : []),
+                amount: totalAmount,
+                paidDate: paidDate || dueDate,
                 managerName: assignedTo || "__unassigned__",
                 paymentMethod: p.method || "Non spécifié",
               });

@@ -134,12 +134,13 @@ export function useCommissions(startDate?: string, endDate?: string) {
       const commissionPercentage = managementType?.percentage || 0;
       const managementTypeName = managementType?.name || "Aucun";
 
-      // Calculate amount - for multi-month advance payments, only count overlapping months
+      // Calculate amount - use paid_amount for partial payments
       const paymentMonths = (payment as any).payment_months as string[] | null;
       const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
-      let rentAmount = payment.amount;
+      const isPartial = payment.status !== "paid" && ((payment as any).paid_amount || 0) > 0;
+      let rentAmount = isPartial ? Number((payment as any).paid_amount) : payment.amount;
       
-      if (isMultiMonth && startDate && endDate) {
+      if (isMultiMonth && !isPartial && startDate && endDate) {
         const perMonth = Math.round(payment.amount / paymentMonths.length);
         const overlapping = countOverlapping(paymentMonths, startDate, endDate);
         rentAmount = perMonth * overlapping;

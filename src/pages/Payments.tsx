@@ -40,9 +40,9 @@ import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashbo
 import { useOwners } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
+import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
-import { ReceiptActions } from "@/components/payment/ReceiptActions";
 import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { CommissionReportCard } from "@/components/commission/CommissionReportCard";
 import { AccountTab } from "@/components/payment/AccountTab";

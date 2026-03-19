@@ -82,7 +82,9 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
           doc.setFontSize(7);
           doc.setFont("helvetica", "bold");
           doc.text("Locataire", 28, y + 5);
-          doc.text("Mois concerné(s)", 90, y + 5);
+          doc.text("Propriétaire", 58, y + 5);
+          doc.text("Bien loué", 88, y + 5);
+          doc.text("Mois concerné(s)", 118, y + 5);
           doc.text("Montant", pageWidth - 30, y + 5, { align: "right" });
           y += 7;
           doc.setFont("helvetica", "normal");
@@ -91,11 +93,15 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
             if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
             doc.setTextColor(...textColor);
-            const name = detail.tenantName.length > 25 ? detail.tenantName.substring(0, 23) + "..." : detail.tenantName;
+            const name = detail.tenantName.length > 18 ? detail.tenantName.substring(0, 16) + "..." : detail.tenantName;
             doc.text(name, 28, y + 5);
+            const owner = (detail.ownerName || "—").length > 18 ? detail.ownerName.substring(0, 16) + "..." : (detail.ownerName || "—");
+            doc.text(owner, 58, y + 5);
+            const prop = (detail.propertyTitle || "—").length > 18 ? detail.propertyTitle.substring(0, 16) + "..." : (detail.propertyTitle || "—");
+            doc.text(prop, 88, y + 5);
             const monthsText = detail.months.length > 0 ? detail.months.join(", ") : new Date(detail.paidDate).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-            const truncMonths = monthsText.length > 35 ? monthsText.substring(0, 33) + "..." : monthsText;
-            doc.text(truncMonths, 90, y + 5);
+            const truncMonths = monthsText.length > 25 ? monthsText.substring(0, 23) + "..." : monthsText;
+            doc.text(truncMonths, 118, y + 5);
             doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 5, { align: "right" });
             y += 7;
           });

@@ -63,6 +63,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
   const updateOwner = useUpdateOwner();
   const { data: managementTypes = [] } = useManagementTypes();
   const { data: contractTemplates = [] } = useContractTemplates();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
 
   const form = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),

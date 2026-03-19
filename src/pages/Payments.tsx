@@ -43,7 +43,7 @@ import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
-import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
+import { ReceiptActions } from "@/components/payment/ReceiptActions";
 import { CommissionReportCard } from "@/components/commission/CommissionReportCard";
 import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";

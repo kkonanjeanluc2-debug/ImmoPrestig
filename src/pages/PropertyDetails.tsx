@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generatePropertyMonthlyReport } from "@/lib/generatePropertyMonthlyReport";
+import { getTenantCollectedAmountForPeriod } from "@/lib/monthlyPaymentTotals";
 import { MonthlyReportPeriodDialog } from "@/components/owner/MonthlyReportPeriodDialog";
 import {
   AlertDialog,

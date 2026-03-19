@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateOwnerMonthlyReport } from "@/lib/generateOwnerMonthlyReport";
+import { getTenantCollectedAmountForPeriod } from "@/lib/monthlyPaymentTotals";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,

@@ -144,11 +144,38 @@ const OwnerDetails = () => {
         return title;
       };
 
+      const periodMonthLabel = format(selectedDate, "MMMM yyyy", { locale: fr }).toLowerCase();
+      const periodMonthIso = format(selectedDate, "yyyy-MM");
+
+      const paymentMatchesSelectedMonth = (payment: any): boolean => {
+        const paymentMonths = Array.isArray(payment.payment_months) ? payment.payment_months : [];
+
+        if (paymentMonths.length > 0) {
+          return paymentMonths.some((month: string) => {
+            const normalizedMonth = month.trim().toLowerCase();
+            return normalizedMonth === periodMonthLabel || normalizedMonth.startsWith(periodMonthIso);
+          });
+        }
+
+        return typeof payment.due_date === "string" && payment.due_date.startsWith(periodMonthIso);
+      };
+
+      const getAmountAppliedToSelectedMonth = (payment: any): number => {
+        const paymentMonths = Array.isArray(payment.payment_months) ? payment.payment_months : [];
+        const paymentAmount = Number(payment.paid_amount ?? payment.amount ?? 0);
+
+        if (paymentMonths.length > 1) {
+          return paymentAmount / paymentMonths.length;
+        }
+
+        return paymentAmount;
+      };
+
       // Prepare tenant payments data
       const tenantPayments = ownerTenants.map(tenant => {
         const property = ownerProperties.find(p => p.id === tenant.property_id);
         const activeContract = tenant.contracts?.find(c => c.status === "active");
-        const monthlyRent = activeContract?.rent_amount || property?.price || 0;
+        const monthlyRent = Number(activeContract?.rent_amount || property?.price || 0);
         const propertyTitle = buildPropertyTitle(property, tenant);
 
         const tenantPaymentsThisMonth = payments.filter(p => 
@@ -157,31 +184,14 @@ const OwnerDetails = () => {
           p.due_date <= format(monthEnd, "yyyy-MM-dd")
         );
 
-        // Calculate paid amount from regular payments
-        const regularPaid = tenantPaymentsThisMonth
-          .filter(p => p.status === "paid")
-          .reduce((sum, p) => sum + p.amount, 0);
+        const paidPaymentsCoveringMonth = payments.filter(
+          (payment) => payment.tenant_id === tenant.id && payment.status === "paid" && paymentMatchesSelectedMonth(payment)
+        );
 
-        // Check for advance payments (multi-month) created/paid this month
-        const advancePaymentsForTenant = payments.filter(p => {
-          if (p.tenant_id !== tenant.id || p.status !== "paid") return false;
-          const pm = (p as any).payment_months as string[] | null;
-          if (!pm || !Array.isArray(pm) || pm.length <= 1) return false;
-          const paidDate = p.paid_date?.substring(0, 10);
-          const createdDate = p.created_at?.substring(0, 10);
-          const monthStartStr = format(monthStart, "yyyy-MM-dd");
-          const monthEndStr = format(monthEnd, "yyyy-MM-dd");
-          return (
-            (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
-            (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr)
-          );
-        });
-
-        // Total advance amount paid this month
-        const advancePaid = advancePaymentsForTenant.reduce((sum, p) => sum + p.amount, 0);
-        
-        // Total paid = regular payments + advance payments for this month
-        const totalPaid = regularPaid + advancePaid;
+        const totalPaid = paidPaymentsCoveringMonth.reduce(
+          (sum, payment) => sum + getAmountAppliedToSelectedMonth(payment),
+          0
+        );
 
         const hasLate = tenantPaymentsThisMonth.some(p => 
           p.status === "pending" && new Date(p.due_date) < new Date()
@@ -194,13 +204,13 @@ const OwnerDetails = () => {
           status = "late";
         }
 
-        const paidPayment = tenantPaymentsThisMonth.find(p => p.status === "paid");
+        const paidPayment = paidPaymentsCoveringMonth[0];
 
         return {
           tenantName: tenant.name,
           propertyTitle,
           rentAmount: monthlyRent,
-          paidAmount: totalPaid,
+          paidAmount: Math.min(totalPaid, monthlyRent || totalPaid),
           status,
           paidDate: paidPayment?.paid_date || null,
         };
@@ -323,26 +333,79 @@ const OwnerDetails = () => {
       const monthEnd = endOfMonth(now);
       const periodLabel = format(now, "MMMM yyyy", { locale: fr });
 
+      // Helper to get unit number (Supabase may return array or object)
+      const getUnitNumber = (tenant: any): string | null => {
+        const unit = tenant.unit;
+        if (!unit) return null;
+        if (Array.isArray(unit)) return unit[0]?.unit_number || null;
+        return unit.unit_number || null;
+      };
+
+      const buildPropertyTitle = (property: any, tenant: any): string => {
+        let title = property?.title || "Bien inconnu";
+        const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
+        const unitNumber = getUnitNumber(tenant);
+        if (isMultiUnit && unitNumber) {
+          title = `${title} - Porte ${unitNumber}`;
+        }
+        return title;
+      };
+
+      const periodMonthLabel = format(now, "MMMM yyyy", { locale: fr }).toLowerCase();
+      const periodMonthIso = format(now, "yyyy-MM");
+
+      const paymentMatchesSelectedMonth = (payment: any): boolean => {
+        const paymentMonths = Array.isArray(payment.payment_months) ? payment.payment_months : [];
+
+        if (paymentMonths.length > 0) {
+          return paymentMonths.some((month: string) => {
+            const normalizedMonth = month.trim().toLowerCase();
+            return normalizedMonth === periodMonthLabel || normalizedMonth.startsWith(periodMonthIso);
+          });
+        }
+
+        return typeof payment.due_date === "string" && payment.due_date.startsWith(periodMonthIso);
+      };
+
+      const getAmountAppliedToSelectedMonth = (payment: any): number => {
+        const paymentMonths = Array.isArray(payment.payment_months) ? payment.payment_months : [];
+        const paymentAmount = Number(payment.paid_amount ?? payment.amount ?? 0);
+
+        if (paymentMonths.length > 1) {
+          return paymentAmount / paymentMonths.length;
+        }
+
+        return paymentAmount;
+      };
+
       // Prepare tenant payments data
       const tenantPayments = ownerTenants.map(tenant => {
         const property = ownerProperties.find(p => p.id === tenant.property_id);
+        const activeContract = tenant.contracts?.find(c => c.status === "active");
+        const monthlyRent = Number(activeContract?.rent_amount || property?.price || 0);
+        const propertyTitle = buildPropertyTitle(property, tenant);
+
         const tenantPaymentsThisMonth = payments.filter(p => 
           p.tenant_id === tenant.id &&
           p.due_date >= format(monthStart, "yyyy-MM-dd") &&
           p.due_date <= format(monthEnd, "yyyy-MM-dd")
         );
 
-        const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property?.price || 0);
-        const totalPaid = tenantPaymentsThisMonth
-          .filter(p => p.status === "paid")
-          .reduce((sum, p) => sum + p.amount, 0);
+        const paidPaymentsCoveringMonth = payments.filter(
+          (payment) => payment.tenant_id === tenant.id && payment.status === "paid" && paymentMatchesSelectedMonth(payment)
+        );
+
+        const totalPaid = paidPaymentsCoveringMonth.reduce(
+          (sum, payment) => sum + getAmountAppliedToSelectedMonth(payment),
+          0
+        );
 
         const hasLate = tenantPaymentsThisMonth.some(p => 
           p.status === "pending" && new Date(p.due_date) < now
         );
 
         let status: "paid" | "pending" | "late" = "pending";
-        if (totalPaid >= totalDue && totalDue > 0) {
+        if (totalPaid >= monthlyRent && monthlyRent > 0) {
           status = "paid";
         } else if (hasLate) {
           status = "late";
@@ -350,9 +413,9 @@ const OwnerDetails = () => {
 
         return {
           tenantName: tenant.name,
-          propertyTitle: property?.title || "Bien inconnu",
-          rentAmount: totalDue,
-          paidAmount: totalPaid,
+          propertyTitle,
+          rentAmount: monthlyRent,
+          paidAmount: Math.min(totalPaid, monthlyRent || totalPaid),
           status,
         };
       }).filter(t => t.rentAmount > 0);

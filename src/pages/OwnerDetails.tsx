@@ -215,8 +215,8 @@ const OwnerDetails = () => {
           return sum + (p.paid_amount || 0);
         }, 0);
         
-        // Total paid = regular payments + advance payments for this month
-        const totalPaid = regularPaid + advancePaid;
+        // Total paid = regular payments + advance payments + late collected this month
+        const totalPaid = regularPaid + advancePaid + lateCollected;
 
         const hasLate = tenantPaymentsThisMonth.some(p => 
           p.status === "pending" && new Date(p.due_date) < new Date()

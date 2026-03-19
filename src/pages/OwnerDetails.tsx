@@ -284,13 +284,21 @@ const OwnerDetails = () => {
           };
         });
 
-      // Prepare advance payments - multi-month payments created this month
+      // Prepare advance payments - multi-month payments, future payments, and overpayments
       const advancePayments = ownerTenants
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const propertyTitle = buildPropertyTitle(property, tenant);
+          const activeContract = tenant.contracts?.find(c => c.status === "active");
+          const monthlyRent = activeContract?.rent_amount || property?.price || 0;
+
+          const results: { tenantName: string; propertyTitle: string; monthsCovered: string[]; amount: number }[] = [];
+
+          // Multi-month or future payments (fully or partially paid)
           const advPayments = payments.filter(p => {
-            if (p.tenant_id !== tenant.id || p.status !== "paid") return false;
+            if (p.tenant_id !== tenant.id) return false;
+            const hasPaid = p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+            if (!hasPaid) return false;
             const paidDate = p.paid_date?.substring(0, 10);
             const createdDate = p.created_at?.substring(0, 10);
             const paidThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
@@ -302,12 +310,66 @@ const OwnerDetails = () => {
             const isFutureMonth = dueDate && dueDate > monthEndStr;
             return isMultiMonth || isFutureMonth;
           });
-          return advPayments.map(ap => ({
-            tenantName: tenant.name,
-            propertyTitle,
-            monthsCovered: ((ap as any).payment_months as string[]) || [format(new Date(ap.due_date), "MMMM yyyy", { locale: fr })],
-            amount: ap.amount,
-          }));
+          advPayments.forEach(ap => {
+            const amt = ap.status === "paid" ? ap.amount : (ap.paid_amount || 0);
+            results.push({
+              tenantName: tenant.name,
+              propertyTitle,
+              monthsCovered: ((ap as any).payment_months as string[]) || [format(new Date(ap.due_date), "MMMM yyyy", { locale: fr })],
+              amount: amt,
+            });
+          });
+
+          // Overpayment on current month (tenant paid more than monthly rent)
+          const currentMonthPayments = payments.filter(p =>
+            p.tenant_id === tenant.id &&
+            p.due_date >= monthStartStr &&
+            p.due_date <= monthEndStr
+          );
+          const totalPaidCurrentMonth = currentMonthPayments.reduce((sum, p) => {
+            if (p.status === "paid") return sum + p.amount;
+            if (p.paid_amount && p.paid_amount > 0) return sum + p.paid_amount;
+            return sum;
+          }, 0);
+          if (totalPaidCurrentMonth > monthlyRent && monthlyRent > 0) {
+            const overpayment = totalPaidCurrentMonth - monthlyRent;
+            results.push({
+              tenantName: tenant.name,
+              propertyTitle,
+              monthsCovered: ["Surplus"],
+              amount: overpayment,
+            });
+          }
+
+          return results;
+        })
+        .flat();
+
+      // Prepare late payments - payments from previous months collected (fully or partially) this month
+      const latePayments = ownerTenants
+        .map(tenant => {
+          const property = ownerProperties.find(p => p.id === tenant.property_id);
+          const propertyTitle = buildPropertyTitle(property, tenant);
+
+          const lateCollected = payments.filter(p => {
+            if (p.tenant_id !== tenant.id) return false;
+            if (p.due_date >= monthStartStr) return false;
+            const paidDate = p.paid_date?.substring(0, 10);
+            if (!paidDate || paidDate < monthStartStr || paidDate > monthEndStr) return false;
+            return p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+          });
+
+          return lateCollected.map(lp => {
+            const paidAmt = lp.status === "paid" ? lp.amount : (lp.paid_amount || 0);
+            return {
+              tenantName: tenant.name,
+              propertyTitle,
+              dueMonth: format(new Date(lp.due_date), "MMMM yyyy", { locale: fr }),
+              rentAmount: lp.amount,
+              paidAmount: paidAmt,
+              status: (lp.status === "paid" ? "paid" : "partial") as "paid" | "partial",
+            };
+          });
         })
         .flat();
 
@@ -331,6 +393,7 @@ const OwnerDetails = () => {
         interventions: monthlyInterventions,
         cautions,
         advancePayments,
+        latePayments,
         commissionPercentage,
         managementTypeName: owner.management_type?.name,
       });

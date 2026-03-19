@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
 import { differenceInDays, isFuture, isPast, format } from "date-fns";
 import { usePayments } from "@/hooks/usePayments";
+import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 import { useOwners } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
@@ -99,6 +100,7 @@ export default function Payments() {
 
   const { data: payments, isLoading, error } = usePayments();
   const { data: owners = [] } = useOwners();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
   const { data: properties = [] } = useProperties();
 
   // Collect assigned_to user IDs for gestionnaire name lookup
@@ -621,6 +623,8 @@ export default function Payments() {
                                     isTenantView={isLocataire}
                                     unitNumber={unitNumber || undefined}
                                     gestionnaireName={gestionnaireName || undefined}
+                                    ownerName={owners.find(o => o.id === tenant?.property?.owner_id)?.name}
+                                    initialTemplate={receiptTemplates.find(t => t.id === owners.find(o => o.id === tenant?.property?.owner_id)?.receipt_template_id) || null}
                                   />
                                 )}
                                 {payment.status !== "paid" && isLocataire && (

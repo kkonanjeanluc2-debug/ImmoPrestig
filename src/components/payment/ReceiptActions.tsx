@@ -42,6 +42,8 @@ interface ReceiptActionsProps {
   isTenantView?: boolean;
   unitNumber?: string;
   gestionnaireName?: string;
+  ownerName?: string;
+  initialTemplate?: ReceiptTemplate | null;
 }
 
 export function ReceiptActions({
@@ -60,6 +62,8 @@ export function ReceiptActions({
   isTenantView = false,
   unitNumber,
   gestionnaireName,
+  ownerName,
+  initialTemplate,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -72,8 +76,13 @@ export function ReceiptActions({
   const { data: agency } = useAgency();
   const { data: receiptTemplates = [] } = useReceiptTemplates();
 
-  // Auto-select default template on load
   useEffect(() => {
+    if (initialTemplate) {
+      setSelectedTemplateId(initialTemplate.id);
+      setSelectedTemplate(initialTemplate);
+      return;
+    }
+
     if (receiptTemplates.length > 0 && !selectedTemplateId) {
       const defaultTemplate = receiptTemplates.find(t => t.is_default) || receiptTemplates[0];
       if (defaultTemplate) {
@@ -81,7 +90,7 @@ export function ReceiptActions({
         setSelectedTemplate(defaultTemplate);
       }
     }
-  }, [receiptTemplates, selectedTemplateId]);
+  }, [initialTemplate, receiptTemplates, selectedTemplateId]);
 
   const handleTemplateChange = useCallback((templateId: string | null, template: ReceiptTemplate | null) => {
     setSelectedTemplateId(templateId);
@@ -107,6 +116,7 @@ export function ReceiptActions({
     paymentMonths: paymentMonths || undefined,
     unitNumber,
     gestionnaireName,
+    ownerName,
     agency: agency ? {
       name: agency.name,
       email: agency.email,

@@ -768,6 +768,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
+          const propertyTitle = p.tenant?.property?.title || "";
+          const ownerName = p.tenant?.property?.owner?.name || "";
           const allMonths = p.payment_months || [];
           const totalAmount = isPaid ? (Number(p.paid_amount) || Number(p.amount)) : Number(p.paid_amount);
           const isMultiMonth = allMonths.length > 1;

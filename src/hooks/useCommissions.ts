@@ -82,9 +82,12 @@ export function useCommissions(startDate?: string, endDate?: string) {
   const { data: tenants = [] } = useTenants();
 
   const report = useMemo<CommissionReport>(() => {
-    // Filter paid payments within date range OR with payment_months overlapping the range
+    // Filter paid payments AND partial payments within date range
     const filteredPayments = payments.filter((p) => {
-      if (p.status !== "paid" || !p.paid_date) return false;
+      const isPaid = p.status === "paid" && !!p.paid_date;
+      const isPartial = p.status !== "paid" && ((p as any).paid_amount || 0) > 0;
+      
+      if (!isPaid && !isPartial) return false;
       
       const paymentMonths = (p as any).payment_months as string[] | null;
       const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 0;
@@ -94,9 +97,18 @@ export function useCommissions(startDate?: string, endDate?: string) {
         return paymentMonthsOverlapRange(paymentMonths, startDate, endDate);
       }
       
+      // For partial payments, use due_date
+      if (isPartial) {
+        const dueDate = (p as any).due_date;
+        if (!dueDate) return false;
+        if (startDate && dueDate < startDate) return false;
+        if (endDate && dueDate > endDate) return false;
+        return true;
+      }
+      
       // Otherwise filter by paid_date
-      if (startDate && p.paid_date < startDate) return false;
-      if (endDate && p.paid_date > endDate) return false;
+      if (startDate && p.paid_date! < startDate) return false;
+      if (endDate && p.paid_date! > endDate) return false;
       return true;
     });
 
@@ -122,12 +134,13 @@ export function useCommissions(startDate?: string, endDate?: string) {
       const commissionPercentage = managementType?.percentage || 0;
       const managementTypeName = managementType?.name || "Aucun";
 
-      // Calculate amount - for multi-month advance payments, only count overlapping months
+      // Calculate amount - use paid_amount for partial payments
       const paymentMonths = (payment as any).payment_months as string[] | null;
       const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
-      let rentAmount = payment.amount;
+      const isPartial = payment.status !== "paid" && ((payment as any).paid_amount || 0) > 0;
+      let rentAmount = isPartial ? Number((payment as any).paid_amount) : payment.amount;
       
-      if (isMultiMonth && startDate && endDate) {
+      if (isMultiMonth && !isPartial && startDate && endDate) {
         const perMonth = Math.round(payment.amount / paymentMonths.length);
         const overlapping = countOverlapping(paymentMonths, startDate, endDate);
         rentAmount = perMonth * overlapping;
@@ -137,8 +150,8 @@ export function useCommissions(startDate?: string, endDate?: string) {
 
       const commissionData: CommissionData = {
         paymentId: payment.id,
-        paymentDate: payment.paid_date!,
-        tenantName: tenant.name,
+        paymentDate: payment.paid_date || (payment as any).due_date || "",
+        tenantName: tenant.name + (isPartial ? " (partiel)" : ""),
         propertyTitle: property.title,
         ownerName: owner.name,
         ownerId: owner.id,

@@ -717,10 +717,35 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
               }
             }
           }
-        } else if (status === "pending") {
-          result.loyersEnAttente += totalAmount;
-        } else if (status === "overdue" || status === "late") {
-          result.loyersImpayes += totalAmount;
+        } else if (status === "pending" || status === "overdue" || status === "late") {
+          // For partial payments, count paid_amount as revenue and remainder as pending/impayé
+          const paidPortion = Number(p.paid_amount) || 0;
+          const remainder = Number(p.amount) - paidPortion;
+          
+          if (paidPortion > 0) {
+            // Count the paid portion as collected revenue
+            result.loyersEncaisses += paidPortion;
+            
+            // Add to monthly bucket based on due_date
+            const dueDate = p.due_date;
+            if (dueDate && dueDate >= fromDate && dueDate <= toDate) {
+              const date = new Date(dueDate);
+              const key = `${date.getFullYear()}-${date.getMonth()}`;
+              const monthly = monthlyMap.get(key);
+              if (monthly) {
+                monthly.loyers += paidPortion;
+                monthly.total += paidPortion;
+              }
+              const method = p.method || "Non spécifié";
+              methodMap.set(method, (methodMap.get(method) || 0) + paidPortion);
+            }
+          }
+          
+          if (status === "pending") {
+            result.loyersEnAttente += remainder;
+          } else {
+            result.loyersImpayes += remainder;
+          }
         }
       });
     }
@@ -730,17 +755,22 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     const managerIds = new Set<string>();
     if (payments) {
       payments.forEach((p: any) => {
-        if (normalizeStatus(p.status) === "paid") {
+        const status = normalizeStatus(p.status);
+        const isPaid = status === "paid";
+        const isPartial = !isPaid && (Number(p.paid_amount) || 0) > 0;
+        
+        if (isPaid || isPartial) {
           const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
           const allMonths = p.payment_months || [];
-          const totalAmount = Number(p.paid_amount) || Number(p.amount);
+          const totalAmount = isPaid ? (Number(p.paid_amount) || Number(p.amount)) : Number(p.paid_amount);
           const isMultiMonth = allMonths.length > 1;
           const paidDate = p.paid_date;
           const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
+          const suffix = isPartial ? " (partiel)" : "";
 
-          if (isMultiMonth) {
+          if (isMultiMonth && isPaid) {
             // For multi-month advance payments, only count the portion within the period
             const overlapping = countOverlappingMonths(allMonths, fromDate, toDate);
             if (overlapping > 0) {
@@ -756,6 +786,19 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
                 months: monthsInPeriod,
                 amount: perMonth * overlapping,
                 paidDate: paidDate || p.due_date,
+                managerName: assignedTo || "__unassigned__",
+                paymentMethod: p.method || "Non spécifié",
+              });
+            }
+          } else if (isPartial) {
+            // Partial payment - show the paid portion
+            const dueDate = p.due_date;
+            if (dueDate && dueDate >= fromDate && dueDate <= toDate) {
+              result.paidRentDetails.push({
+                tenantName: tenantName + suffix,
+                months: allMonths.length > 0 ? allMonths : (dueDate ? [dueDate.substring(0, 7)] : []),
+                amount: totalAmount,
+                paidDate: paidDate || dueDate,
                 managerName: assignedTo || "__unassigned__",
                 paymentMethod: p.method || "Non spécifié",
               });

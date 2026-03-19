@@ -301,7 +301,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
       doc.setFontSize(8);
       const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
-      const propertyTitle = row.propertyTitle.length > 22 ? row.propertyTitle.substring(0, 20) + "..." : row.propertyTitle;
+      const propertyTitle = row.propertyTitle.length > 30 ? row.propertyTitle.substring(0, 28) + "..." : row.propertyTitle;
 
       doc.text(tenantName, 18, yPos + 6);
       doc.text(propertyTitle, 70, yPos + 6);
@@ -367,7 +367,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
       doc.setFontSize(8);
       const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
-      const propertyTitle = row.propertyTitle.length > 20 ? row.propertyTitle.substring(0, 18) + "..." : row.propertyTitle;
+      const propertyTitle = row.propertyTitle.length > 30 ? row.propertyTitle.substring(0, 28) + "..." : row.propertyTitle;
       const monthsLabel = row.monthsCovered.length > 3
         ? `${row.monthsCovered.length} mois`
         : row.monthsCovered.join(", ");
@@ -465,7 +465,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   // Summary section
   const totalEncaisse = totalPaid + totalCautions;
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalEncaisse + totalAdvance - commissionAmount - totalInterventionsCost;
+  const netAmount = totalEncaisse - commissionAmount - totalInterventionsCost;
 
   checkPageBreak(65);
   doc.setFillColor(...lightGray);

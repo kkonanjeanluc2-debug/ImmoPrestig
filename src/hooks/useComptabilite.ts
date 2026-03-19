@@ -726,10 +726,12 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             // Count the paid portion as collected revenue
             result.loyersEncaisses += paidPortion;
             
-            // Add to monthly bucket based on due_date
-            const dueDate = p.due_date;
-            if (dueDate && dueDate >= fromDate && dueDate <= toDate) {
-              const date = new Date(dueDate);
+            // Add to monthly bucket based on paid_date first, then due_date
+            const effectiveDate = (p.paid_date && p.paid_date >= fromDate && p.paid_date <= toDate) 
+              ? p.paid_date 
+              : p.due_date;
+            if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
+              const date = new Date(effectiveDate);
               const key = `${date.getFullYear()}-${date.getMonth()}`;
               const monthly = monthlyMap.get(key);
               if (monthly) {

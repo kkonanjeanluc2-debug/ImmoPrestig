@@ -194,8 +194,28 @@ export function CollectPaymentDialog({
             ? getPaymentPeriodsFromMonths(paymentMonths)
             : getPaymentPeriod(dueDate);
             
+          // Get or assign receipt number
+          let receiptNumber: string | undefined;
+          if (agency && !realPaymentId.startsWith("auto-")) {
+            const { data: existingPayment } = await supabase
+              .from("payments")
+              .select("receipt_number")
+              .eq("id", realPaymentId)
+              .single();
+            if (existingPayment?.receipt_number) {
+              receiptNumber = existingPayment.receipt_number;
+            } else {
+              const { data: newNum } = await supabase.rpc("get_next_receipt_number", { _agency_id: agency.id });
+              if (newNum) {
+                await supabase.from("payments").update({ receipt_number: newNum } as any).eq("id", realPaymentId);
+                receiptNumber = newNum;
+              }
+            }
+          }
+
           const pdfBase64 = await generateRentReceiptBase64WithTemplate({
             paymentId: realPaymentId,
+            receiptNumber,
             tenantName,
             tenantEmail,
             propertyTitle,

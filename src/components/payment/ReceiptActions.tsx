@@ -106,8 +106,38 @@ export function ReceiptActions({
     ? getPaymentPeriodsFromMonths(paymentMonths)
     : getPaymentPeriod(dueDate);
 
-  const getReceiptData = () => ({
+  // Fetch or assign a sequential receipt number for this payment
+  const getOrAssignReceiptNumber = async (): Promise<string | undefined> => {
+    if (!agency || paymentId.startsWith("auto-")) return undefined;
+    
+    // Check if payment already has a receipt number
+    const { data: payment } = await supabase
+      .from("payments")
+      .select("receipt_number")
+      .eq("id", paymentId)
+      .single();
+    
+    if (payment?.receipt_number) return payment.receipt_number;
+    
+    // Get next number from agency counter
+    const { data: result } = await supabase.rpc("get_next_receipt_number", {
+      _agency_id: agency.id,
+    });
+    
+    if (result) {
+      // Save it on the payment
+      await supabase
+        .from("payments")
+        .update({ receipt_number: result } as any)
+        .eq("id", paymentId);
+      return result;
+    }
+    return undefined;
+  };
+
+  const getReceiptData = (receiptNumber?: string) => ({
     paymentId,
+    receiptNumber,
     tenantName,
     tenantEmail,
     propertyTitle,
@@ -137,7 +167,8 @@ export function ReceiptActions({
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      await generateRentReceipt(getReceiptData(), selectedTemplate);
+      const receiptNumber = await getOrAssignReceiptNumber();
+      await generateRentReceipt(getReceiptData(receiptNumber), selectedTemplate);
       toast({
         title: "Quittance générée",
         description: "Le PDF a été téléchargé avec succès.",
@@ -165,8 +196,9 @@ export function ReceiptActions({
 
     setIsSending(true);
     try {
+      const receiptNumber = await getOrAssignReceiptNumber();
       const pdfBase64 = await generateRentReceiptBase64WithTemplate({
-        ...getReceiptData(),
+        ...getReceiptData(receiptNumber),
         template: selectedTemplate,
       });
 

@@ -448,6 +448,7 @@ export type Database = {
           online_rent_enabled: boolean
           phone: string | null
           primary_color: string | null
+          receipt_counter: number
           rent_due_day: number
           reservation_deposit_percentage: number
           sale_commission_percentage: number | null
@@ -486,6 +487,7 @@ export type Database = {
           online_rent_enabled?: boolean
           phone?: string | null
           primary_color?: string | null
+          receipt_counter?: number
           rent_due_day?: number
           reservation_deposit_percentage?: number
           sale_commission_percentage?: number | null
@@ -524,6 +526,7 @@ export type Database = {
           online_rent_enabled?: boolean
           phone?: string | null
           primary_color?: string | null
+          receipt_counter?: number
           rent_due_day?: number
           reservation_deposit_percentage?: number
           sale_commission_percentage?: number | null
@@ -2848,6 +2851,7 @@ export type Database = {
           paid_amount: number | null
           paid_date: string | null
           payment_months: string[] | null
+          receipt_number: string | null
           status: string
           tenant_id: string
           updated_at: string
@@ -2863,6 +2867,7 @@ export type Database = {
           paid_amount?: number | null
           paid_date?: string | null
           payment_months?: string[] | null
+          receipt_number?: string | null
           status?: string
           tenant_id: string
           updated_at?: string
@@ -2878,6 +2883,7 @@ export type Database = {
           paid_amount?: number | null
           paid_date?: string | null
           payment_months?: string[] | null
+          receipt_number?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string
@@ -4564,6 +4570,7 @@ export type Database = {
         Args: { p_agency_id: string }
         Returns: number
       }
+      get_next_receipt_number: { Args: { _agency_id: string }; Returns: string }
       get_user_agency_id: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }

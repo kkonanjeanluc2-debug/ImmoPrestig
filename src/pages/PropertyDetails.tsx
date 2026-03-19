@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generatePropertyMonthlyReport } from "@/lib/generatePropertyMonthlyReport";
+import { getTenantCollectedAmountForPeriod } from "@/lib/monthlyPaymentTotals";
 import { MonthlyReportPeriodDialog } from "@/components/owner/MonthlyReportPeriodDialog";
 import {
   AlertDialog,
@@ -108,50 +109,8 @@ const PropertyDetails = () => {
           p.due_date <= monthEndStr
         );
 
-        // Late payments collected this month (due_date before this month, paid this month)
-        const lateCollectedThisMonth = payments.filter(p => {
-          if (p.tenant_id !== tenant.id) return false;
-          if (p.due_date >= monthStartStr) return false;
-          const paidDate = p.paid_date?.substring(0, 10);
-          const createdDate = p.created_at?.substring(0, 10);
-          const collectedThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
-            (!paidDate && createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr);
-          if (!collectedThisMonth) return false;
-          return p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
-        });
-
-        // Advance/future payments paid this month
-        const advancePaymentsForTenant = payments.filter(p => {
-          if (p.tenant_id !== tenant.id) return false;
-          const hasPaid = p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
-          if (!hasPaid) return false;
-          const paidDate = p.paid_date?.substring(0, 10);
-          const createdDate = p.created_at?.substring(0, 10);
-          const paidThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
-            (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr);
-          if (!paidThisMonth) return false;
-          const dueDate = p.due_date?.substring(0, 10);
-          const pm = (p as any).payment_months as string[] | null;
-          const isMultiMonth = pm && Array.isArray(pm) && pm.length > 1;
-          const isFutureMonth = dueDate && dueDate > monthEndStr;
-          return isMultiMonth || isFutureMonth;
-        });
-
         const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property.price || 0);
-        const regularPaid = tenantPaymentsThisMonth.reduce((sum, p) => {
-          if (p.status === "paid") return sum + p.amount;
-          if (p.paid_amount && p.paid_amount > 0) return sum + p.paid_amount;
-          return sum;
-        }, 0);
-        const latePaid = lateCollectedThisMonth.reduce((sum, p) => {
-          if (p.status === "paid") return sum + p.amount;
-          return sum + (p.paid_amount || 0);
-        }, 0);
-        const advancePaid = advancePaymentsForTenant.reduce((sum, p) => {
-          if (p.status === "paid") return sum + p.amount;
-          return sum + (p.paid_amount || 0);
-        }, 0);
-        const totalPaid = regularPaid + latePaid + advancePaid;
+        const totalPaid = getTenantCollectedAmountForPeriod(payments, tenant.id, monthStartStr, monthEndStr);
 
         const hasLate = tenantPaymentsThisMonth.some(p =>
           p.status === "pending" && new Date(p.due_date) < new Date()

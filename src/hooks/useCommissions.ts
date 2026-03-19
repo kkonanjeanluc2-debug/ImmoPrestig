@@ -38,6 +38,43 @@ export interface CommissionReport {
   byOwner: OwnerCommissionSummary[];
 }
 
+const FRENCH_MONTH_NAMES = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+];
+
+function toYearMonth(m: string): string | null {
+  if (/^\d{4}-\d{2}$/.test(m)) return m;
+  const parts = m.split(" ");
+  if (parts.length === 2) {
+    const monthIdx = FRENCH_MONTH_NAMES.indexOf(parts[0]);
+    if (monthIdx >= 0) return `${parts[1]}-${String(monthIdx + 1).padStart(2, '0')}`;
+  }
+  return null;
+}
+
+function paymentMonthsOverlapRange(paymentMonths: string[] | null, startDate?: string, endDate?: string): boolean {
+  if (!paymentMonths || !Array.isArray(paymentMonths) || paymentMonths.length === 0) return false;
+  if (!startDate || !endDate) return true; // no range filter = all match
+  const fromYM = startDate.substring(0, 7);
+  const toYM = endDate.substring(0, 7);
+  return paymentMonths.some(m => {
+    const ym = toYearMonth(m);
+    return ym ? ym >= fromYM && ym <= toYM : false;
+  });
+}
+
+function countOverlapping(paymentMonths: string[], startDate: string, endDate: string): number {
+  const fromYM = startDate.substring(0, 7);
+  const toYM = endDate.substring(0, 7);
+  let count = 0;
+  paymentMonths.forEach(m => {
+    const ym = toYearMonth(m);
+    if (ym && ym >= fromYM && ym <= toYM) count++;
+  });
+  return count;
+}
+
 export function useCommissions(startDate?: string, endDate?: string) {
   const { data: payments = [] } = usePayments();
   const { data: owners = [] } = useOwners();
@@ -45,9 +82,19 @@ export function useCommissions(startDate?: string, endDate?: string) {
   const { data: tenants = [] } = useTenants();
 
   const report = useMemo<CommissionReport>(() => {
-    // Filter paid payments within date range
+    // Filter paid payments within date range OR with payment_months overlapping the range
     const filteredPayments = payments.filter((p) => {
       if (p.status !== "paid" || !p.paid_date) return false;
+      
+      const paymentMonths = (p as any).payment_months as string[] | null;
+      const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 0;
+      
+      // If payment has payment_months, check if any overlap with the date range
+      if (isMultiMonth && startDate && endDate) {
+        return paymentMonthsOverlapRange(paymentMonths, startDate, endDate);
+      }
+      
+      // Otherwise filter by paid_date
       if (startDate && p.paid_date < startDate) return false;
       if (endDate && p.paid_date > endDate) return false;
       return true;
@@ -73,8 +120,20 @@ export function useCommissions(startDate?: string, endDate?: string) {
       // Get commission percentage from management type
       const managementType = owner.management_type;
       const commissionPercentage = managementType?.percentage || 0;
-      const commissionAmount = Math.round((payment.amount * commissionPercentage) / 100);
       const managementTypeName = managementType?.name || "Aucun";
+
+      // Calculate amount - for multi-month advance payments, only count overlapping months
+      const paymentMonths = (payment as any).payment_months as string[] | null;
+      const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
+      let rentAmount = payment.amount;
+      
+      if (isMultiMonth && startDate && endDate) {
+        const perMonth = Math.round(payment.amount / paymentMonths.length);
+        const overlapping = countOverlapping(paymentMonths, startDate, endDate);
+        rentAmount = perMonth * overlapping;
+      }
+
+      const commissionAmount = Math.round((rentAmount * commissionPercentage) / 100);
 
       const commissionData: CommissionData = {
         paymentId: payment.id,
@@ -83,7 +142,7 @@ export function useCommissions(startDate?: string, endDate?: string) {
         propertyTitle: property.title,
         ownerName: owner.name,
         ownerId: owner.id,
-        rentAmount: payment.amount,
+        rentAmount,
         commissionPercentage,
         commissionAmount,
         managementTypeName,
@@ -103,7 +162,7 @@ export function useCommissions(startDate?: string, endDate?: string) {
           paymentCount: 0,
         };
       }
-      ownerTotals[owner.id].totalRent += payment.amount;
+      ownerTotals[owner.id].totalRent += rentAmount;
       ownerTotals[owner.id].totalCommission += commissionAmount;
       ownerTotals[owner.id].paymentCount += 1;
     }

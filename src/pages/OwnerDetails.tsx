@@ -160,10 +160,14 @@ const OwnerDetails = () => {
           p.due_date <= format(monthEnd, "yyyy-MM-dd")
         );
 
-        // Calculate paid amount from regular payments
+        // Calculate paid amount from regular payments (including partial payments)
         const regularPaid = tenantPaymentsThisMonth
-          .filter(p => p.status === "paid")
-          .reduce((sum, p) => sum + p.amount, 0);
+          .reduce((sum, p) => {
+            if (p.status === "paid") return sum + p.amount;
+            // For pending/late payments with partial payment
+            if (p.paid_amount && p.paid_amount > 0) return sum + p.paid_amount;
+            return sum;
+          }, 0);
 
         // Check for advance payments paid this month but for future months
         const advancePaymentsForTenant = payments.filter(p => {

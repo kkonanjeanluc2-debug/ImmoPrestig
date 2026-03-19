@@ -11,6 +11,7 @@ import { FileText, RotateCcw, Save, Eye, Info, Download, Loader2, Droplets, Imag
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -116,6 +117,7 @@ function replaceVariablesForPreview(template: string): string {
 }
 
 export function ReceiptSettings() {
+  const { user } = useAuth();
   const [templates, setTemplates] = useState<ReceiptTemplates>(getReceiptTemplates);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState("content");
@@ -627,25 +629,34 @@ export function ReceiptSettings() {
                       className="hidden"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (!file) return;
+                        e.currentTarget.value = "";
+                        if (!file || !user?.id) {
+                          if (!user?.id) toast.error("Vous devez être connecté pour importer le cachet");
+                          return;
+                        }
+                        if (!file.type.startsWith("image/")) {
+                          toast.error("Veuillez sélectionner une image valide");
+                          return;
+                        }
                         if (file.size > 2 * 1024 * 1024) {
                           toast.error("L'image ne doit pas dépasser 2 Mo");
                           return;
                         }
                         try {
-                          const fileName = `stamps/${Date.now()}_${file.name}`;
+                          const fileExt = file.name.split(".").pop()?.toLowerCase() || "png";
+                          const filePath = `${user.id}/stamps/${Date.now()}_stamp.${fileExt}`;
                           const { data: uploadData, error: uploadError } = await supabase.storage
                             .from("agency-logos")
-                            .upload(fileName, file, { upsert: true });
+                            .upload(filePath, file, { upsert: true });
                           if (uploadError) throw uploadError;
                           const { data: urlData } = supabase.storage
                             .from("agency-logos")
                             .getPublicUrl(uploadData.path);
                           handleChange("stampImageUrl", urlData.publicUrl);
                           toast.success("Cachet/signature importé avec succès");
-                        } catch (err) {
+                        } catch (err: any) {
                           console.error("Upload error:", err);
-                          toast.error("Erreur lors de l'importation");
+                          toast.error(err?.message || "Erreur lors de l'importation du cachet");
                         }
                       }}
                     />

@@ -109,7 +109,7 @@ export function ReceiptActions({
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      await generateRentReceipt(getReceiptData());
+      await generateRentReceipt(getReceiptData(), selectedTemplate);
       toast({
         title: "Quittance générée",
         description: "Le PDF a été téléchargé avec succès.",

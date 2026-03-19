@@ -531,8 +531,9 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   return doc;
 };
 
-export const generateRentReceipt = async (data: ReceiptData): Promise<void> => {
-  const doc = await createReceiptDocument(data);
+export const generateRentReceipt = async (data: ReceiptData, template?: ReceiptTemplate | null): Promise<void> => {
+  const legacyTemplate = template ? convertDbTemplateToLegacy(template) : undefined;
+  const doc = await createReceiptDocument(data, legacyTemplate);
   const fileName = `quittance_${data.tenantName.replace(/\s+/g, "_")}_${data.period.replace(/\s+/g, "_")}.pdf`;
   doc.save(fileName);
 };

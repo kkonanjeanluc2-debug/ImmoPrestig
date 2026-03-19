@@ -167,7 +167,8 @@ export function ReceiptActions({
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      await generateRentReceipt(getReceiptData(), selectedTemplate);
+      const receiptNumber = await getOrAssignReceiptNumber();
+      await generateRentReceipt(getReceiptData(receiptNumber), selectedTemplate);
       toast({
         title: "Quittance générée",
         description: "Le PDF a été téléchargé avec succès.",

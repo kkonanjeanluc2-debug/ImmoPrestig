@@ -49,6 +49,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { ReceiptTemplateImportExport } from "./ReceiptTemplateImportExport";
 import { WatermarkThumbnail } from "./WatermarkThumbnail";
 import {

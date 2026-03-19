@@ -24,7 +24,7 @@ import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle } from "l
 import { generateRentReceipt, generateRentReceiptBase64WithTemplate, getPaymentPeriod, getPaymentPeriodsFromMonths } from "@/lib/generateReceipt";
 import { generateReceiptMessage, openWhatsApp, formatPhoneForWhatsApp } from "@/lib/whatsapp";
 import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
-import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
+import { useReceiptTemplates, type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
 
 interface ReceiptActionsProps {
   paymentId: string;

@@ -71,8 +71,12 @@ const convertDbTemplateToLegacy = (template: ReceiptTemplate): ReceiptTemplates 
 
 const loadImageAsset = async (url: string): Promise<PdfImageAsset | null> => {
   try {
+    console.log("[Receipt PDF] Loading image from:", url);
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn("[Receipt PDF] Image fetch failed with status:", response.status);
+      return null;
+    }
 
     const blob = await response.blob();
     const format: PdfImageAsset["format"] = blob.type.includes("png") ? "PNG" : "JPEG";
@@ -82,16 +86,21 @@ const loadImageAsset = async (url: string): Promise<PdfImageAsset | null> => {
       reader.onloadend = () => {
         const dataUrl = reader.result;
         if (typeof dataUrl !== "string") {
+          console.warn("[Receipt PDF] FileReader did not return a string");
           resolve(null);
           return;
         }
-
+        console.log("[Receipt PDF] Image loaded successfully, format:", format);
         resolve({ dataUrl, format });
       };
-      reader.onerror = () => resolve(null);
+      reader.onerror = () => {
+        console.warn("[Receipt PDF] FileReader error");
+        resolve(null);
+      };
       reader.readAsDataURL(blob);
     });
-  } catch {
+  } catch (err) {
+    console.error("[Receipt PDF] loadImageAsset error:", err);
     return null;
   }
 };
@@ -105,23 +114,6 @@ const addImageToPdf = (
   height: number,
 ) => {
   doc.addImage(image.dataUrl, image.format, x, y, width, height);
-};
-
-const ensureSpace = (
-  doc: jsPDF,
-  yPos: number,
-  requiredHeight: number,
-  topMargin = 20,
-  footerReserve = 32,
-): number => {
-  const pageHeight = doc.internal.pageSize.getHeight();
-
-  if (yPos + requiredHeight > pageHeight - footerReserve) {
-    doc.addPage();
-    return topMargin;
-  }
-
-  return yPos;
 };
 
 const formatDate = (dateStr: string, format: "short" | "long"): string => {
@@ -166,93 +158,93 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   const textColor: [number, number, number] = [51, 51, 51];
   const lightGray: [number, number, number] = [245, 245, 245];
   
-  // Header background
+  // Compact header (reduced from 55 to 45)
   doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 55, "F");
+  doc.rect(0, 0, pageWidth, 45, "F");
   
-  let headerYOffset = 0;
+  let headerXOffset = 15;
   
   // Agency logo and info
   if (data.agency) {
     if (templates.showLogo && data.agency.logo_url) {
-      try {
-        const logoImage = await loadImageAsset(data.agency.logo_url);
-        if (logoImage) {
-          addImageToPdf(doc, logoImage, 15, 8, 20, 20);
-          headerYOffset = 25;
-        }
-      } catch {
-        // Continue without logo
+      const logoImage = await loadImageAsset(data.agency.logo_url);
+      if (logoImage) {
+        addImageToPdf(doc, logoImage, 12, 6, 18, 18);
+        headerXOffset = 34;
       }
     }
     
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text(data.agency.name, headerYOffset > 0 ? 40 : 15, 15);
+    doc.text(data.agency.name, headerXOffset, 14);
     
     if (templates.showAgencyContact) {
-      doc.setFontSize(8);
+      doc.setFontSize(7);
       doc.setFont("helvetica", "normal");
-      let contactY = 22;
-      
-      if (data.agency.phone) {
-        doc.text(`Tél: ${data.agency.phone}`, headerYOffset > 0 ? 40 : 15, contactY);
-        contactY += 5;
-      }
-      if (data.agency.email) {
-        doc.text(data.agency.email, headerYOffset > 0 ? 40 : 15, contactY);
+      let contactY = 20;
+      const contactParts: string[] = [];
+      if (data.agency.phone) contactParts.push(`Tél: ${data.agency.phone}`);
+      if (data.agency.email) contactParts.push(data.agency.email);
+      if (contactParts.length > 0) {
+        doc.text(contactParts.join(" | "), headerXOffset, contactY);
         contactY += 5;
       }
       if (data.agency.address || data.agency.city) {
         const addressParts = [data.agency.address, data.agency.city, data.agency.country].filter(Boolean);
         const fullAddress = addressParts.join(", ");
         if (fullAddress) {
-          doc.text(fullAddress, headerYOffset > 0 ? 40 : 15, contactY);
+          doc.text(fullAddress, headerXOffset, contactY);
         }
       }
     }
   }
   
-  // Title
+  // Title (right side)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   
   if (data.agency) {
-    doc.text(templates.title, pageWidth - 15, 18, { align: "right" });
+    doc.setFontSize(14);
+    doc.text(templates.title, pageWidth - 15, 14, { align: "right" });
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth - 15, 21, { align: "right" });
+  } else {
+    doc.setFontSize(18);
+    doc.text(templates.title, pageWidth / 2, 20, { align: "center" });
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth - 15, 26, { align: "right" });
-  } else {
-    doc.setFontSize(24);
-    doc.text(templates.title, pageWidth / 2, 25, { align: "center" });
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth / 2, 35, { align: "center" });
+    doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth / 2, 28, { align: "center" });
   }
   
   doc.setTextColor(...textColor);
   
-  let yPos = 70;
+  let yPos = 52;
   
-  // Period box
-  const periodText = data.paymentMonths && data.paymentMonths.length > 1
-    ? `Périodes : ${data.paymentMonths.join(", ")}`
-    : `Période : ${data.period}`;
+  // Period box (compact)
+  const isMultiMonth = data.paymentMonths && data.paymentMonths.length > 1;
+  const monthCount = data.paymentMonths?.length || 1;
+  let periodText: string;
+  
+  if (isMultiMonth) {
+    periodText = `Loyer de ${monthCount} mois : ${data.paymentMonths!.join(", ")}`;
+  } else {
+    periodText = `Période : ${data.period}`;
+  }
   
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, data.paymentMonths && data.paymentMonths.length > 2 ? 28 : 20, 3, 3, "F");
-  doc.setFontSize(data.paymentMonths && data.paymentMonths.length > 3 ? 10 : 12);
-  doc.setFont("helvetica", "bold");
-  
   const splitPeriod = doc.splitTextToSize(periodText, pageWidth - 40);
-  const periodYOffset = splitPeriod.length > 1 ? 8 : 12;
-  doc.text(splitPeriod, pageWidth / 2, yPos + periodYOffset, { align: "center" });
+  const periodBoxHeight = Math.max(14, splitPeriod.length * 5 + 6);
+  doc.roundedRect(15, yPos, pageWidth - 30, periodBoxHeight, 2, 2, "F");
+  doc.setFontSize(splitPeriod.length > 1 ? 9 : 10);
+  doc.setFont("helvetica", "bold");
+  const periodYCenter = yPos + (periodBoxHeight / 2) + 1;
+  doc.text(splitPeriod, pageWidth / 2, splitPeriod.length > 1 ? yPos + 5 : periodYCenter, { align: "center" });
   
-  yPos += (data.paymentMonths && data.paymentMonths.length > 2 ? 38 : 35);
+  yPos += periodBoxHeight + 6;
 
-  // Compact info row: owner / tenant / property on the same line
+  // Compact info row: BAILLEUR / LOCATAIRE / BIEN LOUÉ on same line
   const sections = [
     templates.showOwnerSection && data.ownerName
       ? {
@@ -282,12 +274,11 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     },
   ].filter(Boolean) as Array<{ title: string; lines: string[] }>;
 
-  const sectionGap = 8;
+  const sectionGap = 6;
   const availableWidth = pageWidth - 30;
   const sectionWidth = (availableWidth - sectionGap * (sections.length - 1)) / sections.length;
   const sectionXStart = 15;
 
-  doc.setFontSize(10);
   let maxSectionBottom = yPos;
 
   sections.forEach((section, index) => {
@@ -296,79 +287,101 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
 
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
+    doc.setFontSize(8);
     doc.text(section.title, x, sectionY);
 
-    sectionY += 7;
+    sectionY += 5;
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...textColor);
-    doc.setFontSize(9);
-    doc.text(section.lines, x, sectionY, { lineHeightFactor: 1.35 });
+    doc.setFontSize(8);
+    doc.text(section.lines, x, sectionY, { lineHeightFactor: 1.3 });
 
-    const sectionBottom = sectionY + Math.max(section.lines.length - 1, 0) * 4.2;
+    const sectionBottom = sectionY + Math.max(section.lines.length - 1, 0) * 3.5;
     maxSectionBottom = Math.max(maxSectionBottom, sectionBottom);
   });
 
-  yPos = maxSectionBottom + 18;
+  yPos = maxSectionBottom + 10;
+  
+  // Determine if this is a partial payment (advance)
+  const isPartialPayment = data.totalRentAmount && data.totalRentAmount > data.amount && data.remainingAmount !== undefined && data.remainingAmount > 0;
   
   // Amount box
   doc.setFillColor(...primaryColor);
-  doc.roundedRect(15, yPos, pageWidth - 30, 35, 3, 3, "F");
+  const amountBoxHeight = 28;
+  doc.roundedRect(15, yPos, pageWidth - 30, amountBoxHeight, 3, 3, "F");
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
-  doc.setFontSize(22);
+  
+  if (isPartialPayment) {
+    // Partial payment: "Avance sur le loyer"
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const advanceLabel = isMultiMonth
+      ? `Avance sur le loyer de ${monthCount} mois`
+      : `Avance sur le loyer du mois de ${data.period}`;
+    doc.text(advanceLabel, pageWidth / 2, yPos + 9, { align: "center" });
+  } else {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const receiptLabel = isMultiMonth
+      ? `Montant du loyer reçu pour ${monthCount} mois`
+      : "Montant du loyer reçu";
+    doc.text(receiptLabel, pageWidth / 2, yPos + 9, { align: "center" });
+  }
+  
+  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   const amountText = formatAmountWithCurrency(data.amount);
-  doc.text(amountText, pageWidth / 2, yPos + 26, { align: "center", charSpace: 0.5 });
+  doc.text(amountText, pageWidth / 2, yPos + 22, { align: "center", charSpace: 0.5 });
   
-  yPos += 50;
+  yPos += amountBoxHeight + 4;
 
-  // Partial payment info
-  if (data.totalRentAmount && data.totalRentAmount > data.amount && data.remainingAmount !== undefined) {
+  // Partial payment details
+  if (isPartialPayment) {
     const accentColor: [number, number, number] = [220, 120, 0];
     doc.setFillColor(255, 248, 235);
-    doc.roundedRect(15, yPos - 5, pageWidth - 30, data.remainingAmount > 0 ? 22 : 14, 3, 3, "F");
-    doc.setFontSize(9);
+    doc.roundedRect(15, yPos, pageWidth - 30, 16, 2, 2, "F");
+    doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...accentColor);
-    doc.text(`Loyer total : ${formatAmountWithCurrency(data.totalRentAmount)}`, 20, yPos + 3);
-    doc.text(`Montant recu : ${formatAmountWithCurrency(data.amount)}`, pageWidth - 20, yPos + 3, { align: "right" });
-    if (data.remainingAmount > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.text(`Reste a payer : ${formatAmountWithCurrency(data.remainingAmount)}`, 20, yPos + 12);
-    } else {
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(34, 139, 34);
-      doc.text("Loyer integralement paye", pageWidth - 20, yPos + 3, { align: "right" });
-    }
+    doc.text(`Loyer total : ${formatAmountWithCurrency(data.totalRentAmount!)}`, 20, yPos + 6);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Reste à payer : ${formatAmountWithCurrency(data.remainingAmount!)}`, pageWidth - 20, yPos + 6, { align: "right" });
     doc.setTextColor(...textColor);
-    yPos += (data.remainingAmount > 0 ? 28 : 20);
+    yPos += 20;
+  } else if (data.totalRentAmount && data.totalRentAmount <= data.amount && data.totalRentAmount > 0) {
+    // Fully paid
+    doc.setFillColor(240, 255, 240);
+    doc.roundedRect(15, yPos, pageWidth - 30, 10, 2, 2, "F");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(34, 139, 34);
+    doc.text("✓ Loyer intégralement payé", pageWidth / 2, yPos + 6.5, { align: "center" });
+    doc.setTextColor(...textColor);
+    yPos += 14;
   }
 
-  // Amount in words
+  // Amount in words (compact)
   if (templates.showAmountInWords) {
     doc.setTextColor(...textColor);
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont("helvetica", "italic");
     const amountInWords = numberToWordsPDF(data.amount);
-    doc.text(`Soit : ${amountInWords} francs CFA`, 15, yPos);
-    yPos += 15;
+    doc.text(`Soit : ${amountInWords} francs CFA`, 15, yPos + 2);
+    yPos += 8;
   }
   
-  // Payment details table
+  // Payment details table (compact)
   if (templates.showPaymentDetails) {
-    yPos = ensureSpace(doc, yPos, 55);
-
     doc.setFillColor(...lightGray);
-    doc.rect(15, yPos, pageWidth - 30, 8, "F");
+    doc.rect(15, yPos, pageWidth - 30, 7, "F");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setTextColor(...textColor);
-    doc.text("DÉTAILS DU PAIEMENT", 20, yPos + 5.5);
+    doc.text("DÉTAILS DU PAIEMENT", 20, yPos + 5);
     
-    yPos += 12;
+    yPos += 10;
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
     
     const details: [string, string][] = [
       ["Date d'échéance", formatDate(data.dueDate, templates.dateFormat)],
@@ -382,32 +395,27 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     details.forEach(([label, value]) => {
       doc.text(label, 20, yPos);
       doc.text(value, pageWidth - 20, yPos, { align: "right" });
-      yPos += 7;
+      yPos += 6;
     });
     
-    yPos += 15;
+    yPos += 6;
   } else {
-    yPos += 10;
+    yPos += 4;
   }
   
-  // Declaration text
-  doc.setFontSize(10);
+  // Declaration text (compact)
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   const declarationText = replaceVariables(templates.declarationText, data, templates);
   const splitDeclaration = declarationText ? doc.splitTextToSize(declarationText, pageWidth - 30) : [];
 
   if (splitDeclaration.length > 0) {
-    yPos = ensureSpace(doc, yPos, splitDeclaration.length * 5 + 55);
-    doc.text(splitDeclaration, 15, yPos, { lineHeightFactor: 1.5 });
-    yPos += splitDeclaration.length * 5 + 20;
-  } else {
-    yPos = ensureSpace(doc, yPos, 55);
+    doc.text(splitDeclaration, 15, yPos, { lineHeightFactor: 1.4 });
+    yPos += splitDeclaration.length * 4.5 + 8;
   }
   
   // Date and signature block
-  yPos = ensureSpace(doc, yPos, 60);
-
   const today = new Date().toLocaleDateString(
     "fr-FR",
     templates.dateFormat === "long"
@@ -415,29 +423,33 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
       : undefined,
   );
 
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   doc.text(`Fait le ${today}`, pageWidth - 20, yPos, { align: "right" });
 
-  yPos += 12;
+  yPos += 8;
   doc.setFont("helvetica", "italic");
+  doc.setFontSize(9);
   const signatureLabel = replaceVariables(templates.signatureLabel, data, templates);
   doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
 
+  // Stamp image
   if (templates.stampImageUrl) {
-    try {
-      const stampImage = await loadImageAsset(templates.stampImageUrl);
-      if (stampImage) {
-        const stampSize = 36;
-        const stampX = pageWidth - 20 - stampSize;
-        const stampY = yPos + 4;
-        addImageToPdf(doc, stampImage, stampX, stampY, stampSize, stampSize);
-        yPos += stampSize + 8;
-      }
-    } catch (e) {
-      console.error("Failed to load stamp image:", e);
+    console.log("[Receipt PDF] Attempting to load stamp from:", templates.stampImageUrl);
+    const stampImage = await loadImageAsset(templates.stampImageUrl);
+    if (stampImage) {
+      console.log("[Receipt PDF] Stamp loaded, adding to PDF");
+      const stampSize = 32;
+      const stampX = pageWidth - 20 - stampSize;
+      const stampY = yPos + 3;
+      addImageToPdf(doc, stampImage, stampX, stampY, stampSize, stampSize);
+      yPos += stampSize + 4;
+    } else {
+      console.warn("[Receipt PDF] Stamp image could not be loaded");
     }
+  } else {
+    console.log("[Receipt PDF] No stamp URL configured. stampImageUrl:", templates.stampImageUrl);
   }
   
   // Watermark
@@ -447,7 +459,6 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     
     if (templates.watermarkType === "text" && templates.watermarkText) {
       doc.saveGraphicsState();
-      
       const grayValue = Math.round(200 + (55 * (1 - opacity)));
       doc.setTextColor(grayValue, grayValue, grayValue);
       doc.setFontSize(60);
@@ -475,101 +486,80 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
       } else {
         doc.text(templates.watermarkText, wmX, wmY, { align: "center" });
       }
-      
       doc.restoreGraphicsState();
     } else if (templates.watermarkType === "agency_logo" && data.agency?.logo_url) {
-      try {
-        const logoImage = await loadImageAsset(data.agency.logo_url);
-        if (logoImage) {
-          doc.saveGraphicsState();
-          
-          const logoSize = 60;
-          let logoX = (pageWidth - logoSize) / 2;
-          let logoY = (pageHeight - logoSize) / 2;
-          
-          if (templates.watermarkPosition === "bottom-right") {
-            logoX = pageWidth - logoSize - 20;
-            logoY = pageHeight - logoSize - 40;
-          } else if (templates.watermarkPosition === "diagonal") {
-            const smallLogoSize = 40;
-            for (let i = 0; i < 3; i++) {
-              for (let j = 0; j < 4; j++) {
-                const x = (pageWidth / 3) * i + 20;
-                const y = (pageHeight / 4) * j + 40;
-                if (x > 0 && x < pageWidth - smallLogoSize && y > 0 && y < pageHeight - smallLogoSize) {
-                  doc.setGState(new (doc as any).GState({ opacity: opacity }));
-                  addImageToPdf(doc, logoImage, x, y, smallLogoSize, smallLogoSize);
-                }
+      const logoImage = await loadImageAsset(data.agency.logo_url);
+      if (logoImage) {
+        doc.saveGraphicsState();
+        const logoSize = 60;
+        let logoX = (pageWidth - logoSize) / 2;
+        let logoY = (pageHeight - logoSize) / 2;
+        
+        if (templates.watermarkPosition === "bottom-right") {
+          logoX = pageWidth - logoSize - 20;
+          logoY = pageHeight - logoSize - 40;
+        } else if (templates.watermarkPosition === "diagonal") {
+          const smallLogoSize = 40;
+          for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 4; j++) {
+              const x = (pageWidth / 3) * i + 20;
+              const y = (pageHeight / 4) * j + 40;
+              if (x > 0 && x < pageWidth - smallLogoSize && y > 0 && y < pageHeight - smallLogoSize) {
+                doc.setGState(new (doc as any).GState({ opacity: opacity }));
+                addImageToPdf(doc, logoImage, x, y, smallLogoSize, smallLogoSize);
               }
             }
-            doc.restoreGraphicsState();
           }
-          
-          if (templates.watermarkPosition !== "diagonal") {
-            doc.setGState(new (doc as any).GState({ opacity: opacity }));
-            addImageToPdf(doc, logoImage, logoX, logoY, logoSize, logoSize);
-            doc.restoreGraphicsState();
-          }
-        }
-      } catch (e) {
-        console.error("Failed to load agency logo for watermark:", e);
-      }
-    } else if (templates.watermarkType === "image" && templates.watermarkImageUrl) {
-      try {
-        const watermarkImage = await loadImageAsset(templates.watermarkImageUrl);
-        if (watermarkImage) {
-          doc.saveGraphicsState();
-          
-          const imageSize = 60;
-          let imgX = (pageWidth - imageSize) / 2;
-          let imgY = (pageHeight - imageSize) / 2;
-          
-          if (templates.watermarkPosition === "bottom-right") {
-            imgX = pageWidth - imageSize - 20;
-            imgY = pageHeight - imageSize - 40;
-          }
-          
-          doc.setGState(new (doc as any).GState({ opacity: opacity }));
-          addImageToPdf(doc, watermarkImage, imgX, imgY, imageSize, imageSize);
           doc.restoreGraphicsState();
         }
-      } catch (e) {
-        console.error("Failed to load watermark image:", e);
+        
+        if (templates.watermarkPosition !== "diagonal") {
+          doc.setGState(new (doc as any).GState({ opacity: opacity }));
+          addImageToPdf(doc, logoImage, logoX, logoY, logoSize, logoSize);
+          doc.restoreGraphicsState();
+        }
+      }
+    } else if (templates.watermarkType === "image" && templates.watermarkImageUrl) {
+      const watermarkImage = await loadImageAsset(templates.watermarkImageUrl);
+      if (watermarkImage) {
+        doc.saveGraphicsState();
+        const imageSize = 60;
+        let imgX = (pageWidth - imageSize) / 2;
+        let imgY = (pageHeight - imageSize) / 2;
+        
+        if (templates.watermarkPosition === "bottom-right") {
+          imgX = pageWidth - imageSize - 20;
+          imgY = pageHeight - imageSize - 40;
+        }
+        
+        doc.setGState(new (doc as any).GState({ opacity: opacity }));
+        addImageToPdf(doc, watermarkImage, imgX, imgY, imageSize, imageSize);
+        doc.restoreGraphicsState();
       }
     }
   }
   
-  // Footer with agency info
+  // Footer
   doc.setFillColor(...lightGray);
-  doc.rect(0, doc.internal.pageSize.getHeight() - 25, pageWidth, 25, "F");
-  doc.setFontSize(8);
+  doc.rect(0, doc.internal.pageSize.getHeight() - 20, pageWidth, 20, "F");
+  doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(128, 128, 128);
   
   if (data.agency) {
     const footerText = replaceVariables(templates.footerText, data, templates);
-    doc.text(
-      footerText,
-      pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 15,
-      { align: "center" }
-    );
+    doc.text(footerText, pageWidth / 2, doc.internal.pageSize.getHeight() - 12, { align: "center" });
     if (templates.showAgencyContact) {
       const contactLine = [data.agency.phone, data.agency.email].filter(Boolean).join(" | ");
       if (contactLine) {
-        doc.text(
-          contactLine,
-          pageWidth / 2,
-          doc.internal.pageSize.getHeight() - 8,
-          { align: "center" }
-        );
+        doc.text(contactLine, pageWidth / 2, doc.internal.pageSize.getHeight() - 6, { align: "center" });
       }
     }
   } else {
     doc.text(
       "Ce document est une quittance de loyer générée automatiquement.",
       pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 10,
+      doc.internal.pageSize.getHeight() - 8,
       { align: "center" }
     );
   }

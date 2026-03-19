@@ -1186,12 +1186,14 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         }
         const tenantName = c.tenant?.name || "Locataire inconnu";
         const propertyName = c.tenant?.property?.title || "";
+        const ownerName = c.tenant?.property?.owner?.name || "";
         cautionDetails.push({
           label: tenantName,
           description: propertyName ? `${propertyName} (Caution)` : "Caution locative",
           amount,
           paidDate: cautionDate,
           managerName: resolveManager(c.tenant?.assigned_to),
+          ownerName,
         });
       });
     }

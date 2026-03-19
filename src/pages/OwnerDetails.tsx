@@ -219,9 +219,14 @@ const OwnerDetails = () => {
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const deposit = tenant.contracts?.find(c => c.status === "active")?.deposit || 0;
+          let propertyTitle = property?.title || "Bien inconnu";
+          const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
+          if (isMultiUnit && tenant.unit?.unit_number) {
+            propertyTitle = `${propertyTitle} - Porte ${tenant.unit.unit_number}`;
+          }
           return {
             tenantName: tenant.name,
-            propertyTitle: property?.title || "Bien inconnu",
+            propertyTitle,
             deposit: Number(deposit),
           };
         });

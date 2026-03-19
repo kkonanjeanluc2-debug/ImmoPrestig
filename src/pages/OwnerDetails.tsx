@@ -136,10 +136,13 @@ const OwnerDetails = () => {
       // Helper to build property title with unit number
       const buildPropertyTitle = (property: any, tenant: any): string => {
         let title = property?.title || "Bien inconnu";
-        const isMultiUnit = property?.property_type === "Maison à porte multiple" || property?.property_type === "Immeuble";
+        const propType = (property?.property_type || "").toLowerCase();
+        const isMultiUnit = propType === "maison à porte multiple" || propType === "immeuble";
         const unitNumber = getUnitNumber(tenant);
         if (isMultiUnit && unitNumber) {
-          title = `${title} - Porte ${unitNumber}`;
+          // Avoid "Porte Porte X" if unit_number already starts with "Porte"
+          const porteSuffix = unitNumber.toLowerCase().startsWith("porte") ? unitNumber : `Porte ${unitNumber}`;
+          title = `${title} - ${porteSuffix}`;
         }
         return title;
       };
@@ -162,19 +165,23 @@ const OwnerDetails = () => {
           .filter(p => p.status === "paid")
           .reduce((sum, p) => sum + p.amount, 0);
 
-        // Check for advance payments (multi-month) created/paid this month
+        // Check for advance payments paid this month but for future months
         const advancePaymentsForTenant = payments.filter(p => {
           if (p.tenant_id !== tenant.id || p.status !== "paid") return false;
-          const pm = (p as any).payment_months as string[] | null;
-          if (!pm || !Array.isArray(pm) || pm.length <= 1) return false;
+          // Must be paid or created this month
           const paidDate = p.paid_date?.substring(0, 10);
           const createdDate = p.created_at?.substring(0, 10);
           const monthStartStr = format(monthStart, "yyyy-MM-dd");
           const monthEndStr = format(monthEnd, "yyyy-MM-dd");
-          return (
-            (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
-            (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr)
-          );
+          const paidThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
+            (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr);
+          if (!paidThisMonth) return false;
+          // Must be for a future period (due_date outside this month) or multi-month
+          const dueDate = p.due_date?.substring(0, 10);
+          const pm = (p as any).payment_months as string[] | null;
+          const isMultiMonth = pm && Array.isArray(pm) && pm.length > 1;
+          const isFutureMonth = dueDate && dueDate > monthEndStr;
+          return isMultiMonth || isFutureMonth;
         });
 
         // Total advance amount paid this month
@@ -255,22 +262,22 @@ const OwnerDetails = () => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const propertyTitle = buildPropertyTitle(property, tenant);
           const advPayments = payments.filter(p => {
-            if (p.tenant_id !== tenant.id) return false;
-            const pm = (p as any).payment_months as string[] | null;
-            if (!pm || !Array.isArray(pm) || pm.length <= 1) return false;
+            if (p.tenant_id !== tenant.id || p.status !== "paid") return false;
             const paidDate = p.paid_date?.substring(0, 10);
-            const dueDate = p.due_date?.substring(0, 10);
             const createdDate = p.created_at?.substring(0, 10);
-            return (
-              (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
-              (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr) ||
-              (dueDate && dueDate >= monthStartStr && dueDate <= monthEndStr)
-            );
+            const paidThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
+              (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr);
+            if (!paidThisMonth) return false;
+            const dueDate = p.due_date?.substring(0, 10);
+            const pm = (p as any).payment_months as string[] | null;
+            const isMultiMonth = pm && Array.isArray(pm) && pm.length > 1;
+            const isFutureMonth = dueDate && dueDate > monthEndStr;
+            return isMultiMonth || isFutureMonth;
           });
           return advPayments.map(ap => ({
             tenantName: tenant.name,
             propertyTitle,
-            monthsCovered: ((ap as any).payment_months as string[]) || [],
+            monthsCovered: ((ap as any).payment_months as string[]) || [format(new Date(ap.due_date), "MMMM yyyy", { locale: fr })],
             amount: ap.amount,
           }));
         })

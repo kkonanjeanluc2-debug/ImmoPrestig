@@ -196,8 +196,9 @@ export function ReceiptActions({
 
     setIsSending(true);
     try {
+      const receiptNumber = await getOrAssignReceiptNumber();
       const pdfBase64 = await generateRentReceiptBase64WithTemplate({
-        ...getReceiptData(),
+        ...getReceiptData(receiptNumber),
         template: selectedTemplate,
       });
 

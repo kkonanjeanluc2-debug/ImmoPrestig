@@ -43,6 +43,7 @@ const ownerSchema = z.object({
   status: z.enum(["actif", "inactif"]),
   management_type_id: z.string().optional().or(z.literal("")),
   default_contract_template_id: z.string().optional().or(z.literal("")),
+  receipt_template_id: z.string().optional().or(z.literal("")),
   birth_date: z.date().optional(),
   birth_place: z.string().trim().max(100).optional().or(z.literal("")),
   profession: z.string().trim().max(100).optional().or(z.literal("")),

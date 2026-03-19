@@ -237,21 +237,23 @@ const OwnerDetails = () => {
       const monthStartStr = format(monthStart, "yyyy-MM-dd");
       const monthEndStr = format(monthEnd, "yyyy-MM-dd");
       const cautions = ownerTenants
-        .flatMap(tenant => {
+        .filter(tenant => {
+          const createdAt = tenant.created_at?.substring(0, 10);
+          return createdAt && createdAt >= monthStartStr && createdAt <= monthEndStr;
+        })
+        .filter(tenant => {
+          const deposit = tenant.contracts?.find(c => c.status === "active")?.deposit || 0;
+          return deposit > 0;
+        })
+        .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
+          const deposit = tenant.contracts?.find(c => c.status === "active")?.deposit || 0;
           const propertyTitle = buildPropertyTitle(property, tenant);
-          // Find contracts with deposit whose start_date falls in the selected month
-          return (tenant.contracts || [])
-            .filter(c => {
-              const startDate = c.start_date?.substring(0, 10);
-              const deposit = c.deposit || 0;
-              return deposit > 0 && startDate && startDate >= monthStartStr && startDate <= monthEndStr;
-            })
-            .map(c => ({
-              tenantName: tenant.name,
-              propertyTitle,
-              deposit: Number(c.deposit || 0),
-            }));
+          return {
+            tenantName: tenant.name,
+            propertyTitle,
+            deposit: Number(deposit),
+          };
         });
 
       // Prepare advance payments - multi-month payments created this month

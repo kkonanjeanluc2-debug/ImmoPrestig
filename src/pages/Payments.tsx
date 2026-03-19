@@ -99,6 +99,7 @@ export default function Payments() {
 
   const { data: payments, isLoading, error } = usePayments();
   const { data: owners = [] } = useOwners();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
   const { data: properties = [] } = useProperties();
 
   // Collect assigned_to user IDs for gestionnaire name lookup

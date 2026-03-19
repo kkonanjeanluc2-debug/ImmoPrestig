@@ -794,13 +794,16 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             }
           } else if (isPartial) {
             // Partial payment - show the paid portion
-            const dueDate = p.due_date;
-            if (dueDate && dueDate >= fromDate && dueDate <= toDate) {
+            // Use paid_date if in period, otherwise due_date
+            const effectiveDate = (paidDate && paidDate >= fromDate && paidDate <= toDate) 
+              ? paidDate 
+              : p.due_date;
+            if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
               result.paidRentDetails.push({
                 tenantName: tenantName + suffix,
-                months: allMonths.length > 0 ? allMonths : (dueDate ? [dueDate.substring(0, 7)] : []),
+                months: allMonths.length > 0 ? allMonths : (p.due_date ? [p.due_date.substring(0, 7)] : []),
                 amount: totalAmount,
-                paidDate: paidDate || dueDate,
+                paidDate: paidDate || p.due_date,
                 managerName: assignedTo || "__unassigned__",
                 paymentMethod: p.method || "Non spécifié",
               });

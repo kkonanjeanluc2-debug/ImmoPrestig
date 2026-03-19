@@ -471,20 +471,7 @@ const OwnerDetails = () => {
         });
 
         const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property?.price || 0);
-        const regularPaid = tenantPaymentsThisMonth.reduce((sum, p) => {
-          if (p.status === "paid") return sum + p.amount;
-          if (p.paid_amount && p.paid_amount > 0) return sum + p.paid_amount;
-          return sum;
-        }, 0);
-        const latePaid = lateCollectedThisMonth.reduce((sum, p) => {
-          if (p.status === "paid") return sum + p.amount;
-          return sum + (p.paid_amount || 0);
-        }, 0);
-        const advancePaid = advancePaymentsForTenant.reduce((sum, p) => {
-          if (p.status === "paid") return sum + p.amount;
-          return sum + (p.paid_amount || 0);
-        }, 0);
-        const totalPaid = regularPaid + latePaid + advancePaid;
+        const totalPaid = getTenantCollectedAmountForPeriod(payments, tenant.id, monthStartStr, monthEndStr);
 
         const hasLate = tenantPaymentsThisMonth.some(p => 
           p.status === "pending" && new Date(p.due_date) < now

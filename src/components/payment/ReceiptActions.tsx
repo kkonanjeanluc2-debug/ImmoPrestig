@@ -70,6 +70,18 @@ export function ReceiptActions({
   const createEmailLog = useCreateEmailLog();
   const logWhatsAppMessage = useLogWhatsAppMessage();
   const { data: agency } = useAgency();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
+
+  // Auto-select default template on load
+  useEffect(() => {
+    if (receiptTemplates.length > 0 && !selectedTemplateId) {
+      const defaultTemplate = receiptTemplates.find(t => t.is_default) || receiptTemplates[0];
+      if (defaultTemplate) {
+        setSelectedTemplateId(defaultTemplate.id);
+        setSelectedTemplate(defaultTemplate);
+      }
+    }
+  }, [receiptTemplates, selectedTemplateId]);
 
   const handleTemplateChange = useCallback((templateId: string | null, template: ReceiptTemplate | null) => {
     setSelectedTemplateId(templateId);

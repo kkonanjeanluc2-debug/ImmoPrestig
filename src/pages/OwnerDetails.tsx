@@ -361,16 +361,35 @@ const OwnerDetails = () => {
       // Prepare tenant payments data
       const tenantPayments = ownerTenants.map(tenant => {
         const property = ownerProperties.find(p => p.id === tenant.property_id);
+        const monthStartStr = format(monthStart, "yyyy-MM-dd");
+        const monthEndStr = format(monthEnd, "yyyy-MM-dd");
+
         const tenantPaymentsThisMonth = payments.filter(p => 
           p.tenant_id === tenant.id &&
-          p.due_date >= format(monthStart, "yyyy-MM-dd") &&
-          p.due_date <= format(monthEnd, "yyyy-MM-dd")
+          p.due_date >= monthStartStr &&
+          p.due_date <= monthEndStr
         );
 
+        // Late payments collected this month
+        const lateCollectedThisMonth = payments.filter(p => {
+          if (p.tenant_id !== tenant.id) return false;
+          if (p.due_date >= monthStartStr) return false;
+          const paidDate = p.paid_date?.substring(0, 10);
+          if (!paidDate || paidDate < monthStartStr || paidDate > monthEndStr) return false;
+          return p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+        });
+
         const totalDue = tenantPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0) || (property?.price || 0);
-        const totalPaid = tenantPaymentsThisMonth
-          .filter(p => p.status === "paid")
-          .reduce((sum, p) => sum + p.amount, 0);
+        const regularPaid = tenantPaymentsThisMonth.reduce((sum, p) => {
+          if (p.status === "paid") return sum + p.amount;
+          if (p.paid_amount && p.paid_amount > 0) return sum + p.paid_amount;
+          return sum;
+        }, 0);
+        const latePaid = lateCollectedThisMonth.reduce((sum, p) => {
+          if (p.status === "paid") return sum + p.amount;
+          return sum + (p.paid_amount || 0);
+        }, 0);
+        const totalPaid = regularPaid + latePaid;
 
         const hasLate = tenantPaymentsThisMonth.some(p => 
           p.status === "pending" && new Date(p.due_date) < now

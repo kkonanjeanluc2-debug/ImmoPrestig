@@ -38,7 +38,7 @@ import { PropertyImageGallery } from "@/components/property/PropertyImageGallery
 import { PropertyUnitsManager } from "@/components/property/PropertyUnitsManager";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generatePropertyMonthlyReport } from "@/lib/generatePropertyMonthlyReport";
 import { MonthlyReportPeriodDialog } from "@/components/owner/MonthlyReportPeriodDialog";
@@ -189,10 +189,13 @@ const PropertyDetails = () => {
           });
           advPayments.forEach(ap => {
             const amt = ap.status === "paid" ? ap.amount : (ap.paid_amount || 0);
+            const isPartialPayment = ap.status !== "paid" && ap.paid_amount && ap.paid_amount > 0 && ap.paid_amount < ap.amount;
+            const rawMonths = ((ap as any).payment_months as string[]) || [format(new Date(ap.due_date), "MMMM yyyy", { locale: fr })];
+            const monthsCovered = isPartialPayment ? rawMonths.map(m => `${m} (partiel)`) : rawMonths;
             results.push({
               tenantName: tenant.name,
               unitNumber: (tenant as any).unit?.unit_number || undefined,
-              monthsCovered: ((ap as any).payment_months as string[]) || [format(new Date(ap.due_date), "MMMM yyyy", { locale: fr })],
+              monthsCovered,
               amount: amt,
             });
           });
@@ -210,10 +213,14 @@ const PropertyDetails = () => {
           }, 0);
           if (totalPaidCurrentMonth > monthlyRent && monthlyRent > 0) {
             const overpayment = totalPaidCurrentMonth - monthlyRent;
+            // Calculate next month name instead of "Surplus"
+            const nextMonth = addMonths(monthStart, 1);
+            const nextMonthLabel = format(nextMonth, "MMMM yyyy", { locale: fr });
+            const isPartial = overpayment < monthlyRent;
             results.push({
               tenantName: tenant.name,
               unitNumber: (tenant as any).unit?.unit_number || undefined,
-              monthsCovered: ["Surplus"],
+              monthsCovered: [isPartial ? `${nextMonthLabel} (partiel)` : nextMonthLabel],
               amount: overpayment,
             });
           }

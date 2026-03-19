@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
+import { createPDFDocument } from "@/lib/pdfFont";
 import { getReceiptTemplates, type ReceiptTemplates } from "@/components/settings/ReceiptSettings";
 import { type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
 import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
@@ -27,15 +27,20 @@ interface ReceiptData {
   method?: string;
   ownerName?: string;
   agency?: AgencyInfo | null;
-  paymentMonths?: string[]; // New field for multi-month payments
-  totalRentAmount?: number; // Total rent amount for partial payment tracking
-  remainingAmount?: number; // Remaining amount after this payment
-  unitNumber?: string; // Unit/door number for multi-unit properties
-  gestionnaireName?: string; // Property manager name
+  paymentMonths?: string[];
+  totalRentAmount?: number;
+  remainingAmount?: number;
+  unitNumber?: string;
+  gestionnaireName?: string;
 }
 
 interface ReceiptDataWithTemplate extends ReceiptData {
   template?: ReceiptTemplate | null;
+}
+
+interface PdfImageAsset {
+  dataUrl: string;
+  format: "PNG" | "JPEG";
 }
 
 // Convert database template to legacy format for compatibility
@@ -64,19 +69,59 @@ const convertDbTemplateToLegacy = (template: ReceiptTemplate): ReceiptTemplates 
   };
 };
 
-const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+const loadImageAsset = async (url: string): Promise<PdfImageAsset | null> => {
   try {
     const response = await fetch(url);
+    if (!response.ok) return null;
+
     const blob = await response.blob();
+    const format: PdfImageAsset["format"] = blob.type.includes("png") ? "PNG" : "JPEG";
+
     return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
+      reader.onloadend = () => {
+        const dataUrl = reader.result;
+        if (typeof dataUrl !== "string") {
+          resolve(null);
+          return;
+        }
+
+        resolve({ dataUrl, format });
+      };
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
   } catch {
     return null;
   }
+};
+
+const addImageToPdf = (
+  doc: jsPDF,
+  image: PdfImageAsset,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) => {
+  doc.addImage(image.dataUrl, image.format, x, y, width, height);
+};
+
+const ensureSpace = (
+  doc: jsPDF,
+  yPos: number,
+  requiredHeight: number,
+  topMargin = 20,
+  footerReserve = 32,
+): number => {
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  if (yPos + requiredHeight > pageHeight - footerReserve) {
+    doc.addPage();
+    return topMargin;
+  }
+
+  return yPos;
 };
 
 const formatDate = (dateStr: string, format: "short" | "long"): string => {
@@ -90,8 +135,6 @@ const formatDate = (dateStr: string, format: "short" | "long"): string => {
   }
   return date.toLocaleDateString("fr-FR");
 };
-
-// NOTE: formatAmountForPDF is imported from @/lib/pdfFormat to ensure consistent rendering.
 
 const replaceVariables = (
   template: string,
@@ -119,7 +162,7 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   const templates = templateOverride || getReceiptTemplates();
   
   // Colors
-  const primaryColor: [number, number, number] = [26, 54, 93]; // Navy
+  const primaryColor: [number, number, number] = [26, 54, 93];
   const textColor: [number, number, number] = [51, 51, 51];
   const lightGray: [number, number, number] = [245, 245, 245];
   
@@ -131,26 +174,23 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   
   // Agency logo and info
   if (data.agency) {
-    // Try to load and add logo
     if (templates.showLogo && data.agency.logo_url) {
       try {
-        const logoBase64 = await loadImageAsBase64(data.agency.logo_url);
-        if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', 15, 8, 20, 20);
+        const logoImage = await loadImageAsset(data.agency.logo_url);
+        if (logoImage) {
+          addImageToPdf(doc, logoImage, 15, 8, 20, 20);
           headerYOffset = 25;
         }
-      } catch (e) {
-        // Logo loading failed, continue without it
+      } catch {
+        // Continue without logo
       }
     }
     
-    // Agency name
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text(data.agency.name, headerYOffset > 0 ? 40 : 15, 15);
     
-    // Agency contact info
     if (templates.showAgencyContact) {
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
@@ -174,7 +214,7 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     }
   }
   
-  // Title - positioned on the right or center
+  // Title
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
@@ -192,12 +232,11 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     doc.text(`N° ${data.paymentId.substring(0, 8).toUpperCase()}`, pageWidth / 2, 35, { align: "center" });
   }
   
-  // Reset text color
   doc.setTextColor(...textColor);
   
   let yPos = 70;
   
-  // Period box - show multiple months if applicable
+  // Period box
   const periodText = data.paymentMonths && data.paymentMonths.length > 1
     ? `Périodes : ${data.paymentMonths.join(", ")}`
     : `Période : ${data.period}`;
@@ -207,65 +246,69 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.setFontSize(data.paymentMonths && data.paymentMonths.length > 3 ? 10 : 12);
   doc.setFont("helvetica", "bold");
   
-  // Split text if too long
   const splitPeriod = doc.splitTextToSize(periodText, pageWidth - 40);
   const periodYOffset = splitPeriod.length > 1 ? 8 : 12;
   doc.text(splitPeriod, pageWidth / 2, yPos + periodYOffset, { align: "center" });
   
   yPos += (data.paymentMonths && data.paymentMonths.length > 2 ? 38 : 35);
-  
-  // Two-column layout for Owner and Tenant
-  const colWidth = (pageWidth - 40) / 2;
-  
-  // Owner section (left column)
-  if (templates.showOwnerSection && data.ownerName) {
-    doc.setFontSize(10);
+
+  // Compact info row: owner / tenant / property on the same line
+  const sections = [
+    templates.showOwnerSection && data.ownerName
+      ? {
+          title: "BAILLEUR",
+          lines: doc.splitTextToSize(data.ownerName, 48),
+        }
+      : null,
+    {
+      title: "LOCATAIRE",
+      lines: doc.splitTextToSize(
+        [data.tenantName, data.tenantEmail].filter(Boolean).join("\n"),
+        48,
+      ),
+    },
+    {
+      title: "BIEN LOUÉ",
+      lines: doc.splitTextToSize(
+        [
+          data.propertyTitle,
+          data.unitNumber ? `Porte : ${data.unitNumber}` : null,
+          data.propertyAddress,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        48,
+      ),
+    },
+  ].filter(Boolean) as Array<{ title: string; lines: string[] }>;
+
+  const sectionGap = 8;
+  const availableWidth = pageWidth - 30;
+  const sectionWidth = (availableWidth - sectionGap * (sections.length - 1)) / sections.length;
+  const sectionXStart = 15;
+
+  doc.setFontSize(10);
+  let maxSectionBottom = yPos;
+
+  sections.forEach((section, index) => {
+    const x = sectionXStart + index * (sectionWidth + sectionGap);
+    let sectionY = yPos;
+
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
-    doc.text("BAILLEUR", 15, yPos);
+    doc.text(section.title, x, sectionY);
+
+    sectionY += 7;
+    doc.setFont("helvetica", "normal");
     doc.setTextColor(...textColor);
-    doc.setFont("helvetica", "normal");
-    doc.text(data.ownerName, 15, yPos + 7);
-  }
-  
-  // Tenant section (right column)
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("LOCATAIRE", templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos);
-  doc.setTextColor(...textColor);
-  doc.setFont("helvetica", "normal");
-  doc.text(data.tenantName, templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos + 7);
-  if (data.tenantEmail) {
     doc.setFontSize(9);
-    doc.text(data.tenantEmail, templates.showOwnerSection ? 15 + colWidth + 10 : 15, yPos + 12);
-  }
-  
-  yPos += 25;
-  
-  // Property section
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("BIEN LOUÉ", 15, yPos);
-  doc.setTextColor(...textColor);
-  doc.setFont("helvetica", "normal");
-  yPos += 7;
-  doc.text(data.propertyTitle, 15, yPos);
-  if (data.unitNumber) {
-    yPos += 5;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Porte : ${data.unitNumber}`, 15, yPos);
-    doc.setFont("helvetica", "normal");
-  }
-  if (data.propertyAddress) {
-    yPos += 5;
-    doc.setFontSize(9);
-    doc.text(data.propertyAddress, 15, yPos);
-  }
-  
-  yPos += 20;
+    doc.text(section.lines, x, sectionY, { lineHeightFactor: 1.35 });
+
+    const sectionBottom = sectionY + Math.max(section.lines.length - 1, 0) * 4.2;
+    maxSectionBottom = Math.max(maxSectionBottom, sectionBottom);
+  });
+
+  yPos = maxSectionBottom + 18;
   
   // Amount box
   doc.setFillColor(...primaryColor);
@@ -276,15 +319,14 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.text("Montant du loyer reçu", pageWidth / 2, yPos + 12, { align: "center" });
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  // Use character spacing for uniform display
   const amountText = formatAmountWithCurrency(data.amount);
   doc.text(amountText, pageWidth / 2, yPos + 26, { align: "center", charSpace: 0.5 });
   
-    yPos += 50;
+  yPos += 50;
 
-  // Partial payment info (remaining balance)
+  // Partial payment info
   if (data.totalRentAmount && data.totalRentAmount > data.amount && data.remainingAmount !== undefined) {
-    const accentColor: [number, number, number] = [220, 120, 0]; // Orange
+    const accentColor: [number, number, number] = [220, 120, 0];
     doc.setFillColor(255, 248, 235);
     doc.roundedRect(15, yPos - 5, pageWidth - 30, data.remainingAmount > 0 ? 22 : 14, 3, 3, "F");
     doc.setFontSize(9);
@@ -316,6 +358,8 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   
   // Payment details table
   if (templates.showPaymentDetails) {
+    yPos = ensureSpace(doc, yPos, 55);
+
     doc.setFillColor(...lightGray);
     doc.rect(15, yPos, pageWidth - 30, 8, "F");
     doc.setFont("helvetica", "bold");
@@ -351,50 +395,57 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   const declarationText = replaceVariables(templates.declarationText, data, templates);
+  const splitDeclaration = declarationText ? doc.splitTextToSize(declarationText, pageWidth - 30) : [];
+
+  if (splitDeclaration.length > 0) {
+    yPos = ensureSpace(doc, yPos, splitDeclaration.length * 5 + 55);
+    doc.text(splitDeclaration, 15, yPos, { lineHeightFactor: 1.5 });
+    yPos += splitDeclaration.length * 5 + 20;
+  } else {
+    yPos = ensureSpace(doc, yPos, 55);
+  }
   
-  const splitDeclaration = doc.splitTextToSize(declarationText, pageWidth - 30);
-  doc.text(splitDeclaration, 15, yPos, { lineHeightFactor: 1.5 });
-  
-  yPos += splitDeclaration.length * 5 + 20;
-  
-  // Date and signature
-  const today = new Date().toLocaleDateString("fr-FR", 
-    templates.dateFormat === "long" 
+  // Date and signature block
+  yPos = ensureSpace(doc, yPos, 60);
+
+  const today = new Date().toLocaleDateString(
+    "fr-FR",
+    templates.dateFormat === "long"
       ? { day: "numeric", month: "long", year: "numeric" }
-      : undefined
+      : undefined,
   );
-  
+
+  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
   doc.text(`Fait le ${today}`, pageWidth - 20, yPos, { align: "right" });
-  
-  yPos += 15;
+
+  yPos += 12;
   doc.setFont("helvetica", "italic");
   const signatureLabel = replaceVariables(templates.signatureLabel, data, templates);
   doc.text(signatureLabel, pageWidth - 20, yPos, { align: "right" });
-  
-  // Stamp / signature image
+
   if (templates.stampImageUrl) {
     try {
-      const stampBase64 = await loadImageAsBase64(templates.stampImageUrl);
-      if (stampBase64) {
-        const stampSize = 40;
+      const stampImage = await loadImageAsset(templates.stampImageUrl);
+      if (stampImage) {
+        const stampSize = 36;
         const stampX = pageWidth - 20 - stampSize;
-        const stampY = yPos + 5;
-        doc.addImage(stampBase64, 'PNG', stampX, stampY, stampSize, stampSize);
-        yPos += stampSize + 10;
+        const stampY = yPos + 4;
+        addImageToPdf(doc, stampImage, stampX, stampY, stampSize, stampSize);
+        yPos += stampSize + 8;
       }
     } catch (e) {
       console.error("Failed to load stamp image:", e);
     }
   }
   
-  // Watermark (rendered before footer so it's behind content)
+  // Watermark
   if (templates.watermarkEnabled) {
     const pageHeight = doc.internal.pageSize.getHeight();
     const opacity = templates.watermarkOpacity / 100;
     
     if (templates.watermarkType === "text" && templates.watermarkText) {
-      // Text watermark
       doc.saveGraphicsState();
       
       const grayValue = Math.round(200 + (55 * (1 - opacity)));
@@ -427,13 +478,11 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
       
       doc.restoreGraphicsState();
     } else if (templates.watermarkType === "agency_logo" && data.agency?.logo_url) {
-      // Agency logo watermark
       try {
-        const logoBase64 = await loadImageAsBase64(data.agency.logo_url);
-        if (logoBase64) {
+        const logoImage = await loadImageAsset(data.agency.logo_url);
+        if (logoImage) {
           doc.saveGraphicsState();
           
-          // Calculate size and position
           const logoSize = 60;
           let logoX = (pageWidth - logoSize) / 2;
           let logoY = (pageHeight - logoSize) / 2;
@@ -442,7 +491,6 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
             logoX = pageWidth - logoSize - 20;
             logoY = pageHeight - logoSize - 40;
           } else if (templates.watermarkPosition === "diagonal") {
-            // For diagonal, place multiple logos
             const smallLogoSize = 40;
             for (let i = 0; i < 3; i++) {
               for (let j = 0; j < 4; j++) {
@@ -450,17 +498,16 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
                 const y = (pageHeight / 4) * j + 40;
                 if (x > 0 && x < pageWidth - smallLogoSize && y > 0 && y < pageHeight - smallLogoSize) {
                   doc.setGState(new (doc as any).GState({ opacity: opacity }));
-                  doc.addImage(logoBase64, 'PNG', x, y, smallLogoSize, smallLogoSize);
+                  addImageToPdf(doc, logoImage, x, y, smallLogoSize, smallLogoSize);
                 }
               }
             }
             doc.restoreGraphicsState();
-            // Skip the single logo rendering below
           }
           
           if (templates.watermarkPosition !== "diagonal") {
             doc.setGState(new (doc as any).GState({ opacity: opacity }));
-            doc.addImage(logoBase64, 'PNG', logoX, logoY, logoSize, logoSize);
+            addImageToPdf(doc, logoImage, logoX, logoY, logoSize, logoSize);
             doc.restoreGraphicsState();
           }
         }
@@ -468,10 +515,9 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
         console.error("Failed to load agency logo for watermark:", e);
       }
     } else if (templates.watermarkType === "image" && templates.watermarkImageUrl) {
-      // Custom image watermark
       try {
-        const imageBase64 = await loadImageAsBase64(templates.watermarkImageUrl);
-        if (imageBase64) {
+        const watermarkImage = await loadImageAsset(templates.watermarkImageUrl);
+        if (watermarkImage) {
           doc.saveGraphicsState();
           
           const imageSize = 60;
@@ -484,7 +530,7 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
           }
           
           doc.setGState(new (doc as any).GState({ opacity: opacity }));
-          doc.addImage(imageBase64, 'PNG', imgX, imgY, imageSize, imageSize);
+          addImageToPdf(doc, watermarkImage, imgX, imgY, imageSize, imageSize);
           doc.restoreGraphicsState();
         }
       } catch (e) {
@@ -557,7 +603,6 @@ export const getPaymentPeriod = (dueDate: string): string => {
   return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
 };
 
-// Generate period string from payment months array
 export const getPaymentPeriodsFromMonths = (paymentMonths: string[] | null): string => {
   if (!paymentMonths || paymentMonths.length === 0) {
     return "";

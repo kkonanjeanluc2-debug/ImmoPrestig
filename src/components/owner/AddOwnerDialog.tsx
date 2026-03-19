@@ -71,6 +71,7 @@ export function AddOwnerDialog() {
       status: "actif",
       management_type_id: "",
       default_contract_template_id: "",
+      receipt_template_id: "",
       birth_date: undefined,
       birth_place: "",
       profession: "",

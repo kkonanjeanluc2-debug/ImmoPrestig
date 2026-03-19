@@ -44,6 +44,8 @@ interface ReceiptActionsProps {
   gestionnaireName?: string;
   ownerName?: string;
   initialTemplate?: ReceiptTemplate | null;
+  totalRentAmount?: number;
+  remainingAmount?: number;
 }
 
 export function ReceiptActions({

@@ -58,6 +58,7 @@ export function AddOwnerDialog() {
   const createOwner = useCreateOwner();
   const { data: managementTypes = [] } = useManagementTypes();
   const { data: contractTemplates = [] } = useContractTemplates();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
 
   // Get default management type
   const defaultManagementType = managementTypes.find((t) => t.is_default);

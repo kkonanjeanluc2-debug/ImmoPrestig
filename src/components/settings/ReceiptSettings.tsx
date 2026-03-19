@@ -117,6 +117,7 @@ function replaceVariablesForPreview(template: string): string {
 }
 
 export function ReceiptSettings() {
+  const { user } = useAuth();
   const [templates, setTemplates] = useState<ReceiptTemplates>(getReceiptTemplates);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState("content");

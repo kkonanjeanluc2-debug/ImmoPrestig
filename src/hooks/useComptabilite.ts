@@ -1233,6 +1233,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           paidDate: p.paid_at?.split("T")[0] || "",
           managerName: resolveManager(assignedTo),
           paymentMethod: p.payment_method || "en_ligne",
+          ownerName: p.tenant?.property?.owner?.name || "",
+          propertyTitle: p.tenant?.property?.title || "",
         });
       });
     }

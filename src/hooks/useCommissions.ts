@@ -150,8 +150,8 @@ export function useCommissions(startDate?: string, endDate?: string) {
 
       const commissionData: CommissionData = {
         paymentId: payment.id,
-        paymentDate: payment.paid_date!,
-        tenantName: tenant.name,
+        paymentDate: payment.paid_date || (payment as any).due_date || "",
+        tenantName: tenant.name + (isPartial ? " (partiel)" : ""),
         propertyTitle: property.title,
         ownerName: owner.name,
         ownerId: owner.id,

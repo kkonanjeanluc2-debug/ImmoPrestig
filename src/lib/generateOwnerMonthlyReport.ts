@@ -32,6 +32,15 @@ interface AdvancePaymentRow {
   amount: number;
 }
 
+interface LatePaymentRow {
+  tenantName: string;
+  propertyTitle: string;
+  dueMonth: string;
+  rentAmount: number;
+  paidAmount: number;
+  status: "paid" | "partial";
+}
+
 interface AgencyInfo {
   name: string;
   email?: string;

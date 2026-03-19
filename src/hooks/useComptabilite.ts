@@ -717,10 +717,35 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
               }
             }
           }
-        } else if (status === "pending") {
-          result.loyersEnAttente += totalAmount;
-        } else if (status === "overdue" || status === "late") {
-          result.loyersImpayes += totalAmount;
+        } else if (status === "pending" || status === "overdue" || status === "late") {
+          // For partial payments, count paid_amount as revenue and remainder as pending/impayé
+          const paidPortion = Number(p.paid_amount) || 0;
+          const remainder = Number(p.amount) - paidPortion;
+          
+          if (paidPortion > 0) {
+            // Count the paid portion as collected revenue
+            result.loyersEncaisses += paidPortion;
+            
+            // Add to monthly bucket based on due_date
+            const dueDate = p.due_date;
+            if (dueDate && dueDate >= fromDate && dueDate <= toDate) {
+              const date = new Date(dueDate);
+              const key = `${date.getFullYear()}-${date.getMonth()}`;
+              const monthly = monthlyMap.get(key);
+              if (monthly) {
+                monthly.loyers += paidPortion;
+                monthly.total += paidPortion;
+              }
+              const method = p.method || "Non spécifié";
+              methodMap.set(method, (methodMap.get(method) || 0) + paidPortion);
+            }
+          }
+          
+          if (status === "pending") {
+            result.loyersEnAttente += remainder;
+          } else {
+            result.loyersImpayes += remainder;
+          }
         }
       });
     }

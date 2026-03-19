@@ -19,6 +19,20 @@ interface InterventionRow {
   status: string;
 }
 
+interface CautionRow {
+  tenantName: string;
+  propertyTitle: string;
+  deposit: number;
+  agencyFees: number;
+}
+
+interface AdvancePaymentRow {
+  tenantName: string;
+  propertyTitle: string;
+  monthsCovered: string[];
+  amount: number;
+}
+
 interface AgencyInfo {
   name: string;
   email?: string;
@@ -39,6 +53,8 @@ interface OwnerMonthlyReportData {
   agency?: AgencyInfo | null;
   tenantPayments: TenantPaymentRow[];
   interventions: InterventionRow[];
+  cautions: CautionRow[];
+  advancePayments: AdvancePaymentRow[];
   commissionPercentage: number;
   managementTypeName?: string;
 }
@@ -236,7 +252,154 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.text(formatAmountForPDF(totalPaid), 140, yPos + 6);
   yPos += 18;
 
+  // Check page break helper
+  const checkPageBreak = (needed: number) => {
+    if (yPos + needed > pageHeight - 30) {
+      doc.addPage();
+      yPos = 20;
+    }
+  };
+
+  // Cautions section
+  checkPageBreak(30);
+  doc.setTextColor(...primaryColor);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("CAUTIONS ET FRAIS D'AGENCE", 15, yPos);
+  yPos += 8;
+
+  let totalCautions = 0;
+
+  if (data.cautions.length === 0) {
+    doc.setFillColor(...lightGray);
+    doc.rect(15, yPos, pageWidth - 30, 10, "F");
+    doc.setTextColor(...textColor);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Aucune caution pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
+    yPos += 10;
+  } else {
+    // Cautions table header
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Locataire", 18, yPos + 5.5);
+    doc.text("Bien", 70, yPos + 5.5);
+    doc.text("Caution", 125, yPos + 5.5);
+    doc.text("Frais agence", 155, yPos + 5.5);
+    yPos += 8;
+
+    doc.setTextColor(...textColor);
+    doc.setFont("helvetica", "normal");
+
+    data.cautions.forEach((row, index) => {
+      checkPageBreak(9);
+      if (index % 2 === 0) {
+        doc.setFillColor(...lightGray);
+        doc.rect(15, yPos, pageWidth - 30, 9, "F");
+      }
+
+      doc.setFontSize(8);
+      const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
+      const propertyTitle = row.propertyTitle.length > 22 ? row.propertyTitle.substring(0, 20) + "..." : row.propertyTitle;
+
+      doc.text(tenantName, 18, yPos + 6);
+      doc.text(propertyTitle, 70, yPos + 6);
+      doc.text(formatAmountForPDF(row.deposit), 125, yPos + 6);
+      doc.text(formatAmountForPDF(row.agencyFees), 155, yPos + 6);
+
+      totalCautions += row.deposit + row.agencyFees;
+      yPos += 9;
+    });
+
+    // Cautions subtotal
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 9, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL CAUTIONS / FRAIS", 18, yPos + 6);
+    doc.text(formatAmountForPDF(totalCautions), 155, yPos + 6);
+    yPos += 9;
+  }
+
+  yPos += 10;
+
+  // Advance payments section
+  checkPageBreak(30);
+  doc.setTextColor(...primaryColor);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("MOIS D'AVANCE", 15, yPos);
+  yPos += 8;
+
+  let totalAdvance = 0;
+
+  if (data.advancePayments.length === 0) {
+    doc.setFillColor(...lightGray);
+    doc.rect(15, yPos, pageWidth - 30, 10, "F");
+    doc.setTextColor(...textColor);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Aucun mois d'avance pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
+    yPos += 10;
+  } else {
+    // Advance payments table header
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Locataire", 18, yPos + 5.5);
+    doc.text("Bien", 65, yPos + 5.5);
+    doc.text("Mois couverts", 115, yPos + 5.5);
+    doc.text("Montant", 170, yPos + 5.5);
+    yPos += 8;
+
+    doc.setTextColor(...textColor);
+    doc.setFont("helvetica", "normal");
+
+    data.advancePayments.forEach((row, index) => {
+      checkPageBreak(9);
+      if (index % 2 === 0) {
+        doc.setFillColor(...lightGray);
+        doc.rect(15, yPos, pageWidth - 30, 9, "F");
+      }
+
+      doc.setFontSize(8);
+      const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
+      const propertyTitle = row.propertyTitle.length > 20 ? row.propertyTitle.substring(0, 18) + "..." : row.propertyTitle;
+      const monthsLabel = row.monthsCovered.length > 3
+        ? `${row.monthsCovered.length} mois`
+        : row.monthsCovered.join(", ");
+      const monthsDisplay = monthsLabel.length > 22 ? monthsLabel.substring(0, 20) + "..." : monthsLabel;
+
+      doc.text(tenantName, 18, yPos + 6);
+      doc.text(propertyTitle, 65, yPos + 6);
+      doc.text(monthsDisplay, 115, yPos + 6);
+      doc.text(formatAmountForPDF(row.amount), 170, yPos + 6);
+
+      totalAdvance += row.amount;
+      yPos += 9;
+    });
+
+    // Advance subtotal
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 9, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL AVANCES", 18, yPos + 6);
+    doc.text(formatAmountForPDF(totalAdvance), 170, yPos + 6);
+    yPos += 9;
+  }
+
+  yPos += 10;
+
   // Interventions section
+  checkPageBreak(30);
   doc.setTextColor(...primaryColor);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
@@ -270,6 +433,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.setFont("helvetica", "normal");
 
     data.interventions.forEach((row, index) => {
+      checkPageBreak(9);
       if (index % 2 === 0) {
         doc.setFillColor(...lightGray);
         doc.rect(15, yPos, pageWidth - 30, 9, "F");
@@ -305,8 +469,9 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
   const netAmount = totalPaid - commissionAmount - totalInterventionsCost;
 
+  checkPageBreak(75);
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 65, 3, 3, "F");
+  doc.roundedRect(15, yPos, pageWidth - 30, 75, 3, 3, "F");
 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);
@@ -334,9 +499,18 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.setTextColor(...dangerColor);
   doc.text(`- ${formatAmountWithCurrency(commissionAmount)}`, pageWidth - 25, summaryY, { align: "right" });
 
+  // Cautions
+  summaryY += 10;
+  doc.setTextColor(...textColor);
+  doc.setFont("helvetica", "normal");
+  doc.text("Cautions et frais d'agence encaisses", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalCautions), pageWidth - 25, summaryY, { align: "right" });
+
   // Interventions
   summaryY += 10;
   doc.setTextColor(...textColor);
+  doc.setFont("helvetica", "normal");
   doc.text("Couts interventions/reparations", 25, summaryY);
   doc.setTextColor(...dangerColor);
   doc.text(`- ${formatAmountWithCurrency(totalInterventionsCost)}`, pageWidth - 25, summaryY, { align: "right" });

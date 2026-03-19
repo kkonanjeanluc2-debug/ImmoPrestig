@@ -182,6 +182,57 @@ const OwnerDetails = () => {
 
       const commissionPercentage = owner.management_type?.percentage || 0;
 
+      // Prepare cautions - tenants created this month with deposit or agency_fees
+      const monthStartStr = format(monthStart, "yyyy-MM-dd");
+      const monthEndStr = format(monthEnd, "yyyy-MM-dd");
+      const cautions = ownerTenants
+        .filter(tenant => {
+          const createdAt = tenant.created_at?.substring(0, 10);
+          return createdAt && createdAt >= monthStartStr && createdAt <= monthEndStr;
+        })
+        .filter(tenant => {
+          const deposit = tenant.contracts?.find(c => c.status === "active")?.deposit || 0;
+          const agencyFees = Number(tenant.agency_fees) || 0;
+          return deposit > 0 || agencyFees > 0;
+        })
+        .map(tenant => {
+          const property = ownerProperties.find(p => p.id === tenant.property_id);
+          const deposit = tenant.contracts?.find(c => c.status === "active")?.deposit || 0;
+          return {
+            tenantName: tenant.name,
+            propertyTitle: property?.title || "Bien inconnu",
+            deposit: Number(deposit),
+            agencyFees: Number(tenant.agency_fees) || 0,
+          };
+        });
+
+      // Prepare advance payments - multi-month payments created this month
+      const advancePayments = ownerTenants
+        .map(tenant => {
+          const property = ownerProperties.find(p => p.id === tenant.property_id);
+          const advPayments = payments.filter(p => {
+            if (p.tenant_id !== tenant.id) return false;
+            const pm = (p as any).payment_months as string[] | null;
+            if (!pm || !Array.isArray(pm) || pm.length <= 1) return false;
+            // Check if payment was created/paid in the selected month
+            const paidDate = p.paid_date?.substring(0, 10);
+            const dueDate = p.due_date?.substring(0, 10);
+            const createdDate = p.created_at?.substring(0, 10);
+            return (
+              (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
+              (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr) ||
+              (dueDate && dueDate >= monthStartStr && dueDate <= monthEndStr)
+            );
+          });
+          return advPayments.map(ap => ({
+            tenantName: tenant.name,
+            propertyTitle: property?.title || "Bien inconnu",
+            monthsCovered: ((ap as any).payment_months as string[]) || [],
+            amount: ap.amount,
+          }));
+        })
+        .flat();
+
       await generateOwnerMonthlyReport({
         ownerName: owner.name,
         ownerEmail: owner.email,
@@ -200,6 +251,8 @@ const OwnerDetails = () => {
         } : null,
         tenantPayments,
         interventions: monthlyInterventions,
+        cautions,
+        advancePayments,
         commissionPercentage,
         managementTypeName: owner.management_type?.name,
       });

@@ -44,7 +44,7 @@ import { AddPaymentDialog } from "@/components/payment/AddPaymentDialog";
 import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog";
 import { SendReminderDialog } from "@/components/payment/SendReminderDialog";
 import { ReceiptActions } from "@/components/payment/ReceiptActions";
-import { CommissionReportCard } from "@/components/commission/CommissionReportCard";
+import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";

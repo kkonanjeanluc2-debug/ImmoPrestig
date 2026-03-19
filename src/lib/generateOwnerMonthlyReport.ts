@@ -499,9 +499,18 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.setTextColor(...dangerColor);
   doc.text(`- ${formatAmountWithCurrency(commissionAmount)}`, pageWidth - 25, summaryY, { align: "right" });
 
+  // Cautions
+  summaryY += 10;
+  doc.setTextColor(...textColor);
+  doc.setFont("helvetica", "normal");
+  doc.text("Cautions et frais d'agence encaisses", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalCautions), pageWidth - 25, summaryY, { align: "right" });
+
   // Interventions
   summaryY += 10;
   doc.setTextColor(...textColor);
+  doc.setFont("helvetica", "normal");
   doc.text("Couts interventions/reparations", 25, summaryY);
   doc.setTextColor(...dangerColor);
   doc.text(`- ${formatAmountWithCurrency(totalInterventionsCost)}`, pageWidth - 25, summaryY, { align: "right" });

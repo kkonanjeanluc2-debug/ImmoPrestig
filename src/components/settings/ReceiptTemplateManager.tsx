@@ -757,25 +757,34 @@ export function ReceiptTemplateManager() {
                             className="hidden"
                             onChange={async (e) => {
                               const file = e.target.files?.[0];
-                              if (!file) return;
+                              e.currentTarget.value = "";
+                              if (!file || !user?.id) {
+                                if (!user?.id) toast.error("Vous devez être connecté pour importer le cachet");
+                                return;
+                              }
+                              if (!file.type.startsWith("image/")) {
+                                toast.error("Veuillez sélectionner une image valide");
+                                return;
+                              }
                               if (file.size > 2 * 1024 * 1024) {
                                 toast.error("L'image ne doit pas dépasser 2 Mo");
                                 return;
                               }
                               try {
-                                const fileName = `stamps/${Date.now()}_${file.name}`;
+                                const fileExt = file.name.split(".").pop()?.toLowerCase() || "png";
+                                const filePath = `${user.id}/stamps/${Date.now()}_stamp.${fileExt}`;
                                 const { data: uploadData, error: uploadError } = await supabase.storage
                                   .from("agency-logos")
-                                  .upload(fileName, file, { upsert: true });
+                                  .upload(filePath, file, { upsert: true });
                                 if (uploadError) throw uploadError;
                                 const { data: urlData } = supabase.storage
                                   .from("agency-logos")
                                   .getPublicUrl(uploadData.path);
-                                setFormData({ ...formData, stamp_image_url: urlData.publicUrl });
+                                setFormData((prev) => ({ ...prev, stamp_image_url: urlData.publicUrl }));
                                 toast.success("Image importée");
-                              } catch (err) {
+                              } catch (err: any) {
                                 console.error("Upload error:", err);
-                                toast.error("Erreur lors de l'importation");
+                                toast.error(err?.message || "Erreur lors de l'importation du cachet");
                               }
                             }}
                           />

@@ -10,6 +10,8 @@ export interface PaidRentDetail {
   paidDate: string;
   managerName: string;
   paymentMethod: string;
+  ownerName: string;
+  propertyTitle: string;
 }
 
 export interface ManagerRentGroup {
@@ -24,6 +26,7 @@ export interface RevenueDetail {
   amount: number;
   paidDate: string;
   managerName: string;
+  ownerName?: string;
 }
 
 export interface ManagerRevenueGroup {
@@ -172,7 +175,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       // Fetch payments within the period by paid_date OR due_date
       const { data: periodPayments, error } = await supabase
         .from("payments")
-        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to)")
+        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${fromDate},paid_date.lte.${toDate})`
         );
@@ -182,7 +185,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       // but cover months within this period
       const { data: advancePayments, error: advError } = await supabase
         .from("payments")
-        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to)")
+        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .eq("status", "paid")
         .lt("paid_date", fromDate)
         .not("payment_months", "is", null);
@@ -413,7 +416,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("online_rent_payments")
-        .select("id, amount, paid_at, payment_method, status, payment_id, tenant:tenants(name, assigned_to)")
+        .select("id, amount, paid_at, payment_method, status, payment_id, tenant:tenants(name, assigned_to, property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .eq("status", "completed")
         .is("payment_id", null)
         .gte("paid_at", fromDate)
@@ -432,7 +435,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contracts")
-        .select("id, deposit, start_date, created_at, tenant:tenants!contracts_tenant_id_fkey(name, assigned_to, property:properties!tenants_property_id_fkey(title))")
+        .select("id, deposit, start_date, created_at, tenant:tenants!contracts_tenant_id_fkey(name, assigned_to, property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .gt("deposit", 0)
         .is("deleted_at", null);
       if (error) {
@@ -765,6 +768,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const tenantName = p.tenant?.name || "Locataire inconnu";
+          const propertyTitle = p.tenant?.property?.title || "";
+          const ownerName = p.tenant?.property?.owner?.name || "";
           const allMonths = p.payment_months || [];
           const totalAmount = isPaid ? (Number(p.paid_amount) || Number(p.amount)) : Number(p.paid_amount);
           const isMultiMonth = allMonths.length > 1;
@@ -790,6 +795,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
                 paidDate: paidDate || p.due_date,
                 managerName: assignedTo || "__unassigned__",
                 paymentMethod: p.method || "Non spécifié",
+                ownerName,
+                propertyTitle,
               });
             }
           } else if (isPartial) {
@@ -806,6 +813,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
                 paidDate: paidDate || p.due_date,
                 managerName: assignedTo || "__unassigned__",
                 paymentMethod: p.method || "Non spécifié",
+                ownerName,
+                propertyTitle,
               });
             }
           } else if (isPaidInPeriod || (allMonths.length === 1 && paymentMonthsOverlapPeriod(allMonths, fromDate, toDate))) {
@@ -816,6 +825,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
               paidDate: paidDate || p.due_date,
               managerName: assignedTo || "__unassigned__",
               paymentMethod: p.method || "Non spécifié",
+              ownerName,
+              propertyTitle,
             });
           }
         }
@@ -1175,12 +1186,14 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         }
         const tenantName = c.tenant?.name || "Locataire inconnu";
         const propertyName = c.tenant?.property?.title || "";
+        const ownerName = c.tenant?.property?.owner?.name || "";
         cautionDetails.push({
           label: tenantName,
           description: propertyName ? `${propertyName} (Caution)` : "Caution locative",
           amount,
           paidDate: cautionDate,
           managerName: resolveManager(c.tenant?.assigned_to),
+          ownerName,
         });
       });
     }
@@ -1222,6 +1235,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           paidDate: p.paid_at?.split("T")[0] || "",
           managerName: resolveManager(assignedTo),
           paymentMethod: p.payment_method || "en_ligne",
+          ownerName: p.tenant?.property?.owner?.name || "",
+          propertyTitle: p.tenant?.property?.title || "",
         });
       });
     }

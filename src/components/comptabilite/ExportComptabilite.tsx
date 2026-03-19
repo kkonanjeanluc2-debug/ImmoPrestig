@@ -82,7 +82,9 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
           doc.setFontSize(7);
           doc.setFont("helvetica", "bold");
           doc.text("Locataire", 28, y + 5);
-          doc.text("Mois concerné(s)", 90, y + 5);
+          doc.text("Propriétaire", 58, y + 5);
+          doc.text("Bien loué", 88, y + 5);
+          doc.text("Mois concerné(s)", 118, y + 5);
           doc.text("Montant", pageWidth - 30, y + 5, { align: "right" });
           y += 7;
           doc.setFont("helvetica", "normal");
@@ -91,11 +93,15 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
             if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
             doc.setTextColor(...textColor);
-            const name = detail.tenantName.length > 25 ? detail.tenantName.substring(0, 23) + "..." : detail.tenantName;
+            const name = detail.tenantName.length > 18 ? detail.tenantName.substring(0, 16) + "..." : detail.tenantName;
             doc.text(name, 28, y + 5);
+            const owner = (detail.ownerName || "—").length > 18 ? detail.ownerName.substring(0, 16) + "..." : (detail.ownerName || "—");
+            doc.text(owner, 58, y + 5);
+            const prop = (detail.propertyTitle || "—").length > 18 ? detail.propertyTitle.substring(0, 16) + "..." : (detail.propertyTitle || "—");
+            doc.text(prop, 88, y + 5);
             const monthsText = detail.months.length > 0 ? detail.months.join(", ") : new Date(detail.paidDate).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-            const truncMonths = monthsText.length > 35 ? monthsText.substring(0, 33) + "..." : monthsText;
-            doc.text(truncMonths, 90, y + 5);
+            const truncMonths = monthsText.length > 25 ? monthsText.substring(0, 23) + "..." : monthsText;
+            doc.text(truncMonths, 118, y + 5);
             doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 5, { align: "right" });
             y += 7;
           });
@@ -283,7 +289,47 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
           y = renderRevenueManagerGroups(data.lotissementsByManager, "Parcelle", "Acquéreur", doc, y);
           doc.setFontSize(9);
         } else if (row.account === REVENUE_ACCOUNTS.cautions && data.cautionsByManager.length > 0) {
-          y = renderRevenueManagerGroups(data.cautionsByManager, "Locataire", "Bien", doc, y);
+          // Custom 4-column renderer for cautions (Locataire, Propriétaire, Bien, Montant)
+          let cy = y + 2;
+          data.cautionsByManager.forEach((group) => {
+            if (cy + 20 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); cy = 20; }
+            doc.setFillColor(26, 54, 93);
+            doc.rect(25, cy, pageWidth - 50, 8, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(7.5);
+            doc.setFont("helvetica", "bold");
+            doc.text(`Gestionnaire : ${group.managerName}`, 28, cy + 5.5);
+            doc.text(`Total : ${formatAmountWithCurrency(group.total)}`, pageWidth - 30, cy + 5.5, { align: "right" });
+            cy += 8;
+            doc.setFillColor(230, 237, 245);
+            doc.rect(25, cy, pageWidth - 50, 7, "F");
+            doc.setTextColor(...primaryColor);
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "bold");
+            doc.text("Locataire", 28, cy + 5);
+            doc.text("Propriétaire", 68, cy + 5);
+            doc.text("Bien", 108, cy + 5);
+            doc.text("Montant", pageWidth - 30, cy + 5, { align: "right" });
+            cy += 7;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(7);
+            group.details.forEach((detail, j) => {
+              if (cy + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); cy = 20; }
+              if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, cy, pageWidth - 50, 7, "F"); }
+              doc.setTextColor(...textColor);
+              const lbl = detail.label.length > 22 ? detail.label.substring(0, 20) + "..." : detail.label;
+              doc.text(lbl, 28, cy + 5);
+              const ownerText = (detail.ownerName || "—").length > 22 ? (detail.ownerName || "—").substring(0, 20) + "..." : (detail.ownerName || "—");
+              doc.text(ownerText, 68, cy + 5);
+              const desc = detail.description.replace(" (Caution)", "");
+              const descTrunc = desc.length > 22 ? desc.substring(0, 20) + "..." : desc;
+              doc.text(descTrunc, 108, cy + 5);
+              doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, cy + 5, { align: "right" });
+              cy += 7;
+            });
+            cy += 3;
+          });
+          y = cy;
           doc.setFontSize(9);
         }
       });

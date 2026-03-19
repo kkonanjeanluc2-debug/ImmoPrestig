@@ -32,6 +32,7 @@ import { Loader2, Percent, User, CreditCard, FileText } from "lucide-react";
 import { useUpdateOwner, OwnerWithManagementType } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
+import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { toast } from "sonner";
 
 const ownerSchema = z.object({
@@ -42,6 +43,7 @@ const ownerSchema = z.object({
   status: z.enum(["actif", "inactif"]),
   management_type_id: z.string().optional().or(z.literal("")),
   default_contract_template_id: z.string().optional().or(z.literal("")),
+  receipt_template_id: z.string().optional().or(z.literal("")),
   birth_date: z.date().optional(),
   birth_place: z.string().trim().max(100).optional().or(z.literal("")),
   profession: z.string().trim().max(100).optional().or(z.literal("")),
@@ -61,6 +63,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
   const updateOwner = useUpdateOwner();
   const { data: managementTypes = [] } = useManagementTypes();
   const { data: contractTemplates = [] } = useContractTemplates();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
 
   const form = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
@@ -72,6 +75,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
       status: "actif",
       management_type_id: "",
       default_contract_template_id: "",
+      receipt_template_id: "",
       birth_date: undefined,
       birth_place: "",
       profession: "",
@@ -90,6 +94,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         status: owner.status as "actif" | "inactif",
         management_type_id: owner.management_type_id || "",
         default_contract_template_id: (owner as any).default_contract_template_id || "",
+        receipt_template_id: (owner as any).receipt_template_id || "",
         birth_date: (owner as any).birth_date ? new Date((owner as any).birth_date) : undefined,
         birth_place: (owner as any).birth_place || "",
         profession: (owner as any).profession || "",
@@ -111,6 +116,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         status: data.status,
         management_type_id: data.management_type_id || null,
         default_contract_template_id: data.default_contract_template_id || null,
+        receipt_template_id: data.receipt_template_id || null,
         birth_date: data.birth_date ? format(data.birth_date, "yyyy-MM-dd") : null,
         birth_place: data.birth_place || null,
         profession: data.profession || null,
@@ -369,6 +375,44 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
                     </Select>
                     <FormDescription>
                       Ce modèle sera utilisé pour générer les contrats des locataires de ce propriétaire
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {receiptTemplates.length > 0 && (
+              <FormField
+                control={form.control}
+                name="receipt_template_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Modèle de quittance par défaut
+                    </FormLabel>
+                    <Select 
+                      onValueChange={(val) => field.onChange(val === "none" ? "" : val)} 
+                      value={field.value || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un modèle de quittance" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Aucun (utiliser le modèle par défaut)</SelectItem>
+                        {receiptTemplates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                            {template.is_default && " (par défaut)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Ce modèle sera utilisé pour générer les quittances de loyer de ce propriétaire
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

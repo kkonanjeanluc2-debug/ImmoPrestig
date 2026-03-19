@@ -50,7 +50,7 @@ import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
-import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
 const statusConfig = {
   paid: { 
     label: "Payé", 

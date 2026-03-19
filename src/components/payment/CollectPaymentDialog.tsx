@@ -216,6 +216,7 @@ export function CollectPaymentDialog({
           const pdfBase64 = await generateRentReceiptBase64WithTemplate({
             paymentId: realPaymentId,
             receiptNumber,
+            tenantName,
             tenantEmail,
             propertyTitle,
             propertyAddress,

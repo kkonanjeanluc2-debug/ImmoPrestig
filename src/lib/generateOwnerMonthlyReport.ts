@@ -19,6 +19,20 @@ interface InterventionRow {
   status: string;
 }
 
+interface CautionRow {
+  tenantName: string;
+  propertyTitle: string;
+  deposit: number;
+  agencyFees: number;
+}
+
+interface AdvancePaymentRow {
+  tenantName: string;
+  propertyTitle: string;
+  monthsCovered: string[];
+  amount: number;
+}
+
 interface AgencyInfo {
   name: string;
   email?: string;
@@ -39,6 +53,8 @@ interface OwnerMonthlyReportData {
   agency?: AgencyInfo | null;
   tenantPayments: TenantPaymentRow[];
   interventions: InterventionRow[];
+  cautions: CautionRow[];
+  advancePayments: AdvancePaymentRow[];
   commissionPercentage: number;
   managementTypeName?: string;
 }

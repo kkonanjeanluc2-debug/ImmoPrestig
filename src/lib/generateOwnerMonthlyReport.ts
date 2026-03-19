@@ -405,6 +405,80 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   yPos += 10;
 
+  // Late payments section
+  checkPageBreak(30);
+  doc.setTextColor(...primaryColor);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("DETAIL MOIS EN RETARD", 15, yPos);
+  yPos += 8;
+
+  let totalLateCollected = 0;
+
+  if (data.latePayments.length === 0) {
+    doc.setFillColor(...lightGray);
+    doc.rect(15, yPos, pageWidth - 30, 10, "F");
+    doc.setTextColor(...textColor);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Aucun encaissement de mois en retard pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
+    yPos += 10;
+  } else {
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Locataire", 18, yPos + 5.5);
+    doc.text("Bien", 60, yPos + 5.5);
+    doc.text("Mois du", 110, yPos + 5.5);
+    doc.text("Loyer", 140, yPos + 5.5);
+    doc.text("Encaisse", 165, yPos + 5.5);
+    yPos += 8;
+
+    doc.setTextColor(...textColor);
+    doc.setFont("helvetica", "normal");
+
+    data.latePayments.forEach((row, index) => {
+      checkPageBreak(9);
+      if (index % 2 === 0) {
+        doc.setFillColor(...lightGray);
+        doc.rect(15, yPos, pageWidth - 30, 9, "F");
+      }
+
+      doc.setFontSize(8);
+      const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
+      const propertyTitle = row.propertyTitle.length > 25 ? row.propertyTitle.substring(0, 23) + "..." : row.propertyTitle;
+
+      doc.text(tenantName, 18, yPos + 6);
+      doc.text(propertyTitle, 60, yPos + 6);
+      doc.text(row.dueMonth, 110, yPos + 6);
+      doc.text(formatAmountForPDF(row.rentAmount), 140, yPos + 6);
+
+      if (row.status === "partial") {
+        doc.setTextColor(...warningColor);
+      } else {
+        doc.setTextColor(...successColor);
+      }
+      doc.text(formatAmountForPDF(row.paidAmount), 165, yPos + 6);
+      doc.setTextColor(...textColor);
+
+      totalLateCollected += row.paidAmount;
+      yPos += 9;
+    });
+
+    doc.setFillColor(...primaryColor);
+    doc.rect(15, yPos, pageWidth - 30, 9, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL RETARDS ENCAISSES", 18, yPos + 6);
+    doc.text(formatAmountForPDF(totalLateCollected), 165, yPos + 6);
+    yPos += 9;
+  }
+
+  yPos += 10;
+
   // Interventions section
   checkPageBreak(30);
   doc.setTextColor(...primaryColor);

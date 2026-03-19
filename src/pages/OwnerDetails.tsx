@@ -165,19 +165,23 @@ const OwnerDetails = () => {
           .filter(p => p.status === "paid")
           .reduce((sum, p) => sum + p.amount, 0);
 
-        // Check for advance payments (multi-month) created/paid this month
+        // Check for advance payments paid this month but for future months
         const advancePaymentsForTenant = payments.filter(p => {
           if (p.tenant_id !== tenant.id || p.status !== "paid") return false;
-          const pm = (p as any).payment_months as string[] | null;
-          if (!pm || !Array.isArray(pm) || pm.length <= 1) return false;
+          // Must be paid or created this month
           const paidDate = p.paid_date?.substring(0, 10);
           const createdDate = p.created_at?.substring(0, 10);
           const monthStartStr = format(monthStart, "yyyy-MM-dd");
           const monthEndStr = format(monthEnd, "yyyy-MM-dd");
-          return (
-            (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
-            (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr)
-          );
+          const paidThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
+            (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr);
+          if (!paidThisMonth) return false;
+          // Must be for a future period (due_date outside this month) or multi-month
+          const dueDate = p.due_date?.substring(0, 10);
+          const pm = (p as any).payment_months as string[] | null;
+          const isMultiMonth = pm && Array.isArray(pm) && pm.length > 1;
+          const isFutureMonth = dueDate && dueDate > monthEndStr;
+          return isMultiMonth || isFutureMonth;
         });
 
         // Total advance amount paid this month

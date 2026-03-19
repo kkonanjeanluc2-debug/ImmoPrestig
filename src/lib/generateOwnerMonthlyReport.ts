@@ -215,12 +215,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
       doc.setFontSize(8);
       const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
-      const doorSuffixMatch = row.propertyTitle.match(/ - Porte [^-]+$/);
-      const propertyTitle = row.propertyTitle.length > 22
-        ? doorSuffixMatch && doorSuffixMatch[0].length < 19
-          ? `${row.propertyTitle.substring(0, 22 - doorSuffixMatch[0].length - 3).trimEnd()}...${doorSuffixMatch[0]}`
-          : row.propertyTitle.substring(0, 20) + "..."
-        : row.propertyTitle;
+      const propertyTitle = row.propertyTitle.length > 22 ? row.propertyTitle.substring(0, 20) + "..." : row.propertyTitle;
       
       doc.text(tenantName, 18, yPos + 6);
       doc.text(propertyTitle, 60, yPos + 6);
@@ -306,12 +301,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
       doc.setFontSize(8);
       const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
-      const doorSuffixMatch = row.propertyTitle.match(/ - Porte [^-]+$/);
-      const propertyTitle = row.propertyTitle.length > 22
-        ? doorSuffixMatch && doorSuffixMatch[0].length < 19
-          ? `${row.propertyTitle.substring(0, 22 - doorSuffixMatch[0].length - 3).trimEnd()}...${doorSuffixMatch[0]}`
-          : row.propertyTitle.substring(0, 20) + "..."
-        : row.propertyTitle;
+      const propertyTitle = row.propertyTitle.length > 22 ? row.propertyTitle.substring(0, 20) + "..." : row.propertyTitle;
 
       doc.text(tenantName, 18, yPos + 6);
       doc.text(propertyTitle, 70, yPos + 6);
@@ -377,12 +367,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
       doc.setFontSize(8);
       const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
-      const doorSuffixMatch = row.propertyTitle.match(/ - Porte [^-]+$/);
-      const propertyTitle = row.propertyTitle.length > 20
-        ? doorSuffixMatch && doorSuffixMatch[0].length < 17
-          ? `${row.propertyTitle.substring(0, 20 - doorSuffixMatch[0].length - 3).trimEnd()}...${doorSuffixMatch[0]}`
-          : row.propertyTitle.substring(0, 18) + "..."
-        : row.propertyTitle;
+      const propertyTitle = row.propertyTitle.length > 20 ? row.propertyTitle.substring(0, 18) + "..." : row.propertyTitle;
       const monthsLabel = row.monthsCovered.length > 3
         ? `${row.monthsCovered.length} mois`
         : row.monthsCovered.join(", ");
@@ -453,12 +438,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
       doc.setFontSize(8);
       const title = row.title.length > 25 ? row.title.substring(0, 23) + "..." : row.title;
-      const doorSuffixMatch = row.propertyTitle.match(/ - Porte [^-]+$/);
-      const propertyTitle = row.propertyTitle.length > 22
-        ? doorSuffixMatch && doorSuffixMatch[0].length < 19
-          ? `${row.propertyTitle.substring(0, 22 - doorSuffixMatch[0].length - 3).trimEnd()}...${doorSuffixMatch[0]}`
-          : row.propertyTitle.substring(0, 20) + "..."
-        : row.propertyTitle;
+      const propertyTitle = row.propertyTitle.length > 22 ? row.propertyTitle.substring(0, 20) + "..." : row.propertyTitle;
 
       doc.text(title, 18, yPos + 6);
       doc.text(propertyTitle, 75, yPos + 6);

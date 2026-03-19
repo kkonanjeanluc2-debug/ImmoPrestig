@@ -46,7 +46,7 @@ import { InterventionsList } from "@/components/intervention/InterventionsList";
 import { usePermissions } from "@/hooks/usePermissions";
 import { OwnerRequestsList } from "@/components/owner/OwnerRequestsList";
 import { toast } from "sonner";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateOwnerMonthlyReport } from "@/lib/generateOwnerMonthlyReport";
 import { supabase } from "@/integrations/supabase/client";

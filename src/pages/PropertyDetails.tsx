@@ -38,7 +38,7 @@ import { PropertyImageGallery } from "@/components/property/PropertyImageGallery
 import { PropertyUnitsManager } from "@/components/property/PropertyUnitsManager";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generatePropertyMonthlyReport } from "@/lib/generatePropertyMonthlyReport";
 import { MonthlyReportPeriodDialog } from "@/components/owner/MonthlyReportPeriodDialog";

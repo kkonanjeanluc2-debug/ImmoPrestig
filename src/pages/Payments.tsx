@@ -51,7 +51,7 @@ import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
-const statusConfig = {
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
   paid: { 
     label: "Payé", 
     icon: CheckCircle, 

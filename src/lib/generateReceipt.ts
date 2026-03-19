@@ -16,6 +16,7 @@ interface AgencyInfo {
 
 interface ReceiptData {
   paymentId: string;
+  receiptNumber?: string;
   tenantName: string;
   tenantEmail?: string;
   propertyTitle: string;

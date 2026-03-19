@@ -92,6 +92,75 @@ const EXPENSE_COLORS = [
   "#6366f1", "#d946ef", "#0ea5e9", "#22c55e", "#f59e0b", "#64748b",
 ];
 
+// Helper: check if any payment_months overlap with a given period
+function paymentMonthsOverlapPeriod(paymentMonths: string[] | null, fromDate: string, toDate: string): boolean {
+  if (!paymentMonths || !Array.isArray(paymentMonths) || paymentMonths.length === 0) return false;
+  const fromYM = fromDate.substring(0, 7); // "YYYY-MM"
+  const toYM = toDate.substring(0, 7);
+  
+  const FRENCH_MONTH_NAMES = [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+  ];
+  
+  return paymentMonths.some(m => {
+    let ym = m;
+    // Convert French label "Mars 2026" -> "2026-03"
+    if (!/^\d{4}-\d{2}$/.test(m)) {
+      const parts = m.split(" ");
+      if (parts.length === 2) {
+        const monthIdx = FRENCH_MONTH_NAMES.indexOf(parts[0]);
+        if (monthIdx >= 0) {
+          ym = `${parts[1]}-${String(monthIdx + 1).padStart(2, '0')}`;
+        } else return false;
+      } else return false;
+    }
+    return ym >= fromYM && ym <= toYM;
+  });
+}
+
+// Helper: count how many payment_months fall within a period
+function countOverlappingMonths(paymentMonths: string[] | null, fromDate: string, toDate: string): number {
+  if (!paymentMonths || !Array.isArray(paymentMonths) || paymentMonths.length === 0) return 0;
+  const fromYM = fromDate.substring(0, 7);
+  const toYM = toDate.substring(0, 7);
+  
+  const FRENCH_MONTH_NAMES = [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+  ];
+  
+  let count = 0;
+  paymentMonths.forEach(m => {
+    let ym = m;
+    if (!/^\d{4}-\d{2}$/.test(m)) {
+      const parts = m.split(" ");
+      if (parts.length === 2) {
+        const monthIdx = FRENCH_MONTH_NAMES.indexOf(parts[0]);
+        if (monthIdx >= 0) ym = `${parts[1]}-${String(monthIdx + 1).padStart(2, '0')}`;
+        else return;
+      } else return;
+    }
+    if (ym >= fromYM && ym <= toYM) count++;
+  });
+  return count;
+}
+
+// Helper: convert a payment_month string to "YYYY-MM" ISO format
+function toYearMonth(m: string): string | null {
+  if (/^\d{4}-\d{2}$/.test(m)) return m;
+  const FRENCH_MONTH_NAMES = [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+  ];
+  const parts = m.split(" ");
+  if (parts.length === 2) {
+    const monthIdx = FRENCH_MONTH_NAMES.indexOf(parts[0]);
+    if (monthIdx >= 0) return `${parts[1]}-${String(monthIdx + 1).padStart(2, '0')}`;
+  }
+  return null;
+}
+
 export function useComptabilite(periodFrom: Date, periodTo: Date) {
   const { user } = useAuth();
   const fromDate = periodFrom.toISOString().split("T")[0];
@@ -100,14 +169,32 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
   const { data: payments } = useQuery({
     queryKey: ["comptabilite-payments", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch payments within the period by paid_date OR due_date
+      const { data: periodPayments, error } = await supabase
         .from("payments")
-        .select("amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to)")
+        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to)")
         .or(
           `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
       if (error) throw error;
-      return data;
+
+      // Also fetch advance payments (multi-month paid payments) that might have been paid BEFORE this period
+      // but cover months within this period
+      const { data: advancePayments, error: advError } = await supabase
+        .from("payments")
+        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to)")
+        .eq("status", "paid")
+        .lt("paid_date", fromDate)
+        .not("payment_months", "is", null);
+      if (advError) throw advError;
+
+      // Filter advance payments whose payment_months overlap with the period
+      const existingIds = new Set((periodPayments || []).map((p: any) => p.id));
+      const relevantAdvance = (advancePayments || []).filter((p: any) =>
+        !existingIds.has(p.id) && paymentMonthsOverlapPeriod(p.payment_months, fromDate, toDate)
+      );
+
+      return [...(periodPayments || []), ...relevantAdvance];
     },
     enabled: !!user,
   });

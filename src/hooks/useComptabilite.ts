@@ -174,7 +174,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         .from("payments")
         .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to)")
         .or(
-          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
+          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${fromDate},paid_date.lte.${toDate})`
         );
       if (error) throw error;
 
@@ -726,10 +726,12 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             // Count the paid portion as collected revenue
             result.loyersEncaisses += paidPortion;
             
-            // Add to monthly bucket based on due_date
-            const dueDate = p.due_date;
-            if (dueDate && dueDate >= fromDate && dueDate <= toDate) {
-              const date = new Date(dueDate);
+            // Add to monthly bucket based on paid_date first, then due_date
+            const effectiveDate = (p.paid_date && p.paid_date >= fromDate && p.paid_date <= toDate) 
+              ? p.paid_date 
+              : p.due_date;
+            if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
+              const date = new Date(effectiveDate);
               const key = `${date.getFullYear()}-${date.getMonth()}`;
               const monthly = monthlyMap.get(key);
               if (monthly) {
@@ -792,13 +794,16 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             }
           } else if (isPartial) {
             // Partial payment - show the paid portion
-            const dueDate = p.due_date;
-            if (dueDate && dueDate >= fromDate && dueDate <= toDate) {
+            // Use paid_date if in period, otherwise due_date
+            const effectiveDate = (paidDate && paidDate >= fromDate && paidDate <= toDate) 
+              ? paidDate 
+              : p.due_date;
+            if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
               result.paidRentDetails.push({
                 tenantName: tenantName + suffix,
-                months: allMonths.length > 0 ? allMonths : (dueDate ? [dueDate.substring(0, 7)] : []),
+                months: allMonths.length > 0 ? allMonths : (p.due_date ? [p.due_date.substring(0, 7)] : []),
                 amount: totalAmount,
-                paidDate: paidDate || dueDate,
+                paidDate: paidDate || p.due_date,
                 managerName: assignedTo || "__unassigned__",
                 paymentMethod: p.method || "Non spécifié",
               });

@@ -464,11 +464,11 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   // Summary section
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalPaid - commissionAmount - totalInterventionsCost;
+  const netAmount = totalPaid + totalCautions + totalAdvance - commissionAmount - totalInterventionsCost;
 
-  checkPageBreak(75);
+  checkPageBreak(85);
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 75, 3, 3, "F");
+  doc.roundedRect(15, yPos, pageWidth - 30, 85, 3, 3, "F");
 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);
@@ -503,6 +503,14 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.text("Cautions encaissees", 25, summaryY);
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(totalCautions), pageWidth - 25, summaryY, { align: "right" });
+
+  // Advance payments
+  summaryY += 10;
+  doc.setTextColor(...textColor);
+  doc.setFont("helvetica", "normal");
+  doc.text("Mois d'avance encaisses", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalAdvance), pageWidth - 25, summaryY, { align: "right" });
 
   // Interventions
   summaryY += 10;

@@ -26,6 +26,7 @@ export interface RevenueDetail {
   amount: number;
   paidDate: string;
   managerName: string;
+  ownerName?: string;
 }
 
 export interface ManagerRevenueGroup {

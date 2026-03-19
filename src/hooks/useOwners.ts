@@ -19,6 +19,10 @@ export interface OwnerWithManagementType extends Owner {
     id: string;
     name: string;
   } | null;
+  default_receipt_template?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 export const useOwners = () => {

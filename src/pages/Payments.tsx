@@ -625,6 +625,8 @@ export default function Payments() {
                                     gestionnaireName={gestionnaireName || undefined}
                                     ownerName={owners.find(o => o.id === tenant?.property?.owner_id)?.name}
                                     initialTemplate={receiptTemplates.find(t => t.id === owners.find(o => o.id === tenant?.property?.owner_id)?.receipt_template_id) || null}
+                                    totalRentAmount={Number(payment.amount)}
+                                    remainingAmount={Number(payment.amount) - Number((payment as any).paid_amount || payment.amount)}
                                   />
                                 )}
                                 {payment.status !== "paid" && isLocataire && (

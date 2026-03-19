@@ -44,6 +44,8 @@ interface ReceiptActionsProps {
   gestionnaireName?: string;
   ownerName?: string;
   initialTemplate?: ReceiptTemplate | null;
+  totalRentAmount?: number;
+  remainingAmount?: number;
 }
 
 export function ReceiptActions({
@@ -64,6 +66,8 @@ export function ReceiptActions({
   gestionnaireName,
   ownerName,
   initialTemplate,
+  totalRentAmount,
+  remainingAmount,
 }: ReceiptActionsProps) {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -117,6 +121,8 @@ export function ReceiptActions({
     unitNumber,
     gestionnaireName,
     ownerName,
+    totalRentAmount,
+    remainingAmount,
     agency: agency ? {
       name: agency.name,
       email: agency.email,

@@ -28,6 +28,9 @@ export interface Agency {
   longitude: number | null;
   logo_url: string | null;
   siret: string | null;
+  pdf_primary_color: string | null;
+  pdf_secondary_color: string | null;
+  pdf_text_color: string | null;
   primary_color: string | null;
   accent_color: string | null;
   sidebar_color: string | null;

@@ -446,6 +446,9 @@ export type Database = {
           mobile_money_provider: string | null
           name: string
           online_rent_enabled: boolean
+          pdf_primary_color: string | null
+          pdf_secondary_color: string | null
+          pdf_text_color: string | null
           phone: string | null
           primary_color: string | null
           receipt_counter: number
@@ -485,6 +488,9 @@ export type Database = {
           mobile_money_provider?: string | null
           name: string
           online_rent_enabled?: boolean
+          pdf_primary_color?: string | null
+          pdf_secondary_color?: string | null
+          pdf_text_color?: string | null
           phone?: string | null
           primary_color?: string | null
           receipt_counter?: number
@@ -524,6 +530,9 @@ export type Database = {
           mobile_money_provider?: string | null
           name?: string
           online_rent_enabled?: boolean
+          pdf_primary_color?: string | null
+          pdf_secondary_color?: string | null
+          pdf_text_color?: string | null
           phone?: string | null
           primary_color?: string | null
           receipt_counter?: number

@@ -30,6 +30,18 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
 };
 
 /**
+ * Parse a hex color string to RGB tuple.
+ */
+const hexToRgb = (hex: string): [number, number, number] => {
+  const h = hex.replace("#", "");
+  return [
+    parseInt(h.substring(0, 2), 16) || 0,
+    parseInt(h.substring(2, 4), 16) || 0,
+    parseInt(h.substring(4, 6), 16) || 0,
+  ];
+};
+
+/**
  * Adds a professional header with agency logo, info, and document title.
  * Matches the receipt/quittance style: navy band with white text.
  * Returns the Y position after the header.
@@ -41,15 +53,12 @@ export const addPDFHeader = async (
   subtitle?: string
 ): Promise<number> => {
   const pageWidth = doc.internal.pageSize.getWidth();
-  const primaryColor: [number, number, number] = [26, 54, 93];
-
-  // Header background
-  doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 55, "F");
-
-  let headerXOffset = 15;
-
-  if (agency) {
+  const primaryColor: [number, number, number] = agency?.pdf_primary_color
+    ? hexToRgb(agency.pdf_primary_color)
+    : [26, 54, 93];
+  const textColorRgb: [number, number, number] = agency?.pdf_text_color
+    ? hexToRgb(agency.pdf_text_color)
+    : [255, 255, 255];
     // Try to load logo
     if (agency.logo_url) {
       try {

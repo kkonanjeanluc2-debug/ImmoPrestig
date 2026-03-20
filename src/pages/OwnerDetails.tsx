@@ -201,9 +201,15 @@ const OwnerDetails = () => {
           (p.status === "paid" || !!(p.paid_amount && p.paid_amount > 0))
         );
 
+        const propType = (property?.property_type || "").toLowerCase();
+        const isMultiUnit = propType === "maison à porte multiple" || propType === "immeuble";
+        const unitNum = getUnitNumber(tenant);
+
         return {
           tenantName: tenant.name,
           propertyTitle,
+          propertyBaseName: property?.title || "Bien inconnu",
+          unitNumber: isMultiUnit ? unitNum : null,
           rentAmount: totalDue,
           paidAmount: totalPaid,
           status,
@@ -246,9 +252,14 @@ const OwnerDetails = () => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const deposit = tenant.contracts?.find(c => c.status === "active")?.deposit || 0;
           const propertyTitle = buildPropertyTitle(property, tenant);
+          const propType = (property?.property_type || "").toLowerCase();
+          const isMultiUnit = propType === "maison à porte multiple" || propType === "immeuble";
+          const unitNum = getUnitNumber(tenant);
           return {
             tenantName: tenant.name,
             propertyTitle,
+            propertyBaseName: property?.title || "Bien inconnu",
+            unitNumber: isMultiUnit ? unitNum : null,
             deposit: Number(deposit),
           };
         });

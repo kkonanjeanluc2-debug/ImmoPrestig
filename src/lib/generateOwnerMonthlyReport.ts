@@ -5,6 +5,8 @@ import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
 interface TenantPaymentRow {
   tenantName: string;
   propertyTitle: string;
+  propertyBaseName?: string;
+  unitNumber?: string | null;
   rentAmount: number;
   paidAmount: number;
   status: "paid" | "pending" | "late";
@@ -23,6 +25,8 @@ interface InterventionRow {
 interface CautionRow {
   tenantName: string;
   propertyTitle: string;
+  propertyBaseName?: string;
+  unitNumber?: string | null;
   deposit: number;
 }
 
@@ -108,6 +112,16 @@ const groupByProperty = <T extends { propertyTitle: string }>(items: T[]): Map<s
   const map = new Map<string, T[]>();
   for (const item of items) {
     const key = item.propertyTitle;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(item);
+  }
+  return map;
+};
+
+const groupByBaseName = <T extends { propertyBaseName?: string; propertyTitle: string }>(items: T[]): Map<string, T[]> => {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const key = item.propertyBaseName || item.propertyTitle;
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(item);
   }
@@ -221,10 +235,10 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.text("Aucun paiement enregistre pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
     yPos += 10;
   } else {
-    const groupedPayments = groupByProperty(data.tenantPayments);
+    const groupedPayments = groupByBaseName(data.tenantPayments);
     let rowIndex = 0;
 
-    groupedPayments.forEach((rows, propTitle) => {
+    groupedPayments.forEach((rows, propBaseName) => {
       checkPageBreak(20);
       // Property sub-header
       doc.setFillColor(220, 230, 241);
@@ -232,7 +246,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setTextColor(...primaryColor);
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      const displayPropTitle = propTitle.length > 50 ? propTitle.substring(0, 48) + "..." : propTitle;
+      const displayPropTitle = propBaseName.length > 50 ? propBaseName.substring(0, 48) + "..." : propBaseName;
       doc.text(displayPropTitle, 18, yPos + 5.5);
       yPos += 8;
 
@@ -251,6 +265,9 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setTextColor(...textColor);
       doc.setFont("helvetica", "normal");
 
+      let propRentSubtotal = 0;
+      let propPaidSubtotal = 0;
+
       rows.forEach((row) => {
         checkPageBreak(9);
         if (rowIndex % 2 === 0) {
@@ -258,8 +275,14 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
           doc.rect(15, yPos, pageWidth - 30, 9, "F");
         }
         doc.setFontSize(8);
-        const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
-        doc.text(tenantName, 18, yPos + 6);
+        // Show tenant name with unit number for multi-unit properties
+        let tenantLabel = row.tenantName;
+        if (row.unitNumber) {
+          const porteSuffix = row.unitNumber.toLowerCase().startsWith("porte") ? row.unitNumber : `Porte ${row.unitNumber}`;
+          tenantLabel = `${row.tenantName} (${porteSuffix})`;
+        }
+        tenantLabel = tenantLabel.length > 28 ? tenantLabel.substring(0, 26) + "..." : tenantLabel;
+        doc.text(tenantLabel, 18, yPos + 6);
         doc.text(formatAmountForPDF(row.rentAmount), 115, yPos + 6);
         doc.text(formatAmountForPDF(row.paidAmount), 140, yPos + 6);
 
@@ -276,11 +299,26 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
         doc.text(statusLabel, 170, yPos + 6);
         doc.setTextColor(...textColor);
 
+        propRentSubtotal += row.rentAmount;
+        propPaidSubtotal += row.paidAmount;
         totalRent += row.rentAmount;
         totalPaid += row.paidAmount;
         yPos += 9;
         rowIndex++;
       });
+
+      // Property subtotal
+      if (groupedPayments.size > 1) {
+        doc.setFillColor(230, 230, 230);
+        doc.rect(15, yPos, pageWidth - 30, 8, "F");
+        doc.setTextColor(...textColor);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Sous-total ${displayPropTitle}`, 18, yPos + 5.5);
+        doc.text(formatAmountForPDF(propRentSubtotal), 115, yPos + 5.5);
+        doc.text(formatAmountForPDF(propPaidSubtotal), 140, yPos + 5.5);
+        yPos += 8;
+      }
     });
   }
 
@@ -316,10 +354,10 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.text("Aucune caution pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
     yPos += 10;
   } else {
-    const groupedCautions = groupByProperty(data.cautions);
+    const groupedCautions = groupByBaseName(data.cautions);
     let cautionRowIndex = 0;
 
-    groupedCautions.forEach((rows, propTitle) => {
+    groupedCautions.forEach((rows, propBaseName) => {
       checkPageBreak(20);
       // Property sub-header
       doc.setFillColor(220, 230, 241);
@@ -327,7 +365,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setTextColor(...primaryColor);
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      const displayPropTitle = propTitle.length > 50 ? propTitle.substring(0, 48) + "..." : propTitle;
+      const displayPropTitle = propBaseName.length > 50 ? propBaseName.substring(0, 48) + "..." : propBaseName;
       doc.text(displayPropTitle, 18, yPos + 5.5);
       yPos += 8;
 
@@ -344,6 +382,8 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setTextColor(...textColor);
       doc.setFont("helvetica", "normal");
 
+      let propCautionSubtotal = 0;
+
       rows.forEach((row) => {
         checkPageBreak(9);
         if (cautionRowIndex % 2 === 0) {
@@ -351,14 +391,33 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
           doc.rect(15, yPos, pageWidth - 30, 9, "F");
         }
         doc.setFontSize(8);
-        const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
-        doc.text(tenantName, 18, yPos + 6);
+        // Show tenant name with unit number for multi-unit properties
+        let tenantLabel = row.tenantName;
+        if (row.unitNumber) {
+          const porteSuffix = row.unitNumber.toLowerCase().startsWith("porte") ? row.unitNumber : `Porte ${row.unitNumber}`;
+          tenantLabel = `${row.tenantName} (${porteSuffix})`;
+        }
+        tenantLabel = tenantLabel.length > 28 ? tenantLabel.substring(0, 26) + "..." : tenantLabel;
+        doc.text(tenantLabel, 18, yPos + 6);
         doc.text(formatAmountForPDF(row.deposit), 155, yPos + 6);
 
+        propCautionSubtotal += row.deposit;
         totalCautions += row.deposit;
         yPos += 9;
         cautionRowIndex++;
       });
+
+      // Property subtotal
+      if (groupedCautions.size > 1) {
+        doc.setFillColor(230, 230, 230);
+        doc.rect(15, yPos, pageWidth - 30, 8, "F");
+        doc.setTextColor(...textColor);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Sous-total ${displayPropTitle}`, 18, yPos + 5.5);
+        doc.text(formatAmountForPDF(propCautionSubtotal), 155, yPos + 5.5);
+        yPos += 8;
+      }
     });
 
     // Cautions subtotal

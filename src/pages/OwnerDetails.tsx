@@ -423,12 +423,28 @@ const OwnerDetails = () => {
           status = "late";
         }
 
+        const allPaymentsUpToMonth = payments.filter(p =>
+          p.tenant_id === tenant.id &&
+          p.due_date <= monthEndStr
+        );
+        const unpaidMonths = allPaymentsUpToMonth.filter(p =>
+          p.status !== "paid" && !(p.paid_amount && p.paid_amount >= p.amount)
+        ).length;
+
+        let displayStatus: string | undefined;
+        if (status === "paid" && unpaidMonths === 0) {
+          displayStatus = "A jour";
+        } else if (unpaidMonths > 0 && status !== "pending") {
+          displayStatus = `${unpaidMonths} mois de retard`;
+        }
+
         return {
           tenantName: tenant.name,
           propertyTitle: property?.title || "Bien inconnu",
           rentAmount: totalDue,
           paidAmount: totalPaid,
           status,
+          displayStatus,
         };
       }).filter(t => t.rentAmount > 0);
 

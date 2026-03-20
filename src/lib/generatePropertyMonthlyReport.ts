@@ -7,6 +7,7 @@ interface TenantPaymentRow {
   rentAmount: number;
   paidAmount: number;
   status: "paid" | "pending" | "late";
+  displayStatus?: string;
   paidDate: string | null;
 }
 

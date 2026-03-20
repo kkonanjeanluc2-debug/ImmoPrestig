@@ -194,6 +194,14 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   yPos += 32;
 
+  // Check page break helper
+  const checkPageBreak = (needed: number) => {
+    if (yPos + needed > pageHeight - 30) {
+      doc.addPage();
+      yPos = 20;
+    }
+  };
+
   // Tenant payments table
   doc.setTextColor(...primaryColor);
   doc.setFontSize(11);

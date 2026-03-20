@@ -76,30 +76,48 @@ export const addPDFHeader = async (
       } catch {}
     }
 
-    // Agency name
+    // Agency header text
     doc.setTextColor(...textColorRgb);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text(agency.name, headerXOffset, 15);
 
-    // Contact info
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    let contactY = 22;
-    if (agency.phone) {
-      doc.text(`Tél: ${agency.phone}`, headerXOffset, contactY);
-      contactY += 5;
-    }
-    if (agency.email) {
-      doc.text(agency.email, headerXOffset, contactY);
-      contactY += 5;
-    }
-    const addressParts = [agency.address, agency.city, agency.country].filter(Boolean);
-    if (addressParts.length) {
-      const addressText = addressParts.join(", ");
-      const maxAddrWidth = pageWidth / 2 - headerXOffset;
-      const addrLines = doc.splitTextToSize(addressText, maxAddrWidth);
-      doc.text(addrLines[0], headerXOffset, contactY);
+    if (agency.pdf_header_text) {
+      // Use custom header text
+      const lines = agency.pdf_header_text.split("\n");
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(lines[0] || "", headerXOffset, 15);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      let contactY = 22;
+      for (let i = 1; i < lines.length; i++) {
+        const maxWidth = pageWidth / 2 - headerXOffset;
+        const splitLines = doc.splitTextToSize(lines[i], maxWidth);
+        doc.text(splitLines[0], headerXOffset, contactY);
+        contactY += 5;
+      }
+    } else {
+      // Default: agency name + contact info
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(agency.name, headerXOffset, 15);
+
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      let contactY = 22;
+      if (agency.phone) {
+        doc.text(`Tél: ${agency.phone}`, headerXOffset, contactY);
+        contactY += 5;
+      }
+      if (agency.email) {
+        doc.text(agency.email, headerXOffset, contactY);
+        contactY += 5;
+      }
+      const addressParts = [agency.address, agency.city, agency.country].filter(Boolean);
+      if (addressParts.length) {
+        const addressText = addressParts.join(", ");
+        const maxAddrWidth = pageWidth / 2 - headerXOffset;
+        const addrLines = doc.splitTextToSize(addressText, maxAddrWidth);
+        doc.text(addrLines[0], headerXOffset, contactY);
+      }
     }
   }
 

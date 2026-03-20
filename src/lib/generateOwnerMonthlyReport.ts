@@ -555,9 +555,9 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   const commissionAmount = Math.round((totalEncaissements * data.commissionPercentage) / 100);
   const netAmount = totalEncaissements - commissionAmount - totalInterventionsCost;
 
-  checkPageBreak(65);
+  checkPageBreak(90);
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 65, 3, 3, "F");
+  doc.roundedRect(15, yPos, pageWidth - 30, 90, 3, 3, "F");
 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);

@@ -31,6 +31,7 @@ export function PDFDocumentSettings() {
       setPrimaryColor((agency as any).pdf_primary_color || DEFAULT_PRIMARY);
       setSecondaryColor((agency as any).pdf_secondary_color || DEFAULT_SECONDARY);
       setTextColor((agency as any).pdf_text_color || DEFAULT_TEXT);
+      setHeaderText((agency as any).pdf_header_text || "");
     }
   }, [agency]);
 

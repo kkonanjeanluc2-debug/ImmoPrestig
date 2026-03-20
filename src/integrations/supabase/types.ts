@@ -446,6 +446,7 @@ export type Database = {
           mobile_money_provider: string | null
           name: string
           online_rent_enabled: boolean
+          pdf_header_text: string | null
           pdf_primary_color: string | null
           pdf_secondary_color: string | null
           pdf_text_color: string | null
@@ -488,6 +489,7 @@ export type Database = {
           mobile_money_provider?: string | null
           name: string
           online_rent_enabled?: boolean
+          pdf_header_text?: string | null
           pdf_primary_color?: string | null
           pdf_secondary_color?: string | null
           pdf_text_color?: string | null
@@ -530,6 +532,7 @@ export type Database = {
           mobile_money_provider?: string | null
           name?: string
           online_rent_enabled?: boolean
+          pdf_header_text?: string | null
           pdf_primary_color?: string | null
           pdf_secondary_color?: string | null
           pdf_text_color?: string | null

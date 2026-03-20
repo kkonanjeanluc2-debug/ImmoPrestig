@@ -22,6 +22,7 @@ export function PDFDocumentSettings() {
   const [primaryColor, setPrimaryColor] = useState(DEFAULT_PRIMARY);
   const [secondaryColor, setSecondaryColor] = useState(DEFAULT_SECONDARY);
   const [textColor, setTextColor] = useState(DEFAULT_TEXT);
+  const [headerText, setHeaderText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -30,6 +31,7 @@ export function PDFDocumentSettings() {
       setPrimaryColor((agency as any).pdf_primary_color || DEFAULT_PRIMARY);
       setSecondaryColor((agency as any).pdf_secondary_color || DEFAULT_SECONDARY);
       setTextColor((agency as any).pdf_text_color || DEFAULT_TEXT);
+      setHeaderText((agency as any).pdf_header_text || "");
     }
   }, [agency]);
 
@@ -43,6 +45,7 @@ export function PDFDocumentSettings() {
           pdf_primary_color: primaryColor,
           pdf_secondary_color: secondaryColor,
           pdf_text_color: textColor,
+          pdf_header_text: headerText || null,
         } as any)
         .eq("id", agency.id);
       if (error) throw error;
@@ -60,6 +63,7 @@ export function PDFDocumentSettings() {
     setPrimaryColor(DEFAULT_PRIMARY);
     setSecondaryColor(DEFAULT_SECONDARY);
     setTextColor(DEFAULT_TEXT);
+    setHeaderText("");
     setHasChanges(true);
   };
 
@@ -102,9 +106,19 @@ export function PDFDocumentSettings() {
                   />
                 )}
                 <div style={{ color: textColor }}>
-                  <p className="font-bold text-sm">{agency?.name || "Nom de l'agence"}</p>
-                  <p className="text-xs opacity-80">{agency?.phone ? `Tél: ${agency.phone}` : ""}</p>
-                  <p className="text-xs opacity-80">{agency?.email || ""}</p>
+                    {headerText ? (
+                      headerText.split("\n").map((line, i) => (
+                        <p key={i} className={i === 0 ? "font-bold text-sm" : "text-xs opacity-80"}>
+                          {line}
+                        </p>
+                      ))
+                    ) : (
+                      <>
+                        <p className="font-bold text-sm">{agency?.name || "Nom de l'agence"}</p>
+                        <p className="text-xs opacity-80">{agency?.phone ? `Tél: ${agency.phone}` : ""}</p>
+                        <p className="text-xs opacity-80">{agency?.email || ""}</p>
+                      </>
+                    )}
                 </div>
               </div>
               <div style={{ color: textColor }} className="text-right">
@@ -120,6 +134,22 @@ export function PDFDocumentSettings() {
           >
             {agency?.name || "Agence"} - Document généré le {new Date().toLocaleDateString("fr-FR")}
           </div>
+        </div>
+
+        {/* Header text config */}
+        <div className="space-y-2">
+          <Label htmlFor="pdf-header-text">Texte personnalisé de l'en-tête</Label>
+          <textarea
+            id="pdf-header-text"
+            value={headerText}
+            onChange={(e) => { setHeaderText(e.target.value); setHasChanges(true); }}
+            placeholder={`${agency?.name || "Nom de l'agence"}\nTél: ${agency?.phone || "+xxx"}\n${agency?.email || "email@exemple.com"}\n${agency?.address || "Adresse"}`}
+            rows={4}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <p className="text-xs text-muted-foreground">
+            Saisissez le texte qui apparaîtra dans l'en-tête de vos documents PDF. Chaque ligne sera affichée séparément. Laissez vide pour utiliser les informations par défaut de l'agence (nom, téléphone, email, adresse).
+          </p>
         </div>
 
         {/* Color pickers */}

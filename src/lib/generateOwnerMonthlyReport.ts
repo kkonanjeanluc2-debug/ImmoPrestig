@@ -552,7 +552,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   // Summary section
   // Commission is calculated only on rent payments (totalPaid), not on advances/late separately
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalPaid + totalAdvance + totalLateCollected - commissionAmount - totalInterventionsCost;
+  const netAmount = totalPaid - commissionAmount - totalInterventionsCost;
 
   checkPageBreak(85);
   doc.setFillColor(...lightGray);

@@ -234,8 +234,8 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.text(formatAmountForPDF(row.paidAmount), 140, yPos + 6);
 
       // Status with color
-      const statusLabel = getStatusLabel(row.status);
-      if (row.status === "paid") {
+      const statusLabel = row.displayStatus || getStatusLabel(row.status);
+      if (row.displayStatus === "A jour" || row.status === "paid") {
         doc.setTextColor(...successColor);
       } else if (row.status === "pending") {
         doc.setTextColor(...warningColor);

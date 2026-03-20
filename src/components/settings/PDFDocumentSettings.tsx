@@ -136,6 +136,22 @@ export function PDFDocumentSettings() {
           </div>
         </div>
 
+        {/* Header text config */}
+        <div className="space-y-2">
+          <Label htmlFor="pdf-header-text">Texte personnalisé de l'en-tête</Label>
+          <textarea
+            id="pdf-header-text"
+            value={headerText}
+            onChange={(e) => { setHeaderText(e.target.value); setHasChanges(true); }}
+            placeholder={`${agency?.name || "Nom de l'agence"}\nTél: ${agency?.phone || "+xxx"}\n${agency?.email || "email@exemple.com"}\n${agency?.address || "Adresse"}`}
+            rows={4}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <p className="text-xs text-muted-foreground">
+            Saisissez le texte qui apparaîtra dans l'en-tête de vos documents PDF. Chaque ligne sera affichée séparément. Laissez vide pour utiliser les informations par défaut de l'agence (nom, téléphone, email, adresse).
+          </p>
+        </div>
+
         {/* Color pickers */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">

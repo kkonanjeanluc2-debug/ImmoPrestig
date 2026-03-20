@@ -29,9 +29,6 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
   }
 };
 
-/**
- * Parse a hex color string to RGB tuple.
- */
 const hexToRgb = (hex: string): [number, number, number] => {
   const h = hex.replace("#", "");
   return [
@@ -43,7 +40,7 @@ const hexToRgb = (hex: string): [number, number, number] => {
 
 /**
  * Adds a professional header with agency logo, info, and document title.
- * Matches the receipt/quittance style: navy band with white text.
+ * Uses agency custom colors if configured, otherwise defaults to navy.
  * Returns the Y position after the header.
  */
 export const addPDFHeader = async (
@@ -59,6 +56,14 @@ export const addPDFHeader = async (
   const textColorRgb: [number, number, number] = agency?.pdf_text_color
     ? hexToRgb(agency.pdf_text_color)
     : [255, 255, 255];
+
+  // Header background
+  doc.setFillColor(...primaryColor);
+  doc.rect(0, 0, pageWidth, 55, "F");
+
+  let headerXOffset = 15;
+
+  if (agency) {
     // Try to load logo
     if (agency.logo_url) {
       try {
@@ -71,7 +76,7 @@ export const addPDFHeader = async (
     }
 
     // Agency name
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(...textColorRgb);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text(agency.name, headerXOffset, 15);
@@ -98,7 +103,7 @@ export const addPDFHeader = async (
   }
 
   // Title on right (or centered if no agency)
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(...textColorRgb);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.text(title, agency ? pageWidth - 15 : pageWidth / 2, 18, {
@@ -121,6 +126,7 @@ export const addPDFHeader = async (
 
 /**
  * Adds a professional footer with agency name and generation date.
+ * Uses agency custom secondary color if configured.
  */
 export const addPDFFooter = (
   doc: jsPDF,
@@ -129,12 +135,14 @@ export const addPDFFooter = (
 ) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const lightGray: [number, number, number] = [245, 245, 245];
+  const footerBg: [number, number, number] = agency?.pdf_secondary_color
+    ? hexToRgb(agency.pdf_secondary_color)
+    : [245, 245, 245];
 
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFillColor(...lightGray);
+    doc.setFillColor(...footerBg);
     doc.rect(0, pageHeight - 20, pageWidth, 20, "F");
 
     doc.setFontSize(8);

@@ -120,6 +120,22 @@ const PropertyDetails = () => {
         if (totalPaid >= totalDue && totalDue > 0) status = "paid";
         else if (hasLate) status = "late";
 
+        // Calculate displayStatus: count unpaid months up to selected month
+        const allPaymentsUpToMonth = payments.filter(p =>
+          p.tenant_id === tenant.id &&
+          p.due_date <= monthEndStr
+        );
+        const unpaidMonths = allPaymentsUpToMonth.filter(p =>
+          p.status !== "paid" && !(p.paid_amount && p.paid_amount >= p.amount)
+        ).length;
+
+        let displayStatus: string | undefined;
+        if (status === "paid" && unpaidMonths === 0) {
+          displayStatus = "A jour";
+        } else if (unpaidMonths > 0 && status !== "pending") {
+          displayStatus = `${unpaidMonths} mois de retard`;
+        }
+
         const paidPayment = tenantPaymentsThisMonth.find(p => p.status === "paid");
 
         return {
@@ -128,6 +144,7 @@ const PropertyDetails = () => {
           rentAmount: totalDue,
           paidAmount: totalPaid,
           status,
+          displayStatus,
           paidDate: paidPayment?.paid_date || null,
         };
       }).filter(t => t.rentAmount > 0);

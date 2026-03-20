@@ -7,6 +7,7 @@ interface TenantPaymentRow {
   rentAmount: number;
   paidAmount: number;
   status: "paid" | "pending" | "late";
+  displayStatus?: string;
   paidDate: string | null;
 }
 
@@ -218,8 +219,8 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
       doc.text(formatAmountForPDF(row.rentAmount), 115, yPos + 6);
       doc.text(formatAmountForPDF(row.paidAmount), 140, yPos + 6);
 
-      const statusLabel = getStatusLabel(row.status);
-      if (row.status === "paid") doc.setTextColor(...successColor);
+      const statusLabel = row.displayStatus || getStatusLabel(row.status);
+      if (row.displayStatus === "A jour" || row.status === "paid") doc.setTextColor(...successColor);
       else if (row.status === "pending") doc.setTextColor(...warningColor);
       else doc.setTextColor(...dangerColor);
       doc.text(statusLabel, 170, yPos + 6);

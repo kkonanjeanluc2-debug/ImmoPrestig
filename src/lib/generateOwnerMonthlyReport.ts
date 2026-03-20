@@ -551,8 +551,9 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   // Summary section
   const totalEncaisse = totalPaid + totalCautions;
-  const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalEncaisse - commissionAmount - totalInterventionsCost;
+  const totalEncaissements = totalEncaisse + totalAdvance + totalLateCollected;
+  const commissionAmount = Math.round((totalEncaissements * data.commissionPercentage) / 100);
+  const netAmount = totalEncaissements - commissionAmount - totalInterventionsCost;
 
   checkPageBreak(65);
   doc.setFillColor(...lightGray);

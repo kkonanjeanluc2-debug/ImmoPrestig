@@ -63,6 +63,7 @@ export function PDFDocumentSettings() {
     setPrimaryColor(DEFAULT_PRIMARY);
     setSecondaryColor(DEFAULT_SECONDARY);
     setTextColor(DEFAULT_TEXT);
+    setHeaderText("");
     setHasChanges(true);
   };
 

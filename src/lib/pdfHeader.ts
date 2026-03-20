@@ -12,6 +12,7 @@ export interface PDFAgencyInfo {
   pdf_primary_color?: string | null;
   pdf_secondary_color?: string | null;
   pdf_text_color?: string | null;
+  pdf_header_text?: string | null;
 }
 
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {

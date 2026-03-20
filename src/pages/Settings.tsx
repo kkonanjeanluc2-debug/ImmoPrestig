@@ -325,8 +325,9 @@ const Settings = () => {
           </TabsList>
 
           {canAccessAgencyTab && (
-            <TabsContent value="agency">
+            <TabsContent value="agency" className="space-y-6">
               <AgencySettings />
+              <PDFDocumentSettings />
             </TabsContent>
           )}
 

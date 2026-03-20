@@ -295,13 +295,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.text(formatAmountForPDF(totalPaid), 140, yPos + 6);
   yPos += 18;
 
-  // Check page break helper
-  const checkPageBreak = (needed: number) => {
-    if (yPos + needed > pageHeight - 30) {
-      doc.addPage();
-      yPos = 20;
-    }
-  };
+  // checkPageBreak already defined above
 
   // Cautions section
   checkPageBreak(30);

@@ -106,9 +106,19 @@ export function PDFDocumentSettings() {
                   />
                 )}
                 <div style={{ color: textColor }}>
-                  <p className="font-bold text-sm">{agency?.name || "Nom de l'agence"}</p>
-                  <p className="text-xs opacity-80">{agency?.phone ? `Tél: ${agency.phone}` : ""}</p>
-                  <p className="text-xs opacity-80">{agency?.email || ""}</p>
+                    {headerText ? (
+                      headerText.split("\n").map((line, i) => (
+                        <p key={i} className={i === 0 ? "font-bold text-sm" : "text-xs opacity-80"}>
+                          {line}
+                        </p>
+                      ))
+                    ) : (
+                      <>
+                        <p className="font-bold text-sm">{agency?.name || "Nom de l'agence"}</p>
+                        <p className="text-xs opacity-80">{agency?.phone ? `Tél: ${agency.phone}` : ""}</p>
+                        <p className="text-xs opacity-80">{agency?.email || ""}</p>
+                      </>
+                    )}
                 </div>
               </div>
               <div style={{ color: textColor }} className="text-right">

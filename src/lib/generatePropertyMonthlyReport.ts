@@ -448,7 +448,7 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   checkPageBreak(75);
   // Commission calculated on rent payments only (totalPaid)
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalPaid + totalAdvance + totalLateCollected - commissionAmount - totalInterventionsCost;
+  const netAmount = totalPaid - commissionAmount - totalInterventionsCost;
 
   doc.setFillColor(...lightGray);
   doc.roundedRect(15, yPos, pageWidth - 30, 75, 3, 3, "F");

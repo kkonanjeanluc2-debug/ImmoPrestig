@@ -555,9 +555,9 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   const commissionAmount = Math.round((totalEncaissements * data.commissionPercentage) / 100);
   const netAmount = totalEncaissements - commissionAmount - totalInterventionsCost;
 
-  checkPageBreak(65);
+  checkPageBreak(90);
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 65, 3, 3, "F");
+  doc.roundedRect(15, yPos, pageWidth - 30, 90, 3, 3, "F");
 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);
@@ -574,6 +574,25 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.text("Total loyers encaisses", 25, summaryY);
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(totalEncaisse), pageWidth - 25, summaryY, { align: "right" });
+
+  summaryY += 8;
+  doc.setFont("helvetica", "normal");
+  doc.text("Total avances", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalAdvance), pageWidth - 25, summaryY, { align: "right" });
+
+  summaryY += 8;
+  doc.setFont("helvetica", "normal");
+  doc.text("Total retards encaisses", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalLateCollected), pageWidth - 25, summaryY, { align: "right" });
+
+  summaryY += 8;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("Totaux", 25, summaryY);
+  doc.text(formatAmountWithCurrency(totalEncaissements), pageWidth - 25, summaryY, { align: "right" });
+  doc.setTextColor(...textColor);
 
   // Commission
   summaryY += 10;

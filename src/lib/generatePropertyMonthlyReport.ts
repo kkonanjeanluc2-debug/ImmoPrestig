@@ -479,6 +479,13 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(totalLateCollected), pageWidth - 25, summaryY, { align: "right" });
 
+  summaryY += 8;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("Totaux", 25, summaryY);
+  doc.text(formatAmountWithCurrency(totalEncaissements), pageWidth - 25, summaryY, { align: "right" });
+  doc.setTextColor(...textColor);
+
   summaryY += 10;
   doc.setFont("helvetica", "normal");
   const commissionLabel = data.managementTypeName

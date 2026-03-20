@@ -575,6 +575,25 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(totalEncaisse), pageWidth - 25, summaryY, { align: "right" });
 
+  summaryY += 8;
+  doc.setFont("helvetica", "normal");
+  doc.text("Total avances", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalAdvance), pageWidth - 25, summaryY, { align: "right" });
+
+  summaryY += 8;
+  doc.setFont("helvetica", "normal");
+  doc.text("Total retards encaisses", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalLateCollected), pageWidth - 25, summaryY, { align: "right" });
+
+  summaryY += 8;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("Totaux", 25, summaryY);
+  doc.text(formatAmountWithCurrency(totalEncaissements), pageWidth - 25, summaryY, { align: "right" });
+  doc.setTextColor(...textColor);
+
   // Commission
   summaryY += 10;
   doc.setFont("helvetica", "normal");

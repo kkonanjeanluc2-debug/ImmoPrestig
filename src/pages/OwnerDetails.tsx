@@ -207,7 +207,7 @@ const OwnerDetails = () => {
           tenantName: tenant.name,
           propertyTitle,
           propertyBaseName: property?.title || "Bien inconnu",
-          unitNumber: isMultiUnit ? unitNum : null,
+          unitNumber: unitNum || null,
           rentAmount: totalDue,
           paidAmount: totalPaid,
           status,

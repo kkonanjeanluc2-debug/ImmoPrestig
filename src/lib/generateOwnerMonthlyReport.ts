@@ -581,7 +581,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setFontSize(8);
       doc.setFont("helvetica", "bold");
       doc.text("Locataire", 18, yPos + 5.5);
-      doc.text("Mois du", 85, yPos + 5.5);
+      doc.text("Mois", 85, yPos + 5.5);
       doc.text("Loyer", 135, yPos + 5.5);
       doc.text("Encaisse", 165, yPos + 5.5);
       yPos += 8;

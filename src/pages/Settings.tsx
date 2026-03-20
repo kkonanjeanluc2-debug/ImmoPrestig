@@ -13,6 +13,7 @@ import { RolesSettings } from "@/components/settings/RolesSettings";
 import { TeamSettings } from "@/components/settings/TeamSettings";
 import { WhatsAppSettings } from "@/components/settings/WhatsAppSettings";
 import { AgencySettings } from "@/components/settings/AgencySettings";
+import { PDFDocumentSettings } from "@/components/settings/PDFDocumentSettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
 import { ContractTemplateManager } from "@/components/settings/ContractTemplateManager";

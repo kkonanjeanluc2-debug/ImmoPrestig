@@ -9,6 +9,9 @@ export interface PDFAgencyInfo {
   country?: string;
   logo_url?: string | null;
   siret?: string | null;
+  pdf_primary_color?: string | null;
+  pdf_secondary_color?: string | null;
+  pdf_text_color?: string | null;
 }
 
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {

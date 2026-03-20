@@ -354,10 +354,10 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.text("Aucune caution pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
     yPos += 10;
   } else {
-    const groupedCautions = groupByProperty(data.cautions);
+    const groupedCautions = groupByBaseName(data.cautions);
     let cautionRowIndex = 0;
 
-    groupedCautions.forEach((rows, propTitle) => {
+    groupedCautions.forEach((rows, propBaseName) => {
       checkPageBreak(20);
       // Property sub-header
       doc.setFillColor(220, 230, 241);
@@ -365,7 +365,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setTextColor(...primaryColor);
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      const displayPropTitle = propTitle.length > 50 ? propTitle.substring(0, 48) + "..." : propTitle;
+      const displayPropTitle = propBaseName.length > 50 ? propBaseName.substring(0, 48) + "..." : propBaseName;
       doc.text(displayPropTitle, 18, yPos + 5.5);
       yPos += 8;
 
@@ -382,6 +382,8 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setTextColor(...textColor);
       doc.setFont("helvetica", "normal");
 
+      let propCautionSubtotal = 0;
+
       rows.forEach((row) => {
         checkPageBreak(9);
         if (cautionRowIndex % 2 === 0) {
@@ -389,14 +391,33 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
           doc.rect(15, yPos, pageWidth - 30, 9, "F");
         }
         doc.setFontSize(8);
-        const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
-        doc.text(tenantName, 18, yPos + 6);
+        // Show tenant name with unit number for multi-unit properties
+        let tenantLabel = row.tenantName;
+        if (row.unitNumber) {
+          const porteSuffix = row.unitNumber.toLowerCase().startsWith("porte") ? row.unitNumber : `Porte ${row.unitNumber}`;
+          tenantLabel = `${row.tenantName} (${porteSuffix})`;
+        }
+        tenantLabel = tenantLabel.length > 28 ? tenantLabel.substring(0, 26) + "..." : tenantLabel;
+        doc.text(tenantLabel, 18, yPos + 6);
         doc.text(formatAmountForPDF(row.deposit), 155, yPos + 6);
 
+        propCautionSubtotal += row.deposit;
         totalCautions += row.deposit;
         yPos += 9;
         cautionRowIndex++;
       });
+
+      // Property subtotal
+      if (groupedCautions.size > 1) {
+        doc.setFillColor(230, 230, 230);
+        doc.rect(15, yPos, pageWidth - 30, 8, "F");
+        doc.setTextColor(...textColor);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Sous-total ${displayPropTitle}`, 18, yPos + 5.5);
+        doc.text(formatAmountForPDF(propCautionSubtotal), 155, yPos + 5.5);
+        yPos += 8;
+      }
     });
 
     // Cautions subtotal

@@ -495,49 +495,82 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.text("Aucun encaissement de mois en retard pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
     yPos += 10;
   } else {
-    doc.setFillColor(...primaryColor);
-    doc.rect(15, yPos, pageWidth - 30, 8, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("Locataire", 18, yPos + 5.5);
-    doc.text("Bien", 60, yPos + 5.5);
-    doc.text("Mois du", 110, yPos + 5.5);
-    doc.text("Loyer", 140, yPos + 5.5);
-    doc.text("Encaisse", 165, yPos + 5.5);
-    yPos += 8;
-
-    doc.setTextColor(...textColor);
-    doc.setFont("helvetica", "normal");
-
-    data.latePayments.forEach((row, index) => {
-      checkPageBreak(9);
-      if (index % 2 === 0) {
-        doc.setFillColor(...lightGray);
-        doc.rect(15, yPos, pageWidth - 30, 9, "F");
-      }
-
-      doc.setFontSize(8);
-      const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
-      const propertyTitle = row.propertyTitle.length > 25 ? row.propertyTitle.substring(0, 23) + "..." : row.propertyTitle;
-
-      doc.text(tenantName, 18, yPos + 6);
-      doc.text(propertyTitle, 60, yPos + 6);
-      doc.text(row.dueMonth, 110, yPos + 6);
-      doc.text(formatAmountForPDF(row.rentAmount), 140, yPos + 6);
-
-      if (row.status === "partial") {
-        doc.setTextColor(...warningColor);
-      } else {
-        doc.setTextColor(...successColor);
-      }
-      doc.text(formatAmountForPDF(row.paidAmount), 165, yPos + 6);
-      doc.setTextColor(...textColor);
-
-      totalLateCollected += row.paidAmount;
-      yPos += 9;
+    // Group late payments by property
+    const lateByProperty = new Map<string, typeof data.latePayments>();
+    data.latePayments.forEach(row => {
+      const key = row.propertyTitle || "Autre";
+      if (!lateByProperty.has(key)) lateByProperty.set(key, []);
+      lateByProperty.get(key)!.push(row);
     });
 
+    lateByProperty.forEach((rows, propTitle) => {
+      checkPageBreak(25);
+      // Property sub-header
+      doc.setFillColor(220, 230, 241);
+      doc.rect(15, yPos, pageWidth - 30, 8, "F");
+      doc.setTextColor(...primaryColor);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      const displayPropTitle = propTitle.length > 40 ? propTitle.substring(0, 38) + "..." : propTitle;
+      doc.text(displayPropTitle, 18, yPos + 5.5);
+      yPos += 8;
+
+      // Table header
+      doc.setFillColor(...primaryColor);
+      doc.rect(15, yPos, pageWidth - 30, 8, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text("Locataire", 18, yPos + 5.5);
+      doc.text("Mois du", 85, yPos + 5.5);
+      doc.text("Loyer", 135, yPos + 5.5);
+      doc.text("Encaisse", 165, yPos + 5.5);
+      yPos += 8;
+
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "normal");
+
+      let propSubtotal = 0;
+      rows.forEach((row, index) => {
+        checkPageBreak(9);
+        if (index % 2 === 0) {
+          doc.setFillColor(...lightGray);
+          doc.rect(15, yPos, pageWidth - 30, 9, "F");
+        }
+
+        doc.setFontSize(8);
+        const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
+
+        doc.text(tenantName, 18, yPos + 6);
+        doc.text(row.dueMonth, 85, yPos + 6);
+        doc.text(formatAmountForPDF(row.rentAmount), 135, yPos + 6);
+
+        if (row.status === "partial") {
+          doc.setTextColor(...warningColor);
+        } else {
+          doc.setTextColor(...successColor);
+        }
+        doc.text(formatAmountForPDF(row.paidAmount), 165, yPos + 6);
+        doc.setTextColor(...textColor);
+
+        propSubtotal += row.paidAmount;
+        totalLateCollected += row.paidAmount;
+        yPos += 9;
+      });
+
+      // Property subtotal
+      doc.setFillColor(230, 230, 230);
+      doc.rect(15, yPos, pageWidth - 30, 8, "F");
+      doc.setTextColor(...textColor);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Sous-total ${displayPropTitle}`, 18, yPos + 5.5);
+      doc.text(formatAmountForPDF(propSubtotal), 165, yPos + 5.5);
+      yPos += 8;
+      yPos += 3;
+    });
+
+    // Grand total
     doc.setFillColor(...primaryColor);
     doc.rect(15, yPos, pageWidth - 30, 9, "F");
     doc.setTextColor(255, 255, 255);

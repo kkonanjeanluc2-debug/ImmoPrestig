@@ -5,6 +5,8 @@ import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
 interface TenantPaymentRow {
   tenantName: string;
   propertyTitle: string;
+  propertyBaseName?: string;
+  unitNumber?: string | null;
   rentAmount: number;
   paidAmount: number;
   status: "paid" | "pending" | "late";

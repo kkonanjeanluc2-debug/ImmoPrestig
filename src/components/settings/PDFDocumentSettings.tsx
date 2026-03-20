@@ -22,6 +22,7 @@ export function PDFDocumentSettings() {
   const [primaryColor, setPrimaryColor] = useState(DEFAULT_PRIMARY);
   const [secondaryColor, setSecondaryColor] = useState(DEFAULT_SECONDARY);
   const [textColor, setTextColor] = useState(DEFAULT_TEXT);
+  const [headerText, setHeaderText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 

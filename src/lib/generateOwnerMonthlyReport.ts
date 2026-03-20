@@ -118,6 +118,16 @@ const groupByProperty = <T extends { propertyTitle: string }>(items: T[]): Map<s
   return map;
 };
 
+const groupByBaseName = <T extends { propertyBaseName?: string; propertyTitle: string }>(items: T[]): Map<string, T[]> => {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const key = item.propertyBaseName || item.propertyTitle;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(item);
+  }
+  return map;
+};
+
 export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): Promise<void> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();

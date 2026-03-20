@@ -446,9 +446,9 @@ export const generatePropertyMonthlyReport = async (data: PropertyMonthlyReportD
 
   // Summary
   checkPageBreak(75);
-  const totalEncaissements = totalPaid + totalAdvance + totalLateCollected;
-  const commissionAmount = Math.round((totalEncaissements * data.commissionPercentage) / 100);
-  const netAmount = totalEncaissements - commissionAmount - totalInterventionsCost;
+  // totalPaid already includes advance and late payments from rent details
+  const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
+  const netAmount = totalPaid - commissionAmount - totalInterventionsCost;
 
   doc.setFillColor(...lightGray);
   doc.roundedRect(15, yPos, pageWidth - 30, 75, 3, 3, "F");

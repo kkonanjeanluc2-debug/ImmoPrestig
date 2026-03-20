@@ -549,11 +549,9 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   yPos += 15;
 
-  // Summary section
-  const totalEncaisse = totalPaid + totalCautions;
-  const totalEncaissements = totalEncaisse + totalAdvance + totalLateCollected;
-  const commissionAmount = Math.round((totalEncaissements * data.commissionPercentage) / 100);
-  const netAmount = totalEncaissements - commissionAmount - totalInterventionsCost;
+  // Summary section — totalPaid already includes advance and late payments from rent details
+  const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
+  const netAmount = totalPaid - commissionAmount - totalInterventionsCost;
 
   checkPageBreak(65);
   doc.setFillColor(...lightGray);
@@ -570,10 +568,10 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   let summaryY = yPos + 20;
 
-  // Total encaisse (loyers + cautions)
+  // Total encaisse (includes advance + late already)
   doc.text("Total loyers encaisses", 25, summaryY);
   doc.setFont("helvetica", "bold");
-  doc.text(formatAmountWithCurrency(totalEncaisse), pageWidth - 25, summaryY, { align: "right" });
+  doc.text(formatAmountWithCurrency(totalPaid), pageWidth - 25, summaryY, { align: "right" });
 
   // Commission
   summaryY += 10;

@@ -45,6 +45,7 @@ export function PDFDocumentSettings() {
           pdf_primary_color: primaryColor,
           pdf_secondary_color: secondaryColor,
           pdf_text_color: textColor,
+          pdf_header_text: headerText || null,
         } as any)
         .eq("id", agency.id);
       if (error) throw error;

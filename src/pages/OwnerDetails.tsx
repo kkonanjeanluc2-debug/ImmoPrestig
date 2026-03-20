@@ -201,9 +201,15 @@ const OwnerDetails = () => {
           (p.status === "paid" || !!(p.paid_amount && p.paid_amount > 0))
         );
 
+        const propType = (property?.property_type || "").toLowerCase();
+        const isMultiUnit = propType === "maison à porte multiple" || propType === "immeuble";
+        const unitNum = getUnitNumber(tenant);
+
         return {
           tenantName: tenant.name,
           propertyTitle,
+          propertyBaseName: property?.title || "Bien inconnu",
+          unitNumber: isMultiUnit ? unitNum : null,
           rentAmount: totalDue,
           paidAmount: totalPaid,
           status,

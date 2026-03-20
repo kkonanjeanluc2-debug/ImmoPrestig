@@ -606,6 +606,14 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.setTextColor(...dangerColor);
   doc.text(`- ${formatAmountWithCurrency(totalInterventionsCost)}`, pageWidth - 25, summaryY, { align: "right" });
 
+  // Total cautions
+  summaryY += 10;
+  doc.setTextColor(...textColor);
+  doc.setFont("helvetica", "normal");
+  doc.text("Total cautions", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalCautions), pageWidth - 25, summaryY, { align: "right" });
+
   // Separator
   summaryY += 8;
   doc.setDrawColor(...primaryColor);

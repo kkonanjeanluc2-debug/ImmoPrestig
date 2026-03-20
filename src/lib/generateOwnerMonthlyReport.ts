@@ -568,10 +568,10 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   let summaryY = yPos + 20;
 
-  // Total encaisse (loyers + cautions)
+  // Total encaisse (includes advance + late already)
   doc.text("Total loyers encaisses", 25, summaryY);
   doc.setFont("helvetica", "bold");
-  doc.text(formatAmountWithCurrency(totalEncaisse), pageWidth - 25, summaryY, { align: "right" });
+  doc.text(formatAmountWithCurrency(totalPaid), pageWidth - 25, summaryY, { align: "right" });
 
   // Commission
   summaryY += 10;

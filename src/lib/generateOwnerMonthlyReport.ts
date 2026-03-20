@@ -549,13 +549,14 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   yPos += 15;
 
-  // Summary section — totalPaid already includes advance and late payments from rent details
+  // Summary section
+  // Commission is calculated only on rent payments (totalPaid), not on advances/late separately
   const commissionAmount = Math.round((totalPaid * data.commissionPercentage) / 100);
-  const netAmount = totalPaid - commissionAmount - totalInterventionsCost;
+  const netAmount = totalPaid + totalAdvance + totalLateCollected - commissionAmount - totalInterventionsCost;
 
-  checkPageBreak(65);
+  checkPageBreak(85);
   doc.setFillColor(...lightGray);
-  doc.roundedRect(15, yPos, pageWidth - 30, 65, 3, 3, "F");
+  doc.roundedRect(15, yPos, pageWidth - 30, 85, 3, 3, "F");
 
   doc.setTextColor(...primaryColor);
   doc.setFontSize(12);
@@ -568,10 +569,24 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
 
   let summaryY = yPos + 20;
 
-  // Total encaisse (includes advance + late already)
+  // Total loyers encaisses
   doc.text("Total loyers encaisses", 25, summaryY);
   doc.setFont("helvetica", "bold");
   doc.text(formatAmountWithCurrency(totalPaid), pageWidth - 25, summaryY, { align: "right" });
+
+  // Total avances
+  summaryY += 10;
+  doc.setFont("helvetica", "normal");
+  doc.text("Total avances", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalAdvance), pageWidth - 25, summaryY, { align: "right" });
+
+  // Total retards encaisses
+  summaryY += 10;
+  doc.setFont("helvetica", "normal");
+  doc.text("Total retards encaisses", 25, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatAmountWithCurrency(totalLateCollected), pageWidth - 25, summaryY, { align: "right" });
 
   // Commission
   summaryY += 10;

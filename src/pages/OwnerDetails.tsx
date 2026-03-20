@@ -201,8 +201,6 @@ const OwnerDetails = () => {
           (p.status === "paid" || !!(p.paid_amount && p.paid_amount > 0))
         );
 
-        const propType = (property?.property_type || "").toLowerCase();
-        const isMultiUnit = propType === "maison à porte multiple" || propType === "immeuble";
         const unitNum = getUnitNumber(tenant);
 
         return {

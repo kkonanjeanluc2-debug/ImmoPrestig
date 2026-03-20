@@ -25,6 +25,8 @@ interface InterventionRow {
 interface CautionRow {
   tenantName: string;
   propertyTitle: string;
+  propertyBaseName?: string;
+  unitNumber?: string | null;
   deposit: number;
 }
 

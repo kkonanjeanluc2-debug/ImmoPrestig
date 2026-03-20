@@ -201,65 +201,78 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
   doc.text("DETAIL DES LOYERS", 15, yPos);
   yPos += 8;
 
-  // Table header
-  doc.setFillColor(...primaryColor);
-  doc.rect(15, yPos, pageWidth - 30, 8, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold");
-  doc.text("Locataire", 18, yPos + 5.5);
-  doc.text("Bien", 60, yPos + 5.5);
-  doc.text("Loyer", 115, yPos + 5.5);
-  doc.text("Paye", 140, yPos + 5.5);
-  doc.text("Statut", 170, yPos + 5.5);
-  yPos += 8;
-
-  // Table rows
-  doc.setTextColor(...textColor);
-  doc.setFont("helvetica", "normal");
-
   let totalRent = 0;
   let totalPaid = 0;
 
   if (data.tenantPayments.length === 0) {
     doc.setFillColor(...lightGray);
     doc.rect(15, yPos, pageWidth - 30, 10, "F");
+    doc.setTextColor(...textColor);
     doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
     doc.text("Aucun paiement enregistre pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
     yPos += 10;
   } else {
-    data.tenantPayments.forEach((row, index) => {
-      if (index % 2 === 0) {
-        doc.setFillColor(...lightGray);
-        doc.rect(15, yPos, pageWidth - 30, 9, "F");
-      }
+    const groupedPayments = groupByProperty(data.tenantPayments);
+    let rowIndex = 0;
 
+    groupedPayments.forEach((rows, propTitle) => {
+      checkPageBreak(20);
+      // Property sub-header
+      doc.setFillColor(220, 230, 241);
+      doc.rect(15, yPos, pageWidth - 30, 8, "F");
+      doc.setTextColor(...primaryColor);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      const displayPropTitle = propTitle.length > 50 ? propTitle.substring(0, 48) + "..." : propTitle;
+      doc.text(displayPropTitle, 18, yPos + 5.5);
+      yPos += 8;
+
+      // Column headers
+      doc.setFillColor(...primaryColor);
+      doc.rect(15, yPos, pageWidth - 30, 8, "F");
+      doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
-      const tenantName = row.tenantName.length > 18 ? row.tenantName.substring(0, 16) + "..." : row.tenantName;
-      const propertyTitle = row.propertyTitle.length > 30 ? row.propertyTitle.substring(0, 28) + "..." : row.propertyTitle;
-      
-      doc.text(tenantName, 18, yPos + 6);
-      doc.text(propertyTitle, 60, yPos + 6);
-      doc.text(formatAmountForPDF(row.rentAmount), 115, yPos + 6);
-      doc.text(formatAmountForPDF(row.paidAmount), 140, yPos + 6);
+      doc.setFont("helvetica", "bold");
+      doc.text("Locataire", 18, yPos + 5.5);
+      doc.text("Loyer", 115, yPos + 5.5);
+      doc.text("Paye", 140, yPos + 5.5);
+      doc.text("Statut", 170, yPos + 5.5);
+      yPos += 8;
 
-      // Status with color
-      const statusLabel = row.displayStatus || getStatusLabel(row.status);
-      if (row.displayStatus && row.displayStatus.includes("retard")) {
-        doc.setTextColor(...dangerColor);
-      } else if (row.displayStatus === "A jour" || row.status === "paid") {
-        doc.setTextColor(...successColor);
-      } else if (row.status === "pending") {
-        doc.setTextColor(...warningColor);
-      } else {
-        doc.setTextColor(...dangerColor);
-      }
-      doc.text(statusLabel, 170, yPos + 6);
       doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "normal");
 
-      totalRent += row.rentAmount;
-      totalPaid += row.paidAmount;
-      yPos += 9;
+      rows.forEach((row) => {
+        checkPageBreak(9);
+        if (rowIndex % 2 === 0) {
+          doc.setFillColor(...lightGray);
+          doc.rect(15, yPos, pageWidth - 30, 9, "F");
+        }
+        doc.setFontSize(8);
+        const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
+        doc.text(tenantName, 18, yPos + 6);
+        doc.text(formatAmountForPDF(row.rentAmount), 115, yPos + 6);
+        doc.text(formatAmountForPDF(row.paidAmount), 140, yPos + 6);
+
+        const statusLabel = row.displayStatus || getStatusLabel(row.status);
+        if (row.displayStatus && row.displayStatus.includes("retard")) {
+          doc.setTextColor(...dangerColor);
+        } else if (row.displayStatus === "A jour" || row.status === "paid") {
+          doc.setTextColor(...successColor);
+        } else if (row.status === "pending") {
+          doc.setTextColor(...warningColor);
+        } else {
+          doc.setTextColor(...dangerColor);
+        }
+        doc.text(statusLabel, 170, yPos + 6);
+        doc.setTextColor(...textColor);
+
+        totalRent += row.rentAmount;
+        totalPaid += row.paidAmount;
+        yPos += 9;
+        rowIndex++;
+      });
     });
   }
 

@@ -314,37 +314,49 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.text("Aucune caution pour cette periode", pageWidth / 2, yPos + 6, { align: "center" });
     yPos += 10;
   } else {
-    // Cautions table header
-    doc.setFillColor(...primaryColor);
-    doc.rect(15, yPos, pageWidth - 30, 8, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("Locataire", 18, yPos + 5.5);
-    doc.text("Bien", 70, yPos + 5.5);
-    doc.text("Montant", 155, yPos + 5.5);
-    yPos += 8;
+    const groupedCautions = groupByProperty(data.cautions);
+    let cautionRowIndex = 0;
 
-    doc.setTextColor(...textColor);
-    doc.setFont("helvetica", "normal");
+    groupedCautions.forEach((rows, propTitle) => {
+      checkPageBreak(20);
+      // Property sub-header
+      doc.setFillColor(220, 230, 241);
+      doc.rect(15, yPos, pageWidth - 30, 8, "F");
+      doc.setTextColor(...primaryColor);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      const displayPropTitle = propTitle.length > 50 ? propTitle.substring(0, 48) + "..." : propTitle;
+      doc.text(displayPropTitle, 18, yPos + 5.5);
+      yPos += 8;
 
-    data.cautions.forEach((row, index) => {
-      checkPageBreak(9);
-      if (index % 2 === 0) {
-        doc.setFillColor(...lightGray);
-        doc.rect(15, yPos, pageWidth - 30, 9, "F");
-      }
-
+      // Column headers
+      doc.setFillColor(...primaryColor);
+      doc.rect(15, yPos, pageWidth - 30, 8, "F");
+      doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
-      const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
-      const propertyTitle = row.propertyTitle.length > 30 ? row.propertyTitle.substring(0, 28) + "..." : row.propertyTitle;
+      doc.setFont("helvetica", "bold");
+      doc.text("Locataire", 18, yPos + 5.5);
+      doc.text("Montant", 155, yPos + 5.5);
+      yPos += 8;
 
-      doc.text(tenantName, 18, yPos + 6);
-      doc.text(propertyTitle, 70, yPos + 6);
-      doc.text(formatAmountForPDF(row.deposit), 155, yPos + 6);
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "normal");
 
-      totalCautions += row.deposit;
-      yPos += 9;
+      rows.forEach((row) => {
+        checkPageBreak(9);
+        if (cautionRowIndex % 2 === 0) {
+          doc.setFillColor(...lightGray);
+          doc.rect(15, yPos, pageWidth - 30, 9, "F");
+        }
+        doc.setFontSize(8);
+        const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
+        doc.text(tenantName, 18, yPos + 6);
+        doc.text(formatAmountForPDF(row.deposit), 155, yPos + 6);
+
+        totalCautions += row.deposit;
+        yPos += 9;
+        cautionRowIndex++;
+      });
     });
 
     // Cautions subtotal

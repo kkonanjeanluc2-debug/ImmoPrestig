@@ -216,8 +216,6 @@ const OwnerDetails = () => {
       const commissionPercentage = owner.management_type?.percentage || 0;
 
       // Prepare cautions - tenants created this month with deposit or agency_fees
-      const monthStartStr = format(monthStart, "yyyy-MM-dd");
-      const monthEndStr = format(monthEnd, "yyyy-MM-dd");
       const cautions = ownerTenants
         .filter(tenant => {
           const createdAt = tenant.created_at?.substring(0, 10);

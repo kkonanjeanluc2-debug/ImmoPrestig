@@ -237,7 +237,11 @@ const PropertyDetails = () => {
             if (p.due_date >= monthStartStr) return false;
             const paidDate = p.paid_date?.substring(0, 10);
             if (!paidDate || paidDate < monthStartStr || paidDate > monthEndStr) return false;
-            return p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
+            if (!(p.status === "paid" || (p.paid_amount && p.paid_amount > 0))) return false;
+            // Exclude multi-month payments already counted in advance section
+            const pm = (p as any).payment_months as string[] | null;
+            if (pm && Array.isArray(pm) && pm.length > 1) return false;
+            return true;
           });
 
           return lateCollected.map(lp => {

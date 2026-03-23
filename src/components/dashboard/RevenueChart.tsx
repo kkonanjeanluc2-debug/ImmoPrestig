@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { TrendingUp } from "lucide-react";
+import { getCollectedRevenueByMonth } from "@/lib/revenueCollections";
 
 interface RevenueChartProps {
   payments: Array<{
@@ -17,18 +18,6 @@ interface RevenueChartProps {
   periodTo?: Date;
 }
 
-const FRENCH_MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-
-const parseMonthYM = (m: string): string | null => {
-  const parts = m.split(' ');
-  if (parts.length === 2) {
-    const idx = FRENCH_MONTHS.indexOf(parts[0]);
-    if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}`;
-  }
-  if (m.length >= 7) return m.substring(0, 7);
-  return null;
-};
-
 const chartConfig = {
   revenue: {
     label: "Revenus",
@@ -38,7 +27,7 @@ const chartConfig = {
 
 export function RevenueChart({ payments, periodLabel, periodFrom, periodTo }: RevenueChartProps) {
   const getMonthlyData = () => {
-    const months: { name: string; revenue: number; month: number; year: number }[] = [];
+    const months: { name: string; revenue: number; month: number; year: number; monthStart: string }[] = [];
     const now = new Date();
     const from = periodFrom || new Date(now.getFullYear(), now.getMonth() - 5, 1);
     const to = periodTo || now;
@@ -46,6 +35,7 @@ export function RevenueChart({ payments, periodLabel, periodFrom, periodTo }: Re
     const startMonth = new Date(from.getFullYear(), from.getMonth(), 1);
     const endMonth = new Date(to.getFullYear(), to.getMonth(), 1);
     const cursor = new Date(startMonth);
+
     while (cursor <= endMonth) {
       const monthName = cursor.toLocaleDateString("fr-FR", { month: "short" });
       months.push({
@@ -53,56 +43,22 @@ export function RevenueChart({ payments, periodLabel, periodFrom, periodTo }: Re
         revenue: 0,
         month: cursor.getMonth(),
         year: cursor.getFullYear(),
+        monthStart: `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-01`,
       });
       cursor.setMonth(cursor.getMonth() + 1);
     }
 
-    const addToMonth = (monthIdx: number, yearVal: number, amount: number) => {
-      const bucket = months.find(m => m.month === monthIdx && m.year === yearVal);
-      if (bucket) bucket.revenue += amount;
-    };
+    const collectedByMonth = getCollectedRevenueByMonth(
+      payments as any[],
+      months.map((month) => month.monthStart),
+    );
 
-    payments.forEach((p: any) => {
-      const status = p.status;
-      const paidDate = p.paid_date;
-      const paymentMonths = p.payment_months as string[] | null;
-      const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
-      const totalAmount = Number(p.paid_amount) || Number(p.amount);
-
-      if (status === 'paid') {
-        if (isMultiMonth) {
-          const perMonth = Math.round(totalAmount / paymentMonths.length);
-          paymentMonths.forEach(m => {
-            const ym = parseMonthYM(m);
-            if (ym) {
-              const [y, mo] = ym.split('-').map(Number);
-              addToMonth(mo - 1, y, perMonth);
-            }
-          });
-        } else if (paymentMonths && paymentMonths.length === 1) {
-          const ym = parseMonthYM(paymentMonths[0]);
-          if (ym) {
-            const [y, mo] = ym.split('-').map(Number);
-            addToMonth(mo - 1, y, totalAmount);
-          } else if (paidDate) {
-            const d = new Date(paidDate);
-            addToMonth(d.getMonth(), d.getFullYear(), totalAmount);
-          }
-        } else if (paidDate) {
-          const d = new Date(paidDate);
-          addToMonth(d.getMonth(), d.getFullYear(), totalAmount);
-        }
-      } else if ((status === 'pending' || status === 'late') && Number(p.paid_amount) > 0) {
-        const paidPortion = Number(p.paid_amount);
-        const refDate = paidDate || p.due_date;
-        if (refDate) {
-          const d = new Date(refDate);
-          addToMonth(d.getMonth(), d.getFullYear(), paidPortion);
-        }
-      }
-    });
-
-    return months;
+    return months.map((month, index) => ({
+      name: month.name,
+      revenue: collectedByMonth[index] || 0,
+      month: month.month,
+      year: month.year,
+    }));
   };
 
   const data = getMonthlyData();

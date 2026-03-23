@@ -82,48 +82,8 @@ const Index = () => {
   const monthEnd = new Date(thisYear, thisMonth + 1, 0);
   const monthStartStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-01`;
   const monthEndStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`;
-  const currentYM = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}`;
-  const FRENCH_MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
-  const monthlyRevenue = filteredPayments.reduce((sum, p: any) => {
-    const status = p.status;
-    const paidDate = p.paid_date;
-    const paymentMonths = p.payment_months as string[] | null;
-    const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
-    const totalAmount = Number(p.paid_amount) || Number(p.amount);
-    const isPaidInPeriod = paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr;
-
-    if (status === 'paid') {
-      if (isMultiMonth) {
-        const perMonth = Math.round(totalAmount / paymentMonths.length);
-        const overlapping = paymentMonths.filter(m => {
-          const parts = m.split(' ');
-          if (parts.length === 2) {
-            const idx = FRENCH_MONTHS.indexOf(parts[0]);
-            if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}` === currentYM;
-          }
-          return m.substring(0, 7) === currentYM;
-        }).length;
-        return sum + perMonth * overlapping;
-      } else if (isPaidInPeriod) {
-        return sum + totalAmount;
-      } else if (paymentMonths && paymentMonths.length === 1) {
-        const m = paymentMonths[0];
-        const parts = m.split(' ');
-        let ym = m.substring(0, 7);
-        if (parts.length === 2) {
-          const idx = FRENCH_MONTHS.indexOf(parts[0]);
-          if (idx >= 0) ym = `${parts[1]}-${String(idx + 1).padStart(2, '0')}`;
-        }
-        if (ym === currentYM) return sum + totalAmount;
-      }
-    } else if ((status === 'pending' || status === 'late') && Number(p.paid_amount) > 0) {
-      if (isPaidInPeriod || (p.due_date && p.due_date >= monthStartStr && p.due_date <= monthEndStr)) {
-        return sum + Number(p.paid_amount);
-      }
-    }
-    return sum;
-  }, 0);
+  const monthlyRevenue = getCollectedRevenueForPeriod(filteredPayments as any[], monthStartStr, monthEndStr);
 
   // Calculate occupancy considering units (portes)
   const { totalUnits, occupiedUnits } = useMemo(() => {

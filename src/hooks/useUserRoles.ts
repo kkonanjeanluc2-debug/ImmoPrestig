@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type AppRole = "super_admin" | "admin" | "gestionnaire" | "lecture_seule" | "locataire";
+export type AppRole = "super_admin" | "admin" | "gestionnaire" | "comptable" | "lecture_seule" | "locataire";
 
 export interface UserRole {
   id: string;

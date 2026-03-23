@@ -327,6 +327,14 @@ export function CollectPaymentDialog({
               <Loader2 className="h-4 w-4 animate-spin" />
               Vérification des arriérés...
             </div>
+          ) : tenantEvicted ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium">Ce locataire a fait l'objet d'une expulsion exécutée.</p>
+                <p className="mt-1 text-xs">L'encaissement est bloqué car le locataire est inactif suite à une procédure d'expulsion.</p>
+              </AlertDescription>
+            </Alert>
           ) : hasBlockingLatePayments && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />

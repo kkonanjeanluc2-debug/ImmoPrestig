@@ -146,6 +146,7 @@ export function CollectPaymentDialog({
   };
 
   const hasBlockingLatePayments = latePayments.length > 0;
+  const isBlocked = hasBlockingLatePayments || tenantEvicted;
 
   const handleCollect = async () => {
     if (collectAmount <= 0 || collectAmount > remaining) {

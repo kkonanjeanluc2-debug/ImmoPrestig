@@ -6,13 +6,28 @@ import { TrendingUp } from "lucide-react";
 interface RevenueChartProps {
   payments: Array<{
     amount: number | string;
+    paid_amount?: number | string | null;
     paid_date: string | null;
+    due_date?: string | null;
     status: string;
+    payment_months?: string[] | null;
   }>;
   periodLabel?: { title: string; subtitle: string };
   periodFrom?: Date;
   periodTo?: Date;
 }
+
+const FRENCH_MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+const parseMonthYM = (m: string): string | null => {
+  const parts = m.split(' ');
+  if (parts.length === 2) {
+    const idx = FRENCH_MONTHS.indexOf(parts[0]);
+    if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}`;
+  }
+  if (m.length >= 7) return m.substring(0, 7);
+  return null;
+};
 
 const chartConfig = {
   revenue: {
@@ -28,7 +43,6 @@ export function RevenueChart({ payments, periodLabel, periodFrom, periodTo }: Re
     const from = periodFrom || new Date(now.getFullYear(), now.getMonth() - 5, 1);
     const to = periodTo || now;
 
-    // Build month buckets from period start to period end
     const startMonth = new Date(from.getFullYear(), from.getMonth(), 1);
     const endMonth = new Date(to.getFullYear(), to.getMonth(), 1);
     const cursor = new Date(startMonth);
@@ -43,18 +57,50 @@ export function RevenueChart({ payments, periodLabel, periodFrom, periodTo }: Re
       cursor.setMonth(cursor.getMonth() + 1);
     }
 
-    // Sum payments for each month
-    payments
-      .filter((p) => p.status === "paid" && p.paid_date)
-      .forEach((payment) => {
-        const paidDate = new Date(payment.paid_date!);
-        const monthData = months.find(
-          (m) => m.month === paidDate.getMonth() && m.year === paidDate.getFullYear()
-        );
-        if (monthData) {
-          monthData.revenue += Number(payment.amount);
+    const addToMonth = (monthIdx: number, yearVal: number, amount: number) => {
+      const bucket = months.find(m => m.month === monthIdx && m.year === yearVal);
+      if (bucket) bucket.revenue += amount;
+    };
+
+    payments.forEach((p: any) => {
+      const status = p.status;
+      const paidDate = p.paid_date;
+      const paymentMonths = p.payment_months as string[] | null;
+      const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
+      const totalAmount = Number(p.paid_amount) || Number(p.amount);
+
+      if (status === 'paid') {
+        if (isMultiMonth) {
+          const perMonth = Math.round(totalAmount / paymentMonths.length);
+          paymentMonths.forEach(m => {
+            const ym = parseMonthYM(m);
+            if (ym) {
+              const [y, mo] = ym.split('-').map(Number);
+              addToMonth(mo - 1, y, perMonth);
+            }
+          });
+        } else if (paymentMonths && paymentMonths.length === 1) {
+          const ym = parseMonthYM(paymentMonths[0]);
+          if (ym) {
+            const [y, mo] = ym.split('-').map(Number);
+            addToMonth(mo - 1, y, totalAmount);
+          } else if (paidDate) {
+            const d = new Date(paidDate);
+            addToMonth(d.getMonth(), d.getFullYear(), totalAmount);
+          }
+        } else if (paidDate) {
+          const d = new Date(paidDate);
+          addToMonth(d.getMonth(), d.getFullYear(), totalAmount);
         }
-      });
+      } else if ((status === 'pending' || status === 'late') && Number(p.paid_amount) > 0) {
+        const paidPortion = Number(p.paid_amount);
+        const refDate = paidDate || p.due_date;
+        if (refDate) {
+          const d = new Date(refDate);
+          addToMonth(d.getMonth(), d.getFullYear(), paidPortion);
+        }
+      }
+    });
 
     return months;
   };

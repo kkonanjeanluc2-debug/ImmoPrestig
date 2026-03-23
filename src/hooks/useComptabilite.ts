@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemo } from "react";
+import { getCollectedRevenueByMonth, getCollectedRevenueForPeriod } from "@/lib/revenueCollections";
 
 export interface PaidRentDetail {
   tenantName: string;
@@ -584,10 +585,12 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
 
     // Build monthly buckets
     const monthlyMap = new Map<string, MonthlyEntry>();
+    const monthStarts: string[] = [];
     const cursor = new Date(periodFrom.getFullYear(), periodFrom.getMonth(), 1);
     const endMonth = new Date(periodTo.getFullYear(), periodTo.getMonth(), 1);
     while (cursor <= endMonth) {
       const key = `${cursor.getFullYear()}-${cursor.getMonth()}`;
+      monthStarts.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-01`);
       monthlyMap.set(key, {
         name: `${FRENCH_MONTHS[cursor.getMonth()]} ${cursor.getFullYear()}`,
         loyers: 0,
@@ -1240,6 +1243,16 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         });
       });
     }
+
+    const correctedRentRevenue = getCollectedRevenueForPeriod((payments as any[]) || [], fromDate, toDate);
+    const correctedRentByMonth = getCollectedRevenueByMonth((payments as any[]) || [], monthStarts);
+
+    result.loyersEncaisses = correctedRentRevenue;
+
+    Array.from(monthlyMap.values()).forEach((monthly, index) => {
+      monthly.loyers = correctedRentByMonth[index] || 0;
+      monthly.total = monthly.loyers + monthly.ventes + monthly.achats + monthly.lotissements + monthly.cautions;
+    });
 
     // Process expenses
     const expCategoryMap = new Map<string, number>();

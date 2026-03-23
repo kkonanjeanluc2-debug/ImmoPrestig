@@ -396,11 +396,32 @@ const TenantDetails = () => {
 
             {/* Payment History */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Wallet className="h-5 w-5" />
                   Historique des paiements ({totalPayments})
                 </CardTitle>
+                {tenant.payments && tenant.payments.length > 0 && (
+                  <ExportDropdown
+                    data={[...tenant.payments].sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime()).map(p => ({
+                      due_date: p.due_date,
+                      amount: p.amount,
+                      status: p.status,
+                      paid_date: p.paid_date,
+                      method: p.method,
+                      payment_months: (p as any).payment_months,
+                    }))}
+                    filename={`historique-paiements-${tenant.name.replace(/\s+/g, '-')}`}
+                    columns={[
+                      { key: "due_date", label: "Date d'échéance", format: (v: string) => v ? format(new Date(v), "dd/MM/yyyy") : "" },
+                      { key: "amount", label: "Montant (F CFA)", format: (v: number) => Number(v).toLocaleString('fr-FR') },
+                      { key: "status", label: "Statut", format: (v: string) => v === 'paid' ? 'Payé' : v === 'pending' ? 'En attente' : v === 'late' ? 'En retard' : v },
+                      { key: "paid_date", label: "Date de paiement", format: (v: string) => v ? format(new Date(v), "dd/MM/yyyy") : "" },
+                      { key: "method", label: "Mode de paiement", format: (v: string) => v || "" },
+                      { key: "payment_months", label: "Mois concernés", format: (v: any) => Array.isArray(v) ? v.join(', ') : "" },
+                    ] as ExportColumn<any>[]}
+                  />
+                )}
               </CardHeader>
               <CardContent>
                 {tenant.payments && tenant.payments.length > 0 ? (

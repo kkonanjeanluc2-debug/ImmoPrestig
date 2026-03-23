@@ -174,18 +174,40 @@ export const useUpdateUnpaidCase = () => {
               .eq("status", "active");
 
             if (contracts && contracts.length > 0) {
+              const propertyIds = new Set<string>();
               for (const contract of contracts) {
                 await supabase
                   .from("contracts")
                   .update({ status: "expired", end_date: new Date().toISOString().split("T")[0] })
                   .eq("id", contract.id);
 
+                if (contract.property_id) {
+                  propertyIds.add(contract.property_id);
+                }
+
                 // If contract had a unit, mark it as available
                 if (contract.unit_id) {
                   await supabase
                     .from("property_units")
-                    .update({ status: "available" })
+                    .update({ status: "disponible" })
                     .eq("id", contract.unit_id);
+                }
+              }
+
+              // Update properties to disponible
+              for (const propId of propertyIds) {
+                // Check if there are still occupied units
+                const { data: occupiedUnits } = await supabase
+                  .from("property_units")
+                  .select("id")
+                  .eq("property_id", propId)
+                  .eq("status", "loué");
+
+                if (!occupiedUnits || occupiedUnits.length === 0) {
+                  await supabase
+                    .from("properties")
+                    .update({ status: "disponible" })
+                    .eq("id", propId);
                 }
               }
             }

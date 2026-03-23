@@ -90,6 +90,7 @@ export function CollectPaymentDialog({
   const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplate | null>(null);
   const [latePayments, setLatePayments] = useState<any[]>([]);
   const [checkingLate, setCheckingLate] = useState(false);
+  const [tenantEvicted, setTenantEvicted] = useState(false);
   const remaining = amount - paidAmount;
   const [collectAmount, setCollectAmount] = useState<number>(remaining);
   const updatePayment = useUpdatePayment();

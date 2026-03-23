@@ -156,13 +156,17 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
         });
       }
 
-      // Auto update status
-      if (unpaidCase.status === "detected" || unpaidCase.status === "reminded") {
+      // Auto-sync status: advance to "formal_notice" if below
+      const statusOrder = ["detected", "reminded", "formal_notice", "legal_proceedings", "awaiting_judgment"];
+      const currentIdx = statusOrder.indexOf(unpaidCase.status);
+      const targetIdx = statusOrder.indexOf("formal_notice");
+      if (currentIdx < targetIdx) {
         await updateCase.mutateAsync({
           id: unpaidCase.id,
           status: "formal_notice",
           formal_notice_date: new Date().toISOString().split("T")[0],
         });
+        setNewStatus("formal_notice");
       }
 
       toast.success("Mise en demeure générée avec succès");

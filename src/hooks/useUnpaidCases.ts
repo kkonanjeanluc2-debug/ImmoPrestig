@@ -208,6 +208,31 @@ export const useUpdateUnpaidCase = () => {
                     .from("properties")
                     .update({ status: "disponible" })
                     .eq("id", propId);
+
+                  // Get property details for notification
+                  const { data: propData } = await supabase
+                    .from("properties")
+                    .select("title, address, user_id")
+                    .eq("id", propId)
+                    .single();
+
+                  // Get tenant name for context
+                  const { data: tenantData } = await supabase
+                    .from("tenants")
+                    .select("name")
+                    .eq("id", data.tenant_id)
+                    .single();
+
+                  if (propData) {
+                    await supabase.from("notifications").insert({
+                      user_id: propData.user_id,
+                      title: "Bien redevenu disponible",
+                      message: `Le bien "${propData.title || propData.address}" est désormais disponible suite à l'expulsion du locataire ${tenantData?.name || "inconnu"}.`,
+                      type: "info",
+                      entity_type: "property",
+                      entity_id: propId,
+                    });
+                  }
                 }
               }
             }

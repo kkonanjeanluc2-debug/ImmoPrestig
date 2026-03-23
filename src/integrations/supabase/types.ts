@@ -4623,6 +4623,7 @@ export type Database = {
         | "lecture_seule"
         | "super_admin"
         | "locataire"
+        | "comptable"
       interest_level: "faible" | "moyen" | "eleve"
       payment_type: "comptant" | "echelonne"
       plot_status: "disponible" | "reserve" | "vendu"
@@ -4788,6 +4789,7 @@ export const Constants = {
         "lecture_seule",
         "super_admin",
         "locataire",
+        "comptable",
       ],
       interest_level: ["faible", "moyen", "eleve"],
       payment_type: ["comptant", "echelonne"],

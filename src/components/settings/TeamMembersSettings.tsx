@@ -378,6 +378,17 @@ export function TeamMembersSettings() {
                             </div>
                           </div>
                         </SelectItem>
+                        <SelectItem value="comptable">
+                          <div className="flex items-center gap-2">
+                            <UserCog className="h-4 w-4 text-teal-600" />
+                            <div>
+                              <div>Comptable</div>
+                              <div className="text-xs text-muted-foreground">
+                                Gestion de la comptabilité
+                              </div>
+                            </div>
+                          </div>
+                        </SelectItem>
                         <SelectItem value="lecture_seule">
                           <div className="flex items-center gap-2">
                             <Eye className="h-4 w-4 text-gray-600" />
@@ -482,6 +493,12 @@ export function TeamMembersSettings() {
                           <div className="flex items-center gap-2">
                             {ROLE_ICONS.gestionnaire}
                             Gestionnaire
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="comptable">
+                          <div className="flex items-center gap-2">
+                            {ROLE_ICONS.comptable}
+                            Comptable
                           </div>
                         </SelectItem>
                         <SelectItem value="lecture_seule">

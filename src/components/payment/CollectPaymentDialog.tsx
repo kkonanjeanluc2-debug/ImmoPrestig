@@ -90,6 +90,7 @@ export function CollectPaymentDialog({
   const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplate | null>(null);
   const [latePayments, setLatePayments] = useState<any[]>([]);
   const [checkingLate, setCheckingLate] = useState(false);
+  const [tenantEvicted, setTenantEvicted] = useState(false);
   const remaining = amount - paidAmount;
   const [collectAmount, setCollectAmount] = useState<number>(remaining);
   const updatePayment = useUpdatePayment();
@@ -102,11 +103,12 @@ export function CollectPaymentDialog({
     setSelectedTemplate(template);
   }, []);
 
-  // Check for late payments when dialog opens
+  // Check for late payments and tenant eviction status when dialog opens
   const checkLatePayments = useCallback(async () => {
     if (!tenantId) return;
     setCheckingLate(true);
     try {
+      // Check late payments
       const { data, error } = await supabase
         .from("payments")
         .select("id, due_date, amount, payment_months, status")
@@ -115,9 +117,17 @@ export function CollectPaymentDialog({
         .order("due_date", { ascending: true });
 
       if (!error && data) {
-        // Exclude current payment from the late list
         setLatePayments(data.filter(p => p.id !== paymentId));
       }
+
+      // Check if tenant has been evicted
+      const { data: tenantData } = await supabase
+        .from("tenants")
+        .select("status")
+        .eq("id", tenantId)
+        .single();
+
+      setTenantEvicted(tenantData?.status === "inactive");
     } catch (e) {
       console.error("Error checking late payments:", e);
     } finally {
@@ -136,6 +146,7 @@ export function CollectPaymentDialog({
   };
 
   const hasBlockingLatePayments = latePayments.length > 0;
+  const isBlocked = hasBlockingLatePayments || tenantEvicted;
 
   const handleCollect = async () => {
     if (collectAmount <= 0 || collectAmount > remaining) {
@@ -316,6 +327,14 @@ export function CollectPaymentDialog({
               <Loader2 className="h-4 w-4 animate-spin" />
               Vérification des arriérés...
             </div>
+          ) : tenantEvicted ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium">Ce locataire a fait l'objet d'une expulsion exécutée.</p>
+                <p className="mt-1 text-xs">L'encaissement est bloqué car le locataire est inactif suite à une procédure d'expulsion.</p>
+              </AlertDescription>
+            </Alert>
           ) : hasBlockingLatePayments && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -488,7 +507,7 @@ export function CollectPaymentDialog({
           </Button>
           <Button
             onClick={handleCollect}
-            disabled={isLoading || collectAmount <= 0 || hasBlockingLatePayments}
+            disabled={isLoading || collectAmount <= 0 || isBlocked}
             className="bg-emerald hover:bg-emerald/90"
           >
             {isLoading ? (

@@ -230,7 +230,11 @@ export function UnpaidCaseDetailDialog({ unpaidCase, open, onOpenChange }: Props
         document_url: null,
       });
 
-      if (unpaidCase.status === "detected") {
+      // Auto-sync status: advance to "reminded" if still at "detected"
+      const statusOrder = ["detected", "reminded", "formal_notice", "legal_proceedings", "awaiting_judgment"];
+      const currentIdx = statusOrder.indexOf(unpaidCase.status);
+      const targetIdx = statusOrder.indexOf("reminded");
+      if (currentIdx < targetIdx) {
         await updateCase.mutateAsync({ id: unpaidCase.id, status: "reminded" });
       }
 

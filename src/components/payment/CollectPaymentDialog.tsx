@@ -507,7 +507,7 @@ export function CollectPaymentDialog({
           </Button>
           <Button
             onClick={handleCollect}
-            disabled={isLoading || collectAmount <= 0 || hasBlockingLatePayments}
+            disabled={isLoading || collectAmount <= 0 || isBlocked}
             className="bg-emerald hover:bg-emerald/90"
           >
             {isLoading ? (

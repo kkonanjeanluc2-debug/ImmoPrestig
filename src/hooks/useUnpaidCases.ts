@@ -158,9 +158,53 @@ export const useUpdateUnpaidCase = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any, variables) => {
       queryClient.invalidateQueries({ queryKey: ["unpaid-cases"] });
       queryClient.invalidateQueries({ queryKey: ["unpaid-case-actions"] });
+
+      // When eviction is executed, expire contract and free property
+      if (variables.status === "eviction_executed" && data?.tenant_id) {
+        (async () => {
+          try {
+            // Expire all active contracts for this tenant
+            const { data: contracts } = await supabase
+              .from("contracts")
+              .select("id, property_id, unit_id")
+              .eq("tenant_id", data.tenant_id)
+              .eq("status", "active");
+
+            if (contracts && contracts.length > 0) {
+              for (const contract of contracts) {
+                await supabase
+                  .from("contracts")
+                  .update({ status: "expired", end_date: new Date().toISOString().split("T")[0] })
+                  .eq("id", contract.id);
+
+                // If contract had a unit, mark it as available
+                if (contract.unit_id) {
+                  await supabase
+                    .from("property_units")
+                    .update({ status: "available" })
+                    .eq("id", contract.unit_id);
+                }
+              }
+            }
+
+            // Update tenant status to inactive
+            await supabase
+              .from("tenants")
+              .update({ status: "inactive" })
+              .eq("id", data.tenant_id);
+
+            queryClient.invalidateQueries({ queryKey: ["contracts"] });
+            queryClient.invalidateQueries({ queryKey: ["properties"] });
+            queryClient.invalidateQueries({ queryKey: ["tenants"] });
+            queryClient.invalidateQueries({ queryKey: ["property-units"] });
+          } catch (err) {
+            console.error("Erreur lors de la mise à jour post-expulsion:", err);
+          }
+        })();
+      }
     },
   });
 };

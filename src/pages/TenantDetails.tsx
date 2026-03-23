@@ -3,8 +3,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExportDropdown } from "@/components/export/ExportDropdown";
-import { ExportColumn } from "@/lib/exportData";
+import { generatePaymentHistoryPDF } from "@/lib/generatePaymentHistoryPDF";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -402,25 +401,35 @@ const TenantDetails = () => {
                   Historique des paiements ({totalPayments})
                 </CardTitle>
                 {tenant.payments && tenant.payments.length > 0 && (
-                  <ExportDropdown
-                    data={[...tenant.payments].sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime()).map(p => ({
-                      due_date: p.due_date,
-                      amount: p.amount,
-                      status: p.status,
-                      paid_date: p.paid_date,
-                      method: p.method,
-                      payment_months: (p as any).payment_months,
-                    }))}
-                    filename={`historique-paiements-${tenant.name.replace(/\s+/g, '-')}`}
-                    columns={[
-                      { key: "due_date", label: "Date d'échéance", format: (v: string) => v ? format(new Date(v), "dd/MM/yyyy") : "" },
-                      { key: "amount", label: "Montant (F CFA)", format: (v: number) => Number(v).toLocaleString('fr-FR') },
-                      { key: "status", label: "Statut", format: (v: string) => v === 'paid' ? 'Payé' : v === 'pending' ? 'En attente' : v === 'late' ? 'En retard' : v },
-                      { key: "paid_date", label: "Date de paiement", format: (v: string) => v ? format(new Date(v), "dd/MM/yyyy") : "" },
-                      { key: "method", label: "Mode de paiement", format: (v: string) => v || "" },
-                      { key: "payment_months", label: "Mois concernés", format: (v: any) => Array.isArray(v) ? v.join(', ') : "" },
-                    ] as ExportColumn<any>[]}
-                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => generatePaymentHistoryPDF(
+                      tenant.payments!.map(p => ({
+                        due_date: p.due_date,
+                        amount: Number(p.amount),
+                        status: p.status,
+                        paid_date: p.paid_date,
+                        method: p.method,
+                        paid_amount: (p as any).paid_amount ? Number((p as any).paid_amount) : null,
+                        payment_months: (p as any).payment_months,
+                      })),
+                      {
+                        name: tenant.name,
+                        phone: tenant.phone,
+                        email: tenant.email,
+                        property_title: tenant.property?.title,
+                        property_address: tenant.property?.address,
+                        unit_number: tenant.unit?.unit_number,
+                        contract_start: activeContract?.start_date,
+                        contract_rent: activeContract ? Number(activeContract.rent_amount) : null,
+                      },
+                      ownAgency || tenantAgency
+                    )}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Exporter PDF
+                  </Button>
                 )}
               </CardHeader>
               <CardContent>

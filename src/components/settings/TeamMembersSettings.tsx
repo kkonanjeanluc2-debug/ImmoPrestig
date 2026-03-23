@@ -495,6 +495,12 @@ export function TeamMembersSettings() {
                             Gestionnaire
                           </div>
                         </SelectItem>
+                        <SelectItem value="comptable">
+                          <div className="flex items-center gap-2">
+                            {ROLE_ICONS.comptable}
+                            Comptable
+                          </div>
+                        </SelectItem>
                         <SelectItem value="lecture_seule">
                           <div className="flex items-center gap-2">
                             {ROLE_ICONS.lecture_seule}

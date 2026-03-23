@@ -246,7 +246,7 @@ const Index = () => {
         {/* Charts Section */}
         {!isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <RevenueChart payments={periodFilteredPayments} periodLabel={getPeriodLabel(period)} periodFrom={period.from} periodTo={period.to} />
+            <RevenueChart payments={filteredPayments} periodLabel={getPeriodLabel(period)} periodFrom={period.from} periodTo={period.to} />
             <OccupancyChart properties={filteredProperties} />
             <PropertyTypesChart properties={filteredProperties} />
           </div>

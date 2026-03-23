@@ -14,6 +14,7 @@ import { useProperties } from "@/hooks/useProperties";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMemo, useState } from "react";
+import { getCollectedRevenueForPeriod } from "@/lib/revenueCollections";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";

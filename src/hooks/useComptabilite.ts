@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemo } from "react";
+import { usePayments } from "@/hooks/usePayments";
 import { getCollectedRevenueByMonth, getCollectedRevenueForPeriod } from "@/lib/revenueCollections";
 
 export interface PaidRentDetail {
@@ -167,6 +168,7 @@ function toYearMonth(m: string): string | null {
 
 export function useComptabilite(periodFrom: Date, periodTo: Date) {
   const { user } = useAuth();
+  const { data: allPayments } = usePayments();
   const fromDate = periodFrom.toISOString().split("T")[0];
   const toDate = periodTo.toISOString().split("T")[0];
 
@@ -1244,8 +1246,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       });
     }
 
-    const correctedRentRevenue = getCollectedRevenueForPeriod((payments as any[]) || [], fromDate, toDate);
-    const correctedRentByMonth = getCollectedRevenueByMonth((payments as any[]) || [], monthStarts);
+    const correctedRentRevenue = getCollectedRevenueForPeriod((allPayments as any[]) || [], fromDate, toDate);
+    const correctedRentByMonth = getCollectedRevenueByMonth((allPayments as any[]) || [], monthStarts);
 
     result.loyersEncaisses = correctedRentRevenue;
 
@@ -1314,5 +1316,5 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, cautions, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, allPendingVentes, allPendingAchats, allPendingParcelles, periodFrom, periodTo]);
+  }, [allPayments, payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, cautions, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, allPendingVentes, allPendingAchats, allPendingParcelles, periodFrom, periodTo]);
 }

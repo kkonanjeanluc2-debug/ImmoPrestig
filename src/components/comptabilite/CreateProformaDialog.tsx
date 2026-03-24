@@ -415,7 +415,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                           <SelectValue placeholder="Sélectionner un bien..." />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50">
-                          {activeProperties.map((p: any) => (
+                          {allBiens.map((p: any) => (
                             <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                           ))}
                         </SelectContent>

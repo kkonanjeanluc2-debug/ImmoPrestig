@@ -68,12 +68,25 @@ const statusConfig = {
     icon: XCircle, 
     className: "bg-red-500/10 text-red-500 border-red-500/20" 
   },
+  impaye: { 
+    label: "Impayé", 
+    icon: AlertTriangle, 
+    className: "bg-destructive/10 text-destructive border-destructive/20" 
+  },
   upcoming: { 
     label: "À venir", 
     icon: CalendarIcon, 
     className: "bg-blue-500/10 text-blue-500 border-blue-500/20" 
   },
 };
+
+function getEffectiveStatus(payment: { status: string; due_date: string }) {
+  if (payment.status === 'late') {
+    const daysLate = differenceInDays(new Date(), new Date(payment.due_date));
+    if (daysLate >= 30) return 'impaye';
+  }
+  return payment.status;
+}
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString('fr-FR') + ' F CFA';

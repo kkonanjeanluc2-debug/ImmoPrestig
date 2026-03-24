@@ -38,6 +38,7 @@ export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
   const deleteProforma = useDeleteProforma();
   const { data: agency } = useAgency();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editInvoice, setEditInvoice] = useState<ProformaInvoice | null>(null);
   const [filter, setFilter] = useState<"all" | "proforma" | "definitive">("all");
 
   const filtered = (invoices || []).filter((inv) =>

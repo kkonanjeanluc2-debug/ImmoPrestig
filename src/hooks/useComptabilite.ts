@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMemo } from "react";
 import { usePayments } from "@/hooks/usePayments";
 import { getCollectedRevenueByMonth, getCollectedRevenueForPeriod } from "@/lib/revenueCollections";
+import { differenceInDays } from "date-fns";
 
 export interface PaidRentDetail {
   tenantName: string;

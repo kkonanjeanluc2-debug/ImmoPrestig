@@ -25,6 +25,7 @@ import {
   UserPlus,
   Layers,
   FileSignature,
+  Upload,
 } from "lucide-react";
 import { PeriodFilter, getDefaultPeriod, getPeriodLabel, PeriodValue } from "@/components/dashboard/PeriodFilter";
 import { useLotissement } from "@/hooks/useLotissements";
@@ -48,6 +49,7 @@ import { ProspectsTab } from "@/components/lotissement/ProspectsTab";
 import { IlotsTab } from "@/components/lotissement/IlotsTab";
 import { GenerateLotissementDocumentDialog } from "@/components/lotissement/GenerateLotissementDocumentDialog";
 import { AcquereursListCard } from "@/components/lotissement/AcquereursListCard";
+import { ImportGeometreDialog } from "@/components/lotissement/ImportGeometreDialog";
 import { useNewLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
 import { useIlotsWithStats } from "@/hooks/useIlots";
 const LotissementDetails = () => {
@@ -63,11 +65,12 @@ const LotissementDetails = () => {
   const isGestionnaire = role === "gestionnaire";
   const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewLotissementProspectsCount(id);
   // Prefetch ilots data for instant tab switching
-  useIlotsWithStats(id);
+  const { data: ilotsData } = useIlotsWithStats(id);
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [showGenerateDocument, setShowGenerateDocument] = useState(false);
+  const [showImportGeometre, setShowImportGeometre] = useState(false);
   const [revenuePeriod, setRevenuePeriod] = useState<PeriodValue>(getDefaultPeriod);
 
   // Calculate stats based on parcelle status
@@ -162,6 +165,10 @@ const LotissementDetails = () => {
           </div>
           {canCreateParcelle && (
             <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowImportGeometre(true)}>
+                <Upload className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Import géomètre</span>
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setShowGenerateDocument(true)}>
                 <FileSignature className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Documents</span>
@@ -431,6 +438,13 @@ const LotissementDetails = () => {
           onOpenChange={setShowGenerateDocument}
         />
       )}
+      <ImportGeometreDialog
+        lotissementId={id || ""}
+        open={showImportGeometre}
+        onOpenChange={setShowImportGeometre}
+        existingIlotNames={ilotsData?.map(i => i.name) || []}
+        existingPlotNumbers={parcelles?.map(p => p.plot_number) || []}
+      />
       <AIAdvisorChat context="parcels" title="Conseiller Parcelles" />
     </DashboardLayout>
   );

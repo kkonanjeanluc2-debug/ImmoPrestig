@@ -335,6 +335,34 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                   <Input className="h-9" value={tenantEmail} onChange={(e) => setTenantEmail(e.target.value)} />
                 </div>
               </div>
+            ) : clientType === "proprietaire" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Propriétaire</Label>
+                  <Select value={selectedTenantId} onValueChange={handleOwnerSelect}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Sélectionner..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {activeOwners.map((o: any) => (
+                        <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Nom *</Label>
+                  <Input className="h-9" value={tenantName} onChange={(e) => setTenantName(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Téléphone</Label>
+                  <Input className="h-9" value={tenantPhone} onChange={(e) => setTenantPhone(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Email</Label>
+                  <Input className="h-9" value={tenantEmail} onChange={(e) => setTenantEmail(e.target.value)} />
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>

@@ -26,6 +26,7 @@ import {
   Layers,
   FileSignature,
   Upload,
+  PieChart,
 } from "lucide-react";
 import { PeriodFilter, getDefaultPeriod, getPeriodLabel, PeriodValue } from "@/components/dashboard/PeriodFilter";
 import { useLotissement } from "@/hooks/useLotissements";

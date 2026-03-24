@@ -19,38 +19,30 @@ export function StatCard({
   iconBg = "navy"
 }: StatCardProps) {
   const iconStyles = {
-    navy: "bg-primary/8 text-primary ring-1 ring-primary/10",
-    emerald: "bg-accent/8 text-accent ring-1 ring-accent/10",
-    sand: "bg-secondary/40 text-primary ring-1 ring-secondary/60",
+    navy: "bg-primary/8 text-primary",
+    emerald: "bg-accent/8 text-accent",
+    sand: "bg-destructive/8 text-destructive",
   };
 
-  const changeClasses = {
-    positive: "text-accent",
-    negative: "text-destructive",
-    neutral: "text-muted-foreground",
+  const borderStyles = {
+    navy: "border-l-primary",
+    emerald: "border-l-accent",
+    sand: "border-l-destructive",
   };
+
+  const valueColor = changeType === "negative" ? "text-destructive" : "text-foreground";
 
   return (
-    <div className="group relative bg-card rounded-2xl p-6 border border-border/40 shadow-sm hover:shadow-md hover:border-border/70 transition-all duration-300 ease-out animate-fade-in flex flex-col h-full min-h-[150px] overflow-hidden">
-      {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
-      
-      {/* Header row: Title + Icon */}
-      <div className="relative flex items-start justify-between gap-3 mb-auto">
-        <p className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/80 leading-tight">{title}</p>
-        <div className={cn("p-2.5 rounded-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-105", iconStyles[iconBg])}>
-          <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
-        </div>
+    <div className={cn(
+      "bg-card rounded-xl px-5 py-4 border border-border/40 border-l-[3px] shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between gap-4",
+      borderStyles[iconBg]
+    )}>
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-muted-foreground mb-1 truncate">{title}</p>
+        <p className={cn("text-xl font-display font-bold tracking-tight truncate", valueColor)}>{value}</p>
       </div>
-      
-      {/* Value and change */}
-      <div className="relative mt-4">
-        <p className="text-[28px] font-display font-bold text-foreground tracking-tight leading-none truncate">{value}</p>
-        {change && (
-          <p className={cn("text-[13px] font-medium mt-2 tracking-tight", changeClasses[changeType])}>
-            {change}
-          </p>
-        )}
+      <div className={cn("p-2.5 rounded-xl flex-shrink-0", iconStyles[iconBg])}>
+        <Icon className="h-5 w-5" strokeWidth={1.8} />
       </div>
     </div>
   );

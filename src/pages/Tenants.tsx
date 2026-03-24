@@ -323,8 +323,8 @@ export default function Tenants() {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col gap-3">
-          <div className="relative w-full">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Rechercher un locataire..."
@@ -333,39 +333,44 @@ export default function Tenants() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="active">Contrat actif</SelectItem>
-                <SelectItem value="expired">Contrat expiré</SelectItem>
-              </SelectContent>
-            </Select>
-            {/* Assigned Filter - Only for agency owner/admin */}
+          <div className="flex items-center gap-2 flex-wrap">
             {isAgencyOwner && assignableUsers.length > 1 && (
               <Select value={assignedFilter} onValueChange={setAssignedFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger className="w-[180px] h-9">
                   <SelectValue placeholder="Gestionnaire" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les gestionnaires</SelectItem>
-                  <SelectItem value="unassigned">
-                    <span className="text-muted-foreground">Non assignés</span>
-                  </SelectItem>
+                  <SelectItem value="unassigned">Non assignés</SelectItem>
                   {assignableUsers.map((user) => (
                     <SelectItem key={user.user_id} value={user.user_id}>
-                      <div className="flex items-center gap-2">
-                        <UserCheck className="h-3 w-3" />
-                        {user.full_name || user.email}
-                      </div>
+                      {user.full_name || user.email}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
+            <div className="flex rounded-lg border border-border overflow-hidden">
+              {[
+                { value: "all", label: "Tous" },
+                { value: "uptodate", label: "À jour" },
+                { value: "late", label: "Retard" },
+                { value: "expelled", label: "Expulsés" },
+              ].map((filter) => (
+                <button
+                  key={filter.value}
+                  onClick={() => setStatusFilter(filter.value)}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium transition-colors",
+                    statusFilter === filter.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -402,43 +407,108 @@ export default function Tenants() {
           </div>
         )}
 
-
-        {/* Tenant List */}
+        {/* Tenant Table */}
         {!isLoading && !error && (
-          <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">
-              Liste des locataires ({filteredTenants.length})
-            </h2>
-            <div className="grid gap-3 sm:gap-4">
-              {filteredTenants.map((tenant) => (
-                <TenantCard 
-                  key={tenant.id}
-                  tenant={tenant} 
-                  onEdit={handleEditTenant}
-                  onView={handleViewTenant}
-                  onDelete={handleDeleteTenant}
-                  onCreateAccess={handleCreateAccess}
-                  onRevokeAccess={handleRevokeAccess}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
-                  isDeleting={deleteTenantMutation.isPending}
-                  isRevokingAccess={revokeAccessMutation.isPending}
-                  isAgencyOwner={isAgencyOwner}
-                  tenantRequests={requestsByTenant[tenant.id] || []}
-                />
-              ))}
-            </div>
-            {filteredTenants.length === 0 && (
-              <Card>
-                <CardContent className="p-8 text-center">
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Locataire</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Propriété</th>
+                    <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Loyer</th>
+                    <th className="text-center text-xs font-medium text-muted-foreground px-4 py-3">Statut</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Fin de Bail</th>
+                    <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredTenants.map((tenant) => {
+                    const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
+                    const paymentStatus = getPaymentStatusLabel(tenant);
+                    const propertyLabel = tenant.property
+                      ? `${tenant.property.title}${tenant.unit ? `, ${tenant.unit.unit_number}` : ''}`
+                      : "—";
+
+                    return (
+                      <tr key={tenant.id} className="hover:bg-muted/50 transition-colors">
+                        {/* Locataire */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-semibold text-primary">
+                                {tenant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm text-foreground truncate">{tenant.name}</p>
+                              {tenant.phone && (
+                                <p className="text-xs text-muted-foreground">{tenant.phone}</p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        {/* Propriété */}
+                        <td className="px-4 py-3">
+                          <p className="text-sm text-foreground truncate max-w-[200px]">{propertyLabel}</p>
+                        </td>
+                        {/* Loyer */}
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-sm font-semibold text-foreground whitespace-nowrap">
+                            {activeContract 
+                              ? `${Number(activeContract.rent_amount).toLocaleString('fr-FR')} FCFA`
+                              : "—"}
+                          </span>
+                        </td>
+                        {/* Statut */}
+                        <td className="px-4 py-3 text-center">
+                          {paymentStatus ? (
+                            <Badge variant="outline" className={cn("text-xs", paymentStatus.className)}>
+                              {paymentStatus.label}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        {/* Fin de Bail */}
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-foreground whitespace-nowrap">
+                            {activeContract
+                              ? new Date(activeContract.end_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+                              : "—"}
+                          </span>
+                        </td>
+                        {/* Actions */}
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
+                            {canEdit && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditTenant(tenant)}>
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewTenant(tenant)}>
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {filteredTenants.length === 0 && (
+                <div className="p-8 text-center">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
                     {tenants?.length === 0 
                       ? "Aucun locataire enregistré. Ajoutez votre premier locataire !"
                       : "Aucun locataire trouvé."}
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              )}
+            </div>
+          </Card>
             )}
           </div>
         )}

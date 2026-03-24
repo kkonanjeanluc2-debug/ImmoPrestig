@@ -5,23 +5,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, FileText, User, Home, Building2, Wrench } from "lucide-react";
+import { Plus, Trash2, FileText, User, Home, Building2, Wrench, UserCheck } from "lucide-react";
 import { useCreateProforma, InvoiceItem } from "@/hooks/useProformaInvoices";
 import { useTenants } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
+import { useBiensVente } from "@/hooks/useBiensVente";
+import { useOwners } from "@/hooks/useOwners";
 
 interface Props {
   preselectedTenantId?: string;
   trigger?: React.ReactNode;
 }
 
-type ClientType = "locataire" | "client";
+type ClientType = "locataire" | "client" | "proprietaire";
 type InvoiceCategory = "bien" | "prestation";
 
 export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   const [open, setOpen] = useState(false);
   const { data: tenants } = useTenants();
   const { data: properties } = useProperties();
+  const { data: biensVente } = useBiensVente();
+  const { data: owners } = useOwners();
   const createProforma = useCreateProforma();
 
   const [invoiceCategory, setInvoiceCategory] = useState<InvoiceCategory>("bien");
@@ -49,6 +53,14 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
 
   const activeTenants = (tenants || []).filter((t: any) => !t.deleted_at);
   const activeProperties = (properties || []).filter((p: any) => !p.deleted_at);
+  const activeBiensVente = (biensVente || []).filter((b: any) => !b.deleted_at);
+  const activeOwners = (owners || []).filter((o: any) => !o.deleted_at);
+
+  // Merge properties and biens_vente for selection
+  const allBiens = [
+    ...activeProperties.map((p: any) => ({ id: p.id, title: p.title, type: "location", property_type: p.property_type, address: p.address, area: p.area })),
+    ...activeBiensVente.map((b: any) => ({ id: b.id, title: `${b.title} (Vente)`, type: "vente", property_type: b.property_type, address: b.address, area: b.area })),
+  ];
 
   const handleCategoryChange = (cat: InvoiceCategory) => {
     setInvoiceCategory(cat);
@@ -72,6 +84,16 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
     setUnitNumber("");
   };
 
+  const handleOwnerSelect = (ownerId: string) => {
+    setSelectedTenantId(ownerId);
+    const owner = activeOwners.find((o: any) => o.id === ownerId);
+    if (owner) {
+      setTenantName(owner.name);
+      setTenantPhone(owner.phone || "");
+      setTenantEmail(owner.email || "");
+    }
+  };
+
   const handleTenantSelect = (tenantId: string) => {
     setSelectedTenantId(tenantId);
     const tenant = activeTenants.find((t: any) => t.id === tenantId);
@@ -86,9 +108,9 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
 
   const handlePropertySelect = (propertyId: string) => {
     setSelectedPropertyId(propertyId);
-    const prop = activeProperties.find((p: any) => p.id === propertyId);
+    const prop = allBiens.find((p: any) => p.id === propertyId);
     if (prop) {
-      setPropertyName(prop.title);
+      setPropertyName(prop.title.replace(" (Vente)", ""));
       setPropertyType(prop.property_type || "");
       setPropertyAddress(prop.address || "");
       setPropertyArea(prop.area ? String(prop.area) : "");
@@ -245,12 +267,12 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
           {/* Client type selector */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold">Type de destinataire</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 type="button"
                 variant={clientType === "locataire" ? "default" : "outline"}
                 size="sm"
-                className="gap-2 h-10"
+                className="gap-1.5 h-10 text-xs"
                 onClick={() => handleClientTypeChange("locataire")}
               >
                 <Home className="h-4 w-4" />
@@ -258,9 +280,19 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
               </Button>
               <Button
                 type="button"
+                variant={clientType === "proprietaire" ? "default" : "outline"}
+                size="sm"
+                className="gap-1.5 h-10 text-xs"
+                onClick={() => handleClientTypeChange("proprietaire")}
+              >
+                <UserCheck className="h-4 w-4" />
+                Propriétaire
+              </Button>
+              <Button
+                type="button"
                 variant={clientType === "client" ? "default" : "outline"}
                 size="sm"
-                className="gap-2 h-10"
+                className="gap-1.5 h-10 text-xs"
                 onClick={() => handleClientTypeChange("client")}
               >
                 <User className="h-4 w-4" />
@@ -272,7 +304,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
           {/* Client info */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-foreground">
-              {clientType === "locataire" ? "Informations locataire" : "Informations client"}
+              {clientType === "locataire" ? "Informations locataire" : clientType === "proprietaire" ? "Informations propriétaire" : "Informations client"}
             </h3>
 
             {clientType === "locataire" ? (
@@ -286,6 +318,34 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                     <SelectContent className="bg-popover z-50">
                       {activeTenants.map((t: any) => (
                         <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Nom *</Label>
+                  <Input className="h-9" value={tenantName} onChange={(e) => setTenantName(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Téléphone</Label>
+                  <Input className="h-9" value={tenantPhone} onChange={(e) => setTenantPhone(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Email</Label>
+                  <Input className="h-9" value={tenantEmail} onChange={(e) => setTenantEmail(e.target.value)} />
+                </div>
+              </div>
+            ) : clientType === "proprietaire" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Propriétaire</Label>
+                  <Select value={selectedTenantId} onValueChange={handleOwnerSelect}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Sélectionner..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {activeOwners.map((o: any) => (
+                        <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -346,7 +406,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                     </div>
                   </>
                 )}
-                {clientType === "client" && (
+                {(clientType === "client" || clientType === "proprietaire") && (
                   <>
                     <div>
                       <Label className="text-xs">Bien existant</Label>
@@ -355,7 +415,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                           <SelectValue placeholder="Sélectionner un bien..." />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50">
-                          {activeProperties.map((p: any) => (
+                          {allBiens.map((p: any) => (
                             <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                           ))}
                         </SelectContent>

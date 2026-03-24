@@ -439,7 +439,41 @@ const Properties = () => {
                             </Badge>
                           </td>
                           <td className="px-4 py-3">
-                            {tenantName ? (
+                            {(property.property_type === "maison" || property.property_type === "immeuble") && hasUnits ? (
+                              (() => {
+                                const allTenants = propertyTenantsAllMap[property.id] || [];
+                                if (allTenants.length === 0) return <span className="text-muted-foreground">-</span>;
+                                return (
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-auto py-1 px-2 text-foreground gap-1"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                                        {allTenants.length} locataire{allTenants.length > 1 ? "s" : ""}
+                                        <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-56 p-2" align="start">
+                                      <div className="space-y-1">
+                                        {allTenants.map((t, idx) => (
+                                          <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted">
+                                            <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                            <div className="min-w-0">
+                                              <p className="font-medium truncate">{t.name}</p>
+                                              {t.unit && <p className="text-xs text-muted-foreground">Porte: {t.unit}</p>}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
+                                );
+                              })()
+                            ) : tenantName ? (
                               <div className="flex items-center gap-1.5 text-foreground">
                                 <User className="h-3.5 w-3.5 text-muted-foreground" />
                                 {tenantName}

@@ -253,7 +253,7 @@ const Comptabilite = () => {
             </div>
 
             {/* Secondary KPIs */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
               {secondaryCards.map((card) => (
                 <Card key={card.title}>
                   <CardContent className="p-3 sm:p-4">

@@ -8,7 +8,7 @@ import { SubscriptionQuotaCard } from "@/components/dashboard/SubscriptionQuotaC
 import { MyAssignedItems } from "@/components/dashboard/MyAssignedItems";
 import { ManagerPerformance } from "@/components/dashboard/ManagerPerformance";
 import { ManagerPerformanceChart } from "@/components/dashboard/ManagerPerformanceChart";
-import { Building2, Users, Wallet, TrendingUp, Loader2, FileText, MessageCircle } from "lucide-react";
+import { Building2, Users, Wallet, TrendingUp, Loader2, FileText, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperties } from "@/hooks/useProperties";
 import { supabase } from "@/integrations/supabase/client";

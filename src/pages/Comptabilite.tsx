@@ -678,6 +678,15 @@ const Comptabilite = () => {
           <TabsContent value="factures" className="space-y-6">
             <ProformaInvoicesList />
           </TabsContent>
+
+          {/* === REVERSEMENTS TAB === */}
+          <TabsContent value="reversements" className="space-y-6">
+            <OwnerPayoutsSection
+              fromDate={fromDateStr}
+              toDate={toDateStr}
+              totalReversements={totalReversements}
+            />
+          </TabsContent>
         </Tabs>
       </div>
 

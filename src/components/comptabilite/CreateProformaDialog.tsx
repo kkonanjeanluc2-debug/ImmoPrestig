@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, FileText } from "lucide-react";
+import { Plus, Trash2, FileText, User, Home } from "lucide-react";
 import { useCreateProforma, InvoiceItem } from "@/hooks/useProformaInvoices";
 import { useTenants } from "@/hooks/useTenants";
 
@@ -14,15 +14,20 @@ interface Props {
   trigger?: React.ReactNode;
 }
 
+type ClientType = "locataire" | "client";
+
 export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   const [open, setOpen] = useState(false);
   const { data: tenants } = useTenants();
   const createProforma = useCreateProforma();
 
+  const [clientType, setClientType] = useState<ClientType>(preselectedTenantId ? "locataire" : "locataire");
   const [selectedTenantId, setSelectedTenantId] = useState(preselectedTenantId || "");
   const [tenantName, setTenantName] = useState("");
   const [tenantPhone, setTenantPhone] = useState("");
   const [tenantEmail, setTenantEmail] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+  const [clientCompany, setClientCompany] = useState("");
   const [propertyName, setPropertyName] = useState("");
   const [unitNumber, setUnitNumber] = useState("");
   const [description, setDescription] = useState("");
@@ -34,6 +39,18 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   ]);
 
   const activeTenants = (tenants || []).filter((t: any) => !t.deleted_at);
+
+  const handleClientTypeChange = (type: ClientType) => {
+    setClientType(type);
+    setSelectedTenantId("");
+    setTenantName("");
+    setTenantPhone("");
+    setTenantEmail("");
+    setClientAddress("");
+    setClientCompany("");
+    setPropertyName("");
+    setUnitNumber("");
+  };
 
   const handleTenantSelect = (tenantId: string) => {
     setSelectedTenantId(tenantId);
@@ -74,7 +91,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
 
     createProforma.mutate(
       {
-        tenant_id: selectedTenantId || null,
+        tenant_id: clientType === "locataire" ? (selectedTenantId || null) : null,
         tenant_name: tenantName,
         tenant_phone: tenantPhone,
         tenant_email: tenantEmail,
@@ -86,7 +103,9 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
         tax_rate: taxRate,
         tax_amount: taxAmount,
         total_amount: totalAmount,
-        notes,
+        notes: clientType === "client"
+          ? [clientCompany && `Société: ${clientCompany}`, clientAddress && `Adresse: ${clientAddress}`, notes].filter(Boolean).join("\n")
+          : notes,
         due_date: dueDate || undefined,
       },
       {
@@ -99,10 +118,13 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   };
 
   const resetForm = () => {
+    setClientType(preselectedTenantId ? "locataire" : "locataire");
     setSelectedTenantId(preselectedTenantId || "");
     setTenantName("");
     setTenantPhone("");
     setTenantEmail("");
+    setClientAddress("");
+    setClientCompany("");
     setPropertyName("");
     setUnitNumber("");
     setDescription("");
@@ -131,44 +153,107 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Client type selector */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold">Type de destinataire</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={clientType === "locataire" ? "default" : "outline"}
+                size="sm"
+                className="gap-2 h-10"
+                onClick={() => handleClientTypeChange("locataire")}
+              >
+                <Home className="h-4 w-4" />
+                Locataire
+              </Button>
+              <Button
+                type="button"
+                variant={clientType === "client" ? "default" : "outline"}
+                size="sm"
+                className="gap-2 h-10"
+                onClick={() => handleClientTypeChange("client")}
+              >
+                <User className="h-4 w-4" />
+                Client externe
+              </Button>
+            </div>
+          </div>
+
           {/* Client info */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Informations client</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Locataire existant</Label>
-                <Select value={selectedTenantId} onValueChange={handleTenantSelect}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Sélectionner..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    {activeTenants.map((t: any) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <h3 className="text-sm font-semibold text-foreground">
+              {clientType === "locataire" ? "Informations locataire" : "Informations client"}
+            </h3>
+
+            {clientType === "locataire" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Locataire existant</Label>
+                  <Select value={selectedTenantId} onValueChange={handleTenantSelect}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Sélectionner..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {activeTenants.map((t: any) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Nom *</Label>
+                  <Input className="h-9" value={tenantName} onChange={(e) => setTenantName(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Téléphone</Label>
+                  <Input className="h-9" value={tenantPhone} onChange={(e) => setTenantPhone(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Email</Label>
+                  <Input className="h-9" value={tenantEmail} onChange={(e) => setTenantEmail(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Bien</Label>
+                  <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">N° porte/unité</Label>
+                  <Input className="h-9" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} />
+                </div>
               </div>
-              <div>
-                <Label className="text-xs">Nom *</Label>
-                <Input className="h-9" value={tenantName} onChange={(e) => setTenantName(e.target.value)} />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Nom / Raison sociale *</Label>
+                  <Input className="h-9" value={tenantName} onChange={(e) => setTenantName(e.target.value)} placeholder="Nom du client ou de la société" />
+                </div>
+                <div>
+                  <Label className="text-xs">Société / Entreprise</Label>
+                  <Input className="h-9" value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="Nom de l'entreprise" />
+                </div>
+                <div>
+                  <Label className="text-xs">Téléphone</Label>
+                  <Input className="h-9" value={tenantPhone} onChange={(e) => setTenantPhone(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Email</Label>
+                  <Input className="h-9" value={tenantEmail} onChange={(e) => setTenantEmail(e.target.value)} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label className="text-xs">Adresse</Label>
+                  <Input className="h-9" value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="Adresse du client" />
+                </div>
+                <div>
+                  <Label className="text-xs">Bien / Objet concerné</Label>
+                  <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} placeholder="Ex: Terrain, Appartement, Prestation..." />
+                </div>
+                <div>
+                  <Label className="text-xs">Référence</Label>
+                  <Input className="h-9" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} placeholder="N° lot, réf. bien..." />
+                </div>
               </div>
-              <div>
-                <Label className="text-xs">Téléphone</Label>
-                <Input className="h-9" value={tenantPhone} onChange={(e) => setTenantPhone(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Email</Label>
-                <Input className="h-9" value={tenantEmail} onChange={(e) => setTenantEmail(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Bien</Label>
-                <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">N° porte/unité</Label>
-                <Input className="h-9" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} />
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Items */}
@@ -185,7 +270,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                   {index === 0 && <Label className="text-xs">Description</Label>}
                   <Input
                     className="h-9"
-                    placeholder="Ex: Loyer mensuel"
+                    placeholder={clientType === "locataire" ? "Ex: Loyer mensuel" : "Ex: Commission, Frais de dossier..."}
                     value={item.description}
                     onChange={(e) => updateItem(index, "description", e.target.value)}
                   />

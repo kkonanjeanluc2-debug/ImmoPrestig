@@ -65,7 +65,7 @@ const LotissementDetails = () => {
   const isGestionnaire = role === "gestionnaire";
   const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewLotissementProspectsCount(id);
   // Prefetch ilots data for instant tab switching
-  useIlotsWithStats(id);
+  const { data: ilotsData } = useIlotsWithStats(id);
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);

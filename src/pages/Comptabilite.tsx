@@ -80,8 +80,9 @@ const Comptabilite = () => {
   const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
-  const beneficeNet = totalRevenue - data.totalExpenses - totalReversements;
-  const margePercent = totalRevenue > 0 ? Math.round((beneficeNet / totalRevenue) * 100) : 0;
+  const revenusNets = totalRevenue - totalReversements;
+  const beneficeNet = revenusNets - data.totalExpenses;
+  const margePercent = revenusNets > 0 ? Math.round((beneficeNet / revenusNets) * 100) : 0;
 
   const renderPieLabel = ({ name, percent }: { name: string; percent: number }) => {
     if (percent < 0.05) return null;
@@ -91,7 +92,7 @@ const Comptabilite = () => {
   const statCards = [
     {
       title: "Revenus encaissés",
-      value: formatCFA(totalRevenue),
+      value: formatCFA(revenusNets),
       icon: ArrowUpRight,
       color: "text-emerald",
       bgColor: "bg-emerald/10",

@@ -7,6 +7,7 @@ import { ComptabiliteData, MonthlyEntry } from "@/hooks/useComptabilite";
 interface Props {
   data: ComptabiliteData;
   totalRevenue: number;
+  totalReversements?: number;
 }
 
 function formatCFA(amount: number) {

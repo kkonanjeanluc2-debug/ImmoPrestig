@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, FileText, User, Home } from "lucide-react";
+import { Plus, Trash2, FileText, User, Home, Building2, Wrench } from "lucide-react";
 import { useCreateProforma, InvoiceItem } from "@/hooks/useProformaInvoices";
 import { useTenants } from "@/hooks/useTenants";
+import { useProperties } from "@/hooks/useProperties";
 
 interface Props {
   preselectedTenantId?: string;
@@ -15,12 +16,15 @@ interface Props {
 }
 
 type ClientType = "locataire" | "client";
+type InvoiceCategory = "bien" | "prestation";
 
 export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   const [open, setOpen] = useState(false);
   const { data: tenants } = useTenants();
+  const { data: properties } = useProperties();
   const createProforma = useCreateProforma();
 
+  const [invoiceCategory, setInvoiceCategory] = useState<InvoiceCategory>("bien");
   const [clientType, setClientType] = useState<ClientType>(preselectedTenantId ? "locataire" : "locataire");
   const [selectedTenantId, setSelectedTenantId] = useState(preselectedTenantId || "");
   const [tenantName, setTenantName] = useState("");
@@ -30,6 +34,11 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   const [clientCompany, setClientCompany] = useState("");
   const [propertyName, setPropertyName] = useState("");
   const [unitNumber, setUnitNumber] = useState("");
+  const [selectedPropertyId, setSelectedPropertyId] = useState("");
+  const [propertyType, setPropertyType] = useState("");
+  const [propertyAddress, setPropertyAddress] = useState("");
+  const [propertyArea, setPropertyArea] = useState("");
+  const [prestationType, setPrestationType] = useState("");
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -39,6 +48,17 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   ]);
 
   const activeTenants = (tenants || []).filter((t: any) => !t.deleted_at);
+  const activeProperties = (properties || []).filter((p: any) => !p.deleted_at);
+
+  const handleCategoryChange = (cat: InvoiceCategory) => {
+    setInvoiceCategory(cat);
+    setItems([{ description: "", quantity: 1, unit_price: 0, total: 0 }]);
+    setPrestationType("");
+    setSelectedPropertyId("");
+    setPropertyType("");
+    setPropertyAddress("");
+    setPropertyArea("");
+  };
 
   const handleClientTypeChange = (type: ClientType) => {
     setClientType(type);
@@ -61,6 +81,17 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
       setTenantEmail(tenant.email || "");
       setPropertyName(tenant.property?.title || "");
       setUnitNumber(tenant.unit?.unit_number || "");
+    }
+  };
+
+  const handlePropertySelect = (propertyId: string) => {
+    setSelectedPropertyId(propertyId);
+    const prop = activeProperties.find((p: any) => p.id === propertyId);
+    if (prop) {
+      setPropertyName(prop.title);
+      setPropertyType(prop.property_type || "");
+      setPropertyAddress(prop.address || "");
+      setPropertyArea(prop.area ? String(prop.area) : "");
     }
   };
 
@@ -89,6 +120,20 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
     if (!tenantName.trim()) return;
     if (items.some(i => !i.description.trim() || i.total <= 0)) return;
 
+    const categoryNotes: string[] = [];
+    if (invoiceCategory === "bien") {
+      if (propertyType) categoryNotes.push(`Type de bien: ${propertyType}`);
+      if (propertyAddress) categoryNotes.push(`Adresse: ${propertyAddress}`);
+      if (propertyArea) categoryNotes.push(`Superficie: ${propertyArea} m²`);
+    } else {
+      if (prestationType) categoryNotes.push(`Type de prestation: ${prestationType}`);
+    }
+    if (clientType === "client") {
+      if (clientCompany) categoryNotes.push(`Société: ${clientCompany}`);
+      if (clientAddress) categoryNotes.push(`Adresse client: ${clientAddress}`);
+    }
+    if (notes) categoryNotes.push(notes);
+
     createProforma.mutate(
       {
         tenant_id: clientType === "locataire" ? (selectedTenantId || null) : null,
@@ -97,15 +142,13 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
         tenant_email: tenantEmail,
         property_name: propertyName,
         unit_number: unitNumber,
-        description,
+        description: description || (invoiceCategory === "bien" ? "Facture bien immobilier" : "Facture prestation"),
         items,
         subtotal,
         tax_rate: taxRate,
         tax_amount: taxAmount,
         total_amount: totalAmount,
-        notes: clientType === "client"
-          ? [clientCompany && `Société: ${clientCompany}`, clientAddress && `Adresse: ${clientAddress}`, notes].filter(Boolean).join("\n")
-          : notes,
+        notes: categoryNotes.join("\n"),
         due_date: dueDate || undefined,
       },
       {
@@ -118,6 +161,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   };
 
   const resetForm = () => {
+    setInvoiceCategory("bien");
     setClientType(preselectedTenantId ? "locataire" : "locataire");
     setSelectedTenantId(preselectedTenantId || "");
     setTenantName("");
@@ -127,12 +171,30 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
     setClientCompany("");
     setPropertyName("");
     setUnitNumber("");
+    setSelectedPropertyId("");
+    setPropertyType("");
+    setPropertyAddress("");
+    setPropertyArea("");
+    setPrestationType("");
     setDescription("");
     setNotes("");
     setDueDate("");
     setTaxRate(0);
     setItems([{ description: "", quantity: 1, unit_price: 0, total: 0 }]);
   };
+
+  const prestationTypes = [
+    "Gestion locative",
+    "Commission de vente",
+    "Frais de dossier",
+    "Conseil immobilier",
+    "Expertise / Évaluation",
+    "Médiation immobilière",
+    "Travaux / Rénovation",
+    "État des lieux",
+    "Accompagnement juridique",
+    "Autre",
+  ];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -153,6 +215,33 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Invoice category selector */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold">Catégorie de facture</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={invoiceCategory === "bien" ? "default" : "outline"}
+                size="sm"
+                className="gap-2 h-10"
+                onClick={() => handleCategoryChange("bien")}
+              >
+                <Building2 className="h-4 w-4" />
+                Bien immobilier
+              </Button>
+              <Button
+                type="button"
+                variant={invoiceCategory === "prestation" ? "default" : "outline"}
+                size="sm"
+                className="gap-2 h-10"
+                onClick={() => handleCategoryChange("prestation")}
+              >
+                <Wrench className="h-4 w-4" />
+                Prestation
+              </Button>
+            </div>
+          </div>
+
           {/* Client type selector */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold">Type de destinataire</Label>
@@ -213,14 +302,6 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                   <Label className="text-xs">Email</Label>
                   <Input className="h-9" value={tenantEmail} onChange={(e) => setTenantEmail(e.target.value)} />
                 </div>
-                <div>
-                  <Label className="text-xs">Bien</Label>
-                  <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs">N° porte/unité</Label>
-                  <Input className="h-9" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} />
-                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -244,17 +325,99 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                   <Label className="text-xs">Adresse</Label>
                   <Input className="h-9" value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="Adresse du client" />
                 </div>
-                <div>
-                  <Label className="text-xs">Bien / Objet concerné</Label>
-                  <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} placeholder="Ex: Terrain, Appartement, Prestation..." />
-                </div>
-                <div>
-                  <Label className="text-xs">Référence</Label>
-                  <Input className="h-9" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} placeholder="N° lot, réf. bien..." />
-                </div>
               </div>
             )}
           </div>
+
+          {/* Category-specific fields */}
+          {invoiceCategory === "bien" ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Informations du bien</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {clientType === "locataire" && (
+                  <>
+                    <div>
+                      <Label className="text-xs">Bien</Label>
+                      <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">N° porte/unité</Label>
+                      <Input className="h-9" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} />
+                    </div>
+                  </>
+                )}
+                {clientType === "client" && (
+                  <>
+                    <div>
+                      <Label className="text-xs">Bien existant</Label>
+                      <Select value={selectedPropertyId} onValueChange={handlePropertySelect}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Sélectionner un bien..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {activeProperties.map((p: any) => (
+                            <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Nom du bien *</Label>
+                      <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} placeholder="Ex: Villa Cocody, Terrain Riviera..." />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Type de bien</Label>
+                      <Select value={propertyType} onValueChange={setPropertyType}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Type..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {["Appartement", "Maison", "Villa", "Terrain", "Bureau", "Commerce", "Immeuble", "Studio", "Meublé"].map(t => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Adresse du bien</Label>
+                      <Input className="h-9" value={propertyAddress} onChange={(e) => setPropertyAddress(e.target.value)} placeholder="Localisation du bien" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Superficie (m²)</Label>
+                      <Input className="h-9" type="number" value={propertyArea} onChange={(e) => setPropertyArea(e.target.value)} placeholder="Ex: 500" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Référence / N° lot</Label>
+                      <Input className="h-9" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} placeholder="N° lot, réf..." />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Informations de la prestation</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Type de prestation *</Label>
+                  <Select value={prestationType} onValueChange={setPrestationType}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Sélectionner..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {prestationTypes.map(t => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Bien concerné (optionnel)</Label>
+                  <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} placeholder="Ex: Villa Cocody, Lot 12..." />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Items */}
           <div className="space-y-3">
@@ -270,7 +433,11 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                   {index === 0 && <Label className="text-xs">Description</Label>}
                   <Input
                     className="h-9"
-                    placeholder={clientType === "locataire" ? "Ex: Loyer mensuel" : "Ex: Commission, Frais de dossier..."}
+                    placeholder={
+                      invoiceCategory === "bien"
+                        ? "Ex: Loyer, Commission, Frais de dossier..."
+                        : "Ex: Honoraires, Consultation, Visite technique..."
+                    }
                     value={item.description}
                     onChange={(e) => updateItem(index, "description", e.target.value)}
                   />

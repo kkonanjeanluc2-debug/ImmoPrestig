@@ -81,7 +81,7 @@ const Comptabilite = () => {
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
   const beneficeNet = totalRevenue - data.totalExpenses - totalReversements;
-  const margePercent = totalRevenue > 0 ? Math.round((beneficeNet / totalRevenue) * 100) : 0;
+  const margePercent = revenusNets > 0 ? Math.round((beneficeNet / revenusNets) * 100) : 0;
 
   const renderPieLabel = ({ name, percent }: { name: string; percent: number }) => {
     if (percent < 0.05) return null;

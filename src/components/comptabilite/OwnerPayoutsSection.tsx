@@ -292,7 +292,7 @@ export function OwnerPayoutsSection({
                   <Label>Année *</Label>
                   <Select
                     value={String(form.payout_year)}
-                    onValueChange={(v) => setForm({ ...form, payout_year: Number(v) })}
+                    onValueChange={(v) => handleYearChange(Number(v))}
                   >
                     <SelectTrigger>
                       <SelectValue />

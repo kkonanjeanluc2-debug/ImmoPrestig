@@ -434,6 +434,7 @@ export type Database = {
           geniuspay_sandbox: boolean | null
           geniuspay_secret_key: string | null
           id: string
+          invoice_counter: number
           is_active: boolean
           kkiapay_private_key: string | null
           kkiapay_public_key: string | null
@@ -452,6 +453,7 @@ export type Database = {
           pdf_text_color: string | null
           phone: string | null
           primary_color: string | null
+          proforma_counter: number
           receipt_counter: number
           rent_due_day: number
           reservation_deposit_percentage: number
@@ -477,6 +479,7 @@ export type Database = {
           geniuspay_sandbox?: boolean | null
           geniuspay_secret_key?: string | null
           id?: string
+          invoice_counter?: number
           is_active?: boolean
           kkiapay_private_key?: string | null
           kkiapay_public_key?: string | null
@@ -495,6 +498,7 @@ export type Database = {
           pdf_text_color?: string | null
           phone?: string | null
           primary_color?: string | null
+          proforma_counter?: number
           receipt_counter?: number
           rent_due_day?: number
           reservation_deposit_percentage?: number
@@ -520,6 +524,7 @@ export type Database = {
           geniuspay_sandbox?: boolean | null
           geniuspay_secret_key?: string | null
           id?: string
+          invoice_counter?: number
           is_active?: boolean
           kkiapay_private_key?: string | null
           kkiapay_public_key?: string | null
@@ -538,6 +543,7 @@ export type Database = {
           pdf_text_color?: string | null
           phone?: string | null
           primary_color?: string | null
+          proforma_counter?: number
           receipt_counter?: number
           rent_due_day?: number
           reservation_deposit_percentage?: number
@@ -3031,6 +3037,102 @@ export type Database = {
         }
         Relationships: []
       }
+      proforma_invoices: {
+        Row: {
+          converted_at: string | null
+          converted_from_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          due_date: string | null
+          id: string
+          invoice_number: string
+          invoice_type: string
+          items: Json
+          notes: string | null
+          property_name: string | null
+          status: string
+          subtotal: number
+          tax_amount: number | null
+          tax_rate: number | null
+          tenant_email: string | null
+          tenant_id: string | null
+          tenant_name: string
+          tenant_phone: string | null
+          total_amount: number
+          unit_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          converted_at?: string | null
+          converted_from_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          invoice_type?: string
+          items?: Json
+          notes?: string | null
+          property_name?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          tenant_email?: string | null
+          tenant_id?: string | null
+          tenant_name: string
+          tenant_phone?: string | null
+          total_amount?: number
+          unit_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          converted_at?: string | null
+          converted_from_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          invoice_type?: string
+          items?: Json
+          notes?: string | null
+          property_name?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          tenant_email?: string | null
+          tenant_id?: string | null
+          tenant_name?: string
+          tenant_phone?: string | null
+          total_amount?: number
+          unit_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proforma_invoices_converted_from_id_fkey"
+            columns: ["converted_from_id"]
+            isOneToOne: false
+            referencedRelation: "proforma_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proforma_invoices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       promesse_vente_templates: {
         Row: {
           content: string
@@ -4581,6 +4683,11 @@ export type Database = {
       get_agency_tenant_portal_count: {
         Args: { p_agency_id: string }
         Returns: number
+      }
+      get_next_invoice_number: { Args: { _agency_id: string }; Returns: string }
+      get_next_proforma_number: {
+        Args: { _agency_id: string }
+        Returns: string
       }
       get_next_receipt_number: { Args: { _agency_id: string }; Returns: string }
       get_user_agency_id: { Args: { _user_id: string }; Returns: string }

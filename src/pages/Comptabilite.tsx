@@ -10,6 +10,7 @@ import {
   Wallet, TrendingUp, TrendingDown, Clock, AlertTriangle,
   BarChart3, Receipt, ArrowUpRight,
   ArrowDownRight, Plus, DollarSign, Minus, BookOpen, Landmark,
+  FileText,
 } from "lucide-react";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 import { useComptabilite } from "@/hooks/useComptabilite";
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ExpensesTable } from "@/components/comptabilite/ExpensesTable";
 import { AddExpenseDialog } from "@/components/comptabilite/AddExpenseDialog";
 import { SyscohadaCompteResultat } from "@/components/comptabilite/SyscohadaCompteResultat";
+import { ProformaInvoicesList } from "@/components/comptabilite/ProformaInvoicesList";
 import { TresorerieTab } from "@/components/comptabilite/TresorerieTab";
 import { ExportComptabilite } from "@/components/comptabilite/ExportComptabilite";
 import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
@@ -200,6 +202,11 @@ const Comptabilite = () => {
               <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">SYSCOHADA</span>
               <span className="sm:hidden">SYS.</span>
+            </TabsTrigger>
+            <TabsTrigger value="factures" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="hidden sm:inline">Factures</span>
+              <span className="sm:hidden">Fact.</span>
             </TabsTrigger>
           </TabsList>
 
@@ -651,6 +658,11 @@ const Comptabilite = () => {
           {/* === SYSCOHADA TAB === */}
           <TabsContent value="syscohada" className="space-y-6">
             <SyscohadaCompteResultat data={data} totalRevenue={totalRevenue} />
+          </TabsContent>
+
+          {/* === FACTURES TAB === */}
+          <TabsContent value="factures" className="space-y-6">
+            <ProformaInvoicesList />
           </TabsContent>
         </Tabs>
       </div>

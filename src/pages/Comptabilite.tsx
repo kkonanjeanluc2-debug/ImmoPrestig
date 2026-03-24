@@ -342,6 +342,7 @@ const Comptabilite = () => {
                         <th className="text-right py-2 px-3 text-muted-foreground font-medium">Cautions</th>
                         <th className="text-right py-2 px-3 font-medium text-emerald">Total revenus</th>
                         <th className="text-right py-2 px-3 font-medium text-destructive">Dépenses</th>
+                        <th className="text-right py-2 px-3 font-medium text-primary">Reversements</th>
                         <th className="text-right py-2 px-3 font-semibold text-foreground">Bénéfice</th>
                       </tr>
                     </thead>

@@ -430,9 +430,12 @@ const Properties = () => {
                       };
 
                       // Find tenant for a specific unit
-                      const getUnitTenant = (unitId: string) => {
+                      const getUnitTenant = (unit: PropertyUnit) => {
                         const allTenants = propertyTenantsAllMap[property.id] || [];
-                        return allTenants.find((t: any) => t.unit_id === unitId);
+                        return allTenants.find((t: any) => 
+                          (t.unit_id && t.unit_id === unit.id) || 
+                          (t.unit && t.unit === unit.unit_number)
+                        );
                       };
 
                       return (
@@ -594,7 +597,7 @@ const Properties = () => {
                                       </thead>
                                       <tbody>
                                         {expandedUnits.map((unit) => {
-                                          const unitTenant = getUnitTenant(unit.id);
+                                          const unitTenant = getUnitTenant(unit);
                                           const unitStatusConfig: Record<string, { label: string; className: string }> = {
                                             disponible: { label: "Disponible", className: "bg-primary/10 text-primary border-primary/30" },
                                             "loué": { label: "Loué", className: "bg-destructive/10 text-destructive border-destructive/20" },

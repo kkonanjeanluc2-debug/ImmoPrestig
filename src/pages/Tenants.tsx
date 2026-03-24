@@ -132,7 +132,7 @@ export default function Tenants() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [assignedFilter, setAssignedFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("active");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [accessDialogTenant, setAccessDialogTenant] = useState<TenantWithDetails | null>(null);

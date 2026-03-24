@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useCreateIlot } from "@/hooks/useIlots";
 import { useCreateParcelle } from "@/hooks/useParcelles";
 import * as XLSX from "xlsx";
+import { supabase } from "@/integrations/supabase/client";
 import {
   parseDXF,
   parseShapefile,

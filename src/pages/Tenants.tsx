@@ -461,7 +461,12 @@ export default function Tenants() {
                         </td>
                         {/* Bien */}
                         <td className="px-4 py-3">
-                          <p className="text-sm text-foreground truncate max-w-[200px]">{propertyLabel}</p>
+                          <div className="max-w-[250px]">
+                            <p className="text-sm text-foreground break-words">{tenant.property?.title || "—"}</p>
+                            {tenant.unit && (
+                              <p className="text-xs text-muted-foreground break-words">{tenant.unit.unit_number}</p>
+                            )}
+                          </div>
                         </td>
                         {/* Loyer */}
                         <td className="px-4 py-3 text-right">

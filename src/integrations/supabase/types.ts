@@ -1842,7 +1842,11 @@ export type Database = {
           latitude: number | null
           location: string
           longitude: number | null
+          lotisseur_name: string | null
           name: string
+          proprietaire_name: string | null
+          repartition_lotisseur: number | null
+          repartition_proprietaire: number | null
           total_area: number | null
           total_plots: number | null
           updated_at: string
@@ -1858,7 +1862,11 @@ export type Database = {
           latitude?: number | null
           location: string
           longitude?: number | null
+          lotisseur_name?: string | null
           name: string
+          proprietaire_name?: string | null
+          repartition_lotisseur?: number | null
+          repartition_proprietaire?: number | null
           total_area?: number | null
           total_plots?: number | null
           updated_at?: string
@@ -1874,7 +1882,11 @@ export type Database = {
           latitude?: number | null
           location?: string
           longitude?: number | null
+          lotisseur_name?: string | null
           name?: string
+          proprietaire_name?: string | null
+          repartition_lotisseur?: number | null
+          repartition_proprietaire?: number | null
           total_area?: number | null
           total_plots?: number | null
           updated_at?: string
@@ -2713,6 +2725,7 @@ export type Database = {
         Row: {
           area: number
           assigned_to: string | null
+          attribution: string | null
           created_at: string
           deleted_at: string | null
           height: number | null
@@ -2732,6 +2745,7 @@ export type Database = {
         Insert: {
           area: number
           assigned_to?: string | null
+          attribution?: string | null
           created_at?: string
           deleted_at?: string | null
           height?: number | null
@@ -2751,6 +2765,7 @@ export type Database = {
         Update: {
           area?: number
           assigned_to?: string | null
+          attribution?: string | null
           created_at?: string
           deleted_at?: string | null
           height?: number | null

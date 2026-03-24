@@ -95,7 +95,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     }
 
     try {
-      await createProperty.mutateAsync({
+      const result = await createProperty.mutateAsync({
         title: formData.title,
         address: formData.address,
         price: formData.price ? Number(formData.price) : 0,
@@ -118,6 +118,11 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
       resetForm();
       setOpen(false);
       onSuccess?.();
+
+      // For immeuble category, navigate to unit management
+      if (category === "immeuble" && result?.id) {
+        navigate(`/properties/${result.id}`);
+      }
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'ajout du bien");
     }

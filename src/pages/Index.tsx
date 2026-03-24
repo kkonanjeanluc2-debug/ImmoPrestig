@@ -222,6 +222,11 @@ const Index = () => {
           </div>
         )}
 
+        {/* Payment Evolution Chart */}
+        {!isLoading && (
+          <PaymentEvolutionChart payments={filteredPayments} periodFrom={period.from} periodTo={period.to} />
+        )}
+
         {/* Manager Performance Chart */}
         {!isLoading && <ManagerPerformanceChart periodFrom={period.from} periodTo={period.to} />}
 

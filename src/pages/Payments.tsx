@@ -184,16 +184,17 @@ export default function Payments() {
 
     // Handle "impaye" filter: late payments with >=30 days overdue
     if (statusFilter === "impaye") {
-      const dueDate = new Date(payment.due_date);
-      const daysLate = differenceInDays(new Date(), dueDate);
-      return matchesSearch && payment.status === 'late' && daysLate >= 30;
+      return matchesSearch && getEffectiveStatus(payment) === 'impaye';
     }
 
     // Handle "late" filter: late payments with <30 days overdue
     if (statusFilter === "late") {
-      const dueDate = new Date(payment.due_date);
-      const daysLate = differenceInDays(new Date(), dueDate);
-      return matchesSearch && payment.status === 'late' && daysLate < 30;
+      return matchesSearch && getEffectiveStatus(payment) === 'late';
+    }
+
+    // Handle "pending" filter: only truly pending (not overdue)
+    if (statusFilter === "pending") {
+      return matchesSearch && getEffectiveStatus(payment) === 'pending';
     }
     
     const matchesStatus = statusFilter === "all" || payment.status === statusFilter;

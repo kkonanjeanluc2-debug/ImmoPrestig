@@ -286,6 +286,12 @@ const LotissementDetails = () => {
                   <span className="hidden sm:inline">Acquéreurs</span>
                 </TabsTrigger>
                 {isOwner && (
+                  <TabsTrigger value="repartition" className="gap-2">
+                    <PieChart className="h-4 w-4" />
+                    <span className="hidden sm:inline">Répartition</span>
+                  </TabsTrigger>
+                )}
+                {isOwner && (
                   <TabsTrigger value="affectations" className="gap-2">
                     <UserCheck className="h-4 w-4" />
                     <span className="hidden sm:inline">Affectations</span>

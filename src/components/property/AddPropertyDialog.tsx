@@ -60,6 +60,9 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const [showUnitForm, setShowUnitForm] = useState(false);
   const [editingUnitId, setEditingUnitId] = useState<string | null>(null);
   const [unitForm, setUnitForm] = useState({ unit_number: "", rooms_count: 1, rent_amount: 0, area: "" });
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
+  const [bulkCount, setBulkCount] = useState(5);
+  const [bulkSourceUnit, setBulkSourceUnit] = useState<LocalUnit | null>(null);
   const createProperty = useCreateProperty();
   const createUnit = useCreatePropertyUnit();
   const { data: owners = [] } = useOwners();

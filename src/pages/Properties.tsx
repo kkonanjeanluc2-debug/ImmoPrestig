@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen } from "lucide-react";
+import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen, Pencil, Eye } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,9 @@ import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers
 import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
+import { usePropertyTenants } from "@/hooks/usePropertyTenants";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 import { toast } from "sonner";
 import {

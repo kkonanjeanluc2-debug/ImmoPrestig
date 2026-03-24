@@ -91,6 +91,34 @@ const paymentStatusConfig = {
   upcoming: { label: "À venir", icon: Clock, className: "text-blue-500" },
 };
 
+function getPaymentStatusLabel(tenant: TenantWithDetails) {
+  const activeContract = tenant.contracts?.find(c => c.status === 'active');
+  if (!activeContract) return null;
+  
+  const payments = tenant.payments || [];
+  if (payments.length === 0) return { label: "En attente", className: "bg-amber-500/10 text-amber-600 border-amber-500/30" };
+  
+  // Count late payments
+  const latePayments = payments.filter(p => p.status === 'late');
+  const lateDays = latePayments.length > 0 
+    ? Math.max(...latePayments.map(p => Math.ceil((new Date().getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24))))
+    : 0;
+  
+  if (latePayments.length >= 3) {
+    return { label: "Retard fréquent", className: "bg-orange-500/10 text-orange-600 border-orange-500/30" };
+  }
+  if (latePayments.length > 0 && lateDays > 0) {
+    return { label: `Retard ${lateDays}j+`, className: "bg-destructive/10 text-destructive border-destructive/30" };
+  }
+  
+  const latestPayment = payments.sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())[0];
+  if (latestPayment?.status === 'paid') {
+    return { label: "À jour", className: "bg-emerald/10 text-emerald border-emerald/30" };
+  }
+  
+  return { label: "En attente", className: "bg-amber-500/10 text-amber-600 border-amber-500/30" };
+}
+
 interface TenantCardProps {
   tenant: TenantWithDetails;
   onEdit: (tenant: TenantWithDetails) => void;

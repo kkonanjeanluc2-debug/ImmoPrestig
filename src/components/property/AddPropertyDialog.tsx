@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Home, Building, Loader2, User, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Home, Building, Loader2, User, ArrowRight, ArrowLeft, DoorOpen, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 import { supabase } from "@/integrations/supabase/client";
 import { useCreateProperty } from "@/hooks/useProperties";
+import { useCreatePropertyUnit } from "@/hooks/usePropertyUnits";
 import { useOwners } from "@/hooks/useOwners";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
@@ -18,14 +20,22 @@ import { cn } from "@/lib/utils";
 
 type PropertyCategory = "unique" | "immeuble" | null;
 
+interface LocalUnit {
+  id: string;
+  unit_number: string;
+  rooms_count: number;
+  rent_amount: number;
+  area: number | null;
+  status: string;
+}
+
 interface AddPropertyDialogProps {
   onSuccess?: () => void;
 }
 
 export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"category" | "form">("category");
+  const [step, setStep] = useState<"category" | "form" | "units">("category");
   const [category, setCategory] = useState<PropertyCategory>(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -46,10 +56,15 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     longitude: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [localUnits, setLocalUnits] = useState<LocalUnit[]>([]);
+  const [showUnitForm, setShowUnitForm] = useState(false);
+  const [editingUnitId, setEditingUnitId] = useState<string | null>(null);
+  const [unitForm, setUnitForm] = useState({ unit_number: "", rooms_count: 1, rent_amount: 0, area: "" });
   const createProperty = useCreateProperty();
+  const createUnit = useCreatePropertyUnit();
   const { data: owners = [] } = useOwners();
   const limits = useSubscriptionLimits();
-
+  const [isCreating, setIsCreating] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -73,6 +88,9 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     setImagePreview(null);
     setStep("category");
     setCategory(null);
+    setLocalUnits([]);
+    setShowUnitForm(false);
+    setEditingUnitId(null);
   };
 
   const handleCategorySelect = (cat: PropertyCategory) => {
@@ -85,9 +103,20 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     setStep("form");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormNext = (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!formData.title || !formData.address) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+    if (category === "immeuble") {
+      setStep("units");
+    } else {
+      handleSubmitFinal();
+    }
+  };
+
+  const handleSubmitFinal = async () => {
     const isPriceRequired = category !== "immeuble" && formData.property_type !== "maison";
     if (!formData.title || !formData.address || (isPriceRequired && !formData.price)) {
       toast.error("Veuillez remplir tous les champs obligatoires");
@@ -95,6 +124,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     }
 
     try {
+      setIsCreating(true);
       const result = await createProperty.mutateAsync({
         title: formData.title,
         address: formData.address,
@@ -114,19 +144,104 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
         longitude: formData.longitude ? Number(formData.longitude) : null,
       });
 
+      // Create units if immeuble
+      if (category === "immeuble" && result?.id && localUnits.length > 0) {
+        for (const unit of localUnits) {
+          await createUnit.mutateAsync({
+            property_id: result.id,
+            unit_number: unit.unit_number,
+            rooms_count: unit.rooms_count,
+            rent_amount: unit.rent_amount,
+            area: unit.area,
+            status: unit.status,
+          });
+        }
+      }
+
       toast.success("Bien ajouté avec succès !");
       resetForm();
       setOpen(false);
       onSuccess?.();
-
-      // For immeuble category, navigate to unit management
-      if (category === "immeuble" && result?.id) {
-        navigate(`/properties/${result.id}`);
-      }
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'ajout du bien");
+    } finally {
+      setIsCreating(false);
     }
   };
+
+  // Local unit management
+  const resetUnitForm = () => {
+    setUnitForm({ unit_number: "", rooms_count: 1, rent_amount: 0, area: "" });
+    setShowUnitForm(false);
+    setEditingUnitId(null);
+  };
+
+  const addLocalUnit = () => {
+    if (!unitForm.unit_number.trim()) {
+      toast.error("Le numéro de porte est requis");
+      return;
+    }
+    if (unitForm.rent_amount <= 0) {
+      toast.error("Le loyer doit être supérieur à 0");
+      return;
+    }
+    const isDuplicate = localUnits.some(u => u.unit_number.toLowerCase() === unitForm.unit_number.trim().toLowerCase() && u.id !== editingUnitId);
+    if (isDuplicate) {
+      toast.error("Ce numéro de porte existe déjà");
+      return;
+    }
+
+    if (editingUnitId) {
+      setLocalUnits(prev => prev.map(u => u.id === editingUnitId ? {
+        ...u,
+        unit_number: unitForm.unit_number.trim(),
+        rooms_count: unitForm.rooms_count,
+        rent_amount: unitForm.rent_amount,
+        area: unitForm.area ? Number(unitForm.area) : null,
+      } : u));
+    } else {
+      setLocalUnits(prev => [...prev, {
+        id: crypto.randomUUID(),
+        unit_number: unitForm.unit_number.trim(),
+        rooms_count: unitForm.rooms_count,
+        rent_amount: unitForm.rent_amount,
+        area: unitForm.area ? Number(unitForm.area) : null,
+        status: "disponible",
+      }]);
+    }
+    resetUnitForm();
+  };
+
+  const editLocalUnit = (unit: LocalUnit) => {
+    setUnitForm({
+      unit_number: unit.unit_number,
+      rooms_count: unit.rooms_count,
+      rent_amount: unit.rent_amount,
+      area: unit.area?.toString() || "",
+    });
+    setEditingUnitId(unit.id);
+    setShowUnitForm(true);
+  };
+
+  const deleteLocalUnit = (id: string) => {
+    setLocalUnits(prev => prev.filter(u => u.id !== id));
+  };
+
+  const addTemplate = (label: string, rooms: number) => {
+    const existingCount = localUnits.filter(u => u.unit_number.toLowerCase().includes(label.toLowerCase())).length;
+    const unitNumber = `${label} ${existingCount + 1}`;
+    setLocalUnits(prev => [...prev, {
+      id: crypto.randomUUID(),
+      unit_number: unitNumber,
+      rooms_count: rooms,
+      rent_amount: 0,
+      area: null,
+      status: "disponible",
+    }]);
+    toast.success(`${unitNumber} ajouté`);
+  };
+
+  const formatCurrency = (amount: number) => new Intl.NumberFormat("fr-FR").format(amount) + " F CFA";
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) resetForm(); }}>
@@ -197,12 +312,12 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
               </button>
             </div>
           </>
-        ) : (
+        ) : step === "form" ? (
         <>
         <DialogHeader>
           <DialogTitle className="text-2xl font-display">Ajouter un nouveau bien</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+        <form onSubmit={handleFormNext} className="space-y-6 mt-4">
           <div className="space-y-2">
             <Label htmlFor="propertyType">Type de bien *</Label>
             <Select
@@ -371,9 +486,8 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
               <Button 
                 type="submit" 
                 className="bg-emerald hover:bg-emerald-dark gap-2" 
-                disabled={createProperty.isPending}
               >
-                {createProperty.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                <ArrowRight className="h-4 w-4" />
                 Suivant
               </Button>
             ) : (
@@ -388,6 +502,154 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             )}
           </div>
         </form>
+        </>
+        ) : (
+        /* Step: Units management */
+        <>
+        <DialogHeader>
+          <DialogTitle className="text-xl font-display">Gestion des Unités</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5 mt-2">
+          {/* Property summary */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setStep("form")}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h4 className="font-semibold">{formData.title}</h4>
+                <p className="text-sm text-muted-foreground">{formData.address}</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-sm">{localUnits.length} unité{localUnits.length > 1 ? "s" : ""}</Badge>
+          </div>
+
+          {/* Templates */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground">Templates:</span>
+            <Button type="button" variant="outline" size="sm" onClick={() => addTemplate("Studio", 1)}>+ Studio</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => addTemplate("2 pièces", 2)}>+ 2 pièces</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => addTemplate("3 pièces", 3)}>+ 3 pièces</Button>
+          </div>
+
+          {/* Add unit button / form */}
+          {showUnitForm ? (
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Numéro de porte *</Label>
+                    <Input
+                      value={unitForm.unit_number}
+                      onChange={(e) => setUnitForm({ ...unitForm, unit_number: e.target.value })}
+                      placeholder="ex: Porte A"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Pièces *</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={unitForm.rooms_count}
+                      onChange={(e) => setUnitForm({ ...unitForm, rooms_count: parseInt(e.target.value) || 1 })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Loyer mensuel (F CFA) *</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={unitForm.rent_amount}
+                      onChange={(e) => setUnitForm({ ...unitForm, rent_amount: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Surface (m²)</Label>
+                    <Input
+                      type="number"
+                      value={unitForm.area}
+                      onChange={(e) => setUnitForm({ ...unitForm, area: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={resetUnitForm}>Annuler</Button>
+                  <Button type="button" size="sm" onClick={addLocalUnit}>
+                    {editingUnitId ? "Modifier" : "Ajouter"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2 border-dashed"
+              onClick={() => { resetUnitForm(); setShowUnitForm(true); }}
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter une unité
+            </Button>
+          )}
+
+          {/* Units list */}
+          {localUnits.length > 0 && (
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {localUnits.map((unit) => (
+                <Card key={unit.id}>
+                  <CardContent className="p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <DoorOpen className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-sm">{unit.unit_number}</span>
+                        <p className="text-xs text-muted-foreground">
+                          {unit.rooms_count} pièce{unit.rooms_count > 1 ? "s" : ""}
+                          {unit.area ? ` • ${unit.area} m²` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-primary">{formatCurrency(unit.rent_amount)}</span>
+                      <div className="flex gap-1">
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => editLocalUnit(unit)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteLocalUnit(unit.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-2 border-t">
+            <p className="text-xs text-muted-foreground">
+              {localUnits.length === 0 ? "Ajoutez au moins une unité pour continuer" : `${localUnits.length} unité${localUnits.length > 1 ? "s" : ""} configurée${localUnits.length > 1 ? "s" : ""}`}
+            </p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setStep("form")}>
+                Retour
+              </Button>
+              <Button
+                type="button"
+                className="bg-emerald hover:bg-emerald-dark"
+                disabled={localUnits.length === 0 || isCreating}
+                onClick={handleSubmitFinal}
+              >
+                {isCreating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Créer l'immeuble ({localUnits.length} unité{localUnits.length > 1 ? "s" : ""})
+              </Button>
+            </div>
+          </div>
+        </div>
         </>
         )}
       </DialogContent>

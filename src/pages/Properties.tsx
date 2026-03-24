@@ -64,6 +64,8 @@ const Properties = () => {
   const { data: unitsSummary = {} } = usePropertyUnitsSummary();
   const { user } = useAuth();
   const { data: userRole } = useCurrentUserRole();
+  const { data: propertyTenantsMap = {} } = usePropertyTenants();
+  const navigate = useNavigate();
 
   // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
   const isGestionnaire = userRole?.role === "gestionnaire";

@@ -68,13 +68,19 @@ const Comptabilite = () => {
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
   const { data: agency } = useAgency();
   const { hasPermission, role } = usePermissions();
+  const fromDateStr = period.from.toISOString().split("T")[0];
+  const toDateStr = period.to.toISOString().split("T")[0];
+  const { data: ownerPayouts = [] } = useOwnerPayouts(fromDateStr, toDateStr);
+  const totalReversements = ownerPayouts
+    .filter((p) => p.status === "completed")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
 
   const isAdminOrOwner = role === "super_admin" || role === "admin";
   const canExport = isAdminOrOwner || hasPermission("can_export_comptabilite");
   const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
-  const beneficeNet = totalRevenue - data.totalExpenses;
+  const beneficeNet = totalRevenue - data.totalExpenses - totalReversements;
   const margePercent = totalRevenue > 0 ? Math.round((beneficeNet / totalRevenue) * 100) : 0;
 
   const renderPieLabel = ({ name, percent }: { name: string; percent: number }) => {

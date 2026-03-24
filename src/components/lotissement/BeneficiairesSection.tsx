@@ -244,48 +244,92 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
       </Card>
 
       {/* Add Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog open={showAddDialog} onOpenChange={(open) => { setShowAddDialog(open); if (!open) resetForm(); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
               Ajouter un {partie === "proprietaire" ? "membre de la famille" : "collaborateur"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nom complet *</Label>
-              <Input value={nom} onChange={e => setNom(e.target.value)} placeholder="Nom et prénom" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+          <Tabs value={addMode} onValueChange={(v) => setAddMode(v as "team" | "new")}>
+            <TabsList className="w-full">
+              <TabsTrigger value="team" className="flex-1 gap-1">
+                <Users className="h-4 w-4" />
+                Membre de l'équipe
+              </TabsTrigger>
+              <TabsTrigger value="new" className="flex-1 gap-1">
+                <UserPlus className="h-4 w-4" />
+                Nouveau
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="team" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label>Téléphone</Label>
-                <Input value={telephone} onChange={e => setTelephone(e.target.value)} placeholder="+225..." />
+                <Label>Sélectionner un membre</Label>
+                <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un membre de l'équipe..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeMembers.map(m => (
+                      <SelectItem key={m.user_id} value={m.user_id}>
+                        {m.profile?.full_name || m.profile?.email || "Membre"}
+                        {m.profile?.email ? ` (${m.profile.email})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              {activeMembers.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  Aucun membre actif dans l'équipe
+                </p>
+              )}
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
+                  Annuler
+                </Button>
+                <Button onClick={handleAddFromTeam} disabled={!selectedMemberId || createBeneficiaire.isPending}>
+                  {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Ajouter
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+            <TabsContent value="new" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label>Email</Label>
-                <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemple.com" type="email" />
+                <Label>Nom complet *</Label>
+                <Input value={nom} onChange={e => setNom(e.target.value)} placeholder="Nom et prénom" />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{partie === "proprietaire" ? "Lien de parenté" : "Rôle"}</Label>
-                <Input value={lienRole} onChange={e => setLienRole(e.target.value)} placeholder={partie === "proprietaire" ? "Fils, frère, épouse..." : "Associé, directeur..."} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Téléphone</Label>
+                  <Input value={telephone} onChange={e => setTelephone(e.target.value)} placeholder="+225..." />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemple.com" type="email" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>N° CNI</Label>
-                <Input value={cniNumber} onChange={e => setCniNumber(e.target.value)} placeholder="Numéro de pièce" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{partie === "proprietaire" ? "Lien de parenté" : "Rôle"}</Label>
+                  <Input value={lienRole} onChange={e => setLienRole(e.target.value)} placeholder={partie === "proprietaire" ? "Fils, frère, épouse..." : "Associé, directeur..."} />
+                </div>
+                <div className="space-y-2">
+                  <Label>N° CNI</Label>
+                  <Input value={cniNumber} onChange={e => setCniNumber(e.target.value)} placeholder="Numéro de pièce" />
+                </div>
               </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
-              Annuler
-            </Button>
-            <Button onClick={handleAdd} disabled={createBeneficiaire.isPending}>
-              {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Ajouter
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
+                  Annuler
+                </Button>
+                <Button onClick={handleAdd} disabled={createBeneficiaire.isPending}>
+                  {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Ajouter
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

@@ -278,7 +278,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
             {clientType === "locataire" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Locataire existant</Label>
+                  <Label className="text-xs">Locataire</Label>
                   <Select value={selectedTenantId} onValueChange={handleTenantSelect}>
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Sélectionner..." />

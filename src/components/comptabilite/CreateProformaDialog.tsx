@@ -260,19 +260,21 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button size="sm" className="gap-1">
-            <Plus className="h-3.5 w-3.5" />
-            Nouvelle proforma
-          </Button>
-        )}
-      </DialogTrigger>
+      {!isEditing && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button size="sm" className="gap-1">
+              <Plus className="h-3.5 w-3.5" />
+              Nouvelle proforma
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Créer une facture proforma
+            {isEditing ? "Modifier la facture proforma" : "Créer une facture proforma"}
           </DialogTitle>
         </DialogHeader>
 

@@ -473,7 +473,30 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                 </div>
                 <div>
                   <Label className="text-xs">Bien concerné (optionnel)</Label>
-                  <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} placeholder="Ex: Villa Cocody, Lot 12..." />
+                  {clientType === "proprietaire" && selectedTenantId ? (
+                    <Select value={selectedPropertyId} onValueChange={(val) => {
+                      setSelectedPropertyId(val);
+                      const ownerBiens = activeProperties.filter((p: any) => p.owner_id === selectedTenantId);
+                      const found = ownerBiens.find((p: any) => p.id === val);
+                      if (found) {
+                        setPropertyName(found.title);
+                        setPropertyAddress(found.address || "");
+                      }
+                    }}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Sélectionner un bien..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {activeProperties
+                          .filter((p: any) => p.owner_id === selectedTenantId)
+                          .map((p: any) => (
+                            <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input className="h-9" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} placeholder="Ex: Villa Cocody, Lot 12..." />
+                  )}
                 </div>
               </div>
             </div>

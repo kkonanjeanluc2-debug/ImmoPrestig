@@ -267,12 +267,12 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
           {/* Client type selector */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold">Type de destinataire</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 type="button"
                 variant={clientType === "locataire" ? "default" : "outline"}
                 size="sm"
-                className="gap-2 h-10"
+                className="gap-1.5 h-10 text-xs"
                 onClick={() => handleClientTypeChange("locataire")}
               >
                 <Home className="h-4 w-4" />
@@ -280,9 +280,19 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
               </Button>
               <Button
                 type="button"
+                variant={clientType === "proprietaire" ? "default" : "outline"}
+                size="sm"
+                className="gap-1.5 h-10 text-xs"
+                onClick={() => handleClientTypeChange("proprietaire")}
+              >
+                <UserCheck className="h-4 w-4" />
+                Propriétaire
+              </Button>
+              <Button
+                type="button"
                 variant={clientType === "client" ? "default" : "outline"}
                 size="sm"
-                className="gap-2 h-10"
+                className="gap-1.5 h-10 text-xs"
                 onClick={() => handleClientTypeChange("client")}
               >
                 <User className="h-4 w-4" />

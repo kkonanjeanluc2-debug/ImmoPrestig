@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -22,10 +23,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Trash2, User, Building2, Users, Loader2 } from "lucide-react";
+import { Plus, Trash2, User, Building2, Users, Loader2, UserPlus } from "lucide-react";
 import { BeneficiaireLot, useBeneficiairesLots, useCreateBeneficiaireLot, useDeleteBeneficiaireLot } from "@/hooks/useBeneficiairesLots";
 import { Parcelle, useUpdateParcelle } from "@/hooks/useParcelles";
 import { Lotissement } from "@/hooks/useLotissements";
+import { useAgencyMembers } from "@/hooks/useAgencyMembers";
 import { toast } from "sonner";
 
 interface BeneficiairesSectionProps {

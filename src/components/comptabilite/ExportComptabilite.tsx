@@ -93,25 +93,57 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
           // Column widths for splitTextToSize
           const colWidths = { name: 28, owner: 28, prop: 28, months: 38 };
 
-          group.details.forEach((detail, j) => {
-            // Calculate row height based on text wrapping
-            const nameLines = doc.splitTextToSize(detail.tenantName, colWidths.name);
-            const ownerLines = doc.splitTextToSize(detail.ownerName || "—", colWidths.owner);
-            const propLines = doc.splitTextToSize(detail.propertyTitle || "—", colWidths.prop);
-            const monthsText = detail.months.length > 0 ? detail.months.join(", ") : new Date(detail.paidDate).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-            const monthsLines = doc.splitTextToSize(monthsText, colWidths.months);
-            const maxLines = Math.max(nameLines.length, ownerLines.length, propLines.length, monthsLines.length);
-            const rowHeight = Math.max(7, maxLines * 3.5 + 3);
+          // Group details by property title for subtotals
+          const detailsByProperty = new Map<string, { details: typeof group.details; total: number }>();
+          group.details.forEach((detail) => {
+            const key = detail.propertyTitle || "—";
+            if (!detailsByProperty.has(key)) {
+              detailsByProperty.set(key, { details: [], total: 0 });
+            }
+            const entry = detailsByProperty.get(key)!;
+            entry.details.push(detail);
+            entry.total += detail.amount;
+          });
 
-            if (y + rowHeight > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
-            if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, rowHeight, "F"); }
-            doc.setTextColor(...textColor);
-            doc.text(nameLines, 28, y + 4);
-            doc.text(ownerLines, 58, y + 4);
-            doc.text(propLines, 88, y + 4);
-            doc.text(monthsLines, 118, y + 4);
-            doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 4, { align: "right" });
-            y += rowHeight;
+          let rowIdx = 0;
+          Array.from(detailsByProperty.entries()).forEach(([propName, propGroup]) => {
+            propGroup.details.forEach((detail) => {
+              const nameLines = doc.splitTextToSize(detail.tenantName, colWidths.name);
+              const ownerLines = doc.splitTextToSize(detail.ownerName || "—", colWidths.owner);
+              const propLines = doc.splitTextToSize(detail.propertyTitle || "—", colWidths.prop);
+              const monthsText = detail.months.length > 0 ? detail.months.join(", ") : new Date(detail.paidDate).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+              const monthsLines = doc.splitTextToSize(monthsText, colWidths.months);
+              const maxLines = Math.max(nameLines.length, ownerLines.length, propLines.length, monthsLines.length);
+              const rowHeight = Math.max(7, maxLines * 3.5 + 3);
+
+              if (y + rowHeight > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+              if (rowIdx % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, rowHeight, "F"); }
+              doc.setTextColor(...textColor);
+              doc.text(nameLines, 28, y + 4);
+              doc.text(ownerLines, 58, y + 4);
+              doc.text(propLines, 88, y + 4);
+              doc.text(monthsLines, 118, y + 4);
+              doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 4, { align: "right" });
+              y += rowHeight;
+              rowIdx++;
+            });
+
+            // Subtotal row per property
+            if (detailsByProperty.size > 1 || propGroup.details.length > 1) {
+              if (y + 7 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+              doc.setFillColor(220, 230, 242);
+              doc.rect(25, y, pageWidth - 50, 7, "F");
+              doc.setTextColor(...primaryColor);
+              doc.setFontSize(7);
+              doc.setFont("helvetica", "bold");
+              const subtotalLabel = propName.length > 30 ? propName.substring(0, 28) + "..." : propName;
+              doc.text(`Sous-total : ${subtotalLabel}`, 28, y + 5);
+              doc.text(formatAmountWithCurrency(propGroup.total), pageWidth - 30, y + 5, { align: "right" });
+              y += 7;
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(7);
+              rowIdx++;
+            }
           });
           y += 3;
         });

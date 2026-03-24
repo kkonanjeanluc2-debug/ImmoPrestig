@@ -43,55 +43,6 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const { data: owners = [] } = useOwners();
   const limits = useSubscriptionLimits();
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error("Veuillez sélectionner une image valide");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("L'image ne doit pas dépasser 5 Mo");
-      return;
-    }
-
-    setIsUploading(true);
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `properties/${fileName}`;
-
-      const { error } = await supabase.storage
-        .from('property-images')
-        .upload(filePath, file);
-
-      if (error) throw error;
-
-      const { data: urlData } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(filePath);
-
-      setFormData({ ...formData, image_url: urlData.publicUrl });
-      setImagePreview(urlData.publicUrl);
-      toast.success("Image importée avec succès !");
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error("Erreur lors de l'import de l'image");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const removeImage = () => {
-    setImagePreview(null);
-    setFormData({ ...formData, image_url: "" });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
 
   const resetForm = () => {
     setFormData({

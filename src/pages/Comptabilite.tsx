@@ -88,10 +88,12 @@ const Comptabilite = () => {
     return `${name} ${(percent * 100).toFixed(0)}%`;
   };
 
+  const revenusNets = totalRevenue - totalReversements;
+
   const statCards = [
     {
       title: "Revenus encaissés",
-      value: formatCFA(totalRevenue),
+      value: formatCFA(revenusNets),
       icon: ArrowUpRight,
       color: "text-emerald",
       bgColor: "bg-emerald/10",

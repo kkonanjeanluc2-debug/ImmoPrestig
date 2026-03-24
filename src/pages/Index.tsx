@@ -1,11 +1,8 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { RecentPayments } from "@/components/dashboard/RecentPayments";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
-import { SubscriptionQuotaCard } from "@/components/dashboard/SubscriptionQuotaCard";
-import { MyAssignedItems } from "@/components/dashboard/MyAssignedItems";
 import { ManagerPerformance } from "@/components/dashboard/ManagerPerformance";
 import { ManagerPerformanceChart } from "@/components/dashboard/ManagerPerformanceChart";
 import { PaymentEvolutionChart } from "@/components/dashboard/PaymentEvolutionChart";

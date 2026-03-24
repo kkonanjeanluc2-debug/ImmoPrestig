@@ -210,8 +210,8 @@ export function ManagerPerformance({ periodFrom, periodTo }: ManagerPerformanceP
           </div>
         </div>
 
-        {/* Manager List */}
-        <div className="space-y-3">
+        {/* Manager Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {managerStats.map((manager) => (
             <div
               key={manager.userId}

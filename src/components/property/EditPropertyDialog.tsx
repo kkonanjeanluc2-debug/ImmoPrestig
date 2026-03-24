@@ -364,16 +364,6 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
             onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
           />
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Décrivez le bien..."
-              rows={3}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-          </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -438,7 +438,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contracts")
-        .select("id, deposit, start_date, created_at, tenant:tenants!contracts_tenant_id_fkey(name, assigned_to, property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
+        .select("id, deposit, start_date, created_at, tenant:tenants!contracts_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .gt("deposit", 0)
         .is("deleted_at", null);
       if (error) {

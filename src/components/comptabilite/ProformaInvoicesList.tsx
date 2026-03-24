@@ -215,6 +215,15 @@ export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {editInvoice && (
+          <CreateProformaDialog
+            preselectedTenantId={tenantId}
+            editInvoice={editInvoice}
+            open={!!editInvoice}
+            onOpenChange={(open) => !open && setEditInvoice(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );

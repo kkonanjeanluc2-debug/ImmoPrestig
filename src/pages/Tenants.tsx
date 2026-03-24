@@ -148,6 +148,7 @@ export default function Tenants() {
   const { data: newRequests } = useNewTenantRequests();
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
   const { requestsByTenant } = useTenantsActiveRequestsMap();
+  const { data: owners = [] } = useOwners();
 
   const handleOpenRequests = () => {
     setRequestsDialogOpen(true);

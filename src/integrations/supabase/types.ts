@@ -2453,6 +2453,8 @@ export type Database = {
           owner_id: string
           payment_method: string | null
           payout_date: string
+          payout_month: number
+          payout_year: number
           recipient_phone: string | null
           status: string
           updated_at: string
@@ -2466,6 +2468,8 @@ export type Database = {
           owner_id: string
           payment_method?: string | null
           payout_date?: string
+          payout_month: number
+          payout_year: number
           recipient_phone?: string | null
           status?: string
           updated_at?: string
@@ -2479,6 +2483,8 @@ export type Database = {
           owner_id?: string
           payment_method?: string | null
           payout_date?: string
+          payout_month?: number
+          payout_year?: number
           recipient_phone?: string | null
           status?: string
           updated_at?: string

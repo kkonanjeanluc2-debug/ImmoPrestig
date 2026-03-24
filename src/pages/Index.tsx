@@ -8,7 +8,7 @@ import { SubscriptionQuotaCard } from "@/components/dashboard/SubscriptionQuotaC
 import { MyAssignedItems } from "@/components/dashboard/MyAssignedItems";
 import { ManagerPerformance } from "@/components/dashboard/ManagerPerformance";
 import { ManagerPerformanceChart } from "@/components/dashboard/ManagerPerformanceChart";
-import { Building2, Users, Wallet, TrendingUp, Loader2, FileText, MessageCircle } from "lucide-react";
+import { Building2, Users, Wallet, TrendingUp, Loader2, FileText, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperties } from "@/hooks/useProperties";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +17,7 @@ import { useMemo, useState } from "react";
 import { getCollectedRevenueForPeriod } from "@/lib/revenueCollections";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
-import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
+
 import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -35,7 +35,7 @@ const Index = () => {
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
-  const { data: whatsappStats } = useWhatsAppLogsCount();
+  
   const { data: unitsSummary } = usePropertyUnitsSummary();
 
   // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
@@ -59,6 +59,14 @@ const Index = () => {
     // usePayments est déjà scoped par rôle/assignation + RLS
     return payments;
   }, [payments]);
+
+  // Compute late payments (arriérés)
+  const latePaymentsStats = useMemo(() => {
+    if (!filteredPayments) return { total: 0, totalAmount: 0 };
+    const late = filteredPayments.filter(p => p.status === 'en_retard' || p.status === 'late' || (p.status === 'pending' && p.due_date && new Date(p.due_date) < new Date()));
+    const totalAmount = late.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    return { total: late.length, totalAmount };
+  }, [filteredPayments]);
 
   // Apply period filter to payments
   const periodFilteredPayments = useMemo(() => {
@@ -194,12 +202,12 @@ const Index = () => {
               iconBg="navy"
             />
             <StatCard
-              title="Messages WhatsApp"
-              value={whatsappStats?.total || 0}
-              change={`${whatsappStats?.thisMonth || 0} ce mois`}
-              changeType="positive"
-              icon={MessageCircle}
-              iconBg="emerald"
+              title="Retard (Arriéré)"
+              value={latePaymentsStats.total}
+              change={`${latePaymentsStats.totalAmount.toLocaleString("fr-FR")} F CFA`}
+              changeType="negative"
+              icon={AlertTriangle}
+              iconBg="sand"
             />
           </div>
         )}

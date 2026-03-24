@@ -212,23 +212,17 @@ export default function Tenants() {
 
 
   const filteredTenants = (tenants || []).filter(tenant => {
-    const hasActiveContract = tenant.contracts?.some(c => c.status === 'active');
-    const latePayments = tenant.payments?.filter(p => p.status === 'late') || [];
+    const paymentStatus = getPaymentStatusLabel(tenant);
     
     // Status filter using button-based filters
     if (statusFilter === "uptodate") {
-      if (!hasActiveContract) return false;
-      const paymentStatus = getPaymentStatusLabel(tenant);
       if (paymentStatus?.label !== "À jour") return false;
     }
     if (statusFilter === "late") {
-      const paymentStatus = getPaymentStatusLabel(tenant);
       if (!paymentStatus?.label.includes("Retard")) return false;
     }
     if (statusFilter === "expelled") {
-      // Show tenants with expired contracts (expelled)
-      if (hasActiveContract) return false;
-      if (!tenant.contracts?.some(c => c.status === 'expired')) return false;
+      if (paymentStatus?.label !== "Expulsé") return false;
     }
 
     const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

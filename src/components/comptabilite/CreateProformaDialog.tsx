@@ -406,7 +406,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
                     </div>
                   </>
                 )}
-                {clientType === "client" && (
+                {(clientType === "client" || clientType === "proprietaire") && (
                   <>
                     <div>
                       <Label className="text-xs">Bien existant</Label>

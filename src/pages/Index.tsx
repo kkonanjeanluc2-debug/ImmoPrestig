@@ -17,7 +17,7 @@ import { useMemo, useState } from "react";
 import { getCollectedRevenueForPeriod } from "@/lib/revenueCollections";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
-import { useWhatsAppLogsCount } from "@/hooks/useWhatsAppLogsCount";
+
 import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";

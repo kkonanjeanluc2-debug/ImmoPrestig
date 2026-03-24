@@ -143,15 +143,17 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(7);
           group.details.forEach((detail, j) => {
-            if (y + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
-            if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, 7, "F"); }
+            const labelLines = doc.splitTextToSize(detail.label, 78);
+            const descLines = doc.splitTextToSize(detail.description, 45);
+            const maxLines = Math.max(labelLines.length, descLines.length);
+            const rowHeight = Math.max(7, maxLines * 3.5 + 3);
+            if (y + rowHeight > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); y = 20; }
+            if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, y, pageWidth - 50, rowHeight, "F"); }
             doc.setTextColor(...textColor);
-            const label = detail.label.length > 40 ? detail.label.substring(0, 38) + "..." : detail.label;
-            doc.text(label, 28, y + 5);
-            const desc = detail.description.length > 30 ? detail.description.substring(0, 28) + "..." : detail.description;
-            doc.text(desc, 110, y + 5);
-            doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 5, { align: "right" });
-            y += 7;
+            doc.text(labelLines, 28, y + 4);
+            doc.text(descLines, 110, y + 4);
+            doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, y + 4, { align: "right" });
+            y += rowHeight;
           });
           y += 3;
         });

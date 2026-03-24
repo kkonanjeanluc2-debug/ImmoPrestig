@@ -92,6 +92,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const canDelete = hasPermission("can_delete_lotissements");
   const deleteParcelle = useSoftDeleteParcelle();
   const { data: ilots } = useIlots(lotissementId);
+  const { data: lotissement } = useLotissement(lotissementId);
   const isAdmin = role !== "gestionnaire";
 
   // Fetch profiles for assigned users
@@ -105,6 +106,13 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const [viewingReservation, setViewingReservation] = useState<Parcelle | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [attributionFilter, setAttributionFilter] = useState<string>("all");
+
+  const getAttributionLabel = (attribution: string | null) => {
+    if (attribution === "proprietaire") return lotissement?.proprietaire_name || "Propriétaire";
+    if (attribution === "lotisseur") return lotissement?.lotisseur_name || "Lotisseur";
+    return null;
+  };
 
   const getIlotName = (ilotId: string | null) => {
     if (!ilotId) return null;

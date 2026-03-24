@@ -8,13 +8,11 @@ import {
   Mail, 
   Building2, 
   MapPin,
-  MoreVertical,
   Loader2,
   Users,
   Pencil,
-  ChevronDown,
-  ChevronUp,
-  Eye
+  Eye,
+  Banknote
 } from "lucide-react";
 import {
   DropdownMenu,

@@ -45,6 +45,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
+import { useOwners } from "@/hooks/useOwners";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
 import { ImportTenantsDialog } from "@/components/tenant/ImportTenantsDialog";
 import { MergeTenantsDialog } from "@/components/tenant/MergeTenantsDialog";
@@ -128,6 +129,7 @@ export default function Tenants() {
   const [searchQuery, setSearchQuery] = useState("");
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("all");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [accessDialogTenant, setAccessDialogTenant] = useState<TenantWithDetails | null>(null);
@@ -146,6 +148,7 @@ export default function Tenants() {
   const { data: newRequests } = useNewTenantRequests();
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
   const { requestsByTenant } = useTenantsActiveRequestsMap();
+  const { data: owners = [] } = useOwners();
 
   const handleOpenRequests = () => {
     setRequestsDialogOpen(true);
@@ -235,8 +238,12 @@ export default function Tenants() {
       : assignedFilter === "unassigned"
         ? !assignedTo
         : assignedTo === assignedFilter;
+
+    const matchesOwner = ownerFilter === "all"
+      ? true
+      : tenant.property?.owner_id === ownerFilter;
     
-    return matchesSearch && matchesAssigned;
+    return matchesSearch && matchesAssigned && matchesOwner;
   });
 
   // Compute stats
@@ -323,6 +330,19 @@ export default function Tenants() {
             />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+              <SelectTrigger className="w-[180px] h-9">
+                <SelectValue placeholder="Propriétaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les propriétaires</SelectItem>
+                {owners.map((owner) => (
+                  <SelectItem key={owner.id} value={owner.id}>
+                    {owner.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {isAgencyOwner && assignableUsers.length > 1 && (
               <Select value={assignedFilter} onValueChange={setAssignedFilter}>
                 <SelectTrigger className="w-[180px] h-9">

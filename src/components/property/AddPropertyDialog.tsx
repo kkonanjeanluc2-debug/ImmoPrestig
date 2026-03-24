@@ -13,6 +13,9 @@ import { useCreateProperty } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
+import { cn } from "@/lib/utils";
+
+type PropertyCategory = "unique" | "immeuble" | null;
 
 interface AddPropertyDialogProps {
   onSuccess?: () => void;

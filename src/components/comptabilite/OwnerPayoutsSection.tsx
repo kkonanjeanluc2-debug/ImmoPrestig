@@ -47,9 +47,8 @@ import {
   useCreateOwnerPayout,
   useDeleteOwnerPayout,
 } from "@/hooks/useOwnerPayouts";
-import { useOwners } from "@/hooks/useOwners";
+import { useOwners, OwnerWithManagementType } from "@/hooks/useOwners";
 import { PAYMENT_OPERATORS } from "@/hooks/useAgency";
-import { useCommissions } from "@/hooks/useCommissions";
 import { useProperties } from "@/hooks/useProperties";
 import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
 import { useTenants } from "@/hooks/useTenants";

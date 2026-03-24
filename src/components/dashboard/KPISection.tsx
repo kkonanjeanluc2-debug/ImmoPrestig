@@ -56,7 +56,7 @@ export function KPISection({ properties, payments, contracts, period, visibleWid
     };
   };
 
-  // KPI 2: Taux de recouvrement
+  // KPI 2: Taux de recouvrement (basé sur les encaissements réels de la période)
   const calculateRecoveryRate = () => {
     const periodPayments = payments.filter((p) => {
       const dueDate = new Date(p.due_date);
@@ -66,15 +66,23 @@ export function KPISection({ properties, payments, contracts, period, visibleWid
     if (periodPayments.length === 0) return { value: "N/A", subtitle: "Aucun paiement attendu" };
 
     const totalExpected = periodPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const totalPaid = periodPayments
-      .filter((p) => p.status === "paid")
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+    
+    // Inclure les paiements complets ET les paiements partiels
+    const totalCollected = periodPayments.reduce((sum, p) => {
+      if (p.status === "paid") return sum + Number(p.amount);
+      // Paiements partiels (en attente ou en retard avec un montant payé)
+      if ((p as any).paid_amount && Number((p as any).paid_amount) > 0) {
+        return sum + Number((p as any).paid_amount);
+      }
+      return sum;
+    }, 0);
 
-    const rate = totalExpected > 0 ? Math.round((totalPaid / totalExpected) * 100) : 0;
+    const rate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
+    const periodLabel = period === "month" ? "ce mois" : period === "quarter" ? "ce trimestre" : "cette année";
     return {
       value: `${rate}%`,
-      subtitle: `${totalPaid.toLocaleString("fr-FR")} / ${totalExpected.toLocaleString("fr-FR")} F`,
-      trend: rate >= 90 ? { value: rate - 85, label: "performant" } : undefined,
+      subtitle: `${totalCollected.toLocaleString("fr-FR")} / ${totalExpected.toLocaleString("fr-FR")} F (${periodLabel})`,
+      trend: rate >= 90 ? { value: rate - 85, label: "performant" } : rate < 70 ? { value: rate - 70, label: "à améliorer" } : undefined,
     };
   };
 

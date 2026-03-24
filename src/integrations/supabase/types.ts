@@ -768,6 +768,56 @@ export type Database = {
         }
         Relationships: []
       }
+      beneficiaires_lots: {
+        Row: {
+          cni_number: string | null
+          created_at: string
+          email: string | null
+          id: string
+          lien_role: string | null
+          lotissement_id: string
+          nom: string
+          partie: string
+          telephone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cni_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          lien_role?: string | null
+          lotissement_id: string
+          nom: string
+          partie: string
+          telephone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cni_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          lien_role?: string | null
+          lotissement_id?: string
+          nom?: string
+          partie?: string
+          telephone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beneficiaires_lots_lotissement_id_fkey"
+            columns: ["lotissement_id"]
+            isOneToOne: false
+            referencedRelation: "lotissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biens_achat: {
         Row: {
           address: string
@@ -2726,6 +2776,7 @@ export type Database = {
           area: number
           assigned_to: string | null
           attribution: string | null
+          beneficiaire_id: string | null
           created_at: string
           deleted_at: string | null
           height: number | null
@@ -2746,6 +2797,7 @@ export type Database = {
           area: number
           assigned_to?: string | null
           attribution?: string | null
+          beneficiaire_id?: string | null
           created_at?: string
           deleted_at?: string | null
           height?: number | null
@@ -2766,6 +2818,7 @@ export type Database = {
           area?: number
           assigned_to?: string | null
           attribution?: string | null
+          beneficiaire_id?: string | null
           created_at?: string
           deleted_at?: string | null
           height?: number | null
@@ -2783,6 +2836,13 @@ export type Database = {
           width?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "parcelles_beneficiaire_id_fkey"
+            columns: ["beneficiaire_id"]
+            isOneToOne: false
+            referencedRelation: "beneficiaires_lots"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "parcelles_ilot_id_fkey"
             columns: ["ilot_id"]

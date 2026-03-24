@@ -692,7 +692,7 @@ const Comptabilite = () => {
 
           {/* === TRESORERIE TAB === */}
           <TabsContent value="tresorerie">
-            <TresorerieTab data={data} totalRevenue={totalRevenue} />
+            <TresorerieTab data={data} totalRevenue={totalRevenue} totalReversements={totalReversements} />
           </TabsContent>
 
           {/* === SYSCOHADA TAB === */}

@@ -1,3 +1,4 @@
+import React from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { Button } from "@/components/ui/button";

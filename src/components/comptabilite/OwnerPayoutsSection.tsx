@@ -47,6 +47,7 @@ import {
 } from "@/hooks/useOwnerPayouts";
 import { useOwners } from "@/hooks/useOwners";
 import { PAYMENT_OPERATORS } from "@/hooks/useAgency";
+import { useCommissions } from "@/hooks/useCommissions";
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString("fr-FR") + " F CFA";
@@ -67,6 +68,7 @@ export function OwnerPayoutsSection({
   const { data: owners = [] } = useOwners();
   const createPayout = useCreateOwnerPayout();
   const deletePayout = useDeleteOwnerPayout();
+  const commissionReport = useCommissions(fromDate, toDate);
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
@@ -77,6 +79,15 @@ export function OwnerPayoutsSection({
     recipient_phone: "",
     notes: "",
   });
+
+  // Auto-fill amount when owner is selected
+  const handleOwnerChange = (ownerId: string) => {
+    const ownerSummary = commissionReport.byOwner.find((o) => o.ownerId === ownerId);
+    const netAmount = ownerSummary
+      ? Math.max(0, ownerSummary.totalRent - ownerSummary.totalCommission)
+      : 0;
+    setForm({ ...form, owner_id: ownerId, amount: netAmount > 0 ? String(netAmount) : "" });
+  };
 
   const handleSubmit = () => {
     if (!form.owner_id || !form.amount || Number(form.amount) <= 0) return;

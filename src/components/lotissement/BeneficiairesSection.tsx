@@ -41,8 +41,11 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const createBeneficiaire = useCreateBeneficiaireLot();
   const deleteBeneficiaire = useDeleteBeneficiaireLot();
   const updateParcelle = useUpdateParcelle();
+  const { data: agencyMembers = [] } = useAgencyMembers();
 
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addMode, setAddMode] = useState<"team" | "new">(partie === "lotisseur" ? "team" : "new");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [assigningBeneficiaire, setAssigningBeneficiaire] = useState<BeneficiaireLot | null>(null);
   const [selectedLots, setSelectedLots] = useState<string[]>([]);
@@ -54,6 +57,8 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const [email, setEmail] = useState("");
   const [lienRole, setLienRole] = useState("");
   const [cniNumber, setCniNumber] = useState("");
+
+  const activeMembers = agencyMembers.filter(m => m.status === "active");
 
   const partieBeneficiaires = beneficiaires.filter(b => b.partie === partie);
   const partieParcelles = parcelles.filter(p => p.attribution === partie);

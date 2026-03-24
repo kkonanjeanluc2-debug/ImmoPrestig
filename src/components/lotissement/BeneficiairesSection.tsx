@@ -92,6 +92,33 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
     }
   };
 
+  const handleAddFromTeam = async () => {
+    if (!selectedMemberId) {
+      toast.error("Sélectionnez un membre");
+      return;
+    }
+    const member = activeMembers.find(m => m.user_id === selectedMemberId);
+    if (!member) return;
+
+    const memberName = member.profile?.full_name || member.profile?.email || "Membre";
+    try {
+      await createBeneficiaire.mutateAsync({
+        lotissement_id: lotissement.id,
+        nom: memberName,
+        telephone: null,
+        email: member.profile?.email || null,
+        lien_role: partie === "lotisseur" ? "Collaborateur" : null,
+        cni_number: null,
+        partie,
+      });
+      toast.success(`${memberName} ajouté comme bénéficiaire`);
+      setShowAddDialog(false);
+      setSelectedMemberId("");
+    } catch {
+      toast.error("Erreur lors de l'ajout");
+    }
+  };
+
   const handleDelete = async () => {
     if (!deletingId) return;
     try {

@@ -47,16 +47,32 @@ export function generateProformaPDF(invoice: ProformaInvoice, agency?: any) {
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);
 
-  // Left: Agency
+  // Left: Agency with logo
   if (agency) {
+    let agencyTextStartX = margin;
+    
+    // Add agency logo if available
+    if (agency.logo_url) {
+      try {
+        const logoSize = 18;
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = agency.logo_url;
+        doc.addImage(img, "PNG", margin, y - 3, logoSize, logoSize);
+        agencyTextStartX = margin + logoSize + 4;
+      } catch (e) {
+        console.warn("Could not load agency logo:", e);
+      }
+    }
+    
     doc.setFont("helvetica", "bold");
-    doc.text(agency.name || "Agence", margin, y);
+    doc.text(agency.name || "Agence", agencyTextStartX, y);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    if (agency.address) doc.text(agency.address, margin, y + 5);
-    if (agency.phone) doc.text(`Tél: ${agency.phone}`, margin, y + 10);
-    if (agency.email) doc.text(agency.email, margin, y + 15);
-    if (agency.siret) doc.text(`SIRET: ${agency.siret}`, margin, y + 20);
+    if (agency.address) doc.text(agency.address, agencyTextStartX, y + 5);
+    if (agency.phone) doc.text(`Tél: ${agency.phone}`, agencyTextStartX, y + 10);
+    if (agency.email) doc.text(agency.email, agencyTextStartX, y + 15);
+    if (agency.siret) doc.text(`SIRET: ${agency.siret}`, agencyTextStartX, y + 20);
   }
 
   // Right: Client

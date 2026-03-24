@@ -36,7 +36,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2 } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";

@@ -460,8 +460,8 @@ const Properties = () => {
                 </table>
               </div>
             </div>
-          )}
-        
+          )
+        )}
 
         {!isLoading && !error && filteredProperties.length === 0 && (
           <div className="text-center py-12">

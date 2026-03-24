@@ -238,8 +238,12 @@ export default function Tenants() {
       : assignedFilter === "unassigned"
         ? !assignedTo
         : assignedTo === assignedFilter;
+
+    const matchesOwner = ownerFilter === "all"
+      ? true
+      : tenant.property?.owner_id === ownerFilter;
     
-    return matchesSearch && matchesAssigned;
+    return matchesSearch && matchesAssigned && matchesOwner;
   });
 
   // Compute stats

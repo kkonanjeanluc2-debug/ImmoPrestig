@@ -443,7 +443,8 @@ const TenantDetails = () => {
                 {tenant.payments && tenant.payments.length > 0 ? (
                   <div className="space-y-3">
                     {[...tenant.payments].sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime()).map((payment) => {
-                      const status = paymentStatusConfig[payment.status as keyof typeof paymentStatusConfig] || paymentStatusConfig.pending;
+                      const effectiveStatus = payment.status === 'late' && differenceInDays(new Date(), new Date(payment.due_date)) >= 30 ? 'impaye' : payment.status;
+                      const status = paymentStatusConfig[effectiveStatus as keyof typeof paymentStatusConfig] || paymentStatusConfig.pending;
                       const StatusIcon = status.icon;
                       
                       // Check if payment is due within the next 7 days

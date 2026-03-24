@@ -403,9 +403,17 @@ const Properties = () => {
                             {ownerName || "—"}
                           </td>
                           <td className="px-4 py-3">
-                            <Badge variant="outline" className={cn("text-xs", typeBadgeColors[property.property_type] || "")}>
-                              {typeLabels[property.property_type] || property.property_type}
-                            </Badge>
+                            <div className="flex flex-col gap-1">
+                              <Badge variant="outline" className={cn("text-xs w-fit", typeBadgeColors[property.property_type] || "")}>
+                                {typeLabels[property.property_type] || property.property_type}
+                              </Badge>
+                              {(property.property_type === "maison" || property.property_type === "immeuble") && hasUnits && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <DoorOpen className="h-3 w-3" />
+                                  {summary.available_units}/{summary.total_units} disponible{summary.available_units > 1 ? "s" : ""}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
                             {displayPrice.toLocaleString("fr-FR")} FCFA

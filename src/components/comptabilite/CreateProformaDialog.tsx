@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, FileText, User, Home, Building2, Wrench, UserCheck } from "lucide-react";
-import { useCreateProforma, InvoiceItem } from "@/hooks/useProformaInvoices";
+import { useCreateProforma, useUpdateProforma, InvoiceItem, ProformaInvoice } from "@/hooks/useProformaInvoices";
 import { useTenants } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 import { useBiensVente } from "@/hooks/useBiensVente";
@@ -15,18 +15,27 @@ import { useOwners } from "@/hooks/useOwners";
 interface Props {
   preselectedTenantId?: string;
   trigger?: React.ReactNode;
+  editInvoice?: ProformaInvoice;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 type ClientType = "locataire" | "client" | "proprietaire";
 type InvoiceCategory = "bien" | "prestation";
 
-export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
-  const [open, setOpen] = useState(false);
+export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice, open: controlledOpen, onOpenChange }: Props) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
+
   const { data: tenants } = useTenants();
   const { data: properties } = useProperties();
   const { data: biensVente } = useBiensVente();
   const { data: owners } = useOwners();
   const createProforma = useCreateProforma();
+  const updateProforma = useUpdateProforma();
+
+  const isEditing = !!editInvoice;
 
   const [invoiceCategory, setInvoiceCategory] = useState<InvoiceCategory>("bien");
   const [clientType, setClientType] = useState<ClientType>(preselectedTenantId ? "locataire" : "locataire");
@@ -50,6 +59,26 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   const [items, setItems] = useState<InvoiceItem[]>([
     { description: "", quantity: 1, unit_price: 0, total: 0 },
   ]);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editInvoice && open) {
+      setTenantName(editInvoice.tenant_name || "");
+      setTenantPhone(editInvoice.tenant_phone || "");
+      setTenantEmail(editInvoice.tenant_email || "");
+      setPropertyName(editInvoice.property_name || "");
+      setUnitNumber(editInvoice.unit_number || "");
+      setDescription(editInvoice.description || "");
+      setNotes(editInvoice.notes || "");
+      setDueDate(editInvoice.due_date || "");
+      setTaxRate(editInvoice.tax_rate || 0);
+      setItems(editInvoice.items.length > 0 ? editInvoice.items : [{ description: "", quantity: 1, unit_price: 0, total: 0 }]);
+      setSelectedTenantId(editInvoice.tenant_id || "");
+      if (editInvoice.tenant_id) {
+        setClientType("locataire");
+      }
+    }
+  }, [editInvoice, open]);
 
   const activeTenants = (tenants || []).filter((t: any) => !t.deleted_at);
   const activeProperties = (properties || []).filter((p: any) => !p.deleted_at);
@@ -156,30 +185,41 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
     }
     if (notes) categoryNotes.push(notes);
 
-    createProforma.mutate(
-      {
-        tenant_id: clientType === "locataire" ? (selectedTenantId || null) : null,
-        tenant_name: tenantName,
-        tenant_phone: tenantPhone,
-        tenant_email: tenantEmail,
-        property_name: propertyName,
-        unit_number: unitNumber,
-        description: description || (invoiceCategory === "bien" ? "Facture bien immobilier" : "Facture prestation"),
-        items,
-        subtotal,
-        tax_rate: taxRate,
-        tax_amount: taxAmount,
-        total_amount: totalAmount,
-        notes: categoryNotes.join("\n"),
-        due_date: dueDate || undefined,
-      },
-      {
+    const payload = {
+      tenant_id: clientType === "locataire" ? (selectedTenantId || null) : null,
+      tenant_name: tenantName,
+      tenant_phone: tenantPhone,
+      tenant_email: tenantEmail,
+      property_name: propertyName,
+      unit_number: unitNumber,
+      description: description || (invoiceCategory === "bien" ? "Facture bien immobilier" : "Facture prestation"),
+      items,
+      subtotal,
+      tax_rate: taxRate,
+      tax_amount: taxAmount,
+      total_amount: totalAmount,
+      notes: categoryNotes.join("\n"),
+      due_date: dueDate || undefined,
+    };
+
+    if (isEditing && editInvoice) {
+      updateProforma.mutate(
+        { id: editInvoice.id, data: payload },
+        {
+          onSuccess: () => {
+            setOpen(false);
+            resetForm();
+          },
+        }
+      );
+    } else {
+      createProforma.mutate(payload, {
         onSuccess: () => {
           setOpen(false);
           resetForm();
         },
-      }
-    );
+      });
+    }
   };
 
   const resetForm = () => {
@@ -220,19 +260,21 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button size="sm" className="gap-1">
-            <Plus className="h-3.5 w-3.5" />
-            Nouvelle proforma
-          </Button>
-        )}
-      </DialogTrigger>
+      {!isEditing && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button size="sm" className="gap-1">
+              <Plus className="h-3.5 w-3.5" />
+              Nouvelle proforma
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Créer une facture proforma
+            {isEditing ? "Modifier la facture proforma" : "Créer une facture proforma"}
           </DialogTitle>
         </DialogHeader>
 
@@ -611,10 +653,12 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
 
           <Button
             onClick={handleSubmit}
-            disabled={!tenantName.trim() || totalAmount <= 0 || createProforma.isPending}
+            disabled={!tenantName.trim() || totalAmount <= 0 || createProforma.isPending || updateProforma.isPending}
             className="w-full"
           >
-            {createProforma.isPending ? "Création..." : "Créer la facture proforma"}
+            {isEditing
+              ? (updateProforma.isPending ? "Modification..." : "Modifier la facture proforma")
+              : (createProforma.isPending ? "Création..." : "Créer la facture proforma")}
           </Button>
         </div>
       </DialogContent>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { FileText, MoreVertical, Download, ArrowRightLeft, Trash2, Eye, Send, CheckCircle, XCircle } from "lucide-react";
+import { FileText, MoreVertical, Download, ArrowRightLeft, Trash2, Eye, Send, CheckCircle, XCircle, Pencil } from "lucide-react";
 import { useProformaInvoices, useConvertToInvoice, useUpdateProformaStatus, useDeleteProforma, ProformaInvoice } from "@/hooks/useProformaInvoices";
 import { CreateProformaDialog } from "./CreateProformaDialog";
 import { generateProformaPDF } from "@/lib/generateProformaPDF";
@@ -38,6 +38,7 @@ export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
   const deleteProforma = useDeleteProforma();
   const { data: agency } = useAgency();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editInvoice, setEditInvoice] = useState<ProformaInvoice | null>(null);
   const [filter, setFilter] = useState<"all" | "proforma" | "definitive">("all");
 
   const filtered = (invoices || []).filter((inv) =>
@@ -159,6 +160,11 @@ export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
                             <DropdownMenuItem onClick={() => handleExportPDF(inv)} className="gap-2 text-xs">
                               <Download className="h-3.5 w-3.5" /> Télécharger PDF
                             </DropdownMenuItem>
+                            {inv.invoice_type === "proforma" && inv.status === "draft" && (
+                              <DropdownMenuItem onClick={() => setEditInvoice(inv)} className="gap-2 text-xs">
+                                <Pencil className="h-3.5 w-3.5" /> Modifier
+                              </DropdownMenuItem>
+                            )}
                             {inv.invoice_type === "proforma" && inv.status !== "converted" && inv.status !== "cancelled" && (
                               <>
                                 {inv.status === "draft" && (
@@ -209,6 +215,15 @@ export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {editInvoice && (
+          <CreateProformaDialog
+            preselectedTenantId={tenantId}
+            editInvoice={editInvoice}
+            open={!!editInvoice}
+            onOpenChange={(open) => !open && setEditInvoice(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );

@@ -365,60 +365,6 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
           />
 
           <div className="space-y-2">
-            <Label>Photo du bien</Label>
-            <div className="space-y-3">
-              {imagePreview ? (
-                <div className="relative rounded-lg overflow-hidden border border-border">
-                  <img 
-                    src={imagePreview} 
-                    alt="Aperçu" 
-                    className="w-full h-48 object-cover"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 h-8 w-8"
-                    onClick={removeImage}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-emerald/50 hover:bg-emerald/5 transition-colors"
-                >
-                  {isUploading ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-10 w-10 text-emerald animate-spin" />
-                      <p className="text-sm text-muted-foreground">Import en cours...</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="p-3 rounded-full bg-emerald/10">
-                        <ImageIcon className="h-8 w-8 text-emerald" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">Cliquez pour importer une image</p>
-                        <p className="text-sm text-muted-foreground">ou glissez-déposez</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground">PNG, JPG, WEBP (max 5 Mo)</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"

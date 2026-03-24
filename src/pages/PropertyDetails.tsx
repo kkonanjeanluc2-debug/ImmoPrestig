@@ -394,31 +394,7 @@ const PropertyDetails = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Image Gallery Section */}
           <div className="lg:col-span-2 space-y-4">
-            <Card className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle>Photos</CardTitle>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary" className="flex items-center gap-1.5">
-                      {typeIcons[property.property_type]}
-                      {typeLabels[property.property_type] || property.property_type}
-                    </Badge>
-                    <Badge className={cn("border", statusClasses[property.status] || "")}>
-                      {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <PropertyImageGallery
-                  propertyId={property.id}
-                  mainImage={property.image_url}
-                  canEdit={canEdit}
-                />
-              </CardContent>
-            </Card>
 
             {/* Description */}
             {property.description && (

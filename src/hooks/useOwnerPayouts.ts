@@ -9,6 +9,8 @@ export interface OwnerPayout {
   owner_id: string;
   amount: number;
   payout_date: string;
+  payout_month: number;
+  payout_year: number;
   payment_method: string;
   recipient_phone: string | null;
   notes: string | null;
@@ -64,10 +66,27 @@ export function useCreateOwnerPayout() {
       amount: number;
       payout_date: string;
       payment_method: string;
+      payout_month: number;
+      payout_year: number;
       recipient_phone?: string;
       notes?: string;
     }) => {
       if (!user) throw new Error("Non authentifié");
+
+      // Check for duplicate
+      const { data: existing } = await supabase
+        .from("owner_payouts")
+        .select("id")
+        .eq("owner_id", payout.owner_id)
+        .eq("payout_month", payout.payout_month)
+        .eq("payout_year", payout.payout_year)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existing) {
+        throw new Error(`Un reversement existe déjà pour ce propriétaire en ${payout.payout_month}/${payout.payout_year}`);
+      }
+
       const { data, error } = await supabase
         .from("owner_payouts")
         .insert({ ...payout, user_id: user.id, status: "completed" })

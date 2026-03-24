@@ -78,14 +78,30 @@ export function OwnerPayoutsSection({
   const deletePayout = useDeleteOwnerPayout();
 
   const [open, setOpen] = useState(false);
+  const now = new Date();
   const [form, setForm] = useState({
     owner_id: "",
     amount: "",
-    payout_date: new Date().toISOString().split("T")[0],
+    payout_date: now.toISOString().split("T")[0],
     payment_method: "especes",
     recipient_phone: "",
     notes: "",
+    payout_month: now.getMonth() + 1,
+    payout_year: now.getFullYear(),
   });
+
+  const FRENCH_MONTHS = [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+  ];
+
+  // Check if a payout already exists for this owner/month/year
+  const isDuplicate = payouts.some(
+    (p) =>
+      p.owner_id === form.owner_id &&
+      p.payout_month === form.payout_month &&
+      p.payout_year === form.payout_year
+  );
 
   // Auto-fill amount using the exact same formula as the PDF monthly report
   const handleOwnerChange = (ownerId: string) => {
@@ -144,19 +160,24 @@ export function OwnerPayoutsSection({
         amount: Number(form.amount),
         payout_date: form.payout_date,
         payment_method: form.payment_method,
+        payout_month: form.payout_month,
+        payout_year: form.payout_year,
         recipient_phone: form.recipient_phone || undefined,
         notes: form.notes || undefined,
       },
       {
         onSuccess: () => {
           setOpen(false);
+          const now = new Date();
           setForm({
             owner_id: "",
             amount: "",
-            payout_date: new Date().toISOString().split("T")[0],
+            payout_date: now.toISOString().split("T")[0],
             payment_method: "especes",
             recipient_phone: "",
             notes: "",
+            payout_month: now.getMonth() + 1,
+            payout_year: now.getFullYear(),
           });
         },
       }
@@ -235,6 +256,45 @@ export function OwnerPayoutsSection({
                     ))}
                   </SelectContent>
                 </Select>
+                {isDuplicate && form.owner_id && (
+                  <p className="text-xs text-destructive font-medium">
+                    ⚠️ Un reversement existe déjà pour {FRENCH_MONTHS[form.payout_month - 1]} {form.payout_year}
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Mois *</Label>
+                  <Select
+                    value={String(form.payout_month)}
+                    onValueChange={(v) => setForm({ ...form, payout_month: Number(v) })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FRENCH_MONTHS.map((m, i) => (
+                        <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Année *</Label>
+                  <Select
+                    value={String(form.payout_year)}
+                    onValueChange={(v) => setForm({ ...form, payout_year: Number(v) })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
+                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Montant (F CFA) *</Label>
@@ -303,6 +363,7 @@ export function OwnerPayoutsSection({
                   !form.owner_id ||
                   !form.amount ||
                   Number(form.amount) <= 0 ||
+                  isDuplicate ||
                   createPayout.isPending
                 }
               >
@@ -352,6 +413,9 @@ export function OwnerPayoutsSection({
                           <p className="font-medium text-foreground">
                             {payout.owner?.name || "Propriétaire"}
                           </p>
+                          <Badge variant="secondary" className="text-xs">
+                            {FRENCH_MONTHS[(payout.payout_month || 1) - 1]} {payout.payout_year}
+                          </Badge>
                           <Badge
                             variant="outline"
                             className="text-xs bg-emerald/10 text-emerald border-emerald/20"

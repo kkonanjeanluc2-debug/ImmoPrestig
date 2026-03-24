@@ -337,7 +337,15 @@ export default function Payments() {
                 { key: 'amount', label: 'Montant (F CFA)', format: (v) => Number(v).toString() },
                 { key: 'due_date', label: 'Échéance', format: (v) => new Date(v).toLocaleDateString('fr-FR') },
                 { key: 'paid_date', label: 'Date de paiement', format: (v) => v ? new Date(v).toLocaleDateString('fr-FR') : '' },
-                { key: 'status', label: 'Statut', format: (v) => v === 'paid' ? 'Payé' : v === 'pending' ? 'En attente' : v === 'late' ? 'En retard' : 'À venir' },
+                { key: 'status', label: 'Statut', format: (v, row: any) => {
+                  if (v === 'paid') return 'Payé';
+                  if (v === 'pending') return 'En attente';
+                  if (v === 'late') {
+                    const daysLate = differenceInDays(new Date(), new Date(row?.due_date));
+                    return daysLate >= 30 ? 'Impayé' : 'En retard';
+                  }
+                  return 'À venir';
+                }},
                 { key: 'method', label: 'Mode de paiement', format: (v) => v || '' },
               ]}
             />

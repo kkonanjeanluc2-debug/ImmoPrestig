@@ -1191,7 +1191,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           monthly.cautions += amount;
           monthly.total += amount;
         }
-        const tenantName = c.tenant?.name || "Locataire inconnu";
+        const baseTenantName = c.tenant?.name || "Locataire inconnu";
+        const unitNumber = c.tenant?.unit?.unit_number;
+        const tenantName = unitNumber ? `${baseTenantName} (${unitNumber})` : baseTenantName;
         const propertyName = c.tenant?.property?.title || "";
         const ownerName = c.tenant?.property?.owner?.name || "";
         cautionDetails.push({

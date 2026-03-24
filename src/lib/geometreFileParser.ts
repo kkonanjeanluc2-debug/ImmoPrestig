@@ -42,7 +42,7 @@ function calculatePolygonArea(vertices: [number, number][]): number {
 
 // ─── DXF Parser ───────────────────────────────────────────────────────
 export async function parseDXF(file: File): Promise<GeometreParseResult> {
-  const dxfModule = await import("dxf-parser");
+  const dxfModule: any = await import("dxf-parser");
   const DxfParserClass = dxfModule.default?.default || dxfModule.default || dxfModule;
   const text = await file.text();
   const parser = new DxfParserClass();

@@ -13,6 +13,9 @@ import { useCreateProperty } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
+import { cn } from "@/lib/utils";
+
+type PropertyCategory = "unique" | "immeuble" | null;
 
 interface AddPropertyDialogProps {
   onSuccess?: () => void;
@@ -20,6 +23,8 @@ interface AddPropertyDialogProps {
 
 export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<"category" | "form">("category");
+  const [category, setCategory] = useState<PropertyCategory>(null);
   const [formData, setFormData] = useState({
     title: "",
     address: "",
@@ -64,6 +69,18 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
       longitude: "",
     });
     setImagePreview(null);
+    setStep("category");
+    setCategory(null);
+  };
+
+  const handleCategorySelect = (cat: PropertyCategory) => {
+    setCategory(cat);
+    if (cat === "unique") {
+      setFormData(prev => ({ ...prev, property_type: "appartement" }));
+    } else {
+      setFormData(prev => ({ ...prev, property_type: "immeuble" }));
+    }
+    setStep("form");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,17 +134,67 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        {step === "category" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-display text-center">Nouveau Bien</DialogTitle>
+            </DialogHeader>
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-semibold">Quel type de bien souhaitez-vous ajouter ?</h3>
+              <p className="text-sm text-muted-foreground mt-1">Choisissez le type qui correspond à votre situation</p>
+            </div>
+            {!limits.canCreateProperty && limits.maxProperties !== null && (
+              <SubscriptionLimitAlert
+                type="property"
+                planName={limits.planName}
+                current={limits.currentProperties}
+                max={limits.maxProperties}
+              />
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => handleCategorySelect("unique")}
+                disabled={!limits.canCreateProperty}
+                className={cn(
+                  "flex flex-col items-center text-center p-6 rounded-xl border-2 border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Home className="h-7 w-7 text-primary" />
+                </div>
+                <h4 className="font-semibold text-base mb-1">Bien Unique</h4>
+                <p className="text-xs text-muted-foreground mb-3">Villa, bureau, boutique, studio individuel</p>
+                <ul className="text-xs text-muted-foreground text-left space-y-1">
+                  <li>• Un seul bien à ajouter</li>
+                  <li>• Formulaire simple et rapide</li>
+                </ul>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCategorySelect("immeuble")}
+                disabled={!limits.canCreateProperty}
+                className={cn(
+                  "flex flex-col items-center text-center p-6 rounded-xl border-2 border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Building className="h-7 w-7 text-primary" />
+                </div>
+                <h4 className="font-semibold text-base mb-1">Immeuble</h4>
+                <p className="text-xs text-muted-foreground mb-3">Résidence avec plusieurs appartements</p>
+                <ul className="text-xs text-muted-foreground text-left space-y-1">
+                  <li>• Plusieurs unités à gérer</li>
+                  <li>• Duplication et templates rapides</li>
+                </ul>
+              </button>
+            </div>
+          </>
+        ) : (
+        <>
         <DialogHeader>
           <DialogTitle className="text-2xl font-display">Ajouter un nouveau bien</DialogTitle>
         </DialogHeader>
-        {!limits.canCreateProperty && limits.maxProperties !== null && (
-          <SubscriptionLimitAlert
-            type="property"
-            planName={limits.planName}
-            current={limits.currentProperties}
-            max={limits.maxProperties}
-          />
-        )}
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
             <Label htmlFor="propertyType">Type de bien *</Label>
@@ -139,48 +206,34 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
                 <SelectValue placeholder="Sélectionner" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="appartement">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Appartement
-                  </div>
-                </SelectItem>
-                <SelectItem value="maison">
-                  <div className="flex items-center gap-2">
-                    <Home className="h-4 w-4" />
-                    Maison à porte multiple
-                  </div>
-                </SelectItem>
-                <SelectItem value="villa">
-                  <div className="flex items-center gap-2">
-                    <Home className="h-4 w-4" />
-                    Villa
-                  </div>
-                </SelectItem>
-                <SelectItem value="bureau">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Bureau
-                  </div>
-                </SelectItem>
-                <SelectItem value="commerce">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Commerce
-                  </div>
-                </SelectItem>
-                <SelectItem value="immeuble">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Immeuble
-                  </div>
-                </SelectItem>
-                <SelectItem value="meuble">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Location meublée
-                  </div>
-                </SelectItem>
+                {category === "unique" ? (
+                  <>
+                    <SelectItem value="appartement">
+                      <div className="flex items-center gap-2"><Building className="h-4 w-4" />Appartement</div>
+                    </SelectItem>
+                    <SelectItem value="villa">
+                      <div className="flex items-center gap-2"><Home className="h-4 w-4" />Villa</div>
+                    </SelectItem>
+                    <SelectItem value="bureau">
+                      <div className="flex items-center gap-2"><Building className="h-4 w-4" />Bureau</div>
+                    </SelectItem>
+                    <SelectItem value="commerce">
+                      <div className="flex items-center gap-2"><Building className="h-4 w-4" />Commerce</div>
+                    </SelectItem>
+                    <SelectItem value="meuble">
+                      <div className="flex items-center gap-2"><Building className="h-4 w-4" />Location meublée</div>
+                    </SelectItem>
+                  </>
+                ) : (
+                  <>
+                    <SelectItem value="immeuble">
+                      <div className="flex items-center gap-2"><Building className="h-4 w-4" />Immeuble</div>
+                    </SelectItem>
+                    <SelectItem value="maison">
+                      <div className="flex items-center gap-2"><Home className="h-4 w-4" />Maison à porte multiple</div>
+                    </SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -299,6 +352,9 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={() => setStep("category")}>
+              Retour
+            </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuler
             </Button>
@@ -312,6 +368,8 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             </Button>
           </div>
         </form>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );

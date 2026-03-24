@@ -23,6 +23,8 @@ import { Parcelle, useUpdateParcelle } from "@/hooks/useParcelles";
 import { Lotissement } from "@/hooks/useLotissements";
 import { useUpdateLotissement } from "@/hooks/useLotissements";
 import { toast } from "sonner";
+import { BeneficiairesSection } from "./BeneficiairesSection";
+import { useBeneficiairesLots } from "@/hooks/useBeneficiairesLots";
 
 interface LotRepartitionTabProps {
   lotissement: Lotissement;

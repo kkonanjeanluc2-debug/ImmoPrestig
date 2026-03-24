@@ -427,7 +427,7 @@ export default function Tenants() {
                             </div>
                           </div>
                         </td>
-                        {/* Propriété */}
+                        {/* Bien */}
                         <td className="px-4 py-3">
                           <p className="text-sm text-foreground truncate max-w-[200px]">{propertyLabel}</p>
                         </td>

@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Home, Building, X, ImageIcon, Loader2, User } from "lucide-react";
+import { Plus, Home, Building, Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,61 +39,10 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     longitude: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const createProperty = useCreateProperty();
   const { data: owners = [] } = useOwners();
   const limits = useSubscriptionLimits();
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error("Veuillez sélectionner une image valide");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("L'image ne doit pas dépasser 5 Mo");
-      return;
-    }
-
-    setIsUploading(true);
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `properties/${fileName}`;
-
-      const { error } = await supabase.storage
-        .from('property-images')
-        .upload(filePath, file);
-
-      if (error) throw error;
-
-      const { data: urlData } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(filePath);
-
-      setFormData({ ...formData, image_url: urlData.publicUrl });
-      setImagePreview(urlData.publicUrl);
-      toast.success("Image importée avec succès !");
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error("Erreur lors de l'import de l'image");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const removeImage = () => {
-    setImagePreview(null);
-    setFormData({ ...formData, image_url: "" });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
 
   const resetForm = () => {
     setFormData({
@@ -339,60 +288,6 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
           />
 
           <div className="space-y-2">
-            <Label>Photo du bien</Label>
-            <div className="space-y-3">
-              {imagePreview ? (
-                <div className="relative rounded-lg overflow-hidden border border-border">
-                  <img 
-                    src={imagePreview} 
-                    alt="Aperçu" 
-                    className="w-full h-48 object-cover"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 h-8 w-8"
-                    onClick={removeImage}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-emerald/50 hover:bg-emerald/5 transition-colors"
-                >
-                  {isUploading ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-10 w-10 text-emerald animate-spin" />
-                      <p className="text-sm text-muted-foreground">Import en cours...</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="p-3 rounded-full bg-emerald/10">
-                        <ImageIcon className="h-8 w-8 text-emerald" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">Cliquez pour importer une image</p>
-                        <p className="text-sm text-muted-foreground">ou glissez-déposez</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground">PNG, JPG, WEBP (max 5 Mo)</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -410,7 +305,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             <Button 
               type="submit" 
               className="bg-emerald hover:bg-emerald-dark" 
-              disabled={isUploading || createProperty.isPending}
+              disabled={createProperty.isPending}
             >
               {createProperty.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Ajouter le bien

@@ -30,7 +30,8 @@ import {
   ClipboardCheck,
   KeyRound,
   MessageSquare,
-  ShieldOff
+  ShieldOff,
+  AlertTriangle
 } from "lucide-react";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { useAuth } from "@/contexts/AuthContext";

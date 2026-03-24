@@ -413,6 +413,9 @@ export function OwnerPayoutsSection({
                           <p className="font-medium text-foreground">
                             {payout.owner?.name || "Propriétaire"}
                           </p>
+                          <Badge variant="secondary" className="text-xs">
+                            {FRENCH_MONTHS[(payout.payout_month || 1) - 1]} {payout.payout_year}
+                          </Badge>
                           <Badge
                             variant="outline"
                             className="text-xs bg-emerald/10 text-emerald border-emerald/20"

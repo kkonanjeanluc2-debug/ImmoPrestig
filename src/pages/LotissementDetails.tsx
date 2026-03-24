@@ -50,6 +50,7 @@ import { IlotsTab } from "@/components/lotissement/IlotsTab";
 import { GenerateLotissementDocumentDialog } from "@/components/lotissement/GenerateLotissementDocumentDialog";
 import { AcquereursListCard } from "@/components/lotissement/AcquereursListCard";
 import { ImportGeometreDialog } from "@/components/lotissement/ImportGeometreDialog";
+import { LotRepartitionTab } from "@/components/lotissement/LotRepartitionTab";
 import { useNewLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
 import { useIlotsWithStats } from "@/hooks/useIlots";
 const LotissementDetails = () => {

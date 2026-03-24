@@ -34,6 +34,10 @@ export interface LotissementInsert {
   image_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  repartition_proprietaire?: number | null;
+  repartition_lotisseur?: number | null;
+  proprietaire_name?: string | null;
+  lotisseur_name?: string | null;
 }
 
 export interface LotissementUpdate extends Partial<LotissementInsert> {

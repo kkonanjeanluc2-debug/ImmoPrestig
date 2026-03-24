@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useCreateIlot } from "@/hooks/useIlots";
 import { useCreateParcelle } from "@/hooks/useParcelles";
 import * as XLSX from "xlsx";
+import { supabase } from "@/integrations/supabase/client";
 import {
   parseDXF,
   parseShapefile,
@@ -267,36 +268,66 @@ export const ImportGeometreDialog = ({
     setImportProgress({ done: 0, total: totalItems });
 
     try {
+      // Create ilots first
       for (const ilot of parsedIlots) {
-        const result = await createIlot.mutateAsync({
-          lotissement_id: lotissementId,
-          name: ilot.name,
-          description: ilot.description || null,
-          total_area: ilot.totalArea || null,
-          plots_count: ilot.parcelles.length || null,
-        });
-        ilotIdMap[ilot.name.toLowerCase()] = result.id;
+        try {
+          const result = await createIlot.mutateAsync({
+            lotissement_id: lotissementId,
+            name: ilot.name,
+            description: ilot.description || null,
+            total_area: ilot.totalArea || null,
+            plots_count: ilot.parcelles.length || null,
+          });
+          ilotIdMap[ilot.name.toLowerCase()] = result.id;
+        } catch (ilotErr) {
+          console.error(`Erreur création îlot ${ilot.name}:`, ilotErr);
+          // Try to find existing ilot with same name
+          const { data: existingIlot } = await supabase
+            .from("ilots")
+            .select("id")
+            .eq("lotissement_id", lotissementId)
+            .eq("name", ilot.name)
+            .is("deleted_at", null)
+            .maybeSingle();
+          if (existingIlot) {
+            ilotIdMap[ilot.name.toLowerCase()] = existingIlot.id;
+          }
+        }
         done++;
         setImportProgress({ done, total: totalItems });
       }
 
+      // Create parcelles
+      let successCount = 0;
+      let failCount = 0;
       for (const parcelle of parsedParcelles) {
-        const ilotId = parcelle.ilotName ? ilotIdMap[parcelle.ilotName.toLowerCase()] || null : null;
-        await createParcelle.mutateAsync({
-          lotissement_id: lotissementId,
-          ilot_id: ilotId,
-          plot_number: parcelle.plotNumber,
-          area: parcelle.area,
-          price: parcelle.price,
-        });
+        try {
+          const ilotId = parcelle.ilotName ? ilotIdMap[parcelle.ilotName.toLowerCase()] || null : null;
+          await createParcelle.mutateAsync({
+            lotissement_id: lotissementId,
+            ilot_id: ilotId,
+            plot_number: parcelle.plotNumber,
+            area: parcelle.area,
+            price: parcelle.price,
+          });
+          successCount++;
+        } catch (parcelleErr) {
+          console.error(`Erreur création parcelle ${parcelle.plotNumber}:`, parcelleErr);
+          failCount++;
+        }
         done++;
         setImportProgress({ done, total: totalItems });
       }
 
       setStep("done");
-      toast.success(`Import réussi : ${parsedIlots.length} îlot(s) et ${parsedParcelles.length} parcelle(s) créé(s)`);
+      if (failCount > 0) {
+        toast.warning(`Import partiel : ${successCount} parcelle(s) créée(s), ${failCount} en erreur`);
+      } else {
+        toast.success(`Import réussi : ${parsedIlots.length} îlot(s) et ${successCount} parcelle(s) créé(s)`);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erreur lors de l'import";
+      console.error("Import error:", err);
       toast.error(message);
       setStep("preview");
     }

@@ -48,6 +48,9 @@ import {
 import { useOwners } from "@/hooks/useOwners";
 import { PAYMENT_OPERATORS } from "@/hooks/useAgency";
 import { useCommissions } from "@/hooks/useCommissions";
+import { useProperties } from "@/hooks/useProperties";
+import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
+import { useTenants } from "@/hooks/useTenants";
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString("fr-FR") + " F CFA";
@@ -66,6 +69,9 @@ export function OwnerPayoutsSection({
 }: OwnerPayoutsSectionProps) {
   const { data: payouts = [], isLoading } = useOwnerPayouts(fromDate, toDate);
   const { data: owners = [] } = useOwners();
+  const { data: properties = [] } = useProperties();
+  const { data: allInterventions = [] } = usePropertyInterventions();
+  const { data: tenants = [] } = useTenants();
   const createPayout = useCreateOwnerPayout();
   const deletePayout = useDeleteOwnerPayout();
   const commissionReport = useCommissions(fromDate, toDate);
@@ -83,9 +89,37 @@ export function OwnerPayoutsSection({
   // Auto-fill amount when owner is selected
   const handleOwnerChange = (ownerId: string) => {
     const ownerSummary = commissionReport.byOwner.find((o) => o.ownerId === ownerId);
-    const netAmount = ownerSummary
-      ? Math.max(0, ownerSummary.totalRent - ownerSummary.totalCommission)
-      : 0;
+    
+    // Get owner's properties
+    const ownerProps = properties.filter((p) => p.owner_id === ownerId);
+    const ownerPropIds = ownerProps.map((p) => p.id);
+    
+    // Calculate interventions cost for the period
+    const interventionsCost = allInterventions
+      .filter((i) => {
+        if (!ownerPropIds.includes(i.property_id)) return false;
+        const startDate = i.start_date?.substring(0, 10);
+        return startDate && startDate >= fromDate && startDate <= toDate;
+      })
+      .reduce((sum, i) => sum + (i.cost || 0), 0);
+    
+    // Calculate cautions (deposits from tenants created in the period)
+    const totalCautions = tenants
+      .filter((t) => {
+        if (!t.property_id || !ownerPropIds.includes(t.property_id)) return false;
+        const createdAt = t.created_at?.substring(0, 10);
+        return createdAt && createdAt >= fromDate && createdAt <= toDate;
+      })
+      .reduce((sum, t) => {
+        const deposit = (t as any).contracts?.find((c: any) => c.status === "active")?.deposit || 0;
+        return sum + Number(deposit);
+      }, 0);
+    
+    // Formula: totalRent - commission - interventions + cautions
+    const totalRent = ownerSummary?.totalRent || 0;
+    const totalCommission = ownerSummary?.totalCommission || 0;
+    const netAmount = Math.max(0, totalRent - totalCommission - interventionsCost + totalCautions);
+    
     setForm({ ...form, owner_id: ownerId, amount: netAmount > 0 ? String(netAmount) : "" });
   };
 

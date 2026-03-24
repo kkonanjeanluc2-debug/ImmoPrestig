@@ -53,7 +53,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
 
   const activeTenants = (tenants || []).filter((t: any) => !t.deleted_at);
   const activeProperties = (properties || []).filter((p: any) => !p.deleted_at);
-  const activeBiensVente = (biensVente || []).filter((b: any) => !b.deleted_at);
+  const activeBiensVente = (biensVente || []).filter((b: any) => !b.deleted_at && b.status !== "vendu");
   const activeOwners = (owners || []).filter((o: any) => !o.deleted_at);
 
   // Merge properties and biens_vente for selection

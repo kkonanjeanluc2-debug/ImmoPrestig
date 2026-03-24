@@ -30,7 +30,8 @@ import {
   ClipboardCheck,
   KeyRound,
   MessageSquare,
-  ShieldOff
+  ShieldOff,
+  AlertTriangle
 } from "lucide-react";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,6 +82,7 @@ const paymentStatusConfig = {
   paid: { label: "Payé", icon: CheckCircle, className: "text-emerald bg-emerald/10" },
   pending: { label: "En attente", icon: Clock, className: "text-amber-500 bg-amber-500/10" },
   late: { label: "En retard", icon: XCircle, className: "text-destructive bg-destructive/10" },
+  impaye: { label: "Impayé", icon: AlertTriangle, className: "text-destructive bg-destructive/20 font-semibold" },
   upcoming: { label: "À venir", icon: Clock, className: "text-primary bg-primary/10" },
 };
 
@@ -441,7 +443,8 @@ const TenantDetails = () => {
                 {tenant.payments && tenant.payments.length > 0 ? (
                   <div className="space-y-3">
                     {[...tenant.payments].sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime()).map((payment) => {
-                      const status = paymentStatusConfig[payment.status as keyof typeof paymentStatusConfig] || paymentStatusConfig.pending;
+                      const effectiveStatus = payment.status === 'late' && differenceInDays(new Date(), new Date(payment.due_date)) >= 30 ? 'impaye' : payment.status;
+                      const status = paymentStatusConfig[effectiveStatus as keyof typeof paymentStatusConfig] || paymentStatusConfig.pending;
                       const StatusIcon = status.icon;
                       
                       // Check if payment is due within the next 7 days

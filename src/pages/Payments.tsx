@@ -68,12 +68,25 @@ const statusConfig = {
     icon: XCircle, 
     className: "bg-red-500/10 text-red-500 border-red-500/20" 
   },
+  impaye: { 
+    label: "Impayé", 
+    icon: AlertTriangle, 
+    className: "bg-destructive/10 text-destructive border-destructive/20" 
+  },
   upcoming: { 
     label: "À venir", 
     icon: CalendarIcon, 
     className: "bg-blue-500/10 text-blue-500 border-blue-500/20" 
   },
 };
+
+function getEffectiveStatus(payment: { status: string; due_date: string }) {
+  if (payment.status === 'late') {
+    const daysLate = differenceInDays(new Date(), new Date(payment.due_date));
+    if (daysLate >= 30) return 'impaye';
+  }
+  return payment.status;
+}
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString('fr-FR') + ' F CFA';
@@ -162,6 +175,20 @@ export default function Payments() {
       const isDueSoon = payment.status !== 'paid' && isFuture(dueDate) && daysUntilDue <= 7 && daysUntilDue >= 0;
       return matchesSearch && isDueSoon;
     }
+
+    // Handle "impaye" filter: late payments with >=30 days overdue
+    if (statusFilter === "impaye") {
+      const dueDate = new Date(payment.due_date);
+      const daysLate = differenceInDays(new Date(), dueDate);
+      return matchesSearch && payment.status === 'late' && daysLate >= 30;
+    }
+
+    // Handle "late" filter: late payments with <30 days overdue
+    if (statusFilter === "late") {
+      const dueDate = new Date(payment.due_date);
+      const daysLate = differenceInDays(new Date(), dueDate);
+      return matchesSearch && payment.status === 'late' && daysLate < 30;
+    }
     
     const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -234,11 +261,15 @@ export default function Payments() {
     .reduce((sum, p) => sum + Number(p.amount), 0);
   const pendingCount = (payments || []).filter(p => p.status === 'pending').length;
 
-  const lateAmount = (payments || []).filter(p => p.status === 'late')
-    .reduce((sum, p) => sum + Number(p.amount), 0);
-  const lateCount = (payments || []).filter(p => p.status === 'late').length;
+  const latePayments = (payments || []).filter(p => p.status === 'late' && differenceInDays(new Date(), new Date(p.due_date)) < 30);
+  const lateAmount = latePayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const lateCount = latePayments.length;
 
-  const totalExpected = monthlyCollected + pendingAmount + lateAmount;
+  const impayePayments = (payments || []).filter(p => p.status === 'late' && differenceInDays(new Date(), new Date(p.due_date)) >= 30);
+  const impayeAmount = impayePayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const impayeCount = impayePayments.length;
+
+  const totalExpected = monthlyCollected + pendingAmount + lateAmount + impayeAmount;
   const recoveryRate = totalExpected > 0 ? Math.round((monthlyCollected / totalExpected) * 100) : 0;
 
   const stats = [
@@ -258,11 +289,18 @@ export default function Payments() {
       color: "text-amber-500" 
     },
     { 
-      title: "Retards", 
+      title: "En retard (<30j)", 
       value: formatCurrency(lateAmount), 
       count: `${lateCount} paiement${lateCount > 1 ? 's' : ''}`,
-      icon: AlertTriangle, 
+      icon: XCircle, 
       color: "text-red-500" 
+    },
+    { 
+      title: "Impayés (≥30j)", 
+      value: formatCurrency(impayeAmount), 
+      count: `${impayeCount} paiement${impayeCount > 1 ? 's' : ''}`,
+      icon: AlertTriangle, 
+      color: "text-destructive" 
     },
     { 
       title: "Taux de recouvrement", 
@@ -313,7 +351,15 @@ export default function Payments() {
                 { key: 'amount', label: 'Montant (F CFA)', format: (v) => Number(v).toString() },
                 { key: 'due_date', label: 'Échéance', format: (v) => new Date(v).toLocaleDateString('fr-FR') },
                 { key: 'paid_date', label: 'Date de paiement', format: (v) => v ? new Date(v).toLocaleDateString('fr-FR') : '' },
-                { key: 'status', label: 'Statut', format: (v) => v === 'paid' ? 'Payé' : v === 'pending' ? 'En attente' : v === 'late' ? 'En retard' : 'À venir' },
+                { key: 'status', label: 'Statut', format: (v, row: any) => {
+                  if (v === 'paid') return 'Payé';
+                  if (v === 'pending') return 'En attente';
+                  if (v === 'late') {
+                    const daysLate = differenceInDays(new Date(), new Date(row?.due_date));
+                    return daysLate >= 30 ? 'Impayé' : 'En retard';
+                  }
+                  return 'À venir';
+                }},
                 { key: 'method', label: 'Mode de paiement', format: (v) => v || '' },
               ]}
             />
@@ -531,7 +577,8 @@ export default function Payments() {
                               </SelectItem>
                               <SelectItem value="paid">Payés</SelectItem>
                               <SelectItem value="pending">En attente</SelectItem>
-                              <SelectItem value="late">En retard</SelectItem>
+                              <SelectItem value="late">En retard (&lt;30j)</SelectItem>
+                              <SelectItem value="impaye">Impayés (≥30j)</SelectItem>
                               <SelectItem value="upcoming">À venir</SelectItem>
                             </SelectContent>
                           </Select>
@@ -542,7 +589,8 @@ export default function Payments() {
                   <CardContent className="p-0">
                     <div className="divide-y divide-border">
                       {filteredPayments.map((payment) => {
-                        const status = statusConfig[payment.status as keyof typeof statusConfig] || statusConfig.pending;
+                        const effectiveStatus = getEffectiveStatus(payment);
+                        const status = statusConfig[effectiveStatus as keyof typeof statusConfig] || statusConfig.pending;
                         const StatusIcon = status.icon;
                         const tenant = payment.tenant as any;
                         const tenantName = tenant?.name || 'Locataire inconnu';
@@ -573,9 +621,10 @@ export default function Payments() {
                               <div className="flex items-start gap-3">
                                 <div className={cn(
                                   "p-2 rounded-lg",
-                                  payment.status === "paid" ? "bg-emerald/10" :
-                                  payment.status === "late" ? "bg-red-500/10" :
-                                  payment.status === "pending" ? "bg-amber-500/10" : "bg-blue-500/10"
+                                  effectiveStatus === "paid" ? "bg-emerald/10" :
+                                  effectiveStatus === "impaye" ? "bg-destructive/10" :
+                                  effectiveStatus === "late" ? "bg-red-500/10" :
+                                  effectiveStatus === "pending" ? "bg-amber-500/10" : "bg-blue-500/10"
                                 )}>
                                   <StatusIcon className={cn("h-4 w-4", status.className.split(' ').find(c => c.startsWith('text-')))} />
                                 </div>

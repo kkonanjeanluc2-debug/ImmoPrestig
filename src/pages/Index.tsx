@@ -60,6 +60,14 @@ const Index = () => {
     return payments;
   }, [payments]);
 
+  // Compute late payments (arriérés)
+  const latePaymentsStats = useMemo(() => {
+    if (!filteredPayments) return { total: 0, totalAmount: 0 };
+    const late = filteredPayments.filter(p => p.status === 'en_retard' || p.status === 'late' || (p.status === 'pending' && p.due_date && new Date(p.due_date) < new Date()));
+    const totalAmount = late.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    return { total: late.length, totalAmount };
+  }, [filteredPayments]);
+
   // Apply period filter to payments
   const periodFilteredPayments = useMemo(() => {
     return filteredPayments.filter(p => {

@@ -126,17 +126,23 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
     if (statusFilter !== "all") {
       filtered = filtered.filter(p => p.status === statusFilter);
     }
+
+    if (attributionFilter !== "all") {
+      filtered = filtered.filter(p => p.attribution === attributionFilter);
+    }
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((parcelle) => {
         const ilotName = getIlotName(parcelle.ilot_id)?.toLowerCase() || "";
         const statusLabel = STATUS_LABELS[parcelle.status]?.toLowerCase() || "";
+        const attrLabel = getAttributionLabel(parcelle.attribution)?.toLowerCase() || "";
         
         return (
           parcelle.plot_number.toLowerCase().includes(query) ||
           ilotName.includes(query) ||
           statusLabel.includes(query) ||
+          attrLabel.includes(query) ||
           parcelle.area.toString().includes(query) ||
           parcelle.price.toString().includes(query)
         );
@@ -144,7 +150,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
     }
     
     return filtered;
-  }, [parcelles, searchQuery, statusFilter, ilots]);
+  }, [parcelles, searchQuery, statusFilter, attributionFilter, ilots, lotissement]);
 
   const handleDelete = async () => {
     if (!deletingId) return;

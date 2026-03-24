@@ -509,8 +509,6 @@ export default function Tenants() {
               )}
             </div>
           </Card>
-            )}
-          </div>
         )}
 
         {/* Edit Tenant Dialog */}

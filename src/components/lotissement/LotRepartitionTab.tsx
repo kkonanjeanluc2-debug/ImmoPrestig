@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAgency } from "@/hooks/useAgency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,7 @@ interface LotRepartitionTabProps {
 }
 
 export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabProps) {
+  const { data: agency } = useAgency();
   const updateLotissement = useUpdateLotissement();
   const updateParcelle = useUpdateParcelle();
 
@@ -43,6 +45,16 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
   );
   const [isApplying, setIsApplying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Auto-fill names if empty
+  useEffect(() => {
+    if (!proprietaireName && lotissement.proprietaire_name) {
+      setProprietaireName(lotissement.proprietaire_name);
+    }
+    if (!lotisseurName && agency?.name) {
+      setLotisseurName(agency.name);
+    }
+  }, [agency?.name, lotissement.proprietaire_name]);
 
   const lotisseurPercent = 100 - proprietairePercent;
 

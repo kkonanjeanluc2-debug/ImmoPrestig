@@ -45,6 +45,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
+import { useOwners } from "@/hooks/useOwners";
 import { AddTenantDialog } from "@/components/tenant/AddTenantDialog";
 import { ImportTenantsDialog } from "@/components/tenant/ImportTenantsDialog";
 import { MergeTenantsDialog } from "@/components/tenant/MergeTenantsDialog";

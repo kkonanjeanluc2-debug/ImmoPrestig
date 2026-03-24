@@ -160,19 +160,24 @@ export function OwnerPayoutsSection({
         amount: Number(form.amount),
         payout_date: form.payout_date,
         payment_method: form.payment_method,
+        payout_month: form.payout_month,
+        payout_year: form.payout_year,
         recipient_phone: form.recipient_phone || undefined,
         notes: form.notes || undefined,
       },
       {
         onSuccess: () => {
           setOpen(false);
+          const now = new Date();
           setForm({
             owner_id: "",
             amount: "",
-            payout_date: new Date().toISOString().split("T")[0],
+            payout_date: now.toISOString().split("T")[0],
             payment_method: "especes",
             recipient_phone: "",
             notes: "",
+            payout_month: now.getMonth() + 1,
+            payout_year: now.getFullYear(),
           });
         },
       }

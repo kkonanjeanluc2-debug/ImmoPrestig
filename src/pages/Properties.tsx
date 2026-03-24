@@ -53,6 +53,7 @@ const Properties = () => {
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
+  const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
   const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_properties");
   const canEdit = hasPermission("can_edit_properties");

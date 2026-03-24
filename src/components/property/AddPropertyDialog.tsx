@@ -286,32 +286,32 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">
-                {(formData.property_type === "maison" || formData.property_type === "immeuble") ? "Revenu mensuel (F CFA)" : "Loyer mensuel (F CFA) *"}
-              </Label>
-              <Input
-                id="price"
-                type="number"
-                placeholder="Ex: 150000"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              />
+          {category !== "immeuble" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Loyer mensuel (F CFA) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  placeholder="Ex: 150000"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="area">Surface (m²)</Label>
+                <Input
+                  id="area"
+                  type="number"
+                  placeholder="Ex: 120"
+                  value={formData.area}
+                  onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="area">Surface (m²)</Label>
-              <Input
-                id="area"
-                type="number"
-                placeholder="Ex: 120"
-                value={formData.area}
-                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-              />
-            </div>
-          </div>
+          )}
 
-          {formData.property_type !== "terrain" && formData.property_type !== "maison" && formData.property_type !== "immeuble" && (
+          {category !== "immeuble" && formData.property_type !== "terrain" && formData.property_type !== "maison" && formData.property_type !== "immeuble" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="bedrooms">Chambres</Label>
@@ -342,16 +342,18 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
           />
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Décrivez le bien..."
-              rows={3}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-          </div>
+          {category !== "immeuble" && (
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Décrivez le bien..."
+                rows={3}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => setStep("category")}>
@@ -360,14 +362,25 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuler
             </Button>
-            <Button 
-              type="submit" 
-              className="bg-emerald hover:bg-emerald-dark" 
-              disabled={createProperty.isPending}
-            >
-              {createProperty.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Ajouter le bien
-            </Button>
+            {category === "immeuble" ? (
+              <Button 
+                type="submit" 
+                className="bg-emerald hover:bg-emerald-dark gap-2" 
+                disabled={createProperty.isPending}
+              >
+                {createProperty.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                Suivant
+              </Button>
+            ) : (
+              <Button 
+                type="submit" 
+                className="bg-emerald hover:bg-emerald-dark" 
+                disabled={createProperty.isPending}
+              >
+                {createProperty.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Ajouter le bien
+              </Button>
+            )}
           </div>
         </form>
         </>

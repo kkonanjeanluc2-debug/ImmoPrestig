@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { FileText, MoreVertical, Download, ArrowRightLeft, Trash2, Eye, Send, CheckCircle, XCircle } from "lucide-react";
+import { FileText, MoreVertical, Download, ArrowRightLeft, Trash2, Eye, Send, CheckCircle, XCircle, Pencil } from "lucide-react";
 import { useProformaInvoices, useConvertToInvoice, useUpdateProformaStatus, useDeleteProforma, ProformaInvoice } from "@/hooks/useProformaInvoices";
 import { CreateProformaDialog } from "./CreateProformaDialog";
 import { generateProformaPDF } from "@/lib/generateProformaPDF";

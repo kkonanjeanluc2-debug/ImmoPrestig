@@ -237,6 +237,42 @@ export function useUpdateProformaStatus() {
   });
 }
 
+export function useUpdateProforma() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateProformaData> }) => {
+      const { error } = await supabase
+        .from("proforma_invoices")
+        .update({
+          tenant_name: data.tenant_name,
+          tenant_id: data.tenant_id || null,
+          tenant_phone: data.tenant_phone || null,
+          tenant_email: data.tenant_email || null,
+          property_name: data.property_name || null,
+          unit_number: data.unit_number || null,
+          description: data.description || null,
+          items: data.items as any,
+          subtotal: data.subtotal,
+          tax_rate: data.tax_rate || 0,
+          tax_amount: data.tax_amount || 0,
+          total_amount: data.total_amount,
+          notes: data.notes || null,
+          due_date: data.due_date || null,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proforma-invoices"] });
+      toast.success("Facture proforma modifiée avec succès");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erreur lors de la modification");
+    },
+  });
+}
+
 export function useDeleteProforma() {
   const queryClient = useQueryClient();
 

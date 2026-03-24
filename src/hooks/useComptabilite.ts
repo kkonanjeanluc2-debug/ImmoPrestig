@@ -752,10 +752,13 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
             }
           }
           
-          if (status === "pending") {
-            result.loyersEnAttente += remainder;
-          } else {
+          // Apply same logic as dashboard: ≥30 days overdue = impayé
+          const dueDate = p.due_date ? new Date(p.due_date) : null;
+          const daysLate = dueDate ? differenceInDays(new Date(), dueDate) : 0;
+          if (daysLate >= 30) {
             result.loyersImpayes += remainder;
+          } else {
+            result.loyersEnAttente += remainder;
           }
         }
       });

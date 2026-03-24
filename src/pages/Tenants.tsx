@@ -330,6 +330,19 @@ export default function Tenants() {
             />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+              <SelectTrigger className="w-[180px] h-9">
+                <SelectValue placeholder="Propriétaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les propriétaires</SelectItem>
+                {owners.map((owner) => (
+                  <SelectItem key={owner.id} value={owner.id}>
+                    {owner.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {isAgencyOwner && assignableUsers.length > 1 && (
               <Select value={assignedFilter} onValueChange={setAssignedFilter}>
                 <SelectTrigger className="w-[180px] h-9">

@@ -313,6 +313,21 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </TableCell>
+                  <TableCell>
+                    {parcelle.attribution === "proprietaire" ? (
+                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1">
+                        <User className="h-3 w-3" />
+                        {lotissement?.proprietaire_name || "Propriétaire"}
+                      </Badge>
+                    ) : parcelle.attribution === "lotisseur" ? (
+                      <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1">
+                        <Building2 className="h-3 w-3" />
+                        {lotissement?.lotisseur_name || "Lotisseur"}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>{parcelle.area.toLocaleString("fr-FR")} m²</TableCell>
                   <TableCell>{parcelle.price.toLocaleString("fr-FR")} F CFA</TableCell>
                   <TableCell>

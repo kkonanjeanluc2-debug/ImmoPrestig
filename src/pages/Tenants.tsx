@@ -69,12 +69,6 @@ const contractStatusConfig = {
   ancien: { label: "Ancien locataire", className: "bg-muted text-muted-foreground border-muted-foreground/20" },
 };
 
-const paymentStatusConfig = {
-  paid: { label: "Payé", icon: CheckCircle, className: "text-emerald" },
-  pending: { label: "En attente", icon: Clock, className: "text-amber-500" },
-  late: { label: "En retard", icon: XCircle, className: "text-red-500" },
-  upcoming: { label: "À venir", icon: Clock, className: "text-blue-500" },
-};
 
 function getPaymentStatusLabel(tenant: TenantWithDetails) {
   const activeContract = tenant.contracts?.find(c => c.status === 'active');

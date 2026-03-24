@@ -658,6 +658,11 @@ const Comptabilite = () => {
           <TabsContent value="syscohada" className="space-y-6">
             <SyscohadaCompteResultat data={data} totalRevenue={totalRevenue} />
           </TabsContent>
+
+          {/* === FACTURES TAB === */}
+          <TabsContent value="factures" className="space-y-6">
+            <ProformaInvoicesList />
+          </TabsContent>
         </Tabs>
       </div>
 

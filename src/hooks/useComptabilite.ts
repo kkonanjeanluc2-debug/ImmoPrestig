@@ -644,12 +644,17 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           }
           const method = e.payment_method || "Non spécifié";
           methodMap.set(method, (methodMap.get(method) || 0) + amount);
-        } else if (status === "pending") {
-          result[pendingField] += amount;
-        } else if (status === "overdue" || status === "late") {
-          if (category === "loyers") result.loyersImpayes += amount;
-          else result[pendingField] += amount;
-        }
+        } else if (status === "pending" || status === "overdue" || status === "late") {
+          if (category === "loyers") {
+            const daysLate = differenceInDays(new Date(), new Date(e.due_date));
+            if (daysLate >= 30) {
+              result.loyersImpayes += amount;
+            } else {
+              result[pendingField] += amount;
+            }
+          } else {
+            result[pendingField] += amount;
+          }
       });
     };
 

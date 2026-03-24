@@ -10,6 +10,7 @@ import {
   Wallet, TrendingUp, TrendingDown, Clock, AlertTriangle,
   BarChart3, Receipt, ArrowUpRight,
   ArrowDownRight, Plus, DollarSign, Minus, BookOpen, Landmark,
+  FileText,
 } from "lucide-react";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 import { useComptabilite } from "@/hooks/useComptabilite";

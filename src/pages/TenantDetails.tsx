@@ -81,6 +81,7 @@ const paymentStatusConfig = {
   paid: { label: "Payé", icon: CheckCircle, className: "text-emerald bg-emerald/10" },
   pending: { label: "En attente", icon: Clock, className: "text-amber-500 bg-amber-500/10" },
   late: { label: "En retard", icon: XCircle, className: "text-destructive bg-destructive/10" },
+  impaye: { label: "Impayé", icon: AlertTriangle, className: "text-destructive bg-destructive/20 font-semibold" },
   upcoming: { label: "À venir", icon: Clock, className: "text-primary bg-primary/10" },
 };
 

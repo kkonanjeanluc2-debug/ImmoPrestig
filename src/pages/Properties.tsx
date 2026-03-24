@@ -1,3 +1,4 @@
+import React from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen, Pencil, Eye, ChevronDown, Users, Navigation } from "lucide-react";
+import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen, Pencil, Eye, ChevronDown, ChevronRight, Users, Navigation } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { usePropertyTenants, usePropertyTenantsAll } from "@/hooks/usePropertyTenants";
+import { usePropertyUnits, PropertyUnit } from "@/hooks/usePropertyUnits";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -52,6 +54,7 @@ const Properties = () => {
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
+  const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
   const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_properties");
   const canEdit = hasPermission("can_edit_properties");
@@ -68,6 +71,7 @@ const Properties = () => {
   const { data: propertyTenantsMap = {} } = usePropertyTenants();
   const { data: propertyTenantsAllMap = {} } = usePropertyTenantsAll();
   const navigate = useNavigate();
+  const { data: expandedUnits = [], isLoading: unitsLoading } = usePropertyUnits(expandedPropertyId || undefined);
 
   // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
   const isGestionnaire = userRole?.role === "gestionnaire";
@@ -402,132 +406,265 @@ const Properties = () => {
 
                       const statusInfo = statusConfig[effectiveStatus] || { label: effectiveStatus, className: "" };
 
+                      const isMultiUnit = (property.property_type === "maison" || property.property_type === "immeuble") && hasUnits;
+                      const isExpanded = expandedPropertyId === property.id;
+
+                      const handleRowClick = () => {
+                        if (isMultiUnit) {
+                          setExpandedPropertyId(isExpanded ? null : property.id);
+                        } else {
+                          navigate(`/properties/${property.id}`);
+                        }
+                      };
+
+                      // Get unit type label from rooms_count
+                      const getUnitTypeLabel = (unit: PropertyUnit) => {
+                        if (unit.rooms_count <= 1) return "Studio";
+                        return `${unit.rooms_count}P`;
+                      };
+                      const getUnitTypeBadgeColor = (unit: PropertyUnit) => {
+                        if (unit.rooms_count <= 1) return "bg-cyan-100 text-cyan-700 border-cyan-200";
+                        if (unit.rooms_count === 2) return "bg-blue-100 text-blue-700 border-blue-200";
+                        if (unit.rooms_count === 3) return "bg-purple-100 text-purple-700 border-purple-200";
+                        return "bg-orange-100 text-orange-700 border-orange-200";
+                      };
+
+                      // Find tenant for a specific unit
+                      const getUnitTenant = (unitId: string) => {
+                        const allTenants = propertyTenantsAllMap[property.id] || [];
+                        return allTenants.find((t: any) => t.unit_id === unitId);
+                      };
+
                       return (
-                        <tr 
-                          key={property.id} 
-                          className="border-b border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
-                          onClick={() => navigate(`/properties/${property.id}`)}
-                        >
-                          <td className="px-4 py-3">
-                            <div className="max-w-[220px]">
-                              <p className="font-medium text-foreground break-words">{property.title}</p>
-                              <p className="text-xs text-muted-foreground break-words">{property.address}</p>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-foreground">
-                            {ownerName || "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex flex-col gap-1">
-                              <Badge variant="outline" className={cn("text-xs w-fit", typeBadgeColors[property.property_type] || "")}>
-                                {typeLabels[property.property_type] || property.property_type}
-                              </Badge>
-                              {(property.property_type === "maison" || property.property_type === "immeuble") && hasUnits && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <DoorOpen className="h-3 w-3" />
-                                  {summary.available_units}/{summary.total_units} disponible{summary.available_units > 1 ? "s" : ""}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
-                            {displayPrice.toLocaleString("fr-FR")} FCFA
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <Badge variant="outline" className={cn("text-xs", statusInfo.className)}>
-                              {statusInfo.label}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3">
-                            {(property.property_type === "maison" || property.property_type === "immeuble") && hasUnits ? (
-                              (() => {
-                                const allTenants = propertyTenantsAllMap[property.id] || [];
-                                if (allTenants.length === 0) return <span className="text-muted-foreground">-</span>;
-                                return (
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-auto py-1 px-2 text-foreground gap-1"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                                        {allTenants.length} locataire{allTenants.length > 1 ? "s" : ""}
-                                        <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                                      </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-56 p-2" align="start">
-                                      <div className="space-y-1">
-                                        {allTenants.map((t, idx) => (
-                                          <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted">
-                                            <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                                            <div className="min-w-0">
-                                              <p className="font-medium truncate">{t.name}</p>
-                                              {t.unit && <p className="text-xs text-muted-foreground">Porte: {t.unit}</p>}
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </PopoverContent>
-                                  </Popover>
-                                );
-                              })()
-                            ) : tenantName ? (
-                              <div className="flex items-center gap-1.5 text-foreground">
-                                <User className="h-3.5 w-3.5 text-muted-foreground" />
-                                {tenantName}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
+                        <React.Fragment key={property.id}>
+                          <tr 
+                            className={cn(
+                              "border-b border-border/50 hover:bg-muted/50 transition-colors cursor-pointer",
+                              isExpanded && "bg-muted/30"
                             )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-1">
-                              {property.latitude && property.longitude && (
+                            onClick={handleRowClick}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2 max-w-[220px]">
+                                {isMultiUnit && (
+                                  <span className="text-muted-foreground shrink-0">
+                                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                  </span>
+                                )}
+                                <div>
+                                  <p className="font-medium text-foreground break-words">{property.title}</p>
+                                  <p className="text-xs text-muted-foreground break-words">{property.address}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-foreground">
+                              {ownerName || "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col gap-1">
+                                <Badge variant="outline" className={cn("text-xs w-fit", typeBadgeColors[property.property_type] || "")}>
+                                  {typeLabels[property.property_type] || property.property_type}
+                                </Badge>
+                                {isMultiUnit && (
+                                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <DoorOpen className="h-3 w-3" />
+                                    {summary.available_units}/{summary.total_units} disponible{summary.available_units > 1 ? "s" : ""}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
+                              {displayPrice.toLocaleString("fr-FR")} FCFA
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Badge variant="outline" className={cn("text-xs", statusInfo.className)}>
+                                {statusInfo.label}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3">
+                              {isMultiUnit ? (
+                                (() => {
+                                  const allTenants = propertyTenantsAllMap[property.id] || [];
+                                  if (allTenants.length === 0) return <span className="text-muted-foreground">-</span>;
+                                  return (
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-auto py-1 px-2 text-foreground gap-1"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                                          {allTenants.length} locataire{allTenants.length > 1 ? "s" : ""}
+                                          <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-56 p-2" align="start">
+                                        <div className="space-y-1">
+                                          {allTenants.map((t, idx) => (
+                                            <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted">
+                                              <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                              <div className="min-w-0">
+                                                <p className="font-medium truncate">{t.name}</p>
+                                                {t.unit && <p className="text-xs text-muted-foreground">Porte: {t.unit}</p>}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </PopoverContent>
+                                    </Popover>
+                                  );
+                                })()
+                              ) : tenantName ? (
+                                <div className="flex items-center gap-1.5 text-foreground">
+                                  <User className="h-3.5 w-3.5 text-muted-foreground" />
+                                  {tenantName}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-end gap-1">
+                                {property.latitude && property.longitude && (
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8"
+                                    title="Suivre l'itinéraire"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(
+                                        `https://www.google.com/maps/dir/?api=1&destination=${property.latitude},${property.longitude}`,
+                                        "_blank"
+                                      );
+                                    }}
+                                  >
+                                    <Navigation className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {canEdit && (
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingProperty(property);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                )}
                                 <Button
                                   size="icon"
                                   variant="ghost"
                                   className="h-8 w-8"
-                                  title="Suivre l'itinéraire"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    window.open(
-                                      `https://www.google.com/maps/dir/?api=1&destination=${property.latitude},${property.longitude}`,
-                                      "_blank"
-                                    );
+                                    navigate(`/properties/${property.id}`);
                                   }}
                                 >
-                                  <Navigation className="h-4 w-4" />
+                                  <Eye className="h-4 w-4" />
                                 </Button>
-                              )}
-                              {canEdit && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingProperty(property);
-                                  }}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/properties/${property.id}`);
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
+                              </div>
+                            </td>
+                          </tr>
+                          {/* Expandable units sub-table */}
+                          {isExpanded && isMultiUnit && (
+                            <tr>
+                              <td colSpan={7} className="p-0">
+                                <div className="bg-muted/20 border-b border-border/50">
+                                  {unitsLoading ? (
+                                    <div className="flex items-center justify-center py-6">
+                                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                    </div>
+                                  ) : (
+                                    <table className="w-full">
+                                      <thead>
+                                        <tr className="border-b border-border/30">
+                                          <th className="text-left px-6 py-2.5 font-medium text-primary text-sm">Unité</th>
+                                          <th className="text-left px-4 py-2.5 font-medium text-primary text-sm">Type</th>
+                                          <th className="text-right px-4 py-2.5 font-medium text-primary text-sm">Loyer</th>
+                                          <th className="text-center px-4 py-2.5 font-medium text-primary text-sm">Statut</th>
+                                          <th className="text-left px-4 py-2.5 font-medium text-primary text-sm">Locataire</th>
+                                          <th className="text-right px-6 py-2.5 font-medium text-primary text-sm">Actions</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {expandedUnits.map((unit) => {
+                                          const unitTenant = getUnitTenant(unit.id);
+                                          const unitStatusConfig: Record<string, { label: string; className: string }> = {
+                                            disponible: { label: "Disponible", className: "bg-primary/10 text-primary border-primary/30" },
+                                            "loué": { label: "Loué", className: "bg-destructive/10 text-destructive border-destructive/20" },
+                                          };
+                                          const unitStatus = unitStatusConfig[unit.status] || { label: unit.status, className: "" };
+
+                                          return (
+                                            <tr key={unit.id} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
+                                              <td className="px-6 py-3">
+                                                <span className="font-medium text-foreground">{unit.unit_number}</span>
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                <Badge variant="outline" className={cn("text-xs", getUnitTypeBadgeColor(unit))}>
+                                                  {getUnitTypeLabel(unit)}
+                                                </Badge>
+                                              </td>
+                                              <td className="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
+                                                {unit.rent_amount.toLocaleString("fr-FR")} FCFA
+                                              </td>
+                                              <td className="px-4 py-3 text-center">
+                                                <Badge variant="outline" className={cn("text-xs", unitStatus.className)}>
+                                                  {unitStatus.label}
+                                                </Badge>
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                {unitTenant ? (
+                                                  <span className="text-foreground text-sm">{unitTenant.name}</span>
+                                                ) : (
+                                                  <span className="text-muted-foreground">-</span>
+                                                )}
+                                              </td>
+                                              <td className="px-6 py-3">
+                                                <div className="flex items-center justify-end gap-1">
+                                                  {canEdit && (
+                                                    <Button
+                                                      size="icon"
+                                                      variant="ghost"
+                                                      className="h-8 w-8"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingProperty(property);
+                                                      }}
+                                                    >
+                                                      <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                  )}
+                                                  <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      navigate(`/properties/${property.id}`);
+                                                    }}
+                                                  >
+                                                    <Eye className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>

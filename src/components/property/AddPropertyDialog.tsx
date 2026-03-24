@@ -233,15 +233,53 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const addTemplate = (label: string, rooms: number) => {
     const existingCount = localUnits.filter(u => u.unit_number.toLowerCase().includes(label.toLowerCase())).length;
     const unitNumber = `${label} ${existingCount + 1}`;
-    setLocalUnits(prev => [...prev, {
+    const newUnit: LocalUnit = {
       id: crypto.randomUUID(),
       unit_number: unitNumber,
       rooms_count: rooms,
       rent_amount: 0,
       area: null,
       status: "disponible",
-    }]);
-    toast.success(`${unitNumber} ajouté`);
+    };
+    setLocalUnits(prev => [...prev, newUnit]);
+    // Open bulk dialog with this unit as source
+    setBulkSourceUnit(newUnit);
+    setBulkCount(5);
+    setShowBulkDialog(true);
+  };
+
+  const duplicateUnit = (unit: LocalUnit) => {
+    setBulkSourceUnit(unit);
+    setBulkCount(5);
+    setShowBulkDialog(true);
+  };
+
+  const addBulkUnits = () => {
+    if (!bulkSourceUnit || bulkCount <= 0) return;
+    // Extract base name and current number
+    const match = bulkSourceUnit.unit_number.match(/^(.+?)(\d+)$/);
+    const baseName = match ? match[1] : bulkSourceUnit.unit_number + " ";
+    const startNum = match ? parseInt(match[2]) : 1;
+
+    const newUnits: LocalUnit[] = [];
+    for (let i = 1; i <= bulkCount; i++) {
+      const num = startNum + i;
+      const unitNumber = `${baseName}${num}`;
+      // Skip if duplicate
+      if (localUnits.some(u => u.unit_number.toLowerCase() === unitNumber.toLowerCase())) continue;
+      newUnits.push({
+        id: crypto.randomUUID(),
+        unit_number: unitNumber,
+        rooms_count: bulkSourceUnit.rooms_count,
+        rent_amount: bulkSourceUnit.rent_amount,
+        area: bulkSourceUnit.area,
+        status: "disponible",
+      });
+    }
+    setLocalUnits(prev => [...prev, ...newUnits]);
+    setShowBulkDialog(false);
+    setBulkSourceUnit(null);
+    toast.success(`${newUnits.length} unité${newUnits.length > 1 ? "s" : ""} ajoutée${newUnits.length > 1 ? "s" : ""}`);
   };
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat("fr-FR").format(amount) + " F CFA";

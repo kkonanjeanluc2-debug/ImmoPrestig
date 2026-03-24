@@ -80,15 +80,14 @@ const Comptabilite = () => {
   const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
-  const beneficeNet = totalRevenue - data.totalExpenses - totalReversements;
+  const revenusNets = totalRevenue - totalReversements;
+  const beneficeNet = revenusNets - data.totalExpenses;
   const margePercent = revenusNets > 0 ? Math.round((beneficeNet / revenusNets) * 100) : 0;
 
   const renderPieLabel = ({ name, percent }: { name: string; percent: number }) => {
     if (percent < 0.05) return null;
     return `${name} ${(percent * 100).toFixed(0)}%`;
   };
-
-  const revenusNets = totalRevenue - totalReversements;
 
   const statCards = [
     {

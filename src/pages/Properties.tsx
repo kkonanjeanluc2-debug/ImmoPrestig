@@ -381,6 +381,7 @@ const Properties = () => {
                       const statusConfig: Record<string, { label: string; className: string }> = {
                         disponible: { label: "Disponible", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
                         loué: { label: "Loué", className: "bg-destructive/10 text-destructive border-destructive/20" },
+                        partiellement_loué: { label: "Partiellement loué", className: "bg-blue-100 text-blue-700 border-blue-200" },
                         "en attente": { label: "En attente", className: "bg-amber-100 text-amber-700 border-amber-200" },
                         vendu: { label: "Vendu", className: "bg-muted text-muted-foreground border-muted-foreground/20" },
                       };

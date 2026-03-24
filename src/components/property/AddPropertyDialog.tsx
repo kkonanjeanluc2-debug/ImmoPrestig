@@ -305,7 +305,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             <Button 
               type="submit" 
               className="bg-emerald hover:bg-emerald-dark" 
-              disabled={isUploading || createProperty.isPending}
+              disabled={createProperty.isPending}
             >
               {createProperty.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Ajouter le bien

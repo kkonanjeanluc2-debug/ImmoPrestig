@@ -653,10 +653,12 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
 
           <Button
             onClick={handleSubmit}
-            disabled={!tenantName.trim() || totalAmount <= 0 || createProforma.isPending}
+            disabled={!tenantName.trim() || totalAmount <= 0 || createProforma.isPending || updateProforma.isPending}
             className="w-full"
           >
-            {createProforma.isPending ? "Création..." : "Créer la facture proforma"}
+            {isEditing
+              ? (updateProforma.isPending ? "Modification..." : "Modifier la facture proforma")
+              : (createProforma.isPending ? "Création..." : "Créer la facture proforma")}
           </Button>
         </div>
       </DialogContent>

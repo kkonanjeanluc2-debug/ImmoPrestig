@@ -401,6 +401,15 @@ const LotissementDetails = () => {
           </TabsContent>
 
           {isOwner && (
+            <TabsContent value="repartition">
+              <LotRepartitionTab
+                lotissement={lotissement}
+                parcelles={parcelles || []}
+              />
+            </TabsContent>
+          )}
+
+          {isOwner && (
             <TabsContent value="affectations">
               <LotAssignmentSettings 
                 parcelles={parcelles || []} 

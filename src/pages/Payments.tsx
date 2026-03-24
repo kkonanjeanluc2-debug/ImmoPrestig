@@ -563,7 +563,8 @@ export default function Payments() {
                               </SelectItem>
                               <SelectItem value="paid">Payés</SelectItem>
                               <SelectItem value="pending">En attente</SelectItem>
-                              <SelectItem value="late">En retard</SelectItem>
+                              <SelectItem value="late">En retard (&lt;30j)</SelectItem>
+                              <SelectItem value="impaye">Impayés (≥30j)</SelectItem>
                               <SelectItem value="upcoming">À venir</SelectItem>
                             </SelectContent>
                           </Select>

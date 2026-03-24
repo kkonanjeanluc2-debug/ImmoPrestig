@@ -438,6 +438,13 @@ const LotissementDetails = () => {
           onOpenChange={setShowGenerateDocument}
         />
       )}
+      <ImportGeometreDialog
+        lotissementId={id || ""}
+        open={showImportGeometre}
+        onOpenChange={setShowImportGeometre}
+        existingIlotNames={ilotsData?.map(i => i.name) || []}
+        existingPlotNumbers={parcelles?.map(p => p.plot_number) || []}
+      />
       <AIAdvisorChat context="parcels" title="Conseiller Parcelles" />
     </DashboardLayout>
   );

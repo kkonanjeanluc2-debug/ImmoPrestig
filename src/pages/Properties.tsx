@@ -356,7 +356,7 @@ const Properties = () => {
 
                       const typeLabels: Record<string, string> = {
                         appartement: "Appart.",
-                        maison: "Maison",
+                        maison: "Maison à porte multiple",
                         villa: "Villa",
                         bureau: "Bureau",
                         commerce: "Commerce",

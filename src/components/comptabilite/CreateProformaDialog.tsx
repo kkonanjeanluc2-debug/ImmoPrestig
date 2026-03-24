@@ -185,30 +185,41 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
     }
     if (notes) categoryNotes.push(notes);
 
-    createProforma.mutate(
-      {
-        tenant_id: clientType === "locataire" ? (selectedTenantId || null) : null,
-        tenant_name: tenantName,
-        tenant_phone: tenantPhone,
-        tenant_email: tenantEmail,
-        property_name: propertyName,
-        unit_number: unitNumber,
-        description: description || (invoiceCategory === "bien" ? "Facture bien immobilier" : "Facture prestation"),
-        items,
-        subtotal,
-        tax_rate: taxRate,
-        tax_amount: taxAmount,
-        total_amount: totalAmount,
-        notes: categoryNotes.join("\n"),
-        due_date: dueDate || undefined,
-      },
-      {
+    const payload = {
+      tenant_id: clientType === "locataire" ? (selectedTenantId || null) : null,
+      tenant_name: tenantName,
+      tenant_phone: tenantPhone,
+      tenant_email: tenantEmail,
+      property_name: propertyName,
+      unit_number: unitNumber,
+      description: description || (invoiceCategory === "bien" ? "Facture bien immobilier" : "Facture prestation"),
+      items,
+      subtotal,
+      tax_rate: taxRate,
+      tax_amount: taxAmount,
+      total_amount: totalAmount,
+      notes: categoryNotes.join("\n"),
+      due_date: dueDate || undefined,
+    };
+
+    if (isEditing && editInvoice) {
+      updateProforma.mutate(
+        { id: editInvoice.id, data: payload },
+        {
+          onSuccess: () => {
+            setOpen(false);
+            resetForm();
+          },
+        }
+      );
+    } else {
+      createProforma.mutate(payload, {
         onSuccess: () => {
           setOpen(false);
           resetForm();
         },
-      }
-    );
+      });
+    }
   };
 
   const resetForm = () => {

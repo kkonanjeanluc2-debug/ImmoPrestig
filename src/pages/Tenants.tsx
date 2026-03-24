@@ -70,32 +70,48 @@ const contractStatusConfig = {
 };
 
 
-function getPaymentStatusLabel(tenant: TenantWithDetails) {
+function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean) {
+  // If tenant has been expelled
+  if (isExpelled) {
+    return { label: "Expulsé", className: "bg-muted text-muted-foreground border-muted-foreground/30" };
+  }
+
   const activeContract = tenant.contracts?.find(c => c.status === 'active');
-  if (!activeContract) return null;
+  if (!activeContract) {
+    // No active contract = check if expired (could be expelled)
+    const hasExpired = tenant.contracts?.some(c => c.status === 'expired');
+    if (hasExpired) {
+      return { label: "Expulsé", className: "bg-muted text-muted-foreground border-muted-foreground/30" };
+    }
+    return null;
+  }
   
   const payments = tenant.payments || [];
-  if (payments.length === 0) return { label: "En attente", className: "bg-amber-500/10 text-amber-600 border-amber-500/30" };
   
-  // Count late payments
+  // Check for any late payments - if any exist, tenant is in "Retard"
   const latePayments = payments.filter(p => p.status === 'late');
-  const lateDays = latePayments.length > 0 
-    ? Math.max(...latePayments.map(p => Math.ceil((new Date().getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24))))
-    : 0;
-  
-  if (latePayments.length >= 3) {
-    return { label: "Retard fréquent", className: "bg-orange-500/10 text-orange-600 border-orange-500/30" };
-  }
-  if (latePayments.length > 0 && lateDays > 0) {
+  if (latePayments.length > 0) {
+    const lateDays = Math.max(...latePayments.map(p => Math.ceil((new Date().getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24))));
+    if (latePayments.length >= 3) {
+      return { label: "Retard fréquent", className: "bg-orange-500/10 text-orange-600 border-orange-500/30" };
+    }
     return { label: `Retard ${lateDays}j+`, className: "bg-destructive/10 text-destructive border-destructive/30" };
   }
   
-  const latestPayment = payments.sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())[0];
-  if (latestPayment?.status === 'paid') {
+  // Check if current month is paid
+  const now = new Date();
+  const currentMonthPayments = payments.filter(p => {
+    const dueDate = new Date(p.due_date);
+    return dueDate.getMonth() === now.getMonth() && dueDate.getFullYear() === now.getFullYear();
+  });
+  
+  const currentMonthPaid = currentMonthPayments.some(p => p.status === 'paid');
+  if (currentMonthPaid) {
     return { label: "À jour", className: "bg-emerald/10 text-emerald border-emerald/30" };
   }
   
-  return { label: "En attente", className: "bg-amber-500/10 text-amber-600 border-amber-500/30" };
+  // No late payments, current month not yet paid - still "À jour" (not overdue yet)
+  return { label: "À jour", className: "bg-emerald/10 text-emerald border-emerald/30" };
 }
 
 // Keep TenantCard interfaces for handlers
@@ -196,23 +212,17 @@ export default function Tenants() {
 
 
   const filteredTenants = (tenants || []).filter(tenant => {
-    const hasActiveContract = tenant.contracts?.some(c => c.status === 'active');
-    const latePayments = tenant.payments?.filter(p => p.status === 'late') || [];
+    const paymentStatus = getPaymentStatusLabel(tenant);
     
     // Status filter using button-based filters
     if (statusFilter === "uptodate") {
-      if (!hasActiveContract) return false;
-      const paymentStatus = getPaymentStatusLabel(tenant);
       if (paymentStatus?.label !== "À jour") return false;
     }
     if (statusFilter === "late") {
-      const paymentStatus = getPaymentStatusLabel(tenant);
       if (!paymentStatus?.label.includes("Retard")) return false;
     }
     if (statusFilter === "expelled") {
-      // Show tenants with expired contracts (expelled)
-      if (hasActiveContract) return false;
-      if (!tenant.contracts?.some(c => c.status === 'expired')) return false;
+      if (paymentStatus?.label !== "Expulsé") return false;
     }
 
     const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

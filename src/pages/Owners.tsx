@@ -265,7 +265,7 @@ const Owners = () => {
                       <span className="flex items-center justify-center gap-1"><Building2 className="h-3.5 w-3.5" /> Biens</span>
                     </th>
                     <th className="text-right px-4 py-3 font-medium text-muted-foreground">
-                      <span className="flex items-center justify-end gap-1"><DollarSign className="h-3.5 w-3.5" /> Loyers/mois</span>
+                      <span className="flex items-center justify-end gap-1"><Banknote className="h-3.5 w-3.5" /> Loyers/mois</span>
                     </th>
                     <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
                   </tr>

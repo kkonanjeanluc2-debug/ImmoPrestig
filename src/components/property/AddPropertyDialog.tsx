@@ -23,6 +23,8 @@ interface AddPropertyDialogProps {
 
 export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<"category" | "form">("category");
+  const [category, setCategory] = useState<PropertyCategory>(null);
   const [formData, setFormData] = useState({
     title: "",
     address: "",

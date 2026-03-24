@@ -1236,7 +1236,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const method = p.payment_method || "Mobile Money";
         methodMap.set(method, (methodMap.get(method) || 0) + amount);
         const assignedTo = p.tenant?.assigned_to;
-        const tenantName = p.tenant?.name || "Locataire inconnu";
+        const baseTenantName = p.tenant?.name || "Locataire inconnu";
+        const unitNumber = p.tenant?.unit?.unit_number;
+        const tenantName = unitNumber ? `${baseTenantName} (${unitNumber})` : baseTenantName;
         result.paidRentDetails.push({
           tenantName,
           months: [],

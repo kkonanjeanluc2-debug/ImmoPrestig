@@ -35,7 +35,13 @@ const Index = () => {
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: payments, isLoading: paymentsLoading } = usePayments();
-  const { data: whatsappStats } = useWhatsAppLogsCount();
+  // Compute late payments (arriérés)
+  const latePaymentsStats = useMemo(() => {
+    if (!filteredPayments) return { total: 0, totalAmount: 0 };
+    const late = filteredPayments.filter(p => p.status === 'en_retard' || p.status === 'late' || (p.status === 'pending' && p.due_date && new Date(p.due_date) < new Date()));
+    const totalAmount = late.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    return { total: late.length, totalAmount };
+  }, [filteredPayments]);
   const { data: unitsSummary } = usePropertyUnitsSummary();
 
   // Check if user is a gestionnaire (manager) - filter data to show only their assigned items

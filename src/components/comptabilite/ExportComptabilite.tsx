@@ -324,18 +324,20 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
             doc.setFont("helvetica", "normal");
             doc.setFontSize(7);
             group.details.forEach((detail, j) => {
-              if (cy + 8 > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); cy = 20; }
-              if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, cy, pageWidth - 50, 7, "F"); }
-              doc.setTextColor(...textColor);
-              const lbl = detail.label.length > 22 ? detail.label.substring(0, 20) + "..." : detail.label;
-              doc.text(lbl, 28, cy + 5);
-              const ownerText = (detail.ownerName || "—").length > 22 ? (detail.ownerName || "—").substring(0, 20) + "..." : (detail.ownerName || "—");
-              doc.text(ownerText, 68, cy + 5);
+              const lblLines = doc.splitTextToSize(detail.label, 36);
+              const ownerLines = doc.splitTextToSize(detail.ownerName || "—", 36);
               const desc = detail.description.replace(" (Caution)", "");
-              const descTrunc = desc.length > 22 ? desc.substring(0, 20) + "..." : desc;
-              doc.text(descTrunc, 108, cy + 5);
-              doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, cy + 5, { align: "right" });
-              cy += 7;
+              const descLines = doc.splitTextToSize(desc, 40);
+              const maxLines = Math.max(lblLines.length, ownerLines.length, descLines.length);
+              const rowHeight = Math.max(7, maxLines * 3.5 + 3);
+              if (cy + rowHeight > doc.internal.pageSize.getHeight() - 30) { doc.addPage(); cy = 20; }
+              if (j % 2 === 0) { doc.setFillColor(245, 248, 252); doc.rect(25, cy, pageWidth - 50, rowHeight, "F"); }
+              doc.setTextColor(...textColor);
+              doc.text(lblLines, 28, cy + 4);
+              doc.text(ownerLines, 68, cy + 4);
+              doc.text(descLines, 108, cy + 4);
+              doc.text(formatAmountWithCurrency(detail.amount), pageWidth - 30, cy + 4, { align: "right" });
+              cy += rowHeight;
             });
             cy += 3;
           });

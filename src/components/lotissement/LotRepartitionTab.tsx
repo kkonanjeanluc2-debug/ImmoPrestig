@@ -337,6 +337,22 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {/* Beneficiaires sections */}
+      {parcelles.some(p => p.attribution === "proprietaire") && (
+        <BeneficiairesSection
+          lotissement={lotissement}
+          parcelles={parcelles}
+          partie="proprietaire"
+        />
+      )}
+      {parcelles.some(p => p.attribution === "lotisseur") && (
+        <BeneficiairesSection
+          lotissement={lotissement}
+          parcelles={parcelles}
+          partie="lotisseur"
+        />
+      )}
     </div>
   );
 }

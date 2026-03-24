@@ -1,11 +1,8 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { RecentPayments } from "@/components/dashboard/RecentPayments";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { PropertyTypesChart } from "@/components/dashboard/PropertyTypesChart";
-import { SubscriptionQuotaCard } from "@/components/dashboard/SubscriptionQuotaCard";
-import { MyAssignedItems } from "@/components/dashboard/MyAssignedItems";
 import { ManagerPerformance } from "@/components/dashboard/ManagerPerformance";
 import { ManagerPerformanceChart } from "@/components/dashboard/ManagerPerformanceChart";
 import { PaymentEvolutionChart } from "@/components/dashboard/PaymentEvolutionChart";
@@ -230,14 +227,10 @@ const Index = () => {
         {/* Manager Performance Chart */}
         {!isLoading && <ManagerPerformanceChart periodFrom={period.from} periodTo={period.to} />}
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-            <MyAssignedItems />
-            <ManagerPerformance periodFrom={period.from} periodTo={period.to} />
-            <RecentPayments />
-          </div>
-      </div>
+        {/* Manager Performance Grid */}
+        {!isLoading && (
+          <ManagerPerformance periodFrom={period.from} periodTo={period.to} />
+        )}
       <AIAdvisorChat context="all" />
       </div>
     </DashboardLayout>

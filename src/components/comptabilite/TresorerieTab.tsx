@@ -20,7 +20,7 @@ const chartConfig = {
   solde: { label: "Solde cumulé", color: "hsl(var(--primary))" },
 };
 
-export function TresorerieTab({ data, totalRevenue }: Props) {
+export function TresorerieTab({ data, totalRevenue, totalReversements = 0 }: Props) {
   // Build cumulative cash flow data
   let cumul = 0;
   const cashFlowData = data.monthlyData.map((m) => {
@@ -37,7 +37,7 @@ export function TresorerieTab({ data, totalRevenue }: Props) {
   });
 
   const totalEntrees = totalRevenue;
-  const totalSorties = data.totalExpenses;
+  const totalSorties = data.totalExpenses + totalReversements;
   const soldeNet = totalEntrees - totalSorties;
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
 

@@ -33,25 +33,10 @@ import {
   FileText, 
   Clock,
   AlertTriangle,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Euro,
-  CheckCircle,
-  XCircle,
-  ChevronDown,
-  ChevronUp,
-  Wallet,
   Loader2,
   Pencil,
   Eye,
   UserCheck,
-  DoorOpen,
-  Trash2,
-  KeyRound,
-  ShieldCheck,
-  ShieldX,
   Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -84,28 +69,36 @@ const contractStatusConfig = {
   ancien: { label: "Ancien locataire", className: "bg-muted text-muted-foreground border-muted-foreground/20" },
 };
 
-const paymentStatusConfig = {
-  paid: { label: "Payé", icon: CheckCircle, className: "text-emerald" },
-  pending: { label: "En attente", icon: Clock, className: "text-amber-500" },
-  late: { label: "En retard", icon: XCircle, className: "text-red-500" },
-  upcoming: { label: "À venir", icon: Clock, className: "text-blue-500" },
-};
 
-interface TenantCardProps {
-  tenant: TenantWithDetails;
-  onEdit: (tenant: TenantWithDetails) => void;
-  onView: (tenant: TenantWithDetails) => void;
-  onDelete: (tenant: TenantWithDetails) => void;
-  onCreateAccess: (tenant: TenantWithDetails) => void;
-  onRevokeAccess: (tenant: TenantWithDetails) => void;
-  canEdit: boolean;
-  canDelete: boolean;
-  isDeleting: boolean;
-  isRevokingAccess: boolean;
-  isAgencyOwner: boolean;
-  tenantRequests?: TenantActiveRequest[];
+function getPaymentStatusLabel(tenant: TenantWithDetails) {
+  const activeContract = tenant.contracts?.find(c => c.status === 'active');
+  if (!activeContract) return null;
+  
+  const payments = tenant.payments || [];
+  if (payments.length === 0) return { label: "En attente", className: "bg-amber-500/10 text-amber-600 border-amber-500/30" };
+  
+  // Count late payments
+  const latePayments = payments.filter(p => p.status === 'late');
+  const lateDays = latePayments.length > 0 
+    ? Math.max(...latePayments.map(p => Math.ceil((new Date().getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24))))
+    : 0;
+  
+  if (latePayments.length >= 3) {
+    return { label: "Retard fréquent", className: "bg-orange-500/10 text-orange-600 border-orange-500/30" };
+  }
+  if (latePayments.length > 0 && lateDays > 0) {
+    return { label: `Retard ${lateDays}j+`, className: "bg-destructive/10 text-destructive border-destructive/30" };
+  }
+  
+  const latestPayment = payments.sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())[0];
+  if (latestPayment?.status === 'paid') {
+    return { label: "À jour", className: "bg-emerald/10 text-emerald border-emerald/30" };
+  }
+  
+  return { label: "En attente", className: "bg-amber-500/10 text-amber-600 border-amber-500/30" };
 }
 
+// Keep TenantCard interfaces for handlers
 const requestStatusConfig: Record<string, { label: string; className: string }> = {
   nouveau: { label: "Nouveau", className: "bg-destructive/10 text-destructive border-destructive/20" },
   en_cours: { label: "En cours", className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
@@ -113,349 +106,12 @@ const requestStatusConfig: Record<string, { label: string; className: string }> 
   rejete: { label: "Rejeté", className: "bg-red-500/10 text-red-500 border-red-500/20" },
 };
 
-function TenantCard({ tenant, onEdit, onView, onDelete, onCreateAccess, onRevokeAccess, canEdit, canDelete, isDeleting, isRevokingAccess, isAgencyOwner, tenantRequests = [] }: TenantCardProps) {
-  const [expanded, setExpanded] = useState(false);
-  
-  // Get active contract - prioritize active contracts
-  const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
-  
-  // Determine contract status based on actual contract data and tenant status
-  const getContractStatus = (): string | null => {
-    // Check if tenant is marked as "ancien" (former tenant)
-    if ((tenant as any).status === 'ancien') return 'ancien';
-    if (!activeContract) return null;
-    if (activeContract.status === 'active') {
-      // Check if ending soon (within 30 days)
-      const endDate = new Date(activeContract.end_date);
-      const today = new Date();
-      const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysUntilEnd <= 30 && daysUntilEnd > 0) return 'ending_soon';
-      return 'active';
-    }
-    if (activeContract.status === 'expired') return 'expired';
-    return null;
-  };
-  
-  const contractStatus = getContractStatus();
-  const statusConfig = contractStatus ? contractStatusConfig[contractStatus as keyof typeof contractStatusConfig] : null;
-  const assignedTo = tenant.assigned_to;
-  const hasPortalAccess = tenant.has_portal_access;
-
-  return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-0">
-        {/* Header */}
-        <div className="p-3 sm:p-4 md:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-            {/* Avatar */}
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-              <span className="text-base sm:text-lg font-semibold text-muted-foreground">
-                {tenant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </span>
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
-                <h3 className="font-semibold text-sm sm:text-base text-foreground truncate max-w-[180px] sm:max-w-none">{tenant.name}</h3>
-                {statusConfig && (
-                  <Badge variant="outline" className={cn("text-[10px] sm:text-xs", statusConfig.className)}>
-                    {statusConfig.label}
-                  </Badge>
-                )}
-                {assignedTo && <AssignmentBadge userId={assignedTo} />}
-                {isAgencyOwner && (
-                  <Badge 
-                    variant={hasPortalAccess ? "default" : "secondary"}
-                    className={cn(
-                      "text-[10px] sm:text-xs flex items-center gap-1",
-                      hasPortalAccess 
-                        ? "bg-emerald/10 text-emerald border-emerald/20" 
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {hasPortalAccess ? (
-                      <>
-                        <ShieldCheck className="h-3 w-3" />
-                        <span className="hidden sm:inline">Accès actif</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShieldX className="h-3 w-3" />
-                        <span className="hidden sm:inline">Sans accès</span>
-                      </>
-                    )}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Contact */}
-              <div className="flex flex-col gap-1 text-xs sm:text-sm text-muted-foreground mb-2">
-                <a href={`mailto:${tenant.email}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors truncate">
-                  <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
-                  <span className="truncate">{tenant.email}</span>
-                </a>
-                {tenant.phone && (
-                  <a href={`tel:${tenant.phone}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                    <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
-                    <span>{tenant.phone}</span>
-                  </a>
-                )}
-              </div>
-
-              {/* Property */}
-              {tenant.property && (
-                <div className="flex items-start gap-1.5 text-xs sm:text-sm">
-                  <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground truncate">{tenant.property.title}</p>
-                      {tenant.unit && (
-                        <Badge variant="secondary" className="text-[10px] flex items-center gap-1 h-5">
-                          <DoorOpen className="h-3 w-3" />
-                          {tenant.unit.unit_number}
-                          <span className="text-muted-foreground">
-                            ({tenant.unit.rooms_count} pièce{tenant.unit.rooms_count > 1 ? 's' : ''})
-                          </span>
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground text-[10px] sm:text-xs truncate">{tenant.property.address}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onView(tenant)}
-                  className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
-                >
-                  <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  <span className="hidden xs:inline">Détails</span>
-                </Button>
-                <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
-                
-                {/* Portal Access Buttons - Only for agency owner */}
-                {isAgencyOwner && (
-                  hasPortalAccess ? (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                          disabled={isRevokingAccess}
-                        >
-                          {isRevokingAccess ? (
-                            <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
-                          ) : (
-                            <ShieldX className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          )}
-                          <span className="hidden sm:inline">Révoquer</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Révoquer l'accès portail ?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Le locataire <strong>{tenant.name}</strong> ne pourra plus se connecter au portail locataire.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onRevokeAccess(tenant)}>
-                            Révoquer
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onCreateAccess(tenant)}
-                      className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 text-emerald hover:text-emerald hover:bg-emerald/10"
-                    >
-                      <KeyRound className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      <span className="hidden sm:inline">Créer accès</span>
-                    </Button>
-                  )
-                )}
-                
-                {canEdit && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(tenant)}
-                      className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
-                    >
-                      <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      <span className="hidden xs:inline">Modifier</span>
-                    </Button>
-                )}
-                
-                {canDelete && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          )}
-                          <span className="hidden xs:inline">Supprimer</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Supprimer ce locataire ?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Êtes-vous sûr de vouloir supprimer <strong>{tenant.name}</strong> ? Cette action est irréversible et supprimera également tous les contrats et paiements associés.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => onDelete(tenant)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Supprimer
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                )}
-
-              </div>
-            </div>
-
-            {/* Rent Amount */}
-            {activeContract && (
-              <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:gap-1 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
-                <span className="text-base sm:text-xl font-bold text-foreground">
-                  {Number(activeContract.rent_amount).toLocaleString('fr-FR')}
-                </span>
-                <span className="text-[10px] sm:text-xs text-muted-foreground">F CFA/mois</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Contract Summary */}
-        {activeContract && (
-          <div className="px-4 sm:px-6 pb-4">
-            <div className="flex flex-wrap gap-3 sm:gap-6 text-sm">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-muted-foreground">Début:</span>
-                <span className="font-medium">{new Date(activeContract.start_date).toLocaleDateString('fr-FR')}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-muted-foreground">Fin:</span>
-                <span className="font-medium">{new Date(activeContract.end_date).toLocaleDateString('fr-FR')}</span>
-              </div>
-              {activeContract.deposit && (
-                <div className="flex items-center gap-1.5">
-                  <Euro className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground">Dépôt:</span>
-                  <span className="font-medium">{Number(activeContract.deposit).toLocaleString('fr-FR')} F CFA</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Active Requests */}
-        {tenantRequests.length > 0 && (
-          <div className="px-4 sm:px-6 pb-3">
-            <div className="flex flex-wrap gap-2">
-              {tenantRequests.map((req) => {
-                const reqStatus = requestStatusConfig[req.status] || requestStatusConfig.nouveau;
-                return (
-                  <Badge
-                    key={req.id}
-                    variant="outline"
-                    className={cn("text-[10px] sm:text-xs gap-1", reqStatus.className)}
-                  >
-                    <MessageSquare className="h-3 w-3" />
-                    Requête: {reqStatus.label}
-                  </Badge>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Expand Button */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full px-4 sm:px-6 py-3 border-t border-border flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-        >
-          <Wallet className="h-4 w-4" />
-          <span>Historique des paiements</span>
-          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-
-        {/* Payment History */}
-        {expanded && (
-          <div className="border-t border-border bg-muted/30">
-            <div className="p-4 sm:p-6">
-              <h4 className="text-sm font-medium text-foreground mb-3">Derniers paiements</h4>
-              <div className="space-y-2">
-                {tenant.payments && tenant.payments.length > 0 ? (
-                  tenant.payments.slice(0, 5).map((payment) => {
-                    const status = paymentStatusConfig[payment.status as keyof typeof paymentStatusConfig] || paymentStatusConfig.pending;
-                    const StatusIcon = status.icon;
-                    return (
-                      <div
-                        key={payment.id}
-                        className="flex items-center justify-between p-3 bg-background rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <StatusIcon className={cn("h-4 w-4", status.className)} />
-                          <div>
-                            <p className="text-sm font-medium text-foreground">
-                              {new Date(payment.due_date).toLocaleDateString('fr-FR', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                              })}
-                            </p>
-                            <p className={cn("text-xs", status.className)}>{status.label}</p>
-                          </div>
-                        </div>
-                        <span className="font-semibold text-foreground">
-                          {Number(payment.amount).toLocaleString('fr-FR')} F CFA
-                        </span>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">Aucun paiement enregistré</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
+// TenantCard removed - using table layout now
 export default function Tenants() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [assignedFilter, setAssignedFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("active");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [accessDialogTenant, setAccessDialogTenant] = useState<TenantWithDetails | null>(null);
@@ -541,10 +197,23 @@ export default function Tenants() {
 
   const filteredTenants = (tenants || []).filter(tenant => {
     const hasActiveContract = tenant.contracts?.some(c => c.status === 'active');
+    const latePayments = tenant.payments?.filter(p => p.status === 'late') || [];
     
-    // Status filter
-    if (statusFilter === "active" && !hasActiveContract) return false;
-    if (statusFilter === "expired" && hasActiveContract) return false;
+    // Status filter using button-based filters
+    if (statusFilter === "uptodate") {
+      if (!hasActiveContract) return false;
+      const paymentStatus = getPaymentStatusLabel(tenant);
+      if (paymentStatus?.label !== "À jour") return false;
+    }
+    if (statusFilter === "late") {
+      const paymentStatus = getPaymentStatusLabel(tenant);
+      if (!paymentStatus?.label.includes("Retard")) return false;
+    }
+    if (statusFilter === "expelled") {
+      // Show tenants with expired contracts (expelled)
+      if (hasActiveContract) return false;
+      if (!tenant.contracts?.some(c => c.status === 'expired')) return false;
+    }
 
     const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -633,8 +302,8 @@ export default function Tenants() {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col gap-3">
-          <div className="relative w-full">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Rechercher un locataire..."
@@ -643,39 +312,44 @@ export default function Tenants() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="active">Contrat actif</SelectItem>
-                <SelectItem value="expired">Contrat expiré</SelectItem>
-              </SelectContent>
-            </Select>
-            {/* Assigned Filter - Only for agency owner/admin */}
+          <div className="flex items-center gap-2 flex-wrap">
             {isAgencyOwner && assignableUsers.length > 1 && (
               <Select value={assignedFilter} onValueChange={setAssignedFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger className="w-[180px] h-9">
                   <SelectValue placeholder="Gestionnaire" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les gestionnaires</SelectItem>
-                  <SelectItem value="unassigned">
-                    <span className="text-muted-foreground">Non assignés</span>
-                  </SelectItem>
+                  <SelectItem value="unassigned">Non assignés</SelectItem>
                   {assignableUsers.map((user) => (
                     <SelectItem key={user.user_id} value={user.user_id}>
-                      <div className="flex items-center gap-2">
-                        <UserCheck className="h-3 w-3" />
-                        {user.full_name || user.email}
-                      </div>
+                      {user.full_name || user.email}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
+            <div className="flex rounded-lg border border-border overflow-hidden">
+              {[
+                { value: "all", label: "Tous" },
+                { value: "uptodate", label: "À jour" },
+                { value: "late", label: "Retard" },
+                { value: "expelled", label: "Expulsés" },
+              ].map((filter) => (
+                <button
+                  key={filter.value}
+                  onClick={() => setStatusFilter(filter.value)}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium transition-colors",
+                    statusFilter === filter.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -712,45 +386,108 @@ export default function Tenants() {
           </div>
         )}
 
-
-        {/* Tenant List */}
+        {/* Tenant Table */}
         {!isLoading && !error && (
-          <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">
-              Liste des locataires ({filteredTenants.length})
-            </h2>
-            <div className="grid gap-3 sm:gap-4">
-              {filteredTenants.map((tenant) => (
-                <TenantCard 
-                  key={tenant.id}
-                  tenant={tenant} 
-                  onEdit={handleEditTenant}
-                  onView={handleViewTenant}
-                  onDelete={handleDeleteTenant}
-                  onCreateAccess={handleCreateAccess}
-                  onRevokeAccess={handleRevokeAccess}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
-                  isDeleting={deleteTenantMutation.isPending}
-                  isRevokingAccess={revokeAccessMutation.isPending}
-                  isAgencyOwner={isAgencyOwner}
-                  tenantRequests={requestsByTenant[tenant.id] || []}
-                />
-              ))}
-            </div>
-            {filteredTenants.length === 0 && (
-              <Card>
-                <CardContent className="p-8 text-center">
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Locataire</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Propriété</th>
+                    <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Loyer</th>
+                    <th className="text-center text-xs font-medium text-muted-foreground px-4 py-3">Statut</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Fin de Bail</th>
+                    <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredTenants.map((tenant) => {
+                    const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
+                    const paymentStatus = getPaymentStatusLabel(tenant);
+                    const propertyLabel = tenant.property
+                      ? `${tenant.property.title}${tenant.unit ? `, ${tenant.unit.unit_number}` : ''}`
+                      : "—";
+
+                    return (
+                      <tr key={tenant.id} className="hover:bg-muted/50 transition-colors">
+                        {/* Locataire */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-semibold text-primary">
+                                {tenant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm text-foreground truncate">{tenant.name}</p>
+                              {tenant.phone && (
+                                <p className="text-xs text-muted-foreground">{tenant.phone}</p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        {/* Propriété */}
+                        <td className="px-4 py-3">
+                          <p className="text-sm text-foreground truncate max-w-[200px]">{propertyLabel}</p>
+                        </td>
+                        {/* Loyer */}
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-sm font-semibold text-foreground whitespace-nowrap">
+                            {activeContract 
+                              ? `${Number(activeContract.rent_amount).toLocaleString('fr-FR')} FCFA`
+                              : "—"}
+                          </span>
+                        </td>
+                        {/* Statut */}
+                        <td className="px-4 py-3 text-center">
+                          {paymentStatus ? (
+                            <Badge variant="outline" className={cn("text-xs", paymentStatus.className)}>
+                              {paymentStatus.label}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        {/* Fin de Bail */}
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-foreground whitespace-nowrap">
+                            {activeContract
+                              ? new Date(activeContract.end_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+                              : "—"}
+                          </span>
+                        </td>
+                        {/* Actions */}
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <EmailHistoryDialog tenantId={tenant.id} tenantName={tenant.name} />
+                            {canEdit && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditTenant(tenant)}>
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewTenant(tenant)}>
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {filteredTenants.length === 0 && (
+                <div className="p-8 text-center">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
                     {tenants?.length === 0 
                       ? "Aucun locataire enregistré. Ajoutez votre premier locataire !"
                       : "Aucun locataire trouvé."}
                   </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          </Card>
         )}
 
         {/* Edit Tenant Dialog */}

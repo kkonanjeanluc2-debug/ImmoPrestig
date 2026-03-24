@@ -311,31 +311,157 @@ const Properties = () => {
         )}
 
         {/* Properties Grid */}
-        {!isLoading && !error && (
-          <div className={cn(
-            "grid gap-6",
-            viewMode === "grid" 
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
-              : "grid-cols-1"
-          )}>
-            {filteredProperties.map((property, index) => (
-              <div 
-                key={property.id} 
-                style={{ animationDelay: `${index * 50}ms` }}
-                className="animate-fade-in"
-              >
-                <PropertyCard 
-                  property={property}
-                  onEdit={setEditingProperty}
-                  onDelete={setDeletingProperty}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
-                  unitsSummary={unitsSummary[property.id]}
-                />
+          {viewMode === "grid" ? (
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {filteredProperties.map((property, index) => (
+                <div 
+                  key={property.id} 
+                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="animate-fade-in"
+                >
+                  <PropertyCard 
+                    property={property}
+                    onEdit={setEditingProperty}
+                    onDelete={setDeletingProperty}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    unitsSummary={unitsSummary[property.id]}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-card rounded-xl border border-border/50 shadow-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Bien</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Propriétaire</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Loyer</th>
+                      <th className="text-center px-4 py-3 font-medium text-muted-foreground">Statut</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Locataire</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProperties.map((property) => {
+                      const ownerName = owners.find(o => o.id === property.owner_id)?.name;
+                      const tenantName = propertyTenantsMap[property.id];
+                      const summary = unitsSummary[property.id];
+                      const hasUnits = summary && summary.total_units > 0;
+                      const displayPrice = hasUnits ? summary.total_rent : property.price;
+
+                      const typeLabels: Record<string, string> = {
+                        appartement: "Appart.",
+                        maison: "Maison",
+                        villa: "Villa",
+                        bureau: "Bureau",
+                        commerce: "Commerce",
+                        immeuble: "Immeuble",
+                        meuble: "Meublé",
+                        terrain: "Terrain",
+                        studio: "Studio",
+                      };
+
+                      const typeBadgeColors: Record<string, string> = {
+                        appartement: "bg-blue-100 text-blue-700 border-blue-200",
+                        maison: "bg-emerald-100 text-emerald-700 border-emerald-200",
+                        villa: "bg-purple-100 text-purple-700 border-purple-200",
+                        bureau: "bg-orange-100 text-orange-700 border-orange-200",
+                        commerce: "bg-pink-100 text-pink-700 border-pink-200",
+                        immeuble: "bg-indigo-100 text-indigo-700 border-indigo-200",
+                        meuble: "bg-teal-100 text-teal-700 border-teal-200",
+                        terrain: "bg-amber-100 text-amber-700 border-amber-200",
+                        studio: "bg-cyan-100 text-cyan-700 border-cyan-200",
+                      };
+
+                      const statusConfig: Record<string, { label: string; className: string }> = {
+                        disponible: { label: "Disponible", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+                        loué: { label: "Loué", className: "bg-destructive/10 text-destructive border-destructive/20" },
+                        "en attente": { label: "En attente", className: "bg-amber-100 text-amber-700 border-amber-200" },
+                        vendu: { label: "Vendu", className: "bg-muted text-muted-foreground border-muted-foreground/20" },
+                      };
+
+                      const statusInfo = statusConfig[property.status] || { label: property.status, className: "" };
+
+                      return (
+                        <tr 
+                          key={property.id} 
+                          className="border-b border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/properties/${property.id}`)}
+                        >
+                          <td className="px-4 py-3">
+                            <div className="max-w-[220px]">
+                              <p className="font-medium text-foreground break-words">{property.title}</p>
+                              <p className="text-xs text-muted-foreground break-words">{property.address}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-foreground">
+                            {ownerName || "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant="outline" className={cn("text-xs", typeBadgeColors[property.property_type] || "")}>
+                              {typeLabels[property.property_type] || property.property_type}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
+                            {displayPrice.toLocaleString("fr-FR")} FCFA
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <Badge variant="outline" className={cn("text-xs", statusInfo.className)}>
+                              {statusInfo.label}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3">
+                            {tenantName ? (
+                              <div className="flex items-center gap-1.5 text-foreground">
+                                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                                {tenantName}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1">
+                              {canEdit && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingProperty(property);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/properties/${property.id}`);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
         {!isLoading && !error && filteredProperties.length === 0 && (
           <div className="text-center py-12">

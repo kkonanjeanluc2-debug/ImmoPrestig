@@ -160,6 +160,11 @@ export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
                             <DropdownMenuItem onClick={() => handleExportPDF(inv)} className="gap-2 text-xs">
                               <Download className="h-3.5 w-3.5" /> Télécharger PDF
                             </DropdownMenuItem>
+                            {inv.invoice_type === "proforma" && inv.status === "draft" && (
+                              <DropdownMenuItem onClick={() => setEditInvoice(inv)} className="gap-2 text-xs">
+                                <Pencil className="h-3.5 w-3.5" /> Modifier
+                              </DropdownMenuItem>
+                            )}
                             {inv.invoice_type === "proforma" && inv.status !== "converted" && inv.status !== "cancelled" && (
                               <>
                                 {inv.status === "draft" && (

@@ -276,7 +276,7 @@ export function OwnerPayoutsSection({
                   <Label>Mois *</Label>
                   <Select
                     value={String(form.payout_month)}
-                    onValueChange={(v) => setForm({ ...form, payout_month: Number(v) })}
+                    onValueChange={(v) => handleMonthChange(Number(v))}
                   >
                     <SelectTrigger>
                       <SelectValue />

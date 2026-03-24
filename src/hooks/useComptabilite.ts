@@ -772,7 +772,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         if (isPaid || isPartial) {
           const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
-          const tenantName = p.tenant?.name || "Locataire inconnu";
+          const baseTenantName = p.tenant?.name || "Locataire inconnu";
+          const unitNumber = p.tenant?.unit?.unit_number;
+          const tenantName = unitNumber ? `${baseTenantName} (${unitNumber})` : baseTenantName;
           const propertyTitle = p.tenant?.property?.title || "";
           const ownerName = p.tenant?.property?.owner?.name || "";
           const allMonths = p.payment_months || [];

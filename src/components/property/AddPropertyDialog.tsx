@@ -69,6 +69,18 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
       longitude: "",
     });
     setImagePreview(null);
+    setStep("category");
+    setCategory(null);
+  };
+
+  const handleCategorySelect = (cat: PropertyCategory) => {
+    setCategory(cat);
+    if (cat === "unique") {
+      setFormData(prev => ({ ...prev, property_type: "appartement" }));
+    } else {
+      setFormData(prev => ({ ...prev, property_type: "immeuble" }));
+    }
+    setStep("form");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

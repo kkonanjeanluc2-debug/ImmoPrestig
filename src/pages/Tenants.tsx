@@ -320,65 +320,67 @@ export default function Tenants() {
 
         {/* Search and Filters */}
         <div className="flex flex-col gap-3">
-          <div className="relative w-full sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher un locataire..."
-              className="pl-10 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-              <SelectTrigger className="w-[180px] h-9">
-                <SelectValue placeholder="Propriétaire" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les propriétaires</SelectItem>
-                {owners.map((owner) => (
-                  <SelectItem key={owner.id} value={owner.id}>
-                    {owner.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {isAgencyOwner && assignableUsers.length > 1 && (
-              <Select value={assignedFilter} onValueChange={setAssignedFilter}>
-                <SelectTrigger className="w-[180px] h-9">
-                  <SelectValue placeholder="Gestionnaire" />
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un locataire..."
+                className="pl-10 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+                <SelectTrigger className="w-[220px] h-9">
+                  <SelectValue placeholder="Propriétaire" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les gestionnaires</SelectItem>
-                  <SelectItem value="unassigned">Non assignés</SelectItem>
-                  {assignableUsers.map((user) => (
-                    <SelectItem key={user.user_id} value={user.user_id}>
-                      {user.full_name || user.email}
+                  <SelectItem value="all">Tous les propriétaires</SelectItem>
+                  {owners.map((owner) => (
+                    <SelectItem key={owner.id} value={owner.id}>
+                      {owner.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            )}
-            <div className="flex rounded-lg border border-border overflow-hidden">
-              {[
-                { value: "all", label: "Tous" },
-                { value: "uptodate", label: "À jour" },
-                { value: "late", label: "Retard" },
-                { value: "expelled", label: "Expulsés" },
-              ].map((filter) => (
-                <button
-                  key={filter.value}
-                  onClick={() => setStatusFilter(filter.value)}
-                  className={cn(
-                    "px-3 py-1.5 text-sm font-medium transition-colors",
-                    statusFilter === filter.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-background text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {filter.label}
-                </button>
-              ))}
+              {isAgencyOwner && assignableUsers.length > 1 && (
+                <Select value={assignedFilter} onValueChange={setAssignedFilter}>
+                  <SelectTrigger className="w-[220px] h-9">
+                    <SelectValue placeholder="Gestionnaire" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les gestionnaires</SelectItem>
+                    <SelectItem value="unassigned">Non assignés</SelectItem>
+                    {assignableUsers.map((user) => (
+                      <SelectItem key={user.user_id} value={user.user_id}>
+                        {user.full_name || user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="flex rounded-lg border border-border overflow-hidden">
+                {[
+                  { value: "all", label: "Tous" },
+                  { value: "uptodate", label: "À jour" },
+                  { value: "late", label: "Retard" },
+                  { value: "expelled", label: "Expulsés" },
+                ].map((filter) => (
+                  <button
+                    key={filter.value}
+                    onClick={() => setStatusFilter(filter.value)}
+                    className={cn(
+                      "px-3 py-1.5 text-sm font-medium transition-colors",
+                      statusFilter === filter.value
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

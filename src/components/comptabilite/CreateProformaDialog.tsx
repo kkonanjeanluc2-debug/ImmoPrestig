@@ -642,10 +642,8 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
               <Input className="h-9" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Objet de la facture" />
             </div>
           </div>
-          <div>
-            <Label className="text-xs">Notes</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes additionnelles..." rows={2} />
-          </div>
+
+
 
           <p className="text-[10px] text-muted-foreground italic">
             Proforma – ne vaut pas facture. Ce document est une proposition commerciale.

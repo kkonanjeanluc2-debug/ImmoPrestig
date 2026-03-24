@@ -17,7 +17,7 @@ interface Props {
   trigger?: React.ReactNode;
 }
 
-type ClientType = "locataire" | "client";
+type ClientType = "locataire" | "client" | "proprietaire";
 type InvoiceCategory = "bien" | "prestation";
 
 export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {

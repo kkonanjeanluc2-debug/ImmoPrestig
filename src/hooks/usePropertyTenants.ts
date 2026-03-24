@@ -49,7 +49,7 @@ export const usePropertyTenantsAll = () => {
 
       if (error) throw error;
 
-      const map: Record<string, { name: string; unit?: string }[]> = {};
+      const map: Record<string, { name: string; unit?: string; unit_id?: string }[]> = {};
       for (const contract of data || []) {
         const tenantName = (contract.tenant as any)?.name;
         const unitNumber = (contract.unit as any)?.unit_number;
@@ -57,7 +57,7 @@ export const usePropertyTenantsAll = () => {
           if (!map[contract.property_id]) {
             map[contract.property_id] = [];
           }
-          map[contract.property_id].push({ name: tenantName, unit: unitNumber || undefined });
+          map[contract.property_id].push({ name: tenantName, unit: unitNumber || undefined, unit_id: contract.unit_id || undefined });
         }
       }
       return map;

@@ -430,9 +430,12 @@ const Properties = () => {
                       };
 
                       // Find tenant for a specific unit
-                      const getUnitTenant = (unitId: string) => {
+                      const getUnitTenant = (unit: PropertyUnit) => {
                         const allTenants = propertyTenantsAllMap[property.id] || [];
-                        return allTenants.find((t: any) => t.unit_id === unitId);
+                        return allTenants.find((t: any) => 
+                          (t.unit_id && t.unit_id === unit.id) || 
+                          (t.unit && t.unit === unit.unit_number)
+                        );
                       };
 
                       return (

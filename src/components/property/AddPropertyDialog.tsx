@@ -39,8 +39,6 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     longitude: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const createProperty = useCreateProperty();
   const { data: owners = [] } = useOwners();
   const limits = useSubscriptionLimits();

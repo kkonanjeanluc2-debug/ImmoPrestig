@@ -655,6 +655,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           } else {
             result[pendingField] += amount;
           }
+        }
       });
     };
 

@@ -24,6 +24,8 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
   const [open, setOpen] = useState(false);
   const { data: tenants } = useTenants();
   const { data: properties } = useProperties();
+  const { data: biensVente } = useBiensVente();
+  const { data: owners } = useOwners();
   const createProforma = useCreateProforma();
 
   const [invoiceCategory, setInvoiceCategory] = useState<InvoiceCategory>("bien");

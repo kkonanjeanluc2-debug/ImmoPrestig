@@ -184,16 +184,17 @@ export default function Payments() {
 
     // Handle "impaye" filter: late payments with >=30 days overdue
     if (statusFilter === "impaye") {
-      const dueDate = new Date(payment.due_date);
-      const daysLate = differenceInDays(new Date(), dueDate);
-      return matchesSearch && payment.status === 'late' && daysLate >= 30;
+      return matchesSearch && getEffectiveStatus(payment) === 'impaye';
     }
 
     // Handle "late" filter: late payments with <30 days overdue
     if (statusFilter === "late") {
-      const dueDate = new Date(payment.due_date);
-      const daysLate = differenceInDays(new Date(), dueDate);
-      return matchesSearch && payment.status === 'late' && daysLate < 30;
+      return matchesSearch && getEffectiveStatus(payment) === 'late';
+    }
+
+    // Handle "pending" filter: only truly pending (not overdue)
+    if (statusFilter === "pending") {
+      return matchesSearch && getEffectiveStatus(payment) === 'pending';
     }
     
     const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
@@ -263,15 +264,15 @@ export default function Payments() {
     return sum;
   }, 0);
 
-  const pendingAmount = (payments || []).filter(p => p.status === 'pending')
+  const pendingAmount = (payments || []).filter(p => getEffectiveStatus(p) === 'pending')
     .reduce((sum, p) => sum + Number(p.amount), 0);
-  const pendingCount = (payments || []).filter(p => p.status === 'pending').length;
+  const pendingCount = (payments || []).filter(p => getEffectiveStatus(p) === 'pending').length;
 
-  const latePayments = (payments || []).filter(p => p.status === 'late' && differenceInDays(new Date(), new Date(p.due_date)) < 30);
+  const latePayments = (payments || []).filter(p => getEffectiveStatus(p) === 'late');
   const lateAmount = latePayments.reduce((sum, p) => sum + Number(p.amount), 0);
   const lateCount = latePayments.length;
 
-  const impayePayments = (payments || []).filter(p => p.status === 'late' && differenceInDays(new Date(), new Date(p.due_date)) >= 30);
+  const impayePayments = (payments || []).filter(p => getEffectiveStatus(p) === 'impaye');
   const impayeAmount = impayePayments.reduce((sum, p) => sum + Number(p.amount), 0);
   const impayeCount = impayePayments.length;
 

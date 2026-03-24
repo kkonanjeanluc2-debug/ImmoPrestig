@@ -36,7 +36,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2 } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -92,6 +92,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const canDelete = hasPermission("can_delete_lotissements");
   const deleteParcelle = useSoftDeleteParcelle();
   const { data: ilots } = useIlots(lotissementId);
+  const { data: lotissement } = useLotissement(lotissementId);
   const isAdmin = role !== "gestionnaire";
 
   // Fetch profiles for assigned users
@@ -105,6 +106,13 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const [viewingReservation, setViewingReservation] = useState<Parcelle | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [attributionFilter, setAttributionFilter] = useState<string>("all");
+
+  const getAttributionLabel = (attribution: string | null) => {
+    if (attribution === "proprietaire") return lotissement?.proprietaire_name || "Propriétaire";
+    if (attribution === "lotisseur") return lotissement?.lotisseur_name || "Lotisseur";
+    return null;
+  };
 
   const getIlotName = (ilotId: string | null) => {
     if (!ilotId) return null;
@@ -118,17 +126,23 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
     if (statusFilter !== "all") {
       filtered = filtered.filter(p => p.status === statusFilter);
     }
+
+    if (attributionFilter !== "all") {
+      filtered = filtered.filter(p => p.attribution === attributionFilter);
+    }
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((parcelle) => {
         const ilotName = getIlotName(parcelle.ilot_id)?.toLowerCase() || "";
         const statusLabel = STATUS_LABELS[parcelle.status]?.toLowerCase() || "";
+        const attrLabel = getAttributionLabel(parcelle.attribution)?.toLowerCase() || "";
         
         return (
           parcelle.plot_number.toLowerCase().includes(query) ||
           ilotName.includes(query) ||
           statusLabel.includes(query) ||
+          attrLabel.includes(query) ||
           parcelle.area.toString().includes(query) ||
           parcelle.price.toString().includes(query)
         );
@@ -136,7 +150,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
     }
     
     return filtered;
-  }, [parcelles, searchQuery, statusFilter, ilots]);
+  }, [parcelles, searchQuery, statusFilter, attributionFilter, ilots, lotissement]);
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -219,6 +233,36 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   Vendues ({parcelles.filter(p => p.status === "vendu").length})
                 </Button>
               </div>
+              {/* Attribution filter */}
+              {parcelles.some(p => p.attribution) && (
+                <div className="flex gap-1.5 flex-wrap">
+                  <Button
+                    variant={attributionFilter === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAttributionFilter("all")}
+                  >
+                    Toutes parties
+                  </Button>
+                  <Button
+                    variant={attributionFilter === "proprietaire" ? "default" : "outline"}
+                    size="sm"
+                    className={attributionFilter !== "proprietaire" ? "text-blue-600 border-blue-300 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700"}
+                    onClick={() => setAttributionFilter("proprietaire")}
+                  >
+                    <User className="h-3 w-3 mr-1" />
+                    {lotissement?.proprietaire_name || "Propriétaire"} ({parcelles.filter(p => p.attribution === "proprietaire").length})
+                  </Button>
+                  <Button
+                    variant={attributionFilter === "lotisseur" ? "default" : "outline"}
+                    size="sm"
+                    className={attributionFilter !== "lotisseur" ? "text-amber-600 border-amber-300 hover:bg-amber-50" : "bg-amber-600 hover:bg-amber-700"}
+                    onClick={() => setAttributionFilter("lotisseur")}
+                  >
+                    <Building2 className="h-3 w-3 mr-1" />
+                    {lotissement?.lotisseur_name || "Lotisseur"} ({parcelles.filter(p => p.attribution === "lotisseur").length})
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -242,9 +286,10 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
           <div className="overflow-x-auto">
             <Table className="min-w-[600px]">
               <TableHeader>
-                <TableRow>
+                 <TableRow>
                   <TableHead>N° Lot</TableHead>
                   <TableHead>Îlot</TableHead>
+                  <TableHead>Attribution</TableHead>
                   <TableHead>Superficie</TableHead>
                   <TableHead>Prix</TableHead>
                   <TableHead>Statut</TableHead>
@@ -263,6 +308,21 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       <Badge variant="outline" className="gap-1">
                         <Layers className="h-3 w-3" />
                         {ilotName}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {parcelle.attribution === "proprietaire" ? (
+                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1">
+                        <User className="h-3 w-3" />
+                        {lotissement?.proprietaire_name || "Propriétaire"}
+                      </Badge>
+                    ) : parcelle.attribution === "lotisseur" ? (
+                      <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1">
+                        <Building2 className="h-3 w-3" />
+                        {lotissement?.lotisseur_name || "Lotisseur"}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground text-sm">-</span>

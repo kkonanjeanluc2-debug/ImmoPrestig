@@ -394,7 +394,7 @@ export default function Tenants() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Locataire</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Propriété</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Bien</th>
                     <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Loyer</th>
                     <th className="text-center text-xs font-medium text-muted-foreground px-4 py-3">Statut</th>
                     <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Fin de Bail</th>

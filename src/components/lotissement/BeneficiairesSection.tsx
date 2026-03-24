@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -22,10 +23,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Trash2, User, Building2, Users, Loader2 } from "lucide-react";
+import { Plus, Trash2, User, Building2, Users, Loader2, UserPlus } from "lucide-react";
 import { BeneficiaireLot, useBeneficiairesLots, useCreateBeneficiaireLot, useDeleteBeneficiaireLot } from "@/hooks/useBeneficiairesLots";
 import { Parcelle, useUpdateParcelle } from "@/hooks/useParcelles";
 import { Lotissement } from "@/hooks/useLotissements";
+import { useAgencyMembers } from "@/hooks/useAgencyMembers";
 import { toast } from "sonner";
 
 interface BeneficiairesSectionProps {
@@ -39,8 +41,11 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const createBeneficiaire = useCreateBeneficiaireLot();
   const deleteBeneficiaire = useDeleteBeneficiaireLot();
   const updateParcelle = useUpdateParcelle();
+  const { data: agencyMembers = [] } = useAgencyMembers();
 
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addMode, setAddMode] = useState<"team" | "new">(partie === "lotisseur" ? "team" : "new");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [assigningBeneficiaire, setAssigningBeneficiaire] = useState<BeneficiaireLot | null>(null);
   const [selectedLots, setSelectedLots] = useState<string[]>([]);
@@ -52,6 +57,8 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const [email, setEmail] = useState("");
   const [lienRole, setLienRole] = useState("");
   const [cniNumber, setCniNumber] = useState("");
+
+  const activeMembers = agencyMembers.filter(m => m.status === "active");
 
   const partieBeneficiaires = beneficiaires.filter(b => b.partie === partie);
   const partieParcelles = parcelles.filter(p => p.attribution === partie);
@@ -80,6 +87,33 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
       toast.success("Bénéficiaire ajouté");
       setShowAddDialog(false);
       resetForm();
+    } catch {
+      toast.error("Erreur lors de l'ajout");
+    }
+  };
+
+  const handleAddFromTeam = async () => {
+    if (!selectedMemberId) {
+      toast.error("Sélectionnez un membre");
+      return;
+    }
+    const member = activeMembers.find(m => m.user_id === selectedMemberId);
+    if (!member) return;
+
+    const memberName = member.profile?.full_name || member.profile?.email || "Membre";
+    try {
+      await createBeneficiaire.mutateAsync({
+        lotissement_id: lotissement.id,
+        nom: memberName,
+        telephone: null,
+        email: member.profile?.email || null,
+        lien_role: partie === "lotisseur" ? "Collaborateur" : null,
+        cni_number: null,
+        partie,
+      });
+      toast.success(`${memberName} ajouté comme bénéficiaire`);
+      setShowAddDialog(false);
+      setSelectedMemberId("");
     } catch {
       toast.error("Erreur lors de l'ajout");
     }
@@ -210,48 +244,92 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
       </Card>
 
       {/* Add Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog open={showAddDialog} onOpenChange={(open) => { setShowAddDialog(open); if (!open) resetForm(); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
               Ajouter un {partie === "proprietaire" ? "membre de la famille" : "collaborateur"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nom complet *</Label>
-              <Input value={nom} onChange={e => setNom(e.target.value)} placeholder="Nom et prénom" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+          <Tabs value={addMode} onValueChange={(v) => setAddMode(v as "team" | "new")}>
+            <TabsList className="w-full">
+              <TabsTrigger value="team" className="flex-1 gap-1">
+                <Users className="h-4 w-4" />
+                Membre de l'équipe
+              </TabsTrigger>
+              <TabsTrigger value="new" className="flex-1 gap-1">
+                <UserPlus className="h-4 w-4" />
+                Nouveau
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="team" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label>Téléphone</Label>
-                <Input value={telephone} onChange={e => setTelephone(e.target.value)} placeholder="+225..." />
+                <Label>Sélectionner un membre</Label>
+                <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un membre de l'équipe..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeMembers.map(m => (
+                      <SelectItem key={m.user_id} value={m.user_id}>
+                        {m.profile?.full_name || m.profile?.email || "Membre"}
+                        {m.profile?.email ? ` (${m.profile.email})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              {activeMembers.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  Aucun membre actif dans l'équipe
+                </p>
+              )}
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
+                  Annuler
+                </Button>
+                <Button onClick={handleAddFromTeam} disabled={!selectedMemberId || createBeneficiaire.isPending}>
+                  {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Ajouter
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+            <TabsContent value="new" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label>Email</Label>
-                <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemple.com" type="email" />
+                <Label>Nom complet *</Label>
+                <Input value={nom} onChange={e => setNom(e.target.value)} placeholder="Nom et prénom" />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{partie === "proprietaire" ? "Lien de parenté" : "Rôle"}</Label>
-                <Input value={lienRole} onChange={e => setLienRole(e.target.value)} placeholder={partie === "proprietaire" ? "Fils, frère, épouse..." : "Associé, directeur..."} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Téléphone</Label>
+                  <Input value={telephone} onChange={e => setTelephone(e.target.value)} placeholder="+225..." />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemple.com" type="email" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>N° CNI</Label>
-                <Input value={cniNumber} onChange={e => setCniNumber(e.target.value)} placeholder="Numéro de pièce" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{partie === "proprietaire" ? "Lien de parenté" : "Rôle"}</Label>
+                  <Input value={lienRole} onChange={e => setLienRole(e.target.value)} placeholder={partie === "proprietaire" ? "Fils, frère, épouse..." : "Associé, directeur..."} />
+                </div>
+                <div className="space-y-2">
+                  <Label>N° CNI</Label>
+                  <Input value={cniNumber} onChange={e => setCniNumber(e.target.value)} placeholder="Numéro de pièce" />
+                </div>
               </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
-              Annuler
-            </Button>
-            <Button onClick={handleAdd} disabled={createBeneficiaire.isPending}>
-              {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Ajouter
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
+                  Annuler
+                </Button>
+                <Button onClick={handleAdd} disabled={createBeneficiaire.isPending}>
+                  {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Ajouter
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

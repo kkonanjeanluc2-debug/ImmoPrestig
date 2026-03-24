@@ -573,6 +573,58 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             <Button type="button" variant="outline" size="sm" onClick={() => addTemplate("3 pièces", 3)}>+ 3 pièces</Button>
           </div>
 
+          {/* Add unit form */}
+          {showUnitForm && (
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Numéro de porte *</Label>
+                    <Input
+                      value={unitForm.unit_number}
+                      onChange={(e) => setUnitForm({ ...unitForm, unit_number: e.target.value })}
+                      placeholder="ex: Apt 1"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Pièces *</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={unitForm.rooms_count}
+                      onChange={(e) => setUnitForm({ ...unitForm, rooms_count: parseInt(e.target.value) || 1 })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Loyer mensuel (F CFA) *</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={unitForm.rent_amount}
+                      onChange={(e) => setUnitForm({ ...unitForm, rent_amount: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Surface (m²)</Label>
+                    <Input
+                      type="number"
+                      value={unitForm.area}
+                      onChange={(e) => setUnitForm({ ...unitForm, area: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={resetUnitForm}>Annuler</Button>
+                  <Button type="button" size="sm" onClick={addLocalUnit}>
+                    {editingUnitId ? "Modifier" : "Ajouter"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Units list */}
           {localUnits.length > 0 && (
             <div className="space-y-2 max-h-[200px] overflow-y-auto">

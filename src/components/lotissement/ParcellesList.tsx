@@ -41,6 +41,7 @@ import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
+import { useBeneficiairesLots } from "@/hooks/useBeneficiairesLots";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
 import { SellParcelleDialog } from "./SellParcelleDialog";
@@ -93,6 +94,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const deleteParcelle = useSoftDeleteParcelle();
   const { data: ilots } = useIlots(lotissementId);
   const { data: lotissement } = useLotissement(lotissementId);
+  const { data: beneficiaires = [] } = useBeneficiairesLots(lotissementId);
   const isAdmin = role !== "gestionnaire";
 
   // Fetch profiles for assigned users
@@ -314,19 +316,56 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                     )}
                   </TableCell>
                   <TableCell>
-                    {parcelle.attribution === "proprietaire" ? (
-                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1">
-                        <User className="h-3 w-3" />
-                        {lotissement?.proprietaire_name || "Propriétaire"}
-                      </Badge>
-                    ) : parcelle.attribution === "lotisseur" ? (
-                      <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1">
-                        <Building2 className="h-3 w-3" />
-                        {lotissement?.lotisseur_name || "Lotisseur"}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">-</span>
-                    )}
+                    {(() => {
+                      const beneficiaire = parcelle.beneficiaire_id
+                        ? beneficiaires.find(b => b.id === parcelle.beneficiaire_id)
+                        : null;
+                      const partieLabel = parcelle.attribution === "proprietaire"
+                        ? (lotissement?.proprietaire_name || "Propriétaire")
+                        : parcelle.attribution === "lotisseur"
+                        ? (lotissement?.lotisseur_name || "Lotisseur")
+                        : null;
+
+                      if (beneficiaire) {
+                        return (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex flex-col gap-0.5">
+                                <Badge className={parcelle.attribution === "proprietaire"
+                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1"
+                                  : "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1"
+                                }>
+                                  <User className="h-3 w-3" />
+                                  {beneficiaire.nom}
+                                </Badge>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">Attribué par : <strong>{partieLabel}</strong></p>
+                              {beneficiaire.lien_role && <p className="text-xs">{beneficiaire.lien_role}</p>}
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      }
+
+                      if (parcelle.attribution === "proprietaire") {
+                        return (
+                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1">
+                            <User className="h-3 w-3" />
+                            {partieLabel}
+                          </Badge>
+                        );
+                      }
+                      if (parcelle.attribution === "lotisseur") {
+                        return (
+                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1">
+                            <Building2 className="h-3 w-3" />
+                            {partieLabel}
+                          </Badge>
+                        );
+                      }
+                      return <span className="text-muted-foreground text-sm">-</span>;
+                    })()}
                   </TableCell>
                   <TableCell>{parcelle.area.toLocaleString("fr-FR")} m²</TableCell>
                   <TableCell>{parcelle.price.toLocaleString("fr-FR")} F CFA</TableCell>

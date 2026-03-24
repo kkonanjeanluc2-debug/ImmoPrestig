@@ -304,7 +304,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
           {/* Client info */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-foreground">
-              {clientType === "locataire" ? "Informations locataire" : "Informations client"}
+              {clientType === "locataire" ? "Informations locataire" : clientType === "proprietaire" ? "Informations propriétaire" : "Informations client"}
             </h3>
 
             {clientType === "locataire" ? (

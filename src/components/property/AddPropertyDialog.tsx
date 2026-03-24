@@ -134,17 +134,67 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        {step === "category" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-display text-center">Nouveau Bien</DialogTitle>
+            </DialogHeader>
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-semibold">Quel type de bien souhaitez-vous ajouter ?</h3>
+              <p className="text-sm text-muted-foreground mt-1">Choisissez le type qui correspond à votre situation</p>
+            </div>
+            {!limits.canCreateProperty && limits.maxProperties !== null && (
+              <SubscriptionLimitAlert
+                type="property"
+                planName={limits.planName}
+                current={limits.currentProperties}
+                max={limits.maxProperties}
+              />
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => handleCategorySelect("unique")}
+                disabled={!limits.canCreateProperty}
+                className={cn(
+                  "flex flex-col items-center text-center p-6 rounded-xl border-2 border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Home className="h-7 w-7 text-primary" />
+                </div>
+                <h4 className="font-semibold text-base mb-1">Bien Unique</h4>
+                <p className="text-xs text-muted-foreground mb-3">Villa, bureau, boutique, studio individuel</p>
+                <ul className="text-xs text-muted-foreground text-left space-y-1">
+                  <li>• Un seul bien à ajouter</li>
+                  <li>• Formulaire simple et rapide</li>
+                </ul>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCategorySelect("immeuble")}
+                disabled={!limits.canCreateProperty}
+                className={cn(
+                  "flex flex-col items-center text-center p-6 rounded-xl border-2 border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Building className="h-7 w-7 text-primary" />
+                </div>
+                <h4 className="font-semibold text-base mb-1">Immeuble</h4>
+                <p className="text-xs text-muted-foreground mb-3">Résidence avec plusieurs appartements</p>
+                <ul className="text-xs text-muted-foreground text-left space-y-1">
+                  <li>• Plusieurs unités à gérer</li>
+                  <li>• Duplication et templates rapides</li>
+                </ul>
+              </button>
+            </div>
+          </>
+        ) : (
+        <>
         <DialogHeader>
           <DialogTitle className="text-2xl font-display">Ajouter un nouveau bien</DialogTitle>
         </DialogHeader>
-        {!limits.canCreateProperty && limits.maxProperties !== null && (
-          <SubscriptionLimitAlert
-            type="property"
-            planName={limits.planName}
-            current={limits.currentProperties}
-            max={limits.maxProperties}
-          />
-        )}
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
             <Label htmlFor="propertyType">Type de bien *</Label>

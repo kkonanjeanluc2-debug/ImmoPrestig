@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen, Pencil, Eye, ChevronDown, Users } from "lucide-react";
+import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen, Pencil, Eye, ChevronDown, Users, Navigation } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";

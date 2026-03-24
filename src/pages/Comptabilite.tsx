@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ExpensesTable } from "@/components/comptabilite/ExpensesTable";
 import { AddExpenseDialog } from "@/components/comptabilite/AddExpenseDialog";
 import { SyscohadaCompteResultat } from "@/components/comptabilite/SyscohadaCompteResultat";
+import { ProformaInvoicesList } from "@/components/comptabilite/ProformaInvoicesList";
 import { TresorerieTab } from "@/components/comptabilite/TresorerieTab";
 import { ExportComptabilite } from "@/components/comptabilite/ExportComptabilite";
 import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";

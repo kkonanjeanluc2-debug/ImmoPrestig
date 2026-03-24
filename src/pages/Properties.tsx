@@ -460,8 +460,7 @@ const Properties = () => {
               </div>
             </div>
           )}
-        </div>
-      )}
+        
 
         {!isLoading && !error && filteredProperties.length === 0 && (
           <div className="text-center py-12">

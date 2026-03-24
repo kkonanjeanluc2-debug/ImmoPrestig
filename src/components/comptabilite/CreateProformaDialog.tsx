@@ -53,6 +53,14 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
 
   const activeTenants = (tenants || []).filter((t: any) => !t.deleted_at);
   const activeProperties = (properties || []).filter((p: any) => !p.deleted_at);
+  const activeBiensVente = (biensVente || []).filter((b: any) => !b.deleted_at);
+  const activeOwners = (owners || []).filter((o: any) => !o.deleted_at);
+
+  // Merge properties and biens_vente for selection
+  const allBiens = [
+    ...activeProperties.map((p: any) => ({ id: p.id, title: p.title, type: "location", property_type: p.property_type, address: p.address, area: p.area })),
+    ...activeBiensVente.map((b: any) => ({ id: b.id, title: `${b.title} (Vente)`, type: "vente", property_type: b.property_type, address: b.address, area: b.area })),
+  ];
 
   const handleCategoryChange = (cat: InvoiceCategory) => {
     setInvoiceCategory(cat);

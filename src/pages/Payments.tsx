@@ -81,8 +81,14 @@ const statusConfig = {
 };
 
 function getEffectiveStatus(payment: { status: string; due_date: string }) {
+  const daysLate = differenceInDays(new Date(), new Date(payment.due_date));
+  
+  // Si le paiement est pending mais l'échéance est dépassée, il est en retard
+  if (payment.status === 'pending' && daysLate > 0) {
+    return daysLate >= 30 ? 'impaye' : 'late';
+  }
+  
   if (payment.status === 'late') {
-    const daysLate = differenceInDays(new Date(), new Date(payment.due_date));
     if (daysLate >= 30) return 'impaye';
   }
   return payment.status;

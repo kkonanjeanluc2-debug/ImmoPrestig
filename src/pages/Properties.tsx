@@ -484,6 +484,23 @@ const Properties = () => {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-end gap-1">
+                              {property.latitude && property.longitude && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  title="Suivre l'itinéraire"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(
+                                      `https://www.google.com/maps/dir/?api=1&destination=${property.latitude},${property.longitude}`,
+                                      "_blank"
+                                    );
+                                  }}
+                                >
+                                  <Navigation className="h-4 w-4" />
+                                </Button>
+                              )}
                               {canEdit && (
                                 <Button
                                   size="icon"

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Home, Building, Loader2, User, ArrowRight, ArrowLeft, DoorOpen, Pencil, Trash2 } from "lucide-react";
+import { Plus, Home, Building, Loader2, User, ArrowRight, ArrowLeft, DoorOpen, Pencil, Trash2, Copy, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 import { supabase } from "@/integrations/supabase/client";

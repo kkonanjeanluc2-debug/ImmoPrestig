@@ -363,6 +363,7 @@ export function OwnerPayoutsSection({
                   !form.owner_id ||
                   !form.amount ||
                   Number(form.amount) <= 0 ||
+                  isDuplicate ||
                   createPayout.isPending
                 }
               >

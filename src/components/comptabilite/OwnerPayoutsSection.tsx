@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { usePayments } from "@/hooks/usePayments";
+import { getTenantCollectedAmountForPeriod } from "@/lib/monthlyPaymentTotals";
 import {
   Dialog,
   DialogContent,
@@ -45,9 +47,8 @@ import {
   useCreateOwnerPayout,
   useDeleteOwnerPayout,
 } from "@/hooks/useOwnerPayouts";
-import { useOwners } from "@/hooks/useOwners";
+import { useOwners, OwnerWithManagementType } from "@/hooks/useOwners";
 import { PAYMENT_OPERATORS } from "@/hooks/useAgency";
-import { useCommissions } from "@/hooks/useCommissions";
 import { useProperties } from "@/hooks/useProperties";
 import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
 import { useTenants } from "@/hooks/useTenants";
@@ -72,9 +73,9 @@ export function OwnerPayoutsSection({
   const { data: properties = [] } = useProperties();
   const { data: allInterventions = [] } = usePropertyInterventions();
   const { data: tenants = [] } = useTenants();
+  const { data: payments = [] } = usePayments();
   const createPayout = useCreateOwnerPayout();
   const deletePayout = useDeleteOwnerPayout();
-  const commissionReport = useCommissions(fromDate, toDate);
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
@@ -86,15 +87,30 @@ export function OwnerPayoutsSection({
     notes: "",
   });
 
-  // Auto-fill amount when owner is selected
+  // Auto-fill amount using the exact same formula as the PDF monthly report
   const handleOwnerChange = (ownerId: string) => {
-    const ownerSummary = commissionReport.byOwner.find((o) => o.ownerId === ownerId);
-    
-    // Get owner's properties
+    // Get owner with management type
+    const owner = owners.find((o) => o.id === ownerId) as OwnerWithManagementType | undefined;
+    if (!owner) {
+      setForm({ ...form, owner_id: ownerId, amount: "" });
+      return;
+    }
+
+    // Get owner's properties and tenants
     const ownerProps = properties.filter((p) => p.owner_id === ownerId);
     const ownerPropIds = ownerProps.map((p) => p.id);
-    
-    // Calculate interventions cost for the period
+    const ownerTenants = tenants.filter((t) => t.property_id && ownerPropIds.includes(t.property_id));
+
+    // Calculate totalPaid (same as PDF: getTenantCollectedAmountForPeriod per tenant)
+    const totalPaid = ownerTenants.reduce((sum, tenant) => {
+      return sum + getTenantCollectedAmountForPeriod(payments as any, tenant.id, fromDate, toDate);
+    }, 0);
+
+    // Commission
+    const commissionPercentage = owner.management_type?.percentage || 0;
+    const commissionAmount = Math.round((totalPaid * commissionPercentage) / 100);
+
+    // Interventions cost for the period
     const interventionsCost = allInterventions
       .filter((i) => {
         if (!ownerPropIds.includes(i.property_id)) return false;
@@ -102,11 +118,10 @@ export function OwnerPayoutsSection({
         return startDate && startDate >= fromDate && startDate <= toDate;
       })
       .reduce((sum, i) => sum + (i.cost || 0), 0);
-    
-    // Calculate cautions (deposits from tenants created in the period)
-    const totalCautions = tenants
+
+    // Cautions (deposits from tenants created in the period)
+    const totalCautions = ownerTenants
       .filter((t) => {
-        if (!t.property_id || !ownerPropIds.includes(t.property_id)) return false;
         const createdAt = t.created_at?.substring(0, 10);
         return createdAt && createdAt >= fromDate && createdAt <= toDate;
       })
@@ -114,12 +129,10 @@ export function OwnerPayoutsSection({
         const deposit = (t as any).contracts?.find((c: any) => c.status === "active")?.deposit || 0;
         return sum + Number(deposit);
       }, 0);
-    
-    // Formula: totalRent - commission - interventions + cautions
-    const totalRent = ownerSummary?.totalRent || 0;
-    const totalCommission = ownerSummary?.totalCommission || 0;
-    const netAmount = Math.max(0, totalRent - totalCommission - interventionsCost + totalCautions);
-    
+
+    // Formula: totalPaid - commission - interventions + cautions (same as PDF)
+    const netAmount = totalPaid - commissionAmount - interventionsCost + totalCautions;
+
     setForm({ ...form, owner_id: ownerId, amount: netAmount > 0 ? String(netAmount) : "" });
   };
 

@@ -359,6 +359,20 @@ const Comptabilite = () => {
                           <td className="py-2 px-3 text-right font-medium text-destructive">
                             {row.depenses > 0 ? `-${formatCFA(row.depenses)}` : formatCFA(0)}
                           </td>
+                          <td className="py-2 px-3 text-right font-medium text-primary">
+                            {(() => {
+                              const monthReversements = ownerPayouts
+                                .filter((p) => p.status === "completed" && p.payout_date)
+                                .filter((p) => {
+                                  const d = new Date(p.payout_date);
+                                  const rowKey = `${d.toLocaleDateString("fr-FR", { month: "short" })} ${d.getFullYear()}`;
+                                  // Match by comparing month abbreviation
+                                  return row.name.toLowerCase().startsWith(rowKey.substring(0, 3).toLowerCase()) && row.name.includes(String(d.getFullYear()));
+                                })
+                                .reduce((s, p) => s + Number(p.amount), 0);
+                              return monthReversements > 0 ? `-${formatCFA(monthReversements)}` : formatCFA(0);
+                            })()}
+                          </td>
                           <td className={`py-2 px-3 text-right font-semibold ${row.benefice >= 0 ? "text-foreground" : "text-destructive"}`}>
                             {formatCFA(row.benefice)}
                           </td>

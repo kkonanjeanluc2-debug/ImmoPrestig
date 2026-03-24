@@ -75,25 +75,25 @@ export function generateProformaPDF(invoice: ProformaInvoice, agency?: any) {
     if (agency.siret) doc.text(`SIRET: ${agency.siret}`, agencyTextStartX, y + 20);
   }
 
-  // Right: Client
-  const rightX = pageWidth / 2 + 10;
+  // Right: Client (aligned to right edge)
+  const rightX = pageWidth - margin;
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text("CLIENT", rightX, y);
+  doc.text("CLIENT", rightX, y, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(invoice.tenant_name, rightX, y + 6);
+  doc.text(invoice.tenant_name, rightX, y + 6, { align: "right" });
   let clientY = y + 12;
   if (invoice.tenant_phone) {
-    doc.text(`Tél: ${invoice.tenant_phone}`, rightX, clientY);
+    doc.text(`Tél: ${invoice.tenant_phone}`, rightX, clientY, { align: "right" });
     clientY += 5;
   }
   if (invoice.tenant_email) {
-    doc.text(invoice.tenant_email, rightX, clientY);
+    doc.text(invoice.tenant_email, rightX, clientY, { align: "right" });
     clientY += 5;
   }
   if (invoice.property_name) {
-    doc.text(`Bien: ${invoice.property_name}${invoice.unit_number ? ` (${invoice.unit_number})` : ""}`, rightX, clientY);
+    doc.text(`Bien: ${invoice.property_name}${invoice.unit_number ? ` (${invoice.unit_number})` : ""}`, rightX, clientY, { align: "right" });
   }
 
   y += 30;

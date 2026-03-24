@@ -84,6 +84,16 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
     setUnitNumber("");
   };
 
+  const handleOwnerSelect = (ownerId: string) => {
+    setSelectedTenantId(ownerId);
+    const owner = activeOwners.find((o: any) => o.id === ownerId);
+    if (owner) {
+      setTenantName(owner.name);
+      setTenantPhone(owner.phone || "");
+      setTenantEmail(owner.email || "");
+    }
+  };
+
   const handleTenantSelect = (tenantId: string) => {
     setSelectedTenantId(tenantId);
     const tenant = activeTenants.find((t: any) => t.id === tenantId);

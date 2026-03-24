@@ -41,6 +41,7 @@ import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
+import { useBeneficiairesLots } from "@/hooks/useBeneficiairesLots";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
 import { SellParcelleDialog } from "./SellParcelleDialog";

@@ -69,6 +69,7 @@ const LotissementDetails = () => {
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [showGenerateDocument, setShowGenerateDocument] = useState(false);
+  const [showImportGeometre, setShowImportGeometre] = useState(false);
   const [revenuePeriod, setRevenuePeriod] = useState<PeriodValue>(getDefaultPeriod);
 
   // Calculate stats based on parcelle status

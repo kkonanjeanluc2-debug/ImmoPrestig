@@ -589,7 +589,8 @@ export default function Payments() {
                   <CardContent className="p-0">
                     <div className="divide-y divide-border">
                       {filteredPayments.map((payment) => {
-                        const status = statusConfig[payment.status as keyof typeof statusConfig] || statusConfig.pending;
+                        const effectiveStatus = getEffectiveStatus(payment);
+                        const status = statusConfig[effectiveStatus as keyof typeof statusConfig] || statusConfig.pending;
                         const StatusIcon = status.icon;
                         const tenant = payment.tenant as any;
                         const tenantName = tenant?.name || 'Locataire inconnu';

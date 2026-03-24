@@ -119,21 +119,7 @@ function getPaymentStatusLabel(tenant: TenantWithDetails) {
   return { label: "En attente", className: "bg-amber-500/10 text-amber-600 border-amber-500/30" };
 }
 
-interface TenantCardProps {
-  tenant: TenantWithDetails;
-  onEdit: (tenant: TenantWithDetails) => void;
-  onView: (tenant: TenantWithDetails) => void;
-  onDelete: (tenant: TenantWithDetails) => void;
-  onCreateAccess: (tenant: TenantWithDetails) => void;
-  onRevokeAccess: (tenant: TenantWithDetails) => void;
-  canEdit: boolean;
-  canDelete: boolean;
-  isDeleting: boolean;
-  isRevokingAccess: boolean;
-  isAgencyOwner: boolean;
-  tenantRequests?: TenantActiveRequest[];
-}
-
+// Keep TenantCard interfaces for handlers
 const requestStatusConfig: Record<string, { label: string; className: string }> = {
   nouveau: { label: "Nouveau", className: "bg-destructive/10 text-destructive border-destructive/20" },
   en_cours: { label: "En cours", className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },

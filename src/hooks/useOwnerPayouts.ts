@@ -9,6 +9,8 @@ export interface OwnerPayout {
   owner_id: string;
   amount: number;
   payout_date: string;
+  payout_month: number;
+  payout_year: number;
   payment_method: string;
   recipient_phone: string | null;
   notes: string | null;

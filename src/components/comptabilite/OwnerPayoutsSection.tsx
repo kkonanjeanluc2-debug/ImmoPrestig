@@ -78,14 +78,30 @@ export function OwnerPayoutsSection({
   const deletePayout = useDeleteOwnerPayout();
 
   const [open, setOpen] = useState(false);
+  const now = new Date();
   const [form, setForm] = useState({
     owner_id: "",
     amount: "",
-    payout_date: new Date().toISOString().split("T")[0],
+    payout_date: now.toISOString().split("T")[0],
     payment_method: "especes",
     recipient_phone: "",
     notes: "",
+    payout_month: now.getMonth() + 1,
+    payout_year: now.getFullYear(),
   });
+
+  const FRENCH_MONTHS = [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+  ];
+
+  // Check if a payout already exists for this owner/month/year
+  const isDuplicate = payouts.some(
+    (p) =>
+      p.owner_id === form.owner_id &&
+      p.payout_month === form.payout_month &&
+      p.payout_year === form.payout_year
+  );
 
   // Auto-fill amount using the exact same formula as the PDF monthly report
   const handleOwnerChange = (ownerId: string) => {

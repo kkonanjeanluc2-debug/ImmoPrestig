@@ -108,9 +108,9 @@ export function CreateProformaDialog({ preselectedTenantId, trigger }: Props) {
 
   const handlePropertySelect = (propertyId: string) => {
     setSelectedPropertyId(propertyId);
-    const prop = activeProperties.find((p: any) => p.id === propertyId);
+    const prop = allBiens.find((p: any) => p.id === propertyId);
     if (prop) {
-      setPropertyName(prop.title);
+      setPropertyName(prop.title.replace(" (Vente)", ""));
       setPropertyType(prop.property_type || "");
       setPropertyAddress(prop.address || "");
       setPropertyArea(prop.area ? String(prop.area) : "");

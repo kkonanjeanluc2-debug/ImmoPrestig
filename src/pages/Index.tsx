@@ -168,46 +168,31 @@ const Index = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <StatCard
-              title="Total des biens"
-              value={totalProperties}
-              change={totalProperties > 0 ? `${totalProperties} bien${totalProperties > 1 ? 's' : ''}` : "Aucun bien"}
-              changeType="positive"
-              icon={Building2}
+              title="Total Locataires"
+              value={activeTenants}
+              icon={Users}
               iconBg="navy"
             />
             <StatCard
-              title="Locataires actifs"
-              value={activeTenants}
-              change={activeTenants > 0 ? "Contrats actifs" : "Aucun locataire"}
-              changeType="positive"
-              icon={Users}
+              title="Loyers du Mois"
+              value={`${monthlyRevenue.toLocaleString('fr-FR')} FCFA`}
+              icon={Wallet}
               iconBg="emerald"
             />
             <StatCard
-              title="Revenus du mois"
-              value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
-              change={now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-              changeType="positive"
-              icon={Wallet}
-              iconBg="sand"
-            />
-            <StatCard
-              title="Taux d'occupation"
-              value={`${occupancyRate}%`}
-              change={`${occupiedUnits}/${totalUnits} unités`}
-              changeType="positive"
-              icon={TrendingUp}
-              iconBg="navy"
-            />
-            <StatCard
-              title="Retard (Arriéré)"
-              value={latePaymentsStats.total}
-              change={`${latePaymentsStats.totalAmount.toLocaleString("fr-FR")} F CFA`}
+              title="Arriérés"
+              value={`${latePaymentsStats.totalAmount.toLocaleString("fr-FR")} FCFA`}
               changeType="negative"
               icon={AlertTriangle}
               iconBg="sand"
+            />
+            <StatCard
+              title="Taux d'Occupation"
+              value={`${occupancyRate}%`}
+              icon={Building2}
+              iconBg="navy"
             />
           </div>
         )}

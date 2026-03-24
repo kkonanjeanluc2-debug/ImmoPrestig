@@ -621,9 +621,10 @@ export default function Payments() {
                               <div className="flex items-start gap-3">
                                 <div className={cn(
                                   "p-2 rounded-lg",
-                                  payment.status === "paid" ? "bg-emerald/10" :
-                                  payment.status === "late" ? "bg-red-500/10" :
-                                  payment.status === "pending" ? "bg-amber-500/10" : "bg-blue-500/10"
+                                  effectiveStatus === "paid" ? "bg-emerald/10" :
+                                  effectiveStatus === "impaye" ? "bg-destructive/10" :
+                                  effectiveStatus === "late" ? "bg-red-500/10" :
+                                  effectiveStatus === "pending" ? "bg-amber-500/10" : "bg-blue-500/10"
                                 )}>
                                   <StatusIcon className={cn("h-4 w-4", status.className.split(' ').find(c => c.startsWith('text-')))} />
                                 </div>

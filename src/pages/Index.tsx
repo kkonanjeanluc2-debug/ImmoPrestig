@@ -200,12 +200,12 @@ const Index = () => {
               iconBg="navy"
             />
             <StatCard
-              title="Messages WhatsApp"
-              value={whatsappStats?.total || 0}
-              change={`${whatsappStats?.thisMonth || 0} ce mois`}
-              changeType="positive"
-              icon={MessageCircle}
-              iconBg="emerald"
+              title="Retard (Arriéré)"
+              value={latePaymentsStats.total}
+              change={`${latePaymentsStats.totalAmount.toLocaleString("fr-FR")} F CFA`}
+              changeType="negative"
+              icon={AlertTriangle}
+              iconBg="sand"
             />
           </div>
         )}

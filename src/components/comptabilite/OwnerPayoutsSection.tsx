@@ -48,6 +48,9 @@ import {
 import { useOwners } from "@/hooks/useOwners";
 import { PAYMENT_OPERATORS } from "@/hooks/useAgency";
 import { useCommissions } from "@/hooks/useCommissions";
+import { useProperties } from "@/hooks/useProperties";
+import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
+import { useTenants } from "@/hooks/useTenants";
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString("fr-FR") + " F CFA";

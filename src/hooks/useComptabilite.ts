@@ -419,7 +419,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("online_rent_payments")
-        .select("id, amount, paid_at, payment_method, status, payment_id, tenant:tenants(name, assigned_to, property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
+        .select("id, amount, paid_at, payment_method, status, payment_id, tenant:tenants(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .eq("status", "completed")
         .is("payment_id", null)
         .gte("paid_at", fromDate)

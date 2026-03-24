@@ -247,11 +247,15 @@ export default function Payments() {
     .reduce((sum, p) => sum + Number(p.amount), 0);
   const pendingCount = (payments || []).filter(p => p.status === 'pending').length;
 
-  const lateAmount = (payments || []).filter(p => p.status === 'late')
-    .reduce((sum, p) => sum + Number(p.amount), 0);
-  const lateCount = (payments || []).filter(p => p.status === 'late').length;
+  const latePayments = (payments || []).filter(p => p.status === 'late' && differenceInDays(new Date(), new Date(p.due_date)) < 30);
+  const lateAmount = latePayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const lateCount = latePayments.length;
 
-  const totalExpected = monthlyCollected + pendingAmount + lateAmount;
+  const impayePayments = (payments || []).filter(p => p.status === 'late' && differenceInDays(new Date(), new Date(p.due_date)) >= 30);
+  const impayeAmount = impayePayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const impayeCount = impayePayments.length;
+
+  const totalExpected = monthlyCollected + pendingAmount + lateAmount + impayeAmount;
   const recoveryRate = totalExpected > 0 ? Math.round((monthlyCollected / totalExpected) * 100) : 0;
 
   const stats = [
@@ -271,11 +275,18 @@ export default function Payments() {
       color: "text-amber-500" 
     },
     { 
-      title: "Retards", 
+      title: "En retard (<30j)", 
       value: formatCurrency(lateAmount), 
       count: `${lateCount} paiement${lateCount > 1 ? 's' : ''}`,
-      icon: AlertTriangle, 
+      icon: XCircle, 
       color: "text-red-500" 
+    },
+    { 
+      title: "Impayés (≥30j)", 
+      value: formatCurrency(impayeAmount), 
+      count: `${impayeCount} paiement${impayeCount > 1 ? 's' : ''}`,
+      icon: AlertTriangle, 
+      color: "text-destructive" 
     },
     { 
       title: "Taux de recouvrement", 

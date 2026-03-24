@@ -286,9 +286,10 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
           <div className="overflow-x-auto">
             <Table className="min-w-[600px]">
               <TableHeader>
-                <TableRow>
+                 <TableRow>
                   <TableHead>N° Lot</TableHead>
                   <TableHead>Îlot</TableHead>
+                  <TableHead>Attribution</TableHead>
                   <TableHead>Superficie</TableHead>
                   <TableHead>Prix</TableHead>
                   <TableHead>Statut</TableHead>

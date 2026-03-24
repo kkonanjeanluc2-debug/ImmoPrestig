@@ -175,6 +175,20 @@ export default function Payments() {
       const isDueSoon = payment.status !== 'paid' && isFuture(dueDate) && daysUntilDue <= 7 && daysUntilDue >= 0;
       return matchesSearch && isDueSoon;
     }
+
+    // Handle "impaye" filter: late payments with >=30 days overdue
+    if (statusFilter === "impaye") {
+      const dueDate = new Date(payment.due_date);
+      const daysLate = differenceInDays(new Date(), dueDate);
+      return matchesSearch && payment.status === 'late' && daysLate >= 30;
+    }
+
+    // Handle "late" filter: late payments with <30 days overdue
+    if (statusFilter === "late") {
+      const dueDate = new Date(payment.due_date);
+      const daysLate = differenceInDays(new Date(), dueDate);
+      return matchesSearch && payment.status === 'late' && daysLate < 30;
+    }
     
     const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
     return matchesSearch && matchesStatus;

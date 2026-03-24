@@ -399,6 +399,9 @@ const Comptabilite = () => {
                         <td className="py-2 px-3 text-right text-destructive">
                           {data.totalExpenses > 0 ? `-${formatCFA(data.totalExpenses)}` : formatCFA(0)}
                         </td>
+                        <td className="py-2 px-3 text-right text-primary">
+                          {totalReversements > 0 ? `-${formatCFA(totalReversements)}` : formatCFA(0)}
+                        </td>
                         <td className={`py-2 px-3 text-right ${beneficeNet >= 0 ? "text-foreground" : "text-destructive"}`}>
                           {formatCFA(beneficeNet)}
                         </td>

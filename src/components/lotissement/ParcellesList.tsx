@@ -233,6 +233,36 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   Vendues ({parcelles.filter(p => p.status === "vendu").length})
                 </Button>
               </div>
+              {/* Attribution filter */}
+              {parcelles.some(p => p.attribution) && (
+                <div className="flex gap-1.5 flex-wrap">
+                  <Button
+                    variant={attributionFilter === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAttributionFilter("all")}
+                  >
+                    Toutes parties
+                  </Button>
+                  <Button
+                    variant={attributionFilter === "proprietaire" ? "default" : "outline"}
+                    size="sm"
+                    className={attributionFilter !== "proprietaire" ? "text-blue-600 border-blue-300 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700"}
+                    onClick={() => setAttributionFilter("proprietaire")}
+                  >
+                    <User className="h-3 w-3 mr-1" />
+                    {lotissement?.proprietaire_name || "Propriétaire"} ({parcelles.filter(p => p.attribution === "proprietaire").length})
+                  </Button>
+                  <Button
+                    variant={attributionFilter === "lotisseur" ? "default" : "outline"}
+                    size="sm"
+                    className={attributionFilter !== "lotisseur" ? "text-amber-600 border-amber-300 hover:bg-amber-50" : "bg-amber-600 hover:bg-amber-700"}
+                    onClick={() => setAttributionFilter("lotisseur")}
+                  >
+                    <Building2 className="h-3 w-3 mr-1" />
+                    {lotissement?.lotisseur_name || "Lotisseur"} ({parcelles.filter(p => p.attribution === "lotisseur").length})
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}

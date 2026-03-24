@@ -26,6 +26,9 @@ import { ExportComptabilite } from "@/components/comptabilite/ExportComptabilite
 import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
+import { OwnerPayoutsSection } from "@/components/comptabilite/OwnerPayoutsSection";
+import { useOwnerPayouts } from "@/hooks/useOwnerPayouts";
+import { ArrowDownToLine } from "lucide-react";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -65,13 +68,19 @@ const Comptabilite = () => {
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
   const { data: agency } = useAgency();
   const { hasPermission, role } = usePermissions();
+  const fromDateStr = period.from.toISOString().split("T")[0];
+  const toDateStr = period.to.toISOString().split("T")[0];
+  const { data: ownerPayouts = [] } = useOwnerPayouts(fromDateStr, toDateStr);
+  const totalReversements = ownerPayouts
+    .filter((p) => p.status === "completed")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
 
   const isAdminOrOwner = role === "super_admin" || role === "admin";
   const canExport = isAdminOrOwner || hasPermission("can_export_comptabilite");
   const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
-  const beneficeNet = totalRevenue - data.totalExpenses;
+  const beneficeNet = totalRevenue - data.totalExpenses - totalReversements;
   const margePercent = totalRevenue > 0 ? Math.round((beneficeNet / totalRevenue) * 100) : 0;
 
   const renderPieLabel = ({ name, percent }: { name: string; percent: number }) => {
@@ -117,6 +126,13 @@ const Comptabilite = () => {
       icon: Clock,
       color: "text-sand",
       bgColor: "bg-sand/10",
+    },
+    {
+      title: "Reversements",
+      value: formatCFA(totalReversements),
+      icon: ArrowDownToLine,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
       title: "Impayés (loyers)",
@@ -208,6 +224,11 @@ const Comptabilite = () => {
               <span className="hidden sm:inline">Factures</span>
               <span className="sm:hidden">Fact.</span>
             </TabsTrigger>
+            <TabsTrigger value="reversements" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <ArrowDownToLine className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="hidden sm:inline">Reversements</span>
+              <span className="sm:hidden">Rev.</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* === OVERVIEW TAB === */}
@@ -232,7 +253,7 @@ const Comptabilite = () => {
             </div>
 
             {/* Secondary KPIs */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
               {secondaryCards.map((card) => (
                 <Card key={card.title}>
                   <CardContent className="p-3 sm:p-4">
@@ -321,6 +342,7 @@ const Comptabilite = () => {
                         <th className="text-right py-2 px-3 text-muted-foreground font-medium">Cautions</th>
                         <th className="text-right py-2 px-3 font-medium text-emerald">Total revenus</th>
                         <th className="text-right py-2 px-3 font-medium text-destructive">Dépenses</th>
+                        <th className="text-right py-2 px-3 font-medium text-primary">Reversements</th>
                         <th className="text-right py-2 px-3 font-semibold text-foreground">Bénéfice</th>
                       </tr>
                     </thead>
@@ -336,6 +358,20 @@ const Comptabilite = () => {
                           <td className="py-2 px-3 text-right font-medium text-emerald">{formatCFA(row.total)}</td>
                           <td className="py-2 px-3 text-right font-medium text-destructive">
                             {row.depenses > 0 ? `-${formatCFA(row.depenses)}` : formatCFA(0)}
+                          </td>
+                          <td className="py-2 px-3 text-right font-medium text-primary">
+                            {(() => {
+                              const monthReversements = ownerPayouts
+                                .filter((p) => p.status === "completed" && p.payout_date)
+                                .filter((p) => {
+                                  const d = new Date(p.payout_date);
+                                  const rowKey = `${d.toLocaleDateString("fr-FR", { month: "short" })} ${d.getFullYear()}`;
+                                  // Match by comparing month abbreviation
+                                  return row.name.toLowerCase().startsWith(rowKey.substring(0, 3).toLowerCase()) && row.name.includes(String(d.getFullYear()));
+                                })
+                                .reduce((s, p) => s + Number(p.amount), 0);
+                              return monthReversements > 0 ? `-${formatCFA(monthReversements)}` : formatCFA(0);
+                            })()}
                           </td>
                           <td className={`py-2 px-3 text-right font-semibold ${row.benefice >= 0 ? "text-foreground" : "text-destructive"}`}>
                             {formatCFA(row.benefice)}
@@ -362,6 +398,9 @@ const Comptabilite = () => {
                         <td className="py-2 px-3 text-right text-emerald">{formatCFA(totalRevenue)}</td>
                         <td className="py-2 px-3 text-right text-destructive">
                           {data.totalExpenses > 0 ? `-${formatCFA(data.totalExpenses)}` : formatCFA(0)}
+                        </td>
+                        <td className="py-2 px-3 text-right text-primary">
+                          {totalReversements > 0 ? `-${formatCFA(totalReversements)}` : formatCFA(0)}
                         </td>
                         <td className={`py-2 px-3 text-right ${beneficeNet >= 0 ? "text-foreground" : "text-destructive"}`}>
                           {formatCFA(beneficeNet)}
@@ -663,6 +702,15 @@ const Comptabilite = () => {
           {/* === FACTURES TAB === */}
           <TabsContent value="factures" className="space-y-6">
             <ProformaInvoicesList />
+          </TabsContent>
+
+          {/* === REVERSEMENTS TAB === */}
+          <TabsContent value="reversements" className="space-y-6">
+            <OwnerPayoutsSection
+              fromDate={fromDateStr}
+              toDate={toDateStr}
+              totalReversements={totalReversements}
+            />
           </TabsContent>
         </Tabs>
       </div>

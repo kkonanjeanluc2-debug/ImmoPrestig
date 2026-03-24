@@ -26,6 +26,7 @@ import {
   Layers,
   FileSignature,
   Upload,
+  PieChart,
 } from "lucide-react";
 import { PeriodFilter, getDefaultPeriod, getPeriodLabel, PeriodValue } from "@/components/dashboard/PeriodFilter";
 import { useLotissement } from "@/hooks/useLotissements";
@@ -50,6 +51,7 @@ import { IlotsTab } from "@/components/lotissement/IlotsTab";
 import { GenerateLotissementDocumentDialog } from "@/components/lotissement/GenerateLotissementDocumentDialog";
 import { AcquereursListCard } from "@/components/lotissement/AcquereursListCard";
 import { ImportGeometreDialog } from "@/components/lotissement/ImportGeometreDialog";
+import { LotRepartitionTab } from "@/components/lotissement/LotRepartitionTab";
 import { useNewLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
 import { useIlotsWithStats } from "@/hooks/useIlots";
 const LotissementDetails = () => {
@@ -285,6 +287,12 @@ const LotissementDetails = () => {
                   <span className="hidden sm:inline">Acquéreurs</span>
                 </TabsTrigger>
                 {isOwner && (
+                  <TabsTrigger value="repartition" className="gap-2">
+                    <PieChart className="h-4 w-4" />
+                    <span className="hidden sm:inline">Répartition</span>
+                  </TabsTrigger>
+                )}
+                {isOwner && (
                   <TabsTrigger value="affectations" className="gap-2">
                     <UserCheck className="h-4 w-4" />
                     <span className="hidden sm:inline">Affectations</span>
@@ -391,6 +399,15 @@ const LotissementDetails = () => {
               lotissementName={lotissement.name} 
             />
           </TabsContent>
+
+          {isOwner && (
+            <TabsContent value="repartition">
+              <LotRepartitionTab
+                lotissement={lotissement}
+                parcelles={parcelles || []}
+              />
+            </TabsContent>
+          )}
 
           {isOwner && (
             <TabsContent value="affectations">

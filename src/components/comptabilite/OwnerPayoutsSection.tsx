@@ -175,7 +175,7 @@ export function OwnerPayoutsSection({
                 <Label>Propriétaire *</Label>
                 <Select
                   value={form.owner_id}
-                  onValueChange={(v) => setForm({ ...form, owner_id: v })}
+                  onValueChange={handleOwnerChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un propriétaire" />

@@ -69,6 +69,9 @@ export function OwnerPayoutsSection({
 }: OwnerPayoutsSectionProps) {
   const { data: payouts = [], isLoading } = useOwnerPayouts(fromDate, toDate);
   const { data: owners = [] } = useOwners();
+  const { data: properties = [] } = useProperties();
+  const { data: allInterventions = [] } = usePropertyInterventions();
+  const { data: tenants = [] } = useTenants();
   const createPayout = useCreateOwnerPayout();
   const deletePayout = useDeleteOwnerPayout();
   const commissionReport = useCommissions(fromDate, toDate);

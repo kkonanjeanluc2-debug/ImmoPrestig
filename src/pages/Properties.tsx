@@ -597,7 +597,7 @@ const Properties = () => {
                                       </thead>
                                       <tbody>
                                         {expandedUnits.map((unit) => {
-                                          const unitTenant = getUnitTenant(unit.id);
+                                          const unitTenant = getUnitTenant(unit);
                                           const unitStatusConfig: Record<string, { label: string; className: string }> = {
                                             disponible: { label: "Disponible", className: "bg-primary/10 text-primary border-primary/30" },
                                             "loué": { label: "Loué", className: "bg-destructive/10 text-destructive border-destructive/20" },

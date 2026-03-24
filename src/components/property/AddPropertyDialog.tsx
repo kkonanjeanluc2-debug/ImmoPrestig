@@ -88,7 +88,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const isPriceRequired = formData.property_type !== "maison";
+    const isPriceRequired = category !== "immeuble" && formData.property_type !== "maison";
     if (!formData.title || !formData.address || (isPriceRequired && !formData.price)) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;

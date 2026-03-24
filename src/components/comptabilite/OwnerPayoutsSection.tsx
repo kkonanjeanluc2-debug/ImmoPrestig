@@ -103,53 +103,62 @@ export function OwnerPayoutsSection({
       p.payout_year === form.payout_year
   );
 
-  // Auto-fill amount using the exact same formula as the PDF monthly report
-  const handleOwnerChange = (ownerId: string) => {
-    // Get owner with management type
+  // Compute net amount for a given owner and month/year
+  const computeNetAmount = (ownerId: string, month: number, year: number): string => {
     const owner = owners.find((o) => o.id === ownerId) as OwnerWithManagementType | undefined;
-    if (!owner) {
-      setForm({ ...form, owner_id: ownerId, amount: "" });
-      return;
-    }
+    if (!owner) return "";
 
-    // Get owner's properties and tenants
+    // Period = first and last day of the selected month
+    const periodStart = `${year}-${String(month).padStart(2, "0")}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const periodEnd = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+
     const ownerProps = properties.filter((p) => p.owner_id === ownerId);
     const ownerPropIds = ownerProps.map((p) => p.id);
     const ownerTenants = tenants.filter((t) => t.property_id && ownerPropIds.includes(t.property_id));
 
-    // Calculate totalPaid (same as PDF: getTenantCollectedAmountForPeriod per tenant)
     const totalPaid = ownerTenants.reduce((sum, tenant) => {
-      return sum + getTenantCollectedAmountForPeriod(payments as any, tenant.id, fromDate, toDate);
+      return sum + getTenantCollectedAmountForPeriod(payments as any, tenant.id, periodStart, periodEnd);
     }, 0);
 
-    // Commission
     const commissionPercentage = owner.management_type?.percentage || 0;
     const commissionAmount = Math.round((totalPaid * commissionPercentage) / 100);
 
-    // Interventions cost for the period
     const interventionsCost = allInterventions
       .filter((i) => {
         if (!ownerPropIds.includes(i.property_id)) return false;
         const startDate = i.start_date?.substring(0, 10);
-        return startDate && startDate >= fromDate && startDate <= toDate;
+        return startDate && startDate >= periodStart && startDate <= periodEnd;
       })
       .reduce((sum, i) => sum + (i.cost || 0), 0);
 
-    // Cautions (deposits from tenants created in the period)
     const totalCautions = ownerTenants
       .filter((t) => {
         const createdAt = t.created_at?.substring(0, 10);
-        return createdAt && createdAt >= fromDate && createdAt <= toDate;
+        return createdAt && createdAt >= periodStart && createdAt <= periodEnd;
       })
       .reduce((sum, t) => {
         const deposit = (t as any).contracts?.find((c: any) => c.status === "active")?.deposit || 0;
         return sum + Number(deposit);
       }, 0);
 
-    // Formula: totalPaid - commission - interventions + cautions (same as PDF)
     const netAmount = totalPaid - commissionAmount - interventionsCost + totalCautions;
+    return netAmount > 0 ? String(netAmount) : "";
+  };
 
-    setForm({ ...form, owner_id: ownerId, amount: netAmount > 0 ? String(netAmount) : "" });
+  const handleOwnerChange = (ownerId: string) => {
+    const amount = computeNetAmount(ownerId, form.payout_month, form.payout_year);
+    setForm({ ...form, owner_id: ownerId, amount });
+  };
+
+  const handleMonthChange = (month: number) => {
+    const amount = form.owner_id ? computeNetAmount(form.owner_id, month, form.payout_year) : form.amount;
+    setForm({ ...form, payout_month: month, amount });
+  };
+
+  const handleYearChange = (year: number) => {
+    const amount = form.owner_id ? computeNetAmount(form.owner_id, form.payout_month, year) : form.amount;
+    setForm({ ...form, payout_year: year, amount });
   };
 
   const handleSubmit = () => {
@@ -267,7 +276,7 @@ export function OwnerPayoutsSection({
                   <Label>Mois *</Label>
                   <Select
                     value={String(form.payout_month)}
-                    onValueChange={(v) => setForm({ ...form, payout_month: Number(v) })}
+                    onValueChange={(v) => handleMonthChange(Number(v))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -283,7 +292,7 @@ export function OwnerPayoutsSection({
                   <Label>Année *</Label>
                   <Select
                     value={String(form.payout_year)}
-                    onValueChange={(v) => setForm({ ...form, payout_year: Number(v) })}
+                    onValueChange={(v) => handleYearChange(Number(v))}
                   >
                     <SelectTrigger>
                       <SelectValue />

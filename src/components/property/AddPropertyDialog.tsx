@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Home, Building, Loader2, User, ArrowRight, ArrowLeft, DoorOpen, Pencil, Trash2 } from "lucide-react";
+import { Plus, Home, Building, Loader2, User, ArrowRight, ArrowLeft, DoorOpen, Pencil, Trash2, Copy, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +60,9 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const [showUnitForm, setShowUnitForm] = useState(false);
   const [editingUnitId, setEditingUnitId] = useState<string | null>(null);
   const [unitForm, setUnitForm] = useState({ unit_number: "", rooms_count: 1, rent_amount: 0, area: "" });
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
+  const [bulkCount, setBulkCount] = useState(5);
+  const [bulkSourceUnit, setBulkSourceUnit] = useState<LocalUnit | null>(null);
   const createProperty = useCreateProperty();
   const createUnit = useCreatePropertyUnit();
   const { data: owners = [] } = useOwners();
@@ -230,15 +233,53 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const addTemplate = (label: string, rooms: number) => {
     const existingCount = localUnits.filter(u => u.unit_number.toLowerCase().includes(label.toLowerCase())).length;
     const unitNumber = `${label} ${existingCount + 1}`;
-    setLocalUnits(prev => [...prev, {
+    const newUnit: LocalUnit = {
       id: crypto.randomUUID(),
       unit_number: unitNumber,
       rooms_count: rooms,
       rent_amount: 0,
       area: null,
       status: "disponible",
-    }]);
-    toast.success(`${unitNumber} ajouté`);
+    };
+    setLocalUnits(prev => [...prev, newUnit]);
+    // Open bulk dialog with this unit as source
+    setBulkSourceUnit(newUnit);
+    setBulkCount(5);
+    setShowBulkDialog(true);
+  };
+
+  const duplicateUnit = (unit: LocalUnit) => {
+    setBulkSourceUnit(unit);
+    setBulkCount(5);
+    setShowBulkDialog(true);
+  };
+
+  const addBulkUnits = () => {
+    if (!bulkSourceUnit || bulkCount <= 0) return;
+    // Extract base name and current number
+    const match = bulkSourceUnit.unit_number.match(/^(.+?)(\d+)$/);
+    const baseName = match ? match[1] : bulkSourceUnit.unit_number + " ";
+    const startNum = match ? parseInt(match[2]) : 1;
+
+    const newUnits: LocalUnit[] = [];
+    for (let i = 1; i <= bulkCount; i++) {
+      const num = startNum + i;
+      const unitNumber = `${baseName}${num}`;
+      // Skip if duplicate
+      if (localUnits.some(u => u.unit_number.toLowerCase() === unitNumber.toLowerCase())) continue;
+      newUnits.push({
+        id: crypto.randomUUID(),
+        unit_number: unitNumber,
+        rooms_count: bulkSourceUnit.rooms_count,
+        rent_amount: bulkSourceUnit.rent_amount,
+        area: bulkSourceUnit.area,
+        status: "disponible",
+      });
+    }
+    setLocalUnits(prev => [...prev, ...newUnits]);
+    setShowBulkDialog(false);
+    setBulkSourceUnit(null);
+    toast.success(`${newUnits.length} unité${newUnits.length > 1 ? "s" : ""} ajoutée${newUnits.length > 1 ? "s" : ""}`);
   };
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat("fr-FR").format(amount) + " F CFA";
@@ -532,8 +573,8 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             <Button type="button" variant="outline" size="sm" onClick={() => addTemplate("3 pièces", 3)}>+ 3 pièces</Button>
           </div>
 
-          {/* Add unit button / form */}
-          {showUnitForm ? (
+          {/* Add unit form */}
+          {showUnitForm && (
             <Card>
               <CardContent className="p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -542,7 +583,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
                     <Input
                       value={unitForm.unit_number}
                       onChange={(e) => setUnitForm({ ...unitForm, unit_number: e.target.value })}
-                      placeholder="ex: Porte A"
+                      placeholder="ex: Apt 1"
                     />
                   </div>
                   <div className="space-y-1">
@@ -582,16 +623,6 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
                 </div>
               </CardContent>
             </Card>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full gap-2 border-dashed"
-              onClick={() => { resetUnitForm(); setShowUnitForm(true); }}
-            >
-              <Plus className="h-4 w-4" />
-              Ajouter une unité
-            </Button>
           )}
 
           {/* Units list */}
@@ -599,26 +630,29 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             <div className="space-y-2 max-h-[200px] overflow-y-auto">
               {localUnits.map((unit) => (
                 <Card key={unit.id}>
-                  <CardContent className="p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <DoorOpen className="h-4 w-4 text-primary" />
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <DoorOpen className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">{unit.unit_number}</span>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{unit.rooms_count} pièce{unit.rooms_count > 1 ? "s" : ""}</Badge>
+                            {unit.area && <span className="text-xs text-muted-foreground">{unit.area}m²</span>}
+                          </div>
+                          <p className="text-sm font-medium text-primary">{formatCurrency(unit.rent_amount)}/mois</p>
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-medium text-sm">{unit.unit_number}</span>
-                        <p className="text-xs text-muted-foreground">
-                          {unit.rooms_count} pièce{unit.rooms_count > 1 ? "s" : ""}
-                          {unit.area ? ` • ${unit.area} m²` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-primary">{formatCurrency(unit.rent_amount)}</span>
                       <div className="flex gap-1">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => editLocalUnit(unit)}>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => editLocalUnit(unit)} title="Modifier">
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteLocalUnit(unit.id)}>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicateUnit(unit)} title="Dupliquer en masse">
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteLocalUnit(unit.id)} title="Supprimer">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -627,6 +661,70 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
                 </Card>
               ))}
             </div>
+          )}
+
+          {/* Add unit + Add bulk buttons */}
+          <div className="flex gap-2">
+            {!showUnitForm && (
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 gap-2 border-dashed"
+                onClick={() => { resetUnitForm(); setShowUnitForm(true); }}
+              >
+                <Plus className="h-4 w-4" />
+                Ajouter une unité
+              </Button>
+            )}
+            {localUnits.length > 0 && !showUnitForm && (
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 gap-2"
+                onClick={() => duplicateUnit(localUnits[localUnits.length - 1])}
+              >
+                <Layers className="h-4 w-4" />
+                Ajouter en masse
+              </Button>
+            )}
+          </div>
+
+          {/* Bulk add dialog */}
+          {showBulkDialog && bulkSourceUnit && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="p-4 space-y-3">
+                <h4 className="font-semibold text-sm">Ajouter plusieurs unités</h4>
+                <p className="text-xs text-muted-foreground">
+                  Cette action va dupliquer la dernière unité ({bulkSourceUnit.unit_number}) avec les mêmes caractéristiques. Les numéros seront incrémentés automatiquement.
+                </p>
+                <div className="flex items-center gap-3">
+                  <Label className="text-sm whitespace-nowrap">Nombre d'unités à ajouter:</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={bulkCount}
+                    onChange={(e) => setBulkCount(parseInt(e.target.value) || 1)}
+                    className="w-20"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setShowBulkDialog(false); setBulkSourceUnit(null); }}>
+                    Annuler
+                  </Button>
+                  <Button type="button" size="sm" className="bg-primary" onClick={addBulkUnits}>
+                    Ajouter {bulkCount} unité{bulkCount > 1 ? "s" : ""}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Total */}
+          {localUnits.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              Total: <span className="font-medium text-foreground">{formatCurrency(localUnits.reduce((sum, u) => sum + u.rent_amount, 0))}/mois</span>
+            </p>
           )}
 
           {/* Footer */}

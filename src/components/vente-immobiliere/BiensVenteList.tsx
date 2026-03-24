@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,15 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useBiensVente, useDeleteBienVente, type BienVente } from "@/hooks/useBiensVente";
 import { SellBienDialog } from "./SellBienDialog";
 import { ReserveBienDialog } from "./ReserveBienDialog";
@@ -30,23 +38,44 @@ import {
   Eye,
   HandCoins,
   Trash2,
-  MapPin,
-  Bed,
-  Bath,
-  Ruler,
   Bookmark,
-  User,
+  Pencil,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   disponible: { label: "Disponible", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
   reserve: { label: "Réservé", color: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
   vendu: { label: "Vendu", color: "bg-primary/10 text-primary border-primary/30" },
 };
+
+const TYPE_COLORS: Record<string, string> = {
+  appartement: "bg-blue-500/10 text-blue-600 border-blue-500/30",
+  villa: "bg-purple-500/10 text-purple-600 border-purple-500/30",
+  terrain: "bg-green-500/10 text-green-600 border-green-500/30",
+  bureau: "bg-orange-500/10 text-orange-600 border-orange-500/30",
+  maison: "bg-teal-500/10 text-teal-600 border-teal-500/30",
+  studio: "bg-cyan-500/10 text-cyan-600 border-cyan-500/30",
+  immeuble: "bg-indigo-500/10 text-indigo-600 border-indigo-500/30",
+  duplex: "bg-pink-500/10 text-pink-600 border-pink-500/30",
+};
+
+function getTypeLabel(type: string) {
+  const map: Record<string, string> = {
+    appartement: "Appart.",
+    villa: "Villa",
+    terrain: "Terrain",
+    bureau: "Bureau",
+    maison: "Maison",
+    studio: "Studio",
+    immeuble: "Immeuble",
+    duplex: "Duplex",
+  };
+  return map[type] || type.charAt(0).toUpperCase() + type.slice(1);
+}
 
 export function BiensVenteList() {
   const [search, setSearch] = useState("");
@@ -59,12 +88,11 @@ export function BiensVenteList() {
   const { data: biens, isLoading } = useBiensVente();
   const deleteBien = useDeleteBienVente();
   const navigate = useNavigate();
-  const { hasPermission, role } = usePermissions();
+  const { hasPermission } = usePermissions();
   const { isAdmin } = useIsAgencyOwner();
   const canDelete = hasPermission("can_delete_ventes");
   const canEdit = hasPermission("can_edit_biens_vente");
 
-  // Get all assigned_to user ids for profile lookup
   const assignedUserIds = biens?.map(b => b.assigned_to).filter(Boolean) || [];
   const { data: profilesMap } = useUserProfiles(assignedUserIds);
 
@@ -100,17 +128,13 @@ export function BiensVenteList() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <div className="h-48 bg-muted rounded-t-lg" />
-            <CardContent className="p-4 space-y-3">
-              <div className="h-5 bg-muted rounded w-3/4" />
-              <div className="h-4 bg-muted rounded w-1/2" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <div className="p-4 space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </Card>
     );
   }
 
@@ -153,172 +177,128 @@ export function BiensVenteList() {
         </Select>
       </div>
 
-      {/* Grid */}
+      {/* Table */}
       {filteredBiens?.length === 0 ? (
         <Card className="p-12 text-center">
           <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">Aucun bien trouvé</p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredBiens?.map((bien) => {
-            const statusConfig = STATUS_CONFIG[bien.status];
-            return (
-              <Card 
-                key={bien.id} 
-                className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => navigate(`/ventes-immobilieres/${bien.id}`)}
-              >
-                <div className="relative h-48 bg-muted">
-                  {bien.image_url ? (
-                    <img
-                      src={bien.image_url}
-                      alt={bien.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Building2 className="h-16 w-16 text-muted-foreground/50" />
-                    </div>
-                  )}
-                  <Badge
-                    variant="outline"
-                    className={`absolute top-2 right-2 ${statusConfig.color}`}
-                  >
-                    {statusConfig.label}
-                  </Badge>
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold truncate">{bien.title}</h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {bien.address}
-                      </p>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/ventes-immobilieres/${bien.id}`);
-                        }}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Voir détails
-                        </DropdownMenuItem>
-                        {bien.status === "disponible" && canEdit && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              handleReserve(bien);
-                            }}>
-                              <Bookmark className="h-4 w-4 mr-2" />
-                              Réserver
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              handleSell(bien);
-                            }}>
-                              <HandCoins className="h-4 w-4 mr-2" />
-                              Vendre
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        {bien.status === "reserve" && canEdit && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              handleSell(bien);
-                            }}>
-                              <HandCoins className="h-4 w-4 mr-2" />
-                              Finaliser la vente
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        {canDelete && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(bien);
-                              }}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Supprimer
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Bien</TableHead>
+                  {isAdmin && <TableHead>Gestionnaire</TableHead>}
+                  <TableHead>Type</TableHead>
+                  <TableHead className="text-right">Prix</TableHead>
+                  <TableHead className="text-center">Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredBiens?.map((bien) => {
+                  const statusConfig = STATUS_CONFIG[bien.status] || STATUS_CONFIG.disponible;
+                  const typeColor = TYPE_COLORS[bien.property_type] || "bg-muted text-muted-foreground";
 
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
-                    {bien.bedrooms && (
-                      <span className="flex items-center gap-1">
-                        <Bed className="h-3.5 w-3.5" />
-                        {bien.bedrooms}
-                      </span>
-                    )}
-                    {bien.bathrooms && (
-                      <span className="flex items-center gap-1">
-                        <Bath className="h-3.5 w-3.5" />
-                        {bien.bathrooms}
-                      </span>
-                    )}
-                    {bien.area && (
-                      <span className="flex items-center gap-1">
-                        <Ruler className="h-3.5 w-3.5" />
-                        {bien.area} m²
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-primary">
-                      {formatCurrency(bien.price)}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {isAdmin && bien.assigned_to && profilesMap?.get(bien.assigned_to) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge variant="outline" className="text-xs gap-1">
-                                <User className="h-3 w-3" />
-                                <span className="truncate max-w-[60px]">
-                                  {profilesMap.get(bien.assigned_to)}
-                                </span>
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Gestionnaire: {profilesMap.get(bien.assigned_to)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                  return (
+                    <TableRow
+                      key={bien.id}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/ventes-immobilieres/${bien.id}`)}
+                    >
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{bien.title}</p>
+                          <p className="text-sm text-muted-foreground">{bien.address}</p>
+                        </div>
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <span className="text-sm">
+                            {bien.assigned_to && profilesMap?.get(bien.assigned_to)
+                              ? profilesMap.get(bien.assigned_to)
+                              : "-"}
+                          </span>
+                        </TableCell>
                       )}
-                      <Badge variant="secondary">
-                        {bien.property_type.charAt(0).toUpperCase() + bien.property_type.slice(1)}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                      <TableCell>
+                        <Badge variant="outline" className={typeColor}>
+                          {getTypeLabel(bien.property_type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(bien.price)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className={statusConfig.color}>
+                          {statusConfig.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => navigate(`/ventes-immobilieres/${bien.id}`)}
+                          >
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => navigate(`/ventes-immobilieres/${bien.id}`)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Modifier
+                              </DropdownMenuItem>
+                              {bien.status === "disponible" && canEdit && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleReserve(bien)}>
+                                    <Bookmark className="h-4 w-4 mr-2" />
+                                    Réserver
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSell(bien)}>
+                                    <HandCoins className="h-4 w-4 mr-2" />
+                                    Vendre
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {bien.status === "reserve" && canEdit && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleSell(bien)}>
+                                    <HandCoins className="h-4 w-4 mr-2" />
+                                    Finaliser la vente
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {canDelete && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleDelete(bien)} className="text-destructive">
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Supprimer
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
 
       {selectedBien && (

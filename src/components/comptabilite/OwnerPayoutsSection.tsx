@@ -388,6 +388,7 @@ export function OwnerPayoutsSection({
           </DialogContent>
         </Dialog>
       </div>
+      )}
 
       {/* List */}
       <Card>

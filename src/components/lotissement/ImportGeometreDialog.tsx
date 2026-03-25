@@ -235,6 +235,98 @@ export const ImportGeometreDialog = ({
     return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
   }, [existingIlotNames, existingPlotNumbers]);
 
+  // ─── Word/DOCX parser ─────────────────────────────────────────────
+  const parseWordFile = useCallback(async (file: File) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    const html = result.value;
+
+    const newErrors: string[] = [];
+    const newWarnings: string[] = [];
+    const ilots: ParsedGeometreIlot[] = [];
+    const parcelles: ParsedGeometreParcelle[] = [];
+
+    // Parse HTML tables using DOMParser
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const tables = doc.querySelectorAll("table");
+
+    if (tables.length === 0) {
+      newErrors.push("Aucun tableau trouvé dans le document Word");
+      return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
+    }
+
+    newWarnings.push(`${tables.length} tableau(x) détecté(s) dans le document`);
+
+    for (const table of Array.from(tables)) {
+      const rows = table.querySelectorAll("tr");
+      if (rows.length < 2) continue;
+
+      // First row = headers
+      const headerCells = rows[0].querySelectorAll("td, th");
+      const headers = Array.from(headerCells).map((cell) => cell.textContent?.trim() || "");
+
+      newWarnings.push(`Colonnes détectées : ${headers.filter(Boolean).join(", ")}`);
+
+      // Data rows
+      for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].querySelectorAll("td, th");
+        const record: Record<string, unknown> = {};
+        Array.from(cells).forEach((cell, idx) => {
+          const key = headers[idx] || `col_${idx + 1}`;
+          record[key] = cell.textContent?.trim() || "";
+        });
+
+        if (shouldSkipExcelRow(record)) continue;
+
+        let plotNumber = findValue(record, ["lots", "lot", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
+        if (!plotNumber) {
+          plotNumber = findValue(record, ["numero", "numéro", "num", "n°", "no", "ref", "reference", "référence", "id", "label", "name", "nom", "designation", "désignation"]);
+        }
+        const area = parseNumber(findValue(record, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]));
+        const price = parseNumber(findValue(record, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
+        const ilotName = findValue(record, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
+        const proprietaireTerrien = findValue(record, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
+        const beneficiaire = findValue(record, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
+
+        if (!plotNumber) {
+          const firstNonEmpty = Object.values(record).find(
+            (val) => val !== null && val !== undefined && String(val).trim() !== ""
+          );
+          if (firstNonEmpty !== undefined) plotNumber = firstNonEmpty;
+        }
+
+        if (!plotNumber) continue;
+        if (existingPlotNumbers.includes(String(plotNumber))) continue;
+
+        const parcelle: ParsedGeometreParcelle = {
+          plotNumber: String(plotNumber),
+          area,
+          price: price || 0,
+          ilotName: ilotName ? String(ilotName) : undefined,
+          proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
+          beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
+        };
+        parcelles.push(parcelle);
+
+        if (ilotName) {
+          const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
+          if (existingIlot) {
+            existingIlot.parcelles.push(parcelle);
+          } else {
+            ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+          }
+        }
+      }
+    }
+
+    if (parcelles.length === 0 && ilots.length === 0) {
+      newErrors.push("Aucune donnée exploitable trouvée dans le document Word");
+    }
+
+    return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
+  }, [existingPlotNumbers]);
+
   // ─── Main file handler ──────────────────────────────────────────────
   const parseFile = useCallback(async (file: File, additionalDbf?: File | null) => {
     setErrors([]);
@@ -263,8 +355,11 @@ export const ImportGeometreDialog = ({
         case "excel":
           result = await parseExcelFile(file);
           break;
+        case "word":
+          result = await parseWordFile(file);
+          break;
         default:
-          setErrors(["Format de fichier non reconnu. Formats acceptés : DXF, SHP, CSV, XLS, XLSX"]);
+          setErrors(["Format de fichier non reconnu. Formats acceptés : DXF, SHP, CSV, XLS, XLSX, DOCX"]);
           setStep("preview");
           return;
       }
@@ -297,7 +392,7 @@ export const ImportGeometreDialog = ({
       setErrors(["Erreur de lecture du fichier. Vérifiez le format."]);
       setStep("preview");
     }
-  }, [existingIlotNames, existingPlotNumbers, parseExcelFile]);
+  }, [existingIlotNames, existingPlotNumbers, parseExcelFile, parseWordFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

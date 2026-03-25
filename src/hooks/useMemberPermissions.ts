@@ -183,6 +183,8 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_view_comptabilite: "Accéder à la comptabilité",
   can_export_comptabilite: "Exporter les rapports comptables",
   can_create_expenses: "Enregistrer des dépenses",
+  can_access_gestion_locative: "Accès au module Gestion Locative",
+  can_access_crm_immobilier: "Accès au module CRM Immobilier",
   can_access_settings: "Accéder aux paramètres (global)",
   can_access_agency_tab: "Onglet Agence",
   can_access_management_tab: "Onglet Gestion",

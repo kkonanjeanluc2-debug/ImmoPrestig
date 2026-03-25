@@ -514,6 +514,12 @@ export function TeamMembersSettings() {
                             Comptable
                           </div>
                         </SelectItem>
+                        <SelectItem value="caissiere">
+                          <div className="flex items-center gap-2">
+                            {ROLE_ICONS.caissiere}
+                            Caissière
+                          </div>
+                        </SelectItem>
                         <SelectItem value="lecture_seule">
                           <div className="flex items-center gap-2">
                             {ROLE_ICONS.lecture_seule}

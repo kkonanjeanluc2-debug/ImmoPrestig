@@ -474,6 +474,94 @@ export function AttestationTemplateManager() {
               </div>
             </div>
 
+            {/* Couleur de fond du document */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Couleur de fond du document</Label>
+              <p className="text-xs text-muted-foreground">
+                Choisissez une couleur de fond unique ou en dégradé pour l'ensemble du document.
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={form.doc_bg_gradient}
+                    onCheckedChange={(v) => {
+                      updateField("doc_bg_gradient", v);
+                      if (v && !form.doc_bg_color_2) {
+                        updateField("doc_bg_color_2", "#f5f5dc");
+                      }
+                      if (!form.doc_bg_color_1) {
+                        updateField("doc_bg_color_1", "#fffff0");
+                      }
+                    }}
+                  />
+                  <Label className="text-sm">Dégradé</Label>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs">{form.doc_bg_gradient ? "Couleur 1" : "Couleur de fond"}</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={form.doc_bg_color_1 || "#ffffff"}
+                      onChange={(e) => updateField("doc_bg_color_1", e.target.value)}
+                      className="w-10 h-10 rounded cursor-pointer border border-border"
+                    />
+                    <Input
+                      value={form.doc_bg_color_1 || "#ffffff"}
+                      onChange={(e) => updateField("doc_bg_color_1", e.target.value)}
+                      className="w-28 font-mono text-xs"
+                    />
+                  </div>
+                </div>
+                {form.doc_bg_gradient && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Couleur 2</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={form.doc_bg_color_2 || "#f5f5dc"}
+                        onChange={(e) => updateField("doc_bg_color_2", e.target.value)}
+                        className="w-10 h-10 rounded cursor-pointer border border-border"
+                      />
+                      <Input
+                        value={form.doc_bg_color_2 || "#f5f5dc"}
+                        onChange={(e) => updateField("doc_bg_color_2", e.target.value)}
+                        className="w-28 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Label className="text-xs">Aperçu</Label>
+                  <div
+                    className="h-10 rounded mt-1 border border-border"
+                    style={{
+                      background: form.doc_bg_color_1
+                        ? (form.doc_bg_gradient && form.doc_bg_color_2
+                          ? `linear-gradient(180deg, ${form.doc_bg_color_1}, ${form.doc_bg_color_2})`
+                          : form.doc_bg_color_1)
+                        : "#ffffff",
+                    }}
+                  />
+                </div>
+              </div>
+              {form.doc_bg_color_1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    updateField("doc_bg_color_1", null);
+                    updateField("doc_bg_color_2", null);
+                    updateField("doc_bg_gradient", false);
+                  }}
+                >
+                  Supprimer la couleur de fond
+                </Button>
+              )}
+            </div>
+
             <Separator />
 
             {/* Variables helper */}

@@ -206,6 +206,8 @@ function getDefaultPermissions(role: string) {
     can_view_echeances_achats: true,
     can_collect_echeances_achats: true,
   };
+
+  const caissierePermissions = {
     can_view_properties: true,
     can_create_properties: false,
     can_edit_properties: false,

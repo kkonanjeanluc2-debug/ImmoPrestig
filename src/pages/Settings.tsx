@@ -21,6 +21,7 @@ import { SaleContractTemplateManager } from "@/components/settings/SaleContractT
 import { PromesseVenteTemplateManager } from "@/components/settings/PromesseVenteTemplateManager";
 import { ReservationFormTemplateManager } from "@/components/settings/ReservationFormTemplateManager";
 import { AchatContractTemplateManager } from "@/components/settings/AchatContractTemplateManager";
+import { AttestationTemplateManager } from "@/components/settings/AttestationTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
@@ -238,6 +239,15 @@ const Settings = () => {
                 <span>Documents d'achat</span>
               </TabsTrigger>
             )}
+            {hasLotissement && canManageTemplates && (
+              <TabsTrigger
+                value="attestation-templates"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <MapPin className="h-4 w-4" />
+                <span>Attestations</span>
+              </TabsTrigger>
+            )}
             {canAccessSubscriptionTab && (
               <TabsTrigger
                 value="subscription"
@@ -374,6 +384,12 @@ const Settings = () => {
           {hasAchatsImmobiliers && canAccessAchatContractsTab && (
             <TabsContent value="achat-contracts">
               <AchatContractTemplateManager />
+            </TabsContent>
+          )}
+
+          {hasLotissement && canManageTemplates && (
+            <TabsContent value="attestation-templates">
+              <AttestationTemplateManager />
             </TabsContent>
           )}
 

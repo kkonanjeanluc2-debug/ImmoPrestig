@@ -17,8 +17,10 @@ import {
   generateAttestationVillageoise,
   downloadPDF,
 } from "@/lib/generateLotissementPDF";
+import type { AttestationTemplateData } from "@/lib/generateLotissementPDF";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
+import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
 
 interface DocumentsParcelleDialogProps {
   vente: VenteWithDetails;
@@ -33,7 +35,14 @@ export function DocumentsParcelleDialog({
 }: DocumentsParcelleDialogProps) {
   const { data: agency } = useAgency();
   const { data: echeances } = useEcheancesParcelles(vente.id);
+  const { data: attestationTemplates = [] } = useAttestationTemplates();
   const [generating, setGenerating] = useState<string | null>(null);
+
+  // Find template associated with lotissement or default
+  const lotissementTemplateId = (vente.parcelle?.lotissement as any)?.attestation_template_id;
+  const attestationTemplate = lotissementTemplateId 
+    ? attestationTemplates.find(t => t.id === lotissementTemplateId)
+    : attestationTemplates.find(t => t.is_default) || attestationTemplates[0] || null;
 
   const depositPercentage = agency?.reservation_deposit_percentage ?? 30;
 
@@ -238,14 +247,26 @@ export function DocumentsParcelleDialog({
               onClick={async () => {
                 setGenerating("attestation_villageoise");
                 try {
+                  const templateData: AttestationTemplateData | null = attestationTemplate ? {
+                    district: attestationTemplate.district,
+                    commune: attestationTemplate.commune,
+                    village: attestationTemplate.village,
+                    chef_village_name: attestationTemplate.chef_village_name,
+                    chef_village_titre: attestationTemplate.chef_village_titre,
+                    lotissement_origin_name: attestationTemplate.lotissement_origin_name,
+                    arrete_approbation: attestationTemplate.arrete_approbation,
+                  } : null;
                   const doc = await generateAttestationVillageoise(
                     parcelleInfo,
                     lotissementInfo,
                     acquereurInfo,
                     agencyInfo,
-                    vente.sale_date
+                    vente.sale_date,
+                    undefined,
+                    undefined,
+                    templateData
                   );
-                  downloadPDF(doc, `attestation-villageoise-${parcelleInfo.plot_number}.pdf`);
+                  downloadPDF(doc, `attestation-attribution-${parcelleInfo.plot_number}.pdf`);
                   toast.success("Attestation villageoise générée");
                 } catch (error) {
                   console.error("Error generating PDF:", error);

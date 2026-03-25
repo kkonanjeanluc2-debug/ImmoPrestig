@@ -1026,6 +1026,16 @@ export const generateAttestationPaiement = async (
 // ATTESTATION VILLAGEOISE
 // ========================================
 
+export interface AttestationTemplateData {
+  district?: string;
+  commune?: string;
+  village?: string;
+  chef_village_name?: string;
+  chef_village_titre?: string;
+  lotissement_origin_name?: string;
+  arrete_approbation?: string;
+}
+
 export const generateAttestationVillageoise = async (
   parcelle: ParcelleInfo,
   lotissement: LotissementInfo,
@@ -1033,146 +1043,186 @@ export const generateAttestationVillageoise = async (
   agency: AgencyInfo | null,
   saleDate: string,
   villageName?: string,
-  chefVillageName?: string
+  chefVillageName?: string,
+  template?: AttestationTemplateData | null
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
+  let yPos = 15;
 
-  let yPos = await addHeader(doc, agency, "ATTESTATION VILLAGEOISE");
+  const district = template?.district || "";
+  const commune = template?.commune || "";
+  const village = template?.village || villageName || lotissement.location || "";
+  const chef = template?.chef_village_name || chefVillageName || "____________________";
+  const chefTitre = template?.chef_village_titre || "";
+  const lotOriginName = template?.lotissement_origin_name || lotissement.name;
+  const arreteApprobation = template?.arrete_approbation || "";
 
-  // Sous-titre
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "italic");
+  // ===== EN-TÊTE OFFICIEL =====
+  // Ligne 1: District / République
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
-  doc.text("Attestation de cession coutumière de terrain", pageWidth / 2, yPos, { align: "center" });
-  yPos += 15;
+  if (district) {
+    doc.text(district.toUpperCase(), margin, yPos);
+  }
+  doc.text("RÉPUBLIQUE DE CÔTE D'IVOIRE", pageWidth - margin, yPos, { align: "right" });
+  yPos += 5;
 
-  // Référence
-  doc.setFontSize(9);
+  // Ligne 2: Commune / Devise
+  doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Réf: AV-${parcelle.plot_number}-${new Date(saleDate).getFullYear()}`, margin, yPos);
-  doc.text(`Date: ${formatDate(saleDate)}`, pageWidth - margin, yPos, { align: "right" });
+  if (commune) {
+    doc.text(commune.toUpperCase(), margin, yPos);
+  }
+  doc.text("Union - Discipline - Travail", pageWidth - margin, yPos, { align: "right" });
+  yPos += 5;
+
+  // Village
+  if (village) {
+    doc.text(village.toUpperCase(), margin, yPos);
+  }
+  yPos += 10;
+
+  // ===== BANDEAU BLEU : TITRE =====
+  const bannerHeight = 28;
+  doc.setFillColor(0, 51, 153);
+  doc.rect(margin - 5, yPos - 5, pageWidth - 2 * (margin - 5), bannerHeight, "F");
+  
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, yPos + 3, { align: "center" });
+  
+  doc.setFontSize(9);
+  doc.text(`${lotOriginName.toUpperCase()}`, pageWidth / 2, yPos + 10, { align: "center" });
+  
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  if (arreteApprobation) {
+    doc.text(arreteApprobation, pageWidth / 2, yPos + 17, { align: "center" });
+  }
+  
+  yPos += bannerHeight + 10;
+  doc.setTextColor(...textColor);
+
+  // ===== CORPS : "Nous soussignés..." =====
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("Nous soussignés,", pageWidth / 2, yPos, { align: "center" });
+  yPos += 8;
+
+  doc.setFont("helvetica", "bold");
+  const villageName2 = village.replace(/^Village de /i, "").trim() || "____________________";
+  let chefLine = `Monsieur ${chef}, Chef du village de ${villageName2},`;
+  if (chefTitre) {
+    chefLine += `\n${chefTitre}`;
+  }
+  const chefLines = doc.splitTextToSize(chefLine, pageWidth - 2 * margin);
+  doc.text(chefLines, pageWidth / 2, yPos, { align: "center" });
+  yPos += chefLines.length * 5 + 5;
+
+  doc.setFontSize(11);
+  doc.text("Attestons que :", pageWidth / 2, yPos, { align: "center" });
   yPos += 12;
 
-  // Corps du document
+  // ===== FORMULAIRE =====
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-
-  const village = villageName || lotissement.location || "____________________";
-  const chef = chefVillageName || "____________________";
-
-  const introText = `Je soussigné, Chef du village de ${village}, certifie par la présente que la parcelle ci-après désignée a fait l'objet d'une cession coutumière conformément aux us et coutumes en vigueur.`;
-  const introLines = doc.splitTextToSize(introText, pageWidth - 2 * margin);
-  doc.text(introLines, margin, yPos);
-  yPos += introLines.length * 5 + 10;
-
-  // Informations sur la parcelle
-  doc.setFillColor(...lightGray);
-  doc.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, "F");
+  
+  // M / Mme / Mlle
+  doc.text("M / Mme / Mlle :", margin, yPos);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("DÉSIGNATION DU TERRAIN", margin + 5, yPos);
-  yPos += 10;
-
+  doc.text(acquereur.name, margin + 35, yPos);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-  const parcelleDetails = [
-    `Lotissement : ${lotissement.name}`,
-    `Localisation : ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`,
-    `Numéro de lot : ${parcelle.plot_number}`,
-    `Superficie : ${parcelle.area > 0 ? `${parcelle.area.toLocaleString("fr-FR")} m²` : "Non spécifiée"}`,
-  ];
-  parcelleDetails.forEach((line) => {
-    doc.text(line, margin + 5, yPos);
-    yPos += 6;
-  });
   yPos += 8;
 
-  // Informations sur le bénéficiaire
-  doc.setFillColor(...lightGray);
-  doc.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("BÉNÉFICIAIRE DE LA CESSION", margin + 5, yPos);
-  yPos += 10;
+  // Type de pièce & N°
+  if (acquereur.cni_number) {
+    doc.text("Type de pièce : CNI", margin, yPos);
+    doc.text(`N° : ${acquereur.cni_number}`, pageWidth / 2, yPos);
+    yPos += 8;
+  }
 
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-  const benefDetails = [
-    `Nom et prénoms : ${acquereur.name}`,
-    acquereur.profession ? `Profession : ${acquereur.profession}` : null,
-    acquereur.birth_date ? `Date de naissance : ${formatDate(acquereur.birth_date)}` : null,
-    acquereur.birth_place ? `Lieu de naissance : ${acquereur.birth_place}` : null,
-    acquereur.cni_number ? `N° CNI : ${acquereur.cni_number}` : null,
-    acquereur.address ? `Domicile : ${acquereur.address}` : null,
-    acquereur.phone ? `Téléphone : ${acquereur.phone}` : null,
-  ].filter(Boolean) as string[];
+  // Profession
+  if (acquereur.profession) {
+    doc.text(`Profession : ${acquereur.profession}`, margin, yPos);
+    yPos += 8;
+  }
 
-  benefDetails.forEach((line) => {
-    doc.text(line, margin + 5, yPos);
-    yPos += 6;
-  });
-  yPos += 10;
+  // Contact
+  if (acquereur.phone || acquereur.email) {
+    const contactParts = [acquereur.phone, acquereur.email].filter(Boolean);
+    doc.text(`Contact : ${contactParts.join(" / ")}`, margin, yPos);
+    yPos += 8;
+  }
 
-  // Attestation
-  const attestText = `La présente attestation est délivrée pour servir et valoir ce que de droit. Elle certifie que le terrain ci-dessus désigné a été cédé au bénéficiaire sus-mentionné selon les règles coutumières du village de ${village}, en présence des témoins et notables du village.`;
-  const attestLines = doc.splitTextToSize(attestText, pageWidth - 2 * margin);
-  doc.text(attestLines, margin, yPos);
-  yPos += attestLines.length * 5 + 10;
+  // Adresse
+  if (acquereur.address) {
+    doc.text(`Domicile : ${acquereur.address}`, margin, yPos);
+    yPos += 8;
+  }
 
-  const engagementText = `Le Chef du village et les notables s'engagent à garantir au bénéficiaire la jouissance paisible et entière du terrain cédé, et à le défendre contre toute revendication de tiers.`;
-  const engagementLines = doc.splitTextToSize(engagementText, pageWidth - 2 * margin);
-  doc.text(engagementLines, margin, yPos);
-  yPos += engagementLines.length * 5 + 15;
-
-  // Lieu et date
-  const city = lotissement.city || agency?.city || "____________________";
-  doc.setFont("helvetica", "normal");
-  doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth - margin, yPos, { align: "right" });
-  yPos += 20;
-
-  // Signatures
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-
-  // Colonne gauche - Chef du village
-  doc.text("Le Chef du Village", margin, yPos);
   yPos += 5;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(chef, margin, yPos + 2);
-  doc.text("(Signature et empreinte)", margin, yPos + 8);
-  doc.setDrawColor(150, 150, 150);
-  doc.line(margin, yPos + 25, margin + 60, yPos + 25);
 
-  // Colonne droite - Bénéficiaire
-  doc.setFont("helvetica", "bold");
+  // ===== ATTRIBUTION =====
   doc.setFontSize(10);
-  doc.text("Le Bénéficiaire", pageWidth - margin - 60, yPos - 5);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(acquereur.name, pageWidth - margin - 60, yPos + 2);
-  doc.text("(Signature)", pageWidth - margin - 60, yPos + 8);
-  doc.line(pageWidth - margin - 60, yPos + 25, pageWidth - margin, yPos + 25);
-
-  yPos += 35;
-
-  // Témoins
+  doc.text("Est Attributaire du Lot : ", margin, yPos);
+  
+  // Numéro de lot en gras et encadré
+  const lotNumText = parcelle.plot_number;
+  const lotNumX = margin + doc.getTextWidth("Est Attributaire du Lot : ");
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text(lotNumText, lotNumX, yPos);
+  
+  // Ilot info  
+  const ilotX = lotNumX + doc.getTextWidth(lotNumText) + 5;
   doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  const ilotAndLotText = `du lotissement ${lotOriginName.toUpperCase()}`;
+  doc.text(ilotAndLotText, ilotX, yPos);
+  yPos += 5;
+
+  // Superficie
+  if (parcelle.area > 0) {
+    doc.text(`Superficie : ${parcelle.area.toLocaleString("fr-FR")} m²`, margin, yPos);
+    yPos += 8;
+  }
+
+  yPos += 5;
+
+  // ===== TEXTE JURIDIQUE =====
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  const legalText = `En foi de quoi, la présente Attestation qui annule toutes attestations antérieures sur ledit lot est délivrée en vue des formalités domaniales.`;
+  const legalLines = doc.splitTextToSize(legalText, pageWidth - 2 * margin);
+  doc.text(legalLines, margin, yPos);
+  yPos += legalLines.length * 5 + 15;
+
+  // ===== FAIT À ... =====
+  const city = lotissement.city || agency?.city || "____________________";
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth / 2, yPos, { align: "center" });
+  yPos += 15;
+
+  // ===== SIGNATURE CHEF DU VILLAGE =====
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("TÉMOINS :", margin, yPos);
-  yPos += 8;
-
+  doc.text("LE CHEF DU VILLAGE", pageWidth / 2, yPos, { align: "center" });
+  yPos += 6;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
   doc.setTextColor(...textColor);
-  doc.text("1. Nom : ________________________  Signature : ________________________", margin, yPos);
-  yPos += 8;
-  doc.text("2. Nom : ________________________  Signature : ________________________", margin, yPos);
+  doc.text(chef, pageWidth / 2, yPos, { align: "center" });
+  yPos += 20;
+  
+  // Ligne de signature
+  doc.setDrawColor(150, 150, 150);
+  doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
 
   addFooter(doc, agency);
 

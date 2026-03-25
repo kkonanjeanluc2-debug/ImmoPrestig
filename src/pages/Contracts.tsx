@@ -87,13 +87,20 @@ const Contracts = () => {
   const { data: tenants } = useTenants();
   const { data: owners } = useOwners();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const updateContract = useUpdateContract();
   const expireContract = useExpireContract();
   
   const isLocataire = userRole?.role === "locataire";
+  const isAdmin = role === "super_admin" || role === "admin";
   const canEditContracts = hasPermission("can_edit_contracts");
+  const canCreateContracts = hasPermission("can_create_contracts");
+  const canDeleteContracts = hasPermission("can_delete_contracts");
   const canManageContracts = !roleLoading && !isLocataire && canEditContracts;
+
+  if (!permLoading && !isAdmin && !hasPermission("can_view_contracts")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

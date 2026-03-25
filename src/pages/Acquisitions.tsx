@@ -1,7 +1,16 @@
+import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AcquisitionsList } from "@/components/acquisition/AcquisitionsList";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function Acquisitions() {
+  const { hasPermission, role, isLoading } = usePermissions();
+  const isAdmin = role === "super_admin" || role === "admin";
+
+  if (!isLoading && !isAdmin && !hasPermission("can_view_achats")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">

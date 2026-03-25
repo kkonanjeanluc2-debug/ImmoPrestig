@@ -420,12 +420,16 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 </Collapsible>
               )}
 
-              {/* Other navigation items (Lotissements) - only show if feature is available */}
+              {/* Other navigation items (Lotissements, Comptabilité) - only show if feature is available */}
               {otherNavigation
                 .filter((item) => {
                   if (item.href === "/comptabilite") {
                     if (userRole?.role === "locataire") return false;
                     return isComptaEnabled && hasPermission("can_view_comptabilite");
+                  }
+                  if (item.href === "/lotissements") {
+                    if (userRole?.role === "super_admin" || userRole?.role === "admin") return !item.featureKey || hasFeature(item.featureKey);
+                    return (!item.featureKey || hasFeature(item.featureKey)) && hasPermission("can_view_lotissements");
                   }
                   return !item.featureKey || hasFeature(item.featureKey);
                 })

@@ -38,7 +38,6 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     chef_village_name: "",
     chef_village_titre: "",
     chef_stamp_url: null as string | null,
-    chef_signature_url: null as string | null,
   });
 
   useEffect(() => {

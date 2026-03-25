@@ -81,7 +81,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Modifier le lotissement</DialogTitle>
         </DialogHeader>

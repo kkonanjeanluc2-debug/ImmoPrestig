@@ -363,6 +363,9 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                       .filter((item) => {
                         if (!hasFeature(item.featureKey)) return false;
                         if (item.href === "/acquisitions" && !isAcquisitionsEnabled) return false;
+                        if (item.href === "/ventes-immobilieres") {
+                          return hasPermission("can_view_ventes");
+                        }
                         if (item.href === "/achats-immobiliers" || item.href === "/acquisitions") {
                           return hasPermission("can_view_achats");
                         }

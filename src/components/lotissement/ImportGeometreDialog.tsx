@@ -141,6 +141,8 @@ export const ImportGeometreDialog = ({
         "surface",
         "prix",
         "ilot",
+        "proprietaire",
+        "beneficiaire",
       ]);
 
       if (detectedColumns.length > 0) {

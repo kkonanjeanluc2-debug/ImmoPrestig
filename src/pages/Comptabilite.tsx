@@ -84,6 +84,8 @@ const Comptabilite = () => {
 
   const canExport = isAdminOrOwner || hasPermission("can_export_comptabilite");
   const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
+  const canViewInvoices = isAdminOrOwner || hasPermission("can_view_invoices");
+  const canViewPayouts = isAdminOrOwner || hasPermission("can_view_owner_payouts");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
   const revenusNets = totalRevenue - totalReversements;

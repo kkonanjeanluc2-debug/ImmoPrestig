@@ -216,6 +216,7 @@ const Trash = () => {
               </>
             )}
           </div>
+        </div>
 
         {/* Warning Alert */}
         <Alert className="border-amber-500/50 bg-amber-500/10">

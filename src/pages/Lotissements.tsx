@@ -52,7 +52,12 @@ const Lotissements = () => {
   const { data: allVentes } = useVentesParcelles();
   const { data: allEcheances } = useEcheancesParcelles();
   const deleteLotissement = useSoftDeleteLotissement();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_lotissements")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const canCreate = hasPermission("can_create_lotissements");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");

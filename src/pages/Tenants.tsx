@@ -138,7 +138,12 @@ export default function Tenants() {
   const deleteTenantMutation = useDeleteTenant();
   const revokeAccessMutation = useRevokeTenantPortalAccess();
   const { toast } = useToast();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_tenants")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const canCreate = hasPermission("can_create_tenants");
   const canEdit = hasPermission("can_edit_tenants");
   const canDelete = hasPermission("can_delete_tenants");

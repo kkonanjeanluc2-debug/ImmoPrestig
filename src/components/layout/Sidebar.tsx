@@ -305,6 +305,17 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     .filter((item) => !(userRole?.role === "locataire" && item.hiddenForTenant))
                     .filter((item) => !(userRole?.role === "gestionnaire" && item.hiddenForGestionnaire))
                     .filter((item) => !item.featureKey || hasFeature(item.featureKey))
+                    .filter((item) => {
+                      // Permission-based visibility for non-admin roles
+                      if (userRole?.role === "super_admin" || userRole?.role === "admin") return true;
+                      if (item.href === "/owners") return hasPermission("can_view_owners");
+                      if (item.href === "/properties") return hasPermission("can_view_properties");
+                      if (item.href === "/tenants") return hasPermission("can_view_tenants");
+                      if (item.href === "/contracts") return hasPermission("can_view_contracts");
+                      if (item.href === "/payments") return hasPermission("can_view_payments");
+                      if (item.href === "/impayes") return hasPermission("can_view_impayes");
+                      return true;
+                    })
                     .map((item) => {
                       const isActive = location.pathname === item.href;
                       const badgeCount = item.href === "/tenants" ? newRequestsCount : 0;

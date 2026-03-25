@@ -55,7 +55,13 @@ const Properties = () => {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
   const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
-  const { hasPermission, role } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_properties")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const canCreate = hasPermission("can_create_properties");
   const canCreate = hasPermission("can_create_properties");
   const canEdit = hasPermission("can_edit_properties");
   const canDelete = hasPermission("can_delete_properties");

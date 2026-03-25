@@ -50,7 +50,12 @@ const Owners = () => {
   const { data: properties } = useProperties();
   const { data: payments } = usePayments();
   const deleteOwner = useDeleteOwner();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_owners")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const canCreate = hasPermission("can_create_owners");
   const canEdit = hasPermission("can_edit_owners");
   const canDelete = hasPermission("can_delete_owners");

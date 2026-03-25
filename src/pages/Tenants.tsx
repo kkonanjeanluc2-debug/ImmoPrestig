@@ -128,6 +128,7 @@ export default function Tenants() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const shouldOpenAdd = searchParams.get("add") === "true";
+  const [searchQuery, setSearchQuery] = useState("");
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");

@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/tooltip";
 import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2, Star } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
@@ -95,6 +97,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
   const deleteParcelle = useSoftDeleteParcelle();
+  const queryClient = useQueryClient();
   const { data: ilots } = useIlots(lotissementId);
   const { data: lotissement } = useLotissement(lotissementId);
   const { data: beneficiaires = [] } = useBeneficiairesLots(lotissementId);
@@ -200,25 +203,26 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
 
   const handleBulkDelete = async () => {
     setIsBulkDeleteLoading(true);
-    let success = 0;
-    let fail = 0;
-    for (const id of selectedIds) {
-      const parcelle = parcelles.find(p => p.id === id);
-      try {
-        await deleteParcelle.mutateAsync({ id, plotNumber: parcelle?.plot_number });
-        success++;
-      } catch {
-        fail++;
-      }
+    const ids = Array.from(selectedIds);
+    try {
+      const { error } = await supabase
+        .from("parcelles")
+        .update({ deleted_at: new Date().toISOString() })
+        .in("id", ids);
+
+      if (error) throw error;
+
+      toast.success(`${ids.length} lot(s) déplacé(s) vers la corbeille`);
+      queryClient.invalidateQueries({ queryKey: ["parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
+      queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ilots"] });
+    } catch {
+      toast.error("Erreur lors de la suppression en masse");
     }
     setIsBulkDeleteLoading(false);
-    setBulkDeleting(false);
     setSelectedIds(new Set());
-    if (fail > 0) {
-      toast.warning(`${success} lot(s) supprimé(s), ${fail} en erreur`);
-    } else {
-      toast.success(`${success} lot(s) déplacé(s) vers la corbeille`);
-    }
   };
 
   if (parcelles.length === 0) {

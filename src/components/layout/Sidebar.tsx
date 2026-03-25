@@ -284,6 +284,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             return (
               <>
               {/* Gestion Locative - Collapsible Group */}
+              {(userRole?.role === "super_admin" || userRole?.role === "admin" || hasPermission("can_access_gestion_locative")) && (
               <Collapsible defaultOpen className="space-y-1">
                 <CollapsibleTrigger className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full group",

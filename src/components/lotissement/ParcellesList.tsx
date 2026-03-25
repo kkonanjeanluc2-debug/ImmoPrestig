@@ -367,7 +367,18 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
               {filteredParcelles.map((parcelle) => {
                 const ilotName = getIlotName(parcelle.ilot_id);
                 return (
-                  <TableRow key={parcelle.id}>
+                  <TableRow key={parcelle.id} className={selectedIds.has(parcelle.id) ? "bg-muted/50" : ""}>
+                    {canDelete && (
+                      <TableCell className="w-10">
+                        {parcelle.status !== "vendu" ? (
+                          <Checkbox
+                            checked={selectedIds.has(parcelle.id)}
+                            onCheckedChange={() => toggleSelect(parcelle.id)}
+                            aria-label={`Sélectionner lot ${parcelle.plot_number}`}
+                          />
+                        ) : <span />}
+                      </TableCell>
+                    )}
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {parcelle.plot_number}

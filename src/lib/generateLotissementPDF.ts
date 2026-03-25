@@ -1058,6 +1058,7 @@ export const generateAttestationVillageoise = async (
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   let yPos = 15;
 

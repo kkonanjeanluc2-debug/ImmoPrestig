@@ -68,6 +68,7 @@ export function OwnerPayoutsSection({
   fromDate,
   toDate,
   totalReversements,
+  canCreate = true,
 }: OwnerPayoutsSectionProps) {
   const { data: payouts = [], isLoading } = useOwnerPayouts(fromDate, toDate);
   const { data: owners = [] } = useOwners();

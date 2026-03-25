@@ -93,7 +93,7 @@ export function ProformaInvoicesList({ tenantId, compact = false, canCreate = tr
                 ))}
               </div>
             )}
-            <CreateProformaDialog preselectedTenantId={tenantId} />
+            {canCreate && <CreateProformaDialog preselectedTenantId={tenantId} />}
           </div>
         </div>
       </CardHeader>

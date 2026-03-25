@@ -49,6 +49,7 @@ import { CommissionReportCard } from "@/components/commission/CommissionReportCa
 import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Navigate } from "react-router-dom";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";

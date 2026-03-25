@@ -1107,31 +1107,84 @@ export const generateAttestationVillageoise = async (
   const lotOriginName = template?.lotissement_origin_name || lotissement.name;
   const arreteApprobation = template?.arrete_approbation || "";
 
-  // ===== EN-TÊTE OFFICIEL =====
-  // Ligne 1: District / République
-  doc.setFontSize(8);
+  // ===== EN-TÊTE AGENCE + OFFICIEL =====
+  // Agency logo and info on the left, Republic info on the right
+  let headerLeftX = margin;
+  
+  if (agency?.logo_url) {
+    try {
+      const logoResp = await fetch(agency.logo_url);
+      const logoBlob = await logoResp.blob();
+      const logoBase64 = await new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(logoBlob);
+      });
+      if (logoBase64) {
+        const logoSize = 18;
+        doc.addImage(logoBase64, "PNG", margin, yPos - 3, logoSize, logoSize);
+        headerLeftX = margin + logoSize + 4;
+      }
+    } catch {
+      // skip logo
+    }
+  }
+
+  // Agency name
+  doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...textColor);
-  if (district) {
-    doc.text(district.toUpperCase(), margin, yPos);
+  if (agency?.name) {
+    doc.text(agency.name.toUpperCase(), headerLeftX, yPos);
   }
+  // Republic info on the right
+  doc.setFontSize(8);
   doc.text("RÉPUBLIQUE DE CÔTE D'IVOIRE", pageWidth - margin, yPos, { align: "right" });
-  yPos += 5;
+  yPos += 4;
 
-  // Ligne 2: Commune / Devise
+  // Agency contact info
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "normal");
+  const agencyDetails: string[] = [];
+  if (agency?.address) agencyDetails.push(agency.address);
+  if (agency?.city) agencyDetails.push(agency.city);
+  if (agency?.phone) agencyDetails.push(`Tél: ${agency.phone}`);
+  if (agency?.email) agencyDetails.push(agency.email);
+  if (agency?.siret) agencyDetails.push(`RCCM: ${agency.siret}`);
+  
+  if (agencyDetails.length > 0) {
+    const line1 = agencyDetails.slice(0, 3).join(" | ");
+    doc.text(line1, headerLeftX, yPos);
+  }
+  // Devise
   doc.setFontSize(7);
+  doc.text("Union - Discipline - Travail", pageWidth - margin, yPos, { align: "right" });
+  yPos += 4;
+
+  if (agencyDetails.length > 3) {
+    doc.setFontSize(6.5);
+    const line2 = agencyDetails.slice(3).join(" | ");
+    doc.text(line2, headerLeftX, yPos);
+  }
+
+  // District / Commune / Village on the left
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  if (district) {
+    yPos += 4;
+    doc.text(district.toUpperCase(), headerLeftX, yPos);
+  }
   doc.setFont("helvetica", "normal");
   if (commune) {
-    doc.text(commune.toUpperCase(), margin, yPos);
+    yPos += 4;
+    doc.text(commune.toUpperCase(), headerLeftX, yPos);
   }
-  doc.text("Union - Discipline - Travail", pageWidth - margin, yPos, { align: "right" });
-  yPos += 5;
-
-  // Village
   if (village) {
-    doc.text(village.toUpperCase(), margin, yPos);
+    yPos += 4;
+    doc.text(village.toUpperCase(), headerLeftX, yPos);
   }
-  yPos += 10;
+  yPos += 8;
 
   // ===== BANDEAU BLEU : TITRE =====
   const bannerHeight = 28;

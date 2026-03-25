@@ -105,7 +105,7 @@ export default function Payments() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "impayes" | "commissions" | "account">("payments");
   const [periodFilter, setPeriodFilter] = useState<PeriodValue | undefined>(undefined);
-  const { hasPermission, role } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_payments");
   const canEdit = hasPermission("can_edit_payments");
   const canSendReminders = hasPermission("can_delete_payments");

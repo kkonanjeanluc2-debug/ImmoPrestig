@@ -141,31 +141,56 @@ export async function generateGuidePDF(
         }
       });
 
-      const boxHeight = boxContentLines.length * lineHeight + 14;
       const boxWidth = 140;
       const boxX = (pw - boxWidth) / 2;
+      const boxPaddingTop = 12;
+      const boxPaddingBottom = 6;
+      const maxBoxContentHeight = ph - yPos - 40; // Leave space for date at bottom
+      const maxLinesPerPage = Math.floor((maxBoxContentHeight - boxPaddingTop - boxPaddingBottom) / lineHeight);
 
-      doc.setDrawColor(borderRgb[0], borderRgb[1], borderRgb[2]);
-      doc.setLineWidth(1.2);
-      doc.rect(boxX, yPos, boxWidth, boxHeight);
+      // Split lines across pages if needed
+      let lineIndex = 0;
+      let isFirstBoxPage = true;
 
-      let textY = yPos + 12;
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
+      while (lineIndex < boxContentLines.length) {
+        const linesForThisPage = boxContentLines.slice(lineIndex, lineIndex + maxLinesPerPage);
+        const boxHeight = linesForThisPage.length * lineHeight + boxPaddingTop + boxPaddingBottom;
 
-      boxContentLines.forEach(line => {
-        if (line === "&&") {
-          doc.setTextColor(0, 0, 0);
-          doc.text(line, pw / 2, textY, { align: "center" });
-          doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
-        } else {
-          doc.text(line, pw / 2, textY, { align: "center" });
+        if (!isFirstBoxPage) {
+          doc.addPage("a4", "portrait");
+          // Re-apply background
+          if (cp.bg_color && cp.bg_color !== "#FFFFFF") {
+            const bg = hexToRgb(cp.bg_color);
+            doc.setFillColor(bg[0], bg[1], bg[2]);
+            doc.rect(0, 0, pw, ph, "F");
+          }
+          yPos = 30;
         }
-        textY += lineHeight;
-      });
 
-      yPos += boxHeight + 20;
+        doc.setDrawColor(borderRgb[0], borderRgb[1], borderRgb[2]);
+        doc.setLineWidth(1.2);
+        doc.rect(boxX, yPos, boxWidth, boxHeight);
+
+        let textY = yPos + boxPaddingTop;
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
+
+        linesForThisPage.forEach(line => {
+          if (line === "&&") {
+            doc.setTextColor(0, 0, 0);
+            doc.text(line, pw / 2, textY, { align: "center" });
+            doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
+          } else {
+            doc.text(line, pw / 2, textY, { align: "center" });
+          }
+          textY += lineHeight;
+        });
+
+        yPos += boxHeight + 20;
+        lineIndex += maxLinesPerPage;
+        isFirstBoxPage = false;
+      }
     }
 
     // Date

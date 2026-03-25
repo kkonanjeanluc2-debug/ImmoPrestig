@@ -62,6 +62,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const activeMembers = agencyMembers.filter(m => m.status === "active");
 
   const partieBeneficiaires = beneficiaires.filter(b => b.partie === partie);
+  const proprietaireBeneficiaires = beneficiaires.filter(b => b.partie === "proprietaire");
   const partieParcelles = parcelles.filter(p => p.attribution === partie);
 
   const title = partie === "proprietaire" ? "Membres de la famille" : "Collaborateurs";

@@ -845,6 +845,7 @@ export type Database = {
           id: string
           lien_role: string | null
           lotissement_id: string
+          member_user_id: string | null
           nom: string
           partie: string
           telephone: string | null
@@ -858,6 +859,7 @@ export type Database = {
           id?: string
           lien_role?: string | null
           lotissement_id: string
+          member_user_id?: string | null
           nom: string
           partie: string
           telephone?: string | null
@@ -871,6 +873,7 @@ export type Database = {
           id?: string
           lien_role?: string | null
           lotissement_id?: string
+          member_user_id?: string | null
           nom?: string
           partie?: string
           telephone?: string | null

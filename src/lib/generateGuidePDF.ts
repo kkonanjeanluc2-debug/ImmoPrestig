@@ -135,7 +135,7 @@ export async function generateGuidePDF(
       ilotEntries.forEach(([ilot, iEntries], idx) => {
         const lots = iEntries.map(e => e.lot).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
         boxContentLines.push(`ILOT N°${ilot}`);
-        boxContentLines.push(lots.length > 1 ? `LOT N°${lots[0]} À ${lots[lots.length - 1]}` : `LOT N°${lots[0]}`);
+        boxContentLines.push(lots.length > 1 ? `LOT N°${lots[0]} À LOT N°${lots[lots.length - 1]}` : `LOT N°${lots[0]}`);
         if (idx < ilotEntries.length - 1) {
           boxContentLines.push("&&");
         }

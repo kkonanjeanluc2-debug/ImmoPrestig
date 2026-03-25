@@ -160,6 +160,32 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
     return filtered;
   }, [parcelles, searchQuery, statusFilter, attributionFilter, ilots, lotissement]);
 
+  // Deletable parcelles in current filtered view (exclude "vendu")
+  const deletableFilteredIds = useMemo(
+    () => filteredParcelles.filter(p => p.status !== "vendu").map(p => p.id),
+    [filteredParcelles]
+  );
+
+  const allSelected = deletableFilteredIds.length > 0 && deletableFilteredIds.every(id => selectedIds.has(id));
+  const someSelected = selectedIds.size > 0;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(deletableFilteredIds));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const handleDelete = async () => {
     if (!deletingId) return;
     const parcelle = parcelles.find(p => p.id === deletingId);
@@ -170,6 +196,29 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
       toast.error("Erreur lors de la suppression");
     }
     setDeletingId(null);
+  };
+
+  const handleBulkDelete = async () => {
+    setIsBulkDeleteLoading(true);
+    let success = 0;
+    let fail = 0;
+    for (const id of selectedIds) {
+      const parcelle = parcelles.find(p => p.id === id);
+      try {
+        await deleteParcelle.mutateAsync({ id, plotNumber: parcelle?.plot_number });
+        success++;
+      } catch {
+        fail++;
+      }
+    }
+    setIsBulkDeleteLoading(false);
+    setBulkDeleting(false);
+    setSelectedIds(new Set());
+    if (fail > 0) {
+      toast.warning(`${success} lot(s) supprimé(s), ${fail} en erreur`);
+    } else {
+      toast.success(`${success} lot(s) déplacé(s) vers la corbeille`);
+    }
   };
 
   if (parcelles.length === 0) {

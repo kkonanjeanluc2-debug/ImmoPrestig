@@ -42,7 +42,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { useOwners } from "@/hooks/useOwners";

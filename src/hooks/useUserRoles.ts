@@ -35,6 +35,7 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   admin: "Accès complet : peut gérer les utilisateurs, les paramètres et toutes les données",
   gestionnaire: "Peut créer, modifier et supprimer des biens, locataires et paiements",
   comptable: "Gestion de la comptabilité : paiements, dépenses, rapports financiers et exports",
+  caissiere: "Encaissement des paiements de loyers et consultation des données",
   lecture_seule: "Peut uniquement consulter les données sans les modifier",
   locataire: "Accès limité au portail locataire pour consulter ses propres données",
 };

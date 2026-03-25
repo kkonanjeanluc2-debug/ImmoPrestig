@@ -105,14 +105,16 @@ export const useVentesParcelles = (lotissementId?: string) => {
           parcelle:parcelles(
             plot_number,
             area,
-            lotissement:lotissements(name)
+            ilot_id,
+            ilot:ilots(name),
+            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id)
           ),
           acquereur:acquereurs(name, phone)
         `)
         .order("sale_date", { ascending: false });
 
       if (error) throw error;
-      return data as VenteWithDetails[];
+      return data as unknown as VenteWithDetails[];
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,

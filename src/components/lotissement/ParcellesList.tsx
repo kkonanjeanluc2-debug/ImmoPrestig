@@ -622,6 +622,13 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                           Voir réservation
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem
+                        onClick={() => handleGenerateAttestation(parcelle)}
+                        disabled={generatingAttestationId === parcelle.id}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        {generatingAttestationId === parcelle.id ? "Génération..." : "Attestation villageoise"}
+                      </DropdownMenuItem>
                       {canEdit && (
                         <DropdownMenuItem onClick={() => setEditingParcelle(parcelle)}>
                           <Pencil className="h-4 w-4 mr-2" />

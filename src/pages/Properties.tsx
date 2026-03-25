@@ -72,10 +72,6 @@ const Properties = () => {
   const navigate = useNavigate();
   const { data: expandedUnits = [], isLoading: unitsLoading } = usePropertyUnits(expandedPropertyId || undefined);
 
-  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_properties")) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
   const isGestionnaire = userRole?.role === "gestionnaire";
 
@@ -83,9 +79,12 @@ const Properties = () => {
   const roleFilteredProperties = useMemo(() => {
     if (!properties) return [];
     if (!isGestionnaire || !user) return properties;
-    // For gestionnaire, show only properties assigned to them
     return properties.filter(p => p.assigned_to === user.id);
   }, [properties, isGestionnaire, user]);
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_properties")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Only show rental properties (location)
   const rentalProperties = roleFilteredProperties.filter((property) => property.type === "location");

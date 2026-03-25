@@ -158,6 +158,13 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_offres_achat: "Créer des offres d'achat",
   can_create_achats_documents: "Ajouter des documents achat",
   can_manage_mutations: "Gérer les mutations",
+  // Échéances
+  can_view_echeances_lotissements: "Voir les échéances (Lotissements)",
+  can_collect_echeances_lotissements: "Encaisser les échéances (Lotissements)",
+  can_view_echeances_ventes: "Voir les échéances (Ventes)",
+  can_collect_echeances_ventes: "Encaisser les échéances (Ventes)",
+  can_view_echeances_achats: "Voir les échéances (Achats)",
+  can_collect_echeances_achats: "Encaisser les échéances (Achats)",
   // Impayés
   can_view_impayes: "Voir les impayés",
   can_create_impayes: "Créer des dossiers d'impayés",

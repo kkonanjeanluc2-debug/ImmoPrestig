@@ -49,7 +49,6 @@ const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
@@ -57,12 +56,21 @@ const Properties = () => {
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
   const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
   const { hasPermission, role, isLoading: permLoading } = usePermissions();
+  const canCreate = hasPermission("can_create_properties");
+  const canEdit = hasPermission("can_edit_properties");
+  const canDelete = hasPermission("can_delete_properties");
+  const { data: properties, isLoading, error } = useProperties();
+  const { data: owners = [] } = useOwners();
+  const { data: assignableUsers = [] } = useAssignableUsers();
+  const { isOwner: isAgencyOwner } = useIsAgencyOwner();
+  const deleteProperty = useDeleteProperty();
+  const { data: unitsSummary = {} } = usePropertyUnitsSummary();
+  const { user } = useAuth();
+  const { data: userRole } = useCurrentUserRole();
 
   if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_properties")) {
     return <Navigate to="/dashboard" replace />;
   }
-
-  const canCreate = hasPermission("can_create_properties");
   const canCreate = hasPermission("can_create_properties");
   const canEdit = hasPermission("can_edit_properties");
   const canDelete = hasPermission("can_delete_properties");

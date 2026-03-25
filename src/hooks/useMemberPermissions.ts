@@ -215,15 +215,15 @@ export const PERMISSION_GROUPS = {
   },
   lotissements: {
     label: "Lotissements",
-    permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements", "can_create_parcelles", "can_create_ilots", "can_create_lotissement_documents", "can_create_demarches", "can_create_lotissement_prospects", "can_access_guide", "can_export_guide", "can_import_geometre", "can_access_repartition"] as PermissionKey[],
+    permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements", "can_create_parcelles", "can_create_ilots", "can_create_lotissement_documents", "can_create_demarches", "can_create_lotissement_prospects", "can_access_guide", "can_export_guide", "can_import_geometre", "can_access_repartition", "can_view_echeances_lotissements", "can_collect_echeances_lotissements"] as PermissionKey[],
   },
   ventes: {
     label: "Ventes immobilières",
-    permissions: ["can_view_ventes", "can_create_ventes", "can_edit_ventes", "can_delete_ventes", "can_create_biens_vente", "can_edit_biens_vente", "can_create_vente_prospects"] as PermissionKey[],
+    permissions: ["can_view_ventes", "can_create_ventes", "can_edit_ventes", "can_delete_ventes", "can_create_biens_vente", "can_edit_biens_vente", "can_create_vente_prospects", "can_view_echeances_ventes", "can_collect_echeances_ventes"] as PermissionKey[],
   },
   achats: {
     label: "Achats immobiliers",
-    permissions: ["can_view_achats", "can_create_achats", "can_edit_achats", "can_delete_achats", "can_create_offres_achat", "can_create_achats_documents", "can_manage_mutations"] as PermissionKey[],
+    permissions: ["can_view_achats", "can_create_achats", "can_edit_achats", "can_delete_achats", "can_create_offres_achat", "can_create_achats_documents", "can_manage_mutations", "can_view_echeances_achats", "can_collect_echeances_achats"] as PermissionKey[],
   },
   impayes: {
     label: "Impayés",

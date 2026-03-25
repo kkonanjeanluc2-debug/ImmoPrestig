@@ -65,28 +65,7 @@ export async function generateGuidePDF(
     logoBase64 = await loadImageAsBase64(options.agency.logo_url);
   }
 
-  // Column definitions
-  const cols = [
-    { label: "N°", width: 10 },
-    { label: "Îlot", width: 18 },
-    { label: "Lot", width: 16 },
-    { label: "Attributaires\nNom & Prénoms", width: 52 },
-    { label: "Attestation\nN°", width: 22 },
-    { label: "Date", width: 22 },
-    { label: "Contact", width: 28 },
-    { label: "Équipement", width: 25 },
-    { label: "Nature\nPièce", width: 22 },
-    { label: "N° Pièce", width: 28 },
-    { label: "Date\nPièce", width: 22 },
-  ];
-
-  // Adjust column widths to fill content area
-  const totalColWidth = cols.reduce((s, c) => s + c.width, 0);
-  const scale = contentWidth / totalColWidth;
-  cols.forEach(c => (c.width = Math.round(c.width * scale * 10) / 10));
-
-  const rowHeight = 7;
-  const headerHeight = 10;
+  const margin = 10;
 
   // Group entries by ilot for summary on cover page
   const ilotGroups = new Map<string, GuideEntry[]>();

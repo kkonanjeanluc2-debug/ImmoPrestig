@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Loader2, FileText } from "lucide-react";
 import { useUpdateLotissement, Lotissement } from "@/hooks/useLotissements";
 import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
@@ -31,6 +32,8 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     total_area: "",
     description: "",
     attestation_template_id: "" as string,
+    chef_village_name: "",
+    chef_village_titre: "",
   });
 
   useEffect(() => {
@@ -42,6 +45,8 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         total_area: lotissement.total_area?.toString() || "",
         description: lotissement.description || "",
         attestation_template_id: (lotissement as any).attestation_template_id || "",
+        chef_village_name: lotissement.chef_village_name || "",
+        chef_village_titre: lotissement.chef_village_titre || "",
       });
     }
   }, [lotissement]);
@@ -63,6 +68,8 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         total_area: formData.total_area ? parseFloat(formData.total_area) : null,
         description: formData.description.trim() || null,
         attestation_template_id: formData.attestation_template_id || null,
+        chef_village_name: formData.chef_village_name.trim() || null,
+        chef_village_titre: formData.chef_village_titre.trim() || null,
       } as any);
 
       toast.success("Lotissement modifié avec succès");
@@ -74,7 +81,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Modifier le lotissement</DialogTitle>
         </DialogHeader>
@@ -133,6 +140,39 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
               rows={3}
             />
           </div>
+
+          <Separator className="my-2" />
+          
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-sm font-semibold">
+              Chef du Village
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Ces informations seront utilisées automatiquement lors de la génération des attestations
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="chef_village_name" className="text-xs">Nom du Chef du Village</Label>
+                <Input
+                  id="chef_village_name"
+                  value={formData.chef_village_name}
+                  onChange={(e) => setFormData({ ...formData, chef_village_name: e.target.value })}
+                  placeholder="Ex: AKRE AMOUSSO SIMEON"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="chef_village_titre" className="text-xs">Titre / Arrêté de nomination</Label>
+                <Input
+                  id="chef_village_titre"
+                  value={formData.chef_village_titre}
+                  onChange={(e) => setFormData({ ...formData, chef_village_titre: e.target.value })}
+                  placeholder="Ex: nommé par arrêté N°1953/AT/DGAT..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <Separator className="my-2" />
 
           {attestationTemplates.length > 0 && (
             <div className="space-y-2">

@@ -1030,10 +1030,9 @@ export interface AttestationTemplateData {
   district?: string;
   commune?: string;
   village?: string;
-  chef_village_name?: string;
-  chef_village_titre?: string;
   lotissement_origin_name?: string;
   arrete_approbation?: string;
+  content?: string;
 }
 
 export const generateAttestationVillageoise = async (
@@ -1044,7 +1043,8 @@ export const generateAttestationVillageoise = async (
   saleDate: string,
   villageName?: string,
   chefVillageName?: string,
-  template?: AttestationTemplateData | null
+  template?: AttestationTemplateData | null,
+  chefVillageTitre?: string
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -1054,8 +1054,8 @@ export const generateAttestationVillageoise = async (
   const district = template?.district || "";
   const commune = template?.commune || "";
   const village = template?.village || villageName || lotissement.location || "";
-  const chef = template?.chef_village_name || chefVillageName || "____________________";
-  const chefTitre = template?.chef_village_titre || "";
+  const chef = chefVillageName || "____________________";
+  const chefTitre = chefVillageTitre || "";
   const lotOriginName = template?.lotissement_origin_name || lotissement.name;
   const arreteApprobation = template?.arrete_approbation || "";
 

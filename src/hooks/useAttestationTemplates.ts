@@ -6,11 +6,10 @@ export interface AttestationTemplate {
   id: string;
   user_id: string;
   name: string;
+  content: string;
   district: string;
   commune: string;
   village: string;
-  chef_village_name: string;
-  chef_village_titre: string;
   arrete_numero: string;
   arrete_date: string;
   lotissement_origin_name: string;

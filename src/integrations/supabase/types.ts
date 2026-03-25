@@ -665,9 +665,8 @@ export type Database = {
           arrete_approbation: string | null
           arrete_date: string | null
           arrete_numero: string | null
-          chef_village_name: string | null
-          chef_village_titre: string | null
           commune: string | null
+          content: string
           created_at: string
           district: string | null
           id: string
@@ -682,9 +681,8 @@ export type Database = {
           arrete_approbation?: string | null
           arrete_date?: string | null
           arrete_numero?: string | null
-          chef_village_name?: string | null
-          chef_village_titre?: string | null
           commune?: string | null
+          content?: string
           created_at?: string
           district?: string | null
           id?: string
@@ -699,9 +697,8 @@ export type Database = {
           arrete_approbation?: string | null
           arrete_date?: string | null
           arrete_numero?: string | null
-          chef_village_name?: string | null
-          chef_village_titre?: string | null
           commune?: string | null
+          content?: string
           created_at?: string
           district?: string | null
           id?: string
@@ -1938,6 +1935,8 @@ export type Database = {
       lotissements: {
         Row: {
           attestation_template_id: string | null
+          chef_village_name: string | null
+          chef_village_titre: string | null
           city: string | null
           created_at: string
           deleted_at: string | null
@@ -1959,6 +1958,8 @@ export type Database = {
         }
         Insert: {
           attestation_template_id?: string | null
+          chef_village_name?: string | null
+          chef_village_titre?: string | null
           city?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1980,6 +1981,8 @@ export type Database = {
         }
         Update: {
           attestation_template_id?: string | null
+          chef_village_name?: string | null
+          chef_village_titre?: string | null
           city?: string | null
           created_at?: string
           deleted_at?: string | null

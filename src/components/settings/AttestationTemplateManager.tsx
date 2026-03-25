@@ -122,6 +122,9 @@ const emptyForm: AttestationTemplateInsert = {
   banner_color_1: "#003399",
   banner_color_2: null,
   banner_gradient: false,
+  doc_bg_color_1: null,
+  doc_bg_color_2: null,
+  doc_bg_gradient: false,
 };
 
 export function AttestationTemplateManager() {

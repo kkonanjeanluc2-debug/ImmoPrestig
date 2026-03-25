@@ -608,8 +608,18 @@ export const ImportGeometreDialog = ({
 function findValue(row: Record<string, unknown>, keys: string[]): unknown {
   for (const key of keys) {
     for (const rowKey of Object.keys(row)) {
-      if (rowKey.toLowerCase().trim().replace(/[_\s]/g, "") === key.replace(/[_\s]/g, "")) {
+      const normalizedRowKey = rowKey.toLowerCase().trim().replace(/[_\s°.-]/g, "");
+      const normalizedKey = key.toLowerCase().replace(/[_\s°.-]/g, "");
+      // Exact match
+      if (normalizedRowKey === normalizedKey) {
         return row[rowKey];
+      }
+      // Partial match: column header contains the key or vice versa
+      if (normalizedRowKey.includes(normalizedKey) || normalizedKey.includes(normalizedRowKey)) {
+        const val = row[rowKey];
+        if (val !== null && val !== undefined && String(val).trim() !== "") {
+          return val;
+        }
       }
     }
   }

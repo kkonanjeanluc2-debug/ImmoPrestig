@@ -309,7 +309,7 @@ export async function generateGuidePDF(
   let entryIndex = 0;
 
   while (entryIndex < entries.length) {
-    if (pageNum > 1) doc.addPage("a4", "landscape");
+    doc.addPage("a4", "landscape");
 
     let yPos = drawPageHeader(pageNum);
     yPos = drawTableHeader(yPos);

@@ -203,12 +203,14 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
   const statusColor = (s: string) => {
     if (s === "vendu") return "default";
     if (s === "reserve") return "secondary";
+    if (s === "cede") return "outline";
     return "outline";
   };
 
   const statusLabel = (s: string) => {
     if (s === "vendu") return "Vendu";
     if (s === "reserve") return "Réservé";
+    if (s === "cede") return "Cédé";
     return "Disponible";
   };
 

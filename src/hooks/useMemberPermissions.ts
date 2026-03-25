@@ -327,6 +327,8 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_comptabilite: true,
     can_create_expenses: true,
     can_access_settings: true,
+    can_access_gestion_locative: true,
+    can_access_crm_immobilier: true,
     can_access_agency_tab: true,
     can_access_management_tab: true,
     can_access_subscription_tab: true,

@@ -471,17 +471,24 @@ export const ImportGeometreDialog = ({
         setImportProgress({ done, total: totalItems });
       }
 
-      // Create parcelles
+      // Create parcelles and track beneficiaire assignments
       let successCount = 0;
       let failCount = 0;
+      const createdParcelles: { id: string; parcelle: ParsedGeometreParcelle }[] = [];
+
       for (const parcelle of parsedParcelles) {
         try {
           const ilotId = parcelle.ilotName ? ilotIdMap[parcelle.ilotName.toLowerCase()] || null : null;
           
-          // Build attribution from proprietaire terrien
-          const attribution = parcelle.proprietaireTerrien ? "proprietaire" : undefined;
+          // Determine attribution based on file data
+          let attribution: string | undefined;
+          if (parcelle.proprietaireTerrien) {
+            attribution = "proprietaire";
+          } else if (parcelle.beneficiaire) {
+            attribution = "lotisseur";
+          }
           
-          await createParcelle.mutateAsync({
+          const result = await createParcelle.mutateAsync({
             lotissement_id: lotissementId,
             ilot_id: ilotId,
             plot_number: parcelle.plotNumber,
@@ -494,6 +501,7 @@ export const ImportGeometreDialog = ({
             ].filter(Boolean).join(" | ") || undefined,
           } as any);
           successCount++;
+          createdParcelles.push({ id: result.id, parcelle });
         } catch (parcelleErr) {
           console.error(`Erreur création parcelle ${parcelle.plotNumber}:`, parcelleErr);
           failCount++;
@@ -502,11 +510,86 @@ export const ImportGeometreDialog = ({
         setImportProgress({ done, total: totalItems });
       }
 
+      // Auto-create beneficiaires_lots and link parcelles
+      const beneficiaireCache: Record<string, string> = {}; // name -> beneficiaire_id
+      
+      // Load existing beneficiaires for this lotissement
+      const { data: existingBeneficiaires } = await supabase
+        .from("beneficiaires_lots")
+        .select("id, nom, partie")
+        .eq("lotissement_id", lotissementId);
+      
+      if (existingBeneficiaires) {
+        for (const b of existingBeneficiaires) {
+          beneficiaireCache[`${b.partie}:${b.nom.toLowerCase().trim()}`] = b.id;
+        }
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      for (const { id: parcelleId, parcelle } of createdParcelles) {
+        try {
+          let beneficiaireId: string | null = null;
+
+          // Handle proprietaire terrien
+          if (parcelle.proprietaireTerrien) {
+            const key = `proprietaire:${parcelle.proprietaireTerrien.toLowerCase().trim()}`;
+            if (!beneficiaireCache[key]) {
+              const { data: created } = await supabase
+                .from("beneficiaires_lots")
+                .insert({
+                  lotissement_id: lotissementId,
+                  user_id: user?.id,
+                  nom: parcelle.proprietaireTerrien.trim(),
+                  partie: "proprietaire",
+                } as any)
+                .select("id")
+                .single();
+              if (created) beneficiaireCache[key] = created.id;
+            }
+            beneficiaireId = beneficiaireCache[key] || null;
+          }
+
+          // Handle beneficiaire (lotisseur side)
+          if (parcelle.beneficiaire) {
+            const key = `lotisseur:${parcelle.beneficiaire.toLowerCase().trim()}`;
+            if (!beneficiaireCache[key]) {
+              const { data: created } = await supabase
+                .from("beneficiaires_lots")
+                .insert({
+                  lotissement_id: lotissementId,
+                  user_id: user?.id,
+                  nom: parcelle.beneficiaire.trim(),
+                  partie: "lotisseur",
+                } as any)
+                .select("id")
+                .single();
+              if (created) beneficiaireCache[key] = created.id;
+            }
+            // If parcelle has beneficiaire but no proprietaire, use beneficiaire as the linked one
+            if (!beneficiaireId) {
+              beneficiaireId = beneficiaireCache[key] || null;
+            }
+          }
+
+          // Link parcelle to beneficiaire
+          if (beneficiaireId) {
+            await supabase
+              .from("parcelles")
+              .update({ beneficiaire_id: beneficiaireId })
+              .eq("id", parcelleId);
+          }
+        } catch (linkErr) {
+          console.warn(`Erreur liaison bénéficiaire pour ${parcelle.plotNumber}:`, linkErr);
+        }
+      }
+
       setStep("done");
+      const benefCount = Object.keys(beneficiaireCache).length;
       if (failCount > 0) {
         toast.warning(`Import partiel : ${successCount} parcelle(s) créée(s), ${failCount} en erreur`);
       } else {
-        toast.success(`Import réussi : ${parsedIlots.length} îlot(s) et ${successCount} parcelle(s) créé(s)`);
+        toast.success(`Import réussi : ${parsedIlots.length} îlot(s), ${successCount} parcelle(s) et ${benefCount} bénéficiaire(s) créé(s)`);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erreur lors de l'import";

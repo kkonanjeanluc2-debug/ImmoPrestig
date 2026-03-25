@@ -110,7 +110,7 @@ export const useVentesParcelles = (lotissementId?: string) => {
             ilot:ilots(name),
             lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id)
           ),
-          acquereur:acquereurs(name, phone)
+          acquereur:acquereurs(name, phone, cni_number)
         `)
         .order("sale_date", { ascending: false });
 

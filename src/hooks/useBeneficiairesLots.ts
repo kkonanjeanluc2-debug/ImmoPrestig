@@ -12,6 +12,7 @@ export interface BeneficiaireLot {
   lien_role: string | null;
   cni_number: string | null;
   partie: "proprietaire" | "lotisseur";
+  member_user_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,7 @@ export interface BeneficiaireLotInsert {
   lien_role?: string | null;
   cni_number?: string | null;
   partie: "proprietaire" | "lotisseur";
+  member_user_id?: string | null;
 }
 
 export const useBeneficiairesLots = (lotissementId: string) => {

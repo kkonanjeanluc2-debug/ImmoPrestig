@@ -309,7 +309,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {parcelle.plot_number}
-                        {!isAdmin && parcelle.assigned_to === user?.id && (
+                        {!isAdmin && parcelle.beneficiaire_id && beneficiaires.find(b => b.id === parcelle.beneficiaire_id && b.member_user_id === user?.id) && (
                           <Badge variant="secondary" className="gap-1 text-xs">
                             <Star className="h-3 w-3" />
                             Mon lot

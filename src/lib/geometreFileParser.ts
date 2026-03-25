@@ -18,6 +18,8 @@ export interface ParsedGeometreParcelle {
   price: number;
   ilotName?: string;
   coordinates?: [number, number][];
+  proprietaireTerrien?: string;
+  beneficiaire?: string;
 }
 
 export interface GeometreParseResult {

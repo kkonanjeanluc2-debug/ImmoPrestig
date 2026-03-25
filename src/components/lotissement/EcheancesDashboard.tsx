@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { format, differenceInDays, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useUpcomingEcheances, useOverdueEcheances, EcheanceWithDetails } from "@/hooks/useEcheancesParcelles";
+import { useUpcomingEcheances, useOverdueEcheances, useAllEcheancesWithDetails, EcheanceWithDetails } from "@/hooks/useEcheancesParcelles";
 import { openWhatsApp } from "@/lib/whatsapp";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PayEcheanceDialog } from "./PayEcheanceDialog";
@@ -52,6 +52,7 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
   const [monthsAhead, setMonthsAhead] = useState(1);
   const { data: upcomingEcheances, isLoading: loadingUpcoming } = useUpcomingEcheances(monthsAhead, lotissementId);
   const { data: overdueEcheances, isLoading: loadingOverdue } = useOverdueEcheances(lotissementId);
+  const { data: allEcheances, isLoading: loadingAll } = useAllEcheancesWithDetails(lotissementId);
   const [payingEcheance, setPayingEcheance] = useState<EcheanceWithDetails | null>(null);
 
   const filteredUpcoming = upcomingEcheances;
@@ -142,7 +143,7 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
     </TableRow>
   );
 
-  if (loadingUpcoming || loadingOverdue) {
+  if (loadingUpcoming || loadingOverdue || loadingAll) {
     return (
       <Card>
         <CardHeader>
@@ -263,6 +264,15 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="all" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                Toutes
+                {(allEcheances?.length || 0) > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {allEcheances?.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="upcoming">
@@ -315,6 +325,35 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
                     </TableHeader>
                     <TableBody>
                       {filteredOverdue.map((echeance) => (
+                        <EcheanceRow key={echeance.id} echeance={echeance} />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="all">
+              {!allEcheances?.length ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Aucune échéance en attente</p>
+                </div>
+              ) : (
+                <div className="rounded-md border overflow-x-auto">
+                  <Table className="min-w-[650px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Acquéreur</TableHead>
+                        <TableHead>Parcelle</TableHead>
+                        <TableHead className="text-right">Montant</TableHead>
+                        <TableHead>Échéance</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allEcheances.map((echeance) => (
                         <EcheanceRow key={echeance.id} echeance={echeance} />
                       ))}
                     </TableBody>

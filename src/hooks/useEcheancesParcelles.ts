@@ -158,6 +158,48 @@ export const useUpcomingEcheances = (monthsAhead: number = 1, lotissementId?: st
   });
 };
 
+export const useAllEcheancesWithDetails = (lotissementId?: string) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["echeances-parcelles", "all", lotissementId],
+    queryFn: async () => {
+      let venteIds: string[] | null = null;
+      if (lotissementId) {
+        venteIds = await getVenteIdsForLotissement(lotissementId);
+        if (venteIds.length === 0) return [] as EcheanceWithDetails[];
+      }
+
+      let query = supabase
+        .from("echeances_parcelles")
+        .select(`
+          *,
+          vente:ventes_parcelles(
+            acquereur:acquereurs(name, phone),
+            parcelle:parcelles(
+              plot_number,
+              lotissement:lotissements(name)
+            )
+          )
+        `)
+        .eq("status", "pending")
+        .order("due_date", { ascending: true });
+
+      if (venteIds) {
+        query = query.in("vente_id", venteIds);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data as EcheanceWithDetails[];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+};
+
 export const useOverdueEcheances = (lotissementId?: string) => {
   const { user } = useAuth();
 

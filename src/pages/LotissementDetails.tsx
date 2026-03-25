@@ -68,7 +68,7 @@ const LotissementDetails = () => {
   const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewLotissementProspectsCount(id);
   // Prefetch ilots data for instant tab switching
   const { data: ilotsData } = useIlotsWithStats(id);
-  const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("list");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [showGenerateDocument, setShowGenerateDocument] = useState(false);

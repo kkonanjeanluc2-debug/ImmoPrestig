@@ -610,6 +610,16 @@ export const ImportGeometreDialog = ({
                           {parcelle.ilotName && (
                             <Badge variant="secondary" className="text-xs">Îlot: {parcelle.ilotName}</Badge>
                           )}
+                          {parcelle.proprietaireTerrien && (
+                            <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">
+                              Proprio: {parcelle.proprietaireTerrien}
+                            </Badge>
+                          )}
+                          {parcelle.beneficiaire && (
+                            <Badge variant="outline" className="text-xs border-amber-300 text-amber-700">
+                              Bénéf: {parcelle.beneficiaire}
+                            </Badge>
+                          )}
                           {parcelle.coordinates && (
                             <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300">
                               📍 Géoréférencé

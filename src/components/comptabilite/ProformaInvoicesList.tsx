@@ -29,6 +29,7 @@ const typeConfig: Record<string, { label: string; color: string }> = {
 interface Props {
   tenantId?: string;
   compact?: boolean;
+  canCreate?: boolean;
 }
 
 export function ProformaInvoicesList({ tenantId, compact = false }: Props) {

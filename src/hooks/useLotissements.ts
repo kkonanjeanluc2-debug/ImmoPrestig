@@ -40,6 +40,8 @@ export interface LotissementInsert {
   repartition_lotisseur?: number | null;
   proprietaire_name?: string | null;
   lotisseur_name?: string | null;
+  chef_village_name?: string | null;
+  chef_village_titre?: string | null;
 }
 
 export interface LotissementUpdate extends Partial<LotissementInsert> {

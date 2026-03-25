@@ -1197,6 +1197,12 @@ export const generateAttestationVillageoise = async (
 
       // Skip headings that duplicate the banner (# and ##)
       if (trimmed.startsWith("# ") || trimmed.startsWith("## ")) continue;
+      // Skip signature block lines that are handled separately below
+      const upperTrimmed = trimmed.replace(/\*\*/g, "").toUpperCase().trim();
+      if (upperTrimmed === "LE CHEF DU VILLAGE") continue;
+      if (upperTrimmed === chef.toUpperCase()) continue;
+      if (upperTrimmed === "SIGNATURE ET CACHET" || upperTrimmed === "SIGNATURE ET CACHET DU CHEF") continue;
+      if (/^_?signature/i.test(trimmed.replace(/\*/g, ""))) continue;
 
       if (trimmed === "---") {
         doc.setDrawColor(200, 200, 200);
@@ -1220,14 +1226,19 @@ export const generateAttestationVillageoise = async (
 
       // Process inline bold **text** and italic _text_
       doc.setFontSize(baseFontSize);
-      const isCentered = trimmed.startsWith("**Fait à") || trimmed.startsWith("**Attestons");
+      const plainText = trimmed.replace(/\*\*/g, "").trim();
+      const isFaitA = plainText.toLowerCase().startsWith("fait à");
+      const isCentered = !isFaitA && (plainText.startsWith("Attestons") || plainText.startsWith("attestons"));
       
       // Check if entire line is bold
       if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
         const text = trimmed.replace(/\*\*/g, "");
-        doc.setFont("helvetica", "bold");
+        doc.setFont("helvetica", isFaitA ? "italic" : "bold");
         const splitLines = doc.splitTextToSize(text, maxWidth);
-        if (isCentered) {
+        if (isFaitA) {
+          const rightBlockCenter = pageWidth - margin - 30;
+          doc.text(splitLines, rightBlockCenter, yPos, { align: "center" });
+        } else if (isCentered) {
           doc.text(splitLines, pageWidth / 2, yPos, { align: "center" });
         } else {
           doc.text(splitLines, margin, yPos);
@@ -1357,20 +1368,33 @@ export const generateAttestationVillageoise = async (
 
   yPos += 10;
 
-  // ===== SIGNATURE CHEF DU VILLAGE (aligné à droite) =====
+  // ===== BLOC SIGNATURE (aligné à droite) =====
+  // Format: Fait à... / LE CHEF DU VILLAGE / Nom / Signature+Cachet
   const rightBlockCenter = pageWidth - margin - 30;
   
+  // "Fait à..." line - right aligned (only if not already in template content)
+  const templateHasFaitA = templateContent && templateContent.toLowerCase().includes("fait à");
+  if (!templateHasFaitA) {
+    const city = lotissement.city || agency?.city || "____________________";
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(...textColor);
+    doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, rightBlockCenter, yPos, { align: "center" });
+    yPos += 8;
+  }
+
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
   doc.text("LE CHEF DU VILLAGE", rightBlockCenter, yPos, { align: "center" });
   yPos += 5;
+  
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   doc.text(chef, rightBlockCenter, yPos, { align: "center" });
-  yPos += 6;
+  yPos += 8;
 
-  // Chef stamp and signature image (single combined image)
+  // Chef stamp and signature image
   const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
   if (chefImageUrl) {
     try {
@@ -1393,9 +1417,9 @@ export const generateAttestationVillageoise = async (
       yPos += 12;
     }
   } else {
-    yPos += 12;
     doc.setDrawColor(150, 150, 150);
     doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
+    yPos += 12;
   }
 
   // No footer for attestation villageoise

@@ -42,6 +42,7 @@ export interface MemberPermissions {
   can_create_demarches: boolean;
   can_create_lotissement_prospects: boolean;
   can_access_guide: boolean;
+  can_export_guide: boolean;
   can_import_geometre: boolean;
   can_access_repartition: boolean;
   // Ventes management

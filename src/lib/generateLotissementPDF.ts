@@ -1233,9 +1233,12 @@ export const generateAttestationVillageoise = async (
       // Check if entire line is bold
       if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
         const text = trimmed.replace(/\*\*/g, "");
-        doc.setFont("helvetica", "bold");
+        doc.setFont("helvetica", isFaitA ? "italic" : "bold");
         const splitLines = doc.splitTextToSize(text, maxWidth);
-        if (isCentered) {
+        if (isFaitA) {
+          const rightBlockCenter = pageWidth - margin - 30;
+          doc.text(splitLines, rightBlockCenter, yPos, { align: "center" });
+        } else if (isCentered) {
           doc.text(splitLines, pageWidth / 2, yPos, { align: "center" });
         } else {
           doc.text(splitLines, margin, yPos);

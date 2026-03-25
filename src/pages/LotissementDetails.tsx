@@ -27,6 +27,7 @@ import {
   FileSignature,
   Upload,
   PieChart,
+  BookOpen,
 } from "lucide-react";
 import { PeriodFilter, getDefaultPeriod, getPeriodLabel, PeriodValue } from "@/components/dashboard/PeriodFilter";
 import { useLotissement } from "@/hooks/useLotissements";
@@ -52,6 +53,7 @@ import { GenerateLotissementDocumentDialog } from "@/components/lotissement/Gene
 import { AcquereursListCard } from "@/components/lotissement/AcquereursListCard";
 import { ImportGeometreDialog } from "@/components/lotissement/ImportGeometreDialog";
 import { LotRepartitionTab } from "@/components/lotissement/LotRepartitionTab";
+import { GuideLotissementTab } from "@/components/lotissement/GuideLotissementTab";
 import { useNewLotissementProspectsCount } from "@/hooks/useNewProspectsCount";
 import { useIlotsWithStats } from "@/hooks/useIlots";
 const LotissementDetails = () => {
@@ -286,6 +288,10 @@ const LotissementDetails = () => {
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">Acquéreurs</span>
                 </TabsTrigger>
+                <TabsTrigger value="guide" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="hidden sm:inline">Guide</span>
+                </TabsTrigger>
                 {isOwner && (
                   <TabsTrigger value="repartition" className="gap-2">
                     <PieChart className="h-4 w-4" />
@@ -391,6 +397,13 @@ const LotissementDetails = () => {
 
           <TabsContent value="acquereurs">
             <AcquereursListCard lotissementId={id} />
+          </TabsContent>
+
+          <TabsContent value="guide">
+            <GuideLotissementTab
+              lotissementId={id || ""}
+              lotissementName={lotissement.name}
+            />
           </TabsContent>
 
           <TabsContent value="ilots">

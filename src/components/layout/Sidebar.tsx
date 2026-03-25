@@ -351,6 +351,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     })}
                 </CollapsibleContent>
               </Collapsible>
+              )}
 
               {/* CRM Immobilier - Collapsible Group */}
               {crmImmobilierItems.some(item => hasFeature(item.featureKey)) && (

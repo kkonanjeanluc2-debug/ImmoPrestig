@@ -2145,9 +2145,11 @@ export type Database = {
         Row: {
           can_access_achat_contracts_tab: boolean
           can_access_agency_tab: boolean
+          can_access_guide: boolean
           can_access_management_tab: boolean
           can_access_notifications_tab: boolean
           can_access_promesse_vente_tab: boolean
+          can_access_repartition: boolean
           can_access_reservation_forms_tab: boolean
           can_access_sale_contracts_tab: boolean
           can_access_settings: boolean
@@ -2196,6 +2198,7 @@ export type Database = {
           can_edit_ventes: boolean
           can_export_comptabilite: boolean
           can_export_data: boolean
+          can_import_geometre: boolean
           can_manage_automations: boolean
           can_manage_branding: boolean
           can_manage_mutations: boolean
@@ -2222,9 +2225,11 @@ export type Database = {
         Insert: {
           can_access_achat_contracts_tab?: boolean
           can_access_agency_tab?: boolean
+          can_access_guide?: boolean
           can_access_management_tab?: boolean
           can_access_notifications_tab?: boolean
           can_access_promesse_vente_tab?: boolean
+          can_access_repartition?: boolean
           can_access_reservation_forms_tab?: boolean
           can_access_sale_contracts_tab?: boolean
           can_access_settings?: boolean
@@ -2273,6 +2278,7 @@ export type Database = {
           can_edit_ventes?: boolean
           can_export_comptabilite?: boolean
           can_export_data?: boolean
+          can_import_geometre?: boolean
           can_manage_automations?: boolean
           can_manage_branding?: boolean
           can_manage_mutations?: boolean
@@ -2299,9 +2305,11 @@ export type Database = {
         Update: {
           can_access_achat_contracts_tab?: boolean
           can_access_agency_tab?: boolean
+          can_access_guide?: boolean
           can_access_management_tab?: boolean
           can_access_notifications_tab?: boolean
           can_access_promesse_vente_tab?: boolean
+          can_access_repartition?: boolean
           can_access_reservation_forms_tab?: boolean
           can_access_sale_contracts_tab?: boolean
           can_access_settings?: boolean
@@ -2350,6 +2358,7 @@ export type Database = {
           can_edit_ventes?: boolean
           can_export_comptabilite?: boolean
           can_export_data?: boolean
+          can_import_geometre?: boolean
           can_manage_automations?: boolean
           can_manage_branding?: boolean
           can_manage_mutations?: boolean

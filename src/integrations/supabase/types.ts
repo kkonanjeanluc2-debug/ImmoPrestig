@@ -2145,6 +2145,8 @@ export type Database = {
         Row: {
           can_access_achat_contracts_tab: boolean
           can_access_agency_tab: boolean
+          can_access_crm_immobilier: boolean
+          can_access_gestion_locative: boolean
           can_access_guide: boolean
           can_access_management_tab: boolean
           can_access_notifications_tab: boolean
@@ -2232,6 +2234,8 @@ export type Database = {
         Insert: {
           can_access_achat_contracts_tab?: boolean
           can_access_agency_tab?: boolean
+          can_access_crm_immobilier?: boolean
+          can_access_gestion_locative?: boolean
           can_access_guide?: boolean
           can_access_management_tab?: boolean
           can_access_notifications_tab?: boolean
@@ -2319,6 +2323,8 @@ export type Database = {
         Update: {
           can_access_achat_contracts_tab?: boolean
           can_access_agency_tab?: boolean
+          can_access_crm_immobilier?: boolean
+          can_access_gestion_locative?: boolean
           can_access_guide?: boolean
           can_access_management_tab?: boolean
           can_access_notifications_tab?: boolean

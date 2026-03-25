@@ -87,6 +87,9 @@ export interface MemberPermissions {
   can_view_comptabilite: boolean;
   can_export_comptabilite: boolean;
   can_create_expenses: boolean;
+  // Module access
+  can_access_gestion_locative: boolean;
+  can_access_crm_immobilier: boolean;
   // Settings management
   can_access_settings: boolean;
   can_access_agency_tab: boolean;
@@ -180,6 +183,8 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_view_comptabilite: "Accéder à la comptabilité",
   can_export_comptabilite: "Exporter les rapports comptables",
   can_create_expenses: "Enregistrer des dépenses",
+  can_access_gestion_locative: "Accès au module Gestion Locative",
+  can_access_crm_immobilier: "Accès au module CRM Immobilier",
   can_access_settings: "Accéder aux paramètres (global)",
   can_access_agency_tab: "Onglet Agence",
   can_access_management_tab: "Onglet Gestion",
@@ -232,6 +237,10 @@ export const PERMISSION_GROUPS = {
   documents: {
     label: "Documents",
     permissions: ["can_view_documents", "can_create_documents", "can_delete_documents"] as PermissionKey[],
+  },
+  modules: {
+    label: "Accès aux modules",
+    permissions: ["can_access_gestion_locative", "can_access_crm_immobilier"] as PermissionKey[],
   },
   settings: {
     label: "Paramètres",
@@ -318,6 +327,8 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_comptabilite: true,
     can_create_expenses: true,
     can_access_settings: true,
+    can_access_gestion_locative: true,
+    can_access_crm_immobilier: true,
     can_access_agency_tab: true,
     can_access_management_tab: true,
     can_access_subscription_tab: true,
@@ -401,6 +412,8 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_comptabilite: false,
     can_create_expenses: false,
     can_access_settings: false,
+    can_access_gestion_locative: true,
+    can_access_crm_immobilier: true,
     can_access_agency_tab: false,
     can_access_management_tab: false,
     can_access_subscription_tab: false,
@@ -484,6 +497,8 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_comptabilite: false,
     can_create_expenses: false,
     can_access_settings: false,
+    can_access_gestion_locative: true,
+    can_access_crm_immobilier: true,
     can_access_agency_tab: false,
     can_access_management_tab: false,
     can_access_subscription_tab: false,
@@ -567,6 +582,8 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_comptabilite: false,
     can_create_expenses: false,
     can_access_settings: false,
+    can_access_gestion_locative: true,
+    can_access_crm_immobilier: true,
     can_access_agency_tab: false,
     can_access_management_tab: false,
     can_access_subscription_tab: false,

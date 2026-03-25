@@ -37,7 +37,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2, Star } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2, Star, FileText } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -45,6 +45,8 @@ import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { useBeneficiairesLots } from "@/hooks/useBeneficiairesLots";
+import { useAgency } from "@/hooks/useAgency";
+import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
 import { SellParcelleDialog } from "./SellParcelleDialog";
@@ -53,6 +55,11 @@ import { ReservationParcelleCard } from "./ReservationParcelleCard";
 import { useReservationByParcelle } from "@/hooks/useReservationsParcelles";
 import { useLotissement } from "@/hooks/useLotissements";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  generateAttestationVillageoise,
+  downloadPDF,
+} from "@/lib/generateLotissementPDF";
+import type { AttestationTemplateData, AttestationChefImages } from "@/lib/generateLotissementPDF";
 
 interface ParcellesListProps {
   parcelles: Parcelle[];

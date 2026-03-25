@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2, RotateCcw, AlertTriangle, Users, Building2, Home, Clock, Map, Grid3X3, Layers, UserCheck } from "lucide-react";
+import { Trash2, RotateCcw, AlertTriangle, Users, Building2, Home, Clock, Map, Grid3X3, Layers, UserCheck, XCircle } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

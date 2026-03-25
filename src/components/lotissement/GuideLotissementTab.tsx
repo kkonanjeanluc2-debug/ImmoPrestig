@@ -37,11 +37,12 @@ interface GuideLotissementTabProps {
   guideTemplateId?: string | null;
 }
 
-export function GuideLotissementTab({ lotissementId, lotissementName }: GuideLotissementTabProps) {
+export function GuideLotissementTab({ lotissementId, lotissementName, guideTemplateId }: GuideLotissementTabProps) {
   const { data: parcelles } = useParcelles(lotissementId);
   const { data: ventes } = useVentesParcelles(lotissementId);
   const { data: ilots } = useIlotsWithStats(lotissementId);
   const { data: agency } = useAgency();
+  const { data: guideTemplates = [] } = useGuideTemplates();
   const [search, setSearch] = useState("");
 
   const guideEntries = useMemo(() => {

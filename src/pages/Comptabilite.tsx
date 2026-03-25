@@ -228,14 +228,17 @@ const Comptabilite = () => {
               <span className="hidden sm:inline">SYSCOHADA</span>
               <span className="sm:hidden">SYS.</span>
             </TabsTrigger>
-            <TabsTrigger value="factures" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-              <span className="hidden sm:inline">Factures</span>
-              <span className="sm:hidden">Fact.</span>
-            </TabsTrigger>
-            <TabsTrigger value="reversements" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
-              <ArrowDownToLine className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-              <span className="hidden sm:inline">Reversements</span>
+            {canViewInvoices && (
+              <TabsTrigger value="factures" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Factures</span>
+                <span className="sm:hidden">Fact.</span>
+              </TabsTrigger>
+            )}
+            {canViewPayouts && (
+              <TabsTrigger value="reversements" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+                <ArrowDownToLine className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Reversements</span>
               <span className="sm:hidden">Rev.</span>
             </TabsTrigger>
           </TabsList>

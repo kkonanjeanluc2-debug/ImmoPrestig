@@ -288,6 +288,10 @@ const LotissementDetails = () => {
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">Acquéreurs</span>
                 </TabsTrigger>
+                <TabsTrigger value="guide" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="hidden sm:inline">Guide</span>
+                </TabsTrigger>
                 {isOwner && (
                   <TabsTrigger value="repartition" className="gap-2">
                     <PieChart className="h-4 w-4" />

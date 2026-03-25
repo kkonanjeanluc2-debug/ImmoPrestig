@@ -387,6 +387,12 @@ const Settings = () => {
             </TabsContent>
           )}
 
+          {hasLotissement && canManageTemplates && (
+            <TabsContent value="attestation-templates">
+              <AttestationTemplateManager />
+            </TabsContent>
+          )}
+
           {canAccessSubscriptionTab && (
             <TabsContent value="subscription">
               <SubscriptionSettings />

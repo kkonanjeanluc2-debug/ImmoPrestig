@@ -311,7 +311,7 @@ export default function Tenants() {
             {isAgencyOwner && <TenantTrashDialog />}
             {canCreate && <ImportTenantsDialog />}
             {canEdit && <MergeTenantsDialog />}
-            {canCreate && <AddTenantDialog defaultOpen={shouldOpenAdd} onSuccess={() => setSearchParams({})} />}
+            {canCreate && <AddTenantDialog defaultOpen={shouldOpenAdd} preselectedPropertyId={preselectedPropertyId} preselectedUnitId={preselectedUnitId} onSuccess={() => setSearchParams({})} />}
           </div>
 
           {/* Emergency button for new requests */}

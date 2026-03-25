@@ -645,7 +645,7 @@ const Properties = () => {
                                                     className="h-auto py-1 px-2 text-primary gap-1 hover:text-primary"
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      navigate("/tenants?add=true");
+                                                      navigate(`/tenants?add=true&property_id=${property.id}&unit_id=${unit.id}`);
                                                     }}
                                                   >
                                                     <UserPlus className="h-3.5 w-3.5" />

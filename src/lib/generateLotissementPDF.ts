@@ -1035,6 +1035,11 @@ export interface AttestationTemplateData {
   content?: string;
 }
 
+export interface AttestationChefImages {
+  stamp_url?: string | null;
+  signature_url?: string | null;
+}
+
 export const generateAttestationVillageoise = async (
   parcelle: ParcelleInfo,
   lotissement: LotissementInfo,

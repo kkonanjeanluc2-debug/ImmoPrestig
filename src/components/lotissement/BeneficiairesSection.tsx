@@ -286,7 +286,48 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
               Ajouter un {partie === "proprietaire" ? "membre de la famille" : "collaborateur"}
             </DialogTitle>
           </DialogHeader>
-          <Tabs value={addMode} onValueChange={(v) => setAddMode(v as "team" | "new")}>
+          <Tabs value={addMode} onValueChange={(v) => setAddMode(v as "team" | "new" | "family")}>
+            {partie === "proprietaire" && proprietaireBeneficiaires.length > 0 && (
+              <TabsList className="w-full">
+                <TabsTrigger value="family" className="flex-1 gap-1">
+                  <Users className="h-4 w-4" />
+                  Membre de la famille
+                </TabsTrigger>
+                <TabsTrigger value="new" className="flex-1 gap-1">
+                  <UserPlus className="h-4 w-4" />
+                  Nouveau
+                </TabsTrigger>
+              </TabsList>
+            )}
+            {partie === "proprietaire" && proprietaireBeneficiaires.length > 0 && (
+              <TabsContent value="family" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Sélectionner un membre de la famille</Label>
+                  <Select value={selectedFamilyId} onValueChange={setSelectedFamilyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir un membre de la famille..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {proprietaireBeneficiaires.map(b => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.nom}
+                          {b.lien_role ? ` (${b.lien_role})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleAddFromFamily} disabled={!selectedFamilyId || createBeneficiaire.isPending}>
+                    {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Ajouter
+                  </Button>
+                </DialogFooter>
+              </TabsContent>
+            )}
             {partie === "lotisseur" && (
               <TabsList className="w-full">
                 <TabsTrigger value="team" className="flex-1 gap-1">

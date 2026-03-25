@@ -9,6 +9,7 @@ import { Download, Search, FileText } from "lucide-react";
 import { useParcelles } from "@/hooks/useParcelles";
 import { useVentesParcelles, VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useIlotsWithStats } from "@/hooks/useIlots";
+import { useBeneficiairesLots } from "@/hooks/useBeneficiairesLots";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateGuidePDF } from "@/lib/generateGuidePDF";

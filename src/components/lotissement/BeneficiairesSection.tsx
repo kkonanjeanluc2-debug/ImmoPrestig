@@ -210,6 +210,8 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
     setEmail("");
     setLienRole("");
     setCniNumber("");
+    setSelectedFamilyId("");
+    setSelectedMemberId("");
   };
 
   const getBeneficiaireLotCount = (bId: string) =>

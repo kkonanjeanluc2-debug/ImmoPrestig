@@ -34,6 +34,7 @@ interface GuideEntry {
 interface GuideLotissementTabProps {
   lotissementId: string;
   lotissementName: string;
+  guideTemplateId?: string | null;
 }
 
 export function GuideLotissementTab({ lotissementId, lotissementName }: GuideLotissementTabProps) {

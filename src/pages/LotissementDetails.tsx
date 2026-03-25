@@ -27,6 +27,7 @@ import {
   FileSignature,
   Upload,
   PieChart,
+  BookOpen,
 } from "lucide-react";
 import { PeriodFilter, getDefaultPeriod, getPeriodLabel, PeriodValue } from "@/components/dashboard/PeriodFilter";
 import { useLotissement } from "@/hooks/useLotissements";

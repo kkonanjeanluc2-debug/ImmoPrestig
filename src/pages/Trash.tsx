@@ -28,6 +28,8 @@ import { useTrashCount } from "@/hooks/useTrashCount";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Trash = () => {
   const [confirmDelete, setConfirmDelete] = useState<{

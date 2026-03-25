@@ -423,7 +423,8 @@ export const ImportGeometreDialog = ({
     const mainFile = files.find(f => {
       const name = f.name.toLowerCase();
       return name.endsWith(".dxf") || name.endsWith(".dwg") || name.endsWith(".shp") ||
-        name.endsWith(".csv") || name.endsWith(".xls") || name.endsWith(".xlsx");
+        name.endsWith(".csv") || name.endsWith(".xls") || name.endsWith(".xlsx") ||
+        name.endsWith(".docx") || name.endsWith(".doc");
     });
     const dbf = files.find(f => f.name.toLowerCase().endsWith(".dbf"));
 

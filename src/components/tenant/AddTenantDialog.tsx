@@ -76,10 +76,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface AddTenantDialogProps {
   onSuccess?: () => void;
+  defaultOpen?: boolean;
 }
 
-export function AddTenantDialog({ onSuccess }: AddTenantDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddTenantDialog({ onSuccess, defaultOpen = false }: AddTenantDialogProps) {
+  const [open, setOpen] = useState(defaultOpen);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
   const [rentType, setRentType] = useState<string>("mensuel");
   const [dailyRentDays, setDailyRentDays] = useState<string>("");

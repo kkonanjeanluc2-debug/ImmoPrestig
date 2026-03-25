@@ -268,7 +268,7 @@ export const ImportGeometreDialog = ({
           return;
       }
 
-      // Filter duplicates
+      // Filter duplicate parcelles
       const filteredParcelles = result.parcelles.filter(
         p => !existingPlotNumbers.includes(p.plotNumber)
       );
@@ -277,17 +277,19 @@ export const ImportGeometreDialog = ({
         result.warnings.push(`${duplicates} parcelle(s) ignorée(s) car déjà existante(s)`);
       }
 
-      const filteredIlots = result.ilots.filter(
+      // For ilots: keep only NEW ones for creation, but don't treat existing as errors
+      // Existing ilots will be reused during import (their IDs will be resolved)
+      const newIlots = result.ilots.filter(
         i => !existingIlotNames.includes(i.name)
       );
-      const dupIlots = result.ilots.length - filteredIlots.length;
-      if (dupIlots > 0) {
-        result.warnings.push(`${dupIlots} îlot(s) ignoré(s) car déjà existant(s)`);
+      const reusedIlots = result.ilots.length - newIlots.length;
+      if (reusedIlots > 0) {
+        result.warnings.push(`${reusedIlots} îlot(s) existant(s) seront réutilisé(s)`);
       }
 
       setErrors(result.errors);
       setWarnings(result.warnings);
-      setParsedIlots(filteredIlots);
+      setParsedIlots(newIlots);
       setParsedParcelles(filteredParcelles);
       setStep("preview");
     } catch (err) {
@@ -341,7 +343,20 @@ export const ImportGeometreDialog = ({
     setImportProgress({ done: 0, total: totalItems });
 
     try {
-      // Create ilots first
+      // Pre-populate ilotIdMap with existing ilots from DB
+      const { data: existingDbIlots } = await supabase
+        .from("ilots")
+        .select("id, name")
+        .eq("lotissement_id", lotissementId)
+        .is("deleted_at", null);
+      
+      if (existingDbIlots) {
+        for (const ilot of existingDbIlots) {
+          ilotIdMap[ilot.name.toLowerCase()] = ilot.id;
+        }
+      }
+
+      // Create only NEW ilots
       for (const ilot of parsedIlots) {
         try {
           const result = await createIlot.mutateAsync({
@@ -354,17 +369,6 @@ export const ImportGeometreDialog = ({
           ilotIdMap[ilot.name.toLowerCase()] = result.id;
         } catch (ilotErr) {
           console.error(`Erreur création îlot ${ilot.name}:`, ilotErr);
-          // Try to find existing ilot with same name
-          const { data: existingIlot } = await supabase
-            .from("ilots")
-            .select("id")
-            .eq("lotissement_id", lotissementId)
-            .eq("name", ilot.name)
-            .is("deleted_at", null)
-            .maybeSingle();
-          if (existingIlot) {
-            ilotIdMap[ilot.name.toLowerCase()] = existingIlot.id;
-          }
         }
         done++;
         setImportProgress({ done, total: totalItems });

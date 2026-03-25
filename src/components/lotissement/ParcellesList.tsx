@@ -49,6 +49,7 @@ import { ReserveParcelleDialog } from "./ReserveParcelleDialog";
 import { ReservationParcelleCard } from "./ReservationParcelleCard";
 import { useReservationByParcelle } from "@/hooks/useReservationsParcelles";
 import { useLotissement } from "@/hooks/useLotissements";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ParcellesListProps {
   parcelles: Parcelle[];

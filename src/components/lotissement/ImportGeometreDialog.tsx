@@ -152,11 +152,28 @@ export const ImportGeometreDialog = ({
         newWarnings.push("Aucune ligne d’en-tête fiable détectée : lecture du fichier en mode colonnes automatiques.");
       }
 
+      const hasAreaColumn = detectedColumns.some((column) =>
+        ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"].some((key) => {
+          const normalizedColumn = normalizeExcelKey(column);
+          const normalizedKey = normalizeExcelKey(key);
+          return normalizedColumn === normalizedKey || normalizedColumn.includes(normalizedKey) || normalizedKey.includes(normalizedColumn);
+        })
+      );
+
+      if (!hasAreaColumn) {
+        newWarnings.push("Aucune colonne de superficie détectée : les parcelles seront importées avec une superficie à 0.");
+      }
+
       parcellesData.forEach((row, idx) => {
-        let plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "plot_number", "numero_lot", "lot", "numero_parcelle", "parcelle", "ref", "reference", "référence", "id", "nlot", "nolot", "numerolot", "label", "name", "nom", "designation", "désignation"]);
-        const area = parseNumber(findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]));
+        if (shouldSkipExcelRow(row)) {
+          return;
+        }
+
+        let plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "plot_number", "numero_lot", "lot", "lots", "numero_parcelle", "parcelle", "ref", "reference", "référence", "id", "nlot", "nolot", "numerolot", "label", "name", "nom", "designation", "désignation"]);
+        const areaValue = findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]);
+        const area = parseNumber(areaValue);
         const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
-        const ilotName = findValue(row, ["ilot", "îlot", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
+        const ilotName = findValue(row, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
 
         // Fallback: use the first non-empty cell value as plot number
         if (!plotNumber) {
@@ -176,7 +193,7 @@ export const ImportGeometreDialog = ({
           newErrors.push(`Parcelle "${plotNumber}" existe déjà`);
           return;
         }
-        if (!area || area <= 0) {
+        if (isFilledCell(areaValue) && area <= 0) {
           newErrors.push(`Parcelle "${plotNumber}": superficie invalide`);
           return;
         }
@@ -682,6 +699,18 @@ function normalizeExcelKey(value: unknown): string {
 
 function isFilledCell(value: unknown): boolean {
   return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+function shouldSkipExcelRow(row: Record<string, unknown>): boolean {
+  const values = Object.values(row).filter(isFilledCell).map((value) => normalizeExcelKey(value));
+
+  if (values.length === 0) return true;
+  if (values.includes("lechefduvillage")) return true;
+
+  const headerTokens = ["ndordre", "proprietaireterrien", "beneficiaires", "ilots", "lots", "adresse", "contacts", "quartier"];
+  const headerMatches = values.filter((value) => headerTokens.includes(value)).length;
+
+  return headerMatches >= 3;
 }
 
 function getWorksheetRecords(

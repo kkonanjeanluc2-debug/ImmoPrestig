@@ -1058,6 +1058,7 @@ export const generateAttestationVillageoise = async (
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   let yPos = 15;
 
@@ -1185,7 +1186,11 @@ export const generateAttestationVillageoise = async (
     // Render Markdown lines to PDF
     const lines = rendered.split("\n");
     const maxWidth = pageWidth - 2 * margin;
-    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Use smaller font sizes to fit on single page
+    const baseFontSize = 9;
+    const headingFontSize = 10;
+    const lineSpacing = 4.5;
 
     for (const line of lines) {
       const trimmed = line.trim();
@@ -1193,34 +1198,28 @@ export const generateAttestationVillageoise = async (
       // Skip headings that duplicate the banner (# and ##)
       if (trimmed.startsWith("# ") || trimmed.startsWith("## ")) continue;
 
-      // Check page overflow
-      if (yPos > pageHeight - 40) {
-        doc.addPage();
-        yPos = 20;
-      }
-
       if (trimmed === "---") {
         doc.setDrawColor(200, 200, 200);
         doc.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += 6;
+        yPos += 5;
         continue;
       }
 
       if (trimmed === "") {
-        yPos += 4;
+        yPos += 3;
         continue;
       }
 
       if (trimmed.startsWith("### ")) {
-        doc.setFontSize(11);
+        doc.setFontSize(headingFontSize);
         doc.setFont("helvetica", "bold");
         doc.text(trimmed.substring(4), pageWidth / 2, yPos, { align: "center" });
-        yPos += 8;
+        yPos += 7;
         continue;
       }
 
       // Process inline bold **text** and italic _text_
-      doc.setFontSize(10);
+      doc.setFontSize(baseFontSize);
       const isCentered = trimmed.startsWith("**Fait à") || trimmed.startsWith("**Attestons");
       
       // Check if entire line is bold
@@ -1233,7 +1232,7 @@ export const generateAttestationVillageoise = async (
         } else {
           doc.text(splitLines, margin, yPos);
         }
-        yPos += splitLines.length * 5 + 2;
+        yPos += splitLines.length * lineSpacing + 2;
         doc.setFont("helvetica", "normal");
         continue;
       }
@@ -1241,10 +1240,10 @@ export const generateAttestationVillageoise = async (
       // Check if line is italic
       if (/^_[^_]+_$/.test(trimmed)) {
         const text = trimmed.replace(/_/g, "");
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont("helvetica", "italic");
         doc.text(text, pageWidth / 2, yPos, { align: "center" });
-        yPos += 6;
+        yPos += 5;
         doc.setFont("helvetica", "normal");
         continue;
       }
@@ -1266,7 +1265,7 @@ export const generateAttestationVillageoise = async (
           }
         }
         doc.setFont("helvetica", "normal");
-        yPos += 6;
+        yPos += 5;
         continue;
       }
 
@@ -1274,7 +1273,7 @@ export const generateAttestationVillageoise = async (
       doc.setFont("helvetica", "normal");
       const splitLines = doc.splitTextToSize(trimmed, maxWidth);
       doc.text(splitLines, margin, yPos);
-      yPos += splitLines.length * 5 + 2;
+      yPos += splitLines.length * lineSpacing + 1.5;
     }
   } else {
     // Fallback: hardcoded body if no template content
@@ -1351,23 +1350,25 @@ export const generateAttestationVillageoise = async (
     yPos += legalLines.length * 5 + 15;
 
     const city = lotissement.city || agency?.city || "____________________";
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth / 2, yPos, { align: "center" });
+    doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth - margin, yPos, { align: "right" });
   }
 
-  yPos += 15;
+  yPos += 10;
 
-  // ===== SIGNATURE CHEF DU VILLAGE =====
-  doc.setFontSize(10);
+  // ===== SIGNATURE CHEF DU VILLAGE (aligné à droite) =====
+  const rightBlockCenter = pageWidth - margin - 30;
+  
+  doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("LE CHEF DU VILLAGE", pageWidth / 2, yPos, { align: "center" });
-  yPos += 6;
+  doc.text("LE CHEF DU VILLAGE", rightBlockCenter, yPos, { align: "center" });
+  yPos += 5;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text(chef, pageWidth / 2, yPos, { align: "center" });
-  yPos += 8;
+  doc.text(chef, rightBlockCenter, yPos, { align: "center" });
+  yPos += 6;
 
   // Chef stamp and signature image (single combined image)
   const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
@@ -1383,19 +1384,18 @@ export const generateAttestationVillageoise = async (
       });
       
       if (base64) {
-        const imgWidth = 50;
-        const imgHeight = 30;
-        doc.addImage(base64, "PNG", (pageWidth - imgWidth) / 2, yPos, imgWidth, imgHeight);
-        yPos += 35;
+        const imgWidth = 45;
+        const imgHeight = 28;
+        doc.addImage(base64, "PNG", rightBlockCenter - imgWidth / 2, yPos, imgWidth, imgHeight);
+        yPos += 30;
       }
     } catch {
-      yPos += 15;
+      yPos += 12;
     }
   } else {
-    yPos += 15;
-    // Ligne de signature
+    yPos += 12;
     doc.setDrawColor(150, 150, 150);
-    doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+    doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
   }
 
   // No footer for attestation villageoise

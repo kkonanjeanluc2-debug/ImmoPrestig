@@ -56,7 +56,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     }
   }, [lotissement]);
 
-  const handleUploadImage = async (file: File, type: "stamp" | "signature") => {
+  const handleUploadImage = async (file: File) => {
     if (!user?.id) {
       toast.error("Vous devez être connecté");
       return;
@@ -71,7 +71,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     }
     try {
       const fileExt = file.name.split(".").pop()?.toLowerCase() || "png";
-      const filePath = `${user.id}/chef-${type}/${Date.now()}_${type}.${fileExt}`;
+      const filePath = `${user.id}/chef-stamp/${Date.now()}_cachet.${fileExt}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("agency-logos")
         .upload(filePath, file, { upsert: true });
@@ -79,8 +79,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
       const { data: urlData } = supabase.storage
         .from("agency-logos")
         .getPublicUrl(uploadData.path);
-      const field = type === "stamp" ? "chef_stamp_url" : "chef_signature_url";
-      setFormData((prev) => ({ ...prev, [field]: urlData.publicUrl }));
+      setFormData((prev) => ({ ...prev, chef_stamp_url: urlData.publicUrl }));
       toast.success("Image importée");
     } catch (err: any) {
       console.error("Upload error:", err);

@@ -306,7 +306,17 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                 const ilotName = getIlotName(parcelle.ilot_id);
                 return (
                   <TableRow key={parcelle.id}>
-                    <TableCell className="font-medium">{parcelle.plot_number}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {parcelle.plot_number}
+                        {!isAdmin && parcelle.assigned_to === user?.id && (
+                          <Badge variant="secondary" className="gap-1 text-xs">
+                            <Star className="h-3 w-3" />
+                            Mon lot
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                   <TableCell>
                     {ilotName ? (
                       <Badge variant="outline" className="gap-1">

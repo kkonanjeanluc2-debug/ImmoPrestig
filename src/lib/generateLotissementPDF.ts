@@ -1350,9 +1350,9 @@ export const generateAttestationVillageoise = async (
     yPos += legalLines.length * 5 + 15;
 
     const city = lotissement.city || agency?.city || "____________________";
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth / 2, yPos, { align: "center" });
+    doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth - margin, yPos, { align: "right" });
   }
 
   yPos += 10;

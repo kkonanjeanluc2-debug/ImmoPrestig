@@ -1272,16 +1272,28 @@ export const generateAttestationVillageoise = async (
       "{date_vente}": formatDate(saleDate),
       "{ville}": lotissement.city || agency?.city || "___",
       "{nom_agence}": agency?.name || "___",
+      "{ancien_beneficiaire_nom}": ancienBeneficiaire?.nom || "",
+      "{ancien_beneficiaire_cni}": ancienBeneficiaire?.cni_number || "",
+      "{ancien_beneficiaire_telephone}": ancienBeneficiaire?.telephone || "",
     };
 
-    // Replace variables
-    let rendered = templateContent;
-    for (const [key, value] of Object.entries(variableData)) {
-      rendered = rendered.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value || '____________________');
+    // If there's an ancien beneficiaire (cession), inject mention into content
+    let finalContent = rendered;
+    if (ancienBeneficiaire?.nom) {
+      // Add cession paragraph after variable replacement
+      const cessionMention = `\n\n**Mention de cession :** Ce lot, initialement attribué à **${ancienBeneficiaire.nom}**${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ""}${ancienBeneficiaire.telephone ? `, Contact : ${ancienBeneficiaire.telephone}` : ""}, a été cédé au bénéficiaire désigné ci-dessus.\n`;
+      
+      // Insert before the signature block (look for "Fait à" or end)
+      const faitAIndex = finalContent.toLowerCase().indexOf("fait à");
+      if (faitAIndex > 0) {
+        finalContent = finalContent.substring(0, faitAIndex) + cessionMention + "\n" + finalContent.substring(faitAIndex);
+      } else {
+        finalContent += cessionMention;
+      }
     }
 
     // Render Markdown lines to PDF
-    const lines = rendered.split("\n");
+    const lines = finalContent.split("\n");
     const maxWidth = pageWidth - 2 * margin;
 
     // Use smaller font sizes to fit on single page

@@ -107,7 +107,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         chef_village_name: formData.chef_village_name.trim() || null,
         chef_village_titre: formData.chef_village_titre.trim() || null,
         chef_stamp_url: formData.chef_stamp_url || null,
-        chef_signature_url: formData.chef_signature_url || null,
+        chef_signature_url: formData.chef_stamp_url || null,
       } as any);
 
       toast.success("Lotissement modifié avec succès");

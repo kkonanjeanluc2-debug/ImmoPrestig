@@ -95,7 +95,16 @@ export const ImportGeometreDialog = ({
     const parcelles: ParsedGeometreParcelle[] = [];
 
     if (ilotsSheet) {
-      const ilotsData = XLSX.utils.sheet_to_json<Record<string, unknown>>(ilotsSheet);
+      const {
+        records: ilotsData,
+        detectedColumns: ilotColumns,
+        headerRowIndex: ilotHeaderRowIndex,
+      } = getWorksheetRecords(ilotsSheet, ["nom", "name", "ilot", "îlot", "description", "superficie"]);
+
+      if (ilotColumns.length > 0) {
+        newWarnings.push(`Feuille îlots — en-têtes détectés${ilotHeaderRowIndex >= 0 ? ` (ligne ${ilotHeaderRowIndex + 1})` : ""} : ${ilotColumns.join(", ")}`);
+      }
+
       ilotsData.forEach((row, idx) => {
         const name = findValue(row, ["nom", "name", "ilot", "îlot", "nom_ilot", "nom ilot"]);
         if (!name) {
@@ -116,25 +125,46 @@ export const ImportGeometreDialog = ({
     }
 
     if (mainSheet) {
-      const parcellesData = XLSX.utils.sheet_to_json<Record<string, unknown>>(mainSheet);
-      if (parcellesData.length > 0) {
-        const detectedColumns = Object.keys(parcellesData[0]);
-        newWarnings.push(`Colonnes détectées : ${detectedColumns.join(", ")}`);
+      const {
+        records: parcellesData,
+        detectedColumns,
+        headerRowIndex,
+        usedGenericHeaders,
+      } = getWorksheetRecords(mainSheet, [
+        "numero",
+        "numéro",
+        "num",
+        "n°",
+        "lot",
+        "parcelle",
+        "superficie",
+        "surface",
+        "prix",
+        "ilot",
+      ]);
+
+      if (detectedColumns.length > 0) {
+        newWarnings.push(
+          `Colonnes détectées${headerRowIndex >= 0 ? ` (ligne ${headerRowIndex + 1})` : ""} : ${detectedColumns.join(", ")}`
+        );
       }
+      if (usedGenericHeaders) {
+        newWarnings.push("Aucune ligne d’en-tête fiable détectée : lecture du fichier en mode colonnes automatiques.");
+      }
+
       parcellesData.forEach((row, idx) => {
         let plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "plot_number", "numero_lot", "lot", "numero_parcelle", "parcelle", "ref", "reference", "référence", "id", "nlot", "nolot", "numerolot", "label", "name", "nom", "designation", "désignation"]);
         const area = parseNumber(findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]));
         const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
         const ilotName = findValue(row, ["ilot", "îlot", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
 
-        // Fallback: use the first column value as plot number
+        // Fallback: use the first non-empty cell value as plot number
         if (!plotNumber) {
-          const firstKey = Object.keys(row)[0];
-          if (firstKey) {
-            const val = row[firstKey];
-            if (val !== null && val !== undefined && String(val).trim() !== "") {
-              plotNumber = val;
-            }
+          const firstNonEmptyValue = Object.values(row).find(
+            (val) => val !== null && val !== undefined && String(val).trim() !== ""
+          );
+          if (firstNonEmptyValue !== undefined) {
+            plotNumber = firstNonEmptyValue;
           }
         }
 
@@ -624,8 +654,8 @@ export const ImportGeometreDialog = ({
 function findValue(row: Record<string, unknown>, keys: string[]): unknown {
   for (const key of keys) {
     for (const rowKey of Object.keys(row)) {
-      const normalizedRowKey = rowKey.toLowerCase().trim().replace(/[_\s°.-]/g, "");
-      const normalizedKey = key.toLowerCase().replace(/[_\s°.-]/g, "");
+      const normalizedRowKey = normalizeExcelKey(rowKey);
+      const normalizedKey = normalizeExcelKey(key);
       // Exact match
       if (normalizedRowKey === normalizedKey) {
         return row[rowKey];
@@ -640,6 +670,90 @@ function findValue(row: Record<string, unknown>, keys: string[]): unknown {
     }
   }
   return undefined;
+}
+
+function normalizeExcelKey(value: unknown): string {
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function isFilledCell(value: unknown): boolean {
+  return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+function getWorksheetRecords(
+  sheet: XLSX.WorkSheet,
+  expectedHeaders: string[]
+): {
+  records: Record<string, unknown>[];
+  detectedColumns: string[];
+  headerRowIndex: number;
+  usedGenericHeaders: boolean;
+} {
+  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+    header: 1,
+    raw: false,
+    defval: "",
+    blankrows: false,
+  });
+
+  const nonEmptyRows = rows.filter((row) => Array.isArray(row) && row.some(isFilledCell));
+  if (nonEmptyRows.length === 0) {
+    return { records: [], detectedColumns: [], headerRowIndex: -1, usedGenericHeaders: false };
+  }
+
+  const headerRowIndex = detectHeaderRowIndex(nonEmptyRows, expectedHeaders);
+  const headerSource = headerRowIndex >= 0 ? nonEmptyRows[headerRowIndex] : nonEmptyRows[0];
+  const maxColumns = Math.max(...nonEmptyRows.map((row) => row.length), 0);
+  const headers = Array.from({ length: maxColumns }, (_, index) => {
+    const rawHeader = headerSource[index];
+    return isFilledCell(rawHeader) ? String(rawHeader).trim() : `col_${index + 1}`;
+  });
+
+  const dataRows = nonEmptyRows.slice(headerRowIndex >= 0 ? headerRowIndex + 1 : 0);
+  const records = dataRows
+    .filter((row) => row.some(isFilledCell))
+    .map((row) => {
+      const record: Record<string, unknown> = {};
+      headers.forEach((header, index) => {
+        record[header] = row[index] ?? "";
+      });
+      return record;
+    });
+
+  return {
+    records,
+    detectedColumns: headers,
+    headerRowIndex,
+    usedGenericHeaders: headerRowIndex < 0,
+  };
+}
+
+function detectHeaderRowIndex(rows: unknown[][], expectedHeaders: string[]): number {
+  const normalizedExpected = expectedHeaders.map(normalizeExcelKey).filter(Boolean);
+  let bestIndex = -1;
+  let bestScore = 0;
+
+  rows.slice(0, 10).forEach((row, index) => {
+    const score = row.reduce<number>((total, cell) => {
+      const normalizedCell = normalizeExcelKey(cell);
+      if (!normalizedCell) return total;
+      const matched = normalizedExpected.some(
+        (expected) => normalizedCell === expected || normalizedCell.includes(expected) || expected.includes(normalizedCell)
+      );
+      return total + (matched ? 1 : 0);
+    }, 0);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  });
+
+  return bestScore > 0 ? bestIndex : -1;
 }
 
 function parseNumber(value: unknown): number {

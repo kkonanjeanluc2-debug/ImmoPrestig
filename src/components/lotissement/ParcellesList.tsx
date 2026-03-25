@@ -204,13 +204,17 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const handleBulkDelete = async () => {
     setIsBulkDeleteLoading(true);
     const ids = Array.from(selectedIds);
+    const batchSize = 30;
     try {
-      const { error } = await supabase
-        .from("parcelles")
-        .update({ deleted_at: new Date().toISOString() })
-        .in("id", ids);
+      for (let i = 0; i < ids.length; i += batchSize) {
+        const batch = ids.slice(i, i + batchSize);
+        const { error } = await supabase
+          .from("parcelles")
+          .update({ deleted_at: new Date().toISOString() })
+          .in("id", batch);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       toast.success(`${ids.length} lot(s) déplacé(s) vers la corbeille`);
       queryClient.invalidateQueries({ queryKey: ["parcelles"] });

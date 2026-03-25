@@ -52,7 +52,6 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         chef_village_name: lotissement.chef_village_name || "",
         chef_village_titre: lotissement.chef_village_titre || "",
         chef_stamp_url: lotissement.chef_stamp_url || null,
-        chef_signature_url: lotissement.chef_signature_url || null,
       });
     }
   }, [lotissement]);

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +35,10 @@ export default function VentesImmobilieres() {
   // Prefetch both echeances sub-tabs so they load instantly
   useUpcomingEcheancesVentes();
   useOverdueEcheancesVentes();
+
+  if (!isLoadingPermissions && !hasPermission("can_view_ventes")) {
+    return <Navigate to="/dashboard" replace />;
+  }
   
   return (
     <DashboardLayout>

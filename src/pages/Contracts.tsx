@@ -99,10 +99,6 @@ const Contracts = () => {
   const canDeleteContracts = hasPermission("can_delete_contracts");
   const canManageContracts = !roleLoading && !isLocataire && canEditContracts;
 
-  if (!permLoading && !isAdmin && !hasPermission("can_view_contracts")) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [signatureFilter, setSignatureFilter] = useState("all");
@@ -115,6 +111,10 @@ const Contracts = () => {
   const [contractToGenerate, setContractToGenerate] = useState<any>(null);
   const [signDialogOpen, setSignDialogOpen] = useState(false);
   const [contractToSign, setContractToSign] = useState<any>(null);
+
+  if (!permLoading && !isAdmin && !hasPermission("can_view_contracts")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Get property and tenant names for display
   const getPropertyName = (propertyId: string) => {

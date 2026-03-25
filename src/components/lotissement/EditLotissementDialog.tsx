@@ -117,30 +117,26 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     }
   };
 
-  const renderImageUpload = (
-    label: string,
-    url: string | null,
-    type: "stamp" | "signature"
-  ) => {
-    const field = type === "stamp" ? "chef_stamp_url" : "chef_signature_url";
+  const renderStampUpload = () => {
+    const url = formData.chef_stamp_url;
     return (
       <div className="space-y-2">
         <Label className="flex items-center gap-2 text-xs">
           <Stamp className="h-3.5 w-3.5" />
-          {label}
+          Cachet & Signature du Chef
         </Label>
         {url ? (
           <div className="flex items-center gap-3 p-2 border rounded-lg bg-muted/30">
             <img
               src={url}
-              alt={label}
+              alt="Cachet & Signature"
               className="h-14 w-auto object-contain bg-background rounded border p-1"
             />
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setFormData((prev) => ({ ...prev, [field]: null }))}
+              onClick={() => setFormData((prev) => ({ ...prev, chef_stamp_url: null }))}
             >
               <X className="h-3 w-3 mr-1" />
               Supprimer
@@ -156,7 +152,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   e.currentTarget.value = "";
-                  if (file) handleUploadImage(file, type);
+                  if (file) handleUploadImage(file);
                 }}
               />
               <Button type="button" variant="outline" size="sm" asChild>

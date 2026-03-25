@@ -533,7 +533,7 @@ const Properties = () => {
                                   className="h-auto py-1 px-2 text-primary gap-1 hover:text-primary"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    navigate("/tenants");
+                                    navigate("/tenants?add=true");
                                   }}
                                 >
                                   <UserPlus className="h-3.5 w-3.5" />
@@ -645,7 +645,7 @@ const Properties = () => {
                                                     className="h-auto py-1 px-2 text-primary gap-1 hover:text-primary"
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      navigate("/tenants");
+                                                      navigate("/tenants?add=true");
                                                     }}
                                                   >
                                                     <UserPlus className="h-3.5 w-3.5" />

@@ -42,7 +42,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { useOwners } from "@/hooks/useOwners";
@@ -126,6 +126,8 @@ const requestStatusConfig: Record<string, { label: string; className: string }> 
 // TenantCard removed - using table layout now
 export default function Tenants() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const shouldOpenAdd = searchParams.get("add") === "true";
   const [searchQuery, setSearchQuery] = useState("");
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -307,7 +309,7 @@ export default function Tenants() {
             {isAgencyOwner && <TenantTrashDialog />}
             {canCreate && <ImportTenantsDialog />}
             {canEdit && <MergeTenantsDialog />}
-            {canCreate && <AddTenantDialog />}
+            {canCreate && <AddTenantDialog defaultOpen={shouldOpenAdd} onSuccess={() => setSearchParams({})} />}
           </div>
 
           {/* Emergency button for new requests */}

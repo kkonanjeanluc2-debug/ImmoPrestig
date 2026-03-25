@@ -1033,6 +1033,9 @@ export interface AttestationTemplateData {
   lotissement_origin_name?: string;
   arrete_approbation?: string;
   content?: string;
+  banner_color_1?: string | null;
+  banner_color_2?: string | null;
+  banner_gradient?: boolean;
 }
 
 export interface AttestationChefImages {
@@ -1094,8 +1097,40 @@ export const generateAttestationVillageoise = async (
 
   // ===== BANDEAU BLEU : TITRE =====
   const bannerHeight = 28;
-  doc.setFillColor(0, 51, 153);
-  doc.rect(margin - 5, yPos - 5, pageWidth - 2 * (margin - 5), bannerHeight, "F");
+  const bannerColor1 = template?.banner_color_1 || "#003399";
+  const bannerColor2 = template?.banner_color_2 || null;
+  const useGradient = template?.banner_gradient && bannerColor2;
+  
+  const hexToRgbLocal = (hex: string): [number, number, number] => {
+    const h = hex.replace("#", "");
+    return [
+      parseInt(h.substring(0, 2), 16) || 0,
+      parseInt(h.substring(2, 4), 16) || 0,
+      parseInt(h.substring(4, 6), 16) || 0,
+    ];
+  };
+
+  if (useGradient) {
+    // Simulate gradient with thin vertical strips
+    const bannerX = margin - 5;
+    const bannerW = pageWidth - 2 * (margin - 5);
+    const c1 = hexToRgbLocal(bannerColor1);
+    const c2 = hexToRgbLocal(bannerColor2!);
+    const steps = 40;
+    const stripW = bannerW / steps;
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1);
+      const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+      const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+      const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+      doc.setFillColor(r, g, b);
+      doc.rect(bannerX + i * stripW, yPos - 5, stripW + 0.5, bannerHeight, "F");
+    }
+  } else {
+    const bc = hexToRgbLocal(bannerColor1);
+    doc.setFillColor(bc[0], bc[1], bc[2]);
+    doc.rect(margin - 5, yPos - 5, pageWidth - 2 * (margin - 5), bannerHeight, "F");
+  }
   
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);

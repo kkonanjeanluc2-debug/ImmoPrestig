@@ -119,6 +119,9 @@ const emptyForm: AttestationTemplateInsert = {
   lotissement_origin_name: "",
   arrete_approbation: "",
   is_default: false,
+  banner_color_1: "#003399",
+  banner_color_2: null,
+  banner_gradient: false,
 };
 
 export function AttestationTemplateManager() {
@@ -152,6 +155,9 @@ export function AttestationTemplateManager() {
       lotissement_origin_name: t.lotissement_origin_name,
       arrete_approbation: t.arrete_approbation,
       is_default: t.is_default,
+      banner_color_1: t.banner_color_1 || "#003399",
+      banner_color_2: t.banner_color_2 || null,
+      banner_gradient: t.banner_gradient || false,
     });
     setDialogOpen(true);
   };
@@ -169,6 +175,9 @@ export function AttestationTemplateManager() {
       lotissement_origin_name: t.lotissement_origin_name,
       arrete_approbation: t.arrete_approbation,
       is_default: false,
+      banner_color_1: t.banner_color_1 || "#003399",
+      banner_color_2: t.banner_color_2 || null,
+      banner_gradient: t.banner_gradient || false,
     });
     setDialogOpen(true);
   };
@@ -381,6 +390,77 @@ export function AttestationTemplateManager() {
                 <div>
                   <Label className="text-xs">Arrêté d'approbation</Label>
                   <Input value={form.arrete_approbation} onChange={(e) => updateField("arrete_approbation", e.target.value)} placeholder="Ex: Approuvé par Arrêté N°20-00140/MCLU..." />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Couleurs du bandeau */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Couleurs du bandeau</Label>
+              <p className="text-xs text-muted-foreground">
+                Choisissez une couleur unique ou un dégradé pour le bandeau de titre de l'attestation.
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={form.banner_gradient}
+                    onCheckedChange={(v) => {
+                      updateField("banner_gradient", v);
+                      if (v && !form.banner_color_2) {
+                        updateField("banner_color_2", "#001a66");
+                      }
+                    }}
+                  />
+                  <Label className="text-sm">Dégradé</Label>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs">{form.banner_gradient ? "Couleur 1" : "Couleur du bandeau"}</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={form.banner_color_1 || "#003399"}
+                      onChange={(e) => updateField("banner_color_1", e.target.value)}
+                      className="w-10 h-10 rounded cursor-pointer border border-border"
+                    />
+                    <Input
+                      value={form.banner_color_1 || "#003399"}
+                      onChange={(e) => updateField("banner_color_1", e.target.value)}
+                      className="w-28 font-mono text-xs"
+                    />
+                  </div>
+                </div>
+                {form.banner_gradient && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Couleur 2</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={form.banner_color_2 || "#001a66"}
+                        onChange={(e) => updateField("banner_color_2", e.target.value)}
+                        className="w-10 h-10 rounded cursor-pointer border border-border"
+                      />
+                      <Input
+                        value={form.banner_color_2 || "#001a66"}
+                        onChange={(e) => updateField("banner_color_2", e.target.value)}
+                        className="w-28 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Label className="text-xs">Aperçu</Label>
+                  <div
+                    className="h-10 rounded mt-1"
+                    style={{
+                      background: form.banner_gradient && form.banner_color_2
+                        ? `linear-gradient(135deg, ${form.banner_color_1 || "#003399"}, ${form.banner_color_2})`
+                        : form.banner_color_1 || "#003399",
+                    }}
+                  />
                 </div>
               </div>
             </div>

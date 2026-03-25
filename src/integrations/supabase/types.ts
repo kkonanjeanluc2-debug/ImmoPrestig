@@ -665,6 +665,9 @@ export type Database = {
           arrete_approbation: string | null
           arrete_date: string | null
           arrete_numero: string | null
+          banner_color_1: string | null
+          banner_color_2: string | null
+          banner_gradient: boolean | null
           commune: string | null
           content: string
           created_at: string
@@ -681,6 +684,9 @@ export type Database = {
           arrete_approbation?: string | null
           arrete_date?: string | null
           arrete_numero?: string | null
+          banner_color_1?: string | null
+          banner_color_2?: string | null
+          banner_gradient?: boolean | null
           commune?: string | null
           content?: string
           created_at?: string
@@ -697,6 +703,9 @@ export type Database = {
           arrete_approbation?: string | null
           arrete_date?: string | null
           arrete_numero?: string | null
+          banner_color_1?: string | null
+          banner_color_2?: string | null
+          banner_gradient?: boolean | null
           commune?: string | null
           content?: string
           created_at?: string

@@ -62,6 +62,13 @@ export interface MemberPermissions {
   can_create_offres_achat: boolean;
   can_create_achats_documents: boolean;
   can_manage_mutations: boolean;
+  // Échéances
+  can_view_echeances_lotissements: boolean;
+  can_collect_echeances_lotissements: boolean;
+  can_view_echeances_ventes: boolean;
+  can_collect_echeances_ventes: boolean;
+  can_view_echeances_achats: boolean;
+  can_collect_echeances_achats: boolean;
   // Impayés
   can_view_impayes: boolean;
   can_create_impayes: boolean;
@@ -151,6 +158,13 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_offres_achat: "Créer des offres d'achat",
   can_create_achats_documents: "Ajouter des documents achat",
   can_manage_mutations: "Gérer les mutations",
+  // Échéances
+  can_view_echeances_lotissements: "Voir les échéances (Lotissements)",
+  can_collect_echeances_lotissements: "Encaisser les échéances (Lotissements)",
+  can_view_echeances_ventes: "Voir les échéances (Ventes)",
+  can_collect_echeances_ventes: "Encaisser les échéances (Ventes)",
+  can_view_echeances_achats: "Voir les échéances (Achats)",
+  can_collect_echeances_achats: "Encaisser les échéances (Achats)",
   // Impayés
   can_view_impayes: "Voir les impayés",
   can_create_impayes: "Créer des dossiers d'impayés",
@@ -201,15 +215,15 @@ export const PERMISSION_GROUPS = {
   },
   lotissements: {
     label: "Lotissements",
-    permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements", "can_create_parcelles", "can_create_ilots", "can_create_lotissement_documents", "can_create_demarches", "can_create_lotissement_prospects", "can_access_guide", "can_export_guide", "can_import_geometre", "can_access_repartition"] as PermissionKey[],
+    permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements", "can_create_parcelles", "can_create_ilots", "can_create_lotissement_documents", "can_create_demarches", "can_create_lotissement_prospects", "can_access_guide", "can_export_guide", "can_import_geometre", "can_access_repartition", "can_view_echeances_lotissements", "can_collect_echeances_lotissements"] as PermissionKey[],
   },
   ventes: {
     label: "Ventes immobilières",
-    permissions: ["can_view_ventes", "can_create_ventes", "can_edit_ventes", "can_delete_ventes", "can_create_biens_vente", "can_edit_biens_vente", "can_create_vente_prospects"] as PermissionKey[],
+    permissions: ["can_view_ventes", "can_create_ventes", "can_edit_ventes", "can_delete_ventes", "can_create_biens_vente", "can_edit_biens_vente", "can_create_vente_prospects", "can_view_echeances_ventes", "can_collect_echeances_ventes"] as PermissionKey[],
   },
   achats: {
     label: "Achats immobiliers",
-    permissions: ["can_view_achats", "can_create_achats", "can_edit_achats", "can_delete_achats", "can_create_offres_achat", "can_create_achats_documents", "can_manage_mutations"] as PermissionKey[],
+    permissions: ["can_view_achats", "can_create_achats", "can_edit_achats", "can_delete_achats", "can_create_offres_achat", "can_create_achats_documents", "can_manage_mutations", "can_view_echeances_achats", "can_collect_echeances_achats"] as PermissionKey[],
   },
   impayes: {
     label: "Impayés",
@@ -283,6 +297,12 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_offres_achat: true,
     can_create_achats_documents: true,
     can_manage_mutations: true,
+    can_view_echeances_lotissements: true,
+    can_collect_echeances_lotissements: true,
+    can_view_echeances_ventes: true,
+    can_collect_echeances_ventes: true,
+    can_view_echeances_achats: true,
+    can_collect_echeances_achats: true,
     can_view_impayes: true,
     can_create_impayes: true,
     can_edit_impayes: true,
@@ -360,6 +380,12 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_offres_achat: false,
     can_create_achats_documents: false,
     can_manage_mutations: false,
+    can_view_echeances_lotissements: true,
+    can_collect_echeances_lotissements: false,
+    can_view_echeances_ventes: true,
+    can_collect_echeances_ventes: false,
+    can_view_echeances_achats: true,
+    can_collect_echeances_achats: false,
     can_view_impayes: true,
     can_create_impayes: false,
     can_edit_impayes: false,
@@ -437,6 +463,12 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_offres_achat: false,
     can_create_achats_documents: false,
     can_manage_mutations: false,
+    can_view_echeances_lotissements: true,
+    can_collect_echeances_lotissements: true,
+    can_view_echeances_ventes: true,
+    can_collect_echeances_ventes: true,
+    can_view_echeances_achats: true,
+    can_collect_echeances_achats: true,
     can_view_impayes: true,
     can_create_impayes: false,
     can_edit_impayes: false,
@@ -514,6 +546,12 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_offres_achat: false,
     can_create_achats_documents: false,
     can_manage_mutations: false,
+    can_view_echeances_lotissements: true,
+    can_collect_echeances_lotissements: false,
+    can_view_echeances_ventes: true,
+    can_collect_echeances_ventes: false,
+    can_view_echeances_achats: true,
+    can_collect_echeances_achats: false,
     can_view_impayes: true,
     can_create_impayes: false,
     can_edit_impayes: false,

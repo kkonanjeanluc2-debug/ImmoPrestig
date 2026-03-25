@@ -2155,6 +2155,9 @@ export type Database = {
           can_access_settings: boolean
           can_access_subscription_tab: boolean
           can_access_whatsapp_tab: boolean
+          can_collect_echeances_achats: boolean
+          can_collect_echeances_lotissements: boolean
+          can_collect_echeances_ventes: boolean
           can_create_achats: boolean
           can_create_achats_documents: boolean
           can_create_biens_vente: boolean | null
@@ -2210,6 +2213,9 @@ export type Database = {
           can_view_comptabilite: boolean
           can_view_contracts: boolean
           can_view_documents: boolean
+          can_view_echeances_achats: boolean
+          can_view_echeances_lotissements: boolean
+          can_view_echeances_ventes: boolean
           can_view_impayes: boolean
           can_view_lotissements: boolean
           can_view_owners: boolean
@@ -2236,6 +2242,9 @@ export type Database = {
           can_access_settings?: boolean
           can_access_subscription_tab?: boolean
           can_access_whatsapp_tab?: boolean
+          can_collect_echeances_achats?: boolean
+          can_collect_echeances_lotissements?: boolean
+          can_collect_echeances_ventes?: boolean
           can_create_achats?: boolean
           can_create_achats_documents?: boolean
           can_create_biens_vente?: boolean | null
@@ -2291,6 +2300,9 @@ export type Database = {
           can_view_comptabilite?: boolean
           can_view_contracts?: boolean
           can_view_documents?: boolean
+          can_view_echeances_achats?: boolean
+          can_view_echeances_lotissements?: boolean
+          can_view_echeances_ventes?: boolean
           can_view_impayes?: boolean
           can_view_lotissements?: boolean
           can_view_owners?: boolean
@@ -2317,6 +2329,9 @@ export type Database = {
           can_access_settings?: boolean
           can_access_subscription_tab?: boolean
           can_access_whatsapp_tab?: boolean
+          can_collect_echeances_achats?: boolean
+          can_collect_echeances_lotissements?: boolean
+          can_collect_echeances_ventes?: boolean
           can_create_achats?: boolean
           can_create_achats_documents?: boolean
           can_create_biens_vente?: boolean | null
@@ -2372,6 +2387,9 @@ export type Database = {
           can_view_comptabilite?: boolean
           can_view_contracts?: boolean
           can_view_documents?: boolean
+          can_view_echeances_achats?: boolean
+          can_view_echeances_lotissements?: boolean
+          can_view_echeances_ventes?: boolean
           can_view_impayes?: boolean
           can_view_lotissements?: boolean
           can_view_owners?: boolean

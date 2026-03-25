@@ -87,6 +87,10 @@ export interface MemberPermissions {
   can_view_comptabilite: boolean;
   can_export_comptabilite: boolean;
   can_create_expenses: boolean;
+  can_view_invoices: boolean;
+  can_create_invoices: boolean;
+  can_view_owner_payouts: boolean;
+  can_create_owner_payouts: boolean;
   // Module access
   can_access_gestion_locative: boolean;
   can_access_crm_immobilier: boolean;

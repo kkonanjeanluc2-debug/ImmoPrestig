@@ -55,6 +55,12 @@ function getDefaultPermissions(role: string) {
     can_manage_automations: true,
     can_manage_branding: true,
     can_manage_templates: true,
+    can_view_echeances_lotissements: true,
+    can_collect_echeances_lotissements: true,
+    can_view_echeances_ventes: true,
+    can_collect_echeances_ventes: true,
+    can_view_echeances_achats: true,
+    can_collect_echeances_achats: true,
   };
 
   const gestionnairePermissions = {

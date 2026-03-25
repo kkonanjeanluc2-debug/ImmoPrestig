@@ -254,6 +254,8 @@ function getDefaultPermissions(role: string) {
     can_view_echeances_achats: true,
     can_collect_echeances_achats: true,
   };
+
+  switch (role) {
     case "admin":
       return adminPermissions;
     case "gestionnaire":

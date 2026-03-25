@@ -110,9 +110,21 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
   ];
 
   const handleExportPDF = () => {
+    const template = guideTemplateId
+      ? guideTemplates.find(t => t.id === guideTemplateId)
+      : guideTemplates.find(t => t.is_default);
+
     generateGuidePDF(guideEntries, lotissementName, {
       totalParcelles: parcelles?.length || 0,
       agency: agency || undefined,
+      coverPage: template ? {
+        district: template.district,
+        commune: template.commune,
+        title_color: template.title_color,
+        subtitle_color: template.subtitle_color,
+        border_color: template.border_color,
+        bg_color: template.bg_color,
+      } : undefined,
     });
   };
 

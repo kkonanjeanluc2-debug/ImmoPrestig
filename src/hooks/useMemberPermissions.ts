@@ -256,7 +256,7 @@ export const PERMISSION_GROUPS = {
   },
   comptabilite: {
     label: "Comptabilité",
-    permissions: ["can_view_comptabilite", "can_export_comptabilite", "can_create_expenses"] as PermissionKey[],
+    permissions: ["can_view_comptabilite", "can_export_comptabilite", "can_create_expenses", "can_view_invoices", "can_create_invoices", "can_view_owner_payouts", "can_create_owner_payouts"] as PermissionKey[],
   },
   other: {
     label: "Autres",

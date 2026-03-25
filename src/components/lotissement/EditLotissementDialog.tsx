@@ -38,7 +38,6 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     chef_village_name: "",
     chef_village_titre: "",
     chef_stamp_url: null as string | null,
-    chef_signature_url: null as string | null,
   });
 
   useEffect(() => {
@@ -53,12 +52,11 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         chef_village_name: lotissement.chef_village_name || "",
         chef_village_titre: lotissement.chef_village_titre || "",
         chef_stamp_url: lotissement.chef_stamp_url || null,
-        chef_signature_url: lotissement.chef_signature_url || null,
       });
     }
   }, [lotissement]);
 
-  const handleUploadImage = async (file: File, type: "stamp" | "signature") => {
+  const handleUploadImage = async (file: File) => {
     if (!user?.id) {
       toast.error("Vous devez être connecté");
       return;
@@ -73,7 +71,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     }
     try {
       const fileExt = file.name.split(".").pop()?.toLowerCase() || "png";
-      const filePath = `${user.id}/chef-${type}/${Date.now()}_${type}.${fileExt}`;
+      const filePath = `${user.id}/chef-stamp/${Date.now()}_cachet.${fileExt}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("agency-logos")
         .upload(filePath, file, { upsert: true });
@@ -81,8 +79,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
       const { data: urlData } = supabase.storage
         .from("agency-logos")
         .getPublicUrl(uploadData.path);
-      const field = type === "stamp" ? "chef_stamp_url" : "chef_signature_url";
-      setFormData((prev) => ({ ...prev, [field]: urlData.publicUrl }));
+      setFormData((prev) => ({ ...prev, chef_stamp_url: urlData.publicUrl }));
       toast.success("Image importée");
     } catch (err: any) {
       console.error("Upload error:", err);
@@ -110,7 +107,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         chef_village_name: formData.chef_village_name.trim() || null,
         chef_village_titre: formData.chef_village_titre.trim() || null,
         chef_stamp_url: formData.chef_stamp_url || null,
-        chef_signature_url: formData.chef_signature_url || null,
+        chef_signature_url: formData.chef_stamp_url || null,
       } as any);
 
       toast.success("Lotissement modifié avec succès");
@@ -120,30 +117,26 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     }
   };
 
-  const renderImageUpload = (
-    label: string,
-    url: string | null,
-    type: "stamp" | "signature"
-  ) => {
-    const field = type === "stamp" ? "chef_stamp_url" : "chef_signature_url";
+  const renderStampUpload = () => {
+    const url = formData.chef_stamp_url;
     return (
       <div className="space-y-2">
         <Label className="flex items-center gap-2 text-xs">
           <Stamp className="h-3.5 w-3.5" />
-          {label}
+          Cachet & Signature du Chef
         </Label>
         {url ? (
           <div className="flex items-center gap-3 p-2 border rounded-lg bg-muted/30">
             <img
               src={url}
-              alt={label}
+              alt="Cachet & Signature"
               className="h-14 w-auto object-contain bg-background rounded border p-1"
             />
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setFormData((prev) => ({ ...prev, [field]: null }))}
+              onClick={() => setFormData((prev) => ({ ...prev, chef_stamp_url: null }))}
             >
               <X className="h-3 w-3 mr-1" />
               Supprimer
@@ -159,7 +152,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   e.currentTarget.value = "";
-                  if (file) handleUploadImage(file, type);
+                  if (file) handleUploadImage(file);
                 }}
               />
               <Button type="button" variant="outline" size="sm" asChild>
@@ -266,10 +259,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {renderImageUpload("Cachet du Chef", formData.chef_stamp_url, "stamp")}
-              {renderImageUpload("Signature du Chef", formData.chef_signature_url, "signature")}
-            </div>
+            {renderStampUpload()}
           </div>
 
           <Separator className="my-2" />

@@ -83,8 +83,10 @@ export const useVentesParcelles = (lotissementId?: string) => {
             parcelle:parcelles!inner(
               plot_number,
               area,
+              ilot_id,
               lotissement_id,
-              lotissement:lotissements(name)
+              ilot:ilots(name),
+              lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id)
             ),
             acquereur:acquereurs(name, phone)
           `)
@@ -92,7 +94,7 @@ export const useVentesParcelles = (lotissementId?: string) => {
           .order("sale_date", { ascending: false });
 
         if (error) throw error;
-        return data as VenteWithDetails[];
+        return data as unknown as VenteWithDetails[];
       }
       
       // Without filter, get all ventes

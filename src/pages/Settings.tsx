@@ -22,6 +22,7 @@ import { PromesseVenteTemplateManager } from "@/components/settings/PromesseVent
 import { ReservationFormTemplateManager } from "@/components/settings/ReservationFormTemplateManager";
 import { AchatContractTemplateManager } from "@/components/settings/AchatContractTemplateManager";
 import { AttestationTemplateManager } from "@/components/settings/AttestationTemplateManager";
+import { GuideTemplateManager } from "@/components/settings/GuideTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";

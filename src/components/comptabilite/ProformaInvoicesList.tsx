@@ -29,9 +29,10 @@ const typeConfig: Record<string, { label: string; color: string }> = {
 interface Props {
   tenantId?: string;
   compact?: boolean;
+  canCreate?: boolean;
 }
 
-export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
+export function ProformaInvoicesList({ tenantId, compact = false, canCreate = true }: Props) {
   const { data: invoices, isLoading } = useProformaInvoices(tenantId);
   const convertToInvoice = useConvertToInvoice();
   const updateStatus = useUpdateProformaStatus();
@@ -92,7 +93,7 @@ export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
                 ))}
               </div>
             )}
-            <CreateProformaDialog preselectedTenantId={tenantId} />
+            {canCreate && <CreateProformaDialog preselectedTenantId={tenantId} />}
           </div>
         </div>
       </CardHeader>

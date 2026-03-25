@@ -61,12 +61,14 @@ interface OwnerPayoutsSectionProps {
   fromDate: string;
   toDate: string;
   totalReversements: number;
+  canCreate?: boolean;
 }
 
 export function OwnerPayoutsSection({
   fromDate,
   toDate,
   totalReversements,
+  canCreate = true,
 }: OwnerPayoutsSectionProps) {
   const { data: payouts = [], isLoading } = useOwnerPayouts(fromDate, toDate);
   const { data: owners = [] } = useOwners();
@@ -235,6 +237,7 @@ export function OwnerPayoutsSection({
       </div>
 
       {/* Add button + Dialog */}
+      {canCreate && (
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -385,6 +388,7 @@ export function OwnerPayoutsSection({
           </DialogContent>
         </Dialog>
       </div>
+      )}
 
       {/* List */}
       <Card>

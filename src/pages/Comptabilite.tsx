@@ -84,6 +84,8 @@ const Comptabilite = () => {
 
   const canExport = isAdminOrOwner || hasPermission("can_export_comptabilite");
   const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
+  const canViewInvoices = isAdminOrOwner || hasPermission("can_view_invoices");
+  const canViewPayouts = isAdminOrOwner || hasPermission("can_view_owner_payouts");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
   const revenusNets = totalRevenue - totalReversements;
@@ -226,16 +228,20 @@ const Comptabilite = () => {
               <span className="hidden sm:inline">SYSCOHADA</span>
               <span className="sm:hidden">SYS.</span>
             </TabsTrigger>
-            <TabsTrigger value="factures" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-              <span className="hidden sm:inline">Factures</span>
-              <span className="sm:hidden">Fact.</span>
-            </TabsTrigger>
-            <TabsTrigger value="reversements" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
-              <ArrowDownToLine className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-              <span className="hidden sm:inline">Reversements</span>
-              <span className="sm:hidden">Rev.</span>
-            </TabsTrigger>
+            {canViewInvoices && (
+              <TabsTrigger value="factures" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Factures</span>
+                <span className="sm:hidden">Fact.</span>
+              </TabsTrigger>
+            )}
+            {canViewPayouts && (
+              <TabsTrigger value="reversements" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+                <ArrowDownToLine className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Reversements</span>
+                <span className="sm:hidden">Rev.</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* === OVERVIEW TAB === */}
@@ -707,18 +713,23 @@ const Comptabilite = () => {
           </TabsContent>
 
           {/* === FACTURES TAB === */}
-          <TabsContent value="factures" className="space-y-6">
-            <ProformaInvoicesList />
-          </TabsContent>
+          {canViewInvoices && (
+            <TabsContent value="factures" className="space-y-6">
+              <ProformaInvoicesList canCreate={isAdminOrOwner || hasPermission("can_create_invoices")} />
+            </TabsContent>
+          )}
 
           {/* === REVERSEMENTS TAB === */}
-          <TabsContent value="reversements" className="space-y-6">
-            <OwnerPayoutsSection
-              fromDate={fromDateStr}
-              toDate={toDateStr}
-              totalReversements={totalReversements}
-            />
-          </TabsContent>
+          {canViewPayouts && (
+            <TabsContent value="reversements" className="space-y-6">
+              <OwnerPayoutsSection
+                fromDate={fromDateStr}
+                toDate={toDateStr}
+                totalReversements={totalReversements}
+                canCreate={isAdminOrOwner || hasPermission("can_create_owner_payouts")}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

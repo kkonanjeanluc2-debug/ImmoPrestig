@@ -337,7 +337,7 @@ export async function generateGuidePDF(
 
     // First pass: determine which entries fit on this page
     const pageStartIndex = entryIndex;
-    let tempY = 18 + headerHeight; // approximate header + table header height
+    let tempY = margin + 18 + headerHeight; // margin + page header + table header height
     const maxY = landscapeH - margin - 5;
     let countOnPage = 0;
     while (entryIndex + countOnPage < entries.length && tempY + rowHeight <= maxY) {

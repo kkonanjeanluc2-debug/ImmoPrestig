@@ -116,6 +116,10 @@ export const ImportGeometreDialog = ({
 
     if (mainSheet) {
       const parcellesData = XLSX.utils.sheet_to_json<Record<string, unknown>>(mainSheet);
+      if (parcellesData.length > 0) {
+        const detectedColumns = Object.keys(parcellesData[0]);
+        newWarnings.push(`Colonnes détectées : ${detectedColumns.join(", ")}`);
+      }
       parcellesData.forEach((row, idx) => {
         let plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "plot_number", "numero_lot", "lot", "numero_parcelle", "parcelle", "ref", "reference", "référence", "id", "nlot", "nolot", "numerolot", "label", "name", "nom", "designation", "désignation"]);
         const area = parseNumber(findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]));

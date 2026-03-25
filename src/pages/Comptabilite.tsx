@@ -713,18 +713,23 @@ const Comptabilite = () => {
           </TabsContent>
 
           {/* === FACTURES TAB === */}
-          <TabsContent value="factures" className="space-y-6">
-            <ProformaInvoicesList />
-          </TabsContent>
+          {canViewInvoices && (
+            <TabsContent value="factures" className="space-y-6">
+              <ProformaInvoicesList canCreate={isAdminOrOwner || hasPermission("can_create_invoices")} />
+            </TabsContent>
+          )}
 
           {/* === REVERSEMENTS TAB === */}
-          <TabsContent value="reversements" className="space-y-6">
-            <OwnerPayoutsSection
-              fromDate={fromDateStr}
-              toDate={toDateStr}
-              totalReversements={totalReversements}
-            />
-          </TabsContent>
+          {canViewPayouts && (
+            <TabsContent value="reversements" className="space-y-6">
+              <OwnerPayoutsSection
+                fromDate={fromDateStr}
+                toDate={toDateStr}
+                totalReversements={totalReversements}
+                canCreate={isAdminOrOwner || hasPermission("can_create_owner_payouts")}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

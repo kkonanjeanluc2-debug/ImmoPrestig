@@ -707,7 +707,12 @@ function findValue(row: Record<string, unknown>, keys: string[]): unknown {
         return row[rowKey];
       }
       // Partial match: column header contains the key or vice versa
+      // But skip "N° D'ORDRE" type columns when searching for "n°" or "no"
       if (normalizedRowKey.includes(normalizedKey) || normalizedKey.includes(normalizedRowKey)) {
+        // Exclude "ordre" columns from matching generic number keys
+        if ((normalizedKey === "n" || normalizedKey === "no" || normalizedKey === "num" || normalizedKey === "numero") && normalizedRowKey.includes("ordre")) {
+          continue;
+        }
         const val = row[rowKey];
         if (val !== null && val !== undefined && String(val).trim() !== "") {
           return val;

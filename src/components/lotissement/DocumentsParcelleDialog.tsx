@@ -17,7 +17,7 @@ import {
   generateAttestationVillageoise,
   downloadPDF,
 } from "@/lib/generateLotissementPDF";
-import type { AttestationTemplateData } from "@/lib/generateLotissementPDF";
+import type { AttestationTemplateData, AttestationChefImages } from "@/lib/generateLotissementPDF";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
 import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";

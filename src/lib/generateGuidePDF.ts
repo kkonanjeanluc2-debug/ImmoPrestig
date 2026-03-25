@@ -25,6 +25,14 @@ interface GuideOptions {
     address?: string | null;
     city?: string | null;
   };
+  coverPage?: {
+    district: string;
+    commune: string;
+    title_color: string;
+    subtitle_color: string;
+    border_color: string;
+    bg_color: string;
+  };
 }
 
 async function loadImageAsBase64(url: string): Promise<string | null> {

@@ -75,8 +75,8 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
         attestation_date: vente ? format(new Date(vente.sale_date), "dd/MM/yyyy") : "",
         contact: vente?.acquereur?.phone || "",
         equipement: "",
-        nature_piece: "",
-        numero_piece: "",
+        nature_piece: vente?.acquereur?.cni_number ? "CNI" : "",
+        numero_piece: vente?.acquereur?.cni_number || "",
         date_piece: "",
         status: parcelle.status,
       };

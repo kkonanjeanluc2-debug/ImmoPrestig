@@ -268,7 +268,7 @@ export const ImportGeometreDialog = ({
           return;
       }
 
-      // Filter duplicates
+      // Filter duplicate parcelles
       const filteredParcelles = result.parcelles.filter(
         p => !existingPlotNumbers.includes(p.plotNumber)
       );
@@ -277,17 +277,19 @@ export const ImportGeometreDialog = ({
         result.warnings.push(`${duplicates} parcelle(s) ignorée(s) car déjà existante(s)`);
       }
 
-      const filteredIlots = result.ilots.filter(
+      // For ilots: keep only NEW ones for creation, but don't treat existing as errors
+      // Existing ilots will be reused during import (their IDs will be resolved)
+      const newIlots = result.ilots.filter(
         i => !existingIlotNames.includes(i.name)
       );
-      const dupIlots = result.ilots.length - filteredIlots.length;
-      if (dupIlots > 0) {
-        result.warnings.push(`${dupIlots} îlot(s) ignoré(s) car déjà existant(s)`);
+      const reusedIlots = result.ilots.length - newIlots.length;
+      if (reusedIlots > 0) {
+        result.warnings.push(`${reusedIlots} îlot(s) existant(s) seront réutilisé(s)`);
       }
 
       setErrors(result.errors);
       setWarnings(result.warnings);
-      setParsedIlots(filteredIlots);
+      setParsedIlots(newIlots);
       setParsedParcelles(filteredParcelles);
       setStep("preview");
     } catch (err) {

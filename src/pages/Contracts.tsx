@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,12 +88,15 @@ const Contracts = () => {
   const { data: tenants } = useTenants();
   const { data: owners } = useOwners();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const updateContract = useUpdateContract();
   const expireContract = useExpireContract();
   
   const isLocataire = userRole?.role === "locataire";
+  const isAdmin = role === "super_admin" || role === "admin";
   const canEditContracts = hasPermission("can_edit_contracts");
+  const canCreateContracts = hasPermission("can_create_contracts");
+  const canDeleteContracts = hasPermission("can_delete_contracts");
   const canManageContracts = !roleLoading && !isLocataire && canEditContracts;
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,6 +111,10 @@ const Contracts = () => {
   const [contractToGenerate, setContractToGenerate] = useState<any>(null);
   const [signDialogOpen, setSignDialogOpen] = useState(false);
   const [contractToSign, setContractToSign] = useState<any>(null);
+
+  if (!permLoading && !isAdmin && !hasPermission("can_view_contracts")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Get property and tenant names for display
   const getPropertyName = (propertyId: string) => {

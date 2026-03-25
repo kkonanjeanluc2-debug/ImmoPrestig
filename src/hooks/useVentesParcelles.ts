@@ -65,6 +65,7 @@ export interface VenteWithDetails extends VenteParcelle {
   acquereur?: {
     name: string;
     phone: string | null;
+    cni_number: string | null;
   };
 }
 

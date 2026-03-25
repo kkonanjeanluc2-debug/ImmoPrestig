@@ -268,6 +268,35 @@ export function DocumentsParcelleDialog({
                     stamp_url: lotissement?.chef_stamp_url || null,
                     signature_url: lotissement?.chef_signature_url || null,
                   };
+
+                  // Fetch ancien bénéficiaire if parcelle has one
+                  let ancienBeneficiaire: AncienBeneficiaireInfo | null = null;
+                  const beneficiaireId = (vente.parcelle as any)?.beneficiaire_id;
+                  if (beneficiaireId) {
+                    const { data: benData } = await supabase
+                      .from("beneficiaires_lots")
+                      .select("nom, cni_number, telephone")
+                      .eq("id", beneficiaireId)
+                      .single();
+                    if (benData) {
+                      ancienBeneficiaire = {
+                        nom: benData.nom,
+                        cni_number: benData.cni_number,
+                        telephone: benData.telephone,
+                      };
+                    }
+                  }
+                  // Fallback: extract from notes
+                  if (!ancienBeneficiaire) {
+                    const notes = (vente.parcelle as any)?.notes || "";
+                    const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
+                    const propMatch = notes.match(/Propriétaire:\s*([^|]+)/);
+                    const name = benMatch?.[1]?.trim() || propMatch?.[1]?.trim();
+                    if (name) {
+                      ancienBeneficiaire = { nom: name };
+                    }
+                  }
+
                   const doc = await generateAttestationVillageoise(
                     parcelleInfo,
                     lotissementInfo,
@@ -279,7 +308,8 @@ export function DocumentsParcelleDialog({
                     templateData,
                     lotissement?.chef_village_titre || undefined,
                     ilotName,
-                    chefImages
+                    chefImages,
+                    ancienBeneficiaire
                   );
                   downloadPDF(doc, `attestation-attribution-${parcelleInfo.plot_number}.pdf`);
                   toast.success("Attestation villageoise générée");

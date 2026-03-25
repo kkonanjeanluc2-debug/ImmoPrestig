@@ -68,46 +68,91 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
       return a.plot_number.localeCompare(b.plot_number, "fr", { numeric: true });
     });
 
-    return sorted.map((parcelle, index): GuideEntry => {
+    const entries: GuideEntry[] = [];
+    let numero = 1;
+
+    sorted.forEach((parcelle) => {
       const vente = ventesMap.get(parcelle.id);
       const ilotName = parcelle.ilot_id ? (ilotsMap.get(parcelle.ilot_id) || "-") : "-";
       const beneficiaire = parcelle.beneficiaire_id ? beneficiairesMap.get(parcelle.beneficiaire_id) : null;
 
-      // Extract attributaire: priority to vente acquéreur, then beneficiaire, then notes
-      let attributaire = vente?.acquereur?.name || "";
-      let contact = vente?.acquereur?.phone || "";
-      let naturePiece = vente?.acquereur?.cni_number ? "CNI" : "";
-      let numeroPiece = vente?.acquereur?.cni_number || "";
+      // Determine original attributaire (beneficiaire or notes)
+      let origAttributaire = "";
+      let origContact = "";
+      let origNaturePiece = "";
+      let origNumeroPiece = "";
 
-      if (!attributaire && beneficiaire) {
-        attributaire = beneficiaire.nom;
-        contact = beneficiaire.telephone || "";
-        naturePiece = beneficiaire.cni_number ? "CNI" : "";
-        numeroPiece = beneficiaire.cni_number || "";
+      if (beneficiaire) {
+        origAttributaire = beneficiaire.nom;
+        origContact = beneficiaire.telephone || "";
+        origNaturePiece = beneficiaire.cni_number ? "CNI" : "";
+        origNumeroPiece = beneficiaire.cni_number || "";
       }
 
-      if (!attributaire && parcelle.notes) {
+      if (!origAttributaire && parcelle.notes) {
         const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
         const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
-        if (benMatch) attributaire = benMatch[1].trim();
-        if (!attributaire && propMatch) attributaire = propMatch[1].trim();
+        if (benMatch) origAttributaire = benMatch[1].trim();
+        if (!origAttributaire && propMatch) origAttributaire = propMatch[1].trim();
       }
 
-      return {
-        numero: index + 1,
-        ilot: ilotName,
-        lot: parcelle.plot_number,
-        attributaire,
-        attestation_numero: "",
-        attestation_date: vente ? format(new Date(vente.sale_date), "dd/MM/yyyy") : "",
-        contact,
-        equipement: "",
-        nature_piece: naturePiece,
-        numero_piece: numeroPiece,
-        date_piece: "",
-        status: parcelle.status,
-      };
+      // If sold AND there's an original attributaire, show both rows
+      if (vente?.acquereur?.name && origAttributaire) {
+        // Row 1: original beneficiary
+        entries.push({
+          numero: numero++,
+          ilot: ilotName,
+          lot: parcelle.plot_number,
+          attributaire: origAttributaire,
+          attestation_numero: "",
+          attestation_date: "",
+          contact: origContact,
+          equipement: "",
+          nature_piece: origNaturePiece,
+          numero_piece: origNumeroPiece,
+          date_piece: "",
+          status: "cede",
+        });
+        // Row 2: new acquéreur
+        entries.push({
+          numero: numero++,
+          ilot: ilotName,
+          lot: parcelle.plot_number,
+          attributaire: vente.acquereur.name,
+          attestation_numero: "",
+          attestation_date: format(new Date(vente.sale_date), "dd/MM/yyyy"),
+          contact: vente.acquereur.phone || "",
+          equipement: "",
+          nature_piece: vente.acquereur.cni_number ? "CNI" : "",
+          numero_piece: vente.acquereur.cni_number || "",
+          date_piece: "",
+          status: parcelle.status,
+        });
+      } else {
+        // Single row: acquéreur OR original attributaire
+        let attributaire = vente?.acquereur?.name || origAttributaire;
+        let contact = vente?.acquereur?.phone || origContact;
+        let naturePiece = (vente?.acquereur?.cni_number ? "CNI" : "") || origNaturePiece;
+        let numeroPiece = vente?.acquereur?.cni_number || origNumeroPiece;
+
+        entries.push({
+          numero: numero++,
+          ilot: ilotName,
+          lot: parcelle.plot_number,
+          attributaire,
+          attestation_numero: "",
+          attestation_date: vente ? format(new Date(vente.sale_date), "dd/MM/yyyy") : "",
+          contact,
+          equipement: "",
+          nature_piece: naturePiece,
+          numero_piece: numeroPiece,
+          date_piece: "",
+          status: parcelle.status,
+        });
+      }
     });
+
+    return entries;
   }, [parcelles, ventes, ilots, beneficiaires]);
 
   const filtered = useMemo(() => {
@@ -158,12 +203,14 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
   const statusColor = (s: string) => {
     if (s === "vendu") return "default";
     if (s === "reserve") return "secondary";
+    if (s === "cede") return "outline";
     return "outline";
   };
 
   const statusLabel = (s: string) => {
     if (s === "vendu") return "Vendu";
     if (s === "reserve") return "Réservé";
+    if (s === "cede") return "Cédé";
     return "Disponible";
   };
 

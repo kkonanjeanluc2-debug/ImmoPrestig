@@ -525,13 +525,21 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                         ? (lotissement?.lotisseur_name || "Lotisseur")
                         : null;
 
-                      // Get display name: beneficiaire linked > notes extraction > partie label
-                      let displayName = beneficiaire?.nom || "";
-                      if (!displayName && parcelle.notes) {
+                      // Get display name: prefer beneficiaire notes > linked beneficiaire > partie label
+                      let displayName = "";
+                      // First try notes extraction for actual beneficiaire name
+                      if (parcelle.notes) {
                         const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
-                        const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
                         if (benMatch) displayName = benMatch[1].trim();
-                        else if (propMatch) displayName = propMatch[1].trim();
+                      }
+                      // Fall back to linked beneficiaire
+                      if (!displayName && beneficiaire?.nom) {
+                        displayName = beneficiaire.nom;
+                      }
+                      // Last resort: proprietaire from notes
+                      if (!displayName && parcelle.notes) {
+                        const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
+                        if (propMatch) displayName = propMatch[1].trim();
                       }
 
                       const badgeClass = parcelle.attribution === "proprietaire"

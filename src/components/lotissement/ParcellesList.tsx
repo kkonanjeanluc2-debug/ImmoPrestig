@@ -97,6 +97,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
   const deleteParcelle = useSoftDeleteParcelle();
+  const queryClient = useQueryClient();
   const { data: ilots } = useIlots(lotissementId);
   const { data: lotissement } = useLotissement(lotissementId);
   const { data: beneficiaires = [] } = useBeneficiairesLots(lotissementId);

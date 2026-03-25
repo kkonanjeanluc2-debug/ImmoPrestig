@@ -62,6 +62,13 @@ export interface MemberPermissions {
   can_create_offres_achat: boolean;
   can_create_achats_documents: boolean;
   can_manage_mutations: boolean;
+  // Échéances
+  can_view_echeances_lotissements: boolean;
+  can_collect_echeances_lotissements: boolean;
+  can_view_echeances_ventes: boolean;
+  can_collect_echeances_ventes: boolean;
+  can_view_echeances_achats: boolean;
+  can_collect_echeances_achats: boolean;
   // Impayés
   can_view_impayes: boolean;
   can_create_impayes: boolean;

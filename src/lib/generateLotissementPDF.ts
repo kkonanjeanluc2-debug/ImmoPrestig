@@ -1065,6 +1065,40 @@ export const generateAttestationVillageoise = async (
   const margin = 20;
   let yPos = 15;
 
+  // ===== FOND DU DOCUMENT =====
+  const docBgColor1 = template?.doc_bg_color_1;
+  if (docBgColor1) {
+    const hexToRgbBg = (hex: string): [number, number, number] => {
+      const h = hex.replace("#", "");
+      return [
+        parseInt(h.substring(0, 2), 16) || 255,
+        parseInt(h.substring(2, 4), 16) || 255,
+        parseInt(h.substring(4, 6), 16) || 255,
+      ];
+    };
+    const docBgColor2 = template?.doc_bg_color_2;
+    const docBgGradient = template?.doc_bg_gradient && docBgColor2;
+    
+    if (docBgGradient) {
+      const c1 = hexToRgbBg(docBgColor1);
+      const c2 = hexToRgbBg(docBgColor2!);
+      const steps = 60;
+      const stripH = pageHeight / steps;
+      for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1);
+        const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+        const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+        const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+        doc.setFillColor(r, g, b);
+        doc.rect(0, i * stripH, pageWidth, stripH + 0.5, "F");
+      }
+    } else {
+      const bg = hexToRgbBg(docBgColor1);
+      doc.setFillColor(bg[0], bg[1], bg[2]);
+      doc.rect(0, 0, pageWidth, pageHeight, "F");
+    }
+  }
+
   const district = template?.district || "";
   const commune = template?.commune || "";
   const village = template?.village || villageName || lotissement.location || "";

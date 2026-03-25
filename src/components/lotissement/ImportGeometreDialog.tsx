@@ -343,7 +343,20 @@ export const ImportGeometreDialog = ({
     setImportProgress({ done: 0, total: totalItems });
 
     try {
-      // Create ilots first
+      // Pre-populate ilotIdMap with existing ilots from DB
+      const { data: existingDbIlots } = await supabase
+        .from("ilots")
+        .select("id, name")
+        .eq("lotissement_id", lotissementId)
+        .is("deleted_at", null);
+      
+      if (existingDbIlots) {
+        for (const ilot of existingDbIlots) {
+          ilotIdMap[ilot.name.toLowerCase()] = ilot.id;
+        }
+      }
+
+      // Create only NEW ilots
       for (const ilot of parsedIlots) {
         try {
           const result = await createIlot.mutateAsync({
@@ -356,17 +369,6 @@ export const ImportGeometreDialog = ({
           ilotIdMap[ilot.name.toLowerCase()] = result.id;
         } catch (ilotErr) {
           console.error(`Erreur création îlot ${ilot.name}:`, ilotErr);
-          // Try to find existing ilot with same name
-          const { data: existingIlot } = await supabase
-            .from("ilots")
-            .select("id")
-            .eq("lotissement_id", lotissementId)
-            .eq("name", ilot.name)
-            .is("deleted_at", null)
-            .maybeSingle();
-          if (existingIlot) {
-            ilotIdMap[ilot.name.toLowerCase()] = existingIlot.id;
-          }
         }
         done++;
         setImportProgress({ done, total: totalItems });

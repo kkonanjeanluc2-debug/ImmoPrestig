@@ -343,7 +343,16 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
           <div className="overflow-x-auto">
             <Table className="min-w-[600px]">
               <TableHeader>
-                 <TableRow>
+               <TableRow>
+                  {canDelete && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Tout sélectionner"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>N° Lot</TableHead>
                   <TableHead>Îlot</TableHead>
                   <TableHead>Attribution</TableHead>

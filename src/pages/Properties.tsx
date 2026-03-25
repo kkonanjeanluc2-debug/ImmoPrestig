@@ -158,7 +158,7 @@ const Properties = () => {
                 { key: 'type', label: 'Mode', format: (v) => v === 'location' ? 'Location' : 'Vente' },
                 { key: 'price', label: 'Prix (F CFA)', format: (v) => Number(v).toString() },
                 { key: 'area', label: 'Surface (m²)', format: (v) => v ? Number(v).toString() : '' },
-                { key: 'bedrooms', label: 'Chambres', format: (v) => v ? v.toString() : '' },
+                { key: 'bedrooms', label: 'Pièces', format: (v) => v ? v.toString() : '' },
                 { key: 'bathrooms', label: 'Salles de bain', format: (v) => v ? v.toString() : '' },
                 { key: 'status', label: 'Statut', format: (v) => v === 'disponible' ? 'Disponible' : v === 'loué' ? 'Loué' : v === 'vendu' ? 'Vendu' : 'En attente' },
               ]}

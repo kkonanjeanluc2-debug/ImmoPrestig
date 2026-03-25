@@ -469,7 +469,7 @@ const PropertyDetails = () => {
                         <Bed className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Chambres</p>
+                        <p className="text-sm text-muted-foreground">Pièces</p>
                         <p className="font-semibold">{property.bedrooms}</p>
                       </div>
                     </div>

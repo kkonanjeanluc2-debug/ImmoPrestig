@@ -1277,6 +1277,12 @@ export const generateAttestationVillageoise = async (
       "{ancien_beneficiaire_telephone}": ancienBeneficiaire?.telephone || "",
     };
 
+    // Replace variables
+    let rendered = templateContent;
+    for (const [key, value] of Object.entries(variableData)) {
+      rendered = rendered.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value || '____________________');
+    }
+
     // If there's an ancien beneficiaire (cession), inject mention into content
     let finalContent = rendered;
     if (ancienBeneficiaire?.nom) {

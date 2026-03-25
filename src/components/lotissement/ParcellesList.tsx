@@ -127,6 +127,85 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [isBulkDeleteLoading, setIsBulkDeleteLoading] = useState(false);
+  const [generatingAttestationId, setGeneratingAttestationId] = useState<string | null>(null);
+
+  const handleGenerateAttestation = async (parcelle: Parcelle) => {
+    setGeneratingAttestationId(parcelle.id);
+    try {
+      const lotissementTemplateId = (lotissement as any)?.attestation_template_id;
+      const tpl = lotissementTemplateId
+        ? attestationTemplates.find(t => t.id === lotissementTemplateId)
+        : attestationTemplates.find(t => t.is_default) || attestationTemplates[0] || null;
+
+      const templateData: AttestationTemplateData | null = tpl ? {
+        district: tpl.district,
+        commune: tpl.commune,
+        village: tpl.village,
+        lotissement_origin_name: tpl.lotissement_origin_name,
+        arrete_approbation: tpl.arrete_approbation,
+        content: tpl.content,
+        banner_color_1: (tpl as any).banner_color_1 || null,
+        banner_color_2: (tpl as any).banner_color_2 || null,
+        banner_gradient: (tpl as any).banner_gradient || false,
+        doc_bg_color_1: (tpl as any).doc_bg_color_1 || null,
+        doc_bg_color_2: (tpl as any).doc_bg_color_2 || null,
+        doc_bg_gradient: (tpl as any).doc_bg_gradient || false,
+      } : null;
+
+      const chefImages: AttestationChefImages = {
+        stamp_url: (lotissement as any)?.chef_stamp_url || null,
+        signature_url: (lotissement as any)?.chef_signature_url || null,
+      };
+
+      const ilotName = getIlotName(parcelle.ilot_id);
+
+      let beneficiaireName = "";
+      let beneficiairePhone = "";
+      let beneficiaireCni = "";
+      if (parcelle.beneficiaire_id) {
+        const ben = beneficiaires.find(b => b.id === parcelle.beneficiaire_id);
+        if (ben) {
+          beneficiaireName = ben.nom;
+          beneficiairePhone = ben.telephone || "";
+          beneficiaireCni = ben.cni_number || "";
+        }
+      }
+      if (!beneficiaireName && parcelle.notes) {
+        const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
+        const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
+        if (benMatch) beneficiaireName = benMatch[1].trim();
+        if (!beneficiaireName && propMatch) beneficiaireName = propMatch[1].trim();
+      }
+
+      const acquereurInfo = {
+        name: beneficiaireName || "____________________",
+        phone: beneficiairePhone || null,
+        cni_number: beneficiaireCni || null,
+        email: null, address: null, birth_date: null, birth_place: null, profession: null,
+      };
+
+      const agencyInfo = agency ? {
+        name: agency.name, email: agency.email || undefined, phone: agency.phone || undefined,
+        address: agency.address || undefined, city: agency.city || undefined,
+        country: agency.country || undefined, logo_url: agency.logo_url, siret: agency.siret || undefined,
+      } : null;
+
+      const doc = await generateAttestationVillageoise(
+        { plot_number: parcelle.plot_number, area: parcelle.area || 0, price: parcelle.price || 0 },
+        { name: lotissement?.name || "N/A", location: lotissement?.location || "", city: lotissement?.city || null },
+        acquereurInfo, agencyInfo, new Date().toISOString(), undefined,
+        (lotissement as any)?.chef_village_name || undefined, templateData,
+        (lotissement as any)?.chef_village_titre || undefined, ilotName, chefImages
+      );
+      downloadPDF(doc, `attestation-attribution-${parcelle.plot_number}.pdf`);
+      toast.success("Attestation villageoise générée");
+    } catch (error) {
+      console.error("Error generating attestation:", error);
+      toast.error("Erreur lors de la génération");
+    } finally {
+      setGeneratingAttestationId(null);
+    }
+  };
 
   const getAttributionLabel = (attribution: string | null) => {
     if (attribution === "proprietaire") return lotissement?.proprietaire_name || "Propriétaire";

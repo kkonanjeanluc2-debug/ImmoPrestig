@@ -32,7 +32,7 @@ interface Props {
   canCreate?: boolean;
 }
 
-export function ProformaInvoicesList({ tenantId, compact = false }: Props) {
+export function ProformaInvoicesList({ tenantId, compact = false, canCreate = true }: Props) {
   const { data: invoices, isLoading } = useProformaInvoices(tenantId);
   const convertToInvoice = useConvertToInvoice();
   const updateStatus = useUpdateProformaStatus();

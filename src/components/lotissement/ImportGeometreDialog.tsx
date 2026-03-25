@@ -90,6 +90,7 @@ export const ImportGeometreDialog = ({
     const mainSheet = parcellesSheet || workbook.Sheets[workbook.SheetNames[0]];
 
     const newErrors: string[] = [];
+    const newWarnings: string[] = [];
     const ilots: ParsedGeometreIlot[] = [];
     const parcelles: ParsedGeometreParcelle[] = [];
 

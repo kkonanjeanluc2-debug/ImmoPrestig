@@ -126,7 +126,8 @@ const requestStatusConfig: Record<string, { label: string; className: string }> 
 // TenantCard removed - using table layout now
 export default function Tenants() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const shouldOpenAdd = searchParams.get("add") === "true";
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");

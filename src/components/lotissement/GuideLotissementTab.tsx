@@ -76,24 +76,30 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
       const ilotName = parcelle.ilot_id ? (ilotsMap.get(parcelle.ilot_id) || "-") : "-";
       const beneficiaire = parcelle.beneficiaire_id ? beneficiairesMap.get(parcelle.beneficiaire_id) : null;
 
-      // Determine original attributaire (beneficiaire or notes)
+      // Determine original attributaire - prefer beneficiaire from notes first
       let origAttributaire = "";
       let origContact = "";
       let origNaturePiece = "";
       let origNumeroPiece = "";
 
-      if (beneficiaire) {
+      // First try notes extraction for actual beneficiaire name
+      if (parcelle.notes) {
+        const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
+        if (benMatch) origAttributaire = benMatch[1].trim();
+      }
+
+      // Fall back to linked beneficiaire
+      if (!origAttributaire && beneficiaire) {
         origAttributaire = beneficiaire.nom;
         origContact = beneficiaire.telephone || "";
         origNaturePiece = beneficiaire.cni_number ? "CNI" : "";
         origNumeroPiece = beneficiaire.cni_number || "";
       }
 
+      // Last resort: proprietaire from notes
       if (!origAttributaire && parcelle.notes) {
-        const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
         const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
-        if (benMatch) origAttributaire = benMatch[1].trim();
-        if (!origAttributaire && propMatch) origAttributaire = propMatch[1].trim();
+        if (propMatch) origAttributaire = propMatch[1].trim();
       }
 
       // If sold AND there's an original attributaire, show both rows

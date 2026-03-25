@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, FileText, Upload, X, Stamp } from "lucide-react";
 import { useUpdateLotissement, Lotissement } from "@/hooks/useLotissements";
 import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
+import { useGuideTemplates } from "@/hooks/useGuideTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

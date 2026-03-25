@@ -108,6 +108,8 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const { data: ilots } = useIlots(lotissementId);
   const { data: lotissement } = useLotissement(lotissementId);
   const { data: beneficiaires = [] } = useBeneficiairesLots(lotissementId);
+  const { data: agency } = useAgency();
+  const { data: attestationTemplates = [] } = useAttestationTemplates();
   const isAdmin = role !== "gestionnaire";
 
   // Fetch profiles for assigned users

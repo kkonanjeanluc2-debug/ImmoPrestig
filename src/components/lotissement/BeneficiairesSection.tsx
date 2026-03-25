@@ -93,6 +93,39 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
     }
   };
 
+  const handleAddFromFamily = async () => {
+    if (!selectedFamilyId) {
+      toast.error("Sélectionnez un membre de la famille");
+      return;
+    }
+    const familyMember = proprietaireBeneficiaires.find(b => b.id === selectedFamilyId);
+    if (!familyMember) return;
+
+    // Check if already in current party list
+    const alreadyExists = partieBeneficiaires.some(b => b.nom === familyMember.nom);
+    if (alreadyExists) {
+      toast.error("Ce membre est déjà dans la liste");
+      return;
+    }
+
+    try {
+      await createBeneficiaire.mutateAsync({
+        lotissement_id: lotissement.id,
+        nom: familyMember.nom,
+        telephone: familyMember.telephone || null,
+        email: familyMember.email || null,
+        lien_role: familyMember.lien_role || null,
+        cni_number: familyMember.cni_number || null,
+        partie,
+      });
+      toast.success(`${familyMember.nom} ajouté`);
+      setShowAddDialog(false);
+      setSelectedFamilyId("");
+    } catch {
+      toast.error("Erreur lors de l'ajout");
+    }
+  };
+
   const handleAddFromTeam = async () => {
     if (!selectedMemberId) {
       toast.error("Sélectionnez un membre");

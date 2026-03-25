@@ -87,10 +87,10 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
       }
 
       if (!attributaire && parcelle.notes) {
-        const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
         const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
-        if (propMatch) attributaire = propMatch[1].trim();
-        if (benMatch && !attributaire) attributaire = benMatch[1].trim();
+        const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
+        if (benMatch) attributaire = benMatch[1].trim();
+        if (!attributaire && propMatch) attributaire = propMatch[1].trim();
       }
 
       return {

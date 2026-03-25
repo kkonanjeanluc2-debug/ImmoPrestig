@@ -143,7 +143,7 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
     </TableRow>
   );
 
-  if (loadingUpcoming || loadingOverdue) {
+  if (loadingUpcoming || loadingOverdue || loadingAll) {
     return (
       <Card>
         <CardHeader>

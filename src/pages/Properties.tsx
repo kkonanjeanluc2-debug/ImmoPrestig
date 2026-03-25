@@ -1,4 +1,5 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { Button } from "@/components/ui/button";
@@ -48,18 +49,16 @@ const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
   const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
-  const { hasPermission, role } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_properties");
   const canEdit = hasPermission("can_edit_properties");
   const canDelete = hasPermission("can_delete_properties");
-  
   const { data: properties, isLoading, error } = useProperties();
   const { data: owners = [] } = useOwners();
   const { data: assignableUsers = [] } = useAssignableUsers();
@@ -80,9 +79,12 @@ const Properties = () => {
   const roleFilteredProperties = useMemo(() => {
     if (!properties) return [];
     if (!isGestionnaire || !user) return properties;
-    // For gestionnaire, show only properties assigned to them
     return properties.filter(p => p.assigned_to === user.id);
   }, [properties, isGestionnaire, user]);
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_properties")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Only show rental properties (location)
   const rentalProperties = roleFilteredProperties.filter((property) => property.type === "location");

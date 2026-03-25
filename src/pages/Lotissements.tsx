@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,15 +52,18 @@ const Lotissements = () => {
   const { data: allVentes } = useVentesParcelles();
   const { data: allEcheances } = useEcheancesParcelles();
   const deleteLotissement = useSoftDeleteLotissement();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_lotissements");
   const canEdit = hasPermission("can_edit_lotissements");
   const canDelete = hasPermission("can_delete_lotissements");
-
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingLotissement, setEditingLotissement] = useState<Lotissement | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_lotissements")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const filteredLotissements = lotissements?.filter(
     (lot) =>

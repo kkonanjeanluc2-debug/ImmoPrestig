@@ -49,6 +49,7 @@ import { CommissionReportCard } from "@/components/commission/CommissionReportCa
 import { AccountTab } from "@/components/payment/AccountTab";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Navigate } from "react-router-dom";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
@@ -104,7 +105,7 @@ export default function Payments() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "impayes" | "commissions" | "account">("payments");
   const [periodFilter, setPeriodFilter] = useState<PeriodValue | undefined>(undefined);
-  const { hasPermission, role } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_payments");
   const canEdit = hasPermission("can_edit_payments");
   const canSendReminders = hasPermission("can_delete_payments");
@@ -127,6 +128,10 @@ export default function Payments() {
     .map((p: any) => p.tenant?.property?.assigned_to)
     .filter(Boolean);
   const { data: gestionnaireProfiles } = useUserProfiles(gestionnaireIds);
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && role !== "locataire" && !hasPermission("can_view_payments")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Helper to get commission info for a payment
   const getCommissionInfo = (payment: any) => {

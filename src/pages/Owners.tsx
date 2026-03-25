@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useOwners, useDeleteOwner, Owner } from "@/hooks/useOwners";
 import { useProperties, Property } from "@/hooks/useProperties";
 import { usePayments } from "@/hooks/usePayments";
@@ -50,12 +50,15 @@ const Owners = () => {
   const { data: properties } = useProperties();
   const { data: payments } = usePayments();
   const deleteOwner = useDeleteOwner();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_owners");
   const canEdit = hasPermission("can_edit_owners");
   const canDelete = hasPermission("can_delete_owners");
-  
   const isGestionnaire = currentUserRole?.role === "gestionnaire";
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_owners")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const filteredOwners = (owners || []).filter(owner =>
     owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -1,8 +1,16 @@
+import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
 import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function Impayes() {
+  const { hasPermission, role, isLoading } = usePermissions();
+
+  if (!isLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_impayes")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6 sm:space-y-8">

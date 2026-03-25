@@ -32,6 +32,7 @@ import { AddDocumentDialog } from "@/components/document/AddDocumentDialog";
 import { ViewDocumentDialog } from "@/components/document/ViewDocumentDialog";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Navigate } from "react-router-dom";
 
 const typeConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   contract: { label: "Contrat", icon: FileCheck, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
@@ -191,12 +192,15 @@ export default function Documents() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_documents");
   const canDelete = hasPermission("can_delete_documents");
-
   const { data: documents, isLoading, error } = useDocuments();
   const deleteDocument = useDeleteDocument();
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_documents")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const stats = {
     total: documents?.length || 0,

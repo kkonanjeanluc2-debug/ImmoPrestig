@@ -42,7 +42,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { useOwners } from "@/hooks/useOwners";
@@ -138,7 +138,7 @@ export default function Tenants() {
   const deleteTenantMutation = useDeleteTenant();
   const revokeAccessMutation = useRevokeTenantPortalAccess();
   const { toast } = useToast();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_tenants");
   const canEdit = hasPermission("can_edit_tenants");
   const canDelete = hasPermission("can_delete_tenants");
@@ -149,6 +149,10 @@ export default function Tenants() {
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
   const { requestsByTenant } = useTenantsActiveRequestsMap();
   const { data: owners = [] } = useOwners();
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_tenants")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleOpenRequests = () => {
     setRequestsDialogOpen(true);

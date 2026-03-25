@@ -119,6 +119,9 @@ const emptyForm: AttestationTemplateInsert = {
   lotissement_origin_name: "",
   arrete_approbation: "",
   is_default: false,
+  banner_color_1: "#003399",
+  banner_color_2: null,
+  banner_gradient: false,
 };
 
 export function AttestationTemplateManager() {

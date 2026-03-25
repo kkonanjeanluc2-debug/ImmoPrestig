@@ -1,0 +1,1 @@
+ALTER TABLE public.beneficiaires_lots ADD COLUMN member_user_id UUID DEFAULT NULL;

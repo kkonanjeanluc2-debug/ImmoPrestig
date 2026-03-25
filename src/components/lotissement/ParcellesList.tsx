@@ -36,7 +36,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2, Star } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { useIlots } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -49,6 +49,7 @@ import { ReserveParcelleDialog } from "./ReserveParcelleDialog";
 import { ReservationParcelleCard } from "./ReservationParcelleCard";
 import { useReservationByParcelle } from "@/hooks/useReservationsParcelles";
 import { useLotissement } from "@/hooks/useLotissements";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ParcellesListProps {
   parcelles: Parcelle[];
@@ -87,6 +88,7 @@ function ReservationModalList({ parcelleId, plotNumber, parcelle, lotissementId,
 }
 
 export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) {
+  const { user } = useAuth();
   const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_parcelles");
   const canEdit = hasPermission("can_edit_lotissements");
@@ -304,7 +306,17 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                 const ilotName = getIlotName(parcelle.ilot_id);
                 return (
                   <TableRow key={parcelle.id}>
-                    <TableCell className="font-medium">{parcelle.plot_number}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {parcelle.plot_number}
+                        {!isAdmin && parcelle.assigned_to === user?.id && (
+                          <Badge variant="secondary" className="gap-1 text-xs">
+                            <Star className="h-3 w-3" />
+                            Mon lot
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                   <TableCell>
                     {ilotName ? (
                       <Badge variant="outline" className="gap-1">

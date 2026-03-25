@@ -145,6 +145,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
         lien_role: partie === "lotisseur" ? "Collaborateur" : null,
         cni_number: null,
         partie,
+        member_user_id: member.user_id,
       });
       toast.success(`${memberName} ajouté comme bénéficiaire`);
       setShowAddDialog(false);
@@ -183,15 +184,24 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
     setIsSavingAssignment(true);
     try {
       let count = 0;
+      const memberUserId = assigningBeneficiaire.member_user_id;
       for (const p of partieParcelles) {
         const shouldBeAssigned = selectedLots.includes(p.id);
         const isCurrentlyAssigned = p.beneficiaire_id === assigningBeneficiaire.id;
         
         if (shouldBeAssigned && !isCurrentlyAssigned) {
-          await updateParcelle.mutateAsync({ id: p.id, beneficiaire_id: assigningBeneficiaire.id } as any);
+          const updateData: any = { id: p.id, beneficiaire_id: assigningBeneficiaire.id };
+          if (memberUserId) {
+            updateData.assigned_to = memberUserId;
+          }
+          await updateParcelle.mutateAsync(updateData);
           count++;
         } else if (!shouldBeAssigned && isCurrentlyAssigned) {
-          await updateParcelle.mutateAsync({ id: p.id, beneficiaire_id: null } as any);
+          const updateData: any = { id: p.id, beneficiaire_id: null };
+          if (memberUserId) {
+            updateData.assigned_to = null;
+          }
+          await updateParcelle.mutateAsync(updateData);
           count++;
         }
       }

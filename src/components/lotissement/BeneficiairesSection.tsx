@@ -44,7 +44,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const { data: agencyMembers = [] } = useAgencyMembers();
 
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [addMode, setAddMode] = useState<"team" | "new">(partie === "lotisseur" ? "team" : "new");
+  const [addMode, setAddMode] = useState<"team" | "new">("new");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [assigningBeneficiaire, setAssigningBeneficiaire] = useState<BeneficiaireLot | null>(null);

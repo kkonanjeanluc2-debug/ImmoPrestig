@@ -61,6 +61,7 @@ interface OwnerPayoutsSectionProps {
   fromDate: string;
   toDate: string;
   totalReversements: number;
+  canCreate?: boolean;
 }
 
 export function OwnerPayoutsSection({

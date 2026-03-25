@@ -4864,14 +4864,24 @@ export type Database = {
         Args: { _owner_user_id: string; _user_id: string }
         Returns: boolean
       }
-      can_access_parcelle: {
-        Args: {
-          _assigned_to: string
-          _parcelle_user_id: string
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      can_access_parcelle:
+        | {
+            Args: {
+              _assigned_to: string
+              _parcelle_user_id: string
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _assigned_to: string
+              _beneficiaire_id: string
+              _parcelle_user_id: string
+              _user_id: string
+            }
+            Returns: boolean
+          }
       can_access_payment_via_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean

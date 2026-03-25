@@ -525,23 +525,33 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                         ? (lotissement?.lotisseur_name || "Lotisseur")
                         : null;
 
-                      if (beneficiaire) {
+                      // Get display name: beneficiaire linked > notes extraction > partie label
+                      let displayName = beneficiaire?.nom || "";
+                      if (!displayName && parcelle.notes) {
+                        const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
+                        const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
+                        if (benMatch) displayName = benMatch[1].trim();
+                        else if (propMatch) displayName = propMatch[1].trim();
+                      }
+
+                      const badgeClass = parcelle.attribution === "proprietaire"
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1"
+                        : parcelle.attribution === "lotisseur"
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1"
+                        : "";
+
+                      if (displayName && parcelle.attribution) {
                         return (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <div className="flex flex-col gap-0.5">
-                                <Badge className={parcelle.attribution === "proprietaire"
-                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1"
-                                  : "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1"
-                                }>
-                                  <User className="h-3 w-3" />
-                                  {beneficiaire.nom}
-                                </Badge>
-                              </div>
+                              <Badge className={badgeClass}>
+                                <User className="h-3 w-3" />
+                                {displayName}
+                              </Badge>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className="text-xs">Attribué par : <strong>{partieLabel}</strong></p>
-                              {beneficiaire.lien_role && <p className="text-xs">{beneficiaire.lien_role}</p>}
+                              <p className="text-xs">Partie : <strong>{partieLabel}</strong></p>
+                              {beneficiaire?.lien_role && <p className="text-xs">{beneficiaire.lien_role}</p>}
                             </TooltipContent>
                           </Tooltip>
                         );
@@ -551,7 +561,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                         return (
                           <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1">
                             <User className="h-3 w-3" />
-                            {partieLabel}
+                            {displayName || partieLabel}
                           </Badge>
                         );
                       }
@@ -559,11 +569,13 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                         return (
                           <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1">
                             <Building2 className="h-3 w-3" />
-                            {partieLabel}
+                            {displayName || partieLabel}
                           </Badge>
                         );
                       }
-                      return <span className="text-muted-foreground text-sm">-</span>;
+                      return displayName
+                        ? <span className="text-sm">{displayName}</span>
+                        : <span className="text-muted-foreground text-sm">-</span>;
                     })()}
                   </TableCell>
                   <TableCell>{parcelle.area.toLocaleString("fr-FR")} m²</TableCell>

@@ -77,9 +77,11 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddTenantDialogProps {
   onSuccess?: () => void;
   defaultOpen?: boolean;
+  preselectedPropertyId?: string;
+  preselectedUnitId?: string;
 }
 
-export function AddTenantDialog({ onSuccess, defaultOpen = false }: AddTenantDialogProps) {
+export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPropertyId, preselectedUnitId }: AddTenantDialogProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
   const [rentType, setRentType] = useState<string>("mensuel");
@@ -121,8 +123,8 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false }: AddTenantDia
   const { data: defaultTemplate } = useDefaultContractTemplate();
   const limits = useSubscriptionLimits();
 
-  // Filter only available properties
-  const availableProperties = properties?.filter(p => p.status === 'disponible') || [];
+  // Filter only available properties (+ always include preselected)
+  const availableProperties = properties?.filter(p => p.status === 'disponible' || p.id === preselectedPropertyId) || [];
   
   // Filter available units (only those with status 'disponible')
   const availableUnits = propertyUnits.filter(u => u.status === 'disponible');
@@ -135,7 +137,9 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false }: AddTenantDia
     setOpen(isOpen);
     if (isOpen) {
       refetchProperties();
-      setSelectedPropertyId("");
+      if (!preselectedPropertyId) {
+        setSelectedPropertyId("");
+      }
       setRentType("mensuel");
       setDailyRentDays("");
       setDailyRentDiscount("0");
@@ -178,7 +182,30 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false }: AddTenantDia
     }
   }, [watchedPropertyId, selectedPropertyId, form]);
 
-  // Auto-fill deposit = 2 * rent_amount (only for non-daily rentals)
+  // Pre-fill property and unit when provided via props
+  useEffect(() => {
+    if (open && preselectedPropertyId && properties?.length) {
+      const prop = properties.find(p => p.id === preselectedPropertyId);
+      if (prop) {
+        setSelectedPropertyId(preselectedPropertyId);
+        form.setValue("property_id", preselectedPropertyId);
+        if (!hasUnits) {
+          form.setValue("rent_amount", String(prop.price));
+        }
+      }
+    }
+  }, [open, preselectedPropertyId, properties, form, hasUnits]);
+
+  useEffect(() => {
+    if (open && preselectedUnitId && propertyUnits.length > 0) {
+      const unit = propertyUnits.find(u => u.id === preselectedUnitId);
+      if (unit) {
+        form.setValue("unit_id", preselectedUnitId);
+        form.setValue("rent_amount", String(unit.rent_amount));
+      }
+    }
+  }, [open, preselectedUnitId, propertyUnits, form]);
+
   useEffect(() => {
     const rent = parseFloat(watchedRentAmount);
     const isDaily = selectedProperty?.property_type === "meuble" && rentType === "journalier";

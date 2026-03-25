@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useCreateIlot } from "@/hooks/useIlots";
 import { useCreateParcelle } from "@/hooks/useParcelles";
 import * as XLSX from "xlsx";
+import mammoth from "mammoth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   parseDXF,
@@ -436,6 +437,7 @@ export const ImportGeometreDialog = ({
     dwg: "DWG (AutoCAD)",
     shapefile: "Shapefile (SIG)",
     excel: "Excel/CSV",
+    word: "Word (DOCX/DOC)",
     unknown: "Inconnu",
   };
 
@@ -463,7 +465,7 @@ export const ImportGeometreDialog = ({
               <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
               <p className="text-sm font-medium mb-1">Glissez vos fichiers ici ou cliquez pour parcourir</p>
               <p className="text-xs text-muted-foreground mb-4">
-                Formats acceptés : DXF, SHP (+DBF), CSV, XLS, XLSX
+                Formats acceptés : DXF, SHP (+DBF), CSV, XLS, XLSX, DOCX
               </p>
 
               <div className="flex flex-wrap justify-center gap-2 mb-4">
@@ -483,12 +485,16 @@ export const ImportGeometreDialog = ({
                   <FileType className="h-3 w-3 mr-1" />
                   XLS/XLSX
                 </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  <FileType className="h-3 w-3 mr-1" />
+                  DOCX
+                </Badge>
               </div>
 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".dxf,.dwg,.shp,.dbf,.csv,.xls,.xlsx"
+                accept=".dxf,.dwg,.shp,.dbf,.csv,.xls,.xlsx,.docx,.doc"
                 className="hidden"
                 onChange={handleFileChange}
               />
@@ -515,7 +521,7 @@ export const ImportGeometreDialog = ({
                       onChange={handleDbfChange}
                     />
                     <p className="mt-2"><strong>Fichiers DWG :</strong> Convertissez en DXF depuis AutoCAD avant d'importer.</p>
-                    <p><strong>Excel/CSV :</strong> Colonnes attendues — numéro, superficie, prix, îlot (optionnel)</p>
+                    <p><strong>Excel/CSV/Word :</strong> Colonnes attendues — numéro, superficie, prix, îlot (optionnel)</p>
                   </div>
                 </div>
               </CardContent>

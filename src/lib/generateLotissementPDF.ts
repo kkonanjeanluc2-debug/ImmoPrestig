@@ -1033,6 +1033,9 @@ export interface AttestationTemplateData {
   lotissement_origin_name?: string;
   arrete_approbation?: string;
   content?: string;
+  banner_color_1?: string | null;
+  banner_color_2?: string | null;
+  banner_gradient?: boolean;
 }
 
 export interface AttestationChefImages {

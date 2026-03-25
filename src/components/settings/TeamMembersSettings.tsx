@@ -391,6 +391,17 @@ export function TeamMembersSettings() {
                             </div>
                           </div>
                         </SelectItem>
+                        <SelectItem value="caissiere">
+                          <div className="flex items-center gap-2">
+                            <UserCog className="h-4 w-4 text-pink-600" />
+                            <div>
+                              <div>Caissière</div>
+                              <div className="text-xs text-muted-foreground">
+                                Encaissement des paiements
+                              </div>
+                            </div>
+                          </div>
+                        </SelectItem>
                         <SelectItem value="lecture_seule">
                           <div className="flex items-center gap-2">
                             <Eye className="h-4 w-4 text-gray-600" />

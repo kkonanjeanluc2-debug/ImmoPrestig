@@ -140,7 +140,38 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
             />
           </div>
 
-          {attestationTemplates.length > 0 && (
+          <Separator className="my-2" />
+          
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-sm font-semibold">
+              Chef du Village
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Ces informations seront utilisées automatiquement lors de la génération des attestations
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="chef_village_name" className="text-xs">Nom du Chef du Village</Label>
+                <Input
+                  id="chef_village_name"
+                  value={formData.chef_village_name}
+                  onChange={(e) => setFormData({ ...formData, chef_village_name: e.target.value })}
+                  placeholder="Ex: AKRE AMOUSSO SIMEON"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="chef_village_titre" className="text-xs">Titre / Arrêté de nomination</Label>
+                <Input
+                  id="chef_village_titre"
+                  value={formData.chef_village_titre}
+                  onChange={(e) => setFormData({ ...formData, chef_village_titre: e.target.value })}
+                  placeholder="Ex: nommé par arrêté N°1953/AT/DGAT..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <Separator className="my-2" />
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />

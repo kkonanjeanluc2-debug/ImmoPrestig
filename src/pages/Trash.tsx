@@ -869,6 +869,32 @@ const Trash = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Confirm Empty All Dialog */}
+      <AlertDialog open={confirmEmptyAll} onOpenChange={setConfirmEmptyAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Vider toute la corbeille ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est <strong>irréversible</strong>. Tous les éléments de la corbeille
+              ({trashCount?.total || 0}) seront supprimés définitivement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={emptyingTrash}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleEmptyTrash}
+              disabled={emptyingTrash}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {emptyingTrash ? "Suppression..." : "Vider définitivement"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

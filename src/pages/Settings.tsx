@@ -403,6 +403,12 @@ const Settings = () => {
             </TabsContent>
           )}
 
+          {hasLotissement && canManageTemplates && (
+            <TabsContent value="guide-templates">
+              <GuideTemplateManager />
+            </TabsContent>
+          )}
+
           {canAccessSubscriptionTab && (
             <TabsContent value="subscription">
               <SubscriptionSettings />

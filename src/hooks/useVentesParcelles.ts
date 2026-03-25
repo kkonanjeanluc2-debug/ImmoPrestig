@@ -136,7 +136,9 @@ export const useVenteParcelle = (id: string) => {
             plot_number,
             area,
             price,
-            lotissement:lotissements(name, location)
+            ilot_id,
+            ilot:ilots(name),
+            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id)
           ),
           acquereur:acquereurs(*)
         `)
@@ -144,7 +146,7 @@ export const useVenteParcelle = (id: string) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as VenteWithDetails | null;
+      return data as unknown as VenteWithDetails | null;
     },
     enabled: !!user && !!id,
   });

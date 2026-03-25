@@ -1035,6 +1035,11 @@ export interface AttestationTemplateData {
   content?: string;
 }
 
+export interface AttestationChefImages {
+  stamp_url?: string | null;
+  signature_url?: string | null;
+}
+
 export const generateAttestationVillageoise = async (
   parcelle: ParcelleInfo,
   lotissement: LotissementInfo,
@@ -1044,7 +1049,9 @@ export const generateAttestationVillageoise = async (
   villageName?: string,
   chefVillageName?: string,
   template?: AttestationTemplateData | null,
-  chefVillageTitre?: string
+  chefVillageTitre?: string,
+  ilotName?: string | null,
+  chefImages?: AttestationChefImages | null
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -1171,20 +1178,25 @@ export const generateAttestationVillageoise = async (
   doc.setFont("helvetica", "normal");
   doc.text("Est Attributaire du Lot : ", margin, yPos);
   
-  // Numéro de lot en gras et encadré
+  // Numéro de lot en gras
   const lotNumText = parcelle.plot_number;
   const lotNumX = margin + doc.getTextWidth("Est Attributaire du Lot : ");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.text(lotNumText, lotNumX, yPos);
   
-  // Ilot info  
-  const ilotX = lotNumX + doc.getTextWidth(lotNumText) + 5;
+  // Ilot info
+  let nextX = lotNumX + doc.getTextWidth(lotNumText) + 5;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  const ilotAndLotText = `du lotissement ${lotOriginName.toUpperCase()}`;
-  doc.text(ilotAndLotText, ilotX, yPos);
-  yPos += 5;
+  if (ilotName) {
+    const ilotText = `Îlot ${ilotName}`;
+    doc.text(ilotText, nextX, yPos);
+    nextX += doc.getTextWidth(ilotText) + 5;
+  }
+  const lotText = `du lotissement ${lotOriginName.toUpperCase()}`;
+  doc.text(lotText, margin, yPos + 6);
+  yPos += 12;
 
   // Superficie
   if (parcelle.area > 0) {
@@ -1218,11 +1230,58 @@ export const generateAttestationVillageoise = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   doc.text(chef, pageWidth / 2, yPos, { align: "center" });
-  yPos += 20;
-  
-  // Ligne de signature
-  doc.setDrawColor(150, 150, 150);
-  doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+  yPos += 8;
+
+  // Chef stamp and signature images
+  if (chefImages?.stamp_url || chefImages?.signature_url) {
+    const imagePromises: Promise<{ type: string; base64: string } | null>[] = [];
+    
+    const loadImageAsBase64 = async (url: string, type: string): Promise<{ type: string; base64: string } | null> => {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve({ type, base64: reader.result as string });
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        return null;
+      }
+    };
+
+    if (chefImages.signature_url) {
+      imagePromises.push(loadImageAsBase64(chefImages.signature_url, "signature"));
+    }
+    if (chefImages.stamp_url) {
+      imagePromises.push(loadImageAsBase64(chefImages.stamp_url, "stamp"));
+    }
+
+    const images = (await Promise.all(imagePromises)).filter(Boolean);
+    
+    if (images.length > 0) {
+      const totalWidth = images.length * 40 + (images.length - 1) * 10;
+      let imgX = (pageWidth - totalWidth) / 2;
+      
+      for (const img of images) {
+        if (img) {
+          try {
+            doc.addImage(img.base64, "PNG", imgX, yPos, 40, 25);
+          } catch {
+            // Silently skip if image can't be added
+          }
+          imgX += 50;
+        }
+      }
+      yPos += 30;
+    }
+  } else {
+    yPos += 15;
+    // Ligne de signature
+    doc.setDrawColor(150, 150, 150);
+    doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+  }
 
   addFooter(doc, agency);
 

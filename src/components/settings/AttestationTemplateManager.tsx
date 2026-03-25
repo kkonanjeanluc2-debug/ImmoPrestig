@@ -35,6 +35,7 @@ import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES, replaceAttestation
 
 const SAMPLE_DATA: Record<string, string> = {
   "{numero_lot}": "A-001",
+  "{ilot}": "B",
   "{nom_lotissement}": "SONGON DAGBE-BLEBIYA",
   "{superficie}": "500",
   "{district}": "District Autonome d'Abidjan",

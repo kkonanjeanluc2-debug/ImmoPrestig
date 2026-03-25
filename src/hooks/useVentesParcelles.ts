@@ -47,8 +47,19 @@ export interface VenteWithDetails extends VenteParcelle {
   parcelle?: {
     plot_number: string;
     area: number;
+    ilot_id: string | null;
+    ilot?: {
+      name: string;
+    } | null;
     lotissement?: {
       name: string;
+      location?: string;
+      city?: string;
+      chef_village_name?: string;
+      chef_village_titre?: string;
+      chef_stamp_url?: string;
+      chef_signature_url?: string;
+      attestation_template_id?: string;
     };
   };
   acquereur?: {
@@ -72,8 +83,10 @@ export const useVentesParcelles = (lotissementId?: string) => {
             parcelle:parcelles!inner(
               plot_number,
               area,
+              ilot_id,
               lotissement_id,
-              lotissement:lotissements(name)
+              ilot:ilots(name),
+              lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id)
             ),
             acquereur:acquereurs(name, phone)
           `)
@@ -81,7 +94,7 @@ export const useVentesParcelles = (lotissementId?: string) => {
           .order("sale_date", { ascending: false });
 
         if (error) throw error;
-        return data as VenteWithDetails[];
+        return data as unknown as VenteWithDetails[];
       }
       
       // Without filter, get all ventes
@@ -92,14 +105,16 @@ export const useVentesParcelles = (lotissementId?: string) => {
           parcelle:parcelles(
             plot_number,
             area,
-            lotissement:lotissements(name)
+            ilot_id,
+            ilot:ilots(name),
+            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id)
           ),
           acquereur:acquereurs(name, phone)
         `)
         .order("sale_date", { ascending: false });
 
       if (error) throw error;
-      return data as VenteWithDetails[];
+      return data as unknown as VenteWithDetails[];
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
@@ -121,7 +136,9 @@ export const useVenteParcelle = (id: string) => {
             plot_number,
             area,
             price,
-            lotissement:lotissements(name, location)
+            ilot_id,
+            ilot:ilots(name),
+            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id)
           ),
           acquereur:acquereurs(*)
         `)
@@ -129,7 +146,7 @@ export const useVenteParcelle = (id: string) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as VenteWithDetails | null;
+      return data as unknown as VenteWithDetails | null;
     },
     enabled: !!user && !!id,
   });

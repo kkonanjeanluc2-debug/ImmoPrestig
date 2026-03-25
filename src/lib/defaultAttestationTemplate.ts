@@ -26,7 +26,7 @@ Domicile : {beneficiaire_adresse}
 
 ---
 
-Est Attributaire du **Lot {numero_lot}** du lotissement **{nom_lotissement}**
+Est Attributaire du **Lot {numero_lot}** - **Îlot {ilot}** du lotissement **{nom_lotissement}**
 
 Superficie : **{superficie} m²**
 
@@ -45,6 +45,7 @@ _Signature et cachet_
 
 export const ATTESTATION_VARIABLES = [
   { variable: "{numero_lot}", description: "Numéro du lot" },
+  { variable: "{ilot}", description: "Nom de l'îlot" },
   { variable: "{nom_lotissement}", description: "Nom du lotissement" },
   { variable: "{superficie}", description: "Superficie du lot en m²" },
   { variable: "{district}", description: "Nom du district" },

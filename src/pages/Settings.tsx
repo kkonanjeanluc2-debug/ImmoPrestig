@@ -255,7 +255,7 @@ const Settings = () => {
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
               >
                 <BookOpen className="h-4 w-4" />
-                <span>Guides</span>
+                <span>Page de garde</span>
               </TabsTrigger>
             )}
             {canAccessSubscriptionTab && (

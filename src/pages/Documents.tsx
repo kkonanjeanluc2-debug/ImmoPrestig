@@ -32,6 +32,7 @@ import { AddDocumentDialog } from "@/components/document/AddDocumentDialog";
 import { ViewDocumentDialog } from "@/components/document/ViewDocumentDialog";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Navigate } from "react-router-dom";
 
 const typeConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   contract: { label: "Contrat", icon: FileCheck, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },

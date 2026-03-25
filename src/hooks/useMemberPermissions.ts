@@ -238,6 +238,10 @@ export const PERMISSION_GROUPS = {
     label: "Documents",
     permissions: ["can_view_documents", "can_create_documents", "can_delete_documents"] as PermissionKey[],
   },
+  modules: {
+    label: "Accès aux modules",
+    permissions: ["can_access_gestion_locative", "can_access_crm_immobilier"] as PermissionKey[],
+  },
   settings: {
     label: "Paramètres",
     permissions: ["can_access_settings", "can_access_agency_tab", "can_access_management_tab", "can_access_subscription_tab", "can_access_notifications_tab", "can_access_whatsapp_tab", "can_access_sale_contracts_tab", "can_access_promesse_vente_tab", "can_access_reservation_forms_tab", "can_access_achat_contracts_tab", "can_manage_team", "can_manage_automations", "can_manage_branding", "can_manage_templates"] as PermissionKey[],

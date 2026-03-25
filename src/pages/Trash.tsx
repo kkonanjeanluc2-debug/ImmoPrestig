@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2, RotateCcw, AlertTriangle, Users, Building2, Home, Clock, Map, Grid3X3, Layers, UserCheck } from "lucide-react";
+import { Trash2, RotateCcw, AlertTriangle, Users, Building2, Home, Clock, Map, Grid3X3, Layers, UserCheck, XCircle } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,6 +28,8 @@ import { useTrashCount } from "@/hooks/useTrashCount";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Trash = () => {
   const [confirmDelete, setConfirmDelete] = useState<{
@@ -35,6 +37,9 @@ const Trash = () => {
     name: string;
     type: "tenant" | "property" | "owner" | "lotissement" | "parcelle" | "ilot" | "prospect";
   } | null>(null);
+  const [emptyingTrash, setEmptyingTrash] = useState(false);
+  const [confirmEmptyAll, setConfirmEmptyAll] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: trashCount } = useTrashCount();
   const { data: deletedTenants, isLoading: loadingTenants } = useDeletedTenants();
@@ -131,6 +136,52 @@ const Trash = () => {
     return Math.max(0, 30 - daysElapsed);
   };
 
+  const handleEmptyTrash = async () => {
+    setEmptyingTrash(true);
+    try {
+      const tables = [
+        { name: "vente_prospects" as const, hasDeletedAt: true },
+        { name: "parcelles" as const, hasDeletedAt: true },
+        { name: "ilots" as const, hasDeletedAt: true },
+        { name: "lotissements" as const, hasDeletedAt: true },
+        { name: "tenants" as const, hasDeletedAt: true },
+        { name: "properties" as const, hasDeletedAt: true },
+        { name: "owners" as const, hasDeletedAt: true },
+        { name: "contracts" as const, hasDeletedAt: true },
+      ];
+
+      for (const table of tables) {
+        await supabase
+          .from(table.name)
+          .delete()
+          .not("deleted_at", "is", null);
+      }
+
+      // Invalidate all trash-related queries
+      queryClient.invalidateQueries({ queryKey: ["deleted-tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-properties"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-owners"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-ilots"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-prospects"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
+
+      toast({
+        title: "Corbeille vidée",
+        description: "Tous les éléments ont été supprimés définitivement.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de vider la corbeille.",
+        variant: "destructive",
+      });
+    }
+    setEmptyingTrash(false);
+    setConfirmEmptyAll(false);
+  };
+
   const isRestoring = restoreTenant.isPending || restoreProperty.isPending || restoreOwner.isPending || restoreLotissement.isPending || restoreParcelle.isPending || restoreIlot.isPending || restoreProspect.isPending;
   const isDeleting = deleteTenant.isPending || deleteProperty.isPending || deleteOwner.isPending || deleteLotissement.isPending || deleteParcelle.isPending || deleteIlot.isPending || deleteProspect.isPending;
 
@@ -148,11 +199,23 @@ const Trash = () => {
               Gérez les éléments supprimés. Ils seront définitivement effacés après 30 jours.
             </p>
           </div>
-          {trashCount && trashCount.total > 0 && (
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              {trashCount.total} élément{trashCount.total > 1 ? "s" : ""} dans la corbeille
-            </Badge>
-          )}
+          <div className="flex items-center gap-3">
+            {trashCount && trashCount.total > 0 && (
+              <>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {trashCount.total} élément{trashCount.total > 1 ? "s" : ""}
+                </Badge>
+                <Button
+                  variant="destructive"
+                  onClick={() => setConfirmEmptyAll(true)}
+                  disabled={emptyingTrash}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  {emptyingTrash ? "Vidage..." : "Vider la corbeille"}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Warning Alert */}
@@ -803,6 +866,32 @@ const Trash = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Supprimer définitivement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm Empty All Dialog */}
+      <AlertDialog open={confirmEmptyAll} onOpenChange={setConfirmEmptyAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Vider toute la corbeille ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est <strong>irréversible</strong>. Tous les éléments de la corbeille
+              ({trashCount?.total || 0}) seront supprimés définitivement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={emptyingTrash}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleEmptyTrash}
+              disabled={emptyingTrash}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {emptyingTrash ? "Suppression..." : "Vider définitivement"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

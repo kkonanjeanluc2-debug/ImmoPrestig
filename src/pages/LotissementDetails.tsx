@@ -67,6 +67,9 @@ const LotissementDetails = () => {
   const { isOwner } = useIsAgencyOwner();
   const canCreateParcelle = hasPermission("can_create_parcelles");
   const isGestionnaire = role === "gestionnaire";
+  const canAccessGuide = hasPermission("can_access_guide");
+  const canImportGeometre = hasPermission("can_import_geometre");
+  const canAccessRepartition = hasPermission("can_access_repartition");
   const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewLotissementProspectsCount(id);
   // Prefetch ilots data for instant tab switching
   const { data: ilotsData } = useIlotsWithStats(id);
@@ -167,24 +170,24 @@ const LotissementDetails = () => {
               </p>
             </div>
           </div>
-          {canCreateParcelle && (
+          {(canCreateParcelle || canImportGeometre) && (
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowImportGeometre(true)}>
+              {canImportGeometre && <Button variant="outline" size="sm" onClick={() => setShowImportGeometre(true)}>
                 <Upload className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Import géomètre</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowGenerateDocument(true)}>
+              </Button>}
+              {canCreateParcelle && <Button variant="outline" size="sm" onClick={() => setShowGenerateDocument(true)}>
                 <FileSignature className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Documents</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowBulkAdd(true)}>
+              </Button>}
+              {canCreateParcelle && <Button variant="outline" size="sm" onClick={() => setShowBulkAdd(true)}>
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">En masse</span>
-              </Button>
-              <Button size="sm" onClick={() => setShowAddParcelle(true)}>
+              </Button>}
+              {canCreateParcelle && <Button size="sm" onClick={() => setShowAddParcelle(true)}>
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Nouvelle parcelle</span>
-              </Button>
+              </Button>}
             </div>
           )}
         </div>
@@ -288,11 +291,11 @@ const LotissementDetails = () => {
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">Acquéreurs</span>
                 </TabsTrigger>
-                <TabsTrigger value="guide" className="gap-2">
+                {canAccessGuide && <TabsTrigger value="guide" className="gap-2">
                   <BookOpen className="h-4 w-4" />
                   <span className="hidden sm:inline">Guide</span>
-                </TabsTrigger>
-                {isOwner && (
+                </TabsTrigger>}
+                {(isOwner || canAccessRepartition) && (
                   <TabsTrigger value="repartition" className="gap-2">
                     <PieChart className="h-4 w-4" />
                     <span className="hidden sm:inline">Répartition</span>
@@ -399,13 +402,13 @@ const LotissementDetails = () => {
             <AcquereursListCard lotissementId={id} />
           </TabsContent>
 
-          <TabsContent value="guide">
+          {canAccessGuide && <TabsContent value="guide">
             <GuideLotissementTab
               lotissementId={id || ""}
               lotissementName={lotissement.name}
               guideTemplateId={(lotissement as any).guide_template_id}
             />
-          </TabsContent>
+          </TabsContent>}
 
           <TabsContent value="ilots">
             <IlotsTab 
@@ -414,7 +417,7 @@ const LotissementDetails = () => {
             />
           </TabsContent>
 
-          {isOwner && (
+          {(isOwner || canAccessRepartition) && (
             <TabsContent value="repartition">
               <LotRepartitionTab
                 lotissement={lotissement}

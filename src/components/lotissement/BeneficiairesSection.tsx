@@ -252,48 +252,52 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
             </DialogTitle>
           </DialogHeader>
           <Tabs value={addMode} onValueChange={(v) => setAddMode(v as "team" | "new")}>
-            <TabsList className="w-full">
-              <TabsTrigger value="team" className="flex-1 gap-1">
-                <Users className="h-4 w-4" />
-                Membre de l'équipe
-              </TabsTrigger>
-              <TabsTrigger value="new" className="flex-1 gap-1">
-                <UserPlus className="h-4 w-4" />
-                Nouveau
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="team" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label>Sélectionner un membre</Label>
-                <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir un membre de l'équipe..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeMembers.map(m => (
-                      <SelectItem key={m.user_id} value={m.user_id}>
-                        {m.profile?.full_name || m.profile?.email || "Membre"}
-                        {m.profile?.email ? ` (${m.profile.email})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {activeMembers.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-2">
-                  Aucun membre actif dans l'équipe
-                </p>
-              )}
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
-                  Annuler
-                </Button>
-                <Button onClick={handleAddFromTeam} disabled={!selectedMemberId || createBeneficiaire.isPending}>
-                  {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Ajouter
-                </Button>
-              </DialogFooter>
-            </TabsContent>
+            {partie === "lotisseur" && (
+              <TabsList className="w-full">
+                <TabsTrigger value="team" className="flex-1 gap-1">
+                  <Users className="h-4 w-4" />
+                  Membre de l'équipe
+                </TabsTrigger>
+                <TabsTrigger value="new" className="flex-1 gap-1">
+                  <UserPlus className="h-4 w-4" />
+                  Nouveau
+                </TabsTrigger>
+              </TabsList>
+            )}
+            {partie === "lotisseur" && (
+              <TabsContent value="team" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Sélectionner un membre</Label>
+                  <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir un membre de l'équipe..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeMembers.map(m => (
+                        <SelectItem key={m.user_id} value={m.user_id}>
+                          {m.profile?.full_name || m.profile?.email || "Membre"}
+                          {m.profile?.email ? ` (${m.profile.email})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {activeMembers.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    Aucun membre actif dans l'équipe
+                  </p>
+                )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleAddFromTeam} disabled={!selectedMemberId || createBeneficiaire.isPending}>
+                    {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Ajouter
+                  </Button>
+                </DialogFooter>
+              </TabsContent>
+            )}
             <TabsContent value="new" className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label>Nom complet *</Label>

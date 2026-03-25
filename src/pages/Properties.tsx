@@ -67,26 +67,14 @@ const Properties = () => {
   const { data: unitsSummary = {} } = usePropertyUnitsSummary();
   const { user } = useAuth();
   const { data: userRole } = useCurrentUserRole();
-
-  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_properties")) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  const canCreate = hasPermission("can_create_properties");
-  const canEdit = hasPermission("can_edit_properties");
-  const canDelete = hasPermission("can_delete_properties");
-  
-  const { data: properties, isLoading, error } = useProperties();
-  const { data: owners = [] } = useOwners();
-  const { data: assignableUsers = [] } = useAssignableUsers();
-  const { isOwner: isAgencyOwner } = useIsAgencyOwner();
-  const deleteProperty = useDeleteProperty();
-  const { data: unitsSummary = {} } = usePropertyUnitsSummary();
-  const { user } = useAuth();
-  const { data: userRole } = useCurrentUserRole();
   const { data: propertyTenantsMap = {} } = usePropertyTenants();
   const { data: propertyTenantsAllMap = {} } = usePropertyTenantsAll();
   const navigate = useNavigate();
   const { data: expandedUnits = [], isLoading: unitsLoading } = usePropertyUnits(expandedPropertyId || undefined);
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_properties")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
   const isGestionnaire = userRole?.role === "gestionnaire";

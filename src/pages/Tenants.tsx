@@ -139,11 +139,6 @@ export default function Tenants() {
   const revokeAccessMutation = useRevokeTenantPortalAccess();
   const { toast } = useToast();
   const { hasPermission, role, isLoading: permLoading } = usePermissions();
-
-  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_tenants")) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const canCreate = hasPermission("can_create_tenants");
   const canEdit = hasPermission("can_edit_tenants");
   const canDelete = hasPermission("can_delete_tenants");
@@ -154,6 +149,10 @@ export default function Tenants() {
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
   const { requestsByTenant } = useTenantsActiveRequestsMap();
   const { data: owners = [] } = useOwners();
+
+  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_tenants")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleOpenRequests = () => {
     setRequestsDialogOpen(true);

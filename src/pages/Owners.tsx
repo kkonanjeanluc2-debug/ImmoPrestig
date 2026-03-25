@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useOwners, useDeleteOwner, Owner } from "@/hooks/useOwners";
 import { useProperties, Property } from "@/hooks/useProperties";
 import { usePayments } from "@/hooks/usePayments";

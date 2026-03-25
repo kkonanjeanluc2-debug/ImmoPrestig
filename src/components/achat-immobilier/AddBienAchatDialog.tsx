@@ -186,7 +186,7 @@ export function AddBienAchatDialog({ children }: Props) {
                 <Input type="number" value={form.floors} onChange={(e) => setForm({ ...form, floors: e.target.value })} placeholder="Ex: 3" />
               </div>
               <div className="space-y-2">
-                <Label>Chambres</Label>
+                <Label>Pièces</Label>
                 <Input type="number" value={form.bedrooms} onChange={(e) => setForm({ ...form, bedrooms: e.target.value })} />
               </div>
               <div className="space-y-2">
@@ -212,7 +212,7 @@ export function AddBienAchatDialog({ children }: Props) {
                 <Input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Chambres</Label>
+                <Label>Pièces</Label>
                 <Input type="number" value={form.bedrooms} onChange={(e) => setForm({ ...form, bedrooms: e.target.value })} />
               </div>
               <div className="space-y-2">

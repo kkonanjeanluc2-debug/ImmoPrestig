@@ -233,7 +233,7 @@ export function EditBienVenteDialog({ bien, open, onOpenChange }: EditBienVenteD
             </div>
 
             <div>
-              <Label htmlFor="edit-bedrooms">Chambres</Label>
+              <Label htmlFor="edit-bedrooms">Pièces</Label>
               <Input
                 id="edit-bedrooms"
                 type="number"

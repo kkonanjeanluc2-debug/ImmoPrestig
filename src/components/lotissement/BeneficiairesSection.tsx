@@ -44,8 +44,9 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const { data: agencyMembers = [] } = useAgencyMembers();
 
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [addMode, setAddMode] = useState<"team" | "new">("new");
+  const [addMode, setAddMode] = useState<"team" | "new" | "family">(partie === "lotisseur" ? "team" : "family");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const [selectedFamilyId, setSelectedFamilyId] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [assigningBeneficiaire, setAssigningBeneficiaire] = useState<BeneficiaireLot | null>(null);
   const [selectedLots, setSelectedLots] = useState<string[]>([]);
@@ -61,6 +62,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const activeMembers = agencyMembers.filter(m => m.status === "active");
 
   const partieBeneficiaires = beneficiaires.filter(b => b.partie === partie);
+  const proprietaireBeneficiaires = beneficiaires.filter(b => b.partie === "proprietaire");
   const partieParcelles = parcelles.filter(p => p.attribution === partie);
 
   const title = partie === "proprietaire" ? "Membres de la famille" : "Collaborateurs";
@@ -87,6 +89,39 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
       toast.success("Bénéficiaire ajouté");
       setShowAddDialog(false);
       resetForm();
+    } catch {
+      toast.error("Erreur lors de l'ajout");
+    }
+  };
+
+  const handleAddFromFamily = async () => {
+    if (!selectedFamilyId) {
+      toast.error("Sélectionnez un membre de la famille");
+      return;
+    }
+    const familyMember = proprietaireBeneficiaires.find(b => b.id === selectedFamilyId);
+    if (!familyMember) return;
+
+    // Check if already in current party list
+    const alreadyExists = partieBeneficiaires.some(b => b.nom === familyMember.nom);
+    if (alreadyExists) {
+      toast.error("Ce membre est déjà dans la liste");
+      return;
+    }
+
+    try {
+      await createBeneficiaire.mutateAsync({
+        lotissement_id: lotissement.id,
+        nom: familyMember.nom,
+        telephone: familyMember.telephone || null,
+        email: familyMember.email || null,
+        lien_role: familyMember.lien_role || null,
+        cni_number: familyMember.cni_number || null,
+        partie,
+      });
+      toast.success(`${familyMember.nom} ajouté`);
+      setShowAddDialog(false);
+      setSelectedFamilyId("");
     } catch {
       toast.error("Erreur lors de l'ajout");
     }
@@ -175,6 +210,8 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
     setEmail("");
     setLienRole("");
     setCniNumber("");
+    setSelectedFamilyId("");
+    setSelectedMemberId("");
   };
 
   const getBeneficiaireLotCount = (bId: string) =>
@@ -251,7 +288,48 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
               Ajouter un {partie === "proprietaire" ? "membre de la famille" : "collaborateur"}
             </DialogTitle>
           </DialogHeader>
-          <Tabs value={addMode} onValueChange={(v) => setAddMode(v as "team" | "new")}>
+          <Tabs value={addMode} onValueChange={(v) => setAddMode(v as "team" | "new" | "family")}>
+            {partie === "proprietaire" && proprietaireBeneficiaires.length > 0 && (
+              <TabsList className="w-full">
+                <TabsTrigger value="family" className="flex-1 gap-1">
+                  <Users className="h-4 w-4" />
+                  Membre de la famille
+                </TabsTrigger>
+                <TabsTrigger value="new" className="flex-1 gap-1">
+                  <UserPlus className="h-4 w-4" />
+                  Nouveau
+                </TabsTrigger>
+              </TabsList>
+            )}
+            {partie === "proprietaire" && proprietaireBeneficiaires.length > 0 && (
+              <TabsContent value="family" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Sélectionner un membre de la famille</Label>
+                  <Select value={selectedFamilyId} onValueChange={setSelectedFamilyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir un membre de la famille..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {proprietaireBeneficiaires.map(b => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.nom}
+                          {b.lien_role ? ` (${b.lien_role})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleAddFromFamily} disabled={!selectedFamilyId || createBeneficiaire.isPending}>
+                    {createBeneficiaire.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Ajouter
+                  </Button>
+                </DialogFooter>
+              </TabsContent>
+            )}
             {partie === "lotisseur" && (
               <TabsList className="w-full">
                 <TabsTrigger value="team" className="flex-1 gap-1">

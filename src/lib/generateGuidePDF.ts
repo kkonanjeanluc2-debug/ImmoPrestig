@@ -90,7 +90,7 @@ export async function generateGuidePDF(
   const rowHeight = 7;
   const headerHeight = 10;
 
-  // Group entries by ilot for page headers
+  // Group entries by ilot for summary on cover page
   const ilotGroups = new Map<string, GuideEntry[]>();
   entries.forEach(e => {
     const arr = ilotGroups.get(e.ilot) || [];
@@ -98,6 +98,112 @@ export async function generateGuidePDF(
     ilotGroups.set(e.ilot, arr);
   });
 
+  // ===== COVER PAGE =====
+  if (options.coverPage) {
+    const cp = options.coverPage;
+    const hexToRgb = (hex: string) => {
+      const h = hex.replace("#", "");
+      return [parseInt(h.substring(0, 2), 16), parseInt(h.substring(2, 4), 16), parseInt(h.substring(4, 6), 16)] as [number, number, number];
+    };
+
+    // Background
+    if (cp.bg_color && cp.bg_color !== "#FFFFFF") {
+      const bg = hexToRgb(cp.bg_color);
+      doc.setFillColor(bg[0], bg[1], bg[2]);
+      doc.rect(0, 0, pageWidth, pageHeight, "F");
+    }
+
+    let yPos = 25;
+
+    // District & Commune centered at top
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    if (cp.district) {
+      doc.text(cp.district.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
+      yPos += 7;
+    }
+    if (cp.commune) {
+      doc.text(cp.commune.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
+      yPos += 5;
+      doc.setLineWidth(0.5);
+      doc.line(pageWidth / 2 - 30, yPos, pageWidth / 2 + 30, yPos);
+      yPos += 10;
+    }
+
+    // Large "GUIDE" title
+    yPos += 10;
+    const titleRgb = hexToRgb(cp.title_color);
+    doc.setFontSize(42);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(titleRgb[0], titleRgb[1], titleRgb[2]);
+    doc.text("GUIDE", pageWidth / 2, yPos, { align: "center" });
+    yPos += 15;
+
+    // "LOTISSEMENT [NAME]"
+    const subRgb = hexToRgb(cp.subtitle_color);
+    doc.setFontSize(18);
+    doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
+    doc.text(`LOTISSEMENT ${lotissementName.toUpperCase()}`, pageWidth / 2, yPos, { align: "center" });
+    yPos += 20;
+
+    // Bordered box with ilot/lot ranges
+    const borderRgb = hexToRgb(cp.border_color);
+    const ilotEntries = Array.from(ilotGroups.entries());
+    if (ilotEntries.length > 0) {
+      const lineHeight = 8;
+      const boxContentLines: string[] = [];
+      
+      ilotEntries.forEach(([ilot, ilotEntries], idx) => {
+        const lots = ilotEntries.map(e => e.lot).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+        const firstLot = lots[0];
+        const lastLot = lots[lots.length - 1];
+        boxContentLines.push(`ILOT N°${ilot}`);
+        boxContentLines.push(lots.length > 1 ? `LOT N°${firstLot} À ${lastLot}` : `LOT N°${firstLot}`);
+        if (idx < ilotEntries.length - 1 && ilotEntries.length > 1) {
+          boxContentLines.push("&&");
+        }
+      });
+
+      const boxHeight = boxContentLines.length * lineHeight + 12;
+      const boxWidth = 160;
+      const boxX = (pageWidth - boxWidth) / 2;
+
+      doc.setDrawColor(borderRgb[0], borderRgb[1], borderRgb[2]);
+      doc.setLineWidth(1);
+      doc.rect(boxX, yPos, boxWidth, boxHeight);
+
+      let textY = yPos + 10;
+      doc.setFontSize(13);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
+
+      boxContentLines.forEach(line => {
+        if (line === "&&") {
+          doc.setTextColor(0, 0, 0);
+          doc.text(line, pageWidth / 2, textY, { align: "center" });
+          doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
+        } else {
+          doc.text(line, pageWidth / 2, textY, { align: "center" });
+        }
+        textY += lineHeight;
+      });
+
+      yPos += boxHeight + 15;
+    }
+
+    // Date
+    const now = new Date();
+    const monthNames = ["JANVIER", "FÉVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOÛT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DÉCEMBRE"];
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
+    doc.text(`${monthNames[now.getMonth()]} ${now.getFullYear()}`, pageWidth / 2, yPos, { align: "center" });
+
+    doc.setTextColor(0, 0, 0);
+  }
+
+  // ===== TABLE PAGES =====
   let currentPage = 0;
   const totalPages = Math.ceil(entries.length / 20); // estimate
 

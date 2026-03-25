@@ -531,7 +531,7 @@ export const ImportGeometreDialog = ({
         try {
           let beneficiaireId: string | null = null;
 
-          // Handle proprietaire terrien
+          // Handle proprietaire terrien - create record but don't link yet
           if (parcelle.proprietaireTerrien) {
             const key = `proprietaire:${parcelle.proprietaireTerrien.toLowerCase().trim()}`;
             if (!beneficiaireCache[key]) {
@@ -547,7 +547,6 @@ export const ImportGeometreDialog = ({
                 .single();
               if (created) beneficiaireCache[key] = created.id;
             }
-            beneficiaireId = beneficiaireCache[key] || null;
           }
 
           // Handle beneficiaire (lotisseur side)
@@ -566,10 +565,14 @@ export const ImportGeometreDialog = ({
                 .single();
               if (created) beneficiaireCache[key] = created.id;
             }
-            // If parcelle has beneficiaire but no proprietaire, use beneficiaire as the linked one
-            if (!beneficiaireId) {
-              beneficiaireId = beneficiaireCache[key] || null;
-            }
+            // Always prefer the beneficiaire (actual person) as the linked record
+            beneficiaireId = beneficiaireCache[key] || null;
+          }
+
+          // Only fall back to proprietaire if no beneficiaire
+          if (!beneficiaireId && parcelle.proprietaireTerrien) {
+            const key = `proprietaire:${parcelle.proprietaireTerrien.toLowerCase().trim()}`;
+            beneficiaireId = beneficiaireCache[key] || null;
           }
 
           // Link parcelle to beneficiaire

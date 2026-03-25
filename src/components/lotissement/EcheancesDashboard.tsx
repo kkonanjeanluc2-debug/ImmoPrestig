@@ -52,6 +52,7 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
   const [monthsAhead, setMonthsAhead] = useState(1);
   const { data: upcomingEcheances, isLoading: loadingUpcoming } = useUpcomingEcheances(monthsAhead, lotissementId);
   const { data: overdueEcheances, isLoading: loadingOverdue } = useOverdueEcheances(lotissementId);
+  const { data: allEcheances, isLoading: loadingAll } = useAllEcheancesWithDetails(lotissementId);
   const [payingEcheance, setPayingEcheance] = useState<EcheanceWithDetails | null>(null);
 
   const filteredUpcoming = upcomingEcheances;

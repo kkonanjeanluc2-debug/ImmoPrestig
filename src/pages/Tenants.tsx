@@ -309,7 +309,7 @@ export default function Tenants() {
             {isAgencyOwner && <TenantTrashDialog />}
             {canCreate && <ImportTenantsDialog />}
             {canEdit && <MergeTenantsDialog />}
-            {canCreate && <AddTenantDialog />}
+            {canCreate && <AddTenantDialog defaultOpen={shouldOpenAdd} onSuccess={() => setSearchParams({})} />}
           </div>
 
           {/* Emergency button for new requests */}

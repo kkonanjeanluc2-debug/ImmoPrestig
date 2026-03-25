@@ -343,6 +343,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_demarches: false,
     can_create_lotissement_prospects: false,
     can_access_guide: false,
+    can_export_guide: false,
     can_import_geometre: false,
     can_access_repartition: false,
     can_view_ventes: true,

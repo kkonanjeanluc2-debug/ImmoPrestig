@@ -39,7 +39,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName }: GuideLot
   const { data: parcelles } = useParcelles(lotissementId);
   const { data: ventes } = useVentesParcelles(lotissementId);
   const { data: ilots } = useIlotsWithStats(lotissementId);
-  const { agency } = useAgency();
+  const { data: agency } = useAgency();
   const [search, setSearch] = useState("");
 
   const guideEntries = useMemo(() => {

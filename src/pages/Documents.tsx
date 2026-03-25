@@ -193,16 +193,14 @@ export default function Documents() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { hasPermission, role, isLoading: permLoading } = usePermissions();
+  const canCreate = hasPermission("can_create_documents");
+  const canDelete = hasPermission("can_delete_documents");
+  const { data: documents, isLoading, error } = useDocuments();
+  const deleteDocument = useDeleteDocument();
 
   if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_documents")) {
     return <Navigate to="/dashboard" replace />;
   }
-
-  const canCreate = hasPermission("can_create_documents");
-  const canDelete = hasPermission("can_delete_documents");
-
-  const { data: documents, isLoading, error } = useDocuments();
-  const deleteDocument = useDeleteDocument();
 
   const stats = {
     total: documents?.length || 0,

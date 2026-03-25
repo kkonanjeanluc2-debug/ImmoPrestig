@@ -354,7 +354,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               )}
 
               {/* CRM Immobilier - Collapsible Group */}
-              {crmImmobilierItems.some(item => hasFeature(item.featureKey)) && (
+              {crmImmobilierItems.some(item => hasFeature(item.featureKey)) && (userRole?.role === "admin" || hasPermission("can_access_crm_immobilier")) && (
                 <Collapsible defaultOpen className="space-y-1 mt-2">
                   <CollapsibleTrigger className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full group",

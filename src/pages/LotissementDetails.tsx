@@ -399,6 +399,13 @@ const LotissementDetails = () => {
             <AcquereursListCard lotissementId={id} />
           </TabsContent>
 
+          <TabsContent value="guide">
+            <GuideLotissementTab
+              lotissementId={id || ""}
+              lotissementName={lotissement.name}
+            />
+          </TabsContent>
+
           <TabsContent value="ilots">
             <IlotsTab 
               lotissementId={id || ""} 

@@ -15,6 +15,9 @@ export interface AttestationTemplate {
   lotissement_origin_name: string;
   arrete_approbation: string;
   is_default: boolean;
+  banner_color_1: string | null;
+  banner_color_2: string | null;
+  banner_gradient: boolean;
   created_at: string;
   updated_at: string;
 }

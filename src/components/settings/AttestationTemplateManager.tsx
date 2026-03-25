@@ -175,6 +175,9 @@ export function AttestationTemplateManager() {
       lotissement_origin_name: t.lotissement_origin_name,
       arrete_approbation: t.arrete_approbation,
       is_default: false,
+      banner_color_1: t.banner_color_1 || "#003399",
+      banner_color_2: t.banner_color_2 || null,
+      banner_gradient: t.banner_gradient || false,
     });
     setDialogOpen(true);
   };

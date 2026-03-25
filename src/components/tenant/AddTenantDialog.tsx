@@ -123,8 +123,8 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const { data: defaultTemplate } = useDefaultContractTemplate();
   const limits = useSubscriptionLimits();
 
-  // Filter only available properties
-  const availableProperties = properties?.filter(p => p.status === 'disponible') || [];
+  // Filter only available properties (+ always include preselected)
+  const availableProperties = properties?.filter(p => p.status === 'disponible' || p.id === preselectedPropertyId) || [];
   
   // Filter available units (only those with status 'disponible')
   const availableUnits = propertyUnits.filter(u => u.status === 'disponible');

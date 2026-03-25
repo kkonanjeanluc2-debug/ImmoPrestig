@@ -584,6 +584,28 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk delete dialog */}
+      <AlertDialog open={bulkDeleting} onOpenChange={setBulkDeleting}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer {selectedIds.size} lot(s) ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Les lots sélectionnés seront déplacés vers la corbeille. Cette action peut être annulée depuis la corbeille.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkDeleteLoading}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isBulkDeleteLoading ? "Suppression..." : `Supprimer ${selectedIds.size} lot(s)`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

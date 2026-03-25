@@ -231,7 +231,7 @@ export async function generateGuidePDF(
   const rowHeight = 7;
   const headerHeight = 10;
 
-  function drawPageHeader(pageNum: number) {
+  function drawPageHeader(pageNum: number, pageEntries?: GuideEntry[]) {
     let yPos = margin;
     doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
@@ -242,10 +242,24 @@ export async function generateGuidePDF(
     doc.setFont("helvetica", "normal");
     doc.text(`${options.totalParcelles} PARCELLE${options.totalParcelles > 1 ? "S" : ""}`, landscapeW / 2, yPos + 10, { align: "center" });
 
+    // Dynamic ilot/lot range for this page
+    if (pageEntries && pageEntries.length > 0) {
+      const ilots = pageEntries.map(e => e.ilot);
+      const lots = pageEntries.map(e => e.lot);
+      const uniqueIlots = [...new Set(ilots)].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+      const sortedLots = lots.sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+      const ilotRange = uniqueIlots.length === 1 ? `Îlot N°${uniqueIlots[0]}` : `Îlot N°${uniqueIlots[0]} à N°${uniqueIlots[uniqueIlots.length - 1]}`;
+      const lotRange = `Lot N°${sortedLots[0]} à N°${sortedLots[sortedLots.length - 1]}`;
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "italic");
+      doc.text(`${ilotRange} / ${lotRange}`, landscapeW / 2, yPos + 14, { align: "center" });
+    }
+
     doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
     doc.text(`PAGE | ${pageNum}`, landscapeW - margin, yPos + 5, { align: "right" });
 
-    return yPos + 14;
+    return yPos + 18;
   }
 
   function drawTableHeader(yPos: number) {

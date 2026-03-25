@@ -1935,6 +1935,8 @@ export type Database = {
       lotissements: {
         Row: {
           attestation_template_id: string | null
+          chef_signature_url: string | null
+          chef_stamp_url: string | null
           chef_village_name: string | null
           chef_village_titre: string | null
           city: string | null
@@ -1958,6 +1960,8 @@ export type Database = {
         }
         Insert: {
           attestation_template_id?: string | null
+          chef_signature_url?: string | null
+          chef_stamp_url?: string | null
           chef_village_name?: string | null
           chef_village_titre?: string | null
           city?: string | null
@@ -1981,6 +1985,8 @@ export type Database = {
         }
         Update: {
           attestation_template_id?: string | null
+          chef_signature_url?: string | null
+          chef_stamp_url?: string | null
           chef_village_name?: string | null
           chef_village_titre?: string | null
           city?: string | null

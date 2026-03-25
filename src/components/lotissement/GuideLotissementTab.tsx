@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateGuidePDF } from "@/lib/generateGuidePDF";
 import { useAgency } from "@/hooks/useAgency";
+import { useGuideTemplates } from "@/hooks/useGuideTemplates";
 import { ExportColumn } from "@/lib/exportData";
 
 interface GuideEntry {
@@ -33,13 +34,15 @@ interface GuideEntry {
 interface GuideLotissementTabProps {
   lotissementId: string;
   lotissementName: string;
+  guideTemplateId?: string | null;
 }
 
-export function GuideLotissementTab({ lotissementId, lotissementName }: GuideLotissementTabProps) {
+export function GuideLotissementTab({ lotissementId, lotissementName, guideTemplateId }: GuideLotissementTabProps) {
   const { data: parcelles } = useParcelles(lotissementId);
   const { data: ventes } = useVentesParcelles(lotissementId);
   const { data: ilots } = useIlotsWithStats(lotissementId);
   const { data: agency } = useAgency();
+  const { data: guideTemplates = [] } = useGuideTemplates();
   const [search, setSearch] = useState("");
 
   const guideEntries = useMemo(() => {
@@ -107,9 +110,21 @@ export function GuideLotissementTab({ lotissementId, lotissementName }: GuideLot
   ];
 
   const handleExportPDF = () => {
+    const template = guideTemplateId
+      ? guideTemplates.find(t => t.id === guideTemplateId)
+      : guideTemplates.find(t => t.is_default);
+
     generateGuidePDF(guideEntries, lotissementName, {
       totalParcelles: parcelles?.length || 0,
       agency: agency || undefined,
+      coverPage: template ? {
+        district: template.district,
+        commune: template.commune,
+        title_color: template.title_color,
+        subtitle_color: template.subtitle_color,
+        border_color: template.border_color,
+        bg_color: template.bg_color,
+      } : undefined,
     });
   };
 

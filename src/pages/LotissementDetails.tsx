@@ -403,6 +403,7 @@ const LotissementDetails = () => {
             <GuideLotissementTab
               lotissementId={id || ""}
               lotissementName={lotissement.name}
+              guideTemplateId={(lotissement as any).guide_template_id}
             />
           </TabsContent>
 

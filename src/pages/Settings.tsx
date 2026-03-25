@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck, ShoppingCart, Blocks } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck, ShoppingCart, Blocks, BookOpen } from "lucide-react";
 import { ModulesSettings } from "@/components/settings/ModulesSettings";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
@@ -22,6 +22,7 @@ import { PromesseVenteTemplateManager } from "@/components/settings/PromesseVent
 import { ReservationFormTemplateManager } from "@/components/settings/ReservationFormTemplateManager";
 import { AchatContractTemplateManager } from "@/components/settings/AchatContractTemplateManager";
 import { AttestationTemplateManager } from "@/components/settings/AttestationTemplateManager";
+import { GuideTemplateManager } from "@/components/settings/GuideTemplateManager";
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
@@ -248,6 +249,15 @@ const Settings = () => {
                 <span>Attestations</span>
               </TabsTrigger>
             )}
+            {hasLotissement && canManageTemplates && (
+              <TabsTrigger
+                value="guide-templates"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                <span>Guides</span>
+              </TabsTrigger>
+            )}
             {canAccessSubscriptionTab && (
               <TabsTrigger
                 value="subscription"
@@ -390,6 +400,12 @@ const Settings = () => {
           {hasLotissement && canManageTemplates && (
             <TabsContent value="attestation-templates">
               <AttestationTemplateManager />
+            </TabsContent>
+          )}
+
+          {hasLotissement && canManageTemplates && (
+            <TabsContent value="guide-templates">
+              <GuideTemplateManager />
             </TabsContent>
           )}
 

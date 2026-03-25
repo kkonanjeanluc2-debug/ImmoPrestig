@@ -1785,6 +1785,51 @@ export type Database = {
           },
         ]
       }
+      guide_templates: {
+        Row: {
+          bg_color: string | null
+          border_color: string | null
+          commune: string | null
+          created_at: string
+          district: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          subtitle_color: string | null
+          title_color: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bg_color?: string | null
+          border_color?: string | null
+          commune?: string | null
+          created_at?: string
+          district?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          subtitle_color?: string | null
+          title_color?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bg_color?: string | null
+          border_color?: string | null
+          commune?: string | null
+          created_at?: string
+          district?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          subtitle_color?: string | null
+          title_color?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ilots: {
         Row: {
           assigned_to: string | null
@@ -1961,6 +2006,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           description: string | null
+          guide_template_id: string | null
           id: string
           image_url: string | null
           latitude: number | null
@@ -1986,6 +2032,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          guide_template_id?: string | null
           id?: string
           image_url?: string | null
           latitude?: number | null
@@ -2011,6 +2058,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          guide_template_id?: string | null
           id?: string
           image_url?: string | null
           latitude?: number | null
@@ -2032,6 +2080,13 @@ export type Database = {
             columns: ["attestation_template_id"]
             isOneToOne: false
             referencedRelation: "attestation_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lotissements_guide_template_id_fkey"
+            columns: ["guide_template_id"]
+            isOneToOne: false
+            referencedRelation: "guide_templates"
             referencedColumns: ["id"]
           },
         ]

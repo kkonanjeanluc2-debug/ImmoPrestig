@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, FileText, Upload, X, Stamp } from "lucide-react";
 import { useUpdateLotissement, Lotissement } from "@/hooks/useLotissements";
 import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
+import { useGuideTemplates } from "@/hooks/useGuideTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ interface EditLotissementDialogProps {
 export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditLotissementDialogProps) {
   const updateLotissement = useUpdateLotissement();
   const { data: attestationTemplates = [] } = useAttestationTemplates();
+  const { data: guideTemplates = [] } = useGuideTemplates();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
@@ -35,6 +37,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     total_area: "",
     description: "",
     attestation_template_id: "" as string,
+    guide_template_id: "" as string,
     chef_village_name: "",
     chef_village_titre: "",
     chef_stamp_url: null as string | null,
@@ -49,6 +52,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         total_area: lotissement.total_area?.toString() || "",
         description: lotissement.description || "",
         attestation_template_id: (lotissement as any).attestation_template_id || "",
+        guide_template_id: (lotissement as any).guide_template_id || "",
         chef_village_name: lotissement.chef_village_name || "",
         chef_village_titre: lotissement.chef_village_titre || "",
         chef_stamp_url: lotissement.chef_stamp_url || null,
@@ -104,6 +108,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         total_area: formData.total_area ? parseFloat(formData.total_area) : null,
         description: formData.description.trim() || null,
         attestation_template_id: formData.attestation_template_id || null,
+        guide_template_id: formData.guide_template_id || null,
         chef_village_name: formData.chef_village_name.trim() || null,
         chef_village_titre: formData.chef_village_titre.trim() || null,
         chef_stamp_url: formData.chef_stamp_url || null,
@@ -288,6 +293,34 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
               </Select>
               <p className="text-xs text-muted-foreground">
                 Ce modèle sera utilisé pour générer les attestations d'attribution de ce lotissement
+              </p>
+            </div>
+          )}
+
+          {guideTemplates.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Modèle de page de garde du guide
+              </Label>
+              <Select
+                value={formData.guide_template_id || "none"}
+                onValueChange={(v) => setFormData({ ...formData, guide_template_id: v === "none" ? "" : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un modèle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun modèle</SelectItem>
+                  {guideTemplates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} {t.is_default ? "⭐" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Ce modèle sera utilisé pour la page de garde du guide de ce lotissement
               </p>
             </div>
           )}

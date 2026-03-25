@@ -145,6 +145,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
         lien_role: partie === "lotisseur" ? "Collaborateur" : null,
         cni_number: null,
         partie,
+        member_user_id: member.user_id,
       });
       toast.success(`${memberName} ajouté comme bénéficiaire`);
       setShowAddDialog(false);

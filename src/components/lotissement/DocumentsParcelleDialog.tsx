@@ -14,6 +14,7 @@ import {
   generateContratVente,
   generateAttestationPaiement,
   generatePromesseVente,
+  generateAttestationVillageoise,
   downloadPDF,
 } from "@/lib/generateLotissementPDF";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
@@ -223,6 +224,46 @@ export function DocumentsParcelleDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Attestation villageoise */}
+          <div className="flex items-center justify-between p-3 border rounded-lg bg-emerald-50 dark:bg-emerald-950/20">
+            <div>
+              <p className="font-medium text-sm">Attestation villageoise</p>
+              <p className="text-xs text-muted-foreground">
+                Attestation de cession coutumière
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                setGenerating("attestation_villageoise");
+                try {
+                  const doc = await generateAttestationVillageoise(
+                    parcelleInfo,
+                    lotissementInfo,
+                    acquereurInfo,
+                    agencyInfo,
+                    vente.sale_date
+                  );
+                  downloadPDF(doc, `attestation-villageoise-${parcelleInfo.plot_number}.pdf`);
+                  toast.success("Attestation villageoise générée");
+                } catch (error) {
+                  console.error("Error generating PDF:", error);
+                  toast.error("Erreur lors de la génération du PDF");
+                } finally {
+                  setGenerating(null);
+                }
+              }}
+              disabled={generating === "attestation_villageoise"}
+            >
+              {generating === "attestation_villageoise" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
           {/* Promesse de vente - Only for reserved or sold parcels */}
           <div className="flex items-center justify-between p-3 border rounded-lg bg-amber-50 dark:bg-amber-950/20">
             <div>

@@ -527,7 +527,18 @@ const Properties = () => {
                                   {tenantName}
                                 </div>
                               ) : (
-                                <span className="text-muted-foreground">-</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-auto py-1 px-2 text-primary gap-1 hover:text-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate("/tenants");
+                                  }}
+                                >
+                                  <UserPlus className="h-3.5 w-3.5" />
+                                  Ajouter
+                                </Button>
                               )}
                             </td>
                             <td className="px-4 py-3">

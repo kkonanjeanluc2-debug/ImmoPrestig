@@ -47,8 +47,19 @@ export interface VenteWithDetails extends VenteParcelle {
   parcelle?: {
     plot_number: string;
     area: number;
+    ilot_id: string | null;
+    ilot?: {
+      name: string;
+    } | null;
     lotissement?: {
       name: string;
+      location?: string;
+      city?: string;
+      chef_village_name?: string;
+      chef_village_titre?: string;
+      chef_stamp_url?: string;
+      chef_signature_url?: string;
+      attestation_template_id?: string;
     };
   };
   acquereur?: {

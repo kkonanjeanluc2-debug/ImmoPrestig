@@ -176,6 +176,8 @@ export const ImportGeometreDialog = ({
         const area = parseNumber(areaValue);
         const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
         const ilotName = findValue(row, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
+        const proprietaireTerrien = findValue(row, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
+        const beneficiaire = findValue(row, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
 
         // Fallback: use the first non-empty cell value as plot number
         if (!plotNumber) {
@@ -205,6 +207,8 @@ export const ImportGeometreDialog = ({
           area,
           price: price || 0,
           ilotName: ilotName ? String(ilotName) : undefined,
+          proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
+          beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
         };
         parcelles.push(parcelle);
 

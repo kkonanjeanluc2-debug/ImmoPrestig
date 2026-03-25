@@ -1226,7 +1226,9 @@ export const generateAttestationVillageoise = async (
 
       // Process inline bold **text** and italic _text_
       doc.setFontSize(baseFontSize);
-      const isCentered = trimmed.startsWith("**Fait à") || trimmed.startsWith("**Attestons");
+      const plainText = trimmed.replace(/\*\*/g, "").trim();
+      const isFaitA = plainText.toLowerCase().startsWith("fait à");
+      const isCentered = !isFaitA && (plainText.startsWith("Attestons") || plainText.startsWith("attestons"));
       
       // Check if entire line is bold
       if (/^\*\*[^*]+\*\*$/.test(trimmed)) {

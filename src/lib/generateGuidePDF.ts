@@ -335,11 +335,21 @@ export async function generateGuidePDF(
   while (entryIndex < entries.length) {
     doc.addPage("a4", "landscape");
 
-    let yPos = drawPageHeader(pageNum);
+    // First pass: determine which entries fit on this page
+    const pageStartIndex = entryIndex;
+    let tempY = 18 + headerHeight; // approximate header + table header height
+    const maxY = landscapeH - margin - 5;
+    let countOnPage = 0;
+    while (entryIndex + countOnPage < entries.length && tempY + rowHeight <= maxY) {
+      tempY += rowHeight;
+      countOnPage++;
+    }
+    const pageEntries = entries.slice(pageStartIndex, pageStartIndex + countOnPage);
+
+    let yPos = drawPageHeader(pageNum, pageEntries);
     yPos = drawTableHeader(yPos);
 
     let rowsOnPage = 0;
-    const maxY = landscapeH - margin - 5;
 
     while (entryIndex < entries.length && yPos + rowHeight <= maxY) {
       drawRow(entries[entryIndex], yPos, rowsOnPage % 2 === 0);

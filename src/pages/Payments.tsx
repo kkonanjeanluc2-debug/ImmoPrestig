@@ -129,6 +129,10 @@ export default function Payments() {
     .filter(Boolean);
   const { data: gestionnaireProfiles } = useUserProfiles(gestionnaireIds);
 
+  if (!permLoading && role !== "super_admin" && role !== "admin" && role !== "locataire" && !hasPermission("can_view_payments")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   // Helper to get commission info for a payment
   const getCommissionInfo = (payment: any) => {
     const tenant = payment.tenant as any;

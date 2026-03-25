@@ -259,6 +259,9 @@ export function DocumentsParcelleDialog({
                     banner_color_1: (attestationTemplate as any).banner_color_1 || null,
                     banner_color_2: (attestationTemplate as any).banner_color_2 || null,
                     banner_gradient: (attestationTemplate as any).banner_gradient || false,
+                    doc_bg_color_1: (attestationTemplate as any).doc_bg_color_1 || null,
+                    doc_bg_color_2: (attestationTemplate as any).doc_bg_color_2 || null,
+                    doc_bg_gradient: (attestationTemplate as any).doc_bg_gradient || false,
                   } : null;
                   const chefImages: AttestationChefImages = {
                     stamp_url: lotissement?.chef_stamp_url || null,

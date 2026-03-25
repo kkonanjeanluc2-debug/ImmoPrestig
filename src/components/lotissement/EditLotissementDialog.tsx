@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, FileText } from "lucide-react";
 import { useUpdateLotissement, Lotissement } from "@/hooks/useLotissements";
+import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
 import { toast } from "sonner";
 
 interface EditLotissementDialogProps {
@@ -21,12 +23,14 @@ interface EditLotissementDialogProps {
 
 export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditLotissementDialogProps) {
   const updateLotissement = useUpdateLotissement();
+  const { data: attestationTemplates = [] } = useAttestationTemplates();
   const [formData, setFormData] = useState({
     name: "",
     location: "",
     city: "",
     total_area: "",
     description: "",
+    attestation_template_id: "" as string,
   });
 
   useEffect(() => {
@@ -37,6 +41,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         city: lotissement.city || "Abidjan",
         total_area: lotissement.total_area?.toString() || "",
         description: lotissement.description || "",
+        attestation_template_id: (lotissement as any).attestation_template_id || "",
       });
     }
   }, [lotissement]);
@@ -57,7 +62,8 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         city: formData.city.trim() || "Abidjan",
         total_area: formData.total_area ? parseFloat(formData.total_area) : null,
         description: formData.description.trim() || null,
-      });
+        attestation_template_id: formData.attestation_template_id || null,
+      } as any);
 
       toast.success("Lotissement modifié avec succès");
       onOpenChange(false);
@@ -127,6 +133,34 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
               rows={3}
             />
           </div>
+
+          {attestationTemplates.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Modèle d'attestation villageoise
+              </Label>
+              <Select
+                value={formData.attestation_template_id || "none"}
+                onValueChange={(v) => setFormData({ ...formData, attestation_template_id: v === "none" ? "" : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un modèle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun modèle</SelectItem>
+                  {attestationTemplates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} {t.is_default ? "⭐" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Ce modèle sera utilisé pour générer les attestations d'attribution de ce lotissement
+              </p>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

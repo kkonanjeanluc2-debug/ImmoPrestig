@@ -738,7 +738,7 @@ function detectHeaderRowIndex(rows: unknown[][], expectedHeaders: string[]): num
   let bestScore = 0;
 
   rows.slice(0, 10).forEach((row, index) => {
-    const score = row.reduce((total, cell) => {
+    const score = row.reduce<number>((total, cell) => {
       const normalizedCell = normalizeExcelKey(cell);
       if (!normalizedCell) return total;
       const matched = normalizedExpected.some(

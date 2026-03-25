@@ -239,6 +239,15 @@ const Settings = () => {
                 <span>Documents d'achat</span>
               </TabsTrigger>
             )}
+            {hasLotissement && canManageTemplates && (
+              <TabsTrigger
+                value="attestation-templates"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <MapPin className="h-4 w-4" />
+                <span>Attestations</span>
+              </TabsTrigger>
+            )}
             {canAccessSubscriptionTab && (
               <TabsTrigger
                 value="subscription"

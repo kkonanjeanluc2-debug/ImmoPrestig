@@ -88,6 +88,7 @@ function ReservationModalList({ parcelleId, plotNumber, parcelle, lotissementId,
 }
 
 export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) {
+  const { user } = useAuth();
   const { hasPermission, role } = usePermissions();
   const canCreate = hasPermission("can_create_parcelles");
   const canEdit = hasPermission("can_edit_lotissements");

@@ -183,7 +183,7 @@ export function AddBienVenteDialog({ children }: AddBienVenteDialogProps) {
             {propertyType !== "terrain" && (
               <>
                 <div>
-                  <Label htmlFor="bedrooms">Chambres</Label>
+                  <Label htmlFor="bedrooms">Pièces</Label>
                   <Input
                     id="bedrooms"
                     type="number"

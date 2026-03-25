@@ -45,6 +45,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
   const { data: ilots } = useIlotsWithStats(lotissementId);
   const { data: agency } = useAgency();
   const { data: guideTemplates = [] } = useGuideTemplates();
+  const { data: beneficiaires = [] } = useBeneficiairesLots(lotissementId);
   const [search, setSearch] = useState("");
 
   const guideEntries = useMemo(() => {

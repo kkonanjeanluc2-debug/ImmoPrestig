@@ -199,12 +199,23 @@ const Trash = () => {
               Gérez les éléments supprimés. Ils seront définitivement effacés après 30 jours.
             </p>
           </div>
-          {trashCount && trashCount.total > 0 && (
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              {trashCount.total} élément{trashCount.total > 1 ? "s" : ""} dans la corbeille
-            </Badge>
-          )}
-        </div>
+          <div className="flex items-center gap-3">
+            {trashCount && trashCount.total > 0 && (
+              <>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {trashCount.total} élément{trashCount.total > 1 ? "s" : ""}
+                </Badge>
+                <Button
+                  variant="destructive"
+                  onClick={() => setConfirmEmptyAll(true)}
+                  disabled={emptyingTrash}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  {emptyingTrash ? "Vidage..." : "Vider la corbeille"}
+                </Button>
+              </>
+            )}
+          </div>
 
         {/* Warning Alert */}
         <Alert className="border-amber-500/50 bg-amber-500/10">

@@ -1046,6 +1046,12 @@ export interface AttestationChefImages {
   signature_url?: string | null;
 }
 
+export interface AncienBeneficiaireInfo {
+  nom: string;
+  cni_number?: string | null;
+  telephone?: string | null;
+}
+
 export const generateAttestationVillageoise = async (
   parcelle: ParcelleInfo,
   lotissement: LotissementInfo,
@@ -1057,7 +1063,8 @@ export const generateAttestationVillageoise = async (
   template?: AttestationTemplateData | null,
   chefVillageTitre?: string,
   ilotName?: string | null,
-  chefImages?: AttestationChefImages | null
+  chefImages?: AttestationChefImages | null,
+  ancienBeneficiaire?: AncienBeneficiaireInfo | null
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();

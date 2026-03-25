@@ -172,7 +172,7 @@ export const ImportGeometreDialog = ({
         }
 
         // Try specific lot/parcelle columns first, before falling back to generic "n°" which may match "N° D'ORDRE"
-        let plotNumber = findValue(row, ["lot", "lots", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
+        let plotNumber = findValue(row, ["lots", "lot", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
         if (!plotNumber) {
           plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "ref", "reference", "référence", "id", "label", "name", "nom", "designation", "désignation"]);
         }
@@ -702,29 +702,56 @@ export const ImportGeometreDialog = ({
 
 // Helper functions for Excel parsing
 function findValue(row: Record<string, unknown>, keys: string[]): unknown {
+  const rowEntries = Object.keys(row).map((rowKey) => ({
+    rowKey,
+    normalizedRowKey: normalizeExcelKey(rowKey),
+    value: row[rowKey],
+  }));
+
   for (const key of keys) {
-    for (const rowKey of Object.keys(row)) {
-      const normalizedRowKey = normalizeExcelKey(rowKey);
-      const normalizedKey = normalizeExcelKey(key);
-      // Exact match
-      if (normalizedRowKey === normalizedKey) {
-        return row[rowKey];
-      }
-      // Partial match: column header contains the key or vice versa
-      // But skip "N° D'ORDRE" type columns when searching for "n°" or "no"
-      if (normalizedRowKey.includes(normalizedKey) || normalizedKey.includes(normalizedRowKey)) {
-        // Exclude "ordre" columns from matching generic number keys
-        if ((normalizedKey === "n" || normalizedKey === "no" || normalizedKey === "num" || normalizedKey === "numero") && normalizedRowKey.includes("ordre")) {
-          continue;
-        }
-        const val = row[rowKey];
-        if (val !== null && val !== undefined && String(val).trim() !== "") {
-          return val;
-        }
-      }
+    const normalizedKey = normalizeExcelKey(key);
+
+    const exactMatch = rowEntries.find(
+      ({ normalizedRowKey, value }) =>
+        normalizedRowKey === normalizedKey &&
+        value !== null &&
+        value !== undefined &&
+        String(value).trim() !== ""
+    );
+
+    if (exactMatch) {
+      return exactMatch.value;
     }
   }
+
+  for (const key of keys) {
+    const normalizedKey = normalizeExcelKey(key);
+
+    for (const { normalizedRowKey, value } of rowEntries) {
+      if (!isFilledCell(value)) continue;
+      if (!isCompatiblePartialHeaderMatch(normalizedRowKey, normalizedKey)) continue;
+      return value;
+    }
+  }
+
   return undefined;
+}
+
+function isCompatiblePartialHeaderMatch(normalizedRowKey: string, normalizedKey: string): boolean {
+  if (!normalizedRowKey || !normalizedKey) return false;
+  if (!(normalizedRowKey.includes(normalizedKey) || normalizedKey.includes(normalizedRowKey))) {
+    return false;
+  }
+
+  if (["n", "no", "num", "numero"].includes(normalizedKey) && normalizedRowKey.includes("ordre")) {
+    return false;
+  }
+
+  if (["lot", "lots"].includes(normalizedKey) && normalizedRowKey.startsWith("ilot")) {
+    return false;
+  }
+
+  return true;
 }
 
 function normalizeExcelKey(value: unknown): string {

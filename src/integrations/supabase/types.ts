@@ -672,6 +672,9 @@ export type Database = {
           content: string
           created_at: string
           district: string | null
+          doc_bg_color_1: string | null
+          doc_bg_color_2: string | null
+          doc_bg_gradient: boolean | null
           id: string
           is_default: boolean
           lotissement_origin_name: string | null
@@ -691,6 +694,9 @@ export type Database = {
           content?: string
           created_at?: string
           district?: string | null
+          doc_bg_color_1?: string | null
+          doc_bg_color_2?: string | null
+          doc_bg_gradient?: boolean | null
           id?: string
           is_default?: boolean
           lotissement_origin_name?: string | null
@@ -710,6 +716,9 @@ export type Database = {
           content?: string
           created_at?: string
           district?: string | null
+          doc_bg_color_1?: string | null
+          doc_bg_color_2?: string | null
+          doc_bg_gradient?: boolean | null
           id?: string
           is_default?: boolean
           lotissement_origin_name?: string | null

@@ -18,6 +18,9 @@ export interface AttestationTemplate {
   banner_color_1: string | null;
   banner_color_2: string | null;
   banner_gradient: boolean;
+  doc_bg_color_1: string | null;
+  doc_bg_color_2: string | null;
+  doc_bg_gradient: boolean;
   created_at: string;
   updated_at: string;
 }

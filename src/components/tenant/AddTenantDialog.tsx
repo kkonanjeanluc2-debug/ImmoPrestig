@@ -137,12 +137,37 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
     setOpen(isOpen);
     if (isOpen) {
       refetchProperties();
-      setSelectedPropertyId("");
+      if (!preselectedPropertyId) {
+        setSelectedPropertyId("");
+      }
       setRentType("mensuel");
       setDailyRentDays("");
       setDailyRentDiscount("0");
     }
   };
+
+  // Pre-fill property and unit when provided
+  useEffect(() => {
+    if (open && preselectedPropertyId && properties?.length) {
+      const prop = properties.find(p => p.id === preselectedPropertyId);
+      if (prop) {
+        setSelectedPropertyId(preselectedPropertyId);
+        form.setValue("property_id", preselectedPropertyId);
+        form.setValue("rent_amount", String(prop.rent_amount));
+      }
+    }
+  }, [open, preselectedPropertyId, properties, form]);
+
+  // Pre-fill unit when units are loaded
+  useEffect(() => {
+    if (open && preselectedUnitId && propertyUnits.length > 0) {
+      const unit = propertyUnits.find(u => u.id === preselectedUnitId);
+      if (unit) {
+        form.setValue("unit_id", preselectedUnitId);
+        form.setValue("rent_amount", String(unit.rent_amount));
+      }
+    }
+  }, [open, preselectedUnitId, propertyUnits, form]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

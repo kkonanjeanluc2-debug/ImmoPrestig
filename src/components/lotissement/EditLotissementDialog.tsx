@@ -297,6 +297,34 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
             </div>
           )}
 
+          {guideTemplates.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Modèle de page de garde du guide
+              </Label>
+              <Select
+                value={formData.guide_template_id || "none"}
+                onValueChange={(v) => setFormData({ ...formData, guide_template_id: v === "none" ? "" : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un modèle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun modèle</SelectItem>
+                  {guideTemplates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} {t.is_default ? "⭐" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Ce modèle sera utilisé pour la page de garde du guide de ce lotissement
+              </p>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler

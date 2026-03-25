@@ -101,7 +101,6 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
         const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
         if (propMatch) origAttributaire = propMatch[1].trim();
       }
-      }
 
       // If sold AND there's an original attributaire, show both rows
       if (vente?.acquereur?.name && origAttributaire) {

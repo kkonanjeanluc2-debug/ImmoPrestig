@@ -237,6 +237,7 @@ export function OwnerPayoutsSection({
       </div>
 
       {/* Add button + Dialog */}
+      {canCreate && (
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>

@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { format, differenceInDays, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useUpcomingEcheances, useOverdueEcheances, EcheanceWithDetails } from "@/hooks/useEcheancesParcelles";
+import { useUpcomingEcheances, useOverdueEcheances, useAllEcheancesWithDetails, EcheanceWithDetails } from "@/hooks/useEcheancesParcelles";
 import { openWhatsApp } from "@/lib/whatsapp";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PayEcheanceDialog } from "./PayEcheanceDialog";

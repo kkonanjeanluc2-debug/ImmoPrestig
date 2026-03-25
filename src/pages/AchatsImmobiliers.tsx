@@ -1,11 +1,9 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Building2, Users, FileText, ShoppingCart, Calendar, Plus, Loader2, FileCheck } from "lucide-react";
+import { Building2, Users, FileText, ShoppingCart, Calendar, FileCheck } from "lucide-react";
 import { useBiensAchat } from "@/hooks/useBiensAchat";
 import { useVendeurs } from "@/hooks/useVendeurs";
 import { useOffresAchat } from "@/hooks/useOffresAchat";
@@ -18,19 +16,12 @@ import { AchatsImmobiliersList } from "@/components/achat-immobilier/AchatsImmob
 import { EcheancesAchatsTabContent } from "@/components/achat-immobilier/EcheancesAchatsTabContent";
 import { AchatsDashboard } from "@/components/achat-immobilier/AchatsDashboard";
 import { MutationsAchatList } from "@/components/achat-immobilier/MutationsAchatList";
-
-const STATUS_LABELS: Record<string, string> = {
-  
-  en_negociation: "En négociation",
-  offre_faite: "Offre faite",
-  sous_compromis: "Sous compromis",
-  achete: "Acheté",
-  abandonne: "Abandonné",
-};
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function AchatsImmobiliers() {
   const [activeTab, setActiveTab] = useState("biens");
   const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
+  const { hasPermission, isLoading } = usePermissions();
 
   // Prefetch all tab data on mount for instant switching
   useBiensAchat();
@@ -38,6 +29,10 @@ export default function AchatsImmobiliers() {
   useOffresAchat();
   useAchatsImmobiliers();
   useEcheancesAchats();
+
+  if (!isLoading && !hasPermission("can_view_achats")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <DashboardLayout>

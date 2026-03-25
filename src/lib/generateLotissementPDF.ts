@@ -1149,111 +1149,213 @@ export const generateAttestationVillageoise = async (
   yPos += bannerHeight + 10;
   doc.setTextColor(...textColor);
 
-  // ===== CORPS : "Nous soussignés..." =====
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("Nous soussignés,", pageWidth / 2, yPos, { align: "center" });
-  yPos += 8;
-
-  doc.setFont("helvetica", "bold");
-  const villageName2 = village.replace(/^Village de /i, "").trim() || "____________________";
-  let chefLine = `Monsieur ${chef}, Chef du village de ${villageName2},`;
-  if (chefTitre) {
-    chefLine += `\n${chefTitre}`;
-  }
-  const chefLines = doc.splitTextToSize(chefLine, pageWidth - 2 * margin);
-  doc.text(chefLines, pageWidth / 2, yPos, { align: "center" });
-  yPos += chefLines.length * 5 + 5;
-
-  doc.setFontSize(11);
-  doc.text("Attestons que :", pageWidth / 2, yPos, { align: "center" });
-  yPos += 12;
-
-  // ===== FORMULAIRE =====
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+  // ===== RENDER TEMPLATE CONTENT =====
+  const templateContent = template?.content || "";
   
-  // M / Mme / Mlle
-  doc.text("M / Mme / Mlle :", margin, yPos);
-  doc.setFont("helvetica", "bold");
-  doc.text(acquereur.name, margin + 35, yPos);
-  doc.setFont("helvetica", "normal");
-  yPos += 8;
+  if (templateContent) {
+    // Build variable replacement map
+    const variableData: Record<string, string> = {
+      "{numero_lot}": parcelle.plot_number,
+      "{ilot}": ilotName || "",
+      "{nom_lotissement}": lotOriginName,
+      "{superficie}": parcelle.area > 0 ? parcelle.area.toLocaleString("fr-FR") : "___",
+      "{district}": district,
+      "{commune}": commune,
+      "{village}": village.replace(/^Village de /i, "").trim(),
+      "{chef_village_name}": chef,
+      "{chef_village_titre}": chefTitre,
+      "{arrete_approbation}": arreteApprobation,
+      "{beneficiaire_nom}": acquereur.name,
+      "{beneficiaire_cni}": acquereur.cni_number || "___",
+      "{beneficiaire_profession}": acquereur.profession || "___",
+      "{beneficiaire_telephone}": acquereur.phone || "___",
+      "{beneficiaire_email}": acquereur.email || "___",
+      "{beneficiaire_adresse}": acquereur.address || "___",
+      "{date_vente}": formatDate(saleDate),
+      "{ville}": lotissement.city || agency?.city || "___",
+      "{nom_agence}": agency?.name || "___",
+    };
 
-  // Type de pièce & N°
-  if (acquereur.cni_number) {
-    doc.text("Type de pièce : CNI", margin, yPos);
-    doc.text(`N° : ${acquereur.cni_number}`, pageWidth / 2, yPos);
+    // Replace variables
+    let rendered = templateContent;
+    for (const [key, value] of Object.entries(variableData)) {
+      rendered = rendered.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value || '____________________');
+    }
+
+    // Render Markdown lines to PDF
+    const lines = rendered.split("\n");
+    const maxWidth = pageWidth - 2 * margin;
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      // Skip headings that duplicate the banner (# and ##)
+      if (trimmed.startsWith("# ") || trimmed.startsWith("## ")) continue;
+
+      // Check page overflow
+      if (yPos > pageHeight - 40) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      if (trimmed === "---") {
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 6;
+        continue;
+      }
+
+      if (trimmed === "") {
+        yPos += 4;
+        continue;
+      }
+
+      if (trimmed.startsWith("### ")) {
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text(trimmed.substring(4), pageWidth / 2, yPos, { align: "center" });
+        yPos += 8;
+        continue;
+      }
+
+      // Process inline bold **text** and italic _text_
+      doc.setFontSize(10);
+      const isCentered = trimmed.startsWith("**Fait à") || trimmed.startsWith("**Attestons");
+      
+      // Check if entire line is bold
+      if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
+        const text = trimmed.replace(/\*\*/g, "");
+        doc.setFont("helvetica", "bold");
+        const splitLines = doc.splitTextToSize(text, maxWidth);
+        if (isCentered) {
+          doc.text(splitLines, pageWidth / 2, yPos, { align: "center" });
+        } else {
+          doc.text(splitLines, margin, yPos);
+        }
+        yPos += splitLines.length * 5 + 2;
+        doc.setFont("helvetica", "normal");
+        continue;
+      }
+
+      // Check if line is italic
+      if (/^_[^_]+_$/.test(trimmed)) {
+        const text = trimmed.replace(/_/g, "");
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+        doc.text(text, pageWidth / 2, yPos, { align: "center" });
+        yPos += 6;
+        doc.setFont("helvetica", "normal");
+        continue;
+      }
+
+      // Mixed content with bold segments
+      if (trimmed.includes("**")) {
+        let x = margin;
+        const parts = trimmed.split(/(\*\*[^*]+\*\*)/);
+        for (const part of parts) {
+          if (part.startsWith("**") && part.endsWith("**")) {
+            doc.setFont("helvetica", "bold");
+            const text = part.replace(/\*\*/g, "");
+            doc.text(text, x, yPos);
+            x += doc.getTextWidth(text);
+          } else if (part) {
+            doc.setFont("helvetica", "normal");
+            doc.text(part, x, yPos);
+            x += doc.getTextWidth(part);
+          }
+        }
+        doc.setFont("helvetica", "normal");
+        yPos += 6;
+        continue;
+      }
+
+      // Plain text
+      doc.setFont("helvetica", "normal");
+      const splitLines = doc.splitTextToSize(trimmed, maxWidth);
+      doc.text(splitLines, margin, yPos);
+      yPos += splitLines.length * 5 + 2;
+    }
+  } else {
+    // Fallback: hardcoded body if no template content
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Nous soussignés,", pageWidth / 2, yPos, { align: "center" });
     yPos += 8;
-  }
 
-  // Profession
-  if (acquereur.profession) {
-    doc.text(`Profession : ${acquereur.profession}`, margin, yPos);
+    doc.setFont("helvetica", "bold");
+    const villageName2 = village.replace(/^Village de /i, "").trim() || "____________________";
+    let chefLine = `Monsieur ${chef}, Chef du village de ${villageName2},`;
+    if (chefTitre) chefLine += `\n${chefTitre}`;
+    const chefLines = doc.splitTextToSize(chefLine, pageWidth - 2 * margin);
+    doc.text(chefLines, pageWidth / 2, yPos, { align: "center" });
+    yPos += chefLines.length * 5 + 5;
+
+    doc.setFontSize(11);
+    doc.text("Attestons que :", pageWidth / 2, yPos, { align: "center" });
+    yPos += 12;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("M / Mme / Mlle :", margin, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text(acquereur.name, margin + 35, yPos);
+    doc.setFont("helvetica", "normal");
     yPos += 8;
+
+    if (acquereur.cni_number) {
+      doc.text("Type de pièce : CNI", margin, yPos);
+      doc.text(`N° : ${acquereur.cni_number}`, pageWidth / 2, yPos);
+      yPos += 8;
+    }
+    if (acquereur.profession) {
+      doc.text(`Profession : ${acquereur.profession}`, margin, yPos);
+      yPos += 8;
+    }
+    if (acquereur.phone || acquereur.email) {
+      const contactParts = [acquereur.phone, acquereur.email].filter(Boolean);
+      doc.text(`Contact : ${contactParts.join(" / ")}`, margin, yPos);
+      yPos += 8;
+    }
+    if (acquereur.address) {
+      doc.text(`Domicile : ${acquereur.address}`, margin, yPos);
+      yPos += 8;
+    }
+    yPos += 5;
+
+    doc.text("Est Attributaire du Lot : ", margin, yPos);
+    const lotNumX = margin + doc.getTextWidth("Est Attributaire du Lot : ");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(parcelle.plot_number, lotNumX, yPos);
+    let nextX = lotNumX + doc.getTextWidth(parcelle.plot_number) + 5;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    if (ilotName) {
+      const ilotText = `Îlot ${ilotName}`;
+      doc.text(ilotText, nextX, yPos);
+    }
+    doc.text(`du lotissement ${lotOriginName.toUpperCase()}`, margin, yPos + 6);
+    yPos += 12;
+
+    if (parcelle.area > 0) {
+      doc.text(`Superficie : ${parcelle.area.toLocaleString("fr-FR")} m²`, margin, yPos);
+      yPos += 8;
+    }
+    yPos += 5;
+
+    doc.setFontSize(9);
+    const legalText = `En foi de quoi, la présente Attestation qui annule toutes attestations antérieures sur ledit lot est délivrée en vue des formalités domaniales.`;
+    const legalLines = doc.splitTextToSize(legalText, pageWidth - 2 * margin);
+    doc.text(legalLines, margin, yPos);
+    yPos += legalLines.length * 5 + 15;
+
+    const city = lotissement.city || agency?.city || "____________________";
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth / 2, yPos, { align: "center" });
   }
 
-  // Contact
-  if (acquereur.phone || acquereur.email) {
-    const contactParts = [acquereur.phone, acquereur.email].filter(Boolean);
-    doc.text(`Contact : ${contactParts.join(" / ")}`, margin, yPos);
-    yPos += 8;
-  }
-
-  // Adresse
-  if (acquereur.address) {
-    doc.text(`Domicile : ${acquereur.address}`, margin, yPos);
-    yPos += 8;
-  }
-
-  yPos += 5;
-
-  // ===== ATTRIBUTION =====
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("Est Attributaire du Lot : ", margin, yPos);
-  
-  // Numéro de lot en gras
-  const lotNumText = parcelle.plot_number;
-  const lotNumX = margin + doc.getTextWidth("Est Attributaire du Lot : ");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text(lotNumText, lotNumX, yPos);
-  
-  // Ilot info
-  let nextX = lotNumX + doc.getTextWidth(lotNumText) + 5;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  if (ilotName) {
-    const ilotText = `Îlot ${ilotName}`;
-    doc.text(ilotText, nextX, yPos);
-    nextX += doc.getTextWidth(ilotText) + 5;
-  }
-  const lotText = `du lotissement ${lotOriginName.toUpperCase()}`;
-  doc.text(lotText, margin, yPos + 6);
-  yPos += 12;
-
-  // Superficie
-  if (parcelle.area > 0) {
-    doc.text(`Superficie : ${parcelle.area.toLocaleString("fr-FR")} m²`, margin, yPos);
-    yPos += 8;
-  }
-
-  yPos += 5;
-
-  // ===== TEXTE JURIDIQUE =====
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  const legalText = `En foi de quoi, la présente Attestation qui annule toutes attestations antérieures sur ledit lot est délivrée en vue des formalités domaniales.`;
-  const legalLines = doc.splitTextToSize(legalText, pageWidth - 2 * margin);
-  doc.text(legalLines, margin, yPos);
-  yPos += legalLines.length * 5 + 15;
-
-  // ===== FAIT À ... =====
-  const city = lotissement.city || agency?.city || "____________________";
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth / 2, yPos, { align: "center" });
   yPos += 15;
 
   // ===== SIGNATURE CHEF DU VILLAGE =====

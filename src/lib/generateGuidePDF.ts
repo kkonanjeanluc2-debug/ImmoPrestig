@@ -55,11 +55,9 @@ export async function generateGuidePDF(
   lotissementName: string,
   options: GuideOptions
 ) {
-  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 10;
-  const contentWidth = pageWidth - margin * 2;
+  const hasCover = !!options.coverPage;
+  // Start portrait if cover page, otherwise landscape
+  const doc = new jsPDF({ orientation: hasCover ? "portrait" : "landscape", unit: "mm", format: "a4" });
 
   // Load logo
   let logoBase64: string | null = null;

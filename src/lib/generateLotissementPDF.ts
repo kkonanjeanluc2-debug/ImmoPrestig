@@ -1198,11 +1198,12 @@ export const generateAttestationVillageoise = async (
       // Skip headings that duplicate the banner (# and ##)
       if (trimmed.startsWith("# ") || trimmed.startsWith("## ")) continue;
       // Skip signature block lines that are handled separately below
-      const upperTrimmed = trimmed.replace(/\*\*/g, "").toUpperCase().trim();
-      if (upperTrimmed === "LE CHEF DU VILLAGE") continue;
-      if (upperTrimmed === chef.toUpperCase()) continue;
-      if (upperTrimmed === "SIGNATURE ET CACHET" || upperTrimmed === "SIGNATURE ET CACHET DU CHEF") continue;
-      if (/^_?signature/i.test(trimmed.replace(/\*/g, ""))) continue;
+      const cleanedLine = trimmed.replace(/^\#{1,4}\s*/, "").replace(/\*\*/g, "").replace(/_/g, "").toUpperCase().trim();
+      if (cleanedLine === "LE CHEF DU VILLAGE") continue;
+      if (cleanedLine.includes("LE CHEF DU VILLAGE")) continue;
+      if (chef && cleanedLine === chef.toUpperCase()) continue;
+      if (cleanedLine === "SIGNATURE ET CACHET" || cleanedLine === "SIGNATURE ET CACHET DU CHEF" || cleanedLine === "CACHET ET SIGNATURE") continue;
+      if (/^SIGNATURE/i.test(cleanedLine)) continue;
 
       if (trimmed === "---") {
         doc.setDrawColor(200, 200, 200);

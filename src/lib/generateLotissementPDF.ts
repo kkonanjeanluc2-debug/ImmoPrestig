@@ -1022,6 +1022,163 @@ export const generateAttestationPaiement = async (
   return doc;
 };
 
+// ========================================
+// ATTESTATION VILLAGEOISE
+// ========================================
+
+export const generateAttestationVillageoise = async (
+  parcelle: ParcelleInfo,
+  lotissement: LotissementInfo,
+  acquereur: AcquereurInfo,
+  agency: AgencyInfo | null,
+  saleDate: string,
+  villageName?: string,
+  chefVillageName?: string
+): Promise<jsPDF> => {
+  const doc = createPDFDocument();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+
+  let yPos = await addHeader(doc, agency, "ATTESTATION VILLAGEOISE");
+
+  // Sous-titre
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "italic");
+  doc.setTextColor(...textColor);
+  doc.text("Attestation de cession coutumière de terrain", pageWidth / 2, yPos, { align: "center" });
+  yPos += 15;
+
+  // Référence
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Réf: AV-${parcelle.plot_number}-${new Date(saleDate).getFullYear()}`, margin, yPos);
+  doc.text(`Date: ${formatDate(saleDate)}`, pageWidth - margin, yPos, { align: "right" });
+  yPos += 12;
+
+  // Corps du document
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+
+  const village = villageName || lotissement.location || "____________________";
+  const chef = chefVillageName || "____________________";
+
+  const introText = `Je soussigné, Chef du village de ${village}, certifie par la présente que la parcelle ci-après désignée a fait l'objet d'une cession coutumière conformément aux us et coutumes en vigueur.`;
+  const introLines = doc.splitTextToSize(introText, pageWidth - 2 * margin);
+  doc.text(introLines, margin, yPos);
+  yPos += introLines.length * 5 + 10;
+
+  // Informations sur la parcelle
+  doc.setFillColor(...lightGray);
+  doc.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("DÉSIGNATION DU TERRAIN", margin + 5, yPos);
+  yPos += 10;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const parcelleDetails = [
+    `Lotissement : ${lotissement.name}`,
+    `Localisation : ${lotissement.location}${lotissement.city ? `, ${lotissement.city}` : ""}`,
+    `Numéro de lot : ${parcelle.plot_number}`,
+    `Superficie : ${parcelle.area > 0 ? `${parcelle.area.toLocaleString("fr-FR")} m²` : "Non spécifiée"}`,
+  ];
+  parcelleDetails.forEach((line) => {
+    doc.text(line, margin + 5, yPos);
+    yPos += 6;
+  });
+  yPos += 8;
+
+  // Informations sur le bénéficiaire
+  doc.setFillColor(...lightGray);
+  doc.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("BÉNÉFICIAIRE DE LA CESSION", margin + 5, yPos);
+  yPos += 10;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...textColor);
+  const benefDetails = [
+    `Nom et prénoms : ${acquereur.name}`,
+    acquereur.profession ? `Profession : ${acquereur.profession}` : null,
+    acquereur.birth_date ? `Date de naissance : ${formatDate(acquereur.birth_date)}` : null,
+    acquereur.birth_place ? `Lieu de naissance : ${acquereur.birth_place}` : null,
+    acquereur.cni_number ? `N° CNI : ${acquereur.cni_number}` : null,
+    acquereur.address ? `Domicile : ${acquereur.address}` : null,
+    acquereur.phone ? `Téléphone : ${acquereur.phone}` : null,
+  ].filter(Boolean) as string[];
+
+  benefDetails.forEach((line) => {
+    doc.text(line, margin + 5, yPos);
+    yPos += 6;
+  });
+  yPos += 10;
+
+  // Attestation
+  const attestText = `La présente attestation est délivrée pour servir et valoir ce que de droit. Elle certifie que le terrain ci-dessus désigné a été cédé au bénéficiaire sus-mentionné selon les règles coutumières du village de ${village}, en présence des témoins et notables du village.`;
+  const attestLines = doc.splitTextToSize(attestText, pageWidth - 2 * margin);
+  doc.text(attestLines, margin, yPos);
+  yPos += attestLines.length * 5 + 10;
+
+  const engagementText = `Le Chef du village et les notables s'engagent à garantir au bénéficiaire la jouissance paisible et entière du terrain cédé, et à le défendre contre toute revendication de tiers.`;
+  const engagementLines = doc.splitTextToSize(engagementText, pageWidth - 2 * margin);
+  doc.text(engagementLines, margin, yPos);
+  yPos += engagementLines.length * 5 + 15;
+
+  // Lieu et date
+  const city = lotissement.city || agency?.city || "____________________";
+  doc.setFont("helvetica", "normal");
+  doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth - margin, yPos, { align: "right" });
+  yPos += 20;
+
+  // Signatures
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+
+  // Colonne gauche - Chef du village
+  doc.text("Le Chef du Village", margin, yPos);
+  yPos += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text(chef, margin, yPos + 2);
+  doc.text("(Signature et empreinte)", margin, yPos + 8);
+  doc.setDrawColor(150, 150, 150);
+  doc.line(margin, yPos + 25, margin + 60, yPos + 25);
+
+  // Colonne droite - Bénéficiaire
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("Le Bénéficiaire", pageWidth - margin - 60, yPos - 5);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text(acquereur.name, pageWidth - margin - 60, yPos + 2);
+  doc.text("(Signature)", pageWidth - margin - 60, yPos + 8);
+  doc.line(pageWidth - margin - 60, yPos + 25, pageWidth - margin, yPos + 25);
+
+  yPos += 35;
+
+  // Témoins
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...primaryColor);
+  doc.text("TÉMOINS :", margin, yPos);
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...textColor);
+  doc.text("1. Nom : ________________________  Signature : ________________________", margin, yPos);
+  yPos += 8;
+  doc.text("2. Nom : ________________________  Signature : ________________________", margin, yPos);
+
+  addFooter(doc, agency);
+
+  return doc;
+};
+
 // Helper to download PDF
 export const downloadPDF = (doc: jsPDF, filename: string) => {
   doc.save(filename);

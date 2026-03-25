@@ -14,6 +14,7 @@ import {
   generateContratVente,
   generateAttestationPaiement,
   generatePromesseVente,
+  generateAttestationVillageoise,
   downloadPDF,
 } from "@/lib/generateLotissementPDF";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";

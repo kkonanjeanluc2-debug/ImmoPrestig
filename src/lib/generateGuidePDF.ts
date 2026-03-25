@@ -96,25 +96,7 @@ export async function generateGuidePDF(
   function drawPageHeader(pageNum: number) {
     let yPos = margin;
 
-    // Agency logo + name
-    if (logoBase64) {
-      try {
-        doc.addImage(logoBase64, "PNG", margin, yPos, 15, 15);
-      } catch { /* ignore */ }
-    }
-
-    const textX = logoBase64 ? margin + 18 : margin;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text(options.agency?.name?.toUpperCase() || "", textX, yPos + 5);
-
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "normal");
-    const agencyLine = [options.agency?.address, options.agency?.city, options.agency?.phone].filter(Boolean).join(" · ");
-    if (agencyLine) doc.text(agencyLine, textX, yPos + 9);
-
     // Title centered
-    yPos += 2;
     doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
     doc.text(`GUIDE LOTISSEMENT ${lotissementName.toUpperCase()}`, pageWidth / 2, yPos + 5, { align: "center" });
@@ -127,7 +109,7 @@ export async function generateGuidePDF(
     doc.setFontSize(7);
     doc.text(`PAGE | ${pageNum}`, pageWidth - margin, yPos + 5, { align: "right" });
 
-    return yPos + 16;
+    return yPos + 14;
   }
 
   function drawTableHeader(yPos: number) {

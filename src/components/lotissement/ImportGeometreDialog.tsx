@@ -174,7 +174,7 @@ export const ImportGeometreDialog = ({
       newErrors.push("Aucune donnée exploitable trouvée dans le fichier");
     }
 
-    return { ilots, parcelles, errors: newErrors, warnings: [] as string[] };
+    return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
   }, [existingIlotNames, existingPlotNumbers]);
 
   // ─── Main file handler ──────────────────────────────────────────────

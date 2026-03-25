@@ -90,6 +90,7 @@ export const ImportGeometreDialog = ({
     const mainSheet = parcellesSheet || workbook.Sheets[workbook.SheetNames[0]];
 
     const newErrors: string[] = [];
+    const newWarnings: string[] = [];
     const ilots: ParsedGeometreIlot[] = [];
     const parcelles: ParsedGeometreParcelle[] = [];
 
@@ -116,11 +117,26 @@ export const ImportGeometreDialog = ({
 
     if (mainSheet) {
       const parcellesData = XLSX.utils.sheet_to_json<Record<string, unknown>>(mainSheet);
+      if (parcellesData.length > 0) {
+        const detectedColumns = Object.keys(parcellesData[0]);
+        newWarnings.push(`Colonnes détectées : ${detectedColumns.join(", ")}`);
+      }
       parcellesData.forEach((row, idx) => {
-        const plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "plot_number", "numero_lot", "lot", "numero_parcelle", "parcelle"]);
-        const area = parseNumber(findValue(row, ["superficie", "surface", "area", "m2", "m²"]));
-        const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût"]));
-        const ilotName = findValue(row, ["ilot", "îlot", "nom_ilot", "nom ilot", "ilot_name"]);
+        let plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "plot_number", "numero_lot", "lot", "numero_parcelle", "parcelle", "ref", "reference", "référence", "id", "nlot", "nolot", "numerolot", "label", "name", "nom", "designation", "désignation"]);
+        const area = parseNumber(findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]));
+        const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
+        const ilotName = findValue(row, ["ilot", "îlot", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
+
+        // Fallback: use the first column value as plot number
+        if (!plotNumber) {
+          const firstKey = Object.keys(row)[0];
+          if (firstKey) {
+            const val = row[firstKey];
+            if (val !== null && val !== undefined && String(val).trim() !== "") {
+              plotNumber = val;
+            }
+          }
+        }
 
         if (!plotNumber) {
           newErrors.push(`Parcelle ligne ${idx + 2}: numéro manquant`);
@@ -158,7 +174,7 @@ export const ImportGeometreDialog = ({
       newErrors.push("Aucune donnée exploitable trouvée dans le fichier");
     }
 
-    return { ilots, parcelles, errors: newErrors, warnings: [] as string[] };
+    return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
   }, [existingIlotNames, existingPlotNumbers]);
 
   // ─── Main file handler ──────────────────────────────────────────────
@@ -608,8 +624,18 @@ export const ImportGeometreDialog = ({
 function findValue(row: Record<string, unknown>, keys: string[]): unknown {
   for (const key of keys) {
     for (const rowKey of Object.keys(row)) {
-      if (rowKey.toLowerCase().trim().replace(/[_\s]/g, "") === key.replace(/[_\s]/g, "")) {
+      const normalizedRowKey = rowKey.toLowerCase().trim().replace(/[_\s°.-]/g, "");
+      const normalizedKey = key.toLowerCase().replace(/[_\s°.-]/g, "");
+      // Exact match
+      if (normalizedRowKey === normalizedKey) {
         return row[rowKey];
+      }
+      // Partial match: column header contains the key or vice versa
+      if (normalizedRowKey.includes(normalizedKey) || normalizedKey.includes(normalizedRowKey)) {
+        const val = row[rowKey];
+        if (val !== null && val !== undefined && String(val).trim() !== "") {
+          return val;
+        }
       }
     }
   }

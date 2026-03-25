@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateGuidePDF } from "@/lib/generateGuidePDF";
 import { useAgency } from "@/hooks/useAgency";
+import { useGuideTemplates } from "@/hooks/useGuideTemplates";
 import { ExportColumn } from "@/lib/exportData";
 
 interface GuideEntry {

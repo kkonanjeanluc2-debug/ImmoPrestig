@@ -184,6 +184,9 @@ export function AttestationTemplateManager() {
       banner_color_1: t.banner_color_1 || "#003399",
       banner_color_2: t.banner_color_2 || null,
       banner_gradient: t.banner_gradient || false,
+      doc_bg_color_1: t.doc_bg_color_1 || null,
+      doc_bg_color_2: t.doc_bg_color_2 || null,
+      doc_bg_gradient: t.doc_bg_gradient || false,
     });
     setDialogOpen(true);
   };

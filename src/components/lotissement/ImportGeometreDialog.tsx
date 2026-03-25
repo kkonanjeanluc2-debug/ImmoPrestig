@@ -141,6 +141,8 @@ export const ImportGeometreDialog = ({
         "surface",
         "prix",
         "ilot",
+        "proprietaire",
+        "beneficiaire",
       ]);
 
       if (detectedColumns.length > 0) {
@@ -169,11 +171,17 @@ export const ImportGeometreDialog = ({
           return;
         }
 
-        let plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "plot_number", "numero_lot", "lot", "lots", "numero_parcelle", "parcelle", "ref", "reference", "référence", "id", "nlot", "nolot", "numerolot", "label", "name", "nom", "designation", "désignation"]);
+        // Try specific lot/parcelle columns first, before falling back to generic "n°" which may match "N° D'ORDRE"
+        let plotNumber = findValue(row, ["lot", "lots", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
+        if (!plotNumber) {
+          plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "ref", "reference", "référence", "id", "label", "name", "nom", "designation", "désignation"]);
+        }
         const areaValue = findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]);
         const area = parseNumber(areaValue);
         const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
         const ilotName = findValue(row, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
+        const proprietaireTerrien = findValue(row, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
+        const beneficiaire = findValue(row, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
 
         // Fallback: use the first non-empty cell value as plot number
         if (!plotNumber) {
@@ -203,6 +211,8 @@ export const ImportGeometreDialog = ({
           area,
           price: price || 0,
           ilotName: ilotName ? String(ilotName) : undefined,
+          proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
+          beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
         };
         parcelles.push(parcelle);
 
@@ -366,13 +376,22 @@ export const ImportGeometreDialog = ({
       for (const parcelle of parsedParcelles) {
         try {
           const ilotId = parcelle.ilotName ? ilotIdMap[parcelle.ilotName.toLowerCase()] || null : null;
+          
+          // Build attribution from proprietaire terrien
+          const attribution = parcelle.proprietaireTerrien ? "proprietaire" : undefined;
+          
           await createParcelle.mutateAsync({
             lotissement_id: lotissementId,
             ilot_id: ilotId,
             plot_number: parcelle.plotNumber,
             area: parcelle.area,
             price: parcelle.price,
-          });
+            ...(attribution ? { attribution } : {}),
+            notes: [
+              parcelle.proprietaireTerrien ? `Propriétaire: ${parcelle.proprietaireTerrien}` : "",
+              parcelle.beneficiaire ? `Bénéficiaire: ${parcelle.beneficiaire}` : "",
+            ].filter(Boolean).join(" | ") || undefined,
+          } as any);
           successCount++;
         } catch (parcelleErr) {
           console.error(`Erreur création parcelle ${parcelle.plotNumber}:`, parcelleErr);
@@ -591,6 +610,16 @@ export const ImportGeometreDialog = ({
                           {parcelle.ilotName && (
                             <Badge variant="secondary" className="text-xs">Îlot: {parcelle.ilotName}</Badge>
                           )}
+                          {parcelle.proprietaireTerrien && (
+                            <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">
+                              Proprio: {parcelle.proprietaireTerrien}
+                            </Badge>
+                          )}
+                          {parcelle.beneficiaire && (
+                            <Badge variant="outline" className="text-xs border-amber-300 text-amber-700">
+                              Bénéf: {parcelle.beneficiaire}
+                            </Badge>
+                          )}
                           {parcelle.coordinates && (
                             <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300">
                               📍 Géoréférencé
@@ -678,7 +707,12 @@ function findValue(row: Record<string, unknown>, keys: string[]): unknown {
         return row[rowKey];
       }
       // Partial match: column header contains the key or vice versa
+      // But skip "N° D'ORDRE" type columns when searching for "n°" or "no"
       if (normalizedRowKey.includes(normalizedKey) || normalizedKey.includes(normalizedRowKey)) {
+        // Exclude "ordre" columns from matching generic number keys
+        if ((normalizedKey === "n" || normalizedKey === "no" || normalizedKey === "num" || normalizedKey === "numero") && normalizedRowKey.includes("ordre")) {
+          continue;
+        }
         const val = row[rowKey];
         if (val !== null && val !== undefined && String(val).trim() !== "") {
           return val;

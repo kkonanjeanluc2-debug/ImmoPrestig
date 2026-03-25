@@ -112,6 +112,9 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [attributionFilter, setAttributionFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [isBulkDeleteLoading, setIsBulkDeleteLoading] = useState(false);
 
   const getAttributionLabel = (attribution: string | null) => {
     if (attribution === "proprietaire") return lotissement?.proprietaire_name || "Propriétaire";

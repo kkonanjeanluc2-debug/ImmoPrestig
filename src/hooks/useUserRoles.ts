@@ -25,6 +25,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Administrateur",
   gestionnaire: "Gestionnaire",
   comptable: "Comptable",
+  caissiere: "Caissière",
   lecture_seule: "Lecture seule",
   locataire: "Locataire",
 };

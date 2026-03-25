@@ -136,6 +136,52 @@ const Trash = () => {
     return Math.max(0, 30 - daysElapsed);
   };
 
+  const handleEmptyTrash = async () => {
+    setEmptyingTrash(true);
+    try {
+      const tables = [
+        { name: "vente_prospects" as const, hasDeletedAt: true },
+        { name: "parcelles" as const, hasDeletedAt: true },
+        { name: "ilots" as const, hasDeletedAt: true },
+        { name: "lotissements" as const, hasDeletedAt: true },
+        { name: "tenants" as const, hasDeletedAt: true },
+        { name: "properties" as const, hasDeletedAt: true },
+        { name: "owners" as const, hasDeletedAt: true },
+        { name: "contracts" as const, hasDeletedAt: true },
+      ];
+
+      for (const table of tables) {
+        await supabase
+          .from(table.name)
+          .delete()
+          .not("deleted_at", "is", null);
+      }
+
+      // Invalidate all trash-related queries
+      queryClient.invalidateQueries({ queryKey: ["deleted-tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-properties"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-owners"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-ilots"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-prospects"] });
+      queryClient.invalidateQueries({ queryKey: ["trash-count"] });
+
+      toast({
+        title: "Corbeille vidée",
+        description: "Tous les éléments ont été supprimés définitivement.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de vider la corbeille.",
+        variant: "destructive",
+      });
+    }
+    setEmptyingTrash(false);
+    setConfirmEmptyAll(false);
+  };
+
   const isRestoring = restoreTenant.isPending || restoreProperty.isPending || restoreOwner.isPending || restoreLotissement.isPending || restoreParcelle.isPending || restoreIlot.isPending || restoreProspect.isPending;
   const isDeleting = deleteTenant.isPending || deleteProperty.isPending || deleteOwner.isPending || deleteLotissement.isPending || deleteParcelle.isPending || deleteIlot.isPending || deleteProspect.isPending;
 

@@ -1232,49 +1232,27 @@ export const generateAttestationVillageoise = async (
   doc.text(chef, pageWidth / 2, yPos, { align: "center" });
   yPos += 8;
 
-  // Chef stamp and signature images
-  if (chefImages?.stamp_url || chefImages?.signature_url) {
-    const imagePromises: Promise<{ type: string; base64: string } | null>[] = [];
-    
-    const loadImageAsBase64 = async (url: string, type: string): Promise<{ type: string; base64: string } | null> => {
-      try {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve({ type, base64: reader.result as string });
-          reader.onerror = () => resolve(null);
-          reader.readAsDataURL(blob);
-        });
-      } catch {
-        return null;
-      }
-    };
-
-    if (chefImages.signature_url) {
-      imagePromises.push(loadImageAsBase64(chefImages.signature_url, "signature"));
-    }
-    if (chefImages.stamp_url) {
-      imagePromises.push(loadImageAsBase64(chefImages.stamp_url, "stamp"));
-    }
-
-    const images = (await Promise.all(imagePromises)).filter(Boolean);
-    
-    if (images.length > 0) {
-      const totalWidth = images.length * 40 + (images.length - 1) * 10;
-      let imgX = (pageWidth - totalWidth) / 2;
+  // Chef stamp and signature image (single combined image)
+  const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
+  if (chefImageUrl) {
+    try {
+      const response = await fetch(chefImageUrl);
+      const blob = await response.blob();
+      const base64 = await new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
       
-      for (const img of images) {
-        if (img) {
-          try {
-            doc.addImage(img.base64, "PNG", imgX, yPos, 40, 25);
-          } catch {
-            // Silently skip if image can't be added
-          }
-          imgX += 50;
-        }
+      if (base64) {
+        const imgWidth = 50;
+        const imgHeight = 30;
+        doc.addImage(base64, "PNG", (pageWidth - imgWidth) / 2, yPos, imgWidth, imgHeight);
+        yPos += 35;
       }
-      yPos += 30;
+    } catch {
+      yPos += 15;
     }
   } else {
     yPos += 15;

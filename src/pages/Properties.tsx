@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2, User, UserCheck, DoorOpen, Pencil, Eye, ChevronDown, ChevronRight, Users, Navigation } from "lucide-react";
+import { Search, Grid3X3, List, Loader2, User, UserCheck, UserPlus, DoorOpen, Pencil, Eye, ChevronDown, ChevronRight, Users, Navigation } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -527,7 +527,18 @@ const Properties = () => {
                                   {tenantName}
                                 </div>
                               ) : (
-                                <span className="text-muted-foreground">-</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-auto py-1 px-2 text-primary gap-1 hover:text-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate("/tenants");
+                                  }}
+                                >
+                                  <UserPlus className="h-3.5 w-3.5" />
+                                  Ajouter
+                                </Button>
                               )}
                             </td>
                             <td className="px-4 py-3">
@@ -628,7 +639,18 @@ const Properties = () => {
                                                 {unitTenant ? (
                                                   <span className="text-foreground text-sm">{unitTenant.name}</span>
                                                 ) : (
-                                                  <span className="text-muted-foreground">-</span>
+                                                  <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-auto py-1 px-2 text-primary gap-1 hover:text-primary"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      navigate("/tenants");
+                                                    }}
+                                                  >
+                                                    <UserPlus className="h-3.5 w-3.5" />
+                                                    Ajouter
+                                                  </Button>
                                                 )}
                                               </td>
                                               <td className="px-6 py-3">

@@ -26,7 +26,7 @@ Domicile : {beneficiaire_adresse}
 
 ---
 
-Est Attributaire du **Lot {numero_lot}** du lotissement **{nom_lotissement}**
+Est Attributaire du **Lot {numero_lot}** - **Îlot {ilot}** du lotissement **{nom_lotissement}**
 
 Superficie : **{superficie} m²**
 

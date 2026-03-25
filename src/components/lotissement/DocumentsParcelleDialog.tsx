@@ -247,14 +247,26 @@ export function DocumentsParcelleDialog({
               onClick={async () => {
                 setGenerating("attestation_villageoise");
                 try {
+                  const templateData: AttestationTemplateData | null = attestationTemplate ? {
+                    district: attestationTemplate.district,
+                    commune: attestationTemplate.commune,
+                    village: attestationTemplate.village,
+                    chef_village_name: attestationTemplate.chef_village_name,
+                    chef_village_titre: attestationTemplate.chef_village_titre,
+                    lotissement_origin_name: attestationTemplate.lotissement_origin_name,
+                    arrete_approbation: attestationTemplate.arrete_approbation,
+                  } : null;
                   const doc = await generateAttestationVillageoise(
                     parcelleInfo,
                     lotissementInfo,
                     acquereurInfo,
                     agencyInfo,
-                    vente.sale_date
+                    vente.sale_date,
+                    undefined,
+                    undefined,
+                    templateData
                   );
-                  downloadPDF(doc, `attestation-villageoise-${parcelleInfo.plot_number}.pdf`);
+                  downloadPDF(doc, `attestation-attribution-${parcelleInfo.plot_number}.pdf`);
                   toast.success("Attestation villageoise générée");
                 } catch (error) {
                   console.error("Error generating PDF:", error);

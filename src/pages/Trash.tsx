@@ -37,6 +37,9 @@ const Trash = () => {
     name: string;
     type: "tenant" | "property" | "owner" | "lotissement" | "parcelle" | "ilot" | "prospect";
   } | null>(null);
+  const [emptyingTrash, setEmptyingTrash] = useState(false);
+  const [confirmEmptyAll, setConfirmEmptyAll] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: trashCount } = useTrashCount();
   const { data: deletedTenants, isLoading: loadingTenants } = useDeletedTenants();

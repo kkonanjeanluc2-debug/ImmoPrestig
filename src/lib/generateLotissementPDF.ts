@@ -1355,18 +1355,20 @@ export const generateAttestationVillageoise = async (
     doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth / 2, yPos, { align: "center" });
   }
 
-  yPos += 15;
+  yPos += 10;
 
-  // ===== SIGNATURE CHEF DU VILLAGE =====
-  doc.setFontSize(10);
+  // ===== SIGNATURE CHEF DU VILLAGE (aligné à droite) =====
+  const rightBlockCenter = pageWidth - margin - 30;
+  
+  doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("LE CHEF DU VILLAGE", pageWidth / 2, yPos, { align: "center" });
-  yPos += 6;
+  doc.text("LE CHEF DU VILLAGE", rightBlockCenter, yPos, { align: "center" });
+  yPos += 5;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
-  doc.text(chef, pageWidth / 2, yPos, { align: "center" });
-  yPos += 8;
+  doc.text(chef, rightBlockCenter, yPos, { align: "center" });
+  yPos += 6;
 
   // Chef stamp and signature image (single combined image)
   const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
@@ -1382,19 +1384,18 @@ export const generateAttestationVillageoise = async (
       });
       
       if (base64) {
-        const imgWidth = 50;
-        const imgHeight = 30;
-        doc.addImage(base64, "PNG", (pageWidth - imgWidth) / 2, yPos, imgWidth, imgHeight);
-        yPos += 35;
+        const imgWidth = 45;
+        const imgHeight = 28;
+        doc.addImage(base64, "PNG", rightBlockCenter - imgWidth / 2, yPos, imgWidth, imgHeight);
+        yPos += 30;
       }
     } catch {
-      yPos += 15;
+      yPos += 12;
     }
   } else {
-    yPos += 15;
-    // Ligne de signature
+    yPos += 12;
     doc.setDrawColor(150, 150, 150);
-    doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+    doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
   }
 
   // No footer for attestation villageoise

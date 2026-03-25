@@ -264,6 +264,20 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="all" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                Toutes
+                {(allEcheances?.length || 0) > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {allEcheances?.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+                  <Badge variant="destructive" className="ml-1">
+                    {filteredOverdue?.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="upcoming">

@@ -5034,6 +5034,7 @@ export type Database = {
         | "super_admin"
         | "locataire"
         | "comptable"
+        | "caissiere"
       interest_level: "faible" | "moyen" | "eleve"
       payment_type: "comptant" | "echelonne"
       plot_status: "disponible" | "reserve" | "vendu"
@@ -5200,6 +5201,7 @@ export const Constants = {
         "super_admin",
         "locataire",
         "comptable",
+        "caissiere",
       ],
       interest_level: ["faible", "moyen", "eleve"],
       payment_type: ["comptant", "echelonne"],

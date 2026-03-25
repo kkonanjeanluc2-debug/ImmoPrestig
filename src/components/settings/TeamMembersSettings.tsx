@@ -68,6 +68,7 @@ const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   admin: <Crown className="h-4 w-4 text-amber-600" />,
   gestionnaire: <UserCog className="h-4 w-4 text-blue-600" />,
   comptable: <UserCog className="h-4 w-4 text-teal-600" />,
+  caissiere: <UserCog className="h-4 w-4 text-pink-600" />,
   lecture_seule: <Eye className="h-4 w-4 text-gray-600" />,
   locataire: <Users className="h-4 w-4 text-orange-600" />,
 };
@@ -77,6 +78,7 @@ const ROLE_COLORS: Record<AppRole, string> = {
   admin: "bg-amber-100 text-amber-800 border-amber-300",
   gestionnaire: "bg-blue-100 text-blue-800 border-blue-300",
   comptable: "bg-teal-100 text-teal-800 border-teal-300",
+  caissiere: "bg-pink-100 text-pink-800 border-pink-300",
   lecture_seule: "bg-gray-100 text-gray-800 border-gray-300",
   locataire: "bg-orange-100 text-orange-800 border-orange-300",
 };
@@ -385,6 +387,17 @@ export function TeamMembersSettings() {
                               <div>Comptable</div>
                               <div className="text-xs text-muted-foreground">
                                 Gestion de la comptabilité
+                              </div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="caissiere">
+                          <div className="flex items-center gap-2">
+                            <UserCog className="h-4 w-4 text-pink-600" />
+                            <div>
+                              <div>Caissière</div>
+                              <div className="text-xs text-muted-foreground">
+                                Encaissement des paiements
                               </div>
                             </div>
                           </div>

@@ -52,6 +52,14 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role" |
     canManageUsers: false,
     isReadOnly: false,
   },
+  caissiere: {
+    canCreate: true,
+    canEdit: false,
+    canUpdate: false,
+    canDelete: false,
+    canManageUsers: false,
+    isReadOnly: false,
+  },
   lecture_seule: {
     canCreate: false,
     canEdit: false,

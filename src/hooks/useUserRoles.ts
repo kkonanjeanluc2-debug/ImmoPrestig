@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type AppRole = "super_admin" | "admin" | "gestionnaire" | "comptable" | "lecture_seule" | "locataire";
+export type AppRole = "super_admin" | "admin" | "gestionnaire" | "comptable" | "caissiere" | "lecture_seule" | "locataire";
 
 export interface UserRole {
   id: string;
@@ -25,6 +25,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Administrateur",
   gestionnaire: "Gestionnaire",
   comptable: "Comptable",
+  caissiere: "Caissière",
   lecture_seule: "Lecture seule",
   locataire: "Locataire",
 };
@@ -34,6 +35,7 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   admin: "Accès complet : peut gérer les utilisateurs, les paramètres et toutes les données",
   gestionnaire: "Peut créer, modifier et supprimer des biens, locataires et paiements",
   comptable: "Gestion de la comptabilité : paiements, dépenses, rapports financiers et exports",
+  caissiere: "Encaissement des paiements de loyers et consultation des données",
   lecture_seule: "Peut uniquement consulter les données sans les modifier",
   locataire: "Accès limité au portail locataire pour consulter ses propres données",
 };

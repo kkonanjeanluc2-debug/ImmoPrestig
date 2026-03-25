@@ -183,6 +183,48 @@ function getDefaultPermissions(role: string) {
     can_manage_templates: false,
   };
 
+  const caissierePermissions = {
+    can_view_properties: true,
+    can_create_properties: false,
+    can_edit_properties: false,
+    can_delete_properties: false,
+    can_view_tenants: true,
+    can_create_tenants: false,
+    can_edit_tenants: false,
+    can_delete_tenants: false,
+    can_view_payments: true,
+    can_create_payments: true,
+    can_edit_payments: true,
+    can_delete_payments: false,
+    can_view_owners: false,
+    can_create_owners: false,
+    can_edit_owners: false,
+    can_delete_owners: false,
+    can_view_contracts: true,
+    can_create_contracts: false,
+    can_edit_contracts: false,
+    can_delete_contracts: false,
+    can_view_lotissements: false,
+    can_create_lotissements: false,
+    can_edit_lotissements: false,
+    can_delete_lotissements: false,
+    can_view_ventes: false,
+    can_create_ventes: false,
+    can_edit_ventes: false,
+    can_delete_ventes: false,
+    can_view_documents: false,
+    can_create_documents: false,
+    can_delete_documents: false,
+    can_view_reports: false,
+    can_export_data: false,
+    can_send_reminders: false,
+    can_access_settings: false,
+    can_manage_team: false,
+    can_manage_automations: false,
+    can_manage_branding: false,
+    can_manage_templates: false,
+  };
+
   switch (role) {
     case "admin":
       return adminPermissions;
@@ -190,6 +232,8 @@ function getDefaultPermissions(role: string) {
       return gestionnairePermissions;
     case "comptable":
       return comptablePermissions;
+    case "caissiere":
+      return caissierePermissions;
     case "lecture_seule":
     default:
       return lectureSeulePermissions;

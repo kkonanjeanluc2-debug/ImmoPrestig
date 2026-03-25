@@ -1367,21 +1367,19 @@ export const generateAttestationVillageoise = async (
     doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth - margin, yPos, { align: "right" });
   }
 
-  yPos += 10;
-
   // ===== BLOC SIGNATURE (aligné à droite) =====
-  // Format: Fait à... / LE CHEF DU VILLAGE / Nom / Signature+Cachet
   const rightBlockCenter = pageWidth - margin - 30;
   
   // "Fait à..." line - right aligned (only if not already in template content)
   const templateHasFaitA = templateContent && templateContent.toLowerCase().includes("fait à");
   if (!templateHasFaitA) {
+    yPos += 5;
     const city = lotissement.city || agency?.city || "____________________";
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(...textColor);
     doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, rightBlockCenter, yPos, { align: "center" });
-    yPos += 8;
+    yPos += 6;
   }
 
   doc.setFontSize(9);

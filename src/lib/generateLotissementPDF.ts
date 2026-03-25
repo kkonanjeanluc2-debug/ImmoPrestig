@@ -1035,7 +1035,7 @@ export const generateAttestationVillageoise = async (
   villageName?: string,
   chefVillageName?: string
 ): Promise<jsPDF> => {
-  const doc = createPDFDocument();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
 

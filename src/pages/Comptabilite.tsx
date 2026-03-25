@@ -68,7 +68,7 @@ const Comptabilite = () => {
   const { data, totalRevenue } = useComptabilite(period.from, period.to);
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
   const { data: agency } = useAgency();
-  const { hasPermission, role } = usePermissions();
+  const { hasPermission, role, isLoading } = usePermissions();
   const fromDateStr = period.from.toISOString().split("T")[0];
   const toDateStr = period.to.toISOString().split("T")[0];
   const { data: ownerPayouts = [] } = useOwnerPayouts(fromDateStr, toDateStr);
@@ -77,6 +77,11 @@ const Comptabilite = () => {
     .reduce((sum, p) => sum + Number(p.amount), 0);
 
   const isAdminOrOwner = role === "super_admin" || role === "admin";
+
+  if (!isLoading && !isAdminOrOwner && !hasPermission("can_view_comptabilite")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const canExport = isAdminOrOwner || hasPermission("can_export_comptabilite");
   const canCreateExpense = isAdminOrOwner || hasPermission("can_create_expenses");
 

@@ -360,7 +360,14 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pl-3 space-y-1">
                     {crmImmobilierItems
-                      .filter((item) => hasFeature(item.featureKey) && (item.href !== "/acquisitions" || isAcquisitionsEnabled))
+                      .filter((item) => {
+                        if (!hasFeature(item.featureKey)) return false;
+                        if (item.href === "/acquisitions" && !isAcquisitionsEnabled) return false;
+                        if (item.href === "/achats-immobiliers" || item.href === "/acquisitions") {
+                          return hasPermission("can_view_achats");
+                        }
+                        return true;
+                      })
                       .map((item) => {
                         const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
                         const badgeCount = item.href === "/ventes-immobilieres" ? newVenteProspectsCount : 0;
@@ -402,7 +409,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 .filter((item) => {
                   if (item.href === "/comptabilite") {
                     if (userRole?.role === "locataire") return false;
-                    return isComptaEnabled && (userRole?.role !== "gestionnaire" || hasPermission("can_view_comptabilite"));
+                    return isComptaEnabled && hasPermission("can_view_comptabilite");
                   }
                   return !item.featureKey || hasFeature(item.featureKey);
                 })

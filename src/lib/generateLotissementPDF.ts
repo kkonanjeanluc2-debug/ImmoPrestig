@@ -1296,7 +1296,7 @@ export const generateAttestationVillageoise = async (
     doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
   }
 
-  addFooter(doc, agency);
+  // No footer for attestation villageoise
 
   return doc;
 };

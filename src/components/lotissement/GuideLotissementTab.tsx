@@ -35,9 +35,10 @@ interface GuideLotissementTabProps {
   lotissementId: string;
   lotissementName: string;
   guideTemplateId?: string | null;
+  canExport?: boolean;
 }
 
-export function GuideLotissementTab({ lotissementId, lotissementName, guideTemplateId }: GuideLotissementTabProps) {
+export function GuideLotissementTab({ lotissementId, lotissementName, guideTemplateId, canExport = true }: GuideLotissementTabProps) {
   const { data: parcelles } = useParcelles(lotissementId);
   const { data: ventes } = useVentesParcelles(lotissementId);
   const { data: ilots } = useIlotsWithStats(lotissementId);
@@ -170,17 +171,19 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
                 {ilotStats.size} îlot{ilotStats.size > 1 ? "s" : ""}
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleExportPDF}>
-                <FileText className="h-4 w-4 mr-2" />
-                Export PDF
-              </Button>
-              <ExportDropdown
-                data={guideEntries}
-                filename={`guide-${lotissementName}`}
-                columns={exportColumns}
-              />
-            </div>
+            {canExport && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Export PDF
+                </Button>
+                <ExportDropdown
+                  data={guideEntries}
+                  filename={`guide-${lotissementName}`}
+                  columns={exportColumns}
+                />
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="pt-0">

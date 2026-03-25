@@ -68,6 +68,7 @@ const LotissementDetails = () => {
   const canCreateParcelle = hasPermission("can_create_parcelles");
   const isGestionnaire = role === "gestionnaire";
   const canAccessGuide = hasPermission("can_access_guide");
+  const canExportGuide = hasPermission("can_export_guide");
   const canImportGeometre = hasPermission("can_import_geometre");
   const canAccessRepartition = hasPermission("can_access_repartition");
   const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewLotissementProspectsCount(id);
@@ -407,6 +408,7 @@ const LotissementDetails = () => {
               lotissementId={id || ""}
               lotissementName={lotissement.name}
               guideTemplateId={(lotissement as any).guide_template_id}
+              canExport={canExportGuide}
             />
           </TabsContent>}
 

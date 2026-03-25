@@ -2198,6 +2198,7 @@ export type Database = {
           can_edit_ventes: boolean
           can_export_comptabilite: boolean
           can_export_data: boolean
+          can_export_guide: boolean
           can_import_geometre: boolean
           can_manage_automations: boolean
           can_manage_branding: boolean
@@ -2278,6 +2279,7 @@ export type Database = {
           can_edit_ventes?: boolean
           can_export_comptabilite?: boolean
           can_export_data?: boolean
+          can_export_guide?: boolean
           can_import_geometre?: boolean
           can_manage_automations?: boolean
           can_manage_branding?: boolean
@@ -2358,6 +2360,7 @@ export type Database = {
           can_edit_ventes?: boolean
           can_export_comptabilite?: boolean
           can_export_data?: boolean
+          can_export_guide?: boolean
           can_import_geometre?: boolean
           can_manage_automations?: boolean
           can_manage_branding?: boolean

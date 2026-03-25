@@ -324,6 +324,23 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
           </div>
         )}
 
+        {canDelete && someSelected && (
+          <div className="p-3 border-b bg-destructive/5 flex items-center gap-3">
+            <span className="text-sm font-medium">{selectedIds.size} lot(s) sélectionné(s)</span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleting(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Supprimer la sélection
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
+              Désélectionner
+            </Button>
+          </div>
+        )}
+
         {filteredParcelles.length === 0 && searchQuery ? (
           <CardContent className="py-12 text-center">
             <Search className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />

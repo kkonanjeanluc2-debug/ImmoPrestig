@@ -37,6 +37,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
     total_area: "",
     description: "",
     attestation_template_id: "" as string,
+    guide_template_id: "" as string,
     chef_village_name: "",
     chef_village_titre: "",
     chef_stamp_url: null as string | null,

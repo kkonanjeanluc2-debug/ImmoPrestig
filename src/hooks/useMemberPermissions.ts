@@ -87,6 +87,10 @@ export interface MemberPermissions {
   can_view_comptabilite: boolean;
   can_export_comptabilite: boolean;
   can_create_expenses: boolean;
+  can_view_invoices: boolean;
+  can_create_invoices: boolean;
+  can_view_owner_payouts: boolean;
+  can_create_owner_payouts: boolean;
   // Module access
   can_access_gestion_locative: boolean;
   can_access_crm_immobilier: boolean;
@@ -183,6 +187,10 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_view_comptabilite: "Accéder à la comptabilité",
   can_export_comptabilite: "Exporter les rapports comptables",
   can_create_expenses: "Enregistrer des dépenses",
+  can_view_invoices: "Voir les factures",
+  can_create_invoices: "Créer des factures",
+  can_view_owner_payouts: "Voir les reversements",
+  can_create_owner_payouts: "Créer des reversements",
   can_access_gestion_locative: "Accès au module Gestion Locative",
   can_access_crm_immobilier: "Accès au module CRM Immobilier",
   can_access_settings: "Accéder aux paramètres (global)",
@@ -248,7 +256,7 @@ export const PERMISSION_GROUPS = {
   },
   comptabilite: {
     label: "Comptabilité",
-    permissions: ["can_view_comptabilite", "can_export_comptabilite", "can_create_expenses"] as PermissionKey[],
+    permissions: ["can_view_comptabilite", "can_export_comptabilite", "can_create_expenses", "can_view_invoices", "can_create_invoices", "can_view_owner_payouts", "can_create_owner_payouts"] as PermissionKey[],
   },
   other: {
     label: "Autres",
@@ -326,6 +334,10 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_comptabilite: true,
     can_export_comptabilite: true,
     can_create_expenses: true,
+    can_view_invoices: true,
+    can_create_invoices: true,
+    can_view_owner_payouts: true,
+    can_create_owner_payouts: true,
     can_access_settings: true,
     can_access_gestion_locative: true,
     can_access_crm_immobilier: true,
@@ -411,6 +423,10 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_comptabilite: false,
     can_export_comptabilite: false,
     can_create_expenses: false,
+    can_view_invoices: false,
+    can_create_invoices: false,
+    can_view_owner_payouts: false,
+    can_create_owner_payouts: false,
     can_access_settings: false,
     can_access_gestion_locative: true,
     can_access_crm_immobilier: true,
@@ -496,6 +512,10 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_comptabilite: false,
     can_export_comptabilite: false,
     can_create_expenses: false,
+    can_view_invoices: false,
+    can_create_invoices: false,
+    can_view_owner_payouts: false,
+    can_create_owner_payouts: false,
     can_access_settings: false,
     can_access_gestion_locative: true,
     can_access_crm_immobilier: true,
@@ -581,6 +601,10 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_view_comptabilite: false,
     can_export_comptabilite: false,
     can_create_expenses: false,
+    can_view_invoices: false,
+    can_create_invoices: false,
+    can_view_owner_payouts: false,
+    can_create_owner_payouts: false,
     can_access_settings: false,
     can_access_gestion_locative: true,
     can_access_crm_immobilier: true,

@@ -2170,10 +2170,12 @@ export type Database = {
           can_create_ilots: boolean | null
           can_create_impayes: boolean
           can_create_impayes_actions: boolean
+          can_create_invoices: boolean
           can_create_lotissement_documents: boolean | null
           can_create_lotissement_prospects: boolean | null
           can_create_lotissements: boolean
           can_create_offres_achat: boolean
+          can_create_owner_payouts: boolean
           can_create_owners: boolean
           can_create_parcelles: boolean | null
           can_create_payments: boolean
@@ -2219,7 +2221,9 @@ export type Database = {
           can_view_echeances_lotissements: boolean
           can_view_echeances_ventes: boolean
           can_view_impayes: boolean
+          can_view_invoices: boolean
           can_view_lotissements: boolean
+          can_view_owner_payouts: boolean
           can_view_owners: boolean
           can_view_payments: boolean
           can_view_properties: boolean
@@ -2259,10 +2263,12 @@ export type Database = {
           can_create_ilots?: boolean | null
           can_create_impayes?: boolean
           can_create_impayes_actions?: boolean
+          can_create_invoices?: boolean
           can_create_lotissement_documents?: boolean | null
           can_create_lotissement_prospects?: boolean | null
           can_create_lotissements?: boolean
           can_create_offres_achat?: boolean
+          can_create_owner_payouts?: boolean
           can_create_owners?: boolean
           can_create_parcelles?: boolean | null
           can_create_payments?: boolean
@@ -2308,7 +2314,9 @@ export type Database = {
           can_view_echeances_lotissements?: boolean
           can_view_echeances_ventes?: boolean
           can_view_impayes?: boolean
+          can_view_invoices?: boolean
           can_view_lotissements?: boolean
+          can_view_owner_payouts?: boolean
           can_view_owners?: boolean
           can_view_payments?: boolean
           can_view_properties?: boolean
@@ -2348,10 +2356,12 @@ export type Database = {
           can_create_ilots?: boolean | null
           can_create_impayes?: boolean
           can_create_impayes_actions?: boolean
+          can_create_invoices?: boolean
           can_create_lotissement_documents?: boolean | null
           can_create_lotissement_prospects?: boolean | null
           can_create_lotissements?: boolean
           can_create_offres_achat?: boolean
+          can_create_owner_payouts?: boolean
           can_create_owners?: boolean
           can_create_parcelles?: boolean | null
           can_create_payments?: boolean
@@ -2397,7 +2407,9 @@ export type Database = {
           can_view_echeances_lotissements?: boolean
           can_view_echeances_ventes?: boolean
           can_view_impayes?: boolean
+          can_view_invoices?: boolean
           can_view_lotissements?: boolean
+          can_view_owner_payouts?: boolean
           can_view_owners?: boolean
           can_view_payments?: boolean
           can_view_properties?: boolean

@@ -57,6 +57,9 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     const ilotsMap = new Map<string, string>();
     ilots?.forEach(i => ilotsMap.set(i.id, i.name));
 
+    const beneficiairesMap = new Map<string, typeof beneficiaires[0]>();
+    beneficiaires.forEach(b => beneficiairesMap.set(b.id, b));
+
     // Sort parcelles by ilot name then plot number
     const sorted = [...parcelles].sort((a, b) => {
       const ilotA = a.ilot_id ? (ilotsMap.get(a.ilot_id) || "") : "";
@@ -68,23 +71,44 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     return sorted.map((parcelle, index): GuideEntry => {
       const vente = ventesMap.get(parcelle.id);
       const ilotName = parcelle.ilot_id ? (ilotsMap.get(parcelle.ilot_id) || "-") : "-";
+      const beneficiaire = parcelle.beneficiaire_id ? beneficiairesMap.get(parcelle.beneficiaire_id) : null;
+
+      // Extract attributaire: priority to vente acquéreur, then beneficiaire, then notes
+      let attributaire = vente?.acquereur?.name || "";
+      let contact = vente?.acquereur?.phone || "";
+      let naturePiece = vente?.acquereur?.cni_number ? "CNI" : "";
+      let numeroPiece = vente?.acquereur?.cni_number || "";
+
+      if (!attributaire && beneficiaire) {
+        attributaire = beneficiaire.nom;
+        contact = beneficiaire.telephone || "";
+        naturePiece = beneficiaire.cni_number ? "CNI" : "";
+        numeroPiece = beneficiaire.cni_number || "";
+      }
+
+      if (!attributaire && parcelle.notes) {
+        const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
+        const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
+        if (propMatch) attributaire = propMatch[1].trim();
+        if (benMatch && !attributaire) attributaire = benMatch[1].trim();
+      }
 
       return {
         numero: index + 1,
         ilot: ilotName,
         lot: parcelle.plot_number,
-        attributaire: vente?.acquereur?.name || "",
+        attributaire,
         attestation_numero: "",
         attestation_date: vente ? format(new Date(vente.sale_date), "dd/MM/yyyy") : "",
-        contact: vente?.acquereur?.phone || "",
+        contact,
         equipement: "",
-        nature_piece: vente?.acquereur?.cni_number ? "CNI" : "",
-        numero_piece: vente?.acquereur?.cni_number || "",
+        nature_piece: naturePiece,
+        numero_piece: numeroPiece,
         date_piece: "",
         status: parcelle.status,
       };
     });
-  }, [parcelles, ventes, ilots]);
+  }, [parcelles, ventes, ilots, beneficiaires]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return guideEntries;

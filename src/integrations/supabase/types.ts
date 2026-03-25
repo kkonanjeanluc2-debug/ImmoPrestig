@@ -660,6 +660,60 @@ export type Database = {
           },
         ]
       }
+      attestation_templates: {
+        Row: {
+          arrete_approbation: string | null
+          arrete_date: string | null
+          arrete_numero: string | null
+          chef_village_name: string | null
+          chef_village_titre: string | null
+          commune: string | null
+          created_at: string
+          district: string | null
+          id: string
+          is_default: boolean
+          lotissement_origin_name: string | null
+          name: string
+          updated_at: string
+          user_id: string
+          village: string | null
+        }
+        Insert: {
+          arrete_approbation?: string | null
+          arrete_date?: string | null
+          arrete_numero?: string | null
+          chef_village_name?: string | null
+          chef_village_titre?: string | null
+          commune?: string | null
+          created_at?: string
+          district?: string | null
+          id?: string
+          is_default?: boolean
+          lotissement_origin_name?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+          village?: string | null
+        }
+        Update: {
+          arrete_approbation?: string | null
+          arrete_date?: string | null
+          arrete_numero?: string | null
+          chef_village_name?: string | null
+          chef_village_titre?: string | null
+          commune?: string | null
+          created_at?: string
+          district?: string | null
+          id?: string
+          is_default?: boolean
+          lotissement_origin_name?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+          village?: string | null
+        }
+        Relationships: []
+      }
       automation_logs: {
         Row: {
           completed_at: string | null
@@ -1883,6 +1937,7 @@ export type Database = {
       }
       lotissements: {
         Row: {
+          attestation_template_id: string | null
           city: string | null
           created_at: string
           deleted_at: string | null
@@ -1903,6 +1958,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attestation_template_id?: string | null
           city?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1923,6 +1979,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attestation_template_id?: string | null
           city?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1942,7 +1999,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lotissements_attestation_template_id_fkey"
+            columns: ["attestation_template_id"]
+            isOneToOne: false
+            referencedRelation: "attestation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       management_types: {
         Row: {

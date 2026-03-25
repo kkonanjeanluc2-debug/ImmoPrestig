@@ -158,6 +158,8 @@ function getDefaultPermissions(role: string) {
     can_view_echeances_achats: true,
     can_collect_echeances_achats: false,
   };
+
+  const comptablePermissions = {
     can_view_properties: true,
     can_create_properties: false,
     can_edit_properties: false,

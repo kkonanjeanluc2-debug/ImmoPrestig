@@ -376,13 +376,22 @@ export const ImportGeometreDialog = ({
       for (const parcelle of parsedParcelles) {
         try {
           const ilotId = parcelle.ilotName ? ilotIdMap[parcelle.ilotName.toLowerCase()] || null : null;
+          
+          // Build attribution from proprietaire terrien
+          const attribution = parcelle.proprietaireTerrien ? "proprietaire" : undefined;
+          
           await createParcelle.mutateAsync({
             lotissement_id: lotissementId,
             ilot_id: ilotId,
             plot_number: parcelle.plotNumber,
             area: parcelle.area,
             price: parcelle.price,
-          });
+            ...(attribution ? { attribution } : {}),
+            notes: [
+              parcelle.proprietaireTerrien ? `Propriétaire: ${parcelle.proprietaireTerrien}` : "",
+              parcelle.beneficiaire ? `Bénéficiaire: ${parcelle.beneficiaire}` : "",
+            ].filter(Boolean).join(" | ") || undefined,
+          } as any);
           successCount++;
         } catch (parcelleErr) {
           console.error(`Erreur création parcelle ${parcelle.plotNumber}:`, parcelleErr);

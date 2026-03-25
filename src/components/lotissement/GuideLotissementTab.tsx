@@ -88,9 +88,9 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
         if (benMatch) origAttributaire = benMatch[1].trim();
       }
 
-      // Fall back to linked beneficiaire
-      if (!origAttributaire && beneficiaire) {
-        origAttributaire = beneficiaire.nom;
+      // Get contact/CNI from linked beneficiaire record (even if name came from notes)
+      if (beneficiaire) {
+        if (!origAttributaire) origAttributaire = beneficiaire.nom;
         origContact = beneficiaire.telephone || "";
         origNaturePiece = beneficiaire.cni_number ? "CNI" : "";
         origNumeroPiece = beneficiaire.cni_number || "";

@@ -48,6 +48,8 @@ export interface VenteWithDetails extends VenteParcelle {
     plot_number: string;
     area: number;
     ilot_id: string | null;
+    beneficiaire_id?: string | null;
+    notes?: string | null;
     ilot?: {
       name: string;
     } | null;

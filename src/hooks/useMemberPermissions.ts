@@ -133,6 +133,7 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_demarches: "Ajouter des démarches",
   can_create_lotissement_prospects: "Ajouter des prospects",
   can_access_guide: "Accéder au guide",
+  can_export_guide: "Exporter le guide (PDF/Excel)",
   can_import_geometre: "Import géomètre",
   can_access_repartition: "Accéder à la répartition",
   can_view_ventes: "Voir les ventes immobilières",

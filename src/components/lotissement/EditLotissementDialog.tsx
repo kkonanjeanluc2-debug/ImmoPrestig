@@ -259,10 +259,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {renderImageUpload("Cachet du Chef", formData.chef_stamp_url, "stamp")}
-              {renderImageUpload("Signature du Chef", formData.chef_signature_url, "signature")}
-            </div>
+            {renderStampUpload()}
           </div>
 
           <Separator className="my-2" />

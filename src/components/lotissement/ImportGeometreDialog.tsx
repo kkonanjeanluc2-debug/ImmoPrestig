@@ -171,7 +171,11 @@ export const ImportGeometreDialog = ({
           return;
         }
 
-        let plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "plot_number", "numero_lot", "lot", "lots", "numero_parcelle", "parcelle", "ref", "reference", "référence", "id", "nlot", "nolot", "numerolot", "label", "name", "nom", "designation", "désignation"]);
+        // Try specific lot/parcelle columns first, before falling back to generic "n°" which may match "N° D'ORDRE"
+        let plotNumber = findValue(row, ["lot", "lots", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
+        if (!plotNumber) {
+          plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "ref", "reference", "référence", "id", "label", "name", "nom", "designation", "désignation"]);
+        }
         const areaValue = findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]);
         const area = parseNumber(areaValue);
         const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));

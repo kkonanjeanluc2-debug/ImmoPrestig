@@ -28,6 +28,7 @@ interface EditLotissementDialogProps {
 export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditLotissementDialogProps) {
   const updateLotissement = useUpdateLotissement();
   const { data: attestationTemplates = [] } = useAttestationTemplates();
+  const { data: guideTemplates = [] } = useGuideTemplates();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",

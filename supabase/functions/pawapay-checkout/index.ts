@@ -15,7 +15,7 @@ interface ProrationData {
 
 interface CheckoutRequest {
   plan_id: string;
-  billing_cycle: "monthly" | "yearly";
+  billing_cycle: "monthly" | "quarterly" | "semi_annual" | "yearly";
   payment_method: "mtn_money" | "orange_money" | "moov" | "airtel";
   customer_phone?: string;
   country_code?: string;

@@ -42,6 +42,7 @@ import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { motion } from "framer-motion";
+import { DashboardNavTabs } from "@/components/layout/DashboardNavTabs";
 
 const planIcons: Record<string, React.ReactNode> = {
   Gratuit: <Zap className="h-6 w-6" />,
@@ -196,6 +197,11 @@ const Pricing = () => {
           </div>
         </div>
       </nav>
+
+      {/* Navigation Tabs */}
+      <div className="bg-muted border-b border-border sticky top-[57px] md:top-[65px] z-40">
+        <DashboardNavTabs />
+      </div>
 
       <main>
         {/* ===== HERO SECTION ===== */}

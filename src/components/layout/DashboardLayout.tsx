@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { TrialBanner } from "@/components/dashboard/TrialBanner";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,

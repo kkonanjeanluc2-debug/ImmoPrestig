@@ -43,6 +43,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { motion } from "framer-motion";
 import { DashboardNavTabs } from "@/components/layout/DashboardNavTabs";
+import dashboardPreview from "@/assets/dashboard-preview.png";
 
 const planIcons: Record<string, React.ReactNode> = {
   Gratuit: <Zap className="h-6 w-6" />,
@@ -70,6 +71,7 @@ const Pricing = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showcaseTab, setShowcaseTab] = useState("/dashboard");
   const { user } = useAuth();
   const navigate = useNavigate();
   const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
@@ -198,9 +200,23 @@ const Pricing = () => {
         </div>
       </nav>
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs Showcase */}
       <div className="bg-muted border-b border-border sticky top-[57px] md:top-[65px] z-40">
-        <DashboardNavTabs />
+        <DashboardNavTabs mode="showcase" activeTab={showcaseTab} onTabChange={setShowcaseTab} />
+      </div>
+
+      {/* Tab Content Preview */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded-xl border border-border shadow-lg overflow-hidden bg-card">
+          {showcaseTab === "/dashboard" && (
+            <img src={dashboardPreview} alt="Aperçu du tableau de bord" className="w-full h-auto" />
+          )}
+          {showcaseTab !== "/dashboard" && (
+            <div className="flex items-center justify-center py-20 text-muted-foreground">
+              <p className="text-lg">Aperçu de la section à venir</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <main>

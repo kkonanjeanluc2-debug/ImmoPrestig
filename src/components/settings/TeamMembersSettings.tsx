@@ -51,6 +51,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/hooks/useAgency";
+import { supabase } from "@/integrations/supabase/client";
 import {
   useAgencyMembers,
   useCanAddMember,

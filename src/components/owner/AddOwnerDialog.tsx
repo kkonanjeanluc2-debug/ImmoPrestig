@@ -110,6 +110,37 @@ export function AddOwnerDialog() {
         cni_number: data.cni_number || null,
       });
       toast.success("Propriétaire ajouté avec succès");
+
+      // Generate management contract if a default template exists
+      if (defaultMgmtContractTemplate && agency) {
+        const selectedMgmtType = managementTypes.find(t => t.id === data.management_type_id);
+        try {
+          await generateManagementContractPDF({
+            templateContent: defaultMgmtContractTemplate.content,
+            ownerName: data.name,
+            ownerEmail: data.email,
+            ownerPhone: data.phone || undefined,
+            ownerAddress: data.address || undefined,
+            ownerBirthDate: data.birth_date ? format(data.birth_date, "yyyy-MM-dd") : undefined,
+            ownerBirthPlace: data.birth_place || undefined,
+            ownerProfession: data.profession || undefined,
+            ownerCniNumber: data.cni_number || undefined,
+            agencyName: agency.name,
+            agencyEmail: agency.email || undefined,
+            agencyPhone: agency.phone || undefined,
+            agencyAddress: agency.address || undefined,
+            agencyCity: agency.city || undefined,
+            managementTypeName: selectedMgmtType?.name,
+            commissionPercentage: selectedMgmtType?.percentage,
+            logoUrl: agency.logo_url,
+          });
+          toast.success("Contrat de gestion généré avec succès");
+        } catch (err) {
+          console.error("Error generating management contract:", err);
+          toast.error("Erreur lors de la génération du contrat de gestion");
+        }
+      }
+
       form.reset();
       setOpen(false);
     } catch (error: any) {

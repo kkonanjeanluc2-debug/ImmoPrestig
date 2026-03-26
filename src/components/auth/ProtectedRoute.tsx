@@ -37,6 +37,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const isSubscriptionExpired = useMemo(() => {
     if (!subscription) return false;
     if (subscription.status === "expired" || subscription.status === "cancelled") return true;
+    // Check trial expiry
+    if (subscription.status === "trial" && subscription.trial_ends_at) {
+      return differenceInDays(parseISO(subscription.trial_ends_at), new Date()) < 0;
+    }
     // Check ends_at
     if (subscription.ends_at) {
       return differenceInDays(parseISO(subscription.ends_at), new Date()) < 0;

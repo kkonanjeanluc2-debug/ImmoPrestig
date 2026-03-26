@@ -10,7 +10,7 @@ import { useSubscriptionPlans, SubscriptionPlan } from "@/hooks/useSubscriptionP
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
 import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle } from "@/lib/billingCycleUtils";
 import { useAgency } from "@/hooks/useAgency";
-import { format } from "date-fns";
+import { format, differenceInDays, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { 
   Crown, 

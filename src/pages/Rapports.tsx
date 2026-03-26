@@ -34,7 +34,10 @@ import { generateSingleActivityReport, generateConsolidatedReport } from "@/lib/
 import { useAgency } from "@/hooks/useAgency";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 function getPeriodOptions() {
   const options = [];
@@ -173,6 +176,7 @@ function ManagerReportCard({
 }
 
 export default function Rapports() {
+  const navigate = useNavigate();
   const periodOptions = useMemo(() => getPeriodOptions(), []);
   const [selectedPeriod, setSelectedPeriod] = useState(periodOptions[0].value);
   const [isExporting, setIsExporting] = useState<string | null>(null);
@@ -181,9 +185,18 @@ export default function Rapports() {
   const { data: agency } = useAgency();
   const { data: roleData } = useCurrentUserRole();
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
 
-  const isAdmin = roleData?.role === "admin" || isAgencyOwner;
+  const isAdmin = roleData?.role === "admin" || roleData?.role === "super_admin" || isAgencyOwner;
   const isGestionnaire = roleData?.role === "gestionnaire";
+
+  // Permission guard
+  useEffect(() => {
+    if (!permLoading && !isAdmin && !hasPermission("can_view_reports")) {
+      toast.error("Vous n'avez pas la permission d'accéder aux rapports");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [permLoading, isAdmin, hasPermission, navigate]);
 
   // Individual report for gestionnaires
   const { data: myReport, isLoading: myReportLoading } = useActivityReport(

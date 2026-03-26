@@ -31,7 +31,7 @@ export function ModulesSettings() {
     );
   };
 
-  if (loadingAcq || loadingCompta || loadingKkiapay) {
+  if (loadingAcq || loadingCompta || loadingKkiapay || loadingSetupFee) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

@@ -136,13 +136,13 @@ const Comptabilite = () => {
       color: "text-sand",
       bgColor: "bg-sand/10",
     },
-    {
+    ...(canViewPayouts ? [{
       title: "Reversements",
       value: formatCFA(totalReversements),
       icon: ArrowDownToLine,
       color: "text-primary",
       bgColor: "bg-primary/10",
-    },
+    }] : []),
     {
       title: "Impayés (loyers)",
       value: formatCFA(data.loyersImpayes),

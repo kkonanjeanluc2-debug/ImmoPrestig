@@ -109,6 +109,48 @@ const OwnerDetails = () => {
   const occupiedProperties = ownerProperties.filter(p => p.status === "loué").length;
   const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0;
 
+  const handleDownloadManagementContract = async () => {
+    if (!owner || !agency) return;
+    setGeneratingContract(true);
+    try {
+      const selectedTemplate = (owner as any).management_contract_template_id
+        ? mgmtContractTemplates.find(t => t.id === (owner as any).management_contract_template_id)
+        : defaultMgmtContractTemplate;
+      
+      if (!selectedTemplate) {
+        toast.error("Aucun modèle de contrat de gestion configuré. Veuillez en créer un dans les paramètres.");
+        return;
+      }
+
+      const managementType = (owner as any).management_type;
+      await generateManagementContractPDF({
+        templateContent: selectedTemplate.content,
+        ownerName: owner.name,
+        ownerEmail: owner.email || undefined,
+        ownerPhone: owner.phone || undefined,
+        ownerAddress: owner.address || undefined,
+        ownerBirthDate: (owner as any).birth_date || undefined,
+        ownerBirthPlace: (owner as any).birth_place || undefined,
+        ownerProfession: (owner as any).profession || undefined,
+        ownerCniNumber: (owner as any).cni_number || undefined,
+        agencyName: agency.name,
+        agencyEmail: agency.email || undefined,
+        agencyPhone: agency.phone || undefined,
+        agencyAddress: agency.address || undefined,
+        agencyCity: agency.city || undefined,
+        managementTypeName: managementType?.name,
+        commissionPercentage: managementType?.percentage,
+        logoUrl: agency.logo_url,
+      });
+      toast.success("Contrat de gestion téléchargé avec succès");
+    } catch (err) {
+      console.error("Error generating management contract:", err);
+      toast.error("Erreur lors de la génération du contrat de gestion");
+    } finally {
+      setGeneratingContract(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!owner) return;
     try {

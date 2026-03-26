@@ -44,6 +44,9 @@ import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { motion } from "framer-motion";
 import { DashboardNavTabs } from "@/components/layout/DashboardNavTabs";
 import dashboardPreview from "@/assets/dashboard-preview.png";
+import ownersPreview from "@/assets/owners-preview.png";
+import propertiesPreview from "@/assets/properties-preview.png";
+import tenantsPreview from "@/assets/tenants-preview.png";
 
 const planIcons: Record<string, React.ReactNode> = {
   Gratuit: <Zap className="h-6 w-6" />,

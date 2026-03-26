@@ -141,6 +141,11 @@ const Index = () => {
     return <Navigate to="/super-admin" replace />;
   }
 
+  // Redirect users without gestion locative access
+  if (!roleLoading && role !== "admin" && role !== "super_admin" && !hasPermission("can_access_gestion_locative")) {
+    return <Navigate to="/lotissements" replace />;
+  }
+
   const isLoading = propertiesLoading || tenantsLoading || paymentsLoading || roleLoading;
 
   return (

@@ -82,6 +82,9 @@ const OwnerDetails = () => {
   const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [generatingContract, setGeneratingContract] = useState(false);
+  const { data: mgmtContractTemplates = [] } = useManagementContractTemplates();
+  const { data: defaultMgmtContractTemplate } = useDefaultManagementContractTemplate();
 
   const owner = owners.find(o => o.id === id);
   const ownerProperties = properties.filter(p => p.owner_id === id);

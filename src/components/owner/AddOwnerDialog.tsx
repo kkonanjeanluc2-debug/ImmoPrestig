@@ -115,12 +115,15 @@ export function AddOwnerDialog() {
       });
       toast.success("Propriétaire ajouté avec succès");
 
-      // Generate management contract if a default template exists
-      if (defaultMgmtContractTemplate && agency) {
+      // Generate management contract if a template is selected or default exists
+      const selectedTemplate = data.management_contract_template_id 
+        ? mgmtContractTemplates.find(t => t.id === data.management_contract_template_id)
+        : defaultMgmtContractTemplate;
+      if (selectedTemplate && agency) {
         const selectedMgmtType = managementTypes.find(t => t.id === data.management_type_id);
         try {
           await generateManagementContractPDF({
-            templateContent: defaultMgmtContractTemplate.content,
+            templateContent: selectedTemplate.content,
             ownerName: data.name,
             ownerEmail: data.email,
             ownerPhone: data.phone || undefined,

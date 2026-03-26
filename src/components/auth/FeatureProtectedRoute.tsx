@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFeatureAccess, FeatureKey } from "@/hooks/useFeatureAccess";
 import { Loader2 } from "lucide-react";
@@ -12,9 +12,21 @@ interface FeatureProtectedRouteProps {
 export function FeatureProtectedRoute({ feature, children }: FeatureProtectedRouteProps) {
   const navigate = useNavigate();
   const { hasFeature, isLoading, requiredPlanForFeature } = useFeatureAccess();
+  const hasRedirected = useRef(false);
+  const wasAccessible = useRef(false);
+
+  const featureAllowed = hasFeature(feature);
+
+  // Track if feature was initially accessible to prevent redirect on refetch glitches
+  useEffect(() => {
+    if (!isLoading && featureAllowed) {
+      wasAccessible.current = true;
+    }
+  }, [isLoading, featureAllowed]);
 
   useEffect(() => {
-    if (!isLoading && !hasFeature(feature)) {
+    if (!isLoading && !featureAllowed && !hasRedirected.current && !wasAccessible.current) {
+      hasRedirected.current = true;
       const requiredPlan = requiredPlanForFeature(feature);
       toast.error(`Fonctionnalité non disponible`, {
         description: `Cette fonctionnalité nécessite le forfait ${requiredPlan} ou supérieur.`,
@@ -25,7 +37,7 @@ export function FeatureProtectedRoute({ feature, children }: FeatureProtectedRou
       });
       navigate("/dashboard", { replace: true });
     }
-  }, [isLoading, hasFeature, feature, navigate, requiredPlanForFeature]);
+  }, [isLoading, featureAllowed, feature, navigate, requiredPlanForFeature]);
 
   if (isLoading) {
     return (
@@ -35,8 +47,8 @@ export function FeatureProtectedRoute({ feature, children }: FeatureProtectedRou
     );
   }
 
-  if (!hasFeature(feature)) {
-    return null; // Will be redirected by useEffect
+  if (!featureAllowed && !wasAccessible.current) {
+    return null;
   }
 
   return <>{children}</>;

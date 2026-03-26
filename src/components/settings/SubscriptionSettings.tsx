@@ -141,9 +141,18 @@ export function SubscriptionSettings() {
                   <div>
                     <h3 className="font-semibold text-lg">{subscription.plan.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {subscription.billing_cycle === "lifetime" 
-                        ? "Abonnement à vie" 
-                        : `Facturation ${billingCycleLabels[subscription.billing_cycle as BillingCycle]?.toLowerCase() || subscription.billing_cycle}`}
+                      {subscription.status === "trial" 
+                        ? (() => {
+                            const trialDays = subscription.trial_ends_at 
+                              ? differenceInDays(parseISO(subscription.trial_ends_at), new Date())
+                              : 0;
+                            return trialDays > 0 
+                              ? `Essai gratuit — ${trialDays} jour${trialDays > 1 ? "s" : ""} restant${trialDays > 1 ? "s" : ""}`
+                              : "Essai terminé";
+                          })()
+                        : subscription.billing_cycle === "lifetime" 
+                          ? "Abonnement à vie" 
+                          : `Facturation ${billingCycleLabels[subscription.billing_cycle as BillingCycle]?.toLowerCase() || subscription.billing_cycle}`}
                     </p>
                   </div>
                 </div>

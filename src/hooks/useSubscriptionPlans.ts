@@ -206,6 +206,18 @@ export function useAssignSubscription() {
         subscriptionData.ends_at = null;
       } else if (ends_at !== undefined) {
         subscriptionData.ends_at = ends_at;
+      } else {
+        // Auto-calculate ends_at based on billing cycle
+        const cycleMonths: Record<string, number> = {
+          monthly: 1,
+          quarterly: 3,
+          semi_annual: 6,
+          yearly: 12,
+        };
+        const months = cycleMonths[billing_cycle] || 1;
+        const endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + months);
+        subscriptionData.ends_at = endDate.toISOString();
       }
 
       const { error } = await supabase

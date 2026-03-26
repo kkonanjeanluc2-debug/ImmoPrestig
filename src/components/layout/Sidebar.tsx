@@ -495,7 +495,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               )}
               
               {/* Trash link with counter - admin only */}
-              {(userRole?.role === "admin" || userRole?.role === "super_admin") && (
+              {userRole?.role === "admin" && (
                 <NavLink
                   to="/trash"
                   className={cn(

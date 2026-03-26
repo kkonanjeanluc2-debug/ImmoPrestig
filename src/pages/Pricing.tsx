@@ -200,24 +200,8 @@ const Pricing = () => {
         </div>
       </nav>
 
-      {/* Navigation Tabs Showcase */}
-      <div className="bg-muted border-b border-border sticky top-[57px] md:top-[65px] z-40">
-        <DashboardNavTabs mode="showcase" activeTab={showcaseTab} onTabChange={setShowcaseTab} />
-      </div>
 
-      {/* Tab Content Preview */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="rounded-xl border border-border shadow-lg overflow-hidden bg-card">
-          {showcaseTab === "/dashboard" && (
-            <img src={dashboardPreview} alt="Aperçu du tableau de bord" className="w-full h-auto" />
-          )}
-          {showcaseTab !== "/dashboard" && (
-            <div className="flex items-center justify-center py-20 text-muted-foreground">
-              <p className="text-lg">Aperçu de la section à venir</p>
-            </div>
-          )}
-        </div>
-      </div>
+
 
       <main>
         {/* ===== HERO SECTION ===== */}

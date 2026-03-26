@@ -26,6 +26,7 @@ import { GuideTemplateManager } from "@/components/settings/GuideTemplateManager
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
+import { ManagementContractTemplateManager } from "@/components/settings/ManagementContractTemplateManager";
 import { useIsSuperAdmin } from "@/hooks/useSuperAdmin";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { usePermissions } from "@/hooks/usePermissions";

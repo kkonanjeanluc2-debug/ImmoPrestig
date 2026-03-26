@@ -150,10 +150,13 @@ const Signup = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
+      const msg = error.message?.includes("User already registered")
+        ? "Cette adresse email est déjà utilisée. Veuillez vous connecter ou utiliser une autre adresse."
+        : error.message || "Une erreur est survenue lors de l'inscription.";
       toast({
         variant: "destructive",
         title: "Erreur d'inscription",
-        description: error.message,
+        description: msg,
       });
     } finally {
       setIsLoading(false);

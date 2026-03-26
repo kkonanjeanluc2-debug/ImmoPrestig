@@ -328,6 +328,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
 
+        {/* Navigation Tabs */}
+        <div className="bg-muted border-b border-border">
+          <DashboardNavTabs />
+        </div>
+
         {/* Trial/Expiry Banner */}
         <div className="px-4 lg:px-6 pt-3">
           <TrialBanner />

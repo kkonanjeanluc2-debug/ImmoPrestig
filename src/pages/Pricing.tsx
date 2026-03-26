@@ -804,7 +804,7 @@ const Pricing = () => {
 
         {/* ===== PRICING DIALOG ===== */}
         <Dialog open={pricingOpen} onOpenChange={setPricingOpen}>
-          <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto p-0">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
             <DialogHeader className="p-6 pb-0 text-center">
               <Badge variant="secondary" className="mb-4 mx-auto w-fit">
                 Tarification simple et transparente
@@ -867,7 +867,7 @@ const Pricing = () => {
                   ))}
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                   {activePlans.map((plan) => {
                     const priceMap: Record<string, number> = {
                       monthly: plan.price_monthly,
@@ -892,7 +892,7 @@ const Pricing = () => {
                       <Card
                         key={plan.id}
                         className={cn(
-                          "relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
+                          "relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full",
                           plan.is_popular && "border-primary shadow-md ring-1 ring-primary",
                         )}
                       >
@@ -913,7 +913,7 @@ const Pricing = () => {
                             {plan.description || "Idéal pour démarrer"}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="text-center pt-0">
+                        <CardContent className="text-center pt-0 flex-1">
                           <div className="mb-4">
                             <div className="flex items-baseline justify-center gap-1">
                               <span className="text-3xl font-bold">{formatPrice(price)}</span>

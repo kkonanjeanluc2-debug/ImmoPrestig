@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, PackagePlus, Calculator, CreditCard } from "lucide-react";
+import { Loader2, PackagePlus, Calculator, CreditCard, BadgeInfo } from "lucide-react";
 import { usePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
 import { toast } from "sonner";
 

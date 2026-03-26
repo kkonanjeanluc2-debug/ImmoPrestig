@@ -33,6 +33,7 @@ import { useUpdateOwner, OwnerWithManagementType } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
+import { useManagementContractTemplates } from "@/hooks/useManagementContractTemplates";
 import { toast } from "sonner";
 
 const ownerSchema = z.object({

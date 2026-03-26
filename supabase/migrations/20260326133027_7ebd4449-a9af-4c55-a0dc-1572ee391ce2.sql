@@ -1,0 +1,2 @@
+ALTER TABLE public.agency_subscriptions DROP CONSTRAINT agency_subscriptions_billing_cycle_check;
+ALTER TABLE public.agency_subscriptions ADD CONSTRAINT agency_subscriptions_billing_cycle_check CHECK (billing_cycle = ANY (ARRAY['monthly'::text, 'quarterly'::text, 'semi_annual'::text, 'yearly'::text, 'lifetime'::text]));

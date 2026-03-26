@@ -16,8 +16,9 @@ export const NAV_ITEMS = [
   { label: "Biens", path: "/properties", icon: Building2 },
   { label: "Locataires", path: "/tenants", icon: UserCheck },
   { label: "Paiements", path: "/payments", icon: CreditCard },
+  { label: "Lotissements", path: "/lotissements", icon: MapPin },
   { label: "Rapports", path: "/rapports", icon: BarChart3 },
-  { label: "Point Mensuel", path: "/comptabilite", icon: FileText },
+  { label: "Comptabilité", path: "/comptabilite", icon: FileText },
 ];
 
 interface DashboardNavTabsProps {

@@ -51,6 +51,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/hooks/useAgency";
+import { supabase } from "@/integrations/supabase/client";
 import {
   useAgencyMembers,
   useCanAddMember,
@@ -190,10 +191,25 @@ export function TeamMembersSettings() {
     if (!memberToDelete) return;
 
     try {
+      // Find the member's user_id before deleting
+      const memberData = members?.find(m => m.id === memberToDelete);
+      
       await deleteMember.mutateAsync(memberToDelete);
+      
+      // Also delete the auth user account
+      if (memberData?.user_id) {
+        try {
+          await supabase.functions.invoke("delete-user", {
+            body: { userId: memberData.user_id },
+          });
+        } catch (e) {
+          console.error("Failed to delete auth user:", e);
+        }
+      }
+      
       toast({
         title: "Membre retiré",
-        description: "Le membre a été retiré de votre équipe.",
+        description: "Le membre a été retiré de votre équipe et son compte a été supprimé.",
       });
       setMemberToDelete(null);
     } catch (error: any) {

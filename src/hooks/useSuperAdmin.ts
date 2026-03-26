@@ -242,6 +242,17 @@ export function useDeleteAgency() {
       const { error } = await supabase.from("agencies").delete().eq("id", id);
       if (error) throw error;
       
+      // Delete user from auth (removes email from database)
+      if (agencyData?.user_id) {
+        try {
+          await supabase.functions.invoke("delete-user", {
+            body: { userId: agencyData.user_id },
+          });
+        } catch (e) {
+          console.error("Failed to delete auth user:", e);
+        }
+      }
+      
       // Log audit after successful deletion
       if (logAudit && agencyData) {
         await logAudit('account_deleted', agencyData.user_id, id, {

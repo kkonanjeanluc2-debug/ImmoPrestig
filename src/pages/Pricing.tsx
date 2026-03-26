@@ -71,6 +71,7 @@ const Pricing = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showcaseTab, setShowcaseTab] = useState("/dashboard");
   const { user } = useAuth();
   const navigate = useNavigate();
   const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();

@@ -374,7 +374,44 @@ export function AddOwnerDialog() {
               />
             )}
 
-            {contractTemplates.length > 0 && (
+            {mgmtContractTemplates.length > 0 && (
+              <FormField
+                control={form.control}
+                name="management_contract_template_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Modèle de contrat de gestion
+                    </FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                      value={field.value || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un modèle" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Aucun (utiliser le modèle par défaut)</SelectItem>
+                        {mgmtContractTemplates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                            {template.is_default && " (par défaut)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Ce modèle sera utilisé pour générer le contrat de gestion avec ce propriétaire
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
               <FormField
                 control={form.control}
                 name="default_contract_template_id"

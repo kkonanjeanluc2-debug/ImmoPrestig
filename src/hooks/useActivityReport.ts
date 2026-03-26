@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getCollectedRevenueForPeriod } from "@/lib/revenueCollections";
 
 export interface ActivityReportData {
   userId: string;
@@ -50,7 +51,7 @@ async function fetchAllReportData(periodFrom: string, periodTo: string) {
   // 3. All payments in period
   const { data: payments } = await supabase
     .from("payments")
-    .select("id, tenant_id, amount, status, paid_amount, due_date, paid_date")
+    .select("id, tenant_id, amount, status, paid_amount, due_date, paid_date, payment_months")
     .or(
       `and(status.eq.paid,paid_date.gte.${periodFrom},paid_date.lte.${periodTo}),and(status.neq.paid,due_date.gte.${periodFrom},due_date.lte.${periodTo}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${periodFrom},paid_date.lte.${periodTo})`
     );
@@ -152,7 +153,9 @@ async function fetchAllReportData(periodFrom: string, periodTo: string) {
 
 function computeReportForUser(
   userId: string,
-  data: Awaited<ReturnType<typeof fetchAllReportData>>
+  data: Awaited<ReturnType<typeof fetchAllReportData>>,
+  periodFrom: string,
+  periodTo: string
 ): Omit<ActivityReportData, "userId" | "userName" | "role"> {
   // --- LOYERS: property.assigned_to → tenants → payments (same as dashboard) ---
   const assignedPropertyIds = new Set(
@@ -163,15 +166,10 @@ function computeReportForUser(
   );
   const userPayments = data.payments.filter((p: any) => assignedTenantIds.has(p.tenant_id));
 
-  const loyersEncaisses = userPayments
-    .filter((p: any) => p.status === "paid")
-    .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+  // Use the same centralized revenue calculation as accounting
+  const loyersEncaisses = getCollectedRevenueForPeriod(userPayments, periodFrom, periodTo);
 
-  const montantRecouvre = userPayments.reduce((s: number, p: any) => {
-    const amount = Number(p.amount || 0);
-    const paidAmount = Number(p.paid_amount || 0);
-    return s + (p.status === "paid" ? amount : Math.min(Math.max(paidAmount, 0), amount));
-  }, 0);
+  const montantRecouvre = getCollectedRevenueForPeriod(userPayments, periodFrom, periodTo);
 
   const impayesSuivis = userPayments.filter(
     (p: any) => p.status === "late" || p.status === "pending"
@@ -291,7 +289,7 @@ export function useActivityReport(periodFrom: string, periodTo: string) {
         fetchAllReportData(periodFrom, periodTo),
       ]);
 
-      const report = computeReportForUser(user.id, rawData);
+      const report = computeReportForUser(user.id, rawData, periodFrom, periodTo);
 
       return {
         ...report,
@@ -342,7 +340,7 @@ export function useAllManagersReport(periodFrom: string, periodTo: string) {
       const roleMap = new Map(rolesRes.data?.map(r => [r.user_id, r.role]) || []);
 
       const reports: ActivityReportData[] = userIds.map(uid => {
-        const report = computeReportForUser(uid, rawData);
+        const report = computeReportForUser(uid, rawData, periodFrom, periodTo);
         return {
           ...report,
           userId: uid,

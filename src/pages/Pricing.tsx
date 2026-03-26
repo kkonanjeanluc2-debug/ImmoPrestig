@@ -683,7 +683,16 @@ const Pricing = () => {
                 {showcaseTab === "/dashboard" && (
                   <img src={dashboardPreview} alt="Aperçu du tableau de bord" className="w-full h-auto" />
                 )}
-                {showcaseTab !== "/dashboard" && (
+                {showcaseTab === "/owners" && (
+                  <img src={ownersPreview} alt="Aperçu des propriétaires" className="w-full h-auto" />
+                )}
+                {showcaseTab === "/properties" && (
+                  <img src={propertiesPreview} alt="Aperçu des biens" className="w-full h-auto" />
+                )}
+                {showcaseTab === "/tenants" && (
+                  <img src={tenantsPreview} alt="Aperçu des locataires" className="w-full h-auto" />
+                )}
+                {!["/dashboard", "/owners", "/properties", "/tenants"].includes(showcaseTab) && (
                   <div className="flex items-center justify-center py-20 text-muted-foreground">
                     <p className="text-lg">Aperçu de la section à venir</p>
                   </div>

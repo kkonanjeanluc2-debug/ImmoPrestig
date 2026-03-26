@@ -1,0 +1,1 @@
+ALTER TABLE public.owners ADD COLUMN management_contract_template_id UUID REFERENCES public.management_contract_templates(id) ON DELETE SET NULL;

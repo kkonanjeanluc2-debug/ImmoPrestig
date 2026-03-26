@@ -2801,6 +2801,7 @@ export type Database = {
           deleted_at: string | null
           email: string
           id: string
+          management_contract_template_id: string | null
           management_type_id: string | null
           name: string
           phone: string | null
@@ -2820,6 +2821,7 @@ export type Database = {
           deleted_at?: string | null
           email: string
           id?: string
+          management_contract_template_id?: string | null
           management_type_id?: string | null
           name: string
           phone?: string | null
@@ -2839,6 +2841,7 @@ export type Database = {
           deleted_at?: string | null
           email?: string
           id?: string
+          management_contract_template_id?: string | null
           management_type_id?: string | null
           name?: string
           phone?: string | null
@@ -2854,6 +2857,13 @@ export type Database = {
             columns: ["default_contract_template_id"]
             isOneToOne: false
             referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owners_management_contract_template_id_fkey"
+            columns: ["management_contract_template_id"]
+            isOneToOne: false
+            referencedRelation: "management_contract_templates"
             referencedColumns: ["id"]
           },
           {

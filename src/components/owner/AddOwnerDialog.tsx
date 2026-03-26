@@ -34,7 +34,7 @@ import { useCreateOwner } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
-import { useDefaultManagementContractTemplate } from "@/hooks/useManagementContractTemplates";
+import { useManagementContractTemplates, useDefaultManagementContractTemplate } from "@/hooks/useManagementContractTemplates";
 import { useAgency } from "@/hooks/useAgency";
 import { generateManagementContractPDF } from "@/lib/generateManagementContract";
 import { toast } from "sonner";
@@ -46,6 +46,7 @@ const ownerSchema = z.object({
   address: z.string().trim().max(500, "L'adresse doit contenir moins de 500 caractères").optional().or(z.literal("")),
   status: z.enum(["actif", "inactif"]),
   management_type_id: z.string().optional().or(z.literal("")),
+  management_contract_template_id: z.string().optional().or(z.literal("")),
   default_contract_template_id: z.string().optional().or(z.literal("")),
   receipt_template_id: z.string().optional().or(z.literal("")),
   birth_date: z.date().optional(),
@@ -62,6 +63,7 @@ export function AddOwnerDialog() {
   const { data: managementTypes = [] } = useManagementTypes();
   const { data: contractTemplates = [] } = useContractTemplates();
   const { data: receiptTemplates = [] } = useReceiptTemplates();
+  const { data: mgmtContractTemplates = [] } = useManagementContractTemplates();
   const { data: defaultMgmtContractTemplate } = useDefaultManagementContractTemplate();
   const { data: agency } = useAgency();
 
@@ -77,6 +79,7 @@ export function AddOwnerDialog() {
       address: "",
       status: "actif",
       management_type_id: "",
+      management_contract_template_id: "",
       default_contract_template_id: "",
       receipt_template_id: "",
       birth_date: undefined,
@@ -102,6 +105,7 @@ export function AddOwnerDialog() {
         address: data.address || null,
         status: data.status,
         management_type_id: data.management_type_id || null,
+        management_contract_template_id: data.management_contract_template_id || null,
         default_contract_template_id: data.default_contract_template_id || null,
         receipt_template_id: data.receipt_template_id || null,
         birth_date: data.birth_date ? format(data.birth_date, "yyyy-MM-dd") : null,
@@ -111,12 +115,15 @@ export function AddOwnerDialog() {
       });
       toast.success("Propriétaire ajouté avec succès");
 
-      // Generate management contract if a default template exists
-      if (defaultMgmtContractTemplate && agency) {
+      // Generate management contract if a template is selected or default exists
+      const selectedTemplate = data.management_contract_template_id 
+        ? mgmtContractTemplates.find(t => t.id === data.management_contract_template_id)
+        : defaultMgmtContractTemplate;
+      if (selectedTemplate && agency) {
         const selectedMgmtType = managementTypes.find(t => t.id === data.management_type_id);
         try {
           await generateManagementContractPDF({
-            templateContent: defaultMgmtContractTemplate.content,
+            templateContent: selectedTemplate.content,
             ownerName: data.name,
             ownerEmail: data.email,
             ownerPhone: data.phone || undefined,
@@ -360,6 +367,44 @@ export function AddOwnerDialog() {
                     </Select>
                     <FormDescription>
                       Pourcentage de commission applicable pour ce propriétaire
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {mgmtContractTemplates.length > 0 && (
+              <FormField
+                control={form.control}
+                name="management_contract_template_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Modèle de contrat de gestion
+                    </FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                      value={field.value || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un modèle" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Aucun (utiliser le modèle par défaut)</SelectItem>
+                        {mgmtContractTemplates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                            {template.is_default && " (par défaut)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Ce modèle sera utilisé pour générer le contrat de gestion avec ce propriétaire
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

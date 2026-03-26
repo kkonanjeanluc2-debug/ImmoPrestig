@@ -33,7 +33,8 @@ import {
   FileText,
   Send,
   Users,
-  MessageSquare
+  MessageSquare,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -50,6 +51,8 @@ import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateOwnerMonthlyReport } from "@/lib/generateOwnerMonthlyReport";
 import { getTenantCollectedAmountForPeriod } from "@/lib/monthlyPaymentTotals";
+import { generateManagementContractPDF } from "@/lib/generateManagementContract";
+import { useManagementContractTemplates, useDefaultManagementContractTemplate } from "@/hooks/useManagementContractTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
@@ -79,6 +82,9 @@ const OwnerDetails = () => {
   const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [generatingContract, setGeneratingContract] = useState(false);
+  const { data: mgmtContractTemplates = [] } = useManagementContractTemplates();
+  const { data: defaultMgmtContractTemplate } = useDefaultManagementContractTemplate();
 
   const owner = owners.find(o => o.id === id);
   const ownerProperties = properties.filter(p => p.owner_id === id);
@@ -102,6 +108,48 @@ const OwnerDetails = () => {
   const totalPropertyValue = ownerProperties.reduce((sum, p) => sum + (p.price || 0), 0);
   const occupiedProperties = ownerProperties.filter(p => p.status === "loué").length;
   const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0;
+
+  const handleDownloadManagementContract = async () => {
+    if (!owner || !agency) return;
+    setGeneratingContract(true);
+    try {
+      const selectedTemplate = (owner as any).management_contract_template_id
+        ? mgmtContractTemplates.find(t => t.id === (owner as any).management_contract_template_id)
+        : defaultMgmtContractTemplate;
+      
+      if (!selectedTemplate) {
+        toast.error("Aucun modèle de contrat de gestion configuré. Veuillez en créer un dans les paramètres.");
+        return;
+      }
+
+      const managementType = (owner as any).management_type;
+      await generateManagementContractPDF({
+        templateContent: selectedTemplate.content,
+        ownerName: owner.name,
+        ownerEmail: owner.email || undefined,
+        ownerPhone: owner.phone || undefined,
+        ownerAddress: owner.address || undefined,
+        ownerBirthDate: (owner as any).birth_date || undefined,
+        ownerBirthPlace: (owner as any).birth_place || undefined,
+        ownerProfession: (owner as any).profession || undefined,
+        ownerCniNumber: (owner as any).cni_number || undefined,
+        agencyName: agency.name,
+        agencyEmail: agency.email || undefined,
+        agencyPhone: agency.phone || undefined,
+        agencyAddress: agency.address || undefined,
+        agencyCity: agency.city || undefined,
+        managementTypeName: managementType?.name,
+        commissionPercentage: managementType?.percentage,
+        logoUrl: agency.logo_url,
+      });
+      toast.success("Contrat de gestion téléchargé avec succès");
+    } catch (err) {
+      console.error("Error generating management contract:", err);
+      toast.error("Erreur lors de la génération du contrat de gestion");
+    } finally {
+      setGeneratingContract(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!owner) return;
@@ -564,6 +612,19 @@ const OwnerDetails = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline"
+              size="sm" 
+              onClick={handleDownloadManagementContract}
+              disabled={generatingContract}
+            >
+              {generatingContract ? (
+                <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 sm:mr-2" />
+              )}
+              <span className="hidden sm:inline">Contrat de gestion</span>
+            </Button>
             <Button 
               variant="outline"
               size="sm" 

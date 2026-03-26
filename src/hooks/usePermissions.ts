@@ -126,7 +126,7 @@ export function usePermissions(): Permissions {
       } as MemberPermissions & { _role?: string; _memberId?: string };
     },
     enabled: !!user?.id,
-    refetchInterval: 1500,
+    refetchInterval: 30000,
     refetchOnWindowFocus: true,
   });
 

@@ -195,10 +195,13 @@ export function SubscriptionCheckoutDialog({
   const selectedMethod = paymentMethods.find((m) => m.id === paymentMethod);
 
   // Calculate proration for plan changes - MUST be before any early returns to follow Rules of Hooks
+  const isTrial = currentSubscription?.status === "trial";
   const proration: ProrationResult | null = useMemo(() => {
     try {
       if (!plan || !currentSubscription || currentSubscription.plan_id === plan.id) return null;
       if (!currentSubscription.plan) return null;
+      // No proration during trial period - user pays full price
+      if (currentSubscription.status === "trial") return null;
 
       const selectedPlanPrice = getPriceForCycle(plan, billingCycle);
       if (selectedPlanPrice === 0) return null; // Free plan

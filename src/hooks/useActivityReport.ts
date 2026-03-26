@@ -340,7 +340,7 @@ export function useAllManagersReport(periodFrom: string, periodTo: string) {
       const roleMap = new Map(rolesRes.data?.map(r => [r.user_id, r.role]) || []);
 
       const reports: ActivityReportData[] = userIds.map(uid => {
-        const report = computeReportForUser(uid, rawData);
+        const report = computeReportForUser(uid, rawData, periodFrom, periodTo);
         return {
           ...report,
           userId: uid,

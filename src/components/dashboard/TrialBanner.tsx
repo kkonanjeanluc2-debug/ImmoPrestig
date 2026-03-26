@@ -40,18 +40,19 @@ export function TrialBanner() {
       : `Votre abonnement expire dans ${daysRemaining} jour${daysRemaining > 1 ? "s" : ""}. Pensez à le renouveler.`;
 
   return (
-    <div className={`${isTrial ? "bg-primary/10 border-primary/30" : "bg-destructive/10 border-destructive/30"} border rounded-lg px-3 sm:px-4 py-2.5 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300`}>
-      <Clock className={`h-4 w-4 ${isTrial ? "text-primary" : "text-destructive"} shrink-0`} />
-      <p className={`text-sm ${isTrial ? "text-primary" : "text-destructive"} font-medium flex-1`}>
+    <div className={`${isExpired ? "bg-destructive border-destructive" : "bg-amber-500 border-amber-600"} border-2 rounded-xl px-5 sm:px-6 py-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg`}>
+      <div className="bg-white/20 rounded-full p-2 shrink-0">
+        <Clock className="h-6 w-6 text-white" />
+      </div>
+      <p className="text-base sm:text-lg text-white font-semibold flex-1">
         {message}
       </p>
       <Button
-        size="sm"
-        variant={isTrial ? "default" : "destructive"}
+        size="lg"
         onClick={() => navigate("/settings?tab=subscription")}
-        className="shrink-0 gap-1.5"
+        className="shrink-0 gap-2 bg-white text-foreground hover:bg-white/90 font-semibold shadow-md"
       >
-        <Crown className="h-3.5 w-3.5" />
+        <Crown className="h-4 w-4" />
         Choisir un forfait
       </Button>
     </div>

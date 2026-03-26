@@ -842,9 +842,6 @@ const TenantDetails = () => {
             />
           </TabsContent>
 
-          <TabsContent value="factures">
-            <ProformaInvoicesList tenantId={tenant.id} compact />
-          </TabsContent>
     </Tabs>
   </div>
 

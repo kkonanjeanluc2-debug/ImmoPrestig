@@ -116,6 +116,29 @@ export function ModulesSettings() {
             disabled={upsertMutation.isPending}
           />
         </div>
+
+        {/* Frais de paramétrage */}
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <BadgeInfo className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <Label htmlFor="module-setup-fee" className="text-sm font-medium cursor-pointer">
+                Message frais de paramétrage
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Afficher le message « Frais de paramétrage + Formation » sur la page d'abonnement
+              </p>
+            </div>
+          </div>
+          <Switch
+            id="module-setup-fee"
+            checked={isSetupFeeEnabled}
+            onCheckedChange={(v) => handleToggle("setup_fee_message_enabled", v, "Message frais de paramétrage")}
+            disabled={upsertMutation.isPending}
+          />
+        </div>
       </CardContent>
     </Card>
   );

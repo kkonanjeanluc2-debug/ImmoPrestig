@@ -47,6 +47,9 @@ import dashboardPreview from "@/assets/dashboard-preview.png";
 import ownersPreview from "@/assets/owners-preview.png";
 import propertiesPreview from "@/assets/properties-preview.png";
 import tenantsPreview from "@/assets/tenants-preview.png";
+import lotissementsPreview from "@/assets/lotissements-preview.png";
+import rapportsPreview from "@/assets/rapports-preview.png";
+import comptabilitePreview from "@/assets/comptabilite-preview.png";
 
 const planIcons: Record<string, React.ReactNode> = {
   Gratuit: <Zap className="h-6 w-6" />,

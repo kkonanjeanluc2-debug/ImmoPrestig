@@ -47,6 +47,9 @@ import dashboardPreview from "@/assets/dashboard-preview.png";
 import ownersPreview from "@/assets/owners-preview.png";
 import propertiesPreview from "@/assets/properties-preview.png";
 import tenantsPreview from "@/assets/tenants-preview.png";
+import lotissementsPreview from "@/assets/lotissements-preview.png";
+import rapportsPreview from "@/assets/rapports-preview.png";
+import comptabilitePreview from "@/assets/comptabilite-preview.png";
 
 const planIcons: Record<string, React.ReactNode> = {
   Gratuit: <Zap className="h-6 w-6" />,
@@ -692,10 +695,14 @@ const Pricing = () => {
                 {showcaseTab === "/tenants" && (
                   <img src={tenantsPreview} alt="Aperçu des locataires" className="w-full h-auto" />
                 )}
-                {!["/dashboard", "/owners", "/properties", "/tenants"].includes(showcaseTab) && (
-                  <div className="flex items-center justify-center py-20 text-muted-foreground">
-                    <p className="text-lg">Aperçu de la section à venir</p>
-                  </div>
+                {showcaseTab === "/lotissements" && (
+                  <img src={lotissementsPreview} alt="Aperçu des lotissements" className="w-full h-auto" />
+                )}
+                {showcaseTab === "/rapports" && (
+                  <img src={rapportsPreview} alt="Aperçu des rapports" className="w-full h-auto" />
+                )}
+                {showcaseTab === "/comptabilite" && (
+                  <img src={comptabilitePreview} alt="Aperçu de la comptabilité" className="w-full h-auto" />
                 )}
               </div>
             </motion.div>

@@ -25,7 +25,8 @@ import {
   ShoppingCart,
   Briefcase,
   PackagePlus,
-  Calculator
+  Calculator,
+  BarChart3
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { usePlatformBranding } from "@/hooks/usePlatformBranding";
@@ -92,6 +93,7 @@ const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; 
 const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey?: FeatureKey }[] = [
   { name: "Lotissements", href: "/lotissements", icon: Building2, featureKey: "lotissement" },
   { name: "Comptabilité", href: "/comptabilite", icon: Calculator },
+  { name: "Rapports", href: "/rapports", icon: BarChart3 },
 ];
 
 const superAdminNavigation = [

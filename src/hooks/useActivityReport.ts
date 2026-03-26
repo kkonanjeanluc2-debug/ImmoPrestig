@@ -153,7 +153,9 @@ async function fetchAllReportData(periodFrom: string, periodTo: string) {
 
 function computeReportForUser(
   userId: string,
-  data: Awaited<ReturnType<typeof fetchAllReportData>>
+  data: Awaited<ReturnType<typeof fetchAllReportData>>,
+  periodFrom: string,
+  periodTo: string
 ): Omit<ActivityReportData, "userId" | "userName" | "role"> {
   // --- LOYERS: property.assigned_to → tenants → payments (same as dashboard) ---
   const assignedPropertyIds = new Set(
@@ -164,15 +166,10 @@ function computeReportForUser(
   );
   const userPayments = data.payments.filter((p: any) => assignedTenantIds.has(p.tenant_id));
 
-  const loyersEncaisses = userPayments
-    .filter((p: any) => p.status === "paid")
-    .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+  // Use the same centralized revenue calculation as accounting
+  const loyersEncaisses = getCollectedRevenueForPeriod(userPayments, periodFrom, periodTo);
 
-  const montantRecouvre = userPayments.reduce((s: number, p: any) => {
-    const amount = Number(p.amount || 0);
-    const paidAmount = Number(p.paid_amount || 0);
-    return s + (p.status === "paid" ? amount : Math.min(Math.max(paidAmount, 0), amount));
-  }, 0);
+  const montantRecouvre = getCollectedRevenueForPeriod(userPayments, periodFrom, periodTo);
 
   const impayesSuivis = userPayments.filter(
     (p: any) => p.status === "late" || p.status === "pending"

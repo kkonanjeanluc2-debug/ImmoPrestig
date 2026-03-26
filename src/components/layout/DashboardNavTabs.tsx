@@ -8,6 +8,7 @@ import {
   CreditCard,
   BarChart3,
   FileText,
+  MapPin,
 } from "lucide-react";
 
 export const NAV_ITEMS = [

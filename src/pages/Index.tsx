@@ -20,6 +20,7 @@ import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
+import { usePermissions } from "@/hooks/usePermissions";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 import { SubscriptionExpiryBanner } from "@/components/dashboard/SubscriptionExpiryBanner";
 import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
@@ -27,6 +28,7 @@ import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 const Index = () => {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
+  const { hasPermission, role } = usePermissions();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
@@ -137,6 +139,11 @@ const Index = () => {
   // Redirect super admin to their dedicated space
   if (!roleLoading && userRole?.role === "super_admin") {
     return <Navigate to="/super-admin" replace />;
+  }
+
+  // Redirect users without gestion locative access
+  if (!roleLoading && role !== "admin" && role !== "super_admin" && !hasPermission("can_access_gestion_locative")) {
+    return <Navigate to="/lotissements" replace />;
   }
 
   const isLoading = propertiesLoading || tenantsLoading || paymentsLoading || roleLoading;

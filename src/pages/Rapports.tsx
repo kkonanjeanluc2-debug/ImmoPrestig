@@ -34,7 +34,10 @@ import { generateSingleActivityReport, generateConsolidatedReport } from "@/lib/
 import { useAgency } from "@/hooks/useAgency";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 function getPeriodOptions() {
   const options = [];

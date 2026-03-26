@@ -20,6 +20,7 @@ import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
+import { usePermissions } from "@/hooks/usePermissions";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 import { SubscriptionExpiryBanner } from "@/components/dashboard/SubscriptionExpiryBanner";
 import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";

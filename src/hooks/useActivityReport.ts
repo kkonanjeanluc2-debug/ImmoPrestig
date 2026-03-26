@@ -289,7 +289,7 @@ export function useActivityReport(periodFrom: string, periodTo: string) {
         fetchAllReportData(periodFrom, periodTo),
       ]);
 
-      const report = computeReportForUser(user.id, rawData);
+      const report = computeReportForUser(user.id, rawData, periodFrom, periodTo);
 
       return {
         ...report,

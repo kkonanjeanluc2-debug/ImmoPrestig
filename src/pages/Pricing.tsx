@@ -892,7 +892,7 @@ const Pricing = () => {
                       <Card
                         key={plan.id}
                         className={cn(
-                          "relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
+                          "relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full",
                           plan.is_popular && "border-primary shadow-md ring-1 ring-primary",
                         )}
                       >

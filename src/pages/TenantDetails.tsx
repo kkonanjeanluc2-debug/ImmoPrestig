@@ -57,7 +57,7 @@ import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
 import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { TenantRequestsTab } from "@/components/tenant/TenantRequestsTab";
-import { ProformaInvoicesList } from "@/components/comptabilite/ProformaInvoicesList";
+
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -383,10 +383,6 @@ const TenantDetails = () => {
             <TabsTrigger value="requests" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Requêtes</span>
-            </TabsTrigger>
-            <TabsTrigger value="factures" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Factures</span>
             </TabsTrigger>
           </TabsList>
 
@@ -846,9 +842,6 @@ const TenantDetails = () => {
             />
           </TabsContent>
 
-          <TabsContent value="factures">
-            <ProformaInvoicesList tenantId={tenant.id} compact />
-          </TabsContent>
     </Tabs>
   </div>
 

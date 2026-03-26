@@ -383,6 +383,12 @@ const Settings = () => {
             </TabsContent>
           )}
 
+          {!isFreePlan && (
+            <TabsContent value="management-contracts">
+              <ManagementContractTemplateManager />
+            </TabsContent>
+          )}
+
           {hasVentesImmobilieres && canAccessSaleContractsTab && (
             <TabsContent value="sale-contracts">
               <SaleContractTemplateManager />

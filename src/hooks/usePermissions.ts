@@ -126,8 +126,9 @@ export function usePermissions(): Permissions {
       } as MemberPermissions & { _role?: string; _memberId?: string };
     },
     enabled: !!user?.id,
-    refetchInterval: 30000,
+    refetchInterval: 5000,
     refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   const memberIdForRealtime = (customPermissions as (Partial<MemberPermissions> & { _memberId?: string }) | null)?._memberId;

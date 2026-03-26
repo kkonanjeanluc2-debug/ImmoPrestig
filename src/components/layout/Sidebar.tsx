@@ -429,6 +429,11 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     if (userRole?.role === "locataire") return false;
                     return isComptaEnabled && hasPermission("can_view_comptabilite");
                   }
+                  if (item.href === "/rapports") {
+                    if (userRole?.role === "locataire") return false;
+                    if (userRole?.role === "super_admin" || userRole?.role === "admin") return true;
+                    return hasPermission("can_view_reports");
+                  }
                   if (item.href === "/lotissements") {
                     if (userRole?.role === "super_admin" || userRole?.role === "admin") return !item.featureKey || hasFeature(item.featureKey);
                     return (!item.featureKey || hasFeature(item.featureKey)) && hasPermission("can_view_lotissements");

@@ -804,7 +804,7 @@ const Pricing = () => {
 
         {/* ===== PRICING DIALOG ===== */}
         <Dialog open={pricingOpen} onOpenChange={setPricingOpen}>
-          <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto p-0">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
             <DialogHeader className="p-6 pb-0 text-center">
               <Badge variant="secondary" className="mb-4 mx-auto w-fit">
                 Tarification simple et transparente

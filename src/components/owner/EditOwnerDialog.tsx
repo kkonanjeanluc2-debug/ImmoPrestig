@@ -120,6 +120,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         address: data.address || null,
         status: data.status,
         management_type_id: data.management_type_id || null,
+        management_contract_template_id: data.management_contract_template_id || null,
         default_contract_template_id: data.default_contract_template_id || null,
         receipt_template_id: data.receipt_template_id || null,
         birth_date: data.birth_date ? format(data.birth_date, "yyyy-MM-dd") : null,

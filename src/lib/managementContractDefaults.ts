@@ -146,7 +146,7 @@ export function replaceManagementContractVariables(
 
   let result = content;
   for (const [key, value] of Object.entries(replacements)) {
-    result = result.replaceAll(key, value);
+    result = result.split(key).join(value);
   }
   return result;
 }

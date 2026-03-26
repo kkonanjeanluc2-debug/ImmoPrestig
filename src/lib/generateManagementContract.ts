@@ -37,7 +37,7 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
 };
 
 export async function generateManagementContractPDF(data: ManagementContractPDFData): Promise<void> {
-  const doc = createPDFDocument();
+  const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;

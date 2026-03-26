@@ -346,7 +346,7 @@ Deno.serve(async (req) => {
           value: formattedPhone,
         },
       },
-      statementDescription: `${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`.substring(0, 22),
+      statementDescription: `${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : billing_cycle === "semi_annual" ? "Semestriel" : billing_cycle === "quarterly" ? "Trimestriel" : "Mensuel"}`.substring(0, 22),
       metadata: [
         { fieldName: "transaction_id", fieldValue: transaction.id },
         { fieldName: "agency_id", fieldValue: agency.id },

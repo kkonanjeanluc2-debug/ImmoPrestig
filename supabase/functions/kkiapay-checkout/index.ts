@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
         email: customer_email,
         phone: customer_phone,
         sandbox: isSandbox,
-        reason: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`,
+        reason: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : billing_cycle === "semi_annual" ? "Semestriel" : billing_cycle === "quarterly" ? "Trimestriel" : "Mensuel"}`,
         callback_url: `${supabaseUrl}/functions/v1/kkiapay-webhook`,
         data: {
           transaction_id: transaction.id,

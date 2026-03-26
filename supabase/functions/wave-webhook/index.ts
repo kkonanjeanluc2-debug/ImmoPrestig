@@ -188,10 +188,7 @@ Deno.serve(async (req) => {
 
 function calculateEndDate(billingCycle: string): string {
   const now = new Date();
-  if (billingCycle === "yearly") {
-    now.setFullYear(now.getFullYear() + 1);
-  } else {
-    now.setMonth(now.getMonth() + 1);
-  }
+  const cycleMonths: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
+  now.setMonth(now.getMonth() + (cycleMonths[billingCycle] || 1));
   return now.toISOString();
 }

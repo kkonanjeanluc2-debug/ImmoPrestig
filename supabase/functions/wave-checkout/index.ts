@@ -7,7 +7,7 @@ const corsHeaders = {
 
 interface WaveCheckoutRequest {
   plan_id: string;
-  billing_cycle: "monthly" | "yearly";
+  billing_cycle: "monthly" | "quarterly" | "semi_annual" | "yearly";
   customer_phone: string;
   return_url?: string;
 }

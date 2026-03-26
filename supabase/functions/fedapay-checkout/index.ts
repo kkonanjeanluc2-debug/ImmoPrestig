@@ -309,7 +309,7 @@ Deno.serve(async (req) => {
     // Create FedaPay transaction
     const description = isProrated 
       ? `Changement forfait vers ${plan.name} (prorata ${proration?.remaining_days} jours)`
-      : `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`;
+      : `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : billing_cycle === "semi_annual" ? "Semestriel" : billing_cycle === "quarterly" ? "Trimestriel" : "Mensuel"}`;
 
     const fedapayPayload = {
       description,

@@ -151,9 +151,6 @@ const Index = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Subscription Expiry Banner */}
-        <SubscriptionExpiryBanner />
-
         {/* Header */}
         <div className="flex flex-col gap-4">
           <div>

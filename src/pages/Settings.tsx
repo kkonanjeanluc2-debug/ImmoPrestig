@@ -205,6 +205,15 @@ const Settings = () => {
                 <span>Contrats</span>
               </TabsTrigger>
             )}
+            {!isFreePlan && canManageTemplates && (
+              <TabsTrigger
+                value="management-contracts"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Handshake className="h-4 w-4" />
+                <span>Contrats de gestion</span>
+              </TabsTrigger>
+            )}
             {hasVentesImmobilieres && canAccessSaleContractsTab && (
               <TabsTrigger
                 value="sale-contracts"

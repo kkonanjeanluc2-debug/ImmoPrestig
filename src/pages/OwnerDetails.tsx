@@ -615,6 +615,19 @@ const OwnerDetails = () => {
             <Button 
               variant="outline"
               size="sm" 
+              onClick={handleDownloadManagementContract}
+              disabled={generatingContract}
+            >
+              {generatingContract ? (
+                <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 sm:mr-2" />
+              )}
+              <span className="hidden sm:inline">Contrat de gestion</span>
+            </Button>
+            <Button 
+              variant="outline"
+              size="sm" 
               onClick={() => setPeriodDialogOpen(true)}
             >
               <FileText className="h-4 w-4 sm:mr-2" />

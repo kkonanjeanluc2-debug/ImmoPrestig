@@ -683,27 +683,24 @@ const Pricing = () => {
                 <DashboardNavTabs mode="showcase" activeTab={showcaseTab} onTabChange={setShowcaseTab} />
               </div>
               <div className="rounded-xl border border-border shadow-lg overflow-hidden bg-card">
-                {showcaseTab === "/dashboard" && (
-                  <img src={dashboardPreview} alt="Aperçu du tableau de bord" className="w-full h-auto" />
-                )}
-                {showcaseTab === "/owners" && (
-                  <img src={ownersPreview} alt="Aperçu des propriétaires" className="w-full h-auto" />
-                )}
-                {showcaseTab === "/properties" && (
-                  <img src={propertiesPreview} alt="Aperçu des biens" className="w-full h-auto" />
-                )}
-                {showcaseTab === "/tenants" && (
-                  <img src={tenantsPreview} alt="Aperçu des locataires" className="w-full h-auto" />
-                )}
-                {showcaseTab === "/lotissements" && (
-                  <img src={lotissementsPreview} alt="Aperçu des lotissements" className="w-full h-auto" />
-                )}
-                {showcaseTab === "/rapports" && (
-                  <img src={rapportsPreview} alt="Aperçu des rapports" className="w-full h-auto" />
-                )}
-                {showcaseTab === "/comptabilite" && (
-                  <img src={comptabilitePreview} alt="Aperçu de la comptabilité" className="w-full h-auto" />
-                )}
+                {[
+                  { path: "/dashboard", src: dashboardPreview, alt: "Aperçu du tableau de bord" },
+                  { path: "/owners", src: ownersPreview, alt: "Aperçu des propriétaires" },
+                  { path: "/properties", src: propertiesPreview, alt: "Aperçu des biens" },
+                  { path: "/tenants", src: tenantsPreview, alt: "Aperçu des locataires" },
+                  { path: "/lotissements", src: lotissementsPreview, alt: "Aperçu des lotissements" },
+                  { path: "/rapports", src: rapportsPreview, alt: "Aperçu des rapports" },
+                  { path: "/comptabilite", src: comptabilitePreview, alt: "Aperçu de la comptabilité" },
+                ].map((item) => (
+                  <img
+                    key={item.path}
+                    src={item.src}
+                    alt={item.alt}
+                    className="w-full h-auto"
+                    style={{ display: showcaseTab === item.path ? "block" : "none" }}
+                    loading="eager"
+                  />
+                ))}
               </div>
             </motion.div>
           </div>

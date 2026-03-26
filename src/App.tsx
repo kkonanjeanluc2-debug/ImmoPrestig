@@ -51,6 +51,7 @@ const pageImports = {
   Acquisitions: () => import("./pages/Acquisitions"),
   VendorOfferResponse: () => import("./pages/VendorOfferResponse"),
   Comptabilite: () => import("./pages/Comptabilite"),
+  Rapports: () => import("./pages/Rapports"),
 };
 
 const Index = lazy(pageImports.Index);

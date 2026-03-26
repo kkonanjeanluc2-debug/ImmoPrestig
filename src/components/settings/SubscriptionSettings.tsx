@@ -10,7 +10,7 @@ import { useSubscriptionPlans, SubscriptionPlan } from "@/hooks/useSubscriptionP
 import { SubscriptionCheckoutDialog } from "@/components/subscription/SubscriptionCheckoutDialog";
 import { BillingCycle, billingCycleLabels, billingCyclePeriodLabels, getPriceForCycle } from "@/lib/billingCycleUtils";
 import { useAgency } from "@/hooks/useAgency";
-import { format } from "date-fns";
+import { format, differenceInDays, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { 
   Crown, 
@@ -141,19 +141,30 @@ export function SubscriptionSettings() {
                   <div>
                     <h3 className="font-semibold text-lg">{subscription.plan.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {subscription.billing_cycle === "lifetime" 
-                        ? "Abonnement à vie" 
-                        : `Facturation ${billingCycleLabels[subscription.billing_cycle as BillingCycle]?.toLowerCase() || subscription.billing_cycle}`}
+                      {subscription.status === "trial" 
+                        ? (() => {
+                            const trialDays = subscription.trial_ends_at 
+                              ? differenceInDays(parseISO(subscription.trial_ends_at), new Date())
+                              : 0;
+                            return trialDays > 0 
+                              ? `Essai gratuit — ${trialDays} jour${trialDays > 1 ? "s" : ""} restant${trialDays > 1 ? "s" : ""}`
+                              : "Essai terminé";
+                          })()
+                        : subscription.billing_cycle === "lifetime" 
+                          ? "Abonnement à vie" 
+                          : `Facturation ${billingCycleLabels[subscription.billing_cycle as BillingCycle]?.toLowerCase() || subscription.billing_cycle}`}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   {(() => {
-                    // Compute effective status: if ends_at is past, show expired
-                    const effectiveStatus = 
-                      (subscription.status === "active" && subscription.ends_at && new Date(subscription.ends_at) < new Date())
-                        ? "expired"
-                        : subscription.status;
+                    // Compute effective status
+                    let effectiveStatus = subscription.status;
+                    if (subscription.status === "trial" && subscription.trial_ends_at && new Date(subscription.trial_ends_at) < new Date()) {
+                      effectiveStatus = "expired";
+                    } else if (subscription.status === "active" && subscription.ends_at && new Date(subscription.ends_at) < new Date()) {
+                      effectiveStatus = "expired";
+                    }
                     return (
                       <Badge 
                         variant={statusConfig[effectiveStatus]?.variant || "secondary"}

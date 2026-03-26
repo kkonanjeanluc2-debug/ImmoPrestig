@@ -37,6 +37,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const isSubscriptionExpired = useMemo(() => {
     if (!subscription) return false;
     if (subscription.status === "expired" || subscription.status === "cancelled") return true;
+    // Check trial expiry
+    if (subscription.status === "trial" && subscription.trial_ends_at) {
+      return differenceInDays(parseISO(subscription.trial_ends_at), new Date()) < 0;
+    }
     // Check ends_at
     if (subscription.ends_at) {
       return differenceInDays(parseISO(subscription.ends_at), new Date()) < 0;
@@ -117,12 +121,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
               <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
-            <CardTitle className="text-destructive">Abonnement expiré</CardTitle>
-            <CardDescription className="text-base mt-2">
-              {isAdmin
-                ? "Votre abonnement a expiré. Veuillez renouveler votre forfait pour continuer à utiliser l'application."
-                : "L'abonnement de votre agence a expiré. Veuillez contacter votre administrateur pour renouveler le forfait."}
-            </CardDescription>
+             <CardTitle className="text-destructive">
+               {subscription?.status === "trial" ? "Période d'essai terminée" : "Abonnement expiré"}
+             </CardTitle>
+             <CardDescription className="text-base mt-2">
+               {isAdmin
+                 ? subscription?.status === "trial"
+                   ? "Votre période d'essai gratuite de 30 jours est terminée. Choisissez un forfait pour continuer à utiliser l'application."
+                   : "Votre abonnement a expiré. Veuillez renouveler votre forfait pour continuer à utiliser l'application."
+                 : "L'abonnement de votre agence a expiré. Veuillez contacter votre administrateur pour renouveler le forfait."}
+             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-3">
             {isAdmin && (

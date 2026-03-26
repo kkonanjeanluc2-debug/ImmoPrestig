@@ -22,7 +22,7 @@ import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { usePermissions } from "@/hooks/usePermissions";
 import { PeriodFilter, PeriodValue, getDefaultPeriod, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
-import { SubscriptionExpiryBanner } from "@/components/dashboard/SubscriptionExpiryBanner";
+
 import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 
 const Index = () => {
@@ -151,9 +151,6 @@ const Index = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Subscription Expiry Banner */}
-        <SubscriptionExpiryBanner />
-
         {/* Header */}
         <div className="flex flex-col gap-4">
           <div>

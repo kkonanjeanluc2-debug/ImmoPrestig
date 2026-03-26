@@ -7,7 +7,7 @@ const corsHeaders = {
 
 interface CheckoutPayload {
   plan_id: string;
-  billing_cycle: "monthly" | "yearly";
+  billing_cycle: "monthly" | "quarterly" | "semi_annual" | "yearly";
   payment_method: string;
   customer_name: string;
   customer_email: string;

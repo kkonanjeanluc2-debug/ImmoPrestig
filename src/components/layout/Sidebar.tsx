@@ -25,7 +25,8 @@ import {
   ShoppingCart,
   Briefcase,
   PackagePlus,
-  Calculator
+  Calculator,
+  BarChart3
 } from "lucide-react";
 import immoPrestigeLogo from "@/assets/immoprestige-logo.png";
 import { usePlatformBranding } from "@/hooks/usePlatformBranding";

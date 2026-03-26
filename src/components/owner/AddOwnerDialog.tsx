@@ -34,7 +34,7 @@ import { useCreateOwner } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
-import { useDefaultManagementContractTemplate } from "@/hooks/useManagementContractTemplates";
+import { useManagementContractTemplates, useDefaultManagementContractTemplate } from "@/hooks/useManagementContractTemplates";
 import { useAgency } from "@/hooks/useAgency";
 import { generateManagementContractPDF } from "@/lib/generateManagementContract";
 import { toast } from "sonner";

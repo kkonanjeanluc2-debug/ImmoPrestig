@@ -92,6 +92,7 @@ const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; 
 const otherNavigation: { name: string; href: string; icon: typeof Building2; featureKey?: FeatureKey }[] = [
   { name: "Lotissements", href: "/lotissements", icon: Building2, featureKey: "lotissement" },
   { name: "Comptabilité", href: "/comptabilite", icon: Calculator },
+  { name: "Rapports", href: "/rapports", icon: BarChart3 },
 ];
 
 const superAdminNavigation = [

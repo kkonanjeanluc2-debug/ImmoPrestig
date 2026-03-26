@@ -180,6 +180,7 @@ const App = () => {
                   <Route path="/acquisitions" element={<ProtectedRoute><FeatureProtectedRoute feature="achats_immobiliers"><Acquisitions /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/impayes" element={<ProtectedRoute><FeatureProtectedRoute feature="gestion_impayes"><Impayes /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/comptabilite" element={<ProtectedRoute><Comptabilite /></ProtectedRoute>} />
+                  <Route path="/rapports" element={<ProtectedRoute><Rapports /></ProtectedRoute>} />
                   <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />

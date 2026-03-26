@@ -412,6 +412,7 @@ export function AddOwnerDialog() {
               />
             )}
 
+            {contractTemplates.length > 0 && (
               <FormField
                 control={form.control}
                 name="default_contract_template_id"

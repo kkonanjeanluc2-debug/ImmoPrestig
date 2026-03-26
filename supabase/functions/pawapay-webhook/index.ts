@@ -133,11 +133,8 @@ Deno.serve(async (req) => {
       const startsAt = new Date();
       const endsAt = new Date();
 
-      if (transaction.billing_cycle === "yearly") {
-        endsAt.setFullYear(endsAt.getFullYear() + 1);
-      } else {
-        endsAt.setMonth(endsAt.getMonth() + 1);
-      }
+      const cycleMonths: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
+      endsAt.setMonth(endsAt.getMonth() + (cycleMonths[transaction.billing_cycle] || 1));
 
       const { error: subError } = await supabase
         .from("agency_subscriptions")

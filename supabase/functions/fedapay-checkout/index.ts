@@ -15,7 +15,7 @@ interface ProrationData {
 
 interface CheckoutRequest {
   plan_id: string;
-  billing_cycle: "monthly" | "yearly";
+  billing_cycle: "monthly" | "quarterly" | "semi_annual" | "yearly";
   payment_method: "orange_money" | "mtn_money" | "wave" | "moov" | "card";
   customer_phone?: string;
   return_url?: string;
@@ -309,7 +309,7 @@ Deno.serve(async (req) => {
     // Create FedaPay transaction
     const description = isProrated 
       ? `Changement forfait vers ${plan.name} (prorata ${proration?.remaining_days} jours)`
-      : `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`;
+      : `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : billing_cycle === "semi_annual" ? "Semestriel" : billing_cycle === "quarterly" ? "Trimestriel" : "Mensuel"}`;
 
     const fedapayPayload = {
       description,

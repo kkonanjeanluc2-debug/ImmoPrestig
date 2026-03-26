@@ -146,11 +146,8 @@ Deno.serve(async (req) => {
       const now = new Date();
       const endsAt = new Date(now);
       
-      if (billingCycle === "yearly") {
-        endsAt.setFullYear(endsAt.getFullYear() + 1);
-      } else {
-        endsAt.setMonth(endsAt.getMonth() + 1);
-      }
+      const cycleMonths: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
+      endsAt.setMonth(endsAt.getMonth() + (cycleMonths[billingCycle] || 1));
 
       // Update or create subscription
       const { data: existingSub } = await adminClient

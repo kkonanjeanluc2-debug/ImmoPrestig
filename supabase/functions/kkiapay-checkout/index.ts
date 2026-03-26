@@ -7,7 +7,7 @@ const corsHeaders = {
 
 interface CheckoutPayload {
   plan_id: string;
-  billing_cycle: "monthly" | "yearly";
+  billing_cycle: "monthly" | "quarterly" | "semi_annual" | "yearly";
   payment_method: string;
   customer_name: string;
   customer_email: string;
@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
         email: customer_email,
         phone: customer_phone,
         sandbox: isSandbox,
-        reason: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : "Mensuel"}`,
+        reason: `Abonnement ${plan.name} - ${billing_cycle === "yearly" ? "Annuel" : billing_cycle === "semi_annual" ? "Semestriel" : billing_cycle === "quarterly" ? "Trimestriel" : "Mensuel"}`,
         callback_url: `${supabaseUrl}/functions/v1/kkiapay-webhook`,
         data: {
           transaction_id: transaction.id,

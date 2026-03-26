@@ -27,6 +27,7 @@ import {
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import { DashboardNavTabs } from "./DashboardNavTabs";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,
@@ -326,6 +327,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
         </header>
+
+        {/* Navigation Tabs */}
+        <div className="bg-muted border-b border-border">
+          <DashboardNavTabs />
+        </div>
 
         {/* Trial/Expiry Banner */}
         <div className="px-4 lg:px-6 pt-3">

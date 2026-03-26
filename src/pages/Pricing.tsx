@@ -62,6 +62,8 @@ const fadeUp = {
 const Pricing = () => {
   const { data: plans, isLoading } = useSubscriptionPlans();
   const { data: discountSetting } = usePlatformSetting("yearly_discount_percentage");
+  const { data: setupFeeSetting } = usePlatformSetting("setup_fee_message_enabled");
+  const showSetupFee = setupFeeSetting?.value !== "false";
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "semi_annual" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);

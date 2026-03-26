@@ -77,6 +77,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
       address: "",
       status: "actif",
       management_type_id: "",
+      management_contract_template_id: "",
       default_contract_template_id: "",
       receipt_template_id: "",
       birth_date: undefined,

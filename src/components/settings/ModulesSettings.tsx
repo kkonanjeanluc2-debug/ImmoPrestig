@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, PackagePlus, Calculator, CreditCard } from "lucide-react";
+import { Loader2, PackagePlus, Calculator, CreditCard, BadgeInfo } from "lucide-react";
 import { usePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
 import { toast } from "sonner";
 
@@ -9,11 +9,13 @@ export function ModulesSettings() {
   const { data: acquisitionsSetting, isLoading: loadingAcq } = usePlatformSetting("module_acquisitions_enabled");
   const { data: comptaSetting, isLoading: loadingCompta } = usePlatformSetting("module_comptabilite_enabled");
   const { data: kkiapaySetting, isLoading: loadingKkiapay } = usePlatformSetting("kkiapay_enabled");
+  const { data: setupFeeSetting, isLoading: loadingSetupFee } = usePlatformSetting("setup_fee_message_enabled");
   const upsertMutation = useUpsertPlatformSetting();
 
   const isAcqEnabled = acquisitionsSetting?.value === "true";
   const isComptaEnabled = comptaSetting?.value === "true";
-  const isKkiapayEnabled = kkiapaySetting?.value !== "false"; // enabled by default if no setting
+  const isKkiapayEnabled = kkiapaySetting?.value !== "false";
+  const isSetupFeeEnabled = setupFeeSetting?.value !== "false";
 
   const handleToggle = (key: string, checked: boolean, label: string) => {
     upsertMutation.mutate(
@@ -29,7 +31,7 @@ export function ModulesSettings() {
     );
   };
 
-  if (loadingAcq || loadingCompta || loadingKkiapay) {
+  if (loadingAcq || loadingCompta || loadingKkiapay || loadingSetupFee) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -111,6 +113,29 @@ export function ModulesSettings() {
             id="module-kkiapay"
             checked={isKkiapayEnabled}
             onCheckedChange={(v) => handleToggle("kkiapay_enabled", v, "KKiaPay")}
+            disabled={upsertMutation.isPending}
+          />
+        </div>
+
+        {/* Frais de paramétrage */}
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <BadgeInfo className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <Label htmlFor="module-setup-fee" className="text-sm font-medium cursor-pointer">
+                Message frais de paramétrage
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Afficher le message « Frais de paramétrage + Formation » sur la page d'abonnement
+              </p>
+            </div>
+          </div>
+          <Switch
+            id="module-setup-fee"
+            checked={isSetupFeeEnabled}
+            onCheckedChange={(v) => handleToggle("setup_fee_message_enabled", v, "Message frais de paramétrage")}
             disabled={upsertMutation.isPending}
           />
         </div>

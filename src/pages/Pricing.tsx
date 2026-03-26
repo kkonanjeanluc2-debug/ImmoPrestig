@@ -62,6 +62,8 @@ const fadeUp = {
 const Pricing = () => {
   const { data: plans, isLoading } = useSubscriptionPlans();
   const { data: discountSetting } = usePlatformSetting("yearly_discount_percentage");
+  const { data: setupFeeSetting } = usePlatformSetting("setup_fee_message_enabled");
+  const showSetupFee = setupFeeSetting?.value !== "false";
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "semi_annual" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -982,6 +984,7 @@ const Pricing = () => {
               )}
 
               {/* Frais de paramétrage */}
+              {showSetupFee && (
               <div className="mt-6 mx-auto max-w-2xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Check className="h-4 w-4 text-primary" />
@@ -994,6 +997,7 @@ const Pricing = () => {
                   l'application, eventuellement.
                 </p>
               </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>

@@ -384,10 +384,6 @@ const TenantDetails = () => {
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Requêtes</span>
             </TabsTrigger>
-            <TabsTrigger value="factures" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Factures</span>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payments">

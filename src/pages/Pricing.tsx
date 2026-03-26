@@ -200,24 +200,8 @@ const Pricing = () => {
         </div>
       </nav>
 
-      {/* Navigation Tabs Showcase */}
-      <div className="bg-muted border-b border-border sticky top-[57px] md:top-[65px] z-40">
-        <DashboardNavTabs mode="showcase" activeTab={showcaseTab} onTabChange={setShowcaseTab} />
-      </div>
 
-      {/* Tab Content Preview */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="rounded-xl border border-border shadow-lg overflow-hidden bg-card">
-          {showcaseTab === "/dashboard" && (
-            <img src={dashboardPreview} alt="Aperçu du tableau de bord" className="w-full h-auto" />
-          )}
-          {showcaseTab !== "/dashboard" && (
-            <div className="flex items-center justify-center py-20 text-muted-foreground">
-              <p className="text-lg">Aperçu de la section à venir</p>
-            </div>
-          )}
-        </div>
-      </div>
+
 
       <main>
         {/* ===== HERO SECTION ===== */}
@@ -660,6 +644,47 @@ const Pricing = () => {
                     </CardContent>
                   </Card>
                 </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ===== INTERFACE SHOWCASE ===== */}
+        <section className="py-16 md:py-20 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <motion.div
+              className="text-center mb-10"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={0}
+            >
+              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Découvrez l'interface</h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Explorez les différentes sections de notre plateforme en un clic
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={1}
+            >
+              <div className="mb-6">
+                <DashboardNavTabs mode="showcase" activeTab={showcaseTab} onTabChange={setShowcaseTab} />
+              </div>
+              <div className="rounded-xl border border-border shadow-lg overflow-hidden bg-card">
+                {showcaseTab === "/dashboard" && (
+                  <img src={dashboardPreview} alt="Aperçu du tableau de bord" className="w-full h-auto" />
+                )}
+                {showcaseTab !== "/dashboard" && (
+                  <div className="flex items-center justify-center py-20 text-muted-foreground">
+                    <p className="text-lg">Aperçu de la section à venir</p>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

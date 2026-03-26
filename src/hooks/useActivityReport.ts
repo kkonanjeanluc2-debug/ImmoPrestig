@@ -29,109 +29,230 @@ export interface ActivityReportData {
   totalRevenue: number;
 }
 
-async function fetchReportForUser(
-  userId: string,
-  periodFrom: string,
-  periodTo: string
-): Promise<Omit<ActivityReportData, "userId" | "userName" | "role">> {
-  // 1. Prospects (vente_prospects)
-  const { data: prospects } = await supabase
-    .from("vente_prospects")
-    .select("id, status")
-    .eq("user_id", userId)
+/**
+ * Fetches all raw data needed for activity reports in bulk,
+ * then distributes per-user based on assigned_to / sold_by fields
+ * to match the dashboard logic exactly.
+ */
+async function fetchAllReportData(periodFrom: string, periodTo: string) {
+  // 1. All properties (to map assigned_to)
+  const { data: properties } = await supabase
+    .from("properties")
+    .select("id, assigned_to")
+    .is("deleted_at", null);
+
+  // 2. All tenants (to link property → tenant)
+  const { data: tenants } = await supabase
+    .from("tenants")
+    .select("id, property_id")
+    .is("deleted_at", null);
+
+  // 3. All payments in period
+  const { data: payments } = await supabase
+    .from("payments")
+    .select("id, tenant_id, amount, status, paid_amount, due_date, paid_date")
+    .or(
+      `and(status.eq.paid,paid_date.gte.${periodFrom},paid_date.lte.${periodTo}),and(status.neq.paid,due_date.gte.${periodFrom},due_date.lte.${periodTo}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${periodFrom},paid_date.lte.${periodTo})`
+    );
+
+  // 4. Contracts created in period
+  const { data: contracts } = await supabase
+    .from("contracts")
+    .select("id, property_id, created_at")
+    .is("deleted_at", null)
     .gte("created_at", periodFrom)
     .lte("created_at", periodTo + "T23:59:59");
 
-  const prospectsContacted = prospects?.length || 0;
-  const prospectsConverted = prospects?.filter(p => p.status === "converted" || p.status === "won").length || 0;
+  // 5. Vente prospects
+  const { data: prospects } = await supabase
+    .from("vente_prospects")
+    .select("id, status, user_id")
+    .gte("created_at", periodFrom)
+    .lte("created_at", periodTo + "T23:59:59");
 
-  // 2. Ventes immobilières (sold_by)
+  // 6. Ventes immobilières with bien info for assigned_to
   const { data: ventesImmo } = await supabase
     .from("ventes_immobilieres")
-    .select("id, total_price, sale_date")
-    .eq("sold_by", userId)
+    .select("id, total_price, sale_date, sold_by, down_payment, payment_type, bien_id")
     .gte("sale_date", periodFrom)
     .lte("sale_date", periodTo);
 
-  const ventesConclues = ventesImmo?.length || 0;
-  const ventesAmount = ventesImmo?.reduce((s, v) => s + Number(v.total_price || 0), 0) || 0;
-
-  // 3. Contrats de location signés
-  const { data: contrats } = await supabase
-    .from("contracts")
-    .select("id")
-    .eq("user_id", userId)
-    .gte("created_at", periodFrom)
-    .lte("created_at", periodTo + "T23:59:59")
+  // 6b. Biens vente for assigned_to mapping
+  const { data: biensVente } = await supabase
+    .from("biens_vente")
+    .select("id, assigned_to")
     .is("deleted_at", null);
 
-  const contratsSignes = contrats?.length || 0;
+  // 7. Échéances ventes paid in period
+  const { data: echeancesVentes } = await supabase
+    .from("echeances_ventes")
+    .select("id, vente_id, amount, status, paid_date, paid_amount")
+    .eq("status", "paid")
+    .gte("paid_date", periodFrom)
+    .lte("paid_date", periodTo);
 
-  // 4. Loyers encaissés (payments for tenants assigned to this user)
-  const { data: tenants } = await supabase
-    .from("tenants")
-    .select("id")
-    .eq("assigned_to", userId)
-    .is("deleted_at", null);
-
-  const tenantIds = tenants?.map(t => t.id) || [];
-  let loyersEncaisses = 0;
-  let montantRecouvre = 0;
-  let impayesSuivis = 0;
-
-  if (tenantIds.length > 0) {
-    const { data: payments } = await supabase
-      .from("payments")
-      .select("amount, status, paid_amount")
-      .in("tenant_id", tenantIds)
-      .gte("due_date", periodFrom)
-      .lte("due_date", periodTo);
-
-    loyersEncaisses = payments
-      ?.filter(p => p.status === "paid")
-      .reduce((s, p) => s + Number(p.amount || 0), 0) || 0;
-
-    montantRecouvre = payments?.reduce((s, p) => {
-      if (p.status === "paid") return s + Number(p.amount || 0);
-      return s + Number(p.paid_amount || 0);
-    }, 0) || 0;
-
-    impayesSuivis = payments?.filter(p => p.status === "late" || p.status === "pending").length || 0;
-  }
-
-  // 5. Parcelles vendues
+  // 8. Ventes parcelles
   const { data: ventesParcelles } = await supabase
     .from("ventes_parcelles")
-    .select("id, total_price, sale_date")
-    .eq("sold_by", userId)
+    .select("id, total_price, sale_date, sold_by, down_payment, payment_type, parcelle_id")
     .gte("sale_date", periodFrom)
     .lte("sale_date", periodTo);
 
-  const parcellesVendues = ventesParcelles?.length || 0;
-  const parcellesAmount = ventesParcelles?.reduce((s, v) => s + Number(v.total_price || 0), 0) || 0;
+  // 8b. Parcelles for assigned_to mapping
+  const { data: parcelles } = await supabase
+    .from("parcelles")
+    .select("id, assigned_to");
 
-  // 6. Achats immobiliers (biens assigned to user)
+  // 9. Échéances parcelles paid in period
+  const { data: echeancesParcelles } = await supabase
+    .from("echeances_parcelles")
+    .select("id, vente_id, amount, status, paid_date, paid_amount")
+    .eq("status", "paid")
+    .gte("paid_date", periodFrom)
+    .lte("paid_date", periodTo);
+
+  // 10. Achats immobiliers
+  const { data: achatsImmo } = await supabase
+    .from("achats_immobiliers")
+    .select("id, sale_price, sale_date, bien_id, down_payment, payment_type")
+    .gte("sale_date", periodFrom)
+    .lte("sale_date", periodTo);
+
+  // 10b. Biens achat for assigned_to mapping
   const { data: biensAchat } = await supabase
     .from("biens_achat")
-    .select("id")
-    .eq("assigned_to", userId)
+    .select("id, assigned_to")
     .is("deleted_at", null);
 
-  const bienAchatIds = biensAchat?.map(b => b.id) || [];
-  let achatsEffectues = 0;
+  // 11. Échéances achats paid in period
+  const { data: echeancesAchats } = await supabase
+    .from("echeances_achats")
+    .select("id, achat_id, amount, status, paid_date, paid_amount")
+    .or(`status.eq.paye,status.eq.paid`)
+    .gte("paid_date", periodFrom)
+    .lte("paid_date", periodTo);
+
+  return {
+    properties: properties || [],
+    tenants: tenants || [],
+    payments: payments || [],
+    contracts: contracts || [],
+    prospects: prospects || [],
+    ventesImmo: ventesImmo || [],
+    biensVente: biensVente || [],
+    echeancesVentes: echeancesVentes || [],
+    ventesParcelles: ventesParcelles || [],
+    parcelles: parcelles || [],
+    echeancesParcelles: echeancesParcelles || [],
+    achatsImmo: achatsImmo || [],
+    biensAchat: biensAchat || [],
+    echeancesAchats: echeancesAchats || [],
+  };
+}
+
+function computeReportForUser(
+  userId: string,
+  data: Awaited<ReturnType<typeof fetchAllReportData>>
+): Omit<ActivityReportData, "userId" | "userName" | "role"> {
+  // --- LOYERS: property.assigned_to → tenants → payments (same as dashboard) ---
+  const assignedPropertyIds = new Set(
+    data.properties.filter((p: any) => p.assigned_to === userId).map((p: any) => p.id)
+  );
+  const assignedTenantIds = new Set(
+    data.tenants.filter((t: any) => t.property_id && assignedPropertyIds.has(t.property_id)).map((t: any) => t.id)
+  );
+  const userPayments = data.payments.filter((p: any) => assignedTenantIds.has(p.tenant_id));
+
+  const loyersEncaisses = userPayments
+    .filter((p: any) => p.status === "paid")
+    .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+
+  const montantRecouvre = userPayments.reduce((s: number, p: any) => {
+    const amount = Number(p.amount || 0);
+    const paidAmount = Number(p.paid_amount || 0);
+    return s + (p.status === "paid" ? amount : Math.min(Math.max(paidAmount, 0), amount));
+  }, 0);
+
+  const impayesSuivis = userPayments.filter(
+    (p: any) => p.status === "late" || p.status === "pending"
+  ).length;
+
+  // --- CONTRATS: contracts on assigned properties ---
+  const contratsSignes = data.contracts.filter(
+    (c: any) => c.property_id && assignedPropertyIds.has(c.property_id)
+  ).length;
+
+  // --- PROSPECTS ---
+  const userProspects = data.prospects.filter((p: any) => p.user_id === userId);
+  const prospectsContacted = userProspects.length;
+  const prospectsConverted = userProspects.filter(
+    (p: any) => p.status === "converted" || p.status === "won"
+  ).length;
+
+  // --- VENTES IMMOBILIÈRES: sold_by OR bien.assigned_to ---
+  const bienVenteAssignMap = new Map(data.biensVente.map((b: any) => [b.id, b.assigned_to]));
+  const userVentesImmo = data.ventesImmo.filter((v: any) => {
+    return v.sold_by === userId || bienVenteAssignMap.get(v.bien_id) === userId;
+  });
+  const ventesConclues = userVentesImmo.length;
+
+  // Calculate ventes revenue: down_payment + échéances paid
+  let ventesAmount = 0;
+  const venteImmoIds = new Set(userVentesImmo.map((v: any) => v.id));
+  userVentesImmo.forEach((v: any) => {
+    if (v.payment_type === "comptant") {
+      ventesAmount += Number(v.total_price || 0);
+    } else {
+      ventesAmount += Number(v.down_payment || 0);
+    }
+  });
+  data.echeancesVentes.forEach((e: any) => {
+    if (venteImmoIds.has(e.vente_id)) {
+      ventesAmount += Number(e.paid_amount || e.amount || 0);
+    }
+  });
+
+  // --- VENTES PARCELLES: sold_by OR parcelle.assigned_to ---
+  const parcelleAssignMap = new Map(data.parcelles.map((p: any) => [p.id, p.assigned_to]));
+  const userVentesParcelles = data.ventesParcelles.filter((v: any) => {
+    return v.sold_by === userId || parcelleAssignMap.get(v.parcelle_id) === userId;
+  });
+  const parcellesVendues = userVentesParcelles.length;
+
+  let parcellesAmount = 0;
+  const venteParcelleIds = new Set(userVentesParcelles.map((v: any) => v.id));
+  userVentesParcelles.forEach((v: any) => {
+    if (v.payment_type === "comptant") {
+      parcellesAmount += Number(v.total_price || 0);
+    } else {
+      parcellesAmount += Number(v.down_payment || 0);
+    }
+  });
+  data.echeancesParcelles.forEach((e: any) => {
+    if (venteParcelleIds.has(e.vente_id)) {
+      parcellesAmount += Number(e.paid_amount || e.amount || 0);
+    }
+  });
+
+  // --- ACHATS: bien_achat.assigned_to ---
+  const bienAchatAssignMap = new Map(data.biensAchat.map((b: any) => [b.id, b.assigned_to]));
+  const userAchats = data.achatsImmo.filter((a: any) => bienAchatAssignMap.get(a.bien_id) === userId);
+  const achatsEffectues = userAchats.length;
+
   let achatsAmount = 0;
-
-  if (bienAchatIds.length > 0) {
-    const { data: achats } = await supabase
-      .from("achats_immobiliers")
-      .select("id, sale_price, sale_date")
-      .in("bien_id", bienAchatIds)
-      .gte("sale_date", periodFrom)
-      .lte("sale_date", periodTo);
-
-    achatsEffectues = achats?.length || 0;
-    achatsAmount = achats?.reduce((s, a) => s + Number(a.sale_price || 0), 0) || 0;
-  }
+  const achatIds = new Set(userAchats.map((a: any) => a.id));
+  userAchats.forEach((a: any) => {
+    if (a.payment_type === "comptant") {
+      achatsAmount += Number(a.sale_price || 0);
+    } else {
+      achatsAmount += Number(a.down_payment || 0);
+    }
+  });
+  data.echeancesAchats.forEach((e: any) => {
+    if (achatIds.has(e.achat_id)) {
+      achatsAmount += Number(e.paid_amount || e.amount || 0);
+    }
+  });
 
   const tauxConversion = prospectsContacted > 0
     ? Math.round((prospectsConverted / prospectsContacted) * 100)
@@ -163,26 +284,20 @@ export function useActivityReport(periodFrom: string, periodTo: string) {
     queryKey: ["activity-report", user?.id, periodFrom, periodTo],
     queryFn: async () => {
       if (!user?.id) return null;
-      
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
 
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const [profileRes, roleRes, rawData] = await Promise.all([
+        supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle(),
+        fetchAllReportData(periodFrom, periodTo),
+      ]);
 
-      const report = await fetchReportForUser(user.id, periodFrom, periodTo);
-      
+      const report = computeReportForUser(user.id, rawData);
+
       return {
         ...report,
         userId: user.id,
-        userName: profile?.full_name || "Utilisateur",
-        role: roleData?.role || "gestionnaire",
+        userName: profileRes.data?.full_name || "Utilisateur",
+        role: roleRes.data?.role || "gestionnaire",
       } as ActivityReportData;
     },
     enabled: !!user?.id && !!periodFrom && !!periodTo,
@@ -214,34 +329,27 @@ export function useAllManagersReport(periodFrom: string, periodTo: string) {
         .eq("status", "active");
 
       // Include agency owner + all members
-      const userIds = [agency.user_id, ...(members?.map(m => m.user_id) || [])];
+      const userIds = [...new Set([agency.user_id, ...(members?.map(m => m.user_id) || [])])];
 
-      // Get profiles
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", userIds);
+      // Fetch profiles, roles, and all report data in parallel
+      const [profilesRes, rolesRes, rawData] = await Promise.all([
+        supabase.from("profiles").select("user_id, full_name").in("user_id", userIds),
+        supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
+        fetchAllReportData(periodFrom, periodTo),
+      ]);
 
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name || "Utilisateur"]) || []);
+      const profileMap = new Map(profilesRes.data?.map(p => [p.user_id, p.full_name || "Utilisateur"]) || []);
+      const roleMap = new Map(rolesRes.data?.map(r => [r.user_id, r.role]) || []);
 
-      // Get roles
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .in("user_id", userIds);
-
-      const roleMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
-
-      const reports: ActivityReportData[] = [];
-      for (const uid of userIds) {
-        const report = await fetchReportForUser(uid, periodFrom, periodTo);
-        reports.push({
+      const reports: ActivityReportData[] = userIds.map(uid => {
+        const report = computeReportForUser(uid, rawData);
+        return {
           ...report,
           userId: uid,
           userName: profileMap.get(uid) || "Utilisateur",
           role: roleMap.get(uid) || "admin",
-        });
-      }
+        };
+      });
 
       return reports.sort((a, b) => b.totalRevenue - a.totalRevenue);
     },

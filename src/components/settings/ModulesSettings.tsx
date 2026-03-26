@@ -9,11 +9,13 @@ export function ModulesSettings() {
   const { data: acquisitionsSetting, isLoading: loadingAcq } = usePlatformSetting("module_acquisitions_enabled");
   const { data: comptaSetting, isLoading: loadingCompta } = usePlatformSetting("module_comptabilite_enabled");
   const { data: kkiapaySetting, isLoading: loadingKkiapay } = usePlatformSetting("kkiapay_enabled");
+  const { data: setupFeeSetting, isLoading: loadingSetupFee } = usePlatformSetting("setup_fee_message_enabled");
   const upsertMutation = useUpsertPlatformSetting();
 
   const isAcqEnabled = acquisitionsSetting?.value === "true";
   const isComptaEnabled = comptaSetting?.value === "true";
-  const isKkiapayEnabled = kkiapaySetting?.value !== "false"; // enabled by default if no setting
+  const isKkiapayEnabled = kkiapaySetting?.value !== "false";
+  const isSetupFeeEnabled = setupFeeSetting?.value !== "false";
 
   const handleToggle = (key: string, checked: boolean, label: string) => {
     upsertMutation.mutate(

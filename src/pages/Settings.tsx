@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck, ShoppingCart, Blocks, BookOpen } from "lucide-react";
+import { User, Palette, Bell, Shield, Users, History, MessageCircle, Building2, Paintbrush, FileText, Settings2, CreditCard, Percent, ScrollText, Home, MapPin, BookmarkCheck, ShoppingCart, Blocks, BookOpen, Handshake } from "lucide-react";
 import { ModulesSettings } from "@/components/settings/ModulesSettings";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { DisplaySettings } from "@/components/settings/DisplaySettings";
@@ -26,6 +26,7 @@ import { GuideTemplateManager } from "@/components/settings/GuideTemplateManager
 import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { ManagementTypesSettings } from "@/components/settings/ManagementTypesSettings";
+import { ManagementContractTemplateManager } from "@/components/settings/ManagementContractTemplateManager";
 import { useIsSuperAdmin } from "@/hooks/useSuperAdmin";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -204,6 +205,15 @@ const Settings = () => {
                 <span>Contrats</span>
               </TabsTrigger>
             )}
+            {!isFreePlan && canManageTemplates && (
+              <TabsTrigger
+                value="management-contracts"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
+              >
+                <Handshake className="h-4 w-4" />
+                <span>Contrats de gestion</span>
+              </TabsTrigger>
+            )}
             {hasVentesImmobilieres && canAccessSaleContractsTab && (
               <TabsTrigger
                 value="sale-contracts"
@@ -370,6 +380,12 @@ const Settings = () => {
           {!isFreePlan && (
             <TabsContent value="contracts">
               <ContractTemplateManager />
+            </TabsContent>
+          )}
+
+          {!isFreePlan && (
+            <TabsContent value="management-contracts">
+              <ManagementContractTemplateManager />
             </TabsContent>
           )}
 

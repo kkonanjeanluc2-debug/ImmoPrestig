@@ -197,6 +197,11 @@ const Pricing = () => {
         </div>
       </nav>
 
+      {/* Navigation Tabs */}
+      <div className="bg-muted border-b border-border sticky top-[57px] md:top-[65px] z-40">
+        <DashboardNavTabs />
+      </div>
+
       <main>
         {/* ===== HERO SECTION ===== */}
         <section

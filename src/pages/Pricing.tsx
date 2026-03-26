@@ -913,7 +913,7 @@ const Pricing = () => {
                             {plan.description || "Idéal pour démarrer"}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="text-center pt-0">
+                        <CardContent className="text-center pt-0 flex-1">
                           <div className="mb-4">
                             <div className="flex items-baseline justify-center gap-1">
                               <span className="text-3xl font-bold">{formatPrice(price)}</span>

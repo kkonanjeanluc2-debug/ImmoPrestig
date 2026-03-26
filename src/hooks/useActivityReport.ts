@@ -51,7 +51,7 @@ async function fetchAllReportData(periodFrom: string, periodTo: string) {
   // 3. All payments in period
   const { data: payments } = await supabase
     .from("payments")
-    .select("id, tenant_id, amount, status, paid_amount, due_date, paid_date")
+    .select("id, tenant_id, amount, status, paid_amount, due_date, paid_date, payment_months")
     .or(
       `and(status.eq.paid,paid_date.gte.${periodFrom},paid_date.lte.${periodTo}),and(status.neq.paid,due_date.gte.${periodFrom},due_date.lte.${periodTo}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${periodFrom},paid_date.lte.${periodTo})`
     );

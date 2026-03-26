@@ -63,6 +63,7 @@ export function AddOwnerDialog() {
   const { data: managementTypes = [] } = useManagementTypes();
   const { data: contractTemplates = [] } = useContractTemplates();
   const { data: receiptTemplates = [] } = useReceiptTemplates();
+  const { data: mgmtContractTemplates = [] } = useManagementContractTemplates();
   const { data: defaultMgmtContractTemplate } = useDefaultManagementContractTemplate();
   const { data: agency } = useAgency();
 

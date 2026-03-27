@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 
 // Map of routes to their prefetch functions
-const routePrefetchMap: Record<string, (queryClient: any) => void> = {
+const routePrefetchMap: Record<string, (queryClient: any, userId?: string) => void> = {
   "/dashboard": (qc) => {
     qc.prefetchQuery({ queryKey: ["properties"], queryFn: () => supabase.from("properties").select("*").is("deleted_at", null).order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
     qc.prefetchQuery({ queryKey: ["tenants"], queryFn: () => supabase.from("tenants").select("*").is("deleted_at", null).order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });

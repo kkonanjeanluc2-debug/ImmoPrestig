@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,9 @@ import {
   MessageCircle,
   Banknote,
   Filter,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { format, differenceInDays, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUpcomingEcheances, useOverdueEcheances, useAllEcheancesWithDetails, EcheanceWithDetails } from "@/hooks/useEcheancesParcelles";
@@ -54,9 +56,23 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
   const { data: overdueEcheances, isLoading: loadingOverdue } = useOverdueEcheances(lotissementId);
   const { data: allEcheances, isLoading: loadingAll } = useAllEcheancesWithDetails(lotissementId);
   const [payingEcheance, setPayingEcheance] = useState<EcheanceWithDetails | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredUpcoming = upcomingEcheances;
-  const filteredOverdue = overdueEcheances;
+  const filterBySearch = (list: EcheanceWithDetails[] | undefined) => {
+    if (!list) return [];
+    if (!searchQuery) return list;
+    const q = searchQuery.toLowerCase();
+    return list.filter((e) => {
+      const name = e.vente?.acquereur?.name?.toLowerCase() || "";
+      const phone = e.vente?.acquereur?.phone?.toLowerCase() || "";
+      const plot = e.vente?.parcelle?.plot_number?.toLowerCase() || "";
+      return name.includes(q) || phone.includes(q) || plot.includes(q);
+    });
+  };
+
+  const filteredUpcoming = useMemo(() => filterBySearch(upcomingEcheances), [upcomingEcheances, searchQuery]);
+  const filteredOverdue = useMemo(() => filterBySearch(overdueEcheances), [overdueEcheances, searchQuery]);
+  const filteredAll = useMemo(() => filterBySearch(allEcheances), [allEcheances, searchQuery]);
 
   const totalOverdueAmount = filteredOverdue?.reduce((sum, e) => sum + e.amount, 0) || 0;
   const totalUpcomingAmount = filteredUpcoming?.reduce((sum, e) => sum + e.amount, 0) || 0;
@@ -244,6 +260,15 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un acquéreur, téléphone ou lot..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
           <Tabs defaultValue="upcoming" className="space-y-4">
             <TabsList>
               <TabsTrigger value="upcoming" className="gap-2">
@@ -334,7 +359,7 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
             </TabsContent>
 
             <TabsContent value="all">
-              {!allEcheances?.length ? (
+              {!filteredAll?.length ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>Aucune échéance en attente</p>
@@ -353,7 +378,7 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {allEcheances.map((echeance) => (
+                      {filteredAll.map((echeance) => (
                         <EcheanceRow key={echeance.id} echeance={echeance} />
                       ))}
                     </TableBody>

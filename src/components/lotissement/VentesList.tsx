@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/table";
 import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
-import { FileText, User, Banknote, Building2, Smartphone, CreditCard } from "lucide-react";
+import { FileText, User, Banknote, Building2, Smartphone, CreditCard, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
@@ -27,17 +28,25 @@ interface VentesListProps {
 export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const [selectedVente, setSelectedVente] = useState<VenteWithDetails | null>(null);
   const { data: assignableUsers } = useAssignableUsers();
+  const [searchQuery, setSearchQuery] = useState("");
   
   const filteredVentes = useMemo(() => {
-    return ventes.filter(v => {
+    return ventes.filter((v) => {
       if (!v.parcelle?.lotissement?.name) return false;
       if (period) {
         const saleDate = new Date(v.sale_date);
         if (!isWithinInterval(saleDate, { start: period.from, end: period.to })) return false;
       }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const name = v.acquereur?.name?.toLowerCase() || "";
+        const phone = v.acquereur?.phone?.toLowerCase() || "";
+        const plot = v.parcelle?.plot_number?.toLowerCase() || "";
+        if (!name.includes(q) && !phone.includes(q) && !plot.includes(q)) return false;
+      }
       return true;
     });
-  }, [ventes, period]);
+  }, [ventes, period, searchQuery]);
 
   const getSoldByName = (soldBy: string | null | undefined) => {
     if (!soldBy) return null;
@@ -77,6 +86,15 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
 
   return (
     <>
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher un acquéreur, téléphone ou lot..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
       <Card>
         <div className="overflow-x-auto">
         <Table>

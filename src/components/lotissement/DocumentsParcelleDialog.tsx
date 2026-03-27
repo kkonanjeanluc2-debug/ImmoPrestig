@@ -39,11 +39,11 @@ export function DocumentsParcelleDialog({
   const { data: attestationTemplates = [] } = useAttestationTemplates();
   const [generating, setGenerating] = useState<string | null>(null);
 
-  // Find template associated with lotissement or default
+  // Find template ONLY if explicitly associated with the lotissement
   const lotissementTemplateId = (vente.parcelle?.lotissement as any)?.attestation_template_id;
   const attestationTemplate = lotissementTemplateId 
-    ? attestationTemplates.find(t => t.id === lotissementTemplateId)
-    : attestationTemplates.find(t => t.is_default) || attestationTemplates[0] || null;
+    ? attestationTemplates.find(t => t.id === lotissementTemplateId) || null
+    : null;
 
   const depositPercentage = agency?.reservation_deposit_percentage ?? 30;
 

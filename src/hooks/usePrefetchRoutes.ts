@@ -45,6 +45,14 @@ const routePrefetchMap: Record<string, (queryClient: any) => void> = {
   "/settings": (qc) => {
     qc.prefetchQuery({ queryKey: ["agency"], queryFn: () => supabase.from("agencies").select("*").maybeSingle().then(r => r.data), staleTime: 5 * 60 * 1000 });
   },
+  "/rapports": (qc, userId) => {
+    const now = new Date();
+    const periodFrom = format(startOfMonth(now), "yyyy-MM-dd");
+    const periodTo = format(endOfMonth(now), "yyyy-MM-dd");
+    qc.prefetchQuery({ queryKey: ["activity-report", userId, periodFrom, periodTo], staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["all-managers-report", periodFrom, periodTo], staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["agency"], queryFn: () => supabase.from("agencies").select("*").maybeSingle().then(r => r.data), staleTime: 5 * 60 * 1000 });
+  },
 };
 
 export function usePrefetchRoute() {

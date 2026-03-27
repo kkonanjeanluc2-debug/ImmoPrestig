@@ -2,9 +2,10 @@ import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 
 // Map of routes to their prefetch functions
-const routePrefetchMap: Record<string, (queryClient: any) => void> = {
+const routePrefetchMap: Record<string, (queryClient: any, userId?: string) => void> = {
   "/dashboard": (qc) => {
     qc.prefetchQuery({ queryKey: ["properties"], queryFn: () => supabase.from("properties").select("*").is("deleted_at", null).order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
     qc.prefetchQuery({ queryKey: ["tenants"], queryFn: () => supabase.from("tenants").select("*").is("deleted_at", null).order("created_at", { ascending: false }).then(r => r.data), staleTime: 5 * 60 * 1000 });
@@ -44,6 +45,14 @@ const routePrefetchMap: Record<string, (queryClient: any) => void> = {
   "/settings": (qc) => {
     qc.prefetchQuery({ queryKey: ["agency"], queryFn: () => supabase.from("agencies").select("*").maybeSingle().then(r => r.data), staleTime: 5 * 60 * 1000 });
   },
+  "/rapports": (qc, userId) => {
+    const now = new Date();
+    const periodFrom = format(startOfMonth(now), "yyyy-MM-dd");
+    const periodTo = format(endOfMonth(now), "yyyy-MM-dd");
+    qc.prefetchQuery({ queryKey: ["activity-report", userId, periodFrom, periodTo], staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["all-managers-report", periodFrom, periodTo], staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: ["agency"], queryFn: () => supabase.from("agencies").select("*").maybeSingle().then(r => r.data), staleTime: 5 * 60 * 1000 });
+  },
 };
 
 export function usePrefetchRoute() {
@@ -54,7 +63,7 @@ export function usePrefetchRoute() {
     if (!user) return;
     const prefetchFn = routePrefetchMap[href];
     if (prefetchFn) {
-      prefetchFn(queryClient);
+      prefetchFn(queryClient, user?.id);
     }
   }, [queryClient, user]);
 

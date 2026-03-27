@@ -63,7 +63,7 @@ export function usePrefetchRoute() {
     if (!user) return;
     const prefetchFn = routePrefetchMap[href];
     if (prefetchFn) {
-      prefetchFn(queryClient);
+      prefetchFn(queryClient, user?.id);
     }
   }, [queryClient, user]);
 

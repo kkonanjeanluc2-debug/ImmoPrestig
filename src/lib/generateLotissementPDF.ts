@@ -1269,6 +1269,8 @@ export const generateAttestationVillageoise = async (
       "{beneficiaire_telephone}": acquereur.phone || "___",
       "{beneficiaire_email}": acquereur.email || "___",
       "{beneficiaire_adresse}": acquereur.address || "___",
+      "{beneficiaire_date_naissance}": acquereur.birth_date ? formatDate(acquereur.birth_date) : "___",
+      "{beneficiaire_lieu_naissance}": acquereur.birth_place || "___",
       "{date_vente}": formatDate(saleDate),
       "{ville}": lotissement.city || agency?.city || "___",
       "{nom_agence}": agency?.name || "___",

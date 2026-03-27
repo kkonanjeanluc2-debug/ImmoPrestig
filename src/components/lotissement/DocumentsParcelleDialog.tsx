@@ -269,8 +269,17 @@ export function DocumentsParcelleDialog({
                     signature_url: lotissement?.chef_signature_url || null,
                   };
 
-                  // Fetch ancien bénéficiaire if parcelle has one
+                  // Align with the guide: prefer "Bénéficiaire:" from notes first,
+                  // then enrich/fallback with the linked bénéficiaire record.
                   let ancienBeneficiaire: AncienBeneficiaireInfo | null = null;
+                  const notes = (vente.parcelle as any)?.notes || "";
+                  const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
+                  const beneficiaireNameFromNotes = benMatch?.[1]?.trim();
+
+                  if (beneficiaireNameFromNotes) {
+                    ancienBeneficiaire = { nom: beneficiaireNameFromNotes };
+                  }
+
                   const beneficiaireId = (vente.parcelle as any)?.beneficiaire_id;
                   if (beneficiaireId) {
                     const { data: benData } = await supabase
@@ -278,23 +287,15 @@ export function DocumentsParcelleDialog({
                       .select("nom, cni_number, telephone")
                       .eq("id", beneficiaireId)
                       .single();
+
                     if (benData) {
                       ancienBeneficiaire = {
-                        nom: benData.nom,
+                        nom: ancienBeneficiaire?.nom || benData.nom,
                         cni_number: benData.cni_number,
                         telephone: benData.telephone,
                       };
                     }
                   }
-                   // Fallback: extract from notes (attributaire only, not proprietaire)
-                   if (!ancienBeneficiaire) {
-                     const notes = (vente.parcelle as any)?.notes || "";
-                     const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
-                     const name = benMatch?.[1]?.trim();
-                     if (name) {
-                       ancienBeneficiaire = { nom: name };
-                     }
-                   }
 
                   const doc = await generateAttestationVillageoise(
                     parcelleInfo,

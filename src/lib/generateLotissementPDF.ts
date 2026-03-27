@@ -1269,6 +1269,8 @@ export const generateAttestationVillageoise = async (
       "{beneficiaire_telephone}": acquereur.phone || "___",
       "{beneficiaire_email}": acquereur.email || "___",
       "{beneficiaire_adresse}": acquereur.address || "___",
+      "{beneficiaire_date_naissance}": acquereur.birth_date ? formatDate(acquereur.birth_date) : "___",
+      "{beneficiaire_lieu_naissance}": acquereur.birth_place || "___",
       "{date_vente}": formatDate(saleDate),
       "{ville}": lotissement.city || agency?.city || "___",
       "{nom_agence}": agency?.name || "___",
@@ -1403,78 +1405,96 @@ export const generateAttestationVillageoise = async (
       yPos += splitLines.length * lineSpacing + 1.5;
     }
   } else {
-    // Fallback: hardcoded body if no template content
+    // Fallback: hardcoded body if no template content (matches real attestation format)
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text("Nous soussignés,", pageWidth / 2, yPos, { align: "center" });
-    yPos += 8;
-
-    doc.setFont("helvetica", "bold");
     const villageName2 = village.replace(/^Village de /i, "").trim() || "____________________";
-    let chefLine = `Monsieur ${chef}, Chef du village de ${villageName2},`;
-    if (chefTitre) chefLine += `\n${chefTitre}`;
-    const chefLines = doc.splitTextToSize(chefLine, pageWidth - 2 * margin);
-    doc.text(chefLines, pageWidth / 2, yPos, { align: "center" });
-    yPos += chefLines.length * 5 + 5;
-
-    doc.setFontSize(11);
-    doc.text("Attestons que :", pageWidth / 2, yPos, { align: "center" });
-    yPos += 12;
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("M / Mme / Mlle :", margin, yPos);
+    
+    doc.text("Je soussigné ", margin, yPos);
+    const jsX = margin + doc.getTextWidth("Je soussigné ");
     doc.setFont("helvetica", "bold");
-    doc.text(acquereur.name, margin + 35, yPos);
+    doc.text(chef, jsX, yPos);
+    const chefEndX = jsX + doc.getTextWidth(chef);
+    doc.setFont("helvetica", "normal");
+    doc.text(` Chef du village de ${villageName2} certifie`, chefEndX, yPos);
+    yPos += 8;
+
+    doc.text("Mme/Mlle/M ", margin, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text(acquereur.name, margin + doc.getTextWidth("Mme/Mlle/M "), yPos);
     doc.setFont("helvetica", "normal");
     yPos += 8;
 
-    if (acquereur.cni_number) {
-      doc.text("Type de pièce : CNI", margin, yPos);
-      doc.text(`N° : ${acquereur.cni_number}`, pageWidth / 2, yPos);
-      yPos += 8;
-    }
-    if (acquereur.profession) {
-      doc.text(`Profession : ${acquereur.profession}`, margin, yPos);
-      yPos += 8;
-    }
-    if (acquereur.phone || acquereur.email) {
-      const contactParts = [acquereur.phone, acquereur.email].filter(Boolean);
-      doc.text(`Contact : ${contactParts.join(" / ")}`, margin, yPos);
-      yPos += 8;
+    if (acquereur.birth_date || acquereur.birth_place) {
+      const birthParts = [];
+      if (acquereur.birth_date) birthParts.push(formatDate(acquereur.birth_date));
+      if (acquereur.birth_place) birthParts.push(`à ${acquereur.birth_place}`);
+      doc.text(`Né(e) le : ${birthParts.join(" ")}`, margin, yPos);
+      yPos += 6;
     }
     if (acquereur.address) {
-      doc.text(`Domicile : ${acquereur.address}`, margin, yPos);
+      doc.text(`Adresse : ${acquereur.address}`, margin, yPos);
+      yPos += 6;
+    }
+    if (acquereur.phone) {
+      doc.text(`Tél : ${acquereur.phone}`, margin, yPos);
+      yPos += 6;
+    }
+    if (acquereur.cni_number) {
+      doc.text(`CNI N° : ${acquereur.cni_number}`, margin, yPos);
       yPos += 8;
     }
-    yPos += 5;
 
-    doc.text("Est Attributaire du Lot : ", margin, yPos);
-    const lotNumX = margin + doc.getTextWidth("Est Attributaire du Lot : ");
+    // Attribution line
+    doc.setFont("helvetica", "normal");
+    const attrText = `Est attributaire du lot `;
+    doc.text(attrText, margin, yPos);
+    let attrX = margin + doc.getTextWidth(attrText);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(parcelle.plot_number, lotNumX, yPos);
-    let nextX = lotNumX + doc.getTextWidth(parcelle.plot_number) + 5;
-    doc.setFontSize(10);
+    doc.text(parcelle.plot_number, attrX, yPos);
+    attrX += doc.getTextWidth(parcelle.plot_number);
     doc.setFont("helvetica", "normal");
     if (ilotName) {
-      const ilotText = `Îlot ${ilotName}`;
-      doc.text(ilotText, nextX, yPos);
+      const ilotText = ` ilot ${ilotName}`;
+      doc.text(ilotText, attrX, yPos);
+      attrX += doc.getTextWidth(ilotText);
     }
-    doc.text(`du lotissement ${lotOriginName.toUpperCase()}`, margin, yPos + 6);
-    yPos += 12;
+    yPos += 6;
+    const lotLine = `du lotissement ${lotOriginName.toUpperCase()}, sise dans la commune de ${commune || "___"} suivant le plan d'urbanisation.`;
+    const lotLines = doc.splitTextToSize(lotLine, pageWidth - 2 * margin);
+    doc.text(lotLines, margin, yPos);
+    yPos += lotLines.length * 5 + 8;
 
-    if (parcelle.area > 0) {
-      doc.text(`Superficie : ${parcelle.area.toLocaleString("fr-FR")} m²`, margin, yPos);
-      yPos += 8;
-    }
+    // Irrevocable clause
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, yPos - 3, pageWidth - margin, yPos - 3);
     yPos += 5;
+    
+    const irrevocable = `Les lots cédés par le Chef ${chef} sont incontestables et irrévocables.`;
+    const irrevLines = doc.splitTextToSize(irrevocable, pageWidth - 2 * margin);
+    doc.text(irrevLines, margin, yPos);
+    yPos += irrevLines.length * 5 + 5;
 
-    doc.setFontSize(9);
-    const legalText = `En foi de quoi, la présente Attestation qui annule toutes attestations antérieures sur ledit lot est délivrée en vue des formalités domaniales.`;
-    const legalLines = doc.splitTextToSize(legalText, pageWidth - 2 * margin);
+    const autorise = `Par conséquent Mme/Mlle/M ${acquereur.name} est autorisé(e) à engager la procédure en vigueur en Côte d'Ivoire pour user en toute quiétude de son droit de propriété.`;
+    const autLines = doc.splitTextToSize(autorise, pageWidth - 2 * margin);
+    doc.text(autLines, margin, yPos);
+    yPos += autLines.length * 5 + 5;
+
+    const legal = `En foi de quoi, nous lui délivrons cette attestation pour servir et valoir ce que de droit.`;
+    const legalLines = doc.splitTextToSize(legal, pageWidth - 2 * margin);
     doc.text(legalLines, margin, yPos);
-    yPos += legalLines.length * 5 + 15;
+    yPos += legalLines.length * 5 + 10;
+
+    // Cession mention if applicable
+    if (ancienBeneficiaire?.nom) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Mention de cession : ", margin, yPos);
+      doc.setFont("helvetica", "normal");
+      const cessionText = `Ce lot, initialement attribué à ${ancienBeneficiaire.nom}${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ""}${ancienBeneficiaire.telephone ? `, Contact : ${ancienBeneficiaire.telephone}` : ""}, a été cédé au bénéficiaire désigné ci-dessus.`;
+      const cessionLines = doc.splitTextToSize(cessionText, pageWidth - 2 * margin);
+      doc.text(cessionLines, margin, yPos + 5);
+      yPos += cessionLines.length * 5 + 10;
+    }
 
     const city = lotissement.city || agency?.city || "____________________";
     doc.setFontSize(9);

@@ -7,32 +7,27 @@ export const DEFAULT_ATTESTATION_TEMPLATE = `# ATTESTATION D'ATTRIBUTION N°{num
 
 ---
 
-Nous soussignés,
+Je soussigné **{chef_village_name}** Chef du village de **{village}** certifie
 
-**Monsieur {chef_village_name}, Chef du village de {village}**,
-{chef_village_titre}
+Mme/Mlle/M **{beneficiaire_nom}**
 
-**Attestons que :**
+Né(e) le : {beneficiaire_date_naissance} à {beneficiaire_lieu_naissance}
 
-M / Mme / Mlle : **{beneficiaire_nom}**
+Adresse : {beneficiaire_adresse}
 
-Type de pièce : CNI N° : {beneficiaire_cni}
+Tél : {beneficiaire_telephone}
 
-Profession : {beneficiaire_profession}
+CNI N° : {beneficiaire_cni}
 
-Contact : {beneficiaire_telephone} / {beneficiaire_email}
-
-Domicile : {beneficiaire_adresse}
+Est attributaire du **Lot {numero_lot}** ilot **{ilot}** du lotissement **{nom_lotissement}**, sise dans la commune de **{commune}** suivant le plan d'urbanisation.
 
 ---
 
-Est Attributaire du **Lot {numero_lot}** - **Îlot {ilot}** du lotissement **{nom_lotissement}**
+Les lots cédés par le Chef **{chef_village_name}** sont incontestables et irrévocables.
 
-Superficie : **{superficie} m²**
+Par conséquent Mme/Mlle/M **{beneficiaire_nom}** est autorisé(e) à engager la procédure en vigueur en Côte d'Ivoire pour user en toute quiétude de son droit de propriété.
 
----
-
-En foi de quoi, la présente Attestation qui annule toutes attestations antérieures sur ledit lot est délivrée en vue des formalités domaniales.
+En foi de quoi, nous lui délivrons cette attestation pour servir et valoir ce que de droit.
 
 **Fait à {ville}, le {date_vente}**
 
@@ -60,6 +55,8 @@ export const ATTESTATION_VARIABLES = [
   { variable: "{beneficiaire_telephone}", description: "Téléphone du bénéficiaire" },
   { variable: "{beneficiaire_email}", description: "Email du bénéficiaire" },
   { variable: "{beneficiaire_adresse}", description: "Adresse du bénéficiaire" },
+  { variable: "{beneficiaire_date_naissance}", description: "Date de naissance du bénéficiaire" },
+  { variable: "{beneficiaire_lieu_naissance}", description: "Lieu de naissance du bénéficiaire" },
   { variable: "{date_vente}", description: "Date de la vente" },
   { variable: "{ville}", description: "Ville (pour 'Fait à...')" },
   { variable: "{nom_agence}", description: "Nom de l'agence" },

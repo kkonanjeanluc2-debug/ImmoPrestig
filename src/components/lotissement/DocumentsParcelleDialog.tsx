@@ -286,16 +286,15 @@ export function DocumentsParcelleDialog({
                       };
                     }
                   }
-                  // Fallback: extract from notes
-                  if (!ancienBeneficiaire) {
-                    const notes = (vente.parcelle as any)?.notes || "";
-                    const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
-                    const propMatch = notes.match(/Propriétaire:\s*([^|]+)/);
-                    const name = benMatch?.[1]?.trim() || propMatch?.[1]?.trim();
-                    if (name) {
-                      ancienBeneficiaire = { nom: name };
-                    }
-                  }
+                   // Fallback: extract from notes (attributaire only, not proprietaire)
+                   if (!ancienBeneficiaire) {
+                     const notes = (vente.parcelle as any)?.notes || "";
+                     const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
+                     const name = benMatch?.[1]?.trim();
+                     if (name) {
+                       ancienBeneficiaire = { nom: name };
+                     }
+                   }
 
                   const doc = await generateAttestationVillageoise(
                     parcelleInfo,

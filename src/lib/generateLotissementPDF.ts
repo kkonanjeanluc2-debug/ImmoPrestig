@@ -1070,41 +1070,9 @@ export const generateAttestationVillageoise = async (
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
+  const contentWidth = pageWidth - 2 * margin;
+  const bottomMargin = 25;
   let yPos = 15;
-
-  // ===== FOND DU DOCUMENT =====
-  const docBgColor1 = template?.doc_bg_color_1;
-  if (docBgColor1) {
-    const hexToRgbBg = (hex: string): [number, number, number] => {
-      const h = hex.replace("#", "");
-      return [
-        parseInt(h.substring(0, 2), 16) || 255,
-        parseInt(h.substring(2, 4), 16) || 255,
-        parseInt(h.substring(4, 6), 16) || 255,
-      ];
-    };
-    const docBgColor2 = template?.doc_bg_color_2;
-    const docBgGradient = template?.doc_bg_gradient && docBgColor2;
-    
-    if (docBgGradient) {
-      const c1 = hexToRgbBg(docBgColor1);
-      const c2 = hexToRgbBg(docBgColor2!);
-      const steps = 60;
-      const stripH = pageHeight / steps;
-      for (let i = 0; i < steps; i++) {
-        const t = i / (steps - 1);
-        const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
-        const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
-        const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
-        doc.setFillColor(r, g, b);
-        doc.rect(0, i * stripH, pageWidth, stripH + 0.5, "F");
-      }
-    } else {
-      const bg = hexToRgbBg(docBgColor1);
-      doc.setFillColor(bg[0], bg[1], bg[2]);
-      doc.rect(0, 0, pageWidth, pageHeight, "F");
-    }
-  }
 
   const district = template?.district || "";
   const commune = template?.commune || "";
@@ -1114,10 +1082,128 @@ export const generateAttestationVillageoise = async (
   const lotOriginName = template?.lotissement_origin_name || lotissement.name;
   const arreteApprobation = template?.arrete_approbation || "";
 
-  // ===== EN-TÊTE AGENCE + OFFICIEL =====
-  // Agency logo and info on the left, Republic info on the right
+  const hexToRgb = (hex: string, fallback = 255): [number, number, number] => {
+    const normalized = hex.replace('#', '');
+    return [
+      parseInt(normalized.substring(0, 2), 16) || fallback,
+      parseInt(normalized.substring(2, 4), 16) || fallback,
+      parseInt(normalized.substring(4, 6), 16) || fallback,
+    ];
+  };
+
+  const drawDocumentBackground = () => {
+    const docBgColor1 = template?.doc_bg_color_1;
+    if (!docBgColor1) return;
+
+    const docBgColor2 = template?.doc_bg_color_2;
+    const useGradient = template?.doc_bg_gradient && docBgColor2;
+
+    if (useGradient) {
+      const c1 = hexToRgb(docBgColor1);
+      const c2 = hexToRgb(docBgColor2!);
+      const steps = 60;
+      const stripH = pageHeight / steps;
+      for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1);
+        const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+        const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+        const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+        doc.setFillColor(r, g, b);
+        doc.rect(0, i * stripH, pageWidth, stripH + 0.5, 'F');
+      }
+      return;
+    }
+
+    const bg = hexToRgb(docBgColor1);
+    doc.setFillColor(bg[0], bg[1], bg[2]);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  };
+
+  const ensureSpace = (neededHeight: number) => {
+    if (yPos + neededHeight <= pageHeight - bottomMargin) return;
+    doc.addPage();
+    drawDocumentBackground();
+    yPos = margin;
+  };
+
+  const writeWrappedLines = (
+    lines: string | string[],
+    options?: {
+      align?: 'left' | 'center' | 'right';
+      x?: number;
+      lineHeight?: number;
+      extraAfter?: number;
+      width?: number;
+      font?: 'normal' | 'bold' | 'italic';
+      fontSize?: number;
+    }
+  ) => {
+    const align = options?.align || 'left';
+    const width = options?.width || contentWidth;
+    const x = options?.x ?? (align === 'right' ? pageWidth - margin : align === 'center' ? pageWidth / 2 : margin);
+    if (options?.fontSize) doc.setFontSize(options.fontSize);
+    if (options?.font) doc.setFont('helvetica', options.font);
+
+    const normalized = (Array.isArray(lines) ? lines : doc.splitTextToSize(lines, width)).flatMap((line) =>
+      typeof line === 'string' ? doc.splitTextToSize(line, width) : line
+    );
+
+    const lineHeight = options?.lineHeight ?? 4.5;
+    const extraAfter = options?.extraAfter ?? 1.5;
+    ensureSpace(normalized.length * lineHeight + extraAfter + 2);
+    doc.text(normalized, x, yPos, align === 'left' ? undefined : { align });
+    yPos += normalized.length * lineHeight + extraAfter;
+  };
+
+  const writeMixedMarkdownLine = (line: string, lineHeight = 4.8) => {
+    const segments = line.split(/(\*\*[^*]+\*\*)/).filter(Boolean).map((segment) => ({
+      bold: segment.startsWith('**') && segment.endsWith('**'),
+      text: segment.startsWith('**') && segment.endsWith('**') ? segment.slice(2, -2) : segment,
+    }));
+
+    const wrappedLines: Array<Array<{ text: string; bold: boolean }>> = [];
+    let currentLine: Array<{ text: string; bold: boolean }> = [];
+    let currentWidth = 0;
+
+    const flushCurrentLine = () => {
+      if (currentLine.length === 0) return;
+      wrappedLines.push(currentLine);
+      currentLine = [];
+      currentWidth = 0;
+    };
+
+    for (const segment of segments) {
+      const tokens = segment.text.split(/(\s+)/).filter((token) => token.length > 0);
+      for (const token of tokens) {
+        doc.setFont('helvetica', segment.bold ? 'bold' : 'normal');
+        const tokenWidth = doc.getTextWidth(token);
+        if (currentLine.length > 0 && currentWidth + tokenWidth > contentWidth) {
+          flushCurrentLine();
+        }
+        currentLine.push({ text: token, bold: segment.bold });
+        currentWidth += tokenWidth;
+      }
+    }
+    flushCurrentLine();
+
+    for (const wrappedLine of wrappedLines) {
+      ensureSpace(lineHeight + 2);
+      let cursorX = margin;
+      for (const piece of wrappedLine) {
+        doc.setFont('helvetica', piece.bold ? 'bold' : 'normal');
+        doc.text(piece.text, cursorX, yPos);
+        cursorX += doc.getTextWidth(piece.text);
+      }
+      yPos += lineHeight;
+    }
+
+    yPos += 0.5;
+    doc.setFont('helvetica', 'normal');
+  };
+
+  drawDocumentBackground();
+
   let headerLeftX = margin;
-  
   if (agency?.logo_url) {
     try {
       const logoResp = await fetch(agency.logo_url);
@@ -1128,61 +1214,53 @@ export const generateAttestationVillageoise = async (
         reader.onerror = () => resolve(null);
         reader.readAsDataURL(logoBlob);
       });
+
       if (logoBase64) {
         const logoSize = 18;
-        doc.addImage(logoBase64, "PNG", margin, yPos - 3, logoSize, logoSize);
+        doc.addImage(logoBase64, 'PNG', margin, yPos - 3, logoSize, logoSize);
         headerLeftX = margin + logoSize + 4;
       }
     } catch {
-      // skip logo
     }
   }
 
-  // Agency name
   doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(...textColor);
   if (agency?.name) {
     doc.text(agency.name.toUpperCase(), headerLeftX, yPos);
   }
-  // Republic info on the right
   doc.setFontSize(8);
-  doc.text("RÉPUBLIQUE DE CÔTE D'IVOIRE", pageWidth - margin, yPos, { align: "right" });
+  doc.text("RÉPUBLIQUE DE CÔTE D'IVOIRE", pageWidth - margin, yPos, { align: 'right' });
   yPos += 4;
 
-  // Agency contact info
   doc.setFontSize(6.5);
-  doc.setFont("helvetica", "normal");
+  doc.setFont('helvetica', 'normal');
   const agencyDetails: string[] = [];
   if (agency?.address) agencyDetails.push(agency.address);
   if (agency?.city) agencyDetails.push(agency.city);
   if (agency?.phone) agencyDetails.push(`Tél: ${agency.phone}`);
   if (agency?.email) agencyDetails.push(agency.email);
   if (agency?.siret) agencyDetails.push(`RCCM: ${agency.siret}`);
-  
   if (agencyDetails.length > 0) {
-    const line1 = agencyDetails.slice(0, 3).join(" | ");
-    doc.text(line1, headerLeftX, yPos);
+    doc.text(agencyDetails.slice(0, 3).join(' | '), headerLeftX, yPos);
   }
-  // Devise
   doc.setFontSize(7);
-  doc.text("Union - Discipline - Travail", pageWidth - margin, yPos, { align: "right" });
+  doc.text('Union - Discipline - Travail', pageWidth - margin, yPos, { align: 'right' });
   yPos += 4;
 
   if (agencyDetails.length > 3) {
     doc.setFontSize(6.5);
-    const line2 = agencyDetails.slice(3).join(" | ");
-    doc.text(line2, headerLeftX, yPos);
+    doc.text(agencyDetails.slice(3).join(' | '), headerLeftX, yPos);
   }
 
-  // District / Commune / Village on the left
   doc.setFontSize(7);
-  doc.setFont("helvetica", "bold");
+  doc.setFont('helvetica', 'bold');
   if (district) {
     yPos += 4;
     doc.text(district.toUpperCase(), headerLeftX, yPos);
   }
-  doc.setFont("helvetica", "normal");
+  doc.setFont('helvetica', 'normal');
   if (commune) {
     yPos += 4;
     doc.text(commune.toUpperCase(), headerLeftX, yPos);
@@ -1193,27 +1271,16 @@ export const generateAttestationVillageoise = async (
   }
   yPos += 8;
 
-  // ===== BANDEAU BLEU : TITRE =====
   const bannerHeight = 28;
-  const bannerColor1 = template?.banner_color_1 || "#003399";
+  const bannerColor1 = template?.banner_color_1 || '#003399';
   const bannerColor2 = template?.banner_color_2 || null;
-  const useGradient = template?.banner_gradient && bannerColor2;
-  
-  const hexToRgbLocal = (hex: string): [number, number, number] => {
-    const h = hex.replace("#", "");
-    return [
-      parseInt(h.substring(0, 2), 16) || 0,
-      parseInt(h.substring(2, 4), 16) || 0,
-      parseInt(h.substring(4, 6), 16) || 0,
-    ];
-  };
+  const useBannerGradient = template?.banner_gradient && bannerColor2;
 
-  if (useGradient) {
-    // Simulate gradient with thin vertical strips
+  if (useBannerGradient) {
     const bannerX = margin - 5;
     const bannerW = pageWidth - 2 * (margin - 5);
-    const c1 = hexToRgbLocal(bannerColor1);
-    const c2 = hexToRgbLocal(bannerColor2!);
+    const c1 = hexToRgb(bannerColor1, 0);
+    const c2 = hexToRgb(bannerColor2!, 0);
     const steps = 40;
     const stripW = bannerW / steps;
     for (let i = 0; i < steps; i++) {
@@ -1222,313 +1289,229 @@ export const generateAttestationVillageoise = async (
       const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
       const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
       doc.setFillColor(r, g, b);
-      doc.rect(bannerX + i * stripW, yPos - 5, stripW + 0.5, bannerHeight, "F");
+      doc.rect(bannerX + i * stripW, yPos - 5, stripW + 0.5, bannerHeight, 'F');
     }
   } else {
-    const bc = hexToRgbLocal(bannerColor1);
-    doc.setFillColor(bc[0], bc[1], bc[2]);
-    doc.rect(margin - 5, yPos - 5, pageWidth - 2 * (margin - 5), bannerHeight, "F");
+    const banner = hexToRgb(bannerColor1, 0);
+    doc.setFillColor(banner[0], banner[1], banner[2]);
+    doc.rect(margin - 5, yPos - 5, pageWidth - 2 * (margin - 5), bannerHeight, 'F');
   }
-  
+
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, yPos + 3, { align: "center" });
-  
+  doc.setFont('helvetica', 'bold');
+  doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, yPos + 3, { align: 'center' });
   doc.setFontSize(9);
-  doc.text(`${lotOriginName.toUpperCase()}`, pageWidth / 2, yPos + 10, { align: "center" });
-  
+  doc.text(lotOriginName.toUpperCase(), pageWidth / 2, yPos + 10, { align: 'center' });
   doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
+  doc.setFont('helvetica', 'normal');
   if (arreteApprobation) {
-    doc.text(arreteApprobation, pageWidth / 2, yPos + 17, { align: "center" });
+    doc.text(arreteApprobation, pageWidth / 2, yPos + 17, { align: 'center' });
   }
-  
+
   yPos += bannerHeight + 10;
   doc.setTextColor(...textColor);
 
-  // ===== RENDER TEMPLATE CONTENT =====
-  const templateContent = template?.content || "";
-  
+  const templateContent = template?.content || '';
+
   if (templateContent) {
-    // Build variable replacement map
     const variableData: Record<string, string> = {
-      "{numero_lot}": parcelle.plot_number,
-      "{ilot}": ilotName || "",
-      "{nom_lotissement}": lotOriginName,
-      "{superficie}": parcelle.area > 0 ? parcelle.area.toLocaleString("fr-FR") : "___",
-      "{district}": district,
-      "{commune}": commune,
-      "{village}": village.replace(/^Village de /i, "").trim(),
-      "{chef_village_name}": chef,
-      "{chef_village_titre}": chefTitre,
-      "{arrete_approbation}": arreteApprobation,
-      "{beneficiaire_nom}": acquereur.name,
-      "{beneficiaire_cni}": acquereur.cni_number || "___",
-      "{beneficiaire_profession}": acquereur.profession || "___",
-      "{beneficiaire_telephone}": acquereur.phone || "___",
-      "{beneficiaire_email}": acquereur.email || "___",
-      "{beneficiaire_adresse}": acquereur.address || "___",
-      "{beneficiaire_date_naissance}": acquereur.birth_date ? formatDate(acquereur.birth_date) : "___",
-      "{beneficiaire_lieu_naissance}": acquereur.birth_place || "___",
-      "{date_vente}": formatDate(saleDate),
-      "{ville}": lotissement.city || agency?.city || "___",
-      "{nom_agence}": agency?.name || "___",
-      "{ancien_beneficiaire_nom}": ancienBeneficiaire?.nom || "",
-      "{ancien_beneficiaire_cni}": ancienBeneficiaire?.cni_number || "",
-      "{ancien_beneficiaire_telephone}": ancienBeneficiaire?.telephone || "",
+      '{numero_lot}': parcelle.plot_number,
+      '{ilot}': ilotName || '',
+      '{nom_lotissement}': lotOriginName,
+      '{superficie}': parcelle.area > 0 ? parcelle.area.toLocaleString('fr-FR') : '___',
+      '{district}': district,
+      '{commune}': commune,
+      '{village}': village.replace(/^Village de /i, '').trim(),
+      '{chef_village_name}': chef,
+      '{chef_village_titre}': chefTitre,
+      '{arrete_approbation}': arreteApprobation,
+      '{beneficiaire_nom}': acquereur.name,
+      '{beneficiaire_cni}': acquereur.cni_number || '___',
+      '{beneficiaire_profession}': acquereur.profession || '___',
+      '{beneficiaire_telephone}': acquereur.phone || '___',
+      '{beneficiaire_email}': acquereur.email || '___',
+      '{beneficiaire_adresse}': acquereur.address || '___',
+      '{beneficiaire_date_naissance}': acquereur.birth_date ? formatDate(acquereur.birth_date) : '___',
+      '{beneficiaire_lieu_naissance}': acquereur.birth_place || '___',
+      '{date_vente}': formatDate(saleDate),
+      '{ville}': lotissement.city || agency?.city || '___',
+      '{nom_agence}': agency?.name || '___',
+      '{ancien_beneficiaire_nom}': ancienBeneficiaire?.nom || '',
+      '{ancien_beneficiaire_cni}': ancienBeneficiaire?.cni_number || '',
+      '{ancien_beneficiaire_telephone}': ancienBeneficiaire?.telephone || '',
     };
 
-    // Replace variables
-    let rendered = templateContent;
+    let finalContent = templateContent;
     for (const [key, value] of Object.entries(variableData)) {
-      rendered = rendered.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value || '____________________');
+      finalContent = finalContent.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value || '____________________');
     }
 
-    // If there's an ancien beneficiaire (cession), inject mention into content
-    let finalContent = rendered;
     if (ancienBeneficiaire?.nom) {
-      // Add cession paragraph after variable replacement
-      const cessionMention = `\n\n**Mention de cession :** Ce lot, initialement attribué à **${ancienBeneficiaire.nom}**${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ""}${ancienBeneficiaire.telephone ? `, Contact : ${ancienBeneficiaire.telephone}` : ""}, a été cédé au bénéficiaire désigné ci-dessus.\n`;
-      
-      // Insert before the signature block (look for "Fait à" or end)
-      const faitAIndex = finalContent.toLowerCase().indexOf("fait à");
-      if (faitAIndex > 0) {
-        finalContent = finalContent.substring(0, faitAIndex) + cessionMention + "\n" + finalContent.substring(faitAIndex);
-      } else {
-        finalContent += cessionMention;
-      }
+      const cessionMention = `\n\n**Mention de cession :** Ce lot, initialement attribué à **${ancienBeneficiaire.nom}**${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ''}${ancienBeneficiaire.telephone ? `, Contact : ${ancienBeneficiaire.telephone}` : ''}, a été cédé au bénéficiaire désigné ci-dessus.\n`;
+      const faitAIndex = finalContent.toLowerCase().indexOf('fait à');
+      finalContent = faitAIndex > 0
+        ? `${finalContent.substring(0, faitAIndex)}${cessionMention}\n${finalContent.substring(faitAIndex)}`
+        : `${finalContent}${cessionMention}`;
     }
 
-    // Render Markdown lines to PDF
-    const lines = finalContent.split("\n");
-    const maxWidth = pageWidth - 2 * margin;
-
-    // Use smaller font sizes to fit on single page
+    const lines = finalContent.split('\n');
     const baseFontSize = 9;
     const headingFontSize = 10;
     const lineSpacing = 4.5;
 
     for (const line of lines) {
       const trimmed = line.trim();
+      if (trimmed.startsWith('# ') || trimmed.startsWith('## ')) continue;
 
-      // Skip headings that duplicate the banner (# and ##)
-      if (trimmed.startsWith("# ") || trimmed.startsWith("## ")) continue;
-      // Skip signature block lines that are handled separately below
-      const cleanedLine = trimmed.replace(/^\#{1,4}\s*/, "").replace(/\*\*/g, "").replace(/_/g, "").toUpperCase().trim();
-      if (cleanedLine === "LE CHEF DU VILLAGE") continue;
-      if (cleanedLine.includes("LE CHEF DU VILLAGE")) continue;
+      const cleanedLine = trimmed.replace(/^\#{1,4}\s*/, '').replace(/\*\*/g, '').replace(/_/g, '').toUpperCase().trim();
+      if (cleanedLine === 'LE CHEF DU VILLAGE') continue;
+      if (cleanedLine.includes('LE CHEF DU VILLAGE')) continue;
       if (chef && cleanedLine === chef.toUpperCase()) continue;
-      if (cleanedLine === "SIGNATURE ET CACHET" || cleanedLine === "SIGNATURE ET CACHET DU CHEF" || cleanedLine === "CACHET ET SIGNATURE") continue;
+      if (cleanedLine === 'SIGNATURE ET CACHET' || cleanedLine === 'SIGNATURE ET CACHET DU CHEF' || cleanedLine === 'CACHET ET SIGNATURE') continue;
       if (/^SIGNATURE/i.test(cleanedLine)) continue;
 
-      if (trimmed === "---") {
+      if (trimmed === '---') {
+        ensureSpace(6);
         doc.setDrawColor(200, 200, 200);
         doc.line(margin, yPos, pageWidth - margin, yPos);
         yPos += 5;
         continue;
       }
 
-      if (trimmed === "") {
+      if (!trimmed) {
         yPos += 3;
         continue;
       }
 
-      if (trimmed.startsWith("### ")) {
+      if (trimmed.startsWith('### ')) {
         doc.setFontSize(headingFontSize);
-        doc.setFont("helvetica", "bold");
-        doc.text(trimmed.substring(4), pageWidth / 2, yPos, { align: "center" });
-        yPos += 7;
+        doc.setFont('helvetica', 'bold');
+        writeWrappedLines(trimmed.substring(4), { align: 'center', x: pageWidth / 2, width: contentWidth - 10, lineHeight: 5, extraAfter: 2 });
         continue;
       }
 
-      // Process inline bold **text** and italic _text_
       doc.setFontSize(baseFontSize);
-      const plainText = trimmed.replace(/\*\*/g, "").trim();
-      const isFaitA = plainText.toLowerCase().startsWith("fait à");
-      const isCentered = !isFaitA && (plainText.startsWith("Attestons") || plainText.startsWith("attestons"));
-      
-      // Check if entire line is bold
+      const plainText = trimmed.replace(/\*\*/g, '').trim();
+      const isFaitA = plainText.toLowerCase().startsWith('fait à');
+      const isCentered = !isFaitA && /^attestons/i.test(plainText);
+
       if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
-        const text = trimmed.replace(/\*\*/g, "");
-        doc.setFont("helvetica", isFaitA ? "italic" : "bold");
-        const splitLines = doc.splitTextToSize(text, maxWidth);
-        if (isFaitA) {
-          const rightBlockCenter = pageWidth - margin - 30;
-          doc.text(splitLines, rightBlockCenter, yPos, { align: "center" });
-        } else if (isCentered) {
-          doc.text(splitLines, pageWidth / 2, yPos, { align: "center" });
-        } else {
-          doc.text(splitLines, margin, yPos);
-        }
-        yPos += splitLines.length * lineSpacing + 2;
-        doc.setFont("helvetica", "normal");
+        const textLine = trimmed.replace(/\*\*/g, '');
+        doc.setFont('helvetica', isFaitA ? 'italic' : 'bold');
+        writeWrappedLines(textLine, {
+          align: isFaitA ? 'center' : isCentered ? 'center' : 'left',
+          x: isFaitA ? pageWidth - margin - 30 : isCentered ? pageWidth / 2 : margin,
+          width: isFaitA ? 60 : contentWidth,
+          lineHeight: lineSpacing,
+          extraAfter: 2,
+        });
+        doc.setFont('helvetica', 'normal');
         continue;
       }
 
-      // Check if line is italic
       if (/^_[^_]+_$/.test(trimmed)) {
-        const text = trimmed.replace(/_/g, "");
         doc.setFontSize(8);
-        doc.setFont("helvetica", "italic");
-        doc.text(text, pageWidth / 2, yPos, { align: "center" });
-        yPos += 5;
-        doc.setFont("helvetica", "normal");
+        doc.setFont('helvetica', 'italic');
+        writeWrappedLines(trimmed.replace(/_/g, ''), { align: 'center', x: pageWidth / 2, width: contentWidth - 20, lineHeight: 4, extraAfter: 1 });
+        doc.setFont('helvetica', 'normal');
         continue;
       }
 
-      // Mixed content with bold segments
-      if (trimmed.includes("**")) {
-        let x = margin;
-        const parts = trimmed.split(/(\*\*[^*]+\*\*)/);
-        for (const part of parts) {
-          if (part.startsWith("**") && part.endsWith("**")) {
-            doc.setFont("helvetica", "bold");
-            const text = part.replace(/\*\*/g, "");
-            doc.text(text, x, yPos);
-            x += doc.getTextWidth(text);
-          } else if (part) {
-            doc.setFont("helvetica", "normal");
-            doc.text(part, x, yPos);
-            x += doc.getTextWidth(part);
-          }
-        }
-        doc.setFont("helvetica", "normal");
-        yPos += 5;
+      if (trimmed.includes('**')) {
+        doc.setFontSize(baseFontSize);
+        writeMixedMarkdownLine(trimmed, lineSpacing);
         continue;
       }
 
-      // Plain text
-      doc.setFont("helvetica", "normal");
-      const splitLines = doc.splitTextToSize(trimmed, maxWidth);
-      doc.text(splitLines, margin, yPos);
-      yPos += splitLines.length * lineSpacing + 1.5;
+      doc.setFont('helvetica', 'normal');
+      writeWrappedLines(trimmed, {
+        align: isFaitA ? 'center' : isCentered ? 'center' : 'left',
+        x: isFaitA ? pageWidth - margin - 30 : isCentered ? pageWidth / 2 : margin,
+        width: isFaitA ? 60 : contentWidth,
+        lineHeight: lineSpacing,
+        extraAfter: 1.5,
+      });
     }
   } else {
-    // Fallback: hardcoded body if no template content (matches real attestation format)
     doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    const villageName2 = village.replace(/^Village de /i, "").trim() || "____________________";
-    
-    doc.text("Je soussigné ", margin, yPos);
-    const jsX = margin + doc.getTextWidth("Je soussigné ");
-    doc.setFont("helvetica", "bold");
-    doc.text(chef, jsX, yPos);
-    const chefEndX = jsX + doc.getTextWidth(chef);
-    doc.setFont("helvetica", "normal");
-    doc.text(` Chef du village de ${villageName2} certifie`, chefEndX, yPos);
-    yPos += 8;
+    doc.setFont('helvetica', 'normal');
+    const villageName2 = village.replace(/^Village de /i, '').trim() || '____________________';
 
-    doc.text("Mme/Mlle/M ", margin, yPos);
-    doc.setFont("helvetica", "bold");
-    doc.text(acquereur.name, margin + doc.getTextWidth("Mme/Mlle/M "), yPos);
-    doc.setFont("helvetica", "normal");
-    yPos += 8;
+    writeMixedMarkdownLine(`Je soussigné **${chef}** Chef du village de **${villageName2}** certifie`, 5);
+    yPos += 2;
+    writeMixedMarkdownLine(`Mme/Mlle/M **${acquereur.name}**`, 5);
+    yPos += 2;
 
     if (acquereur.birth_date || acquereur.birth_place) {
       const birthParts = [];
       if (acquereur.birth_date) birthParts.push(formatDate(acquereur.birth_date));
       if (acquereur.birth_place) birthParts.push(`à ${acquereur.birth_place}`);
-      doc.text(`Né(e) le : ${birthParts.join(" ")}`, margin, yPos);
-      yPos += 6;
+      writeWrappedLines(`Né(e) le : ${birthParts.join(' ')}`, { lineHeight: 5, extraAfter: 1 });
     }
     if (acquereur.address) {
-      doc.text(`Adresse : ${acquereur.address}`, margin, yPos);
-      yPos += 6;
+      writeWrappedLines(`Adresse : ${acquereur.address}`, { lineHeight: 5, extraAfter: 1 });
     }
     if (acquereur.phone) {
-      doc.text(`Tél : ${acquereur.phone}`, margin, yPos);
-      yPos += 6;
+      writeWrappedLines(`Tél : ${acquereur.phone}`, { lineHeight: 5, extraAfter: 1 });
     }
     if (acquereur.cni_number) {
-      doc.text(`CNI N° : ${acquereur.cni_number}`, margin, yPos);
-      yPos += 8;
+      writeWrappedLines(`CNI N° : ${acquereur.cni_number}`, { lineHeight: 5, extraAfter: 2 });
     }
 
-    // Attribution line
-    doc.setFont("helvetica", "normal");
-    const attrText = `Est attributaire du lot `;
-    doc.text(attrText, margin, yPos);
-    let attrX = margin + doc.getTextWidth(attrText);
-    doc.setFont("helvetica", "bold");
-    doc.text(parcelle.plot_number, attrX, yPos);
-    attrX += doc.getTextWidth(parcelle.plot_number);
-    doc.setFont("helvetica", "normal");
-    if (ilotName) {
-      const ilotText = ` ilot ${ilotName}`;
-      doc.text(ilotText, attrX, yPos);
-      attrX += doc.getTextWidth(ilotText);
-    }
-    yPos += 6;
-    const lotLine = `du lotissement ${lotOriginName.toUpperCase()}, sise dans la commune de ${commune || "___"} suivant le plan d'urbanisation.`;
-    const lotLines = doc.splitTextToSize(lotLine, pageWidth - 2 * margin);
-    doc.text(lotLines, margin, yPos);
-    yPos += lotLines.length * 5 + 8;
+    writeMixedMarkdownLine(
+      `Est attributaire du **Lot ${parcelle.plot_number}**${ilotName ? ` ilot **${ilotName}**` : ''} du lotissement **${lotOriginName.toUpperCase()}**, sise dans la commune de ${commune || '___'} suivant le plan d'urbanisation.`,
+      5
+    );
+    yPos += 3;
 
-    // Irrevocable clause
+    ensureSpace(8);
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPos - 3, pageWidth - margin, yPos - 3);
     yPos += 5;
-    
-    const irrevocable = `Les lots cédés par le Chef ${chef} sont incontestables et irrévocables.`;
-    const irrevLines = doc.splitTextToSize(irrevocable, pageWidth - 2 * margin);
-    doc.text(irrevLines, margin, yPos);
-    yPos += irrevLines.length * 5 + 5;
 
-    const autorise = `Par conséquent Mme/Mlle/M ${acquereur.name} est autorisé(e) à engager la procédure en vigueur en Côte d'Ivoire pour user en toute quiétude de son droit de propriété.`;
-    const autLines = doc.splitTextToSize(autorise, pageWidth - 2 * margin);
-    doc.text(autLines, margin, yPos);
-    yPos += autLines.length * 5 + 5;
+    writeWrappedLines(`Les lots cédés par le Chef ${chef} sont incontestables et irrévocables.`, { lineHeight: 5, extraAfter: 2 });
+    writeWrappedLines(
+      `Par conséquent Mme/Mlle/M ${acquereur.name} est autorisé(e) à engager la procédure en vigueur en Côte d'Ivoire pour user en toute quiétude de son droit de propriété.`,
+      { lineHeight: 5, extraAfter: 2 }
+    );
+    writeWrappedLines(`En foi de quoi, nous lui délivrons cette attestation pour servir et valoir ce que de droit.`, { lineHeight: 5, extraAfter: 5 });
 
-    const legal = `En foi de quoi, nous lui délivrons cette attestation pour servir et valoir ce que de droit.`;
-    const legalLines = doc.splitTextToSize(legal, pageWidth - 2 * margin);
-    doc.text(legalLines, margin, yPos);
-    yPos += legalLines.length * 5 + 10;
-
-    // Cession mention if applicable
     if (ancienBeneficiaire?.nom) {
-      doc.setFont("helvetica", "bold");
-      doc.text("Mention de cession : ", margin, yPos);
-      doc.setFont("helvetica", "normal");
-      const cessionText = `Ce lot, initialement attribué à ${ancienBeneficiaire.nom}${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ""}${ancienBeneficiaire.telephone ? `, Contact : ${ancienBeneficiaire.telephone}` : ""}, a été cédé au bénéficiaire désigné ci-dessus.`;
-      const cessionLines = doc.splitTextToSize(cessionText, pageWidth - 2 * margin);
-      doc.text(cessionLines, margin, yPos + 5);
-      yPos += cessionLines.length * 5 + 10;
+      const cessionText = `Ce lot, initialement attribué à ${ancienBeneficiaire.nom}${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ''}${ancienBeneficiaire.telephone ? `, Contact : ${ancienBeneficiaire.telephone}` : ''}, a été cédé au bénéficiaire désigné ci-dessus.`;
+      writeMixedMarkdownLine(`**Mention de cession :** ${cessionText}`, 5);
+      yPos += 4;
     }
 
-    const city = lotissement.city || agency?.city || "____________________";
+    const city = lotissement.city || agency?.city || '____________________';
     doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, pageWidth - margin, yPos, { align: "right" });
+    doc.setFont('helvetica', 'bold');
+    writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'right', x: pageWidth - margin, width: 70, lineHeight: 5, extraAfter: 2 });
   }
 
-  // ===== BLOC SIGNATURE (aligné à droite) =====
   const rightBlockCenter = pageWidth - margin - 30;
-  
-  // "Fait à..." line - right aligned (only if not already in template content)
-  const templateHasFaitA = templateContent && templateContent.toLowerCase().includes("fait à");
+  const templateHasFaitA = templateContent && templateContent.toLowerCase().includes('fait à');
   if (!templateHasFaitA) {
+    ensureSpace(30);
     yPos += 5;
-    const city = lotissement.city || agency?.city || "____________________";
+    const city = lotissement.city || agency?.city || '____________________';
     doc.setFontSize(9);
-    doc.setFont("helvetica", "italic");
+    doc.setFont('helvetica', 'italic');
     doc.setTextColor(...textColor);
-    doc.text(`Fait à ${city}, le ${formatDate(saleDate)}`, rightBlockCenter, yPos, { align: "center" });
-    yPos += 6;
+    writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 1 });
   }
 
+  ensureSpace(45);
   doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(...primaryColor);
-  doc.text("LE CHEF DU VILLAGE", rightBlockCenter, yPos, { align: "center" });
+  doc.text('LE CHEF DU VILLAGE', rightBlockCenter, yPos, { align: 'center' });
   yPos += 5;
-  
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-  doc.text(chef, rightBlockCenter, yPos, { align: "center" });
-  yPos += 8;
 
-  // Chef stamp and signature image
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...textColor);
+  writeWrappedLines(chef, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 3 });
+
   const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
   if (chefImageUrl) {
     try {
@@ -1540,23 +1523,23 @@ export const generateAttestationVillageoise = async (
         reader.onerror = () => resolve(null);
         reader.readAsDataURL(blob);
       });
-      
+
       if (base64) {
+        ensureSpace(32);
         const imgWidth = 45;
         const imgHeight = 28;
-        doc.addImage(base64, "PNG", rightBlockCenter - imgWidth / 2, yPos, imgWidth, imgHeight);
+        doc.addImage(base64, 'PNG', rightBlockCenter - imgWidth / 2, yPos, imgWidth, imgHeight);
         yPos += 30;
       }
     } catch {
       yPos += 12;
     }
   } else {
+    ensureSpace(14);
     doc.setDrawColor(150, 150, 150);
     doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
     yPos += 12;
   }
-
-  // No footer for attestation villageoise
 
   return doc;
 };

@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Star, FileText, Loader2, Copy, Info, Eye, Edit } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, FileText, Loader2, Copy, Info, Eye, Edit, Upload, X, ImageIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {

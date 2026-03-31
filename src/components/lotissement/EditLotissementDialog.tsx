@@ -276,7 +276,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
-                Modèle d'attestation villageoise
+                Modèle d'attestation d'attribution
               </Label>
               <Select
                 value={formData.attestation_template_id || "none"}
@@ -287,15 +287,43 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun modèle</SelectItem>
-                  {attestationTemplates.map((t) => (
+                  {attestationTemplates.filter(t => (t as any).template_type !== "cession").map((t) => (
                     <SelectItem key={t.id} value={t.id}>
-                      {t.name} {t.is_default ? "⭐" : ""} — {(t as any).template_type === "cession" ? "Cession" : "Attribution"}
+                      {t.name} {t.is_default ? "⭐" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Ce modèle sera utilisé pour générer les attestations d'attribution de ce lotissement
+                Ce modèle sera utilisé pour générer les attestations d'attribution
+              </p>
+            </div>
+          )}
+
+          {attestationTemplates.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-orange-500" />
+                Modèle d'attestation de cession
+              </Label>
+              <Select
+                value={formData.cession_template_id || "none"}
+                onValueChange={(v) => setFormData({ ...formData, cession_template_id: v === "none" ? "" : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un modèle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun modèle</SelectItem>
+                  {attestationTemplates.filter(t => (t as any).template_type === "cession").map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} {t.is_default ? "⭐" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Ce modèle sera utilisé pour générer les attestations de cession
               </p>
             </div>
           )}

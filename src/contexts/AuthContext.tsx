@@ -27,10 +27,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener BEFORE checking session
+    let initialSessionChecked = false;
+
+    // Check for existing session FIRST to avoid race conditions
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+      initialSessionChecked = true;
+    });
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("[Auth] Event:", event, "Session:", !!session);
+
+        // Ignore INITIAL_SESSION event if we already handled it via getSession
+        if (event === 'INITIAL_SESSION' && initialSessionChecked) {
+          return;
+        }
         
         // If token refresh failed, try to recover the session before logging out
         if (event === 'TOKEN_REFRESHED' && !session) {
@@ -44,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // Don't immediately clear user on transient SIGNED_OUT if we had a session
-        // This handles cases where refresh temporarily fails due to network issues
         if (event === 'SIGNED_OUT' && user) {
           const { data } = await supabase.auth.getSession();
           if (data.session) {
@@ -57,16 +71,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        if (!initialSessionChecked) {
+          setLoading(false);
+          initialSessionChecked = true;
+        } else {
+          setLoading(false);
+        }
       }
     );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
 
     // Set up periodic session refresh every 10 minutes to prevent token expiry
     const refreshInterval = setInterval(async () => {

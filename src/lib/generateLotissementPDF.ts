@@ -1406,6 +1406,7 @@ export const generateAttestationVillageoise = async (
     for (const line of lines) {
       const trimmed = line.trim();
       if (trimmed.startsWith('# ') || trimmed.startsWith('## ')) continue;
+      if (isCessionTemplate && /^N°[\.\s…]+$/i.test(trimmed.replace(/\*\*/g, ''))) continue;
 
       const cleanedLine = trimmed.replace(/^\#{1,4}\s*/, '').replace(/\*\*/g, '').replace(/_/g, '').toUpperCase().trim();
       if (cleanedLine === 'LE CHEF DU VILLAGE') continue;

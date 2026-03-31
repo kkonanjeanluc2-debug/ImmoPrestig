@@ -264,7 +264,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
               </div>
             </div>
 
-            {renderStampUpload()}
+            
           </div>
 
           <Separator className="my-2" />

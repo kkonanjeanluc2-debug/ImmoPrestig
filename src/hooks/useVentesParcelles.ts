@@ -62,6 +62,7 @@ export interface VenteWithDetails extends VenteParcelle {
       chef_stamp_url?: string;
       chef_signature_url?: string;
       attestation_template_id?: string;
+      cession_template_id?: string;
     };
   };
   acquereur?: {

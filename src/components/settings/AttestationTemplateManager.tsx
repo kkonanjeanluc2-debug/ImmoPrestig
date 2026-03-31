@@ -132,6 +132,7 @@ const emptyForm: AttestationTemplateInsert = {
   doc_bg_gradient: false,
   village_logo_url: null,
   template_type: "attribution",
+  header_line_color: "#FF8C00",
 };
 
 export function AttestationTemplateManager({ templateType = "attribution" }: { templateType?: string }) {

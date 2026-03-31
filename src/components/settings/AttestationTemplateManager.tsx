@@ -231,6 +231,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       doc_bg_gradient: t.doc_bg_gradient || false,
       village_logo_url: t.village_logo_url || null,
       template_type: t.template_type || templateType,
+      header_line_color: t.header_line_color || "#FF8C00",
     });
     setDialogOpen(true);
   };

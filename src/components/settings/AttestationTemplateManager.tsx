@@ -55,6 +55,9 @@ const SAMPLE_DATA: Record<string, string> = {
   "{date_vente}": new Date().toLocaleDateString("fr-FR"),
   "{ville}": "Abidjan",
   "{nom_agence}": "Agence Immobilière ABC",
+  "{cedant_nom}": "TRAORE Abdoulaye",
+  "{cedant_cni}": "CI-9876543210",
+  "{cedant_telephone}": "+225 05 06 07 08 09",
 };
 
 function AttestationPreview({ content }: { content: string }) {

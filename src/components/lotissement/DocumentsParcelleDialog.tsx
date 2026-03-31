@@ -354,7 +354,7 @@ export function DocumentsParcelleDialog({
                 try {
                   const lotissement = vente.parcelle?.lotissement as any;
                   const ilotName = (vente.parcelle as any)?.ilot?.name || null;
-                  const usedTemplate = cessionTemplate || attestationTemplate;
+                  const usedTemplate = cessionTemplate;
                   const templateData: AttestationTemplateData | null = usedTemplate ? {
                     district: usedTemplate.district,
                     commune: usedTemplate.commune,

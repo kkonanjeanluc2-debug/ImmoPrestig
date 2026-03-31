@@ -129,7 +129,7 @@ const emptyForm: AttestationTemplateInsert = {
   village_logo_url: null,
 };
 
-export function AttestationTemplateManager() {
+export function AttestationTemplateManager({ templateType = "attribution" }: { templateType?: string }) {
   const { data: templates = [], isLoading } = useAttestationTemplates();
   const createMutation = useCreateAttestationTemplate();
   const updateMutation = useUpdateAttestationTemplate();

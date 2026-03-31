@@ -1,0 +1,1 @@
+ALTER TABLE public.attestation_templates ADD COLUMN header_line_color text DEFAULT '#FF8C00';

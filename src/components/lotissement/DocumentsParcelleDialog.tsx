@@ -264,6 +264,7 @@ export function DocumentsParcelleDialog({
                     doc_bg_color_2: (attestationTemplate as any).doc_bg_color_2 || null,
                     doc_bg_gradient: (attestationTemplate as any).doc_bg_gradient || false,
                     village_logo_url: (attestationTemplate as any).village_logo_url || null,
+                    header_line_color: (attestationTemplate as any).header_line_color || null,
                   } : null;
                   const chefImages: AttestationChefImages = {
                     stamp_url: lotissement?.chef_stamp_url || null,

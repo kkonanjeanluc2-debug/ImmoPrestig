@@ -209,7 +209,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
     setEditingTemplate(null);
     setForm({
       name: `${t.name} (copie)`,
-      content: t.content || DEFAULT_ATTESTATION_TEMPLATE,
+      content: t.content || defaultContent,
       district: t.district,
       commune: t.commune,
       village: t.village,
@@ -225,6 +225,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       doc_bg_color_2: t.doc_bg_color_2 || null,
       doc_bg_gradient: t.doc_bg_gradient || false,
       village_logo_url: t.village_logo_url || null,
+      template_type: t.template_type || templateType,
     });
     setDialogOpen(true);
   };

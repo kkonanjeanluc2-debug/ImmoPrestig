@@ -132,10 +132,14 @@ const emptyForm: AttestationTemplateInsert = {
 };
 
 export function AttestationTemplateManager({ templateType = "attribution" }: { templateType?: string }) {
-  const { data: templates = [], isLoading } = useAttestationTemplates();
+  const { data: allTemplates = [], isLoading } = useAttestationTemplates();
+  const templates = useMemo(() => allTemplates.filter(t => (t.template_type || 'attribution') === templateType), [allTemplates, templateType]);
   const createMutation = useCreateAttestationTemplate();
   const updateMutation = useUpdateAttestationTemplate();
   const deleteMutation = useDeleteAttestationTemplate();
+  const isCession = templateType === "cession";
+  const defaultContent = isCession ? DEFAULT_CESSION_TEMPLATE : DEFAULT_ATTESTATION_TEMPLATE;
+  const variables = isCession ? CESSION_VARIABLES : ATTESTATION_VARIABLES;
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

@@ -35,7 +35,7 @@ En foi de quoi, cette présente attestation de cession est faite pour servir et 
 
 **Fait à {ville}, le {date_vente}**
 
-### LE CÉDANT                                          AGENCE / PROMOTEUR
+**LE CÉDANT**                                                                    **AGENCE / PROMOTEUR**
 `;
 
 export const CESSION_VARIABLES = [

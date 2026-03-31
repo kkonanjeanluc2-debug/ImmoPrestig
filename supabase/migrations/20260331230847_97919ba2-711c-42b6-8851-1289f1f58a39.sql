@@ -1,0 +1,1 @@
+ALTER TABLE public.attestation_templates ADD COLUMN template_type text NOT NULL DEFAULT 'attribution';

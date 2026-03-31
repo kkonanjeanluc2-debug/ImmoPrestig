@@ -679,6 +679,7 @@ export type Database = {
           is_default: boolean
           lotissement_origin_name: string | null
           name: string
+          template_type: string
           updated_at: string
           user_id: string
           village: string | null
@@ -702,6 +703,7 @@ export type Database = {
           is_default?: boolean
           lotissement_origin_name?: string | null
           name: string
+          template_type?: string
           updated_at?: string
           user_id: string
           village?: string | null
@@ -725,6 +727,7 @@ export type Database = {
           is_default?: boolean
           lotissement_origin_name?: string | null
           name?: string
+          template_type?: string
           updated_at?: string
           user_id?: string
           village?: string | null

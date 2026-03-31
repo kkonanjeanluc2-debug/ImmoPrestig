@@ -32,6 +32,7 @@ import {
   type AttestationTemplateInsert,
 } from "@/hooks/useAttestationTemplates";
 import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES, replaceAttestationVariables } from "@/lib/defaultAttestationTemplate";
+import { DEFAULT_CESSION_TEMPLATE, CESSION_VARIABLES } from "@/lib/defaultCessionTemplate";
 import { supabase } from "@/integrations/supabase/client";
 
 const SAMPLE_DATA: Record<string, string> = {
@@ -54,6 +55,9 @@ const SAMPLE_DATA: Record<string, string> = {
   "{date_vente}": new Date().toLocaleDateString("fr-FR"),
   "{ville}": "Abidjan",
   "{nom_agence}": "Agence Immobilière ABC",
+  "{cedant_nom}": "TRAORE Abdoulaye",
+  "{cedant_cni}": "CI-9876543210",
+  "{cedant_telephone}": "+225 05 06 07 08 09",
 };
 
 function AttestationPreview({ content }: { content: string }) {
@@ -127,13 +131,18 @@ const emptyForm: AttestationTemplateInsert = {
   doc_bg_color_2: null,
   doc_bg_gradient: false,
   village_logo_url: null,
+  template_type: "attribution",
 };
 
 export function AttestationTemplateManager({ templateType = "attribution" }: { templateType?: string }) {
-  const { data: templates = [], isLoading } = useAttestationTemplates();
+  const { data: allTemplates = [], isLoading } = useAttestationTemplates();
+  const templates = useMemo(() => allTemplates.filter(t => (t.template_type || 'attribution') === templateType), [allTemplates, templateType]);
   const createMutation = useCreateAttestationTemplate();
   const updateMutation = useUpdateAttestationTemplate();
   const deleteMutation = useDeleteAttestationTemplate();
+  const isCession = templateType === "cession";
+  const defaultContent = isCession ? DEFAULT_CESSION_TEMPLATE : DEFAULT_ATTESTATION_TEMPLATE;
+  const variables = isCession ? CESSION_VARIABLES : ATTESTATION_VARIABLES;
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -170,7 +179,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
   const openCreate = () => {
     setEditingTemplate(null);
-    setForm({ ...emptyForm, is_default: templates.length === 0 });
+    setForm({ ...emptyForm, content: defaultContent, template_type: templateType, is_default: templates.length === 0 });
     setDialogOpen(true);
   };
 
@@ -178,7 +187,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
     setEditingTemplate(t);
     setForm({
       name: t.name,
-      content: t.content || DEFAULT_ATTESTATION_TEMPLATE,
+      content: t.content || defaultContent,
       district: t.district,
       commune: t.commune,
       village: t.village,
@@ -194,6 +203,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       doc_bg_color_2: t.doc_bg_color_2 || null,
       doc_bg_gradient: t.doc_bg_gradient || false,
       village_logo_url: t.village_logo_url || null,
+      template_type: t.template_type || templateType,
     });
     setDialogOpen(true);
   };
@@ -202,7 +212,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
     setEditingTemplate(null);
     setForm({
       name: `${t.name} (copie)`,
-      content: t.content || DEFAULT_ATTESTATION_TEMPLATE,
+      content: t.content || defaultContent,
       district: t.district,
       commune: t.commune,
       village: t.village,
@@ -218,6 +228,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       doc_bg_color_2: t.doc_bg_color_2 || null,
       doc_bg_gradient: t.doc_bg_gradient || false,
       village_logo_url: t.village_logo_url || null,
+      template_type: t.template_type || templateType,
     });
     setDialogOpen(true);
   };
@@ -284,10 +295,12 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Modèles d'attestation villageoise
+                {isCession ? "Modèles d'attestation de cession" : "Modèles d'attestation villageoise"}
               </CardTitle>
               <CardDescription>
-                Créez des modèles avec variables dynamiques pour générer automatiquement les attestations d'attribution
+                {isCession
+                  ? "Créez des modèles pour générer automatiquement les attestations de cession (signataires : Cédant et Agence/Promoteur)"
+                  : "Créez des modèles avec variables dynamiques pour générer automatiquement les attestations d'attribution"}
               </CardDescription>
             </div>
             <Button onClick={openCreate} size="sm">
@@ -652,7 +665,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 <span className="text-sm font-medium">Variables disponibles</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {ATTESTATION_VARIABLES.map((v) => (
+                {variables.map((v) => (
                   <TooltipProvider key={v.variable}>
                     <Tooltip>
                       <TooltipTrigger asChild>

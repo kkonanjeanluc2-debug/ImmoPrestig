@@ -125,6 +125,7 @@ const emptyForm: AttestationTemplateInsert = {
   doc_bg_color_1: null,
   doc_bg_color_2: null,
   doc_bg_gradient: false,
+  village_logo_url: null,
 };
 
 export function AttestationTemplateManager() {

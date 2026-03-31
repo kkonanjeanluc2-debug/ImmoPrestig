@@ -430,6 +430,7 @@ export function DocumentsParcelleDialog({
                 <Download className="h-4 w-4" />
               )}
             </Button>
+          </div>
 
           {/* Promesse de vente - Only for reserved or sold parcels */}
           <div className="flex items-center justify-between p-3 border rounded-lg bg-amber-50 dark:bg-amber-950/20">

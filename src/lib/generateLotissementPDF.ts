@@ -1204,7 +1204,7 @@ export const generateAttestationVillageoise = async (
 
   drawDocumentBackground();
 
-  // Village logo (top-left like the reference image)
+  // Village logo (top-left AND top-right like the reference image)
   let headerLeftX = margin;
   const villageLogoUrl = template?.village_logo_url;
   if (villageLogoUrl) {
@@ -1212,7 +1212,10 @@ export const generateAttestationVillageoise = async (
       const logoBase64 = await loadImageAsBase64(villageLogoUrl);
       if (logoBase64) {
         const logoSize = 22;
+        // Top-left
         doc.addImage(logoBase64, 'PNG', margin, yPos - 3, logoSize, logoSize);
+        // Top-right
+        doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, yPos - 3, logoSize, logoSize);
         headerLeftX = margin + logoSize + 4;
       }
     } catch {

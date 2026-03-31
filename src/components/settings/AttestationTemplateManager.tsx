@@ -140,6 +140,33 @@ export function AttestationTemplateManager() {
   const [editingTemplate, setEditingTemplate] = useState<AttestationTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<AttestationTemplate | null>(null);
   const [form, setForm] = useState<AttestationTemplateInsert>(emptyForm);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `village-logo-${Date.now()}.${fileExt}`;
+      const filePath = `attestation-logos/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('agency-assets')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from('agency-assets')
+        .getPublicUrl(filePath);
+      updateField('village_logo_url', urlData.publicUrl);
+      toast.success("Logo du village importé");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'import du logo");
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
 
   const openCreate = () => {
     setEditingTemplate(null);

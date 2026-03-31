@@ -1240,15 +1240,18 @@ export const generateAttestationVillageoise = async (
     }
     yPos += 22;
 
-    // Colored dashes line
-    const lineColor = hexToRgb(template?.header_line_color || '#FF8C00', 0);
-    doc.setDrawColor(lineColor[0], lineColor[1], lineColor[2]);
+    // Colored dashes line (supports up to 4 alternating colors)
+    let dashColors: string[] = ['#FF8C00'];
+    const rawLineColor = template?.header_line_color || '#FF8C00';
+    try { const parsed = JSON.parse(rawLineColor); if (Array.isArray(parsed)) dashColors = parsed; } catch { dashColors = [rawLineColor]; }
     doc.setLineWidth(1.5);
     const dashWidth = 12;
     const dashGap = 5;
     const totalDashesWidth = 5 * dashWidth + 4 * dashGap;
     const dashStartX = (pageWidth - totalDashesWidth) / 2;
     for (let i = 0; i < 5; i++) {
+      const dc = hexToRgb(dashColors[i % dashColors.length], 0);
+      doc.setDrawColor(dc[0], dc[1], dc[2]);
       const x = dashStartX + i * (dashWidth + dashGap);
       doc.line(x, yPos, x + dashWidth, yPos);
     }

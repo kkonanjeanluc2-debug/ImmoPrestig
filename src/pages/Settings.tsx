@@ -415,7 +415,18 @@ const Settings = () => {
 
           {hasLotissement && canManageTemplates && (
             <TabsContent value="attestation-templates">
-              <AttestationTemplateManager />
+              <Tabs defaultValue="attribution" className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="attribution">Attribution</TabsTrigger>
+                  <TabsTrigger value="cession">Cession</TabsTrigger>
+                </TabsList>
+                <TabsContent value="attribution">
+                  <AttestationTemplateManager />
+                </TabsContent>
+                <TabsContent value="cession">
+                  <AttestationTemplateManager templateType="cession" />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
           )}
 

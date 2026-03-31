@@ -245,7 +245,7 @@ export function DocumentsParcelleDialog({
             <div>
               <p className="font-medium text-sm">Attestation villageoise</p>
               <p className="text-xs text-muted-foreground">
-                Attestation de cession coutumière
+                Attestation d'attribution
               </p>
             </div>
             <Button

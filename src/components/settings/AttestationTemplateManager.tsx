@@ -662,7 +662,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 <span className="text-sm font-medium">Variables disponibles</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {ATTESTATION_VARIABLES.map((v) => (
+                {variables.map((v) => (
                   <TooltipProvider key={v.variable}>
                     <Tooltip>
                       <TooltipTrigger asChild>

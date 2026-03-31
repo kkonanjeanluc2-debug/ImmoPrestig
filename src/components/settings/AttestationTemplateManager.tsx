@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Star, FileText, Loader2, Copy, Info, Eye, Edit } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, FileText, Loader2, Copy, Info, Eye, Edit, Upload, X, ImageIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
@@ -32,6 +32,7 @@ import {
   type AttestationTemplateInsert,
 } from "@/hooks/useAttestationTemplates";
 import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES, replaceAttestationVariables } from "@/lib/defaultAttestationTemplate";
+import { supabase } from "@/integrations/supabase/client";
 
 const SAMPLE_DATA: Record<string, string> = {
   "{numero_lot}": "A-001",
@@ -125,6 +126,7 @@ const emptyForm: AttestationTemplateInsert = {
   doc_bg_color_1: null,
   doc_bg_color_2: null,
   doc_bg_gradient: false,
+  village_logo_url: null,
 };
 
 export function AttestationTemplateManager() {
@@ -138,6 +140,33 @@ export function AttestationTemplateManager() {
   const [editingTemplate, setEditingTemplate] = useState<AttestationTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<AttestationTemplate | null>(null);
   const [form, setForm] = useState<AttestationTemplateInsert>(emptyForm);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `village-logo-${Date.now()}.${fileExt}`;
+      const filePath = `attestation-logos/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('agency-assets')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from('agency-assets')
+        .getPublicUrl(filePath);
+      updateField('village_logo_url', urlData.publicUrl);
+      toast.success("Logo du village importé");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'import du logo");
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
 
   const openCreate = () => {
     setEditingTemplate(null);
@@ -164,6 +193,7 @@ export function AttestationTemplateManager() {
       doc_bg_color_1: t.doc_bg_color_1 || null,
       doc_bg_color_2: t.doc_bg_color_2 || null,
       doc_bg_gradient: t.doc_bg_gradient || false,
+      village_logo_url: t.village_logo_url || null,
     });
     setDialogOpen(true);
   };
@@ -187,6 +217,7 @@ export function AttestationTemplateManager() {
       doc_bg_color_1: t.doc_bg_color_1 || null,
       doc_bg_color_2: t.doc_bg_color_2 || null,
       doc_bg_gradient: t.doc_bg_gradient || false,
+      village_logo_url: t.village_logo_url || null,
     });
     setDialogOpen(true);
   };
@@ -401,6 +432,56 @@ export function AttestationTemplateManager() {
                   <Input value={form.arrete_approbation} onChange={(e) => updateField("arrete_approbation", e.target.value)} placeholder="Ex: Approuvé par Arrêté N°20-00140/MCLU..." />
                 </div>
               </div>
+            </div>
+
+            <Separator />
+
+            {/* Logo du village */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Logo du village</Label>
+              <p className="text-xs text-muted-foreground">
+                Importez le logo/image du village qui apparaîtra en haut à gauche de l'attestation d'attribution.
+              </p>
+              {form.village_logo_url ? (
+                <div className="flex items-center gap-4">
+                  <img
+                    src={form.village_logo_url}
+                    alt="Logo du village"
+                    className="w-20 h-20 object-contain border rounded-lg"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateField('village_logo_url', null)}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Supprimer
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                  >
+                    {uploadingLogo ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    Importer le logo du village
+                  </Button>
+                </div>
+              )}
             </div>
 
             <Separator />

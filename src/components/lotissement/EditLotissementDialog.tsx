@@ -53,6 +53,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         total_area: lotissement.total_area?.toString() || "",
         description: lotissement.description || "",
         attestation_template_id: (lotissement as any).attestation_template_id || "",
+        cession_template_id: (lotissement as any).cession_template_id || "",
         guide_template_id: (lotissement as any).guide_template_id || "",
         chef_village_name: lotissement.chef_village_name || "",
         chef_village_titre: lotissement.chef_village_titre || "",

@@ -292,10 +292,12 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Modèles d'attestation villageoise
+                {isCession ? "Modèles d'attestation de cession" : "Modèles d'attestation villageoise"}
               </CardTitle>
               <CardDescription>
-                Créez des modèles avec variables dynamiques pour générer automatiquement les attestations d'attribution
+                {isCession
+                  ? "Créez des modèles pour générer automatiquement les attestations de cession (signataires : Cédant et Agence/Promoteur)"
+                  : "Créez des modèles avec variables dynamiques pour générer automatiquement les attestations d'attribution"}
               </CardDescription>
             </div>
             <Button onClick={openCreate} size="sm">

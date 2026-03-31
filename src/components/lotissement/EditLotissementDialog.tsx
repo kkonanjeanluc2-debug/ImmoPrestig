@@ -286,7 +286,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
                   <SelectItem value="none">Aucun modèle</SelectItem>
                   {attestationTemplates.map((t) => (
                     <SelectItem key={t.id} value={t.id}>
-                      {t.name} {t.is_default ? "⭐" : ""}
+                      {t.name} {t.is_default ? "⭐" : ""} — {(t as any).template_type === "cession" ? "Cession" : "Attribution"}
                     </SelectItem>
                   ))}
                 </SelectContent>

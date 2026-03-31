@@ -32,6 +32,7 @@ import {
   type AttestationTemplateInsert,
 } from "@/hooks/useAttestationTemplates";
 import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES, replaceAttestationVariables } from "@/lib/defaultAttestationTemplate";
+import { supabase } from "@/integrations/supabase/client";
 
 const SAMPLE_DATA: Record<string, string> = {
   "{numero_lot}": "A-001",

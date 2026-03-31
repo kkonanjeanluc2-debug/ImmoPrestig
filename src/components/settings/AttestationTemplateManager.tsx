@@ -449,7 +449,8 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
             <Separator />
 
-            {/* Logo du village */}
+            {/* Logo du village - only for attribution */}
+            {!isCession && (
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Logo du village</Label>
               <p className="text-xs text-muted-foreground">
@@ -496,6 +497,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 </div>
               )}
             </div>
+            )}
 
             <Separator />
 

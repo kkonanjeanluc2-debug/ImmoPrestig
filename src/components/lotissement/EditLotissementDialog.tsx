@@ -110,6 +110,7 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
         total_area: formData.total_area ? parseFloat(formData.total_area) : null,
         description: formData.description.trim() || null,
         attestation_template_id: formData.attestation_template_id || null,
+        cession_template_id: formData.cession_template_id || null,
         guide_template_id: formData.guide_template_id || null,
         chef_village_name: formData.chef_village_name.trim() || null,
         chef_village_titre: formData.chef_village_titre.trim() || null,

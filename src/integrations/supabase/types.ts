@@ -2010,6 +2010,7 @@ export type Database = {
       lotissements: {
         Row: {
           attestation_template_id: string | null
+          cession_template_id: string | null
           chef_signature_url: string | null
           chef_stamp_url: string | null
           chef_village_name: string | null
@@ -2036,6 +2037,7 @@ export type Database = {
         }
         Insert: {
           attestation_template_id?: string | null
+          cession_template_id?: string | null
           chef_signature_url?: string | null
           chef_stamp_url?: string | null
           chef_village_name?: string | null
@@ -2062,6 +2064,7 @@ export type Database = {
         }
         Update: {
           attestation_template_id?: string | null
+          cession_template_id?: string | null
           chef_signature_url?: string | null
           chef_stamp_url?: string | null
           chef_village_name?: string | null
@@ -2090,6 +2093,13 @@ export type Database = {
           {
             foreignKeyName: "lotissements_attestation_template_id_fkey"
             columns: ["attestation_template_id"]
+            isOneToOne: false
+            referencedRelation: "attestation_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lotissements_cession_template_id_fkey"
+            columns: ["cession_template_id"]
             isOneToOne: false
             referencedRelation: "attestation_templates"
             referencedColumns: ["id"]

@@ -1204,83 +1204,154 @@ export const generateAttestationVillageoise = async (
 
   drawDocumentBackground();
 
-  // Village logo (top-left AND top-right like the reference image)
-  let headerLeftX = margin;
-  const villageLogoUrl = template?.village_logo_url;
-  if (villageLogoUrl) {
-    try {
-      const logoBase64 = await loadImageAsBase64(villageLogoUrl);
-      if (logoBase64) {
-        const logoSize = 22;
-        // Top-left
-        doc.addImage(logoBase64, 'PNG', margin, yPos - 3, logoSize, logoSize);
-        // Top-right
-        doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, yPos - 3, logoSize, logoSize);
-        headerLeftX = margin + logoSize + 4;
-      }
-    } catch {
+  const isCessionTemplate = template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR');
+
+  if (isCessionTemplate) {
+    // === CESSION HEADER: Agency logo (left) + header text (right) + colored dashes + title ===
+    const logoUrl = agency?.logo_url;
+    if (logoUrl) {
+      try {
+        const logoBase64 = await loadImageAsBase64(logoUrl);
+        if (logoBase64) {
+          doc.addImage(logoBase64, 'PNG', margin, yPos - 3, 22, 22);
+        }
+      } catch {}
     }
-  }
 
-  // Header: REPUBLIQUE DE COTE D'IVOIRE centered, then commune/village
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...textColor);
-  doc.text("REPUBLIQUE DE COTE D'IVOIRE", pageWidth / 2, yPos, { align: 'center' });
-  yPos += 5;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  if (commune) {
-    doc.text(commune.toUpperCase(), pageWidth / 2, yPos, { align: 'center' });
-    yPos += 4;
-  }
-  if (village) {
-    doc.text(`VILLAGE DE ${village.replace(/^Village de /i, '').trim().toUpperCase()}`, pageWidth / 2, yPos, { align: 'center' });
-    yPos += 4;
-  }
-  doc.setFont('helvetica', 'normal');
-  yPos += 4;
-
-  const bannerHeight = 28;
-  const bannerColor1 = template?.banner_color_1 || '#003399';
-  const bannerColor2 = template?.banner_color_2 || null;
-  const useBannerGradient = template?.banner_gradient && bannerColor2;
-
-  if (useBannerGradient) {
-    const bannerX = margin - 5;
-    const bannerW = pageWidth - 2 * (margin - 5);
-    const c1 = hexToRgb(bannerColor1, 0);
-    const c2 = hexToRgb(bannerColor2!, 0);
-    const steps = 40;
-    const stripW = bannerW / steps;
-    for (let i = 0; i < steps; i++) {
-      const t = i / (steps - 1);
-      const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
-      const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
-      const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
-      doc.setFillColor(r, g, b);
-      doc.rect(bannerX + i * stripW, yPos - 5, stripW + 0.5, bannerHeight, 'F');
+    // Agency header text on the right of the logo
+    const headerTextX = margin + 26;
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    const agencyName = agency?.name?.toUpperCase() || '';
+    if (agencyName) {
+      doc.text(agencyName, headerTextX, yPos + 2);
     }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.setTextColor(...textColor);
+    const agencyDetails = [agency?.address, agency?.city, agency?.phone, agency?.email].filter(Boolean).join(' • ');
+    if (agencyDetails) {
+      doc.text(agencyDetails, headerTextX, yPos + 7);
+    }
+    if (agency?.siret) {
+      doc.text(`RCCM: ${agency.siret}`, headerTextX, yPos + 11);
+    }
+    yPos += 22;
+
+    // Colored dashes line
+    const lineColor = hexToRgb(template?.header_line_color || '#FF8C00', 0);
+    doc.setDrawColor(lineColor[0], lineColor[1], lineColor[2]);
+    doc.setLineWidth(1.5);
+    const dashWidth = 12;
+    const dashGap = 5;
+    const totalDashesWidth = 5 * dashWidth + 4 * dashGap;
+    const dashStartX = (pageWidth - totalDashesWidth) / 2;
+    for (let i = 0; i < 5; i++) {
+      const x = dashStartX + i * (dashWidth + dashGap);
+      doc.line(x, yPos, x + dashWidth, yPos);
+    }
+    yPos += 8;
+
+    // Title: ATTESTATION DE CESSION
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...textColor);
+    doc.text('ATTESTATION DE CESSION', pageWidth / 2, yPos, { align: 'center' });
+    yPos += 2;
+    // Underline
+    const titleWidth = doc.getTextWidth('ATTESTATION DE CESSION');
+    doc.setDrawColor(...textColor);
+    doc.setLineWidth(0.8);
+    doc.line(pageWidth / 2 - titleWidth / 2, yPos, pageWidth / 2 + titleWidth / 2, yPos);
+    yPos += 6;
+
+    doc.setFontSize(11);
+    doc.text(`N°..........`, pageWidth / 2, yPos, { align: 'center' });
+    // Underline for N°
+    const nWidth = doc.getTextWidth('N°..........');
+    yPos += 1.5;
+    doc.line(pageWidth / 2 - nWidth / 2, yPos, pageWidth / 2 + nWidth / 2, yPos);
+    yPos += 10;
+
+    doc.setLineWidth(0.2);
+
   } else {
-    const banner = hexToRgb(bannerColor1, 0);
-    doc.setFillColor(banner[0], banner[1], banner[2]);
-    doc.rect(margin - 5, yPos - 5, pageWidth - 2 * (margin - 5), bannerHeight, 'F');
+    // === ATTRIBUTION HEADER: Village logos + REPUBLIQUE + banner ===
+    let headerLeftX = margin;
+    const villageLogoUrl = template?.village_logo_url;
+    if (villageLogoUrl) {
+      try {
+        const logoBase64 = await loadImageAsBase64(villageLogoUrl);
+        if (logoBase64) {
+          const logoSize = 22;
+          doc.addImage(logoBase64, 'PNG', margin, yPos - 3, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, yPos - 3, logoSize, logoSize);
+          headerLeftX = margin + logoSize + 4;
+        }
+      } catch {}
+    }
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...textColor);
+    doc.text("REPUBLIQUE DE COTE D'IVOIRE", pageWidth / 2, yPos, { align: 'center' });
+    yPos += 5;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    if (commune) {
+      doc.text(commune.toUpperCase(), pageWidth / 2, yPos, { align: 'center' });
+      yPos += 4;
+    }
+    if (village) {
+      doc.text(`VILLAGE DE ${village.replace(/^Village de /i, '').trim().toUpperCase()}`, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 4;
+    }
+    doc.setFont('helvetica', 'normal');
+    yPos += 4;
+
+    const bannerHeight = 28;
+    const bannerColor1 = template?.banner_color_1 || '#003399';
+    const bannerColor2 = template?.banner_color_2 || null;
+    const useBannerGradient = template?.banner_gradient && bannerColor2;
+
+    if (useBannerGradient) {
+      const bannerX = margin - 5;
+      const bannerW = pageWidth - 2 * (margin - 5);
+      const c1 = hexToRgb(bannerColor1, 0);
+      const c2 = hexToRgb(bannerColor2!, 0);
+      const steps = 40;
+      const stripW = bannerW / steps;
+      for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1);
+        const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+        const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+        const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+        doc.setFillColor(r, g, b);
+        doc.rect(bannerX + i * stripW, yPos - 5, stripW + 0.5, bannerHeight, 'F');
+      }
+    } else {
+      const banner = hexToRgb(bannerColor1, 0);
+      doc.setFillColor(banner[0], banner[1], banner[2]);
+      doc.rect(margin - 5, yPos - 5, pageWidth - 2 * (margin - 5), bannerHeight, 'F');
+    }
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, yPos + 3, { align: 'center' });
+    doc.setFontSize(9);
+    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, yPos + 10, { align: 'center' });
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    if (arreteApprobation) {
+      doc.text(arreteApprobation, pageWidth / 2, yPos + 17, { align: 'center' });
+    }
+
+    yPos += bannerHeight + 10;
   }
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, yPos + 3, { align: 'center' });
-  doc.setFontSize(9);
-  doc.text(lotOriginName.toUpperCase(), pageWidth / 2, yPos + 10, { align: 'center' });
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  if (arreteApprobation) {
-    doc.text(arreteApprobation, pageWidth / 2, yPos + 17, { align: 'center' });
-  }
-
-  yPos += bannerHeight + 10;
   doc.setTextColor(...textColor);
 
   const templateContent = template?.content || '';

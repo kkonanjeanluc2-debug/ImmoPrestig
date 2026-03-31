@@ -504,7 +504,8 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
             <Separator />
 
-            {/* Couleurs du bandeau */}
+            {/* Couleurs du bandeau - only for attribution */}
+            {!isCession && (
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Couleurs du bandeau</Label>
               <p className="text-xs text-muted-foreground">
@@ -572,6 +573,47 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 </div>
               </div>
             </div>
+            )}
+
+            {/* Couleur des traits - only for cession */}
+            {isCession && (
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Couleur des traits décoratifs</Label>
+              <p className="text-xs text-muted-foreground">
+                Couleur des tirets sous l'en-tête de l'attestation de cession.
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs">Couleur des traits</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={form.header_line_color || "#FF8C00"}
+                      onChange={(e) => updateField("header_line_color", e.target.value)}
+                      className="w-10 h-10 rounded cursor-pointer border border-border"
+                    />
+                    <Input
+                      value={form.header_line_color || "#FF8C00"}
+                      onChange={(e) => updateField("header_line_color", e.target.value)}
+                      className="w-28 font-mono text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs">Aperçu</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-1 w-8 rounded"
+                        style={{ backgroundColor: form.header_line_color || "#FF8C00" }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
 
             {/* Couleur de fond du document */}
             <div className="space-y-3">

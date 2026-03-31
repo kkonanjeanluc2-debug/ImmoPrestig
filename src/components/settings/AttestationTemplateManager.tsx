@@ -176,7 +176,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
   const openCreate = () => {
     setEditingTemplate(null);
-    setForm({ ...emptyForm, is_default: templates.length === 0 });
+    setForm({ ...emptyForm, content: defaultContent, template_type: templateType, is_default: templates.length === 0 });
     setDialogOpen(true);
   };
 

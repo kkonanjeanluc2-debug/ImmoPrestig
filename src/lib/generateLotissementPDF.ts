@@ -1039,6 +1039,7 @@ export interface AttestationTemplateData {
   doc_bg_color_1?: string | null;
   doc_bg_color_2?: string | null;
   doc_bg_gradient?: boolean;
+  village_logo_url?: string | null;
 }
 
 export interface AttestationChefImages {

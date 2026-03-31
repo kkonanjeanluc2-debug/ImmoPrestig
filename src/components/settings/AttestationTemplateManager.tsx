@@ -189,6 +189,7 @@ export function AttestationTemplateManager() {
       doc_bg_color_1: t.doc_bg_color_1 || null,
       doc_bg_color_2: t.doc_bg_color_2 || null,
       doc_bg_gradient: t.doc_bg_gradient || false,
+      village_logo_url: t.village_logo_url || null,
     });
     setDialogOpen(true);
   };

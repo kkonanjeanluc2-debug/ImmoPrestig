@@ -436,6 +436,56 @@ export function AttestationTemplateManager() {
 
             <Separator />
 
+            {/* Logo du village */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Logo du village</Label>
+              <p className="text-xs text-muted-foreground">
+                Importez le logo/image du village qui apparaîtra en haut à gauche de l'attestation d'attribution.
+              </p>
+              {form.village_logo_url ? (
+                <div className="flex items-center gap-4">
+                  <img
+                    src={form.village_logo_url}
+                    alt="Logo du village"
+                    className="w-20 h-20 object-contain border rounded-lg"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateField('village_logo_url', null)}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Supprimer
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                  >
+                    {uploadingLogo ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    Importer le logo du village
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
             {/* Couleurs du bandeau */}
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Couleurs du bandeau</Label>

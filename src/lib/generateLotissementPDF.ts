@@ -1472,44 +1472,64 @@ export const generateAttestationVillageoise = async (
     writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 1 });
   }
 
-  ensureSpace(45);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...primaryColor);
-  doc.text('LE CHEF DU VILLAGE', rightBlockCenter, yPos, { align: 'center' });
-  yPos += 5;
+  // Detect if this is a cession template (has CÉDANT + PROMOTEUR signatures)
+  const isCessionTemplate = templateContent && (templateContent.includes('CÉDANT') && templateContent.includes('PROMOTEUR'));
 
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
-  writeWrappedLines(chef, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 3 });
+  if (isCessionTemplate) {
+    ensureSpace(45);
+    const leftBlockCenter = margin + 30;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text('LE CÉDANT', leftBlockCenter, yPos, { align: 'center' });
+    doc.text('AGENCE / PROMOTEUR', rightBlockCenter, yPos, { align: 'center' });
+    yPos += 15;
 
-  const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
-  if (chefImageUrl) {
-    try {
-      const response = await fetch(chefImageUrl);
-      const blob = await response.blob();
-      const base64 = await new Promise<string | null>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(blob);
-      });
-
-      if (base64) {
-        ensureSpace(32);
-        const imgWidth = 45;
-        const imgHeight = 28;
-        doc.addImage(base64, 'PNG', rightBlockCenter - imgWidth / 2, yPos, imgWidth, imgHeight);
-        yPos += 30;
-      }
-    } catch {
-      yPos += 12;
-    }
-  } else {
-    ensureSpace(14);
+    // Signature lines
     doc.setDrawColor(150, 150, 150);
+    doc.line(leftBlockCenter - 25, yPos, leftBlockCenter + 25, yPos);
     doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
     yPos += 12;
+  } else {
+    ensureSpace(45);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text('LE CHEF DU VILLAGE', rightBlockCenter, yPos, { align: 'center' });
+    yPos += 5;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...textColor);
+    writeWrappedLines(chef, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 3 });
+
+    const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
+    if (chefImageUrl) {
+      try {
+        const response = await fetch(chefImageUrl);
+        const blob = await response.blob();
+        const base64 = await new Promise<string | null>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        });
+
+        if (base64) {
+          ensureSpace(32);
+          const imgWidth = 45;
+          const imgHeight = 28;
+          doc.addImage(base64, 'PNG', rightBlockCenter - imgWidth / 2, yPos, imgWidth, imgHeight);
+          yPos += 30;
+        }
+      } catch {
+        yPos += 12;
+      }
+    } else {
+      ensureSpace(14);
+      doc.setDrawColor(150, 150, 150);
+      doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
+      yPos += 12;
+    }
   }
 
   return doc;

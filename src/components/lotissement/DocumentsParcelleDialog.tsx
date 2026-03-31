@@ -39,10 +39,16 @@ export function DocumentsParcelleDialog({
   const { data: attestationTemplates = [] } = useAttestationTemplates();
   const [generating, setGenerating] = useState<string | null>(null);
 
-  // Find template ONLY if explicitly associated with the lotissement
+  // Find attribution template
   const lotissementTemplateId = (vente.parcelle?.lotissement as any)?.attestation_template_id;
   const attestationTemplate = lotissementTemplateId 
     ? attestationTemplates.find(t => t.id === lotissementTemplateId) || null
+    : null;
+
+  // Find cession template
+  const cessionTemplateId = (vente.parcelle?.lotissement as any)?.cession_template_id;
+  const cessionTemplate = cessionTemplateId
+    ? attestationTemplates.find(t => t.id === cessionTemplateId) || null
     : null;
 
   const depositPercentage = agency?.reservation_deposit_percentage ?? 30;
@@ -325,6 +331,100 @@ export function DocumentsParcelleDialog({
               disabled={generating === "attestation_villageoise"}
             >
               {generating === "attestation_villageoise" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          {/* Attestation de cession */}
+          <div className="flex items-center justify-between p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20">
+            <div>
+              <p className="font-medium text-sm">Attestation de cession</p>
+              <p className="text-xs text-muted-foreground">
+                Document de cession entre le cédant et l'agence/promoteur
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                setGenerating("attestation_cession");
+                try {
+                  const lotissement = vente.parcelle?.lotissement as any;
+                  const ilotName = (vente.parcelle as any)?.ilot?.name || null;
+                  const usedTemplate = cessionTemplate || attestationTemplate;
+                  const templateData: AttestationTemplateData | null = usedTemplate ? {
+                    district: usedTemplate.district,
+                    commune: usedTemplate.commune,
+                    village: usedTemplate.village,
+                    lotissement_origin_name: usedTemplate.lotissement_origin_name,
+                    arrete_approbation: usedTemplate.arrete_approbation,
+                    content: usedTemplate.content,
+                    banner_color_1: (usedTemplate as any).banner_color_1 || null,
+                    banner_color_2: (usedTemplate as any).banner_color_2 || null,
+                    banner_gradient: (usedTemplate as any).banner_gradient || false,
+                    doc_bg_color_1: (usedTemplate as any).doc_bg_color_1 || null,
+                    doc_bg_color_2: (usedTemplate as any).doc_bg_color_2 || null,
+                    doc_bg_gradient: (usedTemplate as any).doc_bg_gradient || false,
+                    village_logo_url: (usedTemplate as any).village_logo_url || null,
+                    header_line_color: (usedTemplate as any).header_line_color || null,
+                  } : null;
+                  const chefImages: AttestationChefImages = {
+                    stamp_url: lotissement?.chef_stamp_url || null,
+                    signature_url: lotissement?.chef_signature_url || null,
+                  };
+
+                  let ancienBeneficiaire: AncienBeneficiaireInfo | null = null;
+                  const notes = (vente.parcelle as any)?.notes || "";
+                  const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
+                  const beneficiaireNameFromNotes = benMatch?.[1]?.trim();
+                  if (beneficiaireNameFromNotes) {
+                    ancienBeneficiaire = { nom: beneficiaireNameFromNotes };
+                  }
+                  const beneficiaireId = (vente.parcelle as any)?.beneficiaire_id;
+                  if (beneficiaireId) {
+                    const { data: benData } = await supabase
+                      .from("beneficiaires_lots")
+                      .select("nom, cni_number, telephone")
+                      .eq("id", beneficiaireId)
+                      .single();
+                    if (benData) {
+                      ancienBeneficiaire = {
+                        nom: ancienBeneficiaire?.nom || benData.nom,
+                        cni_number: benData.cni_number,
+                        telephone: benData.telephone,
+                      };
+                    }
+                  }
+
+                  const doc = await generateAttestationVillageoise(
+                    parcelleInfo,
+                    lotissementInfo,
+                    acquereurInfo,
+                    agencyInfo,
+                    vente.sale_date,
+                    undefined,
+                    lotissement?.chef_village_name || undefined,
+                    templateData,
+                    lotissement?.chef_village_titre || undefined,
+                    ilotName,
+                    chefImages,
+                    ancienBeneficiaire
+                  );
+                  downloadPDF(doc, `attestation-cession-${parcelleInfo.plot_number}.pdf`);
+                  toast.success("Attestation de cession générée");
+                } catch (error) {
+                  console.error("Error generating PDF:", error);
+                  toast.error("Erreur lors de la génération du PDF");
+                } finally {
+                  setGenerating(null);
+                }
+              }}
+              disabled={generating === "attestation_cession"}
+            >
+              {generating === "attestation_cession" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Download className="h-4 w-4" />

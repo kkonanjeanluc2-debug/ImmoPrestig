@@ -1547,7 +1547,7 @@ export const generateAttestationVillageoise = async (
   }
 
   // Detect if this is a cession template (has CÉDANT + PROMOTEUR signatures)
-  const isCessionTemplate = templateContent && (templateContent.includes('CÉDANT') && templateContent.includes('PROMOTEUR'));
+  const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') && templateContent.includes('PROMOTEUR'));
 
   if (isCessionTemplate) {
     ensureSpace(45);

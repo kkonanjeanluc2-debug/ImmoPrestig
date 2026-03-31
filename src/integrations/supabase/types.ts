@@ -682,6 +682,7 @@ export type Database = {
           updated_at: string
           user_id: string
           village: string | null
+          village_logo_url: string | null
         }
         Insert: {
           arrete_approbation?: string | null
@@ -704,6 +705,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           village?: string | null
+          village_logo_url?: string | null
         }
         Update: {
           arrete_approbation?: string | null
@@ -726,6 +728,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           village?: string | null
+          village_logo_url?: string | null
         }
         Relationships: []
       }

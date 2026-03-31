@@ -1,0 +1,1 @@
+ALTER TABLE public.attestation_templates ADD COLUMN village_logo_url TEXT DEFAULT NULL;

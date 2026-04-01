@@ -245,7 +245,7 @@ export const useCreateBulkParcelles = () => {
         user.id,
         "create",
         "parcelle",
-        `${data.length} parcelles créées`,
+        `${data.length} lots créés`,
         data[0]?.id || "",
         { count: data.length }
       );

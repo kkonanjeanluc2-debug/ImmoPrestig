@@ -1571,7 +1571,10 @@ export const generateAttestationVillageoise = async (
     }
 
     if (ancienBeneficiaire?.nom) {
-      const cessionMention = `\n\n**Mention de cession :** Ce lot, initialement attribué à **${ancienBeneficiaire.nom}**${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ''}${ancienBeneficiaire.telephone ? `, Contact : ${ancienBeneficiaire.telephone}` : ''}, a été cédé au bénéficiaire désigné ci-dessus.\n`;
+      const formattedPhone = ancienBeneficiaire.telephone
+        ? (ancienBeneficiaire.telephone.match(/\d{10}/g) || [ancienBeneficiaire.telephone]).join(' / ')
+        : '';
+      const cessionMention = `\n\n**Mention de cession :** Ce lot, initialement attribué à **${ancienBeneficiaire.nom}**${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ''}${formattedPhone ? `, Contact : ${formattedPhone}` : ''}, a été cédé au bénéficiaire désigné ci-dessus.\n`;
       const faitAIndex = finalContent.toLowerCase().indexOf('fait à');
       finalContent = faitAIndex > 0
         ? `${finalContent.substring(0, faitAIndex)}${cessionMention}\n${finalContent.substring(faitAIndex)}`

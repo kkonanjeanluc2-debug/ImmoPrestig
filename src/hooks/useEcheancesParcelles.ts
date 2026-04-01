@@ -138,7 +138,7 @@ export const useUpcomingEcheances = (monthsAhead: number = 1, lotissementId?: st
             )
           )
         `)
-        .eq("status", "pending")
+        .in("status", ["pending", "partial"])
         .gte("due_date", today.toISOString().split('T')[0])
         .lte("due_date", endDate.toISOString().split('T')[0])
         .order("due_date", { ascending: true });

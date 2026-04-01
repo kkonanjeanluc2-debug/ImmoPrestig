@@ -75,8 +75,8 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
   const filteredOverdue = useMemo(() => filterBySearch(overdueEcheances), [overdueEcheances, searchQuery]);
   const filteredAll = useMemo(() => filterBySearch(allEcheances), [allEcheances, searchQuery]);
 
-  const totalOverdueAmount = filteredOverdue?.reduce((sum, e) => sum + e.amount, 0) || 0;
-  const totalUpcomingAmount = filteredUpcoming?.reduce((sum, e) => sum + e.amount, 0) || 0;
+  const totalOverdueAmount = filteredOverdue?.reduce((sum, e) => sum + (e.amount - (e.paid_amount || 0)), 0) || 0;
+  const totalUpcomingAmount = filteredUpcoming?.reduce((sum, e) => sum + (e.amount - (e.paid_amount || 0)), 0) || 0;
 
   const getDaysLabel = (dueDate: string) => {
     const days = differenceInDays(new Date(dueDate), new Date());

@@ -294,9 +294,8 @@ export async function generateGuidePDF(
   if (options.coverPage) {
     const cp = options.coverPage;
 
-    // Load individual logos
-    const mclauLogo = await loadImageAsBase64("/images/mclau-logo.png");
-    const armoiriesLogo = await loadImageAsBase64("/images/armoiries-ci.png");
+    // Load cover header image (full-width banner)
+    const coverHeaderImg = await loadImageAsBase64("/images/guide-cover-header.png");
 
     // Background: soft peach/cream gradient
     const bgBase = cp.bg_color && cp.bg_color !== "#FFFFFF" ? hexToRgb(cp.bg_color) : [255, 245, 235] as [number, number, number];
@@ -336,24 +335,17 @@ export async function generateGuidePDF(
       doc.triangle(zx - zigW / 4, ph - patternH, zx, ph - patternH + 3, zx + zigW / 4, ph - patternH, "F");
     }
 
-    // === HEADER: 3 columns - LEFT (District/Commune/Village) | CENTER (MCLAU) | RIGHT (Armoiries + République) ===
-    const headerY = patternH + 8;
-
-    // District/Commune/Village text removed from cover page header
-
-    // CENTER: MCLAU logo
-    if (mclauLogo) {
+    // === FULL-WIDTH HEADER IMAGE (no white background) ===
+    const headerY = patternH + 2;
+    const headerImgH = 30; // height of the banner
+    if (coverHeaderImg) {
       try {
-        const mclauW = 55;
-        const mclauH = 22;
-        const mclauX = pw / 2 - mclauW / 2;
-        doc.addImage(mclauLogo, "PNG", mclauX, headerY, mclauW, mclauH);
-      } catch (e) { console.error("MCLAU logo error:", e); }
-    } else {
-      console.warn("MCLAU logo not loaded");
+        // Draw background color behind image area to remove white bg effect
+        doc.setFillColor(bgBase[0], bgBase[1], bgBase[2]);
+        doc.rect(0, headerY, pw, headerImgH, "F");
+        doc.addImage(coverHeaderImg, "PNG", 0, headerY, pw, headerImgH);
+      } catch (e) { console.error("Cover header image error:", e); }
     }
-
-    // RIGHT: Armoiries removed from cover page
 
     // Center: GUIDE DU LOTISSEMENT title
     const titleRgb = hexToRgb(cp.title_color);

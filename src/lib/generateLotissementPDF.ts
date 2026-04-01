@@ -1271,36 +1271,32 @@ export const generateAttestationVillageoise = async (
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
-      doc.setFontSize(22);
+      doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      // Light gray proportional to opacity (higher opacity = darker)
-      const grayVal = Math.round(200 + (1 - opacity) * 55);
+      // Use very light gray — closer to background
+      const grayVal = Math.round(230 - opacity * 150);
       doc.setTextColor(grayVal, grayVal, grayVal);
 
       const textW = doc.getTextWidth(text);
-      // Gap between repeated texts on the same row
-      const gapX = 15;
+      const gapX = 20;
       const blockW = textW + gapX;
-      // Vertical spacing between rows
-      const rowH = 28;
+      const rowH = 22;
 
       if (repeat) {
         if (angle === 0) {
-          // Horizontal rows — centered, continuous like the reference
-          for (let y = rowH; y < pageHeight; y += rowH) {
-            // Start so that the pattern is roughly centered
-            const totalFit = Math.ceil(pageWidth / blockW) + 1;
-            const startX = -blockW / 2;
-            for (let i = 0; i < totalFit; i++) {
+          for (let y = 20; y < pageHeight - 10; y += rowH) {
+            const cols = Math.ceil((pageWidth + blockW) / blockW);
+            const totalW = cols * blockW;
+            const startX = (pageWidth - totalW) / 2;
+            for (let i = 0; i < cols; i++) {
               doc.text(text, startX + i * blockW, y);
             }
           }
         } else {
-          // Diagonal: staggered grid
           const stepX = textW + 50;
-          const stepY = 45;
+          const stepY = 35;
           let row = 0;
-          for (let y = 0; y < pageHeight + 50; y += stepY) {
+          for (let y = 10; y < pageHeight; y += stepY) {
             const offsetX = (row % 2) * (stepX / 2);
             for (let x = -textW + offsetX; x < pageWidth + textW; x += stepX) {
               doc.text(text, x, y, { angle });
@@ -1318,11 +1314,11 @@ export const generateAttestationVillageoise = async (
       try {
         const imgBase64 = await loadImageAsBase64(template.watermark_image_url);
         if (imgBase64) {
-          const imgSize = 45;
+          const imgSize = 35;
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
           if (repeat) {
-            const stepX = imgSize + 35;
-            const stepY = imgSize + 35;
+            const stepX = imgSize + 30;
+            const stepY = imgSize + 25;
             for (let y = 10; y < pageHeight; y += stepY) {
               for (let x = 10; x < pageWidth; x += stepX) {
                 if (gState) (doc as any).setGState(gState);

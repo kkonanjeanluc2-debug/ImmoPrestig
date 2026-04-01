@@ -269,9 +269,12 @@ export default function Payments() {
     return sum;
   }, 0);
 
-  const pendingAmount = (payments || []).filter(p => getEffectiveStatus(p) === 'pending')
-    .reduce((sum, p) => sum + Number(p.amount), 0);
-  const pendingCount = (payments || []).filter(p => getEffectiveStatus(p) === 'pending').length;
+  const pendingFiltered = (payments || []).filter(p => getEffectiveStatus(p) === 'pending');
+  const pendingAmount = pendingFiltered.reduce((sum, p) => {
+    const paid = Number(p.paid_amount) || 0;
+    return sum + (Number(p.amount) - paid);
+  }, 0);
+  const pendingCount = pendingFiltered.length;
 
   const latePayments = (payments || []).filter(p => getEffectiveStatus(p) === 'late');
   const lateAmount = latePayments.reduce((sum, p) => sum + Number(p.amount), 0);

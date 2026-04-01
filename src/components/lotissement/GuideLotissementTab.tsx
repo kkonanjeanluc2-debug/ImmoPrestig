@@ -242,6 +242,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: numeroPiece,
           date_piece: "",
           status: parcelle.status,
+          area: parcelle.area,
         });
       }
     });

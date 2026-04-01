@@ -149,12 +149,12 @@ const Index = () => {
   };
 
   // Redirect super admin to their dedicated space
-  if (!roleLoading && userRole?.role === "super_admin") {
+  if (!roleLoading && !permissionsLoading && userRole?.role === "super_admin") {
     return <Navigate to="/super-admin" replace />;
   }
 
   // Redirect users without gestion locative access
-  if (!roleLoading && role !== "admin" && role !== "super_admin" && !hasPermission("can_access_gestion_locative")) {
+  if (!roleLoading && !permissionsLoading && role !== "admin" && role !== "super_admin" && !hasPermission("can_access_gestion_locative")) {
     return <Navigate to="/lotissements" replace />;
   }
 

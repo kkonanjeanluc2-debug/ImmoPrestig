@@ -21,7 +21,7 @@ import { Loader2, ArrowRightLeft, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
-import { useCreateMutationParcelle } from "@/hooks/useMutationsParcelles";
+import { useCreateMutationParcelle, useMutationsParcelles } from "@/hooks/useMutationsParcelles";
 
 interface MutationParcelleDialogProps {
   vente: VenteWithDetails;
@@ -35,8 +35,15 @@ export function MutationParcelleDialog({
   onOpenChange,
 }: MutationParcelleDialogProps) {
   const { data: acquereurs = [] } = useAcquereurs();
+  const { data: existingMutations = [] } = useMutationsParcelles(vente.id);
   const createAcquereur = useCreateAcquereur();
   const createMutation = useCreateMutationParcelle();
+
+  // Current owner: last mutation's nouvel_acquereur, or the vente's acquirer
+  const lastMutation = existingMutations.length > 0 ? existingMutations[existingMutations.length - 1] : null;
+  const currentOwnerId = lastMutation ? lastMutation.nouvel_acquereur_id : vente.acquereur_id;
+  const currentOwnerName = lastMutation?.nouvel_acquereur?.name || vente.acquereur?.name || "N/A";
+  const currentOwnerPhone = lastMutation?.nouvel_acquereur?.phone || vente.acquereur?.phone || null;
 
   const [mode, setMode] = useState<"select" | "create">("select");
   const [selectedAcquereurId, setSelectedAcquereurId] = useState("");

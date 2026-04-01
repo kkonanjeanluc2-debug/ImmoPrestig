@@ -389,7 +389,7 @@ export function TeamMembersSettings() {
                           <div className="flex items-center gap-2">
                             <UserCog className="h-4 w-4 text-blue-600" />
                             <div>
-                              <div>Gestionnaire</div>
+                              <div>Commercial</div>
                               <div className="text-xs text-muted-foreground">
                                 Peut gérer les données
                               </div>
@@ -521,7 +521,7 @@ export function TeamMembersSettings() {
                         <SelectItem value="gestionnaire">
                           <div className="flex items-center gap-2">
                             {ROLE_ICONS.gestionnaire}
-                            Gestionnaire
+                            Commercial
                           </div>
                         </SelectItem>
                         <SelectItem value="comptable">

@@ -79,14 +79,12 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  const handleDelete = async () => {
-    if (!deletingIlot) return;
+  const handleDeleteSingle = async (ilot: IlotWithStats) => {
     try {
-      await deleteIlot.mutateAsync({ id: deletingIlot.id, name: deletingIlot.name });
-      toast.success("Îlot déplacé vers la corbeille");
-      setDeletingIlot(null);
-    } catch (error) {
-      toast.error("Erreur lors de la suppression de l'îlot");
+      await deleteIlot.mutateAsync({ id: ilot.id, name: ilot.name });
+      toast.success("Îlot supprimé");
+    } catch {
+      toast.error("Erreur lors de la suppression");
     }
   };
 

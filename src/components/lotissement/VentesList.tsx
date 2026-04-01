@@ -12,12 +12,23 @@ import {
 } from "@/components/ui/table";
 import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
-import { FileText, User, Banknote, Building2, Smartphone, CreditCard, Search } from "lucide-react";
+import { FileText, User, Banknote, Building2, Smartphone, CreditCard, Search, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { VenteWithDetails } from "@/hooks/useVentesParcelles";
+import { VenteWithDetails, useCancelVenteParcelle } from "@/hooks/useVentesParcelles";
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface VentesListProps {
   ventes: VenteWithDetails[];
@@ -29,6 +40,8 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const [selectedVente, setSelectedVente] = useState<VenteWithDetails | null>(null);
   const { data: assignableUsers } = useAssignableUsers();
   const [searchQuery, setSearchQuery] = useState("");
+  const [cancelTarget, setCancelTarget] = useState<VenteWithDetails | null>(null);
+  const cancelVente = useCancelVenteParcelle();
   
   const filteredVentes = useMemo(() => {
     return ventes.filter((v) => {
@@ -108,7 +121,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
               <TableHead>Paiement</TableHead>
               <TableHead>Commercial</TableHead>
               <TableHead>Progression</TableHead>
-              <TableHead className="w-[80px]">Documents</TableHead>
+              <TableHead className="w-[120px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -191,6 +204,15 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     >
                       <FileText className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setCancelTarget(vente)}
+                      title="Annuler la vente"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -207,6 +229,47 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
           onOpenChange={(open) => !open && setSelectedVente(null)}
         />
       )}
+
+      <AlertDialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler cette vente ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action va supprimer la vente du lot {cancelTarget?.parcelle?.plot_number}, 
+              toutes les échéances associées, et remettre le lot en statut "Disponible".
+              {cancelTarget?.down_payment && cancelTarget.down_payment > 0 && (
+                <span className="block mt-2 font-medium text-destructive">
+                  Montant déjà payé à rembourser : {cancelTarget.down_payment.toLocaleString("fr-FR")} F CFA
+                </span>
+              )}
+              <span className="block mt-2 font-semibold">Cette action est irréversible.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Non, garder</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (!cancelTarget) return;
+                cancelVente.mutate(
+                  { venteId: cancelTarget.id, parcelleId: cancelTarget.parcelle_id },
+                  {
+                    onSuccess: () => {
+                      toast.success("Vente annulée — lot remis en disponible");
+                      setCancelTarget(null);
+                    },
+                    onError: (err) => {
+                      toast.error("Erreur lors de l'annulation : " + (err as Error).message);
+                    },
+                  }
+                );
+              }}
+            >
+              Oui, annuler la vente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -339,32 +339,7 @@ export async function generateGuidePDF(
     // === HEADER: 3 columns - LEFT (District/Commune/Village) | CENTER (MCLAU) | RIGHT (Armoiries + République) ===
     const headerY = patternH + 8;
 
-    // LEFT: District / Commune / Village
-    let yInfo = headerY;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    if (cp.district) {
-      const distLines = cp.district.toUpperCase().split("\n");
-      distLines.forEach(line => {
-        doc.text(line.trim(), margin + 5, yInfo);
-        yInfo += 5;
-      });
-    }
-    if (cp.commune) {
-      yInfo += 1;
-      doc.setLineWidth(0.4);
-      doc.setDrawColor(0, 0, 0);
-      doc.line(margin + 5, yInfo, margin + 55, yInfo);
-      yInfo += 5;
-      doc.text(`COMMUNE DE ${cp.commune.toUpperCase()}`, margin + 5, yInfo);
-      yInfo += 5;
-      doc.line(margin + 5, yInfo, margin + 55, yInfo);
-      yInfo += 6;
-    }
-    if (village) {
-      doc.text(`VILLAGE ${village.toUpperCase()}`, margin + 5, yInfo);
-    }
+    // District/Commune/Village text removed from cover page header
 
     // CENTER: MCLAU logo
     if (mclauLogo) {

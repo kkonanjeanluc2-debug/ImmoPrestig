@@ -389,7 +389,9 @@ export async function generateGuidePDF(
     doc.setTextColor(0, 0, 0);
   }
 
-  // === LOT PAGES (2 lots per page, portrait) ===
+  // === LOT PAGES (2 lots per page, landscape) ===
+  const landscapeW = 297; // A4 landscape width
+  const landscapeH = 210; // A4 landscape height
   const blockHeight = 7 + 7 + 6 + 6 + (8 * 3); // header1 + header2 + tableHeader1 + tableHeader2 + 3 rows = 50mm
   const gapBetweenBlocks = 12;
   const footerHeight = 10;
@@ -397,18 +399,18 @@ export async function generateGuidePDF(
   let blockIndex = 0;
 
   while (blockIndex < lotBlocks.length) {
-    doc.addPage("a4", "portrait");
+    doc.addPage("a4", "landscape");
 
     // First lot block
     let yPos = margin;
-    yPos = drawLotBlock(doc, lotBlocks[blockIndex], yPos, pw, margin, commune, village, lotissementName);
+    yPos = drawLotBlock(doc, lotBlocks[blockIndex], yPos, landscapeW, margin, commune, village, lotissementName);
     blockIndex++;
 
     // Second lot block if it fits
     if (blockIndex < lotBlocks.length) {
       yPos += gapBetweenBlocks;
-      if (yPos + blockHeight + footerHeight <= ph - margin) {
-        yPos = drawLotBlock(doc, lotBlocks[blockIndex], yPos, pw, margin, commune, village, lotissementName);
+      if (yPos + blockHeight + footerHeight <= landscapeH - margin) {
+        yPos = drawLotBlock(doc, lotBlocks[blockIndex], yPos, landscapeW, margin, commune, village, lotissementName);
         blockIndex++;
       }
     }
@@ -417,7 +419,7 @@ export async function generateGuidePDF(
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(80, 80, 80);
-    doc.text(`Guide de partage de lotissement ${lotissementName.toUpperCase()}`, pw / 2, ph - margin, { align: "center" });
+    doc.text(`Guide de partage de lotissement ${lotissementName.toUpperCase()}`, landscapeW / 2, landscapeH - margin, { align: "center" });
     doc.setTextColor(0, 0, 0);
   }
 

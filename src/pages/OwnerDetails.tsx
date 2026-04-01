@@ -313,6 +313,7 @@ const OwnerDetails = () => {
 
       // Prepare advance payments - multi-month payments, future payments, and overpayments
       const advancePayments = ownerTenants
+        .filter(tenant => tenant.contracts?.some(c => c.status === "active"))
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const propertyTitle = buildPropertyTitle(property, tenant);

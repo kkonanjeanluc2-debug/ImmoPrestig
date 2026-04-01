@@ -295,7 +295,7 @@ export async function generateGuidePDF(
     const cp = options.coverPage;
 
     // Background: soft peach/cream gradient
-    const bgBase = cp.bg_color && cp.bg_color !== "#FFFFFF" ? hexToRgb(cp.bg_color) : [255, 245, 235] as [number, number, number];
+    const bgBase: [number, number, number] = [255, 255, 255];
     doc.setFillColor(bgBase[0], bgBase[1], bgBase[2]);
     doc.rect(0, 0, pw, ph, "F");
 

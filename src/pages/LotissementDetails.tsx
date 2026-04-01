@@ -175,7 +175,7 @@ const LotissementDetails = () => {
             <div className="flex flex-wrap gap-2">
               {canImportGeometre && <Button variant="outline" size="sm" onClick={() => setShowImportGeometre(true)}>
                 <Upload className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Import géomètre</span>
+                <span className="hidden sm:inline">Import guide</span>
               </Button>}
               {canCreateParcelle && <Button variant="outline" size="sm" onClick={() => setShowGenerateDocument(true)}>
                 <FileSignature className="h-4 w-4 sm:mr-2" />

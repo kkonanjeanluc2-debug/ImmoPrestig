@@ -353,19 +353,7 @@ export async function generateGuidePDF(
       console.warn("MCLAU logo not loaded");
     }
 
-    // RIGHT: Armoiries + République text
-    const rightColX = pw - margin - 50;
-    if (armoiriesLogo) {
-      try {
-        const armW = 28;
-        const armH = 28;
-        const armX = rightColX + (50 - armW) / 2;
-        doc.addImage(armoiriesLogo, "PNG", armX, headerY, armW, armH);
-      } catch (e) { console.error("Armoiries logo error:", e); }
-    } else {
-      console.warn("Armoiries logo not loaded");
-    }
-    // Republic text removed from cover page
+    // RIGHT: Armoiries removed from cover page
 
     // Center: GUIDE DU LOTISSEMENT title
     const titleRgb = hexToRgb(cp.title_color);

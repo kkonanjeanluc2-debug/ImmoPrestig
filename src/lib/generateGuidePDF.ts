@@ -294,9 +294,6 @@ export async function generateGuidePDF(
   if (options.coverPage) {
     const cp = options.coverPage;
 
-    // Load cover header image (full-width banner)
-    const coverHeaderImg = await loadImageAsBase64("/images/guide-cover-header.png");
-
     // Background: soft peach/cream gradient
     const bgBase = cp.bg_color && cp.bg_color !== "#FFFFFF" ? hexToRgb(cp.bg_color) : [255, 245, 235] as [number, number, number];
     doc.setFillColor(bgBase[0], bgBase[1], bgBase[2]);
@@ -333,18 +330,6 @@ export async function generateGuidePDF(
     for (let i = 0; i < pw / zigW; i++) {
       const zx = i * zigW + zigW / 2;
       doc.triangle(zx - zigW / 4, ph - patternH, zx, ph - patternH + 3, zx + zigW / 4, ph - patternH, "F");
-    }
-
-    // === FULL-WIDTH HEADER IMAGE (no white background) ===
-    const headerY = patternH + 2;
-    const headerImgH = 30; // height of the banner
-    if (coverHeaderImg) {
-      try {
-        // Draw background color behind image area to remove white bg effect
-        doc.setFillColor(bgBase[0], bgBase[1], bgBase[2]);
-        doc.rect(0, headerY, pw, headerImgH, "F");
-        doc.addImage(coverHeaderImg, "PNG", 0, headerY, pw, headerImgH);
-      } catch (e) { console.error("Cover header image error:", e); }
     }
 
     // Center: GUIDE DU LOTISSEMENT title

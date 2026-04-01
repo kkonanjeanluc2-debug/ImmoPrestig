@@ -1556,6 +1556,9 @@ export const generateAttestationVillageoise = async (
       '{ancien_beneficiaire_nom}': ancienBeneficiaire?.nom || '',
       '{ancien_beneficiaire_cni}': ancienBeneficiaire?.cni_number || '',
       '{ancien_beneficiaire_telephone}': ancienBeneficiaire?.telephone || '',
+      '{cedant_nom}': ancienBeneficiaire?.nom || '___',
+      '{cedant_cni}': ancienBeneficiaire?.cni_number || '___',
+      '{cedant_telephone}': ancienBeneficiaire?.telephone || '___',
     };
 
     let finalContent = templateContent;

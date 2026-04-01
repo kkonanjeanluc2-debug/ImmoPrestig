@@ -415,7 +415,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
                       <TableCell>
                         {entry.contact ? (
                           <div className="flex flex-col">
-                            {entry.contact.split(/[,;\/]/).map((c, i) => (
+                            {(entry.contact.match(/\d{10}/g) || [entry.contact]).map((c, i) => (
                               <span key={i}>{c.trim()}</span>
                             ))}
                           </div>

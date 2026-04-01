@@ -447,3 +447,6 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
           onOpenChange={(open) => !open && setEditingIlot(null)}
         />
       )}
+    </div>
+  );
+}

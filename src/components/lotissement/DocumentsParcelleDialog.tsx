@@ -21,6 +21,7 @@ import type { AttestationTemplateData, AttestationChefImages, AncienBeneficiaire
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
 import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
+import { useMutationsParcelles } from "@/hooks/useMutationsParcelles";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DocumentsParcelleDialogProps {

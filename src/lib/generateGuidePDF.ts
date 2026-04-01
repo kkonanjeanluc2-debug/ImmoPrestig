@@ -343,7 +343,18 @@ export async function generateGuidePDF(
       } catch (e) { console.error("MCLAU logo error:", e); }
     }
 
-    // Center: GUIDE DU LOTISSEMENT title
+    // Armoiries logo top-right
+    const armoiriesLogo = await loadImageAsBase64("/images/armoiries-ci.png");
+    if (armoiriesLogo) {
+      try {
+        const armW = 35;
+        const armH = 40;
+        const armX = pw - margin - armW;
+        const armY = patternH + 5;
+        doc.addImage(armoiriesLogo, "PNG", armX, armY, armW, armH);
+      } catch (e) { console.error("Armoiries logo error:", e); }
+    }
+
     const titleRgb = hexToRgb(cp.title_color);
     const centerY = ph * 0.42;
     

@@ -294,6 +294,9 @@ export async function generateGuidePDF(
   if (options.coverPage) {
     const cp = options.coverPage;
 
+    // Load header logos image
+    const logosBase64 = await loadImageAsBase64("/images/guide-header-logos.png");
+
     // Background: soft peach/cream gradient
     const bgBase = cp.bg_color && cp.bg_color !== "#FFFFFF" ? hexToRgb(cp.bg_color) : [255, 245, 235] as [number, number, number];
     doc.setFillColor(bgBase[0], bgBase[1], bgBase[2]);

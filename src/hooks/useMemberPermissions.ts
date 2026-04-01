@@ -45,6 +45,8 @@ export interface MemberPermissions {
   can_export_guide: boolean;
   can_import_geometre: boolean;
   can_access_repartition: boolean;
+  can_cancel_vente_parcelle: boolean;
+  can_manage_mutations_parcelle: boolean;
   // Ventes management
   can_view_ventes: boolean;
   can_create_ventes: boolean;

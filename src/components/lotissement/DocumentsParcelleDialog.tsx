@@ -38,6 +38,7 @@ export function DocumentsParcelleDialog({
   const { data: agency } = useAgency();
   const { data: echeances } = useEcheancesParcelles(vente.id);
   const { data: attestationTemplates = [] } = useAttestationTemplates();
+  const { data: venteMutations = [] } = useMutationsParcelles(vente.id);
   const [generating, setGenerating] = useState<string | null>(null);
 
   // Find attribution template

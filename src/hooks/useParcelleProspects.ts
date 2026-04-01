@@ -146,6 +146,7 @@ export const useCreateParcelleProspect = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["parcelle-prospects"] });
       queryClient.invalidateQueries({ queryKey: ["lotissement-prospects"] });
+      queryClient.invalidateQueries({ queryKey: ["parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

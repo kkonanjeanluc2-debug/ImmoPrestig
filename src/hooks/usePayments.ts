@@ -20,13 +20,18 @@ const FRENCH_MONTHS = [
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
 ];
 
+const PAYMENTS_QUERY_VERSION = "current-month-virtual-v2";
+
 export const usePayments = () => {
   const { user } = useAuth();
   const { data: agency } = useAgency();
   const rentDueDay = agency?.rent_due_day ?? 10;
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  const billingWindowKey = today.getDate() >= 15 ? "after-15" : "before-15";
 
   return useQuery({
-    queryKey: ["payments", user?.id, rentDueDay],
+    queryKey: ["payments", PAYMENTS_QUERY_VERSION, user?.id, rentDueDay, currentMonthKey, billingWindowKey],
     queryFn: async () => {
       // Fetch real payments
       const { data, error } = await supabase

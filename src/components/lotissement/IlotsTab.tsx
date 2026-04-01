@@ -217,7 +217,8 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => setShowBulkDeleteDialog(true)}
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Supprimer ({selectedIds.size})

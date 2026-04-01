@@ -49,6 +49,21 @@ function hexToRgb(hex: string): [number, number, number] {
   return [parseInt(h.substring(0, 2), 16), parseInt(h.substring(2, 4), 16), parseInt(h.substring(4, 6), 16)];
 }
 
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 function groupEntriesByLot(entries: GuideEntry[]): LotBlock[] {
   const map = new Map<string, LotBlock>();
   entries.forEach(e => {
@@ -279,6 +294,9 @@ export async function generateGuidePDF(
   if (options.coverPage) {
     const cp = options.coverPage;
 
+    // Load header logos image
+    const logosBase64 = await loadImageAsBase64("/images/guide-header-logos.png");
+
     // Background: soft peach/cream gradient
     const bgBase = cp.bg_color && cp.bg_color !== "#FFFFFF" ? hexToRgb(cp.bg_color) : [255, 245, 235] as [number, number, number];
     doc.setFillColor(bgBase[0], bgBase[1], bgBase[2]);
@@ -345,9 +363,21 @@ export async function generateGuidePDF(
       doc.text(`VILLAGE ${village.toUpperCase()}`, margin + 5, yInfo);
     }
 
-    // Right side: Republic info
+    // Center/Right: Logos (MCLAU + Coat of arms)
+    if (logosBase64) {
+      try {
+        // The image contains both logos side by side, place it center-right of header
+        const logoW = 120;
+        const logoH = 25;
+        const logoX = pw / 2 - 10;
+        const logoY = patternH + 8;
+        doc.addImage(logosBase64, "PNG", logoX, logoY, logoW, logoH);
+      } catch { /* ignore logo errors */ }
+    }
+
+    // Right side: Republic info (below logos)
     const rightX = pw - margin - 5;
-    let yRight = patternH + 25;
+    let yRight = patternH + 38;
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text("REPUBLIQUE DE COTE D'IVOIRE", rightX, yRight, { align: "right" });
@@ -388,12 +418,24 @@ export async function generateGuidePDF(
     if (ilotEntries.length > 0) {
       const lineHeight = 8;
       const boxContentLines: string[] = [];
-      ilotEntries.forEach(([ilot, iEntries], idx) => {
-        const lots = [...new Set(iEntries.map(e => e.lot))].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
-        boxContentLines.push(`ILOT N°${ilot}`);
-        boxContentLines.push(lots.length > 1 ? `LOT N°${lots[0]} À LOT N°${lots[lots.length - 1]}` : `LOT N°${lots[0]}`);
-        if (idx < ilotEntries.length - 1) boxContentLines.push("&&");
-      });
+
+      // If many ilots, show a global summary instead of listing all
+      if (ilotEntries.length > 4) {
+        const allIlots = ilotEntries.map(([ilot]) => ilot).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+        const allLots = entries.map(e => e.lot).filter(Boolean);
+        const sortedLots = [...new Set(allLots)].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+        boxContentLines.push(`ILOT N°${allIlots[0]} À ILOT N°${allIlots[allIlots.length - 1]}`);
+        if (sortedLots.length > 1) {
+          boxContentLines.push(`LOT N°${sortedLots[0]} À LOT N°${sortedLots[sortedLots.length - 1]}`);
+        }
+      } else {
+        ilotEntries.forEach(([ilot, iEntries], idx) => {
+          const lots = [...new Set(iEntries.map(e => e.lot))].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+          boxContentLines.push(`ILOT N°${ilot}`);
+          boxContentLines.push(lots.length > 1 ? `LOT N°${lots[0]} À LOT N°${lots[lots.length - 1]}` : `LOT N°${lots[0]}`);
+          if (idx < ilotEntries.length - 1) boxContentLines.push("&&");
+        });
+      }
 
       const boxWidth = pw * 0.55;
       const boxX = (pw - boxWidth) / 2;

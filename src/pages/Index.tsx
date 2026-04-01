@@ -12,7 +12,7 @@ import { useProperties } from "@/hooks/useProperties";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMemo, useState } from "react";
-import { getCollectedRevenueForPeriod } from "@/lib/revenueCollections";
+
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 
@@ -85,13 +85,25 @@ const Index = () => {
   ).length;
   
   const now = new Date();
-  const thisMonth = now.getMonth();
-  const thisYear = now.getFullYear();
-  const monthEnd = new Date(thisYear, thisMonth + 1, 0);
-  const monthStartStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-01`;
-  const monthEndStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`;
 
-  const monthlyRevenue = getCollectedRevenueForPeriod(filteredPayments as any[], monthStartStr, monthEndStr);
+  // Use selected period for revenue calculation (based on paid_date)
+  const periodFromStr = `${period.from.getFullYear()}-${String(period.from.getMonth() + 1).padStart(2, '0')}-${String(period.from.getDate()).padStart(2, '0')}`;
+  const periodToStr = `${period.to.getFullYear()}-${String(period.to.getMonth() + 1).padStart(2, '0')}-${String(period.to.getDate()).padStart(2, '0')}`;
+
+  const monthlyRevenue = useMemo(() => {
+    return (filteredPayments || []).reduce((sum, p: any) => {
+      if (p._isVirtual) return sum;
+      const collectionDate = p.status === 'paid' ? (p.paid_date || p.created_at) : p.paid_date;
+      if (!collectionDate) return sum;
+      const dateOnly = collectionDate.substring(0, 10);
+      if (dateOnly >= periodFromStr && dateOnly <= periodToStr) {
+        return sum + (Number(p.paid_amount) || Number(p.amount) || 0);
+      }
+      return sum;
+    }, 0);
+  }, [filteredPayments, periodFromStr, periodToStr]);
+
+  const periodLabel = getPeriodLabel(period);
 
   // Calculate occupancy considering units (portes)
   const { totalUnits, occupiedUnits } = useMemo(() => {
@@ -188,9 +200,9 @@ const Index = () => {
               iconBg="emerald"
             />
             <StatCard
-              title="Revenus du mois"
+             title={periodLabel.title}
               value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
-              change={now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              change={periodLabel.subtitle}
               changeType="positive"
               icon={Wallet}
               iconBg="sand"

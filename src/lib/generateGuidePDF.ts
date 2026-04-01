@@ -386,13 +386,7 @@ export async function generateGuidePDF(
         doc.addImage(armoiriesLogo, "PNG", armX, headerY, armW, armH);
       } catch { /* ignore */ }
     }
-    const rightTextX = rightColX + 25;
-    const repY = headerY + 32;
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("REPUBLIQUE DE COTE D'IVOIRE", rightTextX, repY, { align: "center" });
-    doc.setFont("helvetica", "italic");
-    doc.text("Union-Discipline-Travail", rightTextX, repY + 4, { align: "center" });
+    // Republic text removed from cover page
 
     // Center: GUIDE DU LOTISSEMENT title
     const titleRgb = hexToRgb(cp.title_color);
@@ -476,11 +470,7 @@ export async function generateGuidePDF(
       }
     }
 
-    // Village name at bottom (large, subtle)
-    doc.setFontSize(32);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(200, 190, 170);
-    doc.text(village.toUpperCase(), pw / 2, ph - patternH - 15, { align: "center" });
+    // (Village watermark removed)
 
     // Date at bottom
     const now = new Date();

@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/table";
 import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
-import { FileText, User, Banknote, Building2, Smartphone, CreditCard, Search, XCircle } from "lucide-react";
+import { FileText, User, Banknote, Building2, Smartphone, CreditCard, Search, XCircle, ArrowRightLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { VenteWithDetails, useCancelVenteParcelle } from "@/hooks/useVentesParcelles";
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";
+import { MutationParcelleDialog } from "./MutationParcelleDialog";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
 import {
@@ -41,6 +42,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const { data: assignableUsers } = useAssignableUsers();
   const [searchQuery, setSearchQuery] = useState("");
   const [cancelTarget, setCancelTarget] = useState<VenteWithDetails | null>(null);
+  const [mutationTarget, setMutationTarget] = useState<VenteWithDetails | null>(null);
   const cancelVente = useCancelVenteParcelle();
   
   const filteredVentes = useMemo(() => {
@@ -121,7 +123,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
               <TableHead>Paiement</TableHead>
               <TableHead>Commercial</TableHead>
               <TableHead>Progression</TableHead>
-              <TableHead className="w-[120px]">Actions</TableHead>
+              <TableHead className="w-[150px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -207,6 +209,15 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => setMutationTarget(vente)}
+                      title="Mutation (revente à un tiers)"
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setCancelTarget(vente)}
                       title="Annuler la vente"
                       className="text-destructive hover:text-destructive"
@@ -270,6 +281,14 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {mutationTarget && (
+        <MutationParcelleDialog
+          vente={mutationTarget}
+          open={!!mutationTarget}
+          onOpenChange={(open) => !open && setMutationTarget(null)}
+        />
+      )}
     </>
   );
 }

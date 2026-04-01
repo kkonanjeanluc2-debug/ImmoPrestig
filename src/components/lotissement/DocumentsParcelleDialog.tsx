@@ -21,6 +21,7 @@ import type { AttestationTemplateData, AttestationChefImages, AncienBeneficiaire
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
 import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
+import { useMutationsParcelles } from "@/hooks/useMutationsParcelles";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DocumentsParcelleDialogProps {
@@ -37,6 +38,7 @@ export function DocumentsParcelleDialog({
   const { data: agency } = useAgency();
   const { data: echeances } = useEcheancesParcelles(vente.id);
   const { data: attestationTemplates = [] } = useAttestationTemplates();
+  const { data: venteMutations = [] } = useMutationsParcelles(vente.id);
   const [generating, setGenerating] = useState<string | null>(null);
 
   // Find attribution template
@@ -390,25 +392,36 @@ export function DocumentsParcelleDialog({
                   };
 
                   let ancienBeneficiaire: AncienBeneficiaireInfo | null = null;
-                  const notes = (vente.parcelle as any)?.notes || "";
-                  const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
-                  const beneficiaireNameFromNotes = benMatch?.[1]?.trim();
-                  if (beneficiaireNameFromNotes) {
-                    ancienBeneficiaire = { nom: beneficiaireNameFromNotes };
-                  }
-                  const beneficiaireId = (vente.parcelle as any)?.beneficiaire_id;
-                  if (beneficiaireId) {
-                    const { data: benData } = await supabase
-                      .from("beneficiaires_lots")
-                      .select("nom, cni_number, telephone")
-                      .eq("id", beneficiaireId)
-                      .single();
-                    if (benData) {
-                      ancienBeneficiaire = {
-                        nom: ancienBeneficiaire?.nom || benData.nom,
-                        cni_number: benData.cni_number,
-                        telephone: benData.telephone,
-                      };
+                  
+                  // If there are mutations, use the last mutation's ancien_acquereur as cédant
+                  if (venteMutations.length > 0) {
+                    const lastMutation = venteMutations[venteMutations.length - 1];
+                    ancienBeneficiaire = {
+                      nom: lastMutation.ancien_acquereur?.name || "",
+                      cni_number: lastMutation.ancien_acquereur?.cni_number || undefined,
+                      telephone: lastMutation.ancien_acquereur?.phone || undefined,
+                    };
+                  } else {
+                    const notes = (vente.parcelle as any)?.notes || "";
+                    const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
+                    const beneficiaireNameFromNotes = benMatch?.[1]?.trim();
+                    if (beneficiaireNameFromNotes) {
+                      ancienBeneficiaire = { nom: beneficiaireNameFromNotes };
+                    }
+                    const beneficiaireId = (vente.parcelle as any)?.beneficiaire_id;
+                    if (beneficiaireId) {
+                      const { data: benData } = await supabase
+                        .from("beneficiaires_lots")
+                        .select("nom, cni_number, telephone")
+                        .eq("id", beneficiaireId)
+                        .single();
+                      if (benData) {
+                        ancienBeneficiaire = {
+                          nom: ancienBeneficiaire?.nom || benData.nom,
+                          cni_number: benData.cni_number,
+                          telephone: benData.telephone,
+                        };
+                      }
                     }
                   }
 

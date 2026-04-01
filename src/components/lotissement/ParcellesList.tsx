@@ -150,6 +150,12 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
         doc_bg_color_1: (tpl as any).doc_bg_color_1 || null,
         doc_bg_color_2: (tpl as any).doc_bg_color_2 || null,
         doc_bg_gradient: (tpl as any).doc_bg_gradient || false,
+        watermark_type: (tpl as any).watermark_type || 'none',
+        watermark_text: (tpl as any).watermark_text || null,
+        watermark_image_url: (tpl as any).watermark_image_url || null,
+        watermark_angle: (tpl as any).watermark_angle || 'diagonal',
+        watermark_opacity: (tpl as any).watermark_opacity ?? 0.1,
+        watermark_repeat: (tpl as any).watermark_repeat ?? true,
       } : null;
 
       const chefImages: AttestationChefImages = {

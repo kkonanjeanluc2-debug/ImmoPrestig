@@ -1518,6 +1518,15 @@ export const generateAttestationVillageoise = async (
 
   doc.setTextColor(...textColor);
 
+  // Draw watermark in body zone only (between header and footer)
+  watermarkBodyTopY = yPos;
+  const watermarkBodyBottomY = pageHeight - bottomMargin;
+  await drawWatermark(watermarkBodyTopY, watermarkBodyBottomY);
+  // Reset text color after watermark
+  doc.setTextColor(...textColor);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(bodyFontSize);
+
   const templateContent = template?.content || '';
 
   if (templateContent) {

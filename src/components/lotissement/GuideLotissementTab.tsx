@@ -32,6 +32,7 @@ interface GuideEntry {
   numero_piece: string;
   date_piece: string;
   status: string;
+  area?: number;
 }
 
 interface GuideLotissementTabProps {

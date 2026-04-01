@@ -167,6 +167,77 @@ export const ImportGeometreDialog = ({
         newWarnings.push("Aucune colonne de superficie détectée : les parcelles seront importées avec une superficie à 0.");
       }
 
+      // Detect if Excel data contains guide-format blocks (cells with ILOT/LOT patterns)
+      const isGuideExcel = parcellesData.some((row) => {
+        return Object.values(row).some((val) => {
+          const text = String(val || "");
+          return /ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text);
+        });
+      });
+
+      if (isGuideExcel) {
+        newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
+        for (const row of parcellesData) {
+          // Find the cell containing guide block text
+          let blockText = "";
+          for (const val of Object.values(row)) {
+            const text = String(val || "");
+            if (/ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text)) {
+              blockText = text;
+              break;
+            }
+          }
+          if (!blockText) continue;
+
+          const ilotMatch = blockText.match(/ILOT\s*[:]\s*(\d+)/i);
+          const lotMatch = blockText.match(/LOT\s*[:]\s*(\d+)/i);
+          const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+          const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
+
+          const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
+          const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+          const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
+          const affectation = affectationMatch ? affectationMatch[1].trim() : undefined;
+
+          if (!plotNumber) continue;
+          if (existingPlotNumbers.includes(String(plotNumber))) continue;
+
+          // Try to extract attributaire info from other cells in same row
+          const allValues = Object.values(row).map(v => String(v || "").trim()).filter(Boolean);
+          // Find the cell that's NOT the block text and looks like a name
+          let beneficiaireName = "";
+          let contact = "";
+          let cniNumber = "";
+          let cniNature = "";
+          for (const val of allValues) {
+            if (val === blockText) continue;
+            // Skip pure numbers that look like area/price
+            if (/^\d+[\.,]?\d*$/.test(val) && !beneficiaireName) continue;
+            if (!beneficiaireName && val.length > 2 && !/ILOT|LOT|COMMUNE|VILLAGE|SUPERFICIE|ATTESTATION|ATTRIBUT/i.test(val)) {
+              beneficiaireName = val;
+            }
+          }
+
+          const parcelle: ParsedGeometreParcelle = {
+            plotNumber: String(plotNumber),
+            area,
+            price: 0,
+            ilotName: ilotName ? String(ilotName) : undefined,
+            beneficiaire: beneficiaireName || undefined,
+            affectation: (affectation && affectation.length > 0) ? affectation : undefined,
+          };
+          parcelles.push(parcelle);
+
+          if (ilotName) {
+            const existingIlot = ilots.find(i => i.name.toLowerCase() === String(ilotName).toLowerCase());
+            if (existingIlot) {
+              existingIlot.parcelles.push(parcelle);
+            } else {
+              ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+            }
+          }
+        }
+      } else {
       parcellesData.forEach((row, idx) => {
         if (shouldSkipExcelRow(row)) {
           return;
@@ -226,6 +297,7 @@ export const ImportGeometreDialog = ({
           }
         }
       });
+      }
     }
 
     if (parcelles.length === 0 && ilots.length === 0) {
@@ -283,48 +355,102 @@ export const ImportGeometreDialog = ({
       })();
 
       if (isGuideFormat) {
-        newWarnings.push("Format guide détecté — extraction des valeurs ILOT, LOT, SUPERFICIE depuis les blocs");
-        // Parse guide format: each data row may have cells containing block text
-        for (let i = 1; i < rows.length; i++) {
-          const cells = rows[i].querySelectorAll("td, th");
-          // Find a cell that contains the guide block (ILOT/LOT/SUPERFICIE)
-          let blockText = "";
-          for (const cell of Array.from(cells)) {
-            const text = cell.textContent || "";
-            if (/ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text)) {
-              blockText = text;
+        newWarnings.push("Format guide détecté — extraction des valeurs ILOT, LOT, SUPERFICIE, ATTRIBUTAIRES depuis les blocs");
+        // Parse guide format: each table is one lot block with header info + attributaire data rows
+        // Structure:
+        // Row 0-1: Header rows (COMMUNE/VILLAGE/LOTISSEMENT, ILOT/LOT/SUPERFICIE/AFFECTATION/ARRETE)
+        // Row 2-3: Column headers (ATTRIBUTAIRES, ATTESTATION, ADRESSES, PIECES)
+        // Row 4+: Data rows (N°, NOM ET PRENOMS, attestation N°/DATE, contacts, nature/N°/date)
+
+        // Extract header info from all rows' text
+        let blockText = "";
+        for (const row of Array.from(rows)) {
+          for (const cell of Array.from(row.querySelectorAll("td, th"))) {
+            blockText += " " + (cell.textContent || "");
+          }
+        }
+
+        const ilotMatch = blockText.match(/ILOT\s*[:]\s*(\d+)/i);
+        const lotMatch = blockText.match(/LOT\s*[:]\s*(\d+)/i);
+        const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+        const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^A-Z\n]*?)(?:\s{2,}|ARRETE|$)/i);
+
+        const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
+        const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+        const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
+        const affectation = affectationMatch ? affectationMatch[1].trim() : undefined;
+
+        if (!plotNumber) continue;
+        if (existingPlotNumbers.includes(String(plotNumber))) continue;
+
+        // Now find the attributaire data from the table rows
+        // Look for data rows (rows that start with a number in first cell)
+        let beneficiaireName = "";
+        let contact = "";
+        let cniNature = "";
+        let cniNumber = "";
+        let cniDate = "";
+        let attestationNumber = "";
+        let attestationDate = "";
+
+        // Find the header row to determine column mapping
+        let dataHeaderRowIdx = -1;
+        for (let ri = 0; ri < rows.length; ri++) {
+          const cells = rows[ri].querySelectorAll("td, th");
+          const rowText = Array.from(cells).map(c => (c.textContent || "").trim().toUpperCase()).join(" ");
+          if (rowText.includes("NOM") && (rowText.includes("PRENOM") || rowText.includes("ATTRIBUT"))) {
+            dataHeaderRowIdx = ri;
+            break;
+          }
+        }
+
+        // Extract data from the first data row (row after headers, with N°=1)
+        if (dataHeaderRowIdx >= 0) {
+          // The header may span 2 rows (merged cells), so check multiple rows after
+          for (let ri = dataHeaderRowIdx + 1; ri < rows.length; ri++) {
+            const cells = Array.from(rows[ri].querySelectorAll("td, th"));
+            const cellTexts = cells.map(c => (c.textContent || "").trim());
+            
+            // Skip empty rows or header continuation rows
+            const firstCell = cellTexts[0] || "";
+            if (!firstCell || firstCell.toUpperCase().includes("N°") || firstCell.toUpperCase().includes("NATURE")) continue;
+            
+            // This should be data row with: N°, NOM ET PRENOMS, Attestation N°, Attestation Date, Contacts, Nature, N° pièce, Date pièce
+            if (cellTexts.length >= 2 && !beneficiaireName) {
+              beneficiaireName = cellTexts[1] || ""; // NOM ET PRENOMS
+              attestationNumber = cellTexts.length > 2 ? (cellTexts[2] || "") : "";
+              attestationDate = cellTexts.length > 3 ? (cellTexts[3] || "") : "";
+              contact = cellTexts.length > 4 ? (cellTexts[4] || "") : "";
+              cniNature = cellTexts.length > 5 ? (cellTexts[5] || "") : "";
+              cniNumber = cellTexts.length > 6 ? (cellTexts[6] || "") : "";
+              cniDate = cellTexts.length > 7 ? (cellTexts[7] || "") : "";
               break;
             }
           }
-          if (!blockText) continue;
+        }
 
-          // Extract values from block text
-          const ilotMatch = blockText.match(/ILOT\s*[:]\s*(\d+)/i);
-          const lotMatch = blockText.match(/LOT\s*[:]\s*(\d+)/i);
-          const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+        const parcelle: ParsedGeometreParcelle = {
+          plotNumber: String(plotNumber),
+          area,
+          price: 0,
+          ilotName: ilotName ? String(ilotName) : undefined,
+          beneficiaire: beneficiaireName || undefined,
+          contact: contact || undefined,
+          cniNature: cniNature || undefined,
+          cniNumber: cniNumber || undefined,
+          cniDate: cniDate || undefined,
+          attestationNumber: attestationNumber || undefined,
+          attestationDate: attestationDate || undefined,
+          affectation: (affectation && affectation.length > 0) ? affectation : undefined,
+        };
+        parcelles.push(parcelle);
 
-          const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-          const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
-          const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
-
-          if (!plotNumber) continue;
-          if (existingPlotNumbers.includes(String(plotNumber))) continue;
-
-          const parcelle: ParsedGeometreParcelle = {
-            plotNumber: String(plotNumber),
-            area,
-            price: 0,
-            ilotName: ilotName ? String(ilotName) : undefined,
-          };
-          parcelles.push(parcelle);
-
-          if (ilotName) {
-            const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
-            if (existingIlot) {
-              existingIlot.parcelles.push(parcelle);
-            } else {
-              ilots.push({ name: String(ilotName), parcelles: [parcelle] });
-            }
+        if (ilotName) {
+          const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
+          if (existingIlot) {
+            existingIlot.parcelles.push(parcelle);
+          } else {
+            ilots.push({ name: String(ilotName), parcelles: [parcelle] });
           }
         }
       } else {
@@ -634,6 +760,8 @@ export const ImportGeometreDialog = ({
                   user_id: user?.id,
                   nom: parcelle.proprietaireTerrien.trim(),
                   partie: "proprietaire",
+                  telephone: parcelle.contact || null,
+                  cni_number: parcelle.cniNumber || null,
                 } as any)
                 .select("id")
                 .single();
@@ -641,7 +769,7 @@ export const ImportGeometreDialog = ({
             }
           }
 
-          // Handle beneficiaire (lotisseur side)
+          // Handle beneficiaire (lotisseur side or attributaire from guide)
           if (parcelle.beneficiaire) {
             const key = `lotisseur:${parcelle.beneficiaire.toLowerCase().trim()}`;
             if (!beneficiaireCache[key]) {
@@ -652,6 +780,8 @@ export const ImportGeometreDialog = ({
                   user_id: user?.id,
                   nom: parcelle.beneficiaire.trim(),
                   partie: "lotisseur",
+                  telephone: parcelle.contact || null,
+                  cni_number: parcelle.cniNumber || null,
                 } as any)
                 .select("id")
                 .single();
@@ -902,6 +1032,16 @@ export const ImportGeometreDialog = ({
                           {parcelle.beneficiaire && (
                             <Badge variant="outline" className="text-xs border-amber-300 text-amber-700">
                               Bénéf: {parcelle.beneficiaire}
+                            </Badge>
+                          )}
+                          {parcelle.contact && (
+                            <Badge variant="outline" className="text-xs">
+                              📞 {parcelle.contact}
+                            </Badge>
+                          )}
+                          {parcelle.cniNumber && (
+                            <Badge variant="outline" className="text-xs">
+                              {parcelle.cniNature || "CNI"}: {parcelle.cniNumber}
                             </Badge>
                           )}
                           {parcelle.coordinates && (

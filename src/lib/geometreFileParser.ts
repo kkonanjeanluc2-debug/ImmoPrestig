@@ -20,6 +20,13 @@ export interface ParsedGeometreParcelle {
   coordinates?: [number, number][];
   proprietaireTerrien?: string;
   beneficiaire?: string;
+  contact?: string;
+  cniNature?: string;
+  cniNumber?: string;
+  cniDate?: string;
+  attestationNumber?: string;
+  attestationDate?: string;
+  affectation?: string;
 }
 
 export interface GeometreParseResult {

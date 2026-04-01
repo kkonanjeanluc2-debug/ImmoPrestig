@@ -138,7 +138,7 @@ export const useUpcomingEcheances = (monthsAhead: number = 1, lotissementId?: st
             )
           )
         `)
-        .eq("status", "pending")
+        .in("status", ["pending", "partial"])
         .gte("due_date", today.toISOString().split('T')[0])
         .lte("due_date", endDate.toISOString().split('T')[0])
         .order("due_date", { ascending: true });
@@ -182,7 +182,7 @@ export const useAllEcheancesWithDetails = (lotissementId?: string) => {
             )
           )
         `)
-        .eq("status", "pending")
+        .in("status", ["pending", "partial"])
         .order("due_date", { ascending: true });
 
       if (venteIds) {
@@ -226,7 +226,7 @@ export const useOverdueEcheances = (lotissementId?: string) => {
             )
           )
         `)
-        .eq("status", "pending")
+        .in("status", ["pending", "partial"])
         .lt("due_date", today)
         .order("due_date", { ascending: true });
 
@@ -263,14 +263,28 @@ export const usePayEcheance = () => {
       payment_method?: string;
       receipt_number?: string;
     }) => {
+      // Fetch current echeance to accumulate partial payments
+      const { data: current } = await supabase
+        .from("echeances_parcelles")
+        .select("paid_amount, amount, vente_id")
+        .eq("id", id)
+        .single();
+
+      if (!current) throw new Error("Échéance introuvable");
+
+      const previouslyPaid = current.paid_amount || 0;
+      const newTotalPaid = previouslyPaid + paid_amount;
+      const isFullyPaid = newTotalPaid >= current.amount;
+      const newStatus = isFullyPaid ? "paid" : "partial";
+
       const { data, error } = await supabase
         .from("echeances_parcelles")
         .update({
           paid_date,
-          paid_amount,
+          paid_amount: newTotalPaid,
           payment_method,
           receipt_number,
-          status: "paid",
+          status: newStatus,
         })
         .eq("id", id)
         .select()
@@ -278,20 +292,22 @@ export const usePayEcheance = () => {
 
       if (error) throw error;
 
-      // Update vente paid_installments
-      const { data: venteData } = await supabase
-        .from("ventes_parcelles")
-        .select("paid_installments")
-        .eq("id", data.vente_id)
-        .single();
-
-      if (venteData) {
-        await supabase
+      // Update vente paid_installments only when fully paid
+      if (isFullyPaid) {
+        const { data: venteData } = await supabase
           .from("ventes_parcelles")
-          .update({
-            paid_installments: (venteData.paid_installments || 0) + 1,
-          })
-          .eq("id", data.vente_id);
+          .select("paid_installments")
+          .eq("id", data.vente_id)
+          .single();
+
+        if (venteData) {
+          await supabase
+            .from("ventes_parcelles")
+            .update({
+              paid_installments: (venteData.paid_installments || 0) + 1,
+            })
+            .eq("id", data.vente_id);
+        }
       }
 
       if (user) {
@@ -299,9 +315,9 @@ export const usePayEcheance = () => {
           user.id,
           "update",
           "echeance_parcelle",
-          "Échéance payée",
+          isFullyPaid ? "Échéance payée" : "Paiement partiel d'échéance",
           data.id,
-          { amount: paid_amount, method: payment_method }
+          { amount: paid_amount, total_paid: newTotalPaid, remaining: current.amount - newTotalPaid, method: payment_method }
         );
       }
 

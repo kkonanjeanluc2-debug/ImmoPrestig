@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { 
   AlertTriangle, 
   Calendar, 
@@ -74,8 +75,8 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
   const filteredOverdue = useMemo(() => filterBySearch(overdueEcheances), [overdueEcheances, searchQuery]);
   const filteredAll = useMemo(() => filterBySearch(allEcheances), [allEcheances, searchQuery]);
 
-  const totalOverdueAmount = filteredOverdue?.reduce((sum, e) => sum + e.amount, 0) || 0;
-  const totalUpcomingAmount = filteredUpcoming?.reduce((sum, e) => sum + e.amount, 0) || 0;
+  const totalOverdueAmount = filteredOverdue?.reduce((sum, e) => sum + (e.amount - (e.paid_amount || 0)), 0) || 0;
+  const totalUpcomingAmount = filteredUpcoming?.reduce((sum, e) => sum + (e.amount - (e.paid_amount || 0)), 0) || 0;
 
   const getDaysLabel = (dueDate: string) => {
     const days = differenceInDays(new Date(dueDate), new Date());
@@ -108,56 +109,81 @@ export function EcheancesDashboard({ lotissementId }: EcheancesDashboardProps) {
     openWhatsApp(phone, message);
   };
 
-  const EcheanceRow = ({ echeance }: { echeance: EcheanceWithDetails }) => (
-    <TableRow>
-      <TableCell>
-        <div className="font-medium">{echeance.vente?.acquereur?.name || "—"}</div>
-        <div className="text-sm text-muted-foreground flex items-center gap-1">
-          <Phone className="h-3 w-3" />
-          {echeance.vente?.acquereur?.phone || "Non renseigné"}
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="font-medium">
-          Parcelle {echeance.vente?.parcelle?.plot_number}
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {echeance.vente?.parcelle?.lotissement?.name}
-        </div>
-      </TableCell>
-      <TableCell className="text-right font-semibold">
-        {echeance.amount.toLocaleString("fr-FR")} F
-      </TableCell>
-      <TableCell>
-        <div>{format(new Date(echeance.due_date), "dd MMM yyyy", { locale: fr })}</div>
-        <div className="text-sm text-muted-foreground">{getDaysLabel(echeance.due_date)}</div>
-      </TableCell>
-      <TableCell>{getUrgencyBadge(echeance.due_date)}</TableCell>
-      <TableCell>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setPayingEcheance(echeance)}
-            title="Encaisser cette échéance"
-            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-          >
-            <Banknote className="h-4 w-4" />
-          </Button>
-          {echeance.vente?.acquereur?.phone && (
+  const EcheanceRow = ({ echeance }: { echeance: EcheanceWithDetails }) => {
+    const paidAmount = echeance.paid_amount || 0;
+    const remainingAmount = echeance.amount - paidAmount;
+    const isPartial = echeance.status === "partial" || (paidAmount > 0 && echeance.status !== "paid");
+    const progressPercent = echeance.amount > 0 ? (paidAmount / echeance.amount) * 100 : 0;
+
+    return (
+      <TableRow>
+        <TableCell>
+          <div className="font-medium">{echeance.vente?.acquereur?.name || "—"}</div>
+          <div className="text-sm text-muted-foreground flex items-center gap-1">
+            <Phone className="h-3 w-3" />
+            {echeance.vente?.acquereur?.phone || "Non renseigné"}
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="font-medium">
+            Lot {echeance.vente?.parcelle?.plot_number}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {echeance.vente?.parcelle?.lotissement?.name}
+          </div>
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="font-semibold">
+            {remainingAmount.toLocaleString("fr-FR")} F
+          </div>
+          {isPartial && (
+            <div className="space-y-1 mt-1">
+              <div className="text-xs text-muted-foreground">
+                Payé : {paidAmount.toLocaleString("fr-FR")} / {echeance.amount.toLocaleString("fr-FR")}
+              </div>
+              <Progress value={progressPercent} className="h-1.5 w-20 ml-auto" />
+            </div>
+          )}
+        </TableCell>
+        <TableCell>
+          <div>{format(new Date(echeance.due_date), "dd MMM yyyy", { locale: fr })}</div>
+          <div className="text-sm text-muted-foreground">{getDaysLabel(echeance.due_date)}</div>
+        </TableCell>
+        <TableCell>
+          {isPartial ? (
+            <Badge variant="outline" className="border-orange-500 text-orange-600 gap-1">
+              <AlertTriangle className="h-3 w-3" /> Partiel
+            </Badge>
+          ) : (
+            getUrgencyBadge(echeance.due_date)
+          )}
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleWhatsApp(echeance.vente?.acquereur?.phone || null, echeance)}
-              title="Envoyer un rappel WhatsApp"
+              onClick={() => setPayingEcheance(echeance)}
+              title="Encaisser cette échéance"
+              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
             >
-              <MessageCircle className="h-4 w-4 text-green-600" />
+              <Banknote className="h-4 w-4" />
             </Button>
-          )}
-        </div>
-      </TableCell>
-    </TableRow>
-  );
+            {echeance.vente?.acquereur?.phone && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleWhatsApp(echeance.vente?.acquereur?.phone || null, echeance)}
+                title="Envoyer un rappel WhatsApp"
+              >
+                <MessageCircle className="h-4 w-4 text-green-600" />
+              </Button>
+            )}
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  };
 
   if (loadingUpcoming || loadingOverdue || loadingAll) {
     return (

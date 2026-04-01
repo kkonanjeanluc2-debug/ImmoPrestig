@@ -13,18 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { usePayEcheance, EcheanceWithDetails } from "@/hooks/useEcheancesParcelles";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Banknote, CreditCard, Smartphone, Building, Download, CheckCircle2 } from "lucide-react";
+import { Banknote, CreditCard, Smartphone, Building, Download, CheckCircle2, AlertCircle } from "lucide-react";
 import { generateEcheanceReceipt } from "@/lib/generateEcheanceReceipt";
 import { useAgency } from "@/hooks/useAgency";
 import { useQuery } from "@tanstack/react-query";
@@ -74,8 +68,14 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
   });
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paidData, setPaidData] = useState<PaymentFormData | null>(null);
+  const [resultRemainder, setResultRemainder] = useState(0);
   const [generating, setGenerating] = useState(false);
-  
+
+  const previouslyPaid = echeance.paid_amount || 0;
+  const remaining = echeance.amount - previouslyPaid;
+  const isPartiallyPaid = previouslyPaid > 0 && echeance.status !== "paid";
+  const progressPercent = echeance.amount > 0 ? (previouslyPaid / echeance.amount) * 100 : 0;
+
   const {
     register,
     handleSubmit,
@@ -87,15 +87,20 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       paid_date: format(new Date(), "yyyy-MM-dd"),
-      paid_amount: echeance.amount,
+      paid_amount: remaining,
       payment_method: "",
       receipt_number: "",
     },
   });
 
   const selectedMethod = watch("payment_method");
+  const watchedAmount = watch("paid_amount");
 
   const onSubmit = async (data: PaymentFormData) => {
+    if (data.paid_amount > remaining) {
+      toast.error(`Le montant ne peut pas dépasser le reste à payer (${remaining.toLocaleString("fr-FR")} F CFA)`);
+      return;
+    }
     try {
       await payEcheance.mutateAsync({
         id: echeance.id,
@@ -104,8 +109,10 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
         payment_method: data.payment_method,
         receipt_number: data.receipt_number || undefined,
       });
-      
-      toast.success("Paiement enregistré avec succès");
+
+      const newRemainder = remaining - data.paid_amount;
+      setResultRemainder(newRemainder);
+      toast.success(newRemainder > 0 ? "Paiement partiel enregistré" : "Paiement enregistré avec succès");
       setPaidData(data);
       setPaymentSuccess(true);
     } catch (error) {
@@ -119,7 +126,7 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
     try {
       const lotName = echeance.vente?.parcelle?.lotissement?.name || "";
       const plotNumber = echeance.vente?.parcelle?.plot_number || "";
-      const propertyTitle = lotName ? `${lotName} - Parcelle ${plotNumber}` : `Parcelle ${plotNumber}`;
+      const propertyTitle = lotName ? `${lotName} - Lot ${plotNumber}` : `Lot ${plotNumber}`;
 
       await generateEcheanceReceipt({
         echeanceId: echeance.id,
@@ -139,6 +146,8 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
           name: echeance.vente.acquereur.name,
           phone: echeance.vente.acquereur.phone,
         } : undefined,
+        previouslyPaid,
+        remainingAfterPayment: resultRemainder,
       });
       toast.success("Reçu téléchargé");
     } catch (error) {
@@ -152,6 +161,7 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
     if (!open) {
       setPaymentSuccess(false);
       setPaidData(null);
+      setResultRemainder(0);
       reset();
     }
     onOpenChange(open);
@@ -162,14 +172,25 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-[425px]">
           <div className="flex flex-col items-center text-center py-6 space-y-4">
-            <div className="h-16 w-16 rounded-full bg-emerald/10 flex items-center justify-center">
-              <CheckCircle2 className="h-8 w-8 text-emerald" />
+            <div className={`h-16 w-16 rounded-full flex items-center justify-center ${resultRemainder > 0 ? "bg-orange-100" : "bg-emerald/10"}`}>
+              {resultRemainder > 0 ? (
+                <AlertCircle className="h-8 w-8 text-orange-600" />
+              ) : (
+                <CheckCircle2 className="h-8 w-8 text-emerald" />
+              )}
             </div>
             <div>
-              <h3 className="text-lg font-semibold">Paiement enregistré</h3>
+              <h3 className="text-lg font-semibold">
+                {resultRemainder > 0 ? "Paiement partiel enregistré" : "Paiement enregistré"}
+              </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                {paidData?.paid_amount.toLocaleString("fr-FR")} F CFA encaissés pour la parcelle {echeance.vente?.parcelle?.plot_number}
+                {paidData?.paid_amount.toLocaleString("fr-FR")} F CFA encaissés pour le lot {echeance.vente?.parcelle?.plot_number}
               </p>
+              {resultRemainder > 0 && (
+                <p className="text-sm font-medium text-orange-600 mt-2">
+                  Reste à payer : {resultRemainder.toLocaleString("fr-FR")} F CFA
+                </p>
+              )}
             </div>
             <Button
               onClick={handleDownloadReceipt}
@@ -194,16 +215,29 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
         <DialogHeader>
           <DialogTitle>Encaisser l'échéance</DialogTitle>
           <DialogDescription>
-            Parcelle {echeance.vente?.parcelle?.plot_number} - {echeance.vente?.acquereur?.name}
+            Lot {echeance.vente?.parcelle?.plot_number} - {echeance.vente?.acquereur?.name}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="bg-muted/50 p-4 rounded-lg space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Montant attendu :</span>
+              <span className="text-muted-foreground">Montant de l'échéance :</span>
               <span className="font-semibold">{echeance.amount.toLocaleString("fr-FR")} F CFA</span>
             </div>
+            {isPartiallyPaid && (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Déjà payé :</span>
+                  <span className="font-semibold text-emerald-600">{previouslyPaid.toLocaleString("fr-FR")} F CFA</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Reste à payer :</span>
+                  <span className="font-semibold text-orange-600">{remaining.toLocaleString("fr-FR")} F CFA</span>
+                </div>
+                <Progress value={progressPercent} className="h-2 mt-1" />
+              </>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Échéance prévue :</span>
               <span>{format(new Date(echeance.due_date), "dd MMMM yyyy", { locale: fr })}</span>
@@ -227,8 +261,14 @@ export function PayEcheanceDialog({ echeance, open, onOpenChange }: PayEcheanceD
             <Input
               id="paid_amount"
               type="number"
+              max={remaining}
               {...register("paid_amount", { valueAsNumber: true })}
             />
+            {watchedAmount > 0 && watchedAmount < remaining && (
+              <p className="text-sm text-orange-600">
+                Paiement partiel — reste : {(remaining - watchedAmount).toLocaleString("fr-FR")} F CFA
+              </p>
+            )}
             {errors.paid_amount && (
               <p className="text-sm text-destructive">{errors.paid_amount.message}</p>
             )}

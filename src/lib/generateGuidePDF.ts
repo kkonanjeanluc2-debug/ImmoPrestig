@@ -264,9 +264,9 @@ export async function generateGuidePDF(
   lotissementName: string,
   options: GuideOptions
 ) {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const pw = doc.internal.pageSize.getWidth();  // 210
-  const ph = doc.internal.pageSize.getHeight(); // 297
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const pw = doc.internal.pageSize.getWidth();  // 297 landscape
+  const ph = doc.internal.pageSize.getHeight(); // 210 landscape
   const margin = 12;
 
   const commune = options.coverPage?.commune || "";
@@ -275,61 +275,119 @@ export async function generateGuidePDF(
   // Group entries by lot
   const lotBlocks = groupEntriesByLot(entries);
 
-  // === COVER PAGE (optional) ===
+  // === COVER PAGE (landscape, matching official guide format) ===
   if (options.coverPage) {
     const cp = options.coverPage;
 
-    if (cp.bg_color && cp.bg_color !== "#FFFFFF") {
-      const bg = hexToRgb(cp.bg_color);
-      doc.setFillColor(bg[0], bg[1], bg[2]);
-      doc.rect(0, 0, pw, ph, "F");
+    // Background: soft peach/cream gradient
+    const bgBase = cp.bg_color && cp.bg_color !== "#FFFFFF" ? hexToRgb(cp.bg_color) : [255, 245, 235] as [number, number, number];
+    doc.setFillColor(bgBase[0], bgBase[1], bgBase[2]);
+    doc.rect(0, 0, pw, ph, "F");
+
+    // Decorative border pattern (top and bottom)
+    const borderRgb = hexToRgb(cp.border_color);
+    const patternH = 6;
+    
+    // Top decorative band
+    doc.setFillColor(borderRgb[0], borderRgb[1], borderRgb[2]);
+    doc.rect(0, 0, pw, patternH, "F");
+    // Add zigzag pattern overlay
+    doc.setFillColor(255, 255, 255);
+    const zigW = 8;
+    for (let i = 0; i < pw / zigW; i++) {
+      const zx = i * zigW;
+      doc.triangle(zx, patternH, zx + zigW / 2, 0, zx + zigW, patternH, "F");
+    }
+    doc.setFillColor(borderRgb[0], borderRgb[1], borderRgb[2]);
+    for (let i = 0; i < pw / zigW; i++) {
+      const zx = i * zigW + zigW / 2;
+      doc.triangle(zx - zigW / 4, patternH, zx, patternH - 3, zx + zigW / 4, patternH, "F");
     }
 
-    let yPos = 35;
+    // Bottom decorative band
+    doc.setFillColor(borderRgb[0], borderRgb[1], borderRgb[2]);
+    doc.rect(0, ph - patternH, pw, patternH, "F");
+    doc.setFillColor(255, 255, 255);
+    for (let i = 0; i < pw / zigW; i++) {
+      const zx = i * zigW;
+      doc.triangle(zx, ph - patternH, zx + zigW / 2, ph, zx + zigW, ph - patternH, "F");
+    }
+    doc.setFillColor(borderRgb[0], borderRgb[1], borderRgb[2]);
+    for (let i = 0; i < pw / zigW; i++) {
+      const zx = i * zigW + zigW / 2;
+      doc.triangle(zx - zigW / 4, ph - patternH, zx, ph - patternH + 3, zx + zigW / 4, ph - patternH, "F");
+    }
 
-    doc.setFontSize(12);
+    // Top-left: District / Region / Commune / Village info
+    let yInfo = patternH + 12;
+    doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
     if (cp.district) {
-      doc.text(cp.district.toUpperCase(), pw / 2, yPos, { align: "center" });
-      yPos += 8;
+      const distLines = cp.district.toUpperCase().split("\n");
+      distLines.forEach(line => {
+        doc.text(line.trim(), margin + 5, yInfo);
+        yInfo += 5;
+      });
     }
     if (cp.commune) {
-      doc.text(cp.commune.toUpperCase(), pw / 2, yPos, { align: "center" });
-      yPos += 6;
-      doc.setLineWidth(0.5);
-      doc.line(pw / 2 - 35, yPos, pw / 2 + 35, yPos);
-      yPos += 15;
+      yInfo += 2;
+      doc.setLineWidth(0.4);
+      doc.setDrawColor(0, 0, 0);
+      doc.line(margin + 5, yInfo, margin + 55, yInfo);
+      yInfo += 5;
+      doc.text(`COMMUNE DE ${cp.commune.toUpperCase()}`, margin + 5, yInfo);
+      yInfo += 5;
+      doc.line(margin + 5, yInfo, margin + 55, yInfo);
+      yInfo += 6;
+    }
+    if (village) {
+      doc.text(`VILLAGE ${village.toUpperCase()}`, margin + 5, yInfo);
     }
 
-    yPos += 10;
+    // Right side: Republic info
+    const rightX = pw - margin - 5;
+    let yRight = patternH + 25;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("REPUBLIQUE DE COTE D'IVOIRE", rightX, yRight, { align: "right" });
+    yRight += 5;
+    doc.setFont("helvetica", "italic");
+    doc.text("Union-Discipline-Travail", rightX, yRight, { align: "right" });
+
+    // Center: GUIDE DU LOTISSEMENT title
     const titleRgb = hexToRgb(cp.title_color);
-    doc.setFontSize(52);
+    const centerY = ph * 0.42;
+    
+    doc.setFontSize(42);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(titleRgb[0], titleRgb[1], titleRgb[2]);
-    doc.text("GUIDE", pw / 2, yPos, { align: "center" });
-    yPos += 18;
+    doc.text("GUIDE DU LOTISSEMENT", pw / 2, centerY, { align: "center" });
 
+    // Lotissement name (underlined)
     const subRgb = hexToRgb(cp.subtitle_color);
-    doc.setFontSize(20);
+    doc.setFontSize(36);
     doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
-    doc.text(`LOTISSEMENT ${lotissementName.toUpperCase()}`, pw / 2, yPos, { align: "center" });
-    yPos += 25;
+    const nameY = centerY + 18;
+    doc.text(lotissementName.toUpperCase(), pw / 2, nameY, { align: "center" });
+    // Underline
+    const nameW = doc.getTextWidth(lotissementName.toUpperCase());
+    doc.setDrawColor(subRgb[0], subRgb[1], subRgb[2]);
+    doc.setLineWidth(0.8);
+    doc.line(pw / 2 - nameW / 2, nameY + 2, pw / 2 + nameW / 2, nameY + 2);
 
-    // Bordered box with ilot/lot ranges
-    const borderRgb = hexToRgb(cp.border_color);
+    // Ilot/lot ranges box
     const ilotGroups = new Map<string, GuideEntry[]>();
     entries.forEach(e => {
       const arr = ilotGroups.get(e.ilot) || [];
       arr.push(e);
       ilotGroups.set(e.ilot, arr);
     });
-
     const ilotEntries = Array.from(ilotGroups.entries());
-    if (ilotEntries.length > 0) {
-      const lineHeight = 9;
-      const boxContentLines: string[] = [];
 
+    if (ilotEntries.length > 0) {
+      const lineHeight = 8;
+      const boxContentLines: string[] = [];
       ilotEntries.forEach(([ilot, iEntries], idx) => {
         const lots = [...new Set(iEntries.map(e => e.lot))].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
         boxContentLines.push(`ILOT N°${ilot}`);
@@ -337,40 +395,24 @@ export async function generateGuidePDF(
         if (idx < ilotEntries.length - 1) boxContentLines.push("&&");
       });
 
-      const boxWidth = 140;
+      const boxWidth = pw * 0.55;
       const boxX = (pw - boxWidth) / 2;
-      const boxPaddingTop = 12;
-      const boxPaddingBottom = 6;
-      const maxBoxContentHeight = ph - yPos - 40;
-      const maxLinesPerPage = Math.floor((maxBoxContentHeight - boxPaddingTop - boxPaddingBottom) / lineHeight);
+      const boxPaddingV = 8;
+      let boxY = nameY + 12;
 
-      let lineIndex = 0;
-      let isFirstBoxPage = true;
-
-      while (lineIndex < boxContentLines.length) {
-        const linesForThisPage = boxContentLines.slice(lineIndex, lineIndex + maxLinesPerPage);
-        const boxHeight = linesForThisPage.length * lineHeight + boxPaddingTop + boxPaddingBottom;
-
-        if (!isFirstBoxPage) {
-          doc.addPage("a4", "portrait");
-          if (cp.bg_color && cp.bg_color !== "#FFFFFF") {
-            const bg = hexToRgb(cp.bg_color);
-            doc.setFillColor(bg[0], bg[1], bg[2]);
-            doc.rect(0, 0, pw, ph, "F");
-          }
-          yPos = 30;
-        }
-
+      // Only show if it fits
+      const boxH = boxContentLines.length * lineHeight + boxPaddingV * 2;
+      if (boxY + boxH < ph - patternH - 25) {
         doc.setDrawColor(borderRgb[0], borderRgb[1], borderRgb[2]);
-        doc.setLineWidth(1.2);
-        doc.rect(boxX, yPos, boxWidth, boxHeight);
+        doc.setLineWidth(1);
+        doc.rect(boxX, boxY, boxWidth, boxH);
 
-        let textY = yPos + boxPaddingTop;
-        doc.setFontSize(14);
+        doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
 
-        linesForThisPage.forEach(line => {
+        let textY = boxY + boxPaddingV + 4;
+        boxContentLines.forEach(line => {
           if (line === "&&") {
             doc.setTextColor(0, 0, 0);
             doc.text(line, pw / 2, textY, { align: "center" });
@@ -380,19 +422,22 @@ export async function generateGuidePDF(
           }
           textY += lineHeight;
         });
-
-        yPos += boxHeight + 20;
-        lineIndex += maxLinesPerPage;
-        isFirstBoxPage = false;
       }
     }
 
+    // Village name at bottom (large, subtle)
+    doc.setFontSize(32);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(200, 190, 170);
+    doc.text(village.toUpperCase(), pw / 2, ph - patternH - 15, { align: "center" });
+
+    // Date at bottom
     const now = new Date();
     const monthNames = ["JANVIER", "FÉVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOÛT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DÉCEMBRE"];
-    doc.setFontSize(15);
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
-    doc.text(`${monthNames[now.getMonth()]} ${now.getFullYear()}`, pw / 2, yPos, { align: "center" });
+    doc.text(`${monthNames[now.getMonth()]} ${now.getFullYear()}`, pw - margin - 5, ph - patternH - 10, { align: "right" });
 
     doc.setTextColor(0, 0, 0);
   }

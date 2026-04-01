@@ -75,10 +75,8 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingIlot, setEditingIlot] = useState<IlotWithStats | null>(null);
-  const [deletingIlot, setDeletingIlot] = useState<IlotWithStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const handleDelete = async () => {

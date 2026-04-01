@@ -167,6 +167,77 @@ export const ImportGeometreDialog = ({
         newWarnings.push("Aucune colonne de superficie détectée : les parcelles seront importées avec une superficie à 0.");
       }
 
+      // Detect if Excel data contains guide-format blocks (cells with ILOT/LOT patterns)
+      const isGuideExcel = parcellesData.some((row) => {
+        return Object.values(row).some((val) => {
+          const text = String(val || "");
+          return /ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text);
+        });
+      });
+
+      if (isGuideExcel) {
+        newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
+        for (const row of parcellesData) {
+          // Find the cell containing guide block text
+          let blockText = "";
+          for (const val of Object.values(row)) {
+            const text = String(val || "");
+            if (/ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text)) {
+              blockText = text;
+              break;
+            }
+          }
+          if (!blockText) continue;
+
+          const ilotMatch = blockText.match(/ILOT\s*[:]\s*(\d+)/i);
+          const lotMatch = blockText.match(/LOT\s*[:]\s*(\d+)/i);
+          const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+          const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
+
+          const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
+          const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+          const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
+          const affectation = affectationMatch ? affectationMatch[1].trim() : undefined;
+
+          if (!plotNumber) continue;
+          if (existingPlotNumbers.includes(String(plotNumber))) continue;
+
+          // Try to extract attributaire info from other cells in same row
+          const allValues = Object.values(row).map(v => String(v || "").trim()).filter(Boolean);
+          // Find the cell that's NOT the block text and looks like a name
+          let beneficiaireName = "";
+          let contact = "";
+          let cniNumber = "";
+          let cniNature = "";
+          for (const val of allValues) {
+            if (val === blockText) continue;
+            // Skip pure numbers that look like area/price
+            if (/^\d+[\.,]?\d*$/.test(val) && !beneficiaireName) continue;
+            if (!beneficiaireName && val.length > 2 && !/ILOT|LOT|COMMUNE|VILLAGE|SUPERFICIE|ATTESTATION|ATTRIBUT/i.test(val)) {
+              beneficiaireName = val;
+            }
+          }
+
+          const parcelle: ParsedGeometreParcelle = {
+            plotNumber: String(plotNumber),
+            area,
+            price: 0,
+            ilotName: ilotName ? String(ilotName) : undefined,
+            beneficiaire: beneficiaireName || undefined,
+            affectation: (affectation && affectation.length > 0) ? affectation : undefined,
+          };
+          parcelles.push(parcelle);
+
+          if (ilotName) {
+            const existingIlot = ilots.find(i => i.name.toLowerCase() === String(ilotName).toLowerCase());
+            if (existingIlot) {
+              existingIlot.parcelles.push(parcelle);
+            } else {
+              ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+            }
+          }
+        }
+      } else {
       parcellesData.forEach((row, idx) => {
         if (shouldSkipExcelRow(row)) {
           return;
@@ -226,6 +297,7 @@ export const ImportGeometreDialog = ({
           }
         }
       });
+      }
     }
 
     if (parcelles.length === 0 && ilots.length === 0) {

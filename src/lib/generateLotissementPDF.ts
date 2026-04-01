@@ -1262,7 +1262,7 @@ export const generateAttestationVillageoise = async (
   drawDocumentBackground();
 
   // Draw watermark
-  const drawWatermark = async () => {
+  const drawWatermark = async (bodyTopY: number, bodyBottomY: number) => {
     const wmType = template?.watermark_type || 'none';
     if (wmType === 'none') return;
     const opacity = template?.watermark_opacity ?? 0.1;
@@ -1278,29 +1278,24 @@ export const generateAttestationVillageoise = async (
       doc.setTextColor(grayVal, grayVal, grayVal);
 
       const textW = doc.getTextWidth(text);
-      const gapX = 20;
-      const blockW = textW + gapX;
       const rowH = 22;
+      // Two columns positioned at ~1/3 and ~2/3 of page width
+      const col1X = pageWidth * 0.18;
+      const col2X = pageWidth * 0.58;
 
       if (repeat) {
         if (angle === 0) {
-          for (let y = 20; y < pageHeight - 10; y += rowH) {
-            const cols = Math.ceil((pageWidth + blockW) / blockW);
-            const totalW = cols * blockW;
-            const startX = (pageWidth - totalW) / 2;
-            for (let i = 0; i < cols; i++) {
-              doc.text(text, startX + i * blockW, y);
-            }
+          for (let y = bodyTopY; y < bodyBottomY; y += rowH) {
+            doc.text(text, col1X, y);
+            doc.text(text, col2X, y);
           }
         } else {
-          const stepX = textW + 50;
           const stepY = 35;
           let row = 0;
-          for (let y = 10; y < pageHeight; y += stepY) {
-            const offsetX = (row % 2) * (stepX / 2);
-            for (let x = -textW + offsetX; x < pageWidth + textW; x += stepX) {
-              doc.text(text, x, y, { angle });
-            }
+          for (let y = bodyTopY; y < bodyBottomY; y += stepY) {
+            const offX = (row % 2) * 30;
+            doc.text(text, col1X + offX, y, { angle });
+            doc.text(text, col2X + offX, y, { angle });
             row++;
           }
         }
@@ -1317,17 +1312,17 @@ export const generateAttestationVillageoise = async (
           const imgSize = 35;
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
           if (repeat) {
-            const stepX = imgSize + 30;
-            const stepY = imgSize + 25;
-            for (let y = 10; y < pageHeight; y += stepY) {
-              for (let x = 10; x < pageWidth; x += stepX) {
-                if (gState) (doc as any).setGState(gState);
-                doc.addImage(imgBase64, 'PNG', x, y, imgSize, imgSize);
-              }
+            const stepY = imgSize + 30;
+            const x1 = pageWidth * 0.22;
+            const x2 = pageWidth * 0.62;
+            for (let y = bodyTopY; y < bodyBottomY; y += stepY) {
+              if (gState) (doc as any).setGState(gState);
+              doc.addImage(imgBase64, 'PNG', x1, y, imgSize, imgSize);
+              doc.addImage(imgBase64, 'PNG', x2, y, imgSize, imgSize);
             }
           } else {
             if (gState) (doc as any).setGState(gState);
-            doc.addImage(imgBase64, 'PNG', (pageWidth - imgSize) / 2, (pageHeight - imgSize) / 2, imgSize, imgSize);
+            doc.addImage(imgBase64, 'PNG', (pageWidth - imgSize) / 2, (bodyTopY + bodyBottomY - imgSize) / 2, imgSize, imgSize);
           }
           // Reset opacity
           const resetState = (doc as any).GState ? new (doc as any).GState({ opacity: 1 }) : null;
@@ -1337,7 +1332,9 @@ export const generateAttestationVillageoise = async (
     }
   };
 
-  await drawWatermark();
+  // Watermark will be drawn after the header, before footer
+  // We store the body start Y after header rendering, then call drawWatermark
+  let watermarkBodyTopY = 0;
 
   if (isCessionTemplate) {
     // === CESSION HEADER: Agency logo (left) + header text (right) + colored dashes + title ===
@@ -1520,6 +1517,15 @@ export const generateAttestationVillageoise = async (
   }
 
   doc.setTextColor(...textColor);
+
+  // Draw watermark in body zone only (between header and footer)
+  watermarkBodyTopY = yPos;
+  const watermarkBodyBottomY = pageHeight - bottomMargin;
+  await drawWatermark(watermarkBodyTopY, watermarkBodyBottomY);
+  // Reset text color after watermark
+  doc.setTextColor(...textColor);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(bodyFontSize);
 
   const templateContent = template?.content || '';
 

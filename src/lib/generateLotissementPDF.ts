@@ -1067,15 +1067,18 @@ export const generateAttestationVillageoise = async (
   chefVillageTitre?: string,
   ilotName?: string | null,
   chefImages?: AttestationChefImages | null,
-  ancienBeneficiaire?: AncienBeneficiaireInfo | null
+  ancienBeneficiaire?: AncienBeneficiaireInfo | null,
+  compactLevel = 0
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
+  const isCessionTemplate = template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR');
+  const isAttributionTemplate = !isCessionTemplate;
+  const margin = isAttributionTemplate ? (compactLevel > 0 ? 12 : 15) : 20;
   const contentWidth = pageWidth - 2 * margin;
-  const bottomMargin = 25;
-  let yPos = 15;
+  const bottomMargin = isAttributionTemplate ? (compactLevel > 0 ? 12 : 18) : 25;
+  let yPos = isAttributionTemplate ? (compactLevel > 0 ? 10 : 12) : 15;
 
   const district = template?.district || "";
   const commune = template?.commune || "";

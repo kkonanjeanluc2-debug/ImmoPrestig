@@ -418,12 +418,24 @@ export async function generateGuidePDF(
     if (ilotEntries.length > 0) {
       const lineHeight = 8;
       const boxContentLines: string[] = [];
-      ilotEntries.forEach(([ilot, iEntries], idx) => {
-        const lots = [...new Set(iEntries.map(e => e.lot))].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
-        boxContentLines.push(`ILOT N°${ilot}`);
-        boxContentLines.push(lots.length > 1 ? `LOT N°${lots[0]} À LOT N°${lots[lots.length - 1]}` : `LOT N°${lots[0]}`);
-        if (idx < ilotEntries.length - 1) boxContentLines.push("&&");
-      });
+
+      // If many ilots, show a global summary instead of listing all
+      if (ilotEntries.length > 4) {
+        const allIlots = ilotEntries.map(([ilot]) => ilot).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+        const allLots = entries.map(e => e.lot).filter(Boolean);
+        const sortedLots = [...new Set(allLots)].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+        boxContentLines.push(`ILOT N°${allIlots[0]} À ILOT N°${allIlots[allIlots.length - 1]}`);
+        if (sortedLots.length > 1) {
+          boxContentLines.push(`LOT N°${sortedLots[0]} À LOT N°${sortedLots[sortedLots.length - 1]}`);
+        }
+      } else {
+        ilotEntries.forEach(([ilot, iEntries], idx) => {
+          const lots = [...new Set(iEntries.map(e => e.lot))].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+          boxContentLines.push(`ILOT N°${ilot}`);
+          boxContentLines.push(lots.length > 1 ? `LOT N°${lots[0]} À LOT N°${lots[lots.length - 1]}` : `LOT N°${lots[0]}`);
+          if (idx < ilotEntries.length - 1) boxContentLines.push("&&");
+        });
+      }
 
       const boxWidth = pw * 0.55;
       const boxX = (pw - boxWidth) / 2;

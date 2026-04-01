@@ -11,7 +11,7 @@ const warningColor: [number, number, number] = [245, 158, 11];
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Administrateur",
-  gestionnaire: "Gestionnaire",
+  gestionnaire: "Commercial",
   comptable: "Comptable",
   caissiere: "Caissière",
 };

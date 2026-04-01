@@ -23,7 +23,7 @@ export interface UserWithRole {
 export const ROLE_LABELS: Record<AppRole, string> = {
   super_admin: "Super Admin",
   admin: "Administrateur",
-  gestionnaire: "Gestionnaire",
+  gestionnaire: "Commercial",
   comptable: "Comptable",
   caissiere: "Caissière",
   lecture_seule: "Lecture seule",

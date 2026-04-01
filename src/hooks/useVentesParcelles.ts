@@ -275,3 +275,44 @@ export const useDeleteVenteParcelle = () => {
     },
   });
 };
+
+export const useCancelVenteParcelle = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ venteId, parcelleId }: { venteId: string; parcelleId: string }) => {
+      // 1. Delete all écheances for this vente
+      const { error: echeancesError } = await supabase
+        .from("echeances_parcelles")
+        .delete()
+        .eq("vente_id", venteId);
+      if (echeancesError) throw echeancesError;
+
+      // 2. Delete the vente itself
+      const { error: venteError } = await supabase
+        .from("ventes_parcelles")
+        .delete()
+        .eq("id", venteId);
+      if (venteError) throw venteError;
+
+      // 3. Reset parcelle status to disponible and clear beneficiaire
+      const { error: parcelleError } = await supabase
+        .from("parcelles")
+        .update({ status: "disponible" })
+        .eq("id", parcelleId);
+      if (parcelleError) throw parcelleError;
+
+      if (user) {
+        await logActivityDirect(user.id, "delete", "vente_parcelle", "Vente annulée — lot remis en disponible", venteId);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ventes-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["echeances-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["beneficiaires"] });
+    },
+  });
+};

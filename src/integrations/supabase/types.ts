@@ -2603,6 +2603,77 @@ export type Database = {
           },
         ]
       }
+      mutations_parcelles: {
+        Row: {
+          ancien_acquereur_id: string
+          created_at: string
+          id: string
+          mutation_date: string
+          mutation_price: number | null
+          notes: string | null
+          nouvel_acquereur_id: string
+          parcelle_id: string
+          updated_at: string
+          user_id: string
+          vente_id: string
+        }
+        Insert: {
+          ancien_acquereur_id: string
+          created_at?: string
+          id?: string
+          mutation_date?: string
+          mutation_price?: number | null
+          notes?: string | null
+          nouvel_acquereur_id: string
+          parcelle_id: string
+          updated_at?: string
+          user_id: string
+          vente_id: string
+        }
+        Update: {
+          ancien_acquereur_id?: string
+          created_at?: string
+          id?: string
+          mutation_date?: string
+          mutation_price?: number | null
+          notes?: string | null
+          nouvel_acquereur_id?: string
+          parcelle_id?: string
+          updated_at?: string
+          user_id?: string
+          vente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mutations_parcelles_ancien_acquereur_id_fkey"
+            columns: ["ancien_acquereur_id"]
+            isOneToOne: false
+            referencedRelation: "acquereurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mutations_parcelles_nouvel_acquereur_id_fkey"
+            columns: ["nouvel_acquereur_id"]
+            isOneToOne: false
+            referencedRelation: "acquereurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mutations_parcelles_parcelle_id_fkey"
+            columns: ["parcelle_id"]
+            isOneToOne: false
+            referencedRelation: "parcelles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mutations_parcelles_vente_id_fkey"
+            columns: ["vente_id"]
+            isOneToOne: false
+            referencedRelation: "ventes_parcelles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

@@ -251,7 +251,7 @@ const LotissementDetails = () => {
               <TabsList className="h-auto flex-wrap gap-1 p-1 overflow-x-auto">
                 <TabsTrigger value="parcelles" className="gap-2">
                   <Grid3X3 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Parcelles</span>
+                  <span className="hidden sm:inline">Lots</span>
                 </TabsTrigger>
                 <TabsTrigger value="ilots" className="gap-2">
                   <Layers className="h-4 w-4" />

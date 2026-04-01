@@ -125,7 +125,7 @@ export function AddParcelleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Nouvelle parcelle</DialogTitle>
+          <DialogTitle>Nouveau lot</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

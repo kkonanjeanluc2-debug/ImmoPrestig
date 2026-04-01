@@ -1271,17 +1271,34 @@ export const generateAttestationVillageoise = async (
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
-      doc.setFontSize(40);
+      doc.setFontSize(28);
       doc.setFont('helvetica', 'bold');
       const grayVal = Math.round(255 * (1 - opacity));
       doc.setTextColor(grayVal, grayVal, grayVal);
 
+      const textWidth = doc.getTextWidth(text);
+
       if (repeat) {
-        const stepX = 80;
-        const stepY = 60;
-        for (let x = -20; x < pageWidth + 80; x += stepX) {
-          for (let y = 20; y < pageHeight + 60; y += stepY) {
-            doc.text(text, x, y, { angle });
+        if (angle === 0) {
+          // Horizontal: rows of text with generous spacing
+          const stepX = textWidth + 30;
+          const stepY = 40;
+          for (let y = 25; y < pageHeight; y += stepY) {
+            for (let x = 10; x < pageWidth; x += stepX) {
+              doc.text(text, x, y, { angle: 0 });
+            }
+          }
+        } else {
+          // Diagonal: staggered grid, offset every other row to avoid overlap
+          const stepX = textWidth + 40;
+          const stepY = 50;
+          let row = 0;
+          for (let y = 0; y < pageHeight + 50; y += stepY) {
+            const offsetX = (row % 2) * (stepX / 2);
+            for (let x = -30 + offsetX; x < pageWidth + 50; x += stepX) {
+              doc.text(text, x, y, { angle });
+            }
+            row++;
           }
         }
       } else {
@@ -1294,13 +1311,13 @@ export const generateAttestationVillageoise = async (
       try {
         const imgBase64 = await loadImageAsBase64(template.watermark_image_url);
         if (imgBase64) {
-          const imgSize = 60;
+          const imgSize = 45;
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
           if (repeat) {
-            const stepX = 90;
-            const stepY = 90;
-            for (let x = 10; x < pageWidth; x += stepX) {
-              for (let y = 10; y < pageHeight; y += stepY) {
+            const stepX = imgSize + 35;
+            const stepY = imgSize + 35;
+            for (let y = 10; y < pageHeight; y += stepY) {
+              for (let x = 10; x < pageWidth; x += stepX) {
                 if (gState) (doc as any).setGState(gState);
                 doc.addImage(imgBase64, 'PNG', x, y, imgSize, imgSize);
               }

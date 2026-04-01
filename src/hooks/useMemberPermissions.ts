@@ -230,7 +230,7 @@ export const PERMISSION_GROUPS = {
   },
   lotissements: {
     label: "Lotissements",
-    permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements", "can_create_parcelles", "can_create_ilots", "can_create_lotissement_documents", "can_create_demarches", "can_create_lotissement_prospects", "can_access_guide", "can_export_guide", "can_import_geometre", "can_access_repartition", "can_view_echeances_lotissements", "can_collect_echeances_lotissements"] as PermissionKey[],
+    permissions: ["can_view_lotissements", "can_create_lotissements", "can_edit_lotissements", "can_delete_lotissements", "can_create_parcelles", "can_create_ilots", "can_create_lotissement_documents", "can_create_demarches", "can_create_lotissement_prospects", "can_access_guide", "can_export_guide", "can_import_geometre", "can_access_repartition", "can_cancel_vente_parcelle", "can_manage_mutations_parcelle", "can_view_echeances_lotissements", "can_collect_echeances_lotissements"] as PermissionKey[],
   },
   ventes: {
     label: "Ventes immobilières",

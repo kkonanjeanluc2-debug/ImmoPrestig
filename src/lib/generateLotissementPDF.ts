@@ -1545,7 +1545,9 @@ export const generateAttestationVillageoise = async (
       '{beneficiaire_nom}': acquereur.name,
       '{beneficiaire_cni}': acquereur.cni_number || '___',
       '{beneficiaire_profession}': acquereur.profession || '___',
-      '{beneficiaire_telephone}': acquereur.phone || '___',
+      '{beneficiaire_telephone}': acquereur.phone
+        ? (acquereur.phone.match(/\d{10}/g) || [acquereur.phone]).join(' / ')
+        : '___',
       '{beneficiaire_email}': acquereur.email || '___',
       '{beneficiaire_adresse}': acquereur.address || '___',
       '{beneficiaire_date_naissance}': acquereur.birth_date ? formatDate(acquereur.birth_date) : '___',

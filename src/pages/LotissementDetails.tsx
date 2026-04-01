@@ -408,6 +408,7 @@ const LotissementDetails = () => {
               lotissementId={id || ""}
               lotissementName={lotissement.name}
               guideTemplateId={(lotissement as any).guide_template_id}
+              attestationTemplateId={(lotissement as any).attestation_template_id}
               canExport={canExportGuide}
             />
           </TabsContent>}

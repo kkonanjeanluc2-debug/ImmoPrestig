@@ -281,9 +281,15 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
       ? guideTemplates.find(t => t.id === guideTemplateId)
       : guideTemplates.find(t => t.is_default);
 
+    // Get village from attestation template
+    const attTemplate = attestationTemplateId
+      ? attestationTemplates.find(t => t.id === attestationTemplateId)
+      : attestationTemplates.find(t => t.is_default);
+
     generateGuidePDF(guideEntries, lotissementName, {
       totalParcelles: parcelles?.length || 0,
       agency: agency || undefined,
+      village: (attTemplate as any)?.village || "",
       coverPage: template ? {
         district: template.district,
         commune: template.commune,

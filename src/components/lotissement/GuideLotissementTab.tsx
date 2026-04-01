@@ -288,6 +288,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     if (s === "vendu") return "default";
     if (s === "reserve") return "secondary";
     if (s === "cede") return "outline";
+    if (s === "mute") return "default";
     return "outline";
   };
 
@@ -295,6 +296,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     if (s === "vendu") return "Vendu";
     if (s === "reserve") return "Réservé";
     if (s === "cede") return "Cédé";
+    if (s === "mute") return "Muté";
     return "Disponible";
   };
 

@@ -106,13 +106,7 @@ export const useCreateMutationParcelle = () => {
     }) => {
       if (!user) throw new Error("User not authenticated");
 
-      // Update the vente to point to the new acquirer
-      const { error: updateError } = await supabase
-        .from("ventes_parcelles")
-        .update({ acquereur_id: mutation.nouvel_acquereur_id })
-        .eq("id", mutation.vente_id);
-
-      if (updateError) throw updateError;
+      // Create the mutation record (does NOT modify the original vente)
 
       // Create the mutation record
       const { data, error } = await supabase

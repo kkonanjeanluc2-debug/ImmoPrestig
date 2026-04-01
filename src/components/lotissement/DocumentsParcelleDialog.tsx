@@ -425,12 +425,25 @@ export function DocumentsParcelleDialog({
                     }
                   }
 
+                  // If mutations exist, use the last mutation's nouvel_acquereur as the document beneficiary
+                  const lastMut = venteMutations.length > 0 ? venteMutations[venteMutations.length - 1] : null;
+                  const cessionAcquereurInfo = lastMut?.nouvel_acquereur ? {
+                    name: lastMut.nouvel_acquereur.name || "N/A",
+                    phone: lastMut.nouvel_acquereur.phone,
+                    email: lastMut.nouvel_acquereur.email || null,
+                    address: lastMut.nouvel_acquereur.address || null,
+                    cni_number: lastMut.nouvel_acquereur.cni_number || null,
+                    birth_date: lastMut.nouvel_acquereur.birth_date || null,
+                    birth_place: lastMut.nouvel_acquereur.birth_place || null,
+                    profession: lastMut.nouvel_acquereur.profession || null,
+                  } : acquereurInfo;
+
                   const doc = await generateAttestationVillageoise(
                     parcelleInfo,
                     lotissementInfo,
-                    acquereurInfo,
+                    cessionAcquereurInfo,
                     agencyInfo,
-                    vente.sale_date,
+                    lastMut ? lastMut.mutation_date : vente.sale_date,
                     undefined,
                     lotissement?.chef_village_name || undefined,
                     templateData,

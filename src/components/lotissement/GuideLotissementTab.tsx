@@ -112,8 +112,9 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
 
       // If there are mutations, show the full chain
       if (parcelleMutations.length > 0 && vente) {
-        // Row 1: original beneficiary (if exists)
-        if (origAttributaire) {
+        // Row 1: original beneficiary (if exists and different from first ancien_acquereur)
+        const firstAncien = parcelleMutations[0].ancien_acquereur?.name || "";
+        if (origAttributaire && origAttributaire !== firstAncien) {
           entries.push({
             numero: numero++,
             ilot: ilotName,
@@ -130,8 +131,25 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           });
         }
 
-        // Show each mutation step: ancien_acquereur as "Cédé"
-        parcelleMutations.forEach((mut, idx) => {
+        // First entry: the original acquirer from the vente (cédé)
+        entries.push({
+          numero: numero++,
+          ilot: ilotName,
+          lot: parcelle.plot_number,
+          attributaire: vente.acquereur?.name || origAttributaire || "",
+          attestation_numero: "",
+          attestation_date: format(new Date(vente.sale_date), "dd/MM/yyyy"),
+          contact: vente.acquereur?.phone || origContact || "",
+          equipement: "",
+          nature_piece: vente.acquereur?.cni_number ? "CNI" : "",
+          numero_piece: vente.acquereur?.cni_number || "",
+          date_piece: "",
+          status: "cede",
+        });
+
+        // For chained mutations (2nd+), show intermediate ancien_acquereurs as "Cédé"
+        for (let idx = 1; idx < parcelleMutations.length; idx++) {
+          const mut = parcelleMutations[idx];
           entries.push({
             numero: numero++,
             ilot: ilotName,
@@ -146,24 +164,23 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
             date_piece: "",
             status: "cede",
           });
+        }
 
-          // Last mutation: show the nouvel_acquereur as current owner
-          if (idx === parcelleMutations.length - 1) {
-            entries.push({
-              numero: numero++,
-              ilot: ilotName,
-              lot: parcelle.plot_number,
-              attributaire: mut.nouvel_acquereur?.name || "",
-              attestation_numero: "",
-              attestation_date: format(new Date(mut.mutation_date), "dd/MM/yyyy"),
-              contact: mut.nouvel_acquereur?.phone || "",
-              equipement: "",
-              nature_piece: mut.nouvel_acquereur?.cni_number ? "CNI" : "",
-              numero_piece: mut.nouvel_acquereur?.cni_number || "",
-              date_piece: "",
-              status: parcelle.status,
-            });
-          }
+        // Last mutation: show the nouvel_acquereur as current owner
+        const lastMut = parcelleMutations[parcelleMutations.length - 1];
+        entries.push({
+          numero: numero++,
+          ilot: ilotName,
+          lot: parcelle.plot_number,
+          attributaire: lastMut.nouvel_acquereur?.name || "",
+          attestation_numero: "",
+          attestation_date: format(new Date(lastMut.mutation_date), "dd/MM/yyyy"),
+          contact: lastMut.nouvel_acquereur?.phone || "",
+          equipement: "",
+          nature_piece: lastMut.nouvel_acquereur?.cni_number ? "CNI" : "",
+          numero_piece: lastMut.nouvel_acquereur?.cni_number || "",
+          date_piece: "",
+          status: "mute",
         });
       } else if (vente?.acquereur?.name && origAttributaire) {
         // Sold with original beneficiary, no mutations
@@ -245,7 +262,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     { key: "nature_piece", label: "Nature Pièce" },
     { key: "numero_piece", label: "N° Pièce" },
     { key: "date_piece", label: "Date Pièce" },
-    { key: "status", label: "Statut", format: (v) => v === "vendu" ? "Vendu" : v === "reserve" ? "Réservé" : "Disponible" },
+    { key: "status", label: "Statut", format: (v) => v === "vendu" ? "Vendu" : v === "reserve" ? "Réservé" : v === "cede" ? "Cédé" : v === "mute" ? "Muté" : "Disponible" },
   ];
 
   const handleExportPDF = () => {
@@ -271,6 +288,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     if (s === "vendu") return "default";
     if (s === "reserve") return "secondary";
     if (s === "cede") return "outline";
+    if (s === "mute") return "default";
     return "outline";
   };
 
@@ -278,6 +296,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     if (s === "vendu") return "Vendu";
     if (s === "reserve") return "Réservé";
     if (s === "cede") return "Cédé";
+    if (s === "mute") return "Muté";
     return "Disponible";
   };
 

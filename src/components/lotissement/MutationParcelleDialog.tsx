@@ -21,7 +21,7 @@ import { Loader2, ArrowRightLeft, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
-import { useCreateMutationParcelle } from "@/hooks/useMutationsParcelles";
+import { useCreateMutationParcelle, useMutationsParcelles } from "@/hooks/useMutationsParcelles";
 
 interface MutationParcelleDialogProps {
   vente: VenteWithDetails;
@@ -35,8 +35,15 @@ export function MutationParcelleDialog({
   onOpenChange,
 }: MutationParcelleDialogProps) {
   const { data: acquereurs = [] } = useAcquereurs();
+  const { data: existingMutations = [] } = useMutationsParcelles(vente.id);
   const createAcquereur = useCreateAcquereur();
   const createMutation = useCreateMutationParcelle();
+
+  // Current owner: last mutation's nouvel_acquereur, or the vente's acquirer
+  const lastMutation = existingMutations.length > 0 ? existingMutations[existingMutations.length - 1] : null;
+  const currentOwnerId = lastMutation ? lastMutation.nouvel_acquereur_id : vente.acquereur_id;
+  const currentOwnerName = lastMutation?.nouvel_acquereur?.name || vente.acquereur?.name || "N/A";
+  const currentOwnerPhone = lastMutation?.nouvel_acquereur?.phone || vente.acquereur?.phone || null;
 
   const [mode, setMode] = useState<"select" | "create">("select");
   const [selectedAcquereurId, setSelectedAcquereurId] = useState("");
@@ -57,7 +64,7 @@ export function MutationParcelleDialog({
 
   const filteredAcquereurs = acquereurs.filter(
     (a) =>
-      a.id !== vente.acquereur_id &&
+      a.id !== currentOwnerId &&
       (a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.cni_number?.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -95,7 +102,7 @@ export function MutationParcelleDialog({
       await createMutation.mutateAsync({
         vente_id: vente.id,
         parcelle_id: vente.parcelle_id,
-        ancien_acquereur_id: vente.acquereur_id,
+        ancien_acquereur_id: currentOwnerId,
         nouvel_acquereur_id: nouvelAcquereurId,
         mutation_date: mutationDate,
         mutation_price: mutationPrice ? parseFloat(mutationPrice) : null,
@@ -144,10 +151,10 @@ export function MutationParcelleDialog({
         <div className="space-y-4">
           {/* Current owner info */}
           <div className="p-3 border rounded-lg bg-muted/50">
-            <p className="text-sm text-muted-foreground">Acquéreur actuel (cédant)</p>
-            <p className="font-medium">{vente.acquereur?.name}</p>
-            {vente.acquereur?.phone && (
-              <p className="text-sm text-muted-foreground">{vente.acquereur.phone}</p>
+            <p className="text-sm text-muted-foreground">Propriétaire actuel (cédant)</p>
+            <p className="font-medium">{currentOwnerName}</p>
+            {currentOwnerPhone && (
+              <p className="text-sm text-muted-foreground">{currentOwnerPhone}</p>
             )}
           </div>
 

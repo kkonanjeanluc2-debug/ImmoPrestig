@@ -300,8 +300,8 @@ const Lotissements = () => {
           </div>
         )}
 
-        {/* Tableau comparatif */}
-        {lotissements && lotissements.length > 1 && (
+        {/* Tableau comparatif - masqué pour les commerciaux */}
+        {lotissements && lotissements.length > 1 && role !== "gestionnaire" && (
           <LotissementsComparisonTable
             lotissements={lotissements}
             parcelles={allParcelles || []}

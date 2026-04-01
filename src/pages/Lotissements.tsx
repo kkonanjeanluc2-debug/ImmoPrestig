@@ -34,6 +34,7 @@ import {
   Map,
 } from "lucide-react";
 import { useLotissements, useSoftDeleteLotissement } from "@/hooks/useLotissements";
+import { useParcellesStats } from "@/hooks/useParcellesStats";
 import { useParcelles } from "@/hooks/useParcelles";
 import { useVentesParcelles } from "@/hooks/useVentesParcelles";
 import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
@@ -48,6 +49,7 @@ import type { Lotissement } from "@/hooks/useLotissements";
 const Lotissements = () => {
   const navigate = useNavigate();
   const { data: lotissements, isLoading } = useLotissements();
+  const { data: parcellesStats } = useParcellesStats();
   const { data: allParcelles } = useParcelles();
   const { data: allVentes } = useVentesParcelles();
   const { data: allEcheances } = useEcheancesParcelles();
@@ -73,12 +75,9 @@ const Lotissements = () => {
   );
 
   const getParcelleStats = (lotissementId: string) => {
-    const parcelles = allParcelles?.filter(p => p.lotissement_id === lotissementId) || [];
-    const total = parcelles.length;
-    const disponibles = parcelles.filter(p => p.status === "disponible").length;
-    const vendues = parcelles.filter(p => p.status === "vendu").length;
-    const reservees = parcelles.filter(p => p.status === "reserve").length;
-    return { total, disponibles, vendues, reservees };
+    return parcellesStats?.byLotissement[lotissementId] || {
+      total: 0, disponibles: 0, vendues: 0, reservees: 0, revenue: 0,
+    };
   };
 
   const handleDelete = async () => {
@@ -93,10 +92,9 @@ const Lotissements = () => {
     setDeletingId(null);
   };
 
-  const totalParcelles = allParcelles?.length || 0;
-  const totalVendues = allParcelles?.filter(p => p.status === "vendu").length || 0;
-  const totalDisponibles = allParcelles?.filter(p => p.status === "disponible").length || 0;
-  const totalRevenue = allParcelles?.filter(p => p.status === "vendu").reduce((sum, p) => sum + p.price, 0) || 0;
+  const totalParcelles = parcellesStats?.global.total || 0;
+  const totalVendues = parcellesStats?.global.vendues || 0;
+  const totalDisponibles = parcellesStats?.global.disponibles || 0;
 
   return (
     <DashboardLayout>

@@ -363,9 +363,21 @@ export async function generateGuidePDF(
       doc.text(`VILLAGE ${village.toUpperCase()}`, margin + 5, yInfo);
     }
 
-    // Right side: Republic info
+    // Center/Right: Logos (MCLAU + Coat of arms)
+    if (logosBase64) {
+      try {
+        // The image contains both logos side by side, place it center-right of header
+        const logoW = 120;
+        const logoH = 25;
+        const logoX = pw / 2 - 10;
+        const logoY = patternH + 8;
+        doc.addImage(logosBase64, "PNG", logoX, logoY, logoW, logoH);
+      } catch { /* ignore logo errors */ }
+    }
+
+    // Right side: Republic info (below logos)
     const rightX = pw - margin - 5;
-    let yRight = patternH + 25;
+    let yRight = patternH + 38;
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text("REPUBLIQUE DE COTE D'IVOIRE", rightX, yRight, { align: "right" });

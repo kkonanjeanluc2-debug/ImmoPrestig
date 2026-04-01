@@ -102,7 +102,7 @@ export function MutationParcelleDialog({
       await createMutation.mutateAsync({
         vente_id: vente.id,
         parcelle_id: vente.parcelle_id,
-        ancien_acquereur_id: vente.acquereur_id,
+        ancien_acquereur_id: currentOwnerId,
         nouvel_acquereur_id: nouvelAcquereurId,
         mutation_date: mutationDate,
         mutation_price: mutationPrice ? parseFloat(mutationPrice) : null,

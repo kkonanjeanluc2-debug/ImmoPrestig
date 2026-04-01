@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -76,6 +77,9 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
   const [editingIlot, setEditingIlot] = useState<IlotWithStats | null>(null);
   const [deletingIlot, setDeletingIlot] = useState<IlotWithStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (!deletingIlot) return;
@@ -85,6 +89,46 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
       setDeletingIlot(null);
     } catch (error) {
       toast.error("Erreur lors de la suppression de l'îlot");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setIsBulkDeleting(true);
+    try {
+      let successCount = 0;
+      for (const id of selectedIds) {
+        const ilot = filteredIlots.find(i => i.id === id);
+        try {
+          await deleteIlot.mutateAsync({ id, name: ilot?.name || "" });
+          successCount++;
+        } catch {
+          // continue
+        }
+      }
+      toast.success(`${successCount} îlot(s) supprimé(s)`);
+      setSelectedIds(new Set());
+      setShowBulkDeleteDialog(false);
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredIlots.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredIlots.map(i => i.id)));
     }
   };
 
@@ -170,12 +214,24 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
               Regroupez vos parcelles en îlots pour une meilleure organisation
             </CardDescription>
           </div>
-          {canCreate && (
-            <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvel îlot
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && canDelete && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowBulkDeleteDialog(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Supprimer ({selectedIds.size})
+              </Button>
+            )}
+            {canCreate && (
+              <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvel îlot
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search Bar */}
@@ -234,6 +290,14 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
               <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
+                    {canDelete && (
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={selectedIds.size === filteredIlots.length && filteredIlots.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
+                    )}
                     <TableHead>Îlot</TableHead>
                     <TableHead>Superficie</TableHead>
                     <TableHead className="text-center">Lots</TableHead>
@@ -251,7 +315,15 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
                       : 0;
 
                     return (
-                      <TableRow key={ilot.id}>
+                      <TableRow key={ilot.id} className={selectedIds.has(ilot.id) ? "bg-muted/50" : ""}>
+                        {canDelete && (
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedIds.has(ilot.id)}
+                              onCheckedChange={() => toggleSelect(ilot.id)}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
@@ -393,6 +465,28 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer {selectedIds.size} îlot(s) ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Les îlots sélectionnés seront déplacés vers la corbeille. Les parcelles associées ne seront pas supprimées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isBulkDeleting ? "Suppression..." : "Supprimer"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

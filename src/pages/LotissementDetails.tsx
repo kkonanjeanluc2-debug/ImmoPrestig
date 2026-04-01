@@ -187,7 +187,7 @@ const LotissementDetails = () => {
               </Button>}
               {canCreateParcelle && <Button size="sm" onClick={() => setShowAddParcelle(true)}>
                 <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Nouvelle parcelle</span>
+                <span className="hidden sm:inline">Nouveau lot</span>
               </Button>}
             </div>
           )}

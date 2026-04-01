@@ -232,7 +232,7 @@ export function RolesSettings() {
                             <SelectItem value="gestionnaire">
                               <div className="flex items-center gap-2">
                                 <UserCog className="h-4 w-4 text-blue-600" />
-                                Gestionnaire
+                                Commercial
                               </div>
                             </SelectItem>
                             <SelectItem value="lecture_seule">

@@ -226,7 +226,7 @@ export const useOverdueEcheances = (lotissementId?: string) => {
             )
           )
         `)
-        .eq("status", "pending")
+        .in("status", ["pending", "partial"])
         .lt("due_date", today)
         .order("due_date", { ascending: true });
 

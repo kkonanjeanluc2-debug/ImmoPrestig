@@ -122,6 +122,15 @@ export const useCreateParcelleProspect = () => {
         .select()
         .single();
 
+      // Auto-assign the parcelle to this commercial so others no longer see it
+      if (data && prospect.parcelle_id) {
+        await supabase
+          .from("parcelles")
+          .update({ assigned_to: user.id })
+          .eq("id", prospect.parcelle_id)
+          .is("assigned_to", null);
+      }
+
       if (error) throw error;
 
       await logActivityDirect(

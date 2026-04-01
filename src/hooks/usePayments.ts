@@ -45,7 +45,6 @@ export const usePayments = () => {
       if (error) throw error;
 
       const now = new Date();
-      const currentDay = now.getDate();
 
       // Fetch active contracts with tenant info (including start_date for lookback)
       const { data: activeContracts, error: contractsError } = await supabase

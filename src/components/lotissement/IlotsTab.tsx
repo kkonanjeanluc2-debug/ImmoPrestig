@@ -115,6 +115,29 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
     }
   };
 
+  const handleBulkDelete = async () => {
+    setIsBulkDeleting(true);
+    try {
+      let successCount = 0;
+      for (const id of selectedIds) {
+        const ilot = filteredIlots.find(i => i.id === id);
+        try {
+          await deleteIlot.mutateAsync({ id, name: ilot?.name || "" });
+          successCount++;
+        } catch {
+          // continue
+        }
+      }
+      toast.success(`${successCount} îlot(s) supprimé(s)`);
+      setSelectedIds(new Set());
+      setShowBulkDeleteDialog(false);
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);

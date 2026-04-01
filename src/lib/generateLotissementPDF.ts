@@ -1067,15 +1067,64 @@ export const generateAttestationVillageoise = async (
   chefVillageTitre?: string,
   ilotName?: string | null,
   chefImages?: AttestationChefImages | null,
-  ancienBeneficiaire?: AncienBeneficiaireInfo | null
+  ancienBeneficiaire?: AncienBeneficiaireInfo | null,
+  compactLevel = 0
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
+  const isCessionTemplate = template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR');
+  const isAttributionTemplate = !isCessionTemplate;
+  const margin = isAttributionTemplate
+    ? compactLevel > 1
+      ? 10
+      : compactLevel > 0
+        ? 12
+        : 15
+    : 20;
   const contentWidth = pageWidth - 2 * margin;
-  const bottomMargin = 25;
-  let yPos = 15;
+  const bottomMargin = isAttributionTemplate
+    ? compactLevel > 1
+      ? 8
+      : compactLevel > 0
+        ? 12
+        : 18
+    : 25;
+  let yPos = isAttributionTemplate
+    ? compactLevel > 1
+      ? 8
+      : compactLevel > 0
+        ? 10
+        : 12
+    : 15;
+  const bodyFontSize = isAttributionTemplate
+    ? compactLevel > 1
+      ? 7.6
+      : compactLevel > 0
+        ? 8.4
+        : 9
+    : 9;
+  const headingFontSize = isAttributionTemplate
+    ? compactLevel > 1
+      ? 8.8
+      : compactLevel > 0
+        ? 9.4
+        : 10
+    : 10;
+  const bodyLineHeight = isAttributionTemplate
+    ? compactLevel > 1
+      ? 3.8
+      : compactLevel > 0
+        ? 4.1
+        : 4.5
+    : 4.5;
+  const paragraphGap = isAttributionTemplate
+    ? compactLevel > 1
+      ? 0.8
+      : compactLevel > 0
+        ? 1
+        : 1.5
+    : 1.5;
 
   const district = template?.district || "";
   const commune = template?.commune || "";
@@ -1205,8 +1254,6 @@ export const generateAttestationVillageoise = async (
   };
 
   drawDocumentBackground();
-
-  const isCessionTemplate = template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR');
 
   if (isCessionTemplate) {
     // === CESSION HEADER: Agency logo (left) + header text (right) + colored dashes + title ===

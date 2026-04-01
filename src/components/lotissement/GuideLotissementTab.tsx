@@ -412,7 +412,15 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
                       <TableCell>{entry.attributaire || <span className="text-muted-foreground italic">—</span>}</TableCell>
                       <TableCell className="text-center">{entry.attestation_numero || "—"}</TableCell>
                       <TableCell className="text-center">{entry.attestation_date || "—"}</TableCell>
-                      <TableCell>{entry.contact || "—"}</TableCell>
+                      <TableCell>
+                        {entry.contact ? (
+                          <div className="flex flex-col">
+                            {entry.contact.split(/[,;\/]/).map((c, i) => (
+                              <span key={i}>{c.trim()}</span>
+                            ))}
+                          </div>
+                        ) : "—"}
+                      </TableCell>
                       <TableCell>{entry.equipement || "—"}</TableCell>
                       <TableCell>{entry.nature_piece || "—"}</TableCell>
                       <TableCell>{entry.numero_piece || "—"}</TableCell>

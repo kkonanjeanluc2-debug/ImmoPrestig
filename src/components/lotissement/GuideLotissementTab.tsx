@@ -47,6 +47,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
   const { data: agency } = useAgency();
   const { data: guideTemplates = [] } = useGuideTemplates();
   const { data: beneficiaires = [] } = useBeneficiairesLots(lotissementId);
+  const { data: mutations = [] } = useMutationsParcellesByLotissement(lotissementId);
   const [search, setSearch] = useState("");
 
   const guideEntries = useMemo(() => {

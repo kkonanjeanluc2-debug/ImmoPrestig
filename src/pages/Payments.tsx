@@ -104,7 +104,7 @@ export default function Payments() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "impayes" | "commissions" | "account">("payments");
-  const [periodFilter, setPeriodFilter] = useState<PeriodValue | undefined>(undefined);
+  const [periodFilter, setPeriodFilter] = useState<PeriodValue>(() => getDefaultPeriod({ mode: "full-period" }));
   const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_payments");
   const canEdit = hasPermission("can_edit_payments");
@@ -546,7 +546,8 @@ export default function Payments() {
                             />
                           </div>
                           <PeriodFilter
-                            value={periodFilter || getDefaultPeriod()}
+                            value={periodFilter}
+                            rangeMode="full-period"
                             onChange={(v) => setPeriodFilter(v)}
                           />
                         </div>

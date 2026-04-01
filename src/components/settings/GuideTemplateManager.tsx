@@ -190,52 +190,113 @@ export function GuideTemplateManager() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingTemplate ? "Modifier le modèle" : "Nouveau modèle de guide"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Nom du modèle *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Guide Songon" />
-            </div>
-            <div>
-              <Label>District</Label>
-              <Input value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} placeholder="DISTRICT AUTONOME D'ABIDJAN" />
-            </div>
-            <div>
-              <Label>Commune</Label>
-              <Input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} placeholder="COMMUNE DE SONGON" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Form fields */}
+            <div className="space-y-4">
+              <div>
+                <Label>Nom du modèle *</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Guide Songon" />
+              </div>
+
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">Zone en-tête (haut de page)</p>
+              <div>
+                <Label>District</Label>
+                <Input value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} placeholder="DISTRICT AUTONOME D'ABIDJAN" />
+              </div>
+              <div>
+                <Label>Commune</Label>
+                <Input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} placeholder="COMMUNE DE SONGON" />
+              </div>
+
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">Couleurs</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Titre "GUIDE"</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type="color" value={form.title_color} onChange={(e) => setForm({ ...form, title_color: e.target.value })} className="w-8 h-7 cursor-pointer" />
+                    <Input value={form.title_color} onChange={(e) => setForm({ ...form, title_color: e.target.value })} className="font-mono text-xs" />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Nom du lotissement</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type="color" value={form.subtitle_color} onChange={(e) => setForm({ ...form, subtitle_color: e.target.value })} className="w-8 h-7 cursor-pointer" />
+                    <Input value={form.subtitle_color} onChange={(e) => setForm({ ...form, subtitle_color: e.target.value })} className="font-mono text-xs" />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Bordure / Frise</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type="color" value={form.border_color} onChange={(e) => setForm({ ...form, border_color: e.target.value })} className="w-8 h-7 cursor-pointer" />
+                    <Input value={form.border_color} onChange={(e) => setForm({ ...form, border_color: e.target.value })} className="font-mono text-xs" />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Fond de page</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type="color" value={form.bg_color} onChange={(e) => setForm({ ...form, bg_color: e.target.value })} className="w-8 h-7 cursor-pointer" />
+                    <Input value={form.bg_color} onChange={(e) => setForm({ ...form, bg_color: e.target.value })} className="font-mono text-xs" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Couleur titre "GUIDE"</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <input type="color" value={form.title_color} onChange={(e) => setForm({ ...form, title_color: e.target.value })} className="w-10 h-8 cursor-pointer" />
-                  <Input value={form.title_color} onChange={(e) => setForm({ ...form, title_color: e.target.value })} className="font-mono text-xs" />
+            {/* Live preview */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Aperçu</p>
+              <div
+                className="border rounded-lg overflow-hidden shadow-sm"
+                style={{ backgroundColor: form.bg_color, aspectRatio: "210/297" }}
+              >
+                {/* Zigzag border top */}
+                <div className="w-full h-3" style={{ background: `linear-gradient(135deg, ${form.border_color} 25%, transparent 25%) -10px 0, linear-gradient(225deg, ${form.border_color} 25%, transparent 25%) -10px 0, linear-gradient(315deg, ${form.border_color} 25%, transparent 25%), linear-gradient(45deg, ${form.border_color} 25%, transparent 25%)`, backgroundSize: "12px 12px", backgroundRepeat: "repeat-x" }} />
+
+                <div className="px-4 py-3 flex flex-col h-[calc(100%-24px)]">
+                  {/* Header area */}
+                  <div className="flex items-start justify-between text-[6px]">
+                    <div className="font-bold leading-tight max-w-[40%]">
+                      {form.district && <p>{form.district}</p>}
+                      {form.commune && <p className="mt-0.5">{form.commune}</p>}
+                    </div>
+                    <div className="text-center text-[5px]">
+                      <div className="w-8 h-8 mx-auto bg-muted rounded flex items-center justify-center text-[4px] text-muted-foreground">MCLAU</div>
+                    </div>
+                    <div className="text-center text-[5px]">
+                      <div className="w-8 h-8 mx-auto bg-muted rounded flex items-center justify-center text-[4px] text-muted-foreground">🇨🇮</div>
+                      <p className="mt-0.5">RÉPUBLIQUE DE CÔTE D'IVOIRE</p>
+                    </div>
+                  </div>
+
+                  {/* Title area */}
+                  <div className="flex-1 flex flex-col items-center justify-center text-center -mt-2">
+                    <p className="font-extrabold text-sm leading-tight" style={{ color: form.title_color }}>
+                      GUIDE DU LOTISSEMENT
+                    </p>
+                    <p className="font-bold text-xs mt-1 underline" style={{ color: form.subtitle_color }}>
+                      NOM DU LOTISSEMENT
+                    </p>
+
+                    {/* Bordered box */}
+                    <div className="mt-3 border-2 rounded px-4 py-2" style={{ borderColor: form.border_color }}>
+                      <p className="text-[6px] font-semibold" style={{ color: form.subtitle_color }}>ILOT N°... À ILOT N°...</p>
+                      <p className="text-[6px] font-semibold" style={{ color: form.subtitle_color }}>LOT N°... À LOT N°...</p>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="text-right">
+                    <p className="text-[6px] font-bold" style={{ color: form.title_color }}>
+                      {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" }).toUpperCase()}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <Label>Couleur sous-titres</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <input type="color" value={form.subtitle_color} onChange={(e) => setForm({ ...form, subtitle_color: e.target.value })} className="w-10 h-8 cursor-pointer" />
-                  <Input value={form.subtitle_color} onChange={(e) => setForm({ ...form, subtitle_color: e.target.value })} className="font-mono text-xs" />
-                </div>
-              </div>
-              <div>
-                <Label>Couleur bordure encadré</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <input type="color" value={form.border_color} onChange={(e) => setForm({ ...form, border_color: e.target.value })} className="w-10 h-8 cursor-pointer" />
-                  <Input value={form.border_color} onChange={(e) => setForm({ ...form, border_color: e.target.value })} className="font-mono text-xs" />
-                </div>
-              </div>
-              <div>
-                <Label>Couleur de fond</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <input type="color" value={form.bg_color} onChange={(e) => setForm({ ...form, bg_color: e.target.value })} className="w-10 h-8 cursor-pointer" />
-                  <Input value={form.bg_color} onChange={(e) => setForm({ ...form, bg_color: e.target.value })} className="font-mono text-xs" />
-                </div>
+
+                {/* Zigzag border bottom */}
+                <div className="w-full h-3" style={{ background: `linear-gradient(135deg, ${form.border_color} 25%, transparent 25%) -10px 0, linear-gradient(225deg, ${form.border_color} 25%, transparent 25%) -10px 0, linear-gradient(315deg, ${form.border_color} 25%, transparent 25%), linear-gradient(45deg, ${form.border_color} 25%, transparent 25%)`, backgroundSize: "12px 12px", backgroundRepeat: "repeat-x" }} />
               </div>
             </div>
           </div>

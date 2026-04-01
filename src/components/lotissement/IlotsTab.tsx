@@ -103,7 +103,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
       }
       toast.success(`${successCount} îlot(s) supprimé(s)`);
       setSelectedIds(new Set());
-      setShowBulkDeleteDialog(false);
+      
     } catch {
       toast.error("Erreur lors de la suppression");
     } finally {

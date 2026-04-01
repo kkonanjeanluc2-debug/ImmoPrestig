@@ -62,6 +62,14 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     const beneficiairesMap = new Map<string, typeof beneficiaires[0]>();
     beneficiaires.forEach(b => beneficiairesMap.set(b.id, b));
 
+    // Group mutations by parcelle_id
+    const mutationsByParcelle = new Map<string, typeof mutations>();
+    mutations.forEach(m => {
+      const arr = mutationsByParcelle.get(m.parcelle_id) || [];
+      arr.push(m);
+      mutationsByParcelle.set(m.parcelle_id, arr);
+    });
+
     // Sort parcelles by ilot name then plot number
     const sorted = [...parcelles].sort((a, b) => {
       const ilotA = a.ilot_id ? (ilotsMap.get(a.ilot_id) || "") : "";
@@ -77,20 +85,19 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
       const vente = ventesMap.get(parcelle.id);
       const ilotName = parcelle.ilot_id ? (ilotsMap.get(parcelle.ilot_id) || "-") : "-";
       const beneficiaire = parcelle.beneficiaire_id ? beneficiairesMap.get(parcelle.beneficiaire_id) : null;
+      const parcelleMutations = mutationsByParcelle.get(parcelle.id) || [];
 
-      // Determine original attributaire - prefer beneficiaire from notes first
+      // Determine original attributaire
       let origAttributaire = "";
       let origContact = "";
       let origNaturePiece = "";
       let origNumeroPiece = "";
 
-      // First try notes extraction for actual beneficiaire name
       if (parcelle.notes) {
         const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
         if (benMatch) origAttributaire = benMatch[1].trim();
       }
 
-      // Get contact/CNI from linked beneficiaire record (even if name came from notes)
       if (beneficiaire) {
         if (!origAttributaire) origAttributaire = beneficiaire.nom;
         origContact = beneficiaire.telephone || "";
@@ -98,15 +105,68 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
         origNumeroPiece = beneficiaire.cni_number || "";
       }
 
-      // Last resort: proprietaire from notes
       if (!origAttributaire && parcelle.notes) {
         const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
         if (propMatch) origAttributaire = propMatch[1].trim();
       }
 
-      // If sold AND there's an original attributaire, show both rows
-      if (vente?.acquereur?.name && origAttributaire) {
-        // Row 1: original beneficiary
+      // If there are mutations, show the full chain
+      if (parcelleMutations.length > 0 && vente) {
+        // Row 1: original beneficiary (if exists)
+        if (origAttributaire) {
+          entries.push({
+            numero: numero++,
+            ilot: ilotName,
+            lot: parcelle.plot_number,
+            attributaire: origAttributaire,
+            attestation_numero: "",
+            attestation_date: "",
+            contact: origContact,
+            equipement: "",
+            nature_piece: origNaturePiece,
+            numero_piece: origNumeroPiece,
+            date_piece: "",
+            status: "cede",
+          });
+        }
+
+        // Show each mutation step: ancien_acquereur as "Cédé"
+        parcelleMutations.forEach((mut, idx) => {
+          entries.push({
+            numero: numero++,
+            ilot: ilotName,
+            lot: parcelle.plot_number,
+            attributaire: mut.ancien_acquereur?.name || "",
+            attestation_numero: "",
+            attestation_date: format(new Date(mut.mutation_date), "dd/MM/yyyy"),
+            contact: mut.ancien_acquereur?.phone || "",
+            equipement: "",
+            nature_piece: mut.ancien_acquereur?.cni_number ? "CNI" : "",
+            numero_piece: mut.ancien_acquereur?.cni_number || "",
+            date_piece: "",
+            status: "cede",
+          });
+
+          // Last mutation: show the nouvel_acquereur as current owner
+          if (idx === parcelleMutations.length - 1) {
+            entries.push({
+              numero: numero++,
+              ilot: ilotName,
+              lot: parcelle.plot_number,
+              attributaire: mut.nouvel_acquereur?.name || "",
+              attestation_numero: "",
+              attestation_date: format(new Date(mut.mutation_date), "dd/MM/yyyy"),
+              contact: mut.nouvel_acquereur?.phone || "",
+              equipement: "",
+              nature_piece: mut.nouvel_acquereur?.cni_number ? "CNI" : "",
+              numero_piece: mut.nouvel_acquereur?.cni_number || "",
+              date_piece: "",
+              status: parcelle.status,
+            });
+          }
+        });
+      } else if (vente?.acquereur?.name && origAttributaire) {
+        // Sold with original beneficiary, no mutations
         entries.push({
           numero: numero++,
           ilot: ilotName,
@@ -121,7 +181,6 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           date_piece: "",
           status: "cede",
         });
-        // Row 2: new acquéreur
         entries.push({
           numero: numero++,
           ilot: ilotName,
@@ -137,7 +196,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           status: parcelle.status,
         });
       } else {
-        // Single row: acquéreur OR original attributaire
+        // Single row
         let attributaire = vente?.acquereur?.name || origAttributaire;
         let contact = vente?.acquereur?.phone || origContact;
         let naturePiece = (vente?.acquereur?.cni_number ? "CNI" : "") || origNaturePiece;
@@ -161,7 +220,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     });
 
     return entries;
-  }, [parcelles, ventes, ilots, beneficiaires]);
+  }, [parcelles, ventes, ilots, beneficiaires, mutations]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return guideEntries;

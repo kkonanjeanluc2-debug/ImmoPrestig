@@ -169,35 +169,36 @@ export const ImportGeometreDialog = ({
 
       // Detect if Excel data contains guide-format blocks (cells with ILOT/LOT patterns)
       const isGuideExcel = parcellesData.some((row) => {
-        return Object.values(row).some((val) => {
+        // Check individual cells
+        const cellMatch = Object.values(row).some((val) => {
           const text = String(val || "");
-          return /ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text);
+          return /\bILOT\s*[:]\s*\d/i.test(text) && /\bLOT\s*[:]\s*\d/i.test(text);
         });
+        if (cellMatch) return true;
+        // Check concatenated row text (ILOT and LOT may be in separate cells)
+        const rowText = Object.values(row).map(v => String(v || "")).join(" ");
+        return /\bILOT\s*[:]\s*\d/i.test(rowText) && /\bLOT\s*[:]\s*\d/i.test(rowText);
       });
 
       if (isGuideExcel) {
         newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
         for (const row of parcellesData) {
-          // Find the cell containing guide block text
-          let blockText = "";
-          for (const val of Object.values(row)) {
-            const text = String(val || "");
-            if (/ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text)) {
-              blockText = text;
-              break;
-            }
-          }
-          if (!blockText) continue;
+          // Concatenate all cell values to extract header info
+          const rowText = Object.values(row).map(v => String(v || "")).join(" ");
+          
+          // Check if this row contains lot header info
+          if (!/\bILOT\s*[:]\s*\d/i.test(rowText) && !/\bLOT\s*[:]\s*\d/i.test(rowText)) continue;
 
-          const ilotMatch = blockText.match(/ILOT\s*[:]\s*(\d+)/i);
-          const lotMatch = blockText.match(/LOT\s*[:]\s*(\d+)/i);
-          const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
-          const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
+          const ilotMatch = rowText.match(/\bILOT\s*[:]\s*(\d+)/i);
+          const lotMatch = rowText.match(/\bLOT\s*[:]\s*(\d+)/i);
+          const superficieMatch = rowText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+          const affectationMatch = rowText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
 
           const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
           const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
           const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
-          const affectation = affectationMatch ? affectationMatch[1].trim() : undefined;
+          const affectationRaw = affectationMatch ? affectationMatch[1].trim() : undefined;
+          const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
           if (!plotNumber) continue;
           if (existingPlotNumbers.includes(String(plotNumber))) continue;
@@ -210,7 +211,7 @@ export const ImportGeometreDialog = ({
           let cniNumber = "";
           let cniNature = "";
           for (const val of allValues) {
-            if (val === blockText) continue;
+            if (/\bILOT\s*[:]/i.test(val) || /\bLOT\s*[:]/i.test(val) || /SUPERFICIE/i.test(val) || /AFFECTATION/i.test(val)) continue;
             // Skip pure numbers that look like area/price
             if (/^\d+[\.,]?\d*$/.test(val) && !beneficiaireName) continue;
             if (!beneficiaireName && val.length > 2 && !/ILOT|LOT|COMMUNE|VILLAGE|SUPERFICIE|ATTESTATION|ATTRIBUT/i.test(val)) {
@@ -340,15 +341,18 @@ export const ImportGeometreDialog = ({
 
       newWarnings.push(`Colonnes détectées : ${headers.filter(Boolean).join(", ")}`);
 
-      // Check if this is a guide format (cells contain multi-line blocks with COMMUNE/ILOT/LOT)
+      // Check if this is a guide format (table contains ILOT/LOT/SUPERFICIE header info)
       const isGuideFormat = (() => {
-        for (let i = 1; i < Math.min(rows.length, 5); i++) {
-          const cells = rows[i].querySelectorAll("td, th");
-          for (const cell of Array.from(cells)) {
-            const text = cell.textContent || "";
-            if (/ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text)) {
-              return true;
-            }
+        // Check the full table text for guide markers
+        const fullTableText = table.textContent || "";
+        if (/\bILOT\s*[:]\s*\d/i.test(fullTableText) && /\bLOT\s*[:]\s*\d/i.test(fullTableText)) {
+          return true;
+        }
+        // Also check row-by-row (ILOT and LOT may be in same row across cells)
+        for (let i = 0; i < Math.min(rows.length, 5); i++) {
+          const rowText = Array.from(rows[i].querySelectorAll("td, th")).map(c => c.textContent || "").join(" ");
+          if (/\bILOT\s*[:]\s*\d/i.test(rowText) && /\bLOT\s*[:]\s*\d/i.test(rowText)) {
+            return true;
           }
         }
         return false;
@@ -362,23 +366,24 @@ export const ImportGeometreDialog = ({
         // Row 2-3: Column headers (ATTRIBUTAIRES, ATTESTATION, ADRESSES, PIECES)
         // Row 4+: Data rows (N°, NOM ET PRENOMS, attestation N°/DATE, contacts, nature/N°/date)
 
-        // Extract header info from all rows' text
+        // Extract header info — scan each row for ILOT/LOT/SUPERFICIE/AFFECTATION
+        // These values are in the header rows of each lot block table
         let blockText = "";
-        for (const row of Array.from(rows)) {
-          for (const cell of Array.from(row.querySelectorAll("td, th"))) {
-            blockText += " " + (cell.textContent || "");
-          }
+        for (let ri = 0; ri < Math.min(rows.length, 5); ri++) {
+          const cells = Array.from(rows[ri].querySelectorAll("td, th"));
+          blockText += " " + cells.map(c => c.textContent || "").join(" ");
         }
 
-        const ilotMatch = blockText.match(/ILOT\s*[:]\s*(\d+)/i);
-        const lotMatch = blockText.match(/LOT\s*[:]\s*(\d+)/i);
+        const ilotMatch = blockText.match(/\bILOT\s*[:]\s*(\d+)/i);
+        const lotMatch = blockText.match(/\bLOT\s*[:]\s*(\d+)/i);
         const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
-        const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^A-Z\n]*?)(?:\s{2,}|ARRETE|$)/i);
+        const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
 
         const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
         const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
         const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
-        const affectation = affectationMatch ? affectationMatch[1].trim() : undefined;
+        const affectationRaw = affectationMatch ? affectationMatch[1].trim() : undefined;
+        const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
         if (!plotNumber) continue;
         if (existingPlotNumbers.includes(String(plotNumber))) continue;

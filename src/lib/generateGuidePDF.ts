@@ -225,7 +225,14 @@ function drawLotBlock(
 
       // For contact field, handle multi-line (phone numbers)
       if (c === 4 && entry?.contact) {
-        const phones = entry.contact.split(/[,;\/]/).map(p => p.trim()).filter(Boolean);
+        // Split by separators or by 10-digit phone number groups
+        let phones: string[];
+        if (/[,;\/]/.test(entry.contact)) {
+          phones = entry.contact.split(/[,;\/]/).map(p => p.trim()).filter(Boolean);
+        } else {
+          const matches = entry.contact.match(/\d{10}/g);
+          phones = matches && matches.length > 1 ? matches : [entry.contact];
+        }
         if (phones.length > 1) {
           doc.setFontSize(6);
           phones.forEach((phone, pi) => {

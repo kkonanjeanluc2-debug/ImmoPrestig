@@ -1271,31 +1271,38 @@ export const generateAttestationVillageoise = async (
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
-      doc.setFontSize(28);
+      doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
-      const grayVal = Math.round(255 * (1 - opacity));
+      // Light gray proportional to opacity (higher opacity = darker)
+      const grayVal = Math.round(200 + (1 - opacity) * 55);
       doc.setTextColor(grayVal, grayVal, grayVal);
 
-      const textWidth = doc.getTextWidth(text);
+      const textW = doc.getTextWidth(text);
+      // Gap between repeated texts on the same row
+      const gapX = 15;
+      const blockW = textW + gapX;
+      // Vertical spacing between rows
+      const rowH = 28;
 
       if (repeat) {
         if (angle === 0) {
-          // Horizontal: rows of text with generous spacing
-          const stepX = textWidth + 30;
-          const stepY = 40;
-          for (let y = 25; y < pageHeight; y += stepY) {
-            for (let x = 10; x < pageWidth; x += stepX) {
-              doc.text(text, x, y, { angle: 0 });
+          // Horizontal rows — centered, continuous like the reference
+          for (let y = rowH; y < pageHeight; y += rowH) {
+            // Start so that the pattern is roughly centered
+            const totalFit = Math.ceil(pageWidth / blockW) + 1;
+            const startX = -blockW / 2;
+            for (let i = 0; i < totalFit; i++) {
+              doc.text(text, startX + i * blockW, y);
             }
           }
         } else {
-          // Diagonal: staggered grid, offset every other row to avoid overlap
-          const stepX = textWidth + 40;
-          const stepY = 50;
+          // Diagonal: staggered grid
+          const stepX = textW + 50;
+          const stepY = 45;
           let row = 0;
           for (let y = 0; y < pageHeight + 50; y += stepY) {
             const offsetX = (row % 2) * (stepX / 2);
-            for (let x = -30 + offsetX; x < pageWidth + 50; x += stepX) {
+            for (let x = -textW + offsetX; x < pageWidth + textW; x += stepX) {
               doc.text(text, x, y, { angle });
             }
             row++;

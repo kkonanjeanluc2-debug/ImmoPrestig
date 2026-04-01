@@ -243,9 +243,9 @@ export function AddBulkParcellesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Ajouter des parcelles en masse</DialogTitle>
+          <DialogTitle>Ajouter des lots en masse</DialogTitle>
           <DialogDescription>
-            Créez plusieurs parcelles avec les mêmes caractéristiques
+            Créez plusieurs lots avec les mêmes caractéristiques
           </DialogDescription>
         </DialogHeader>
 
@@ -416,7 +416,7 @@ export function AddBulkParcellesDialog({
             </Button>
             <Button type="submit" disabled={createBulkParcelles.isPending || ilotCapacityInfo.wouldExceed || areaCapacityInfo.wouldExceed}>
               {createBulkParcelles.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Créer {formData.count} parcelles
+              Créer {formData.count} lots
             </Button>
           </div>
         </form>

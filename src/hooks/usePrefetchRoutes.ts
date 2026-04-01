@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfMonth, endOfMonth, format } from "date-fns";
-import { fetchReportDataForPrefetch } from "./useActivityReport";
+import { fetchReportDataForPrefetch, fetchAllManagersReportForPrefetch } from "./useActivityReport";
 
 // Map of routes to their prefetch functions
 const routePrefetchMap: Record<string, (queryClient: any, userId?: string) => void> = {

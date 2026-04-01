@@ -1558,7 +1558,9 @@ export const generateAttestationVillageoise = async (
       '{ancien_beneficiaire_telephone}': ancienBeneficiaire?.telephone || '',
       '{cedant_nom}': ancienBeneficiaire?.nom || '___',
       '{cedant_cni}': ancienBeneficiaire?.cni_number || '___',
-      '{cedant_telephone}': ancienBeneficiaire?.telephone || '___',
+      '{cedant_telephone}': ancienBeneficiaire?.telephone
+        ? (ancienBeneficiaire.telephone.match(/\d{10}/g) || [ancienBeneficiaire.telephone]).join(' / ')
+        : '___',
     };
 
     let finalContent = templateContent;

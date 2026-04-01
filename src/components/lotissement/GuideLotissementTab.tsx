@@ -262,7 +262,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     { key: "nature_piece", label: "Nature Pièce" },
     { key: "numero_piece", label: "N° Pièce" },
     { key: "date_piece", label: "Date Pièce" },
-    { key: "status", label: "Statut", format: (v) => v === "vendu" ? "Vendu" : v === "reserve" ? "Réservé" : "Disponible" },
+    { key: "status", label: "Statut", format: (v) => v === "vendu" ? "Vendu" : v === "reserve" ? "Réservé" : v === "cede" ? "Cédé" : v === "mute" ? "Muté" : "Disponible" },
   ];
 
   const handleExportPDF = () => {

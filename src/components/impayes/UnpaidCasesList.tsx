@@ -125,7 +125,7 @@ export function UnpaidCasesList() {
   });
 
   // Stats
-  const totalCaseAmount = (cases || []).filter(c => c.status !== "resolved").reduce((s, c) => s + Number(c.amount_due), 0);
+  const totalCaseAmount = (cases || []).filter(c => c.status !== "resolved" && c.status !== "eviction_executed").reduce((s, c) => s + Number(c.amount_due), 0);
   const totalDetectedAmount = latePaymentsDetected.reduce((s, p) => s + p.totalAmount, 0);
   const totalAmount = totalCaseAmount + totalDetectedAmount;
   const activeCount = (cases || []).filter(c => !["resolved", "eviction_cancelled"].includes(c.status)).length;

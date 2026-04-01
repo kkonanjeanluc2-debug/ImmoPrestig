@@ -234,10 +234,11 @@ function drawLotBlock(
           phones = matches && matches.length > 1 ? matches : [entry.contact];
         }
         if (phones.length > 1) {
-          doc.setFontSize(6);
+          doc.setFontSize(7);
+          const colCenter = rx + cols[c] / 2;
           phones.forEach((phone, pi) => {
             if (pi < 2) {
-              doc.text(phone, rx + 1.5, y + 3 + pi * 3.5);
+              doc.text(phone.trim(), colCenter, y + 3 + pi * 3.5, { align: "center" });
             }
           });
           doc.setFontSize(7);

@@ -476,11 +476,7 @@ export async function generateGuidePDF(
       }
     }
 
-    // Village name at bottom (large, subtle)
-    doc.setFontSize(32);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(200, 190, 170);
-    doc.text(village.toUpperCase(), pw / 2, ph - patternH - 15, { align: "center" });
+    // (Village watermark removed)
 
     // Date at bottom
     const now = new Date();

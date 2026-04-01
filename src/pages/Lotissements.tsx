@@ -143,7 +143,7 @@ const Lotissements = () => {
                 </div>
                 <div>
                   <p className="text-lg sm:text-2xl font-bold">{totalParcelles}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Parcelles</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Lots</p>
                 </div>
               </div>
             </CardContent>
@@ -279,7 +279,7 @@ const Lotissements = () => {
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 bg-muted/50 rounded-lg">
                         <p className="text-lg font-bold">{stats.total}</p>
-                        <p className="text-xs text-muted-foreground">Parcelles</p>
+                        <p className="text-xs text-muted-foreground">Lots</p>
                       </div>
                       <div className="p-2 bg-emerald-500/10 rounded-lg">
                         <p className="text-lg font-bold text-emerald-600">{stats.vendues}</p>

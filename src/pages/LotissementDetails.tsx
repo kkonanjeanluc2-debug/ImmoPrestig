@@ -187,7 +187,7 @@ const LotissementDetails = () => {
               </Button>}
               {canCreateParcelle && <Button size="sm" onClick={() => setShowAddParcelle(true)}>
                 <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Nouvelle parcelle</span>
+                <span className="hidden sm:inline">Nouveau lot</span>
               </Button>}
             </div>
           )}
@@ -199,7 +199,7 @@ const LotissementDetails = () => {
             <CardContent className="p-3 sm:pt-4">
               <div className="text-center">
                 <p className="text-lg sm:text-2xl font-bold">{stats.total}</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Total parcelles</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total lots</p>
               </div>
             </CardContent>
           </Card>
@@ -251,7 +251,7 @@ const LotissementDetails = () => {
               <TabsList className="h-auto flex-wrap gap-1 p-1 overflow-x-auto">
                 <TabsTrigger value="parcelles" className="gap-2">
                   <Grid3X3 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Parcelles</span>
+                  <span className="hidden sm:inline">Lots</span>
                 </TabsTrigger>
                 <TabsTrigger value="ilots" className="gap-2">
                   <Layers className="h-4 w-4" />

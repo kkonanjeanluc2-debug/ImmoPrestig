@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { useLotissements, useSoftDeleteLotissement } from "@/hooks/useLotissements";
 import { useParcellesStats } from "@/hooks/useParcellesStats";
+import { useParcelles } from "@/hooks/useParcelles";
 import { useVentesParcelles } from "@/hooks/useVentesParcelles";
 import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
 import { usePermissions } from "@/hooks/usePermissions";

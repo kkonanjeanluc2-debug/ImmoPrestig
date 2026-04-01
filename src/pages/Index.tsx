@@ -28,7 +28,7 @@ import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 const Index = () => {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
-  const { hasPermission, role } = usePermissions();
+  const { hasPermission, role, isLoading: permissionsLoading } = usePermissions();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);

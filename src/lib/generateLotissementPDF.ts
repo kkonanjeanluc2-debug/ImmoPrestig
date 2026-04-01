@@ -1255,8 +1255,6 @@ export const generateAttestationVillageoise = async (
 
   drawDocumentBackground();
 
-  const isCessionTemplate = template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR');
-
   if (isCessionTemplate) {
     // === CESSION HEADER: Agency logo (left) + header text (right) + colored dashes + title ===
     const logoUrl = agency?.logo_url;

@@ -143,7 +143,7 @@ const Lotissements = () => {
                 </div>
                 <div>
                   <p className="text-lg sm:text-2xl font-bold">{totalParcelles}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Lotissements</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Lots</p>
                 </div>
               </div>
             </CardContent>

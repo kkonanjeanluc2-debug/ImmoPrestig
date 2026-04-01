@@ -1356,6 +1356,9 @@ export const generateAttestationVillageoise = async (
     let headerLeftX = margin;
     const logoStartY = yPos - 3;
     const logoSize = 25;
+    const logoBottomY = logoStartY + logoSize;
+    const logoBannerGap = 6;
+    let hasVillageLogos = false;
     const villageLogoUrl = template?.village_logo_url;
     if (villageLogoUrl) {
       try {
@@ -1364,6 +1367,7 @@ export const generateAttestationVillageoise = async (
           doc.addImage(logoBase64, 'PNG', margin, logoStartY, logoSize, logoSize);
           doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, logoStartY, logoSize, logoSize);
           headerLeftX = margin + logoSize + 4;
+          hasVillageLogos = true;
         }
       } catch {}
     }
@@ -1386,10 +1390,10 @@ export const generateAttestationVillageoise = async (
     }
     doc.setFont('helvetica', 'normal');
 
-    // Ensure banner starts below the logos
-    const logoBottomY = logoStartY + logoSize + 3;
-    yPos = Math.max(yPos + 4, logoBottomY);
-
+    const bannerTopY = Math.max(
+      yPos + 4,
+      hasVillageLogos ? logoBottomY + logoBannerGap : yPos + 4
+    );
     const bannerHeight = 28;
     const bannerColor1 = template?.banner_color_1 || '#003399';
     const bannerColor2 = template?.banner_color_2 || null;
@@ -1408,27 +1412,27 @@ export const generateAttestationVillageoise = async (
         const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
         const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
         doc.setFillColor(r, g, b);
-        doc.rect(bannerX + i * stripW, yPos - 5, stripW + 0.5, bannerHeight, 'F');
+        doc.rect(bannerX + i * stripW, bannerTopY, stripW + 0.5, bannerHeight, 'F');
       }
     } else {
       const banner = hexToRgb(bannerColor1, 0);
       doc.setFillColor(banner[0], banner[1], banner[2]);
-      doc.rect(margin - 5, yPos - 5, pageWidth - 2 * (margin - 5), bannerHeight, 'F');
+      doc.rect(margin - 5, bannerTopY, pageWidth - 2 * (margin - 5), bannerHeight, 'F');
     }
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, yPos + 3, { align: 'center' });
+    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, bannerTopY + 8, { align: 'center' });
     doc.setFontSize(9);
-    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, yPos + 10, { align: 'center' });
+    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, bannerTopY + 15, { align: 'center' });
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     if (arreteApprobation) {
-      doc.text(arreteApprobation, pageWidth / 2, yPos + 17, { align: 'center' });
+      doc.text(arreteApprobation, pageWidth / 2, bannerTopY + 22, { align: 'center' });
     }
 
-    yPos += bannerHeight + 10;
+    yPos = bannerTopY + bannerHeight + 10;
   }
 
   doc.setTextColor(...textColor);

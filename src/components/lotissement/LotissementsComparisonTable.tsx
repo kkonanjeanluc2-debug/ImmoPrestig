@@ -63,18 +63,39 @@ interface LotissementStats {
 
 interface LotissementsComparisonTableProps {
   lotissements: Lotissement[];
-  parcelles: Parcelle[];
+  parcelles?: Parcelle[]; // kept for backward compat but ignored
   ventes: VenteParcelle[];
   echeances: EcheanceParcelle[];
 }
 
 export function LotissementsComparisonTable({
   lotissements,
-  parcelles,
   ventes,
   echeances,
 }: LotissementsComparisonTableProps) {
   const navigate = useNavigate();
+  const [allParcelles, setAllParcelles] = useState<Parcelle[]>([]);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      let all: Parcelle[] = [];
+      let offset = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("parcelles")
+          .select("id, lotissement_id, status, price, area")
+          .is("deleted_at", null)
+          .range(offset, offset + 999);
+        if (error || !data || data.length === 0) { hasMore = false; break; }
+        all = [...all, ...data as Parcelle[]];
+        offset += data.length;
+        if (data.length < 1000) hasMore = false;
+      }
+      setAllParcelles(all);
+    };
+    fetchAll();
+  }, [lotissements]);
 
   const stats = useMemo(() => {
     return lotissements.map((lot): LotissementStats => {

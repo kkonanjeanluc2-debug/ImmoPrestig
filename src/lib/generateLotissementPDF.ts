@@ -11,6 +11,7 @@ interface AgencyInfo {
   country?: string;
   logo_url?: string | null;
   siret?: string | null;
+  pdf_header_text?: string | null;
 }
 
 interface AcquereurInfo {

@@ -158,7 +158,7 @@ export function usePermissions(): Permissions {
     };
   }, [memberIdForRealtime, queryClient, user?.id]);
 
-  const isLoading = roleLoading || permLoading;
+  const isLoading = authLoading || roleLoading || permLoading;
 
   if (isLoading) {
     return {

@@ -64,7 +64,7 @@ export function MutationParcelleDialog({
 
   const filteredAcquereurs = acquereurs.filter(
     (a) =>
-      a.id !== vente.acquereur_id &&
+      a.id !== currentOwnerId &&
       (a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.cni_number?.toLowerCase().includes(searchQuery.toLowerCase()))

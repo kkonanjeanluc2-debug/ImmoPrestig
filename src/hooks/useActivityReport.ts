@@ -319,7 +319,7 @@ export async function fetchAllManagersReportForPrefetch(userId: string, periodFr
   return reports.sort((a, b) => b.totalRevenue - a.totalRevenue);
 }
 
-
+export function useActivityReport(periodFrom: string, periodTo: string) {
   const { user } = useAuth();
 
   return useQuery({

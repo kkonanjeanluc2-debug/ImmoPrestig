@@ -299,6 +299,8 @@ export function useActivityReport(periodFrom: string, periodTo: string) {
       } as ActivityReportData;
     },
     enabled: !!user?.id && !!periodFrom && !!periodTo,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

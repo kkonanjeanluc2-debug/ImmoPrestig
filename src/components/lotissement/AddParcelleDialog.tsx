@@ -106,7 +106,7 @@ export function AddParcelleDialog({
         notes: formData.notes.trim() || null,
       });
 
-      toast.success("Parcelle créée avec succès");
+      toast.success("Lot créé avec succès");
       setFormData({
         plot_number: "",
         area: "",

@@ -96,7 +96,7 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
 
   const handleApplyRepartition = async () => {
     if (parcelles.length === 0) {
-      toast.error("Aucune parcelle à répartir");
+      toast.error("Aucun lot à répartir");
       return;
     }
 

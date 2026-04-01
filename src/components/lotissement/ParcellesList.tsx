@@ -327,7 +327,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
     return (
       <Card className="py-12">
         <CardContent className="text-center">
-          <p className="text-muted-foreground">Aucune parcelle dans ce lotissement</p>
+          <p className="text-muted-foreground">Aucun lot dans ce lotissement</p>
         </CardContent>
       </Card>
     );
@@ -449,7 +449,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
             <Search className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
             <p className="text-lg font-medium text-muted-foreground">Aucun résultat</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Aucune parcelle ne correspond à "{searchQuery}"
+              Aucun lot ne correspond à "{searchQuery}"
             </p>
             <Button 
               variant="outline" 

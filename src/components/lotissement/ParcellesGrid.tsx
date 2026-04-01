@@ -108,7 +108,7 @@ export function ParcellesGrid({ parcelles, lotissementId }: ParcellesGridProps) 
     return (
       <Card className="py-12">
         <CardContent className="text-center">
-          <p className="text-muted-foreground">Aucune parcelle dans ce lotissement</p>
+          <p className="text-muted-foreground">Aucun lot dans ce lotissement</p>
         </CardContent>
       </Card>
     );

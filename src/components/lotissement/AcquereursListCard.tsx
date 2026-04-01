@@ -96,7 +96,7 @@ export function AcquereursListCard({ lotissementId }: AcquereursListCardProps) {
                 <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead className="hidden lg:table-cell">CNI</TableHead>
                 <TableHead className="hidden lg:table-cell">Profession</TableHead>
-                <TableHead>Parcelles</TableHead>
+                <TableHead>Lots</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

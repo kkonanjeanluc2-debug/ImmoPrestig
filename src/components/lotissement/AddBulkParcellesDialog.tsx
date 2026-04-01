@@ -209,7 +209,7 @@ export function AddBulkParcellesDialog({
 
     try {
       await createBulkParcelles.mutateAsync(parcelles);
-      toast.success(`${count} parcelles créées avec succès`);
+      toast.success(`${count} lots créés avec succès`);
       setFormData({
         prefix: "",
         startNumber: "1",

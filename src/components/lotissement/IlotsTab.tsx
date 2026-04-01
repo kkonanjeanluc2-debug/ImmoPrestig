@@ -236,7 +236,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
                   <TableRow>
                     <TableHead>Îlot</TableHead>
                     <TableHead>Superficie</TableHead>
-                    <TableHead className="text-center">Parcelles</TableHead>
+                    <TableHead className="text-center">Lots</TableHead>
                     <TableHead className="text-center">Disponibles</TableHead>
                     <TableHead className="text-center">Vendues</TableHead>
                     <TableHead className="text-center">Taux occupation</TableHead>

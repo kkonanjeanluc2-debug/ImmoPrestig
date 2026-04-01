@@ -637,7 +637,7 @@ const Pricing = () => {
                         {[
                           { icon: <Scale className="h-3 w-3" />, label: "Impayés" },
                           { icon: <TrendingUp className="h-3 w-3" />, label: "Ventes" },
-                          { icon: <BarChart3 className="h-3 w-3" />, label: "Parcelles" },
+                          { icon: <BarChart3 className="h-3 w-3" />, label: "Lots" },
                         ].map((tag) => (
                           <span
                             key={tag.label}

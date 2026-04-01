@@ -77,37 +77,33 @@ export const getCollectedRevenueForPeriod = (
   toDate: string,
 ) => {
   return payments.reduce((sum, payment) => {
-    const totalAmount = Number(payment.paid_amount) || Number(payment.amount) || 0;
+    // Skip virtual payments
+    if ((payment as any)._isVirtual) return sum;
+
     const status = normalizePaymentStatus(payment.status);
-    const paymentMonths = payment.payment_months;
-    const isMultiMonth = !!paymentMonths?.length && paymentMonths.length > 1;
     const paidDate = payment.paid_date || null;
-    const isPaidInPeriod = !!paidDate && paidDate >= fromDate && paidDate <= toDate;
+
+    // Only count payments whose paid_date falls within the period
+    if (!paidDate) {
+      // For pending/late with partial payment, check paid_date only
+      if ((status === "pending" || status === "late") && Number(payment.paid_amount) > 0) {
+        return sum; // no paid_date means we can't attribute it to a period
+      }
+      return sum;
+    }
+
+    const paidDateOnly = paidDate.substring(0, 10);
+    const isPaidInPeriod = paidDateOnly >= fromDate && paidDateOnly <= toDate;
+
+    if (!isPaidInPeriod) return sum;
 
     if (status === "paid") {
-      if (isMultiMonth) {
-        const perMonth = Math.round(totalAmount / paymentMonths.length);
-        return sum + perMonth * countOverlappingMonths(paymentMonths, fromDate, toDate);
-      }
-
-      if (isPaidInPeriod) {
-        return sum + totalAmount;
-      }
-
-      if (paymentMonths?.length === 1) {
-        const ym = toYearMonth(paymentMonths[0]);
-        if (ym && ym >= fromDate.substring(0, 7) && ym <= toDate.substring(0, 7)) {
-          return sum + totalAmount;
-        }
-      }
+      const totalAmount = Number(payment.paid_amount) || Number(payment.amount) || 0;
+      return sum + totalAmount;
     }
 
     if ((status === "pending" || status === "late") && Number(payment.paid_amount) > 0) {
-      const paidPortion = Number(payment.paid_amount);
-      const effectiveDate = isPaidInPeriod ? paidDate : payment.due_date;
-      if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
-        return sum + paidPortion;
-      }
+      return sum + Number(payment.paid_amount);
     }
 
     return sum;

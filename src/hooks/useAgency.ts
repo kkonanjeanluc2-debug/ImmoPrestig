@@ -34,6 +34,7 @@ export interface Agency {
   primary_color: string | null;
   accent_color: string | null;
   sidebar_color: string | null;
+  pdf_header_text: string | null;
   whatsapp_property_template: string | null;
   reservation_deposit_percentage: number;
   rent_due_day: number;

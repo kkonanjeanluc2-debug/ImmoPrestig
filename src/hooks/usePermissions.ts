@@ -79,7 +79,7 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role" |
 };
 
 export function usePermissions(): Permissions {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const queryClient = useQueryClient();
 
@@ -158,7 +158,7 @@ export function usePermissions(): Permissions {
     };
   }, [memberIdForRealtime, queryClient, user?.id]);
 
-  const isLoading = roleLoading || permLoading;
+  const isLoading = authLoading || roleLoading || permLoading;
 
   if (isLoading) {
     return {

@@ -200,9 +200,9 @@ const Index = () => {
               iconBg="emerald"
             />
             <StatCard
-              title="Revenus du mois"
+             title={periodLabel.title}
               value={`${monthlyRevenue.toLocaleString('fr-FR')} F CFA`}
-              change={now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              change={periodLabel.subtitle}
               changeType="positive"
               icon={Wallet}
               iconBg="sand"

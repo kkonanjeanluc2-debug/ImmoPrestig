@@ -150,6 +150,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: vente.acquereur?.cni_number || "",
           date_piece: "",
           status: "cede",
+          area: parcelle.area,
         });
 
         // For chained mutations (2nd+), show intermediate ancien_acquereurs as "Cédé"

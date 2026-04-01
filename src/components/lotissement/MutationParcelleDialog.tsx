@@ -151,10 +151,10 @@ export function MutationParcelleDialog({
         <div className="space-y-4">
           {/* Current owner info */}
           <div className="p-3 border rounded-lg bg-muted/50">
-            <p className="text-sm text-muted-foreground">Acquéreur actuel (cédant)</p>
-            <p className="font-medium">{vente.acquereur?.name}</p>
-            {vente.acquereur?.phone && (
-              <p className="text-sm text-muted-foreground">{vente.acquereur.phone}</p>
+            <p className="text-sm text-muted-foreground">Propriétaire actuel (cédant)</p>
+            <p className="font-medium">{currentOwnerName}</p>
+            {currentOwnerPhone && (
+              <p className="text-sm text-muted-foreground">{currentOwnerPhone}</p>
             )}
           </div>
 

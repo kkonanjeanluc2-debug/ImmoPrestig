@@ -365,23 +365,24 @@ export const ImportGeometreDialog = ({
         // Row 2-3: Column headers (ATTRIBUTAIRES, ATTESTATION, ADRESSES, PIECES)
         // Row 4+: Data rows (N°, NOM ET PRENOMS, attestation N°/DATE, contacts, nature/N°/date)
 
-        // Extract header info from all rows' text
+        // Extract header info — scan each row for ILOT/LOT/SUPERFICIE/AFFECTATION
+        // These values are in the header rows of each lot block table
         let blockText = "";
-        for (const row of Array.from(rows)) {
-          for (const cell of Array.from(row.querySelectorAll("td, th"))) {
-            blockText += " " + (cell.textContent || "");
-          }
+        for (let ri = 0; ri < Math.min(rows.length, 5); ri++) {
+          const cells = Array.from(rows[ri].querySelectorAll("td, th"));
+          blockText += " " + cells.map(c => c.textContent || "").join(" ");
         }
 
-        const ilotMatch = blockText.match(/ILOT\s*[:]\s*(\d+)/i);
-        const lotMatch = blockText.match(/LOT\s*[:]\s*(\d+)/i);
+        const ilotMatch = blockText.match(/\bILOT\s*[:]\s*(\d+)/i);
+        const lotMatch = blockText.match(/\bLOT\s*[:]\s*(\d+)/i);
         const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
-        const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^A-Z\n]*?)(?:\s{2,}|ARRETE|$)/i);
+        const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
 
         const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
         const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
         const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
-        const affectation = affectationMatch ? affectationMatch[1].trim() : undefined;
+        const affectationRaw = affectationMatch ? affectationMatch[1].trim() : undefined;
+        const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
         if (!plotNumber) continue;
         if (existingPlotNumbers.includes(String(plotNumber))) continue;

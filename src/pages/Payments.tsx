@@ -220,51 +220,25 @@ export default function Payments() {
   const monthStartStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-01`;
   const monthEndStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`;
 
+  // Encaissements du mois: uniquement les paiements dont la date d'encaissement (paid_date ou created_at pour les paid sans paid_date) est dans le mois en cours
   const monthlyCollected = (payments || []).reduce((sum, p: any) => {
+    if (p._isVirtual) return sum;
     const status = p.status;
-    const paidDate = p.paid_date;
-    const paymentMonths = p.payment_months as string[] | null;
-    const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
     const totalAmount = Number(p.paid_amount) || Number(p.amount);
-    const isPaidInPeriod = paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr;
+    
+    // Déterminer la date d'encaissement effective
+    const paidDate = p.paid_date?.substring(0, 10);
+    const createdDate = p.created_at?.substring(0, 10);
+    const collectionDate = status === 'paid' ? (paidDate || createdDate) : paidDate;
+    
+    if (!collectionDate) return sum;
+    const isCollectedThisMonth = collectionDate >= monthStartStr && collectionDate <= monthEndStr;
+    if (!isCollectedThisMonth) return sum;
 
     if (status === 'paid') {
-      if (isMultiMonth) {
-        // Prorate: only count months overlapping with current month
-        const perMonth = Math.round(totalAmount / paymentMonths.length);
-        const currentYM = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}`;
-        const overlapping = paymentMonths.filter(m => {
-          // Parse French month name or ISO format
-          const parts = m.split(' ');
-          if (parts.length === 2) {
-            const frMonths = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-            const idx = frMonths.indexOf(parts[0]);
-            if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}` === currentYM;
-          }
-          return m.substring(0, 7) === currentYM;
-        }).length;
-        return sum + perMonth * overlapping;
-      } else if (isPaidInPeriod) {
-        return sum + totalAmount;
-      } else if (paymentMonths && paymentMonths.length === 1) {
-        // Single month advance paid before but covering this month
-        const m = paymentMonths[0];
-        const parts = m.split(' ');
-        let ym = m.substring(0, 7);
-        if (parts.length === 2) {
-          const frMonths = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-          const idx = frMonths.indexOf(parts[0]);
-          if (idx >= 0) ym = `${parts[1]}-${String(idx + 1).padStart(2, '0')}`;
-        }
-        const currentYM = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}`;
-        if (ym === currentYM) return sum + totalAmount;
-      }
+      return sum + totalAmount;
     } else if ((status === 'pending' || status === 'late') && Number(p.paid_amount) > 0) {
-      // Partial payments
-      const paidPortion = Number(p.paid_amount);
-      if (isPaidInPeriod || (p.due_date && p.due_date >= monthStartStr && p.due_date <= monthEndStr)) {
-        return sum + paidPortion;
-      }
+      return sum + Number(p.paid_amount);
     }
     return sum;
   }, 0);

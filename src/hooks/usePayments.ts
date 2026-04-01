@@ -155,6 +155,9 @@ export const usePayments = () => {
       return [...(data || []), ...virtualCurrentMonth, ...virtualNextMonth] as any;
     },
     enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 };
 

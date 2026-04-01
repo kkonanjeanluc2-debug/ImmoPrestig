@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Star, FileText, Loader2, Copy, Info, Eye, Edit, Upload, X, ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, FileText, Loader2, Copy, Info, Eye, Edit, Upload, X, ImageIcon, Droplets } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
@@ -133,6 +133,12 @@ const emptyForm: AttestationTemplateInsert = {
   village_logo_url: null,
   template_type: "attribution",
   header_line_color: "#FF8C00",
+  watermark_type: "none",
+  watermark_text: null,
+  watermark_image_url: null,
+  watermark_angle: "diagonal",
+  watermark_opacity: 0.1,
+  watermark_repeat: true,
 };
 
 export function AttestationTemplateManager({ templateType = "attribution" }: { templateType?: string }) {
@@ -152,6 +158,8 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
   const [form, setForm] = useState<AttestationTemplateInsert>(emptyForm);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const watermarkInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingWatermark, setUploadingWatermark] = useState(false);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -175,6 +183,31 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
     } finally {
       setUploadingLogo(false);
       if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleWatermarkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingWatermark(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `watermark-${Date.now()}.${fileExt}`;
+      const filePath = `attestation-logos/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('agency-assets')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from('agency-assets')
+        .getPublicUrl(filePath);
+      updateField('watermark_image_url', urlData.publicUrl);
+      toast.success("Image de filigrane importée");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'import");
+    } finally {
+      setUploadingWatermark(false);
+      if (watermarkInputRef.current) watermarkInputRef.current.value = '';
     }
   };
 
@@ -206,6 +239,12 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       village_logo_url: t.village_logo_url || null,
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
+      watermark_type: (t as any).watermark_type || "none",
+      watermark_text: (t as any).watermark_text || null,
+      watermark_image_url: (t as any).watermark_image_url || null,
+      watermark_angle: (t as any).watermark_angle || "diagonal",
+      watermark_opacity: (t as any).watermark_opacity ?? 0.1,
+      watermark_repeat: (t as any).watermark_repeat ?? true,
     });
     setDialogOpen(true);
   };
@@ -232,6 +271,12 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       village_logo_url: t.village_logo_url || null,
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
+      watermark_type: (t as any).watermark_type || "none",
+      watermark_text: (t as any).watermark_text || null,
+      watermark_image_url: (t as any).watermark_image_url || null,
+      watermark_angle: (t as any).watermark_angle || "diagonal",
+      watermark_opacity: (t as any).watermark_opacity ?? 0.1,
+      watermark_repeat: (t as any).watermark_repeat ?? true,
     });
     setDialogOpen(true);
   };
@@ -635,6 +680,107 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
 
             {/* Couleur de fond du document */}
+
+            <Separator />
+
+            {/* Filigrane / Watermark */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold flex items-center gap-2">
+                <Droplets className="h-4 w-4" />
+                Filigrane (Watermark)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Ajoutez un filigrane en image/logo ou en texte sur le document. Le filigrane peut être oblique ou horizontal, répété en plusieurs exemplaires.
+              </p>
+
+              {/* Type selector */}
+              <div className="flex items-center gap-4">
+                {["none", "image", "text"].map((type) => (
+                  <label key={type} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="watermark_type"
+                      value={type}
+                      checked={form.watermark_type === type}
+                      onChange={() => updateField("watermark_type", type)}
+                      className="accent-primary"
+                    />
+                    <span className="text-sm">
+                      {type === "none" ? "Aucun" : type === "image" ? "Image / Logo" : "Texte"}
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              {form.watermark_type === "image" && (
+                <div className="space-y-2">
+                  {form.watermark_image_url ? (
+                    <div className="flex items-center gap-4">
+                      <img src={form.watermark_image_url} alt="Filigrane" className="w-16 h-16 object-contain border rounded-lg opacity-30" />
+                      <Button variant="outline" size="sm" onClick={() => updateField('watermark_image_url', null)}>
+                        <X className="h-4 w-4 mr-1" /> Supprimer
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <input ref={watermarkInputRef} type="file" accept="image/*" onChange={handleWatermarkImageUpload} className="hidden" />
+                      <Button variant="outline" size="sm" onClick={() => watermarkInputRef.current?.click()} disabled={uploadingWatermark}>
+                        {uploadingWatermark ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Importer l'image du filigrane
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {form.watermark_type === "text" && (
+                <div className="space-y-2">
+                  <Label className="text-xs">Texte du filigrane</Label>
+                  <Input
+                    value={form.watermark_text || ""}
+                    onChange={(e) => updateField("watermark_text", e.target.value)}
+                    placeholder="Ex: COPIE, CONFIDENTIEL, NOM AGENCE..."
+                  />
+                </div>
+              )}
+
+              {form.watermark_type !== "none" && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Orientation</Label>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="wm_angle" value="diagonal" checked={form.watermark_angle === "diagonal"} onChange={() => updateField("watermark_angle", "diagonal")} className="accent-primary" />
+                        <span className="text-sm">Oblique (45°)</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="wm_angle" value="horizontal" checked={form.watermark_angle === "horizontal"} onChange={() => updateField("watermark_angle", "horizontal")} className="accent-primary" />
+                        <span className="text-sm">Horizontal</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Opacité ({Math.round((form.watermark_opacity ?? 0.1) * 100)}%)</Label>
+                    <input
+                      type="range"
+                      min="0.02"
+                      max="0.4"
+                      step="0.02"
+                      value={form.watermark_opacity ?? 0.1}
+                      onChange={(e) => updateField("watermark_opacity", parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 pt-4">
+                    <Switch checked={form.watermark_repeat ?? true} onCheckedChange={(v) => updateField("watermark_repeat", v)} />
+                    <Label className="text-sm">Répéter le motif</Label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Couleur de fond du document</Label>
               <p className="text-xs text-muted-foreground">

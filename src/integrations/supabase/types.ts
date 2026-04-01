@@ -685,6 +685,12 @@ export type Database = {
           user_id: string
           village: string | null
           village_logo_url: string | null
+          watermark_angle: string | null
+          watermark_image_url: string | null
+          watermark_opacity: number | null
+          watermark_repeat: boolean | null
+          watermark_text: string | null
+          watermark_type: string | null
         }
         Insert: {
           arrete_approbation?: string | null
@@ -710,6 +716,12 @@ export type Database = {
           user_id: string
           village?: string | null
           village_logo_url?: string | null
+          watermark_angle?: string | null
+          watermark_image_url?: string | null
+          watermark_opacity?: number | null
+          watermark_repeat?: boolean | null
+          watermark_text?: string | null
+          watermark_type?: string | null
         }
         Update: {
           arrete_approbation?: string | null
@@ -735,6 +747,12 @@ export type Database = {
           user_id?: string
           village?: string | null
           village_logo_url?: string | null
+          watermark_angle?: string | null
+          watermark_image_url?: string | null
+          watermark_opacity?: number | null
+          watermark_repeat?: boolean | null
+          watermark_text?: string | null
+          watermark_type?: string | null
         }
         Relationships: []
       }

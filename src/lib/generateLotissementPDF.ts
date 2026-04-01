@@ -1042,6 +1042,12 @@ export interface AttestationTemplateData {
   doc_bg_gradient?: boolean;
   village_logo_url?: string | null;
   header_line_color?: string | null;
+  watermark_type?: string;
+  watermark_text?: string | null;
+  watermark_image_url?: string | null;
+  watermark_angle?: string;
+  watermark_opacity?: number;
+  watermark_repeat?: boolean;
 }
 
 export interface AttestationChefImages {
@@ -1254,6 +1260,64 @@ export const generateAttestationVillageoise = async (
   };
 
   drawDocumentBackground();
+
+  // Draw watermark
+  const drawWatermark = async () => {
+    const wmType = template?.watermark_type || 'none';
+    if (wmType === 'none') return;
+    const opacity = template?.watermark_opacity ?? 0.1;
+    const angle = template?.watermark_angle === 'horizontal' ? 0 : -45;
+    const repeat = template?.watermark_repeat ?? true;
+
+    if (wmType === 'text' && template?.watermark_text) {
+      const text = template.watermark_text;
+      doc.setFontSize(40);
+      doc.setFont('helvetica', 'bold');
+      const grayVal = Math.round(255 * (1 - opacity));
+      doc.setTextColor(grayVal, grayVal, grayVal);
+
+      if (repeat) {
+        const stepX = 80;
+        const stepY = 60;
+        for (let x = -20; x < pageWidth + 80; x += stepX) {
+          for (let y = 20; y < pageHeight + 60; y += stepY) {
+            doc.text(text, x, y, { angle });
+          }
+        }
+      } else {
+        doc.text(text, pageWidth / 2, pageHeight / 2, { align: 'center', angle });
+      }
+      doc.setTextColor(...textColor);
+    }
+
+    if (wmType === 'image' && template?.watermark_image_url) {
+      try {
+        const imgBase64 = await loadImageAsBase64(template.watermark_image_url);
+        if (imgBase64) {
+          const imgSize = 60;
+          const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
+          if (repeat) {
+            const stepX = 90;
+            const stepY = 90;
+            for (let x = 10; x < pageWidth; x += stepX) {
+              for (let y = 10; y < pageHeight; y += stepY) {
+                if (gState) (doc as any).setGState(gState);
+                doc.addImage(imgBase64, 'PNG', x, y, imgSize, imgSize);
+              }
+            }
+          } else {
+            if (gState) (doc as any).setGState(gState);
+            doc.addImage(imgBase64, 'PNG', (pageWidth - imgSize) / 2, (pageHeight - imgSize) / 2, imgSize, imgSize);
+          }
+          // Reset opacity
+          const resetState = (doc as any).GState ? new (doc as any).GState({ opacity: 1 }) : null;
+          if (resetState) (doc as any).setGState(resetState);
+        }
+      } catch {}
+    }
+  };
+
+  await drawWatermark();
 
   if (isCessionTemplate) {
     // === CESSION HEADER: Agency logo (left) + header text (right) + colored dashes + title ===

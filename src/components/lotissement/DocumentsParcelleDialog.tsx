@@ -272,6 +272,12 @@ export function DocumentsParcelleDialog({
                     doc_bg_gradient: (attestationTemplate as any).doc_bg_gradient || false,
                     village_logo_url: (attestationTemplate as any).village_logo_url || null,
                     header_line_color: (attestationTemplate as any).header_line_color || null,
+                    watermark_type: (attestationTemplate as any).watermark_type || 'none',
+                    watermark_text: (attestationTemplate as any).watermark_text || null,
+                    watermark_image_url: (attestationTemplate as any).watermark_image_url || null,
+                    watermark_angle: (attestationTemplate as any).watermark_angle || 'diagonal',
+                    watermark_opacity: (attestationTemplate as any).watermark_opacity ?? 0.1,
+                    watermark_repeat: (attestationTemplate as any).watermark_repeat ?? true,
                   } : null;
                   const chefImages: AttestationChefImages = {
                     stamp_url: lotissement?.chef_stamp_url || null,
@@ -371,6 +377,12 @@ export function DocumentsParcelleDialog({
                     doc_bg_gradient: (usedTemplate as any).doc_bg_gradient || false,
                     village_logo_url: (usedTemplate as any).village_logo_url || null,
                     header_line_color: (usedTemplate as any).header_line_color || null,
+                    watermark_type: (usedTemplate as any).watermark_type || 'none',
+                    watermark_text: (usedTemplate as any).watermark_text || null,
+                    watermark_image_url: (usedTemplate as any).watermark_image_url || null,
+                    watermark_angle: (usedTemplate as any).watermark_angle || 'diagonal',
+                    watermark_opacity: (usedTemplate as any).watermark_opacity ?? 0.1,
+                    watermark_repeat: (usedTemplate as any).watermark_repeat ?? true,
                   } : null;
                   const chefImages: AttestationChefImages = {
                     stamp_url: lotissement?.chef_stamp_url || null,

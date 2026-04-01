@@ -24,6 +24,12 @@ export interface AttestationTemplate {
   village_logo_url: string | null;
   template_type: string;
   header_line_color: string | null;
+  watermark_type: string;
+  watermark_text: string | null;
+  watermark_image_url: string | null;
+  watermark_angle: string;
+  watermark_opacity: number;
+  watermark_repeat: boolean;
   created_at: string;
   updated_at: string;
 }

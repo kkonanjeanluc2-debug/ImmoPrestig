@@ -688,6 +688,8 @@ export const ImportGeometreDialog = ({
                   user_id: user?.id,
                   nom: parcelle.proprietaireTerrien.trim(),
                   partie: "proprietaire",
+                  telephone: parcelle.contact || null,
+                  cni_number: parcelle.cniNumber || null,
                 } as any)
                 .select("id")
                 .single();
@@ -695,7 +697,7 @@ export const ImportGeometreDialog = ({
             }
           }
 
-          // Handle beneficiaire (lotisseur side)
+          // Handle beneficiaire (lotisseur side or attributaire from guide)
           if (parcelle.beneficiaire) {
             const key = `lotisseur:${parcelle.beneficiaire.toLowerCase().trim()}`;
             if (!beneficiaireCache[key]) {
@@ -706,6 +708,8 @@ export const ImportGeometreDialog = ({
                   user_id: user?.id,
                   nom: parcelle.beneficiaire.trim(),
                   partie: "lotisseur",
+                  telephone: parcelle.contact || null,
+                  cni_number: parcelle.cniNumber || null,
                 } as any)
                 .select("id")
                 .single();

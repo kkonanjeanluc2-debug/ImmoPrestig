@@ -42,15 +42,6 @@ export const usePayments = () => {
       const now = new Date();
       const currentDay = now.getDate();
 
-      // Only generate virtual payments from the 15th of the month
-      if (currentDay < 15) return data;
-
-      // Determine next month
-      const nextMonth = now.getMonth() + 1 > 11 ? 0 : now.getMonth() + 1;
-      const nextYear = now.getMonth() + 1 > 11 ? now.getFullYear() + 1 : now.getFullYear();
-      const nextMonthLabel = `${FRENCH_MONTHS[nextMonth]} ${nextYear}`;
-      const nextMonthDueDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(rentDueDay).padStart(2, '0')}`;
-
       // Fetch active contracts with tenant info
       const { data: activeContracts, error: contractsError } = await supabase
         .from("contracts")
@@ -63,43 +54,45 @@ export const usePayments = () => {
 
       if (contractsError) throw contractsError;
 
-      // Check which tenants already have ANY real payment for next month
-      // (paid, pending, partial, late — any status means no virtual needed)
-      const nextMonthIso = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}`;
-      const existingTenantIds = new Set(
+      // Always generate virtual payments for the CURRENT month
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      const currentMonthLabel = `${FRENCH_MONTHS[currentMonth]} ${currentYear}`;
+      const currentMonthIso = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+      const currentMonthDueDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(rentDueDay).padStart(2, '0')}`;
+
+      // Check which tenants already have a real payment for current month
+      const existingCurrentMonthTenantIds = new Set(
         (data || [])
           .filter((payment) => {
             if (!payment.tenant_id) return false;
-
             if (payment.payment_months && Array.isArray(payment.payment_months)) {
               return (
-                payment.payment_months.includes(nextMonthLabel) ||
-                payment.payment_months.includes(nextMonthIso)
+                payment.payment_months.includes(currentMonthLabel) ||
+                payment.payment_months.includes(currentMonthIso)
               );
             }
-
-            return typeof payment.due_date === "string" && payment.due_date.startsWith(nextMonthIso);
+            return typeof payment.due_date === "string" && payment.due_date.startsWith(currentMonthIso);
           })
           .map((payment) => payment.tenant_id)
       );
 
-      // Generate virtual pending payments for tenants without one
-      const virtualPayments = (activeContracts || [])
-        .filter(c => !existingTenantIds.has(c.tenant_id))
+      // Virtual payments for current month
+      const virtualCurrentMonth = (activeContracts || [])
+        .filter(c => !existingCurrentMonthTenantIds.has(c.tenant_id))
         .map(contract => {
           const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
-
           return {
-            id: `auto-${contract.tenant_id}-${nextMonthLabel}`,
+            id: `auto-${contract.tenant_id}-${currentMonthLabel}`,
             user_id: agencyUserId,
             tenant_id: contract.tenant_id,
             amount: contract.rent_amount,
-            due_date: nextMonthDueDate,
+            due_date: currentMonthDueDate,
             status: "pending",
             method: null,
             paid_date: null,
             paid_amount: null,
-            payment_months: [nextMonthLabel],
+            payment_months: [currentMonthLabel],
             created_at: now.toISOString(),
             updated_at: now.toISOString(),
             tenant: contract.tenant,
@@ -107,7 +100,54 @@ export const usePayments = () => {
           };
         });
 
-      return [...(data || []), ...virtualPayments] as any;
+      // From the 15th, also generate virtual payments for NEXT month
+      let virtualNextMonth: any[] = [];
+      if (currentDay >= 15) {
+        const nextMonth = currentMonth + 1 > 11 ? 0 : currentMonth + 1;
+        const nextYear = currentMonth + 1 > 11 ? currentYear + 1 : currentYear;
+        const nextMonthLabel = `${FRENCH_MONTHS[nextMonth]} ${nextYear}`;
+        const nextMonthIso = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}`;
+        const nextMonthDueDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(rentDueDay).padStart(2, '0')}`;
+
+        const existingNextMonthTenantIds = new Set(
+          (data || [])
+            .filter((payment) => {
+              if (!payment.tenant_id) return false;
+              if (payment.payment_months && Array.isArray(payment.payment_months)) {
+                return (
+                  payment.payment_months.includes(nextMonthLabel) ||
+                  payment.payment_months.includes(nextMonthIso)
+                );
+              }
+              return typeof payment.due_date === "string" && payment.due_date.startsWith(nextMonthIso);
+            })
+            .map((payment) => payment.tenant_id)
+        );
+
+        virtualNextMonth = (activeContracts || [])
+          .filter(c => !existingNextMonthTenantIds.has(c.tenant_id))
+          .map(contract => {
+            const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
+            return {
+              id: `auto-${contract.tenant_id}-${nextMonthLabel}`,
+              user_id: agencyUserId,
+              tenant_id: contract.tenant_id,
+              amount: contract.rent_amount,
+              due_date: nextMonthDueDate,
+              status: "pending",
+              method: null,
+              paid_date: null,
+              paid_amount: null,
+              payment_months: [nextMonthLabel],
+              created_at: now.toISOString(),
+              updated_at: now.toISOString(),
+              tenant: contract.tenant,
+              _isVirtual: true,
+            };
+          });
+      }
+
+      return [...(data || []), ...virtualCurrentMonth, ...virtualNextMonth] as any;
     },
     enabled: !!user,
   });

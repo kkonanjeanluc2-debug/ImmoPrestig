@@ -99,9 +99,9 @@ export function LotissementsComparisonTable({
 
   const stats = useMemo(() => {
     return lotissements.map((lot): LotissementStats => {
-      const lotParcelles = parcelles.filter((p) => p.lotissement_id === lot.id);
+      const lotParcelles = allParcelles.filter((p) => p.lotissement_id === lot.id);
       const lotVentes = ventes.filter((v) => {
-        const parcelle = parcelles.find((p) => p.id === v.parcelle_id);
+        const parcelle = allParcelles.find((p) => p.id === v.parcelle_id);
         return parcelle?.lotissement_id === lot.id;
       });
 

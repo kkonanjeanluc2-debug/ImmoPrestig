@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { format, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
-import { FileText, User, Banknote, Building2, Smartphone, CreditCard, Search, XCircle } from "lucide-react";
+import { FileText, User, Banknote, Building2, Smartphone, CreditCard, Search, XCircle, ArrowRightLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { VenteWithDetails, useCancelVenteParcelle } from "@/hooks/useVentesParcelles";
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";

@@ -486,6 +486,8 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_export_guide: false,
     can_import_geometre: false,
     can_access_repartition: false,
+    can_cancel_vente_parcelle: false,
+    can_manage_mutations_parcelle: false,
     can_view_ventes: true,
     can_create_ventes: true,
     can_edit_ventes: false,

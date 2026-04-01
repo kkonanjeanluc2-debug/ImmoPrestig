@@ -962,6 +962,16 @@ export const ImportGeometreDialog = ({
                               Bénéf: {parcelle.beneficiaire}
                             </Badge>
                           )}
+                          {parcelle.contact && (
+                            <Badge variant="outline" className="text-xs">
+                              📞 {parcelle.contact}
+                            </Badge>
+                          )}
+                          {parcelle.cniNumber && (
+                            <Badge variant="outline" className="text-xs">
+                              {parcelle.cniNature || "CNI"}: {parcelle.cniNumber}
+                            </Badge>
+                          )}
                           {parcelle.coordinates && (
                             <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300">
                               📍 Géoréférencé

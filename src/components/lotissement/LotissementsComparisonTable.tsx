@@ -148,7 +148,7 @@ export function LotissementsComparisonTable({
         prixMoyenM2,
       };
     });
-  }, [lotissements, parcelles, ventes, echeances]);
+  }, [lotissements, allParcelles, ventes, echeances]);
 
   // Trier par taux de vente décroissant
   const sortedStats = [...stats].sort((a, b) => b.tauxVente - a.tauxVente);

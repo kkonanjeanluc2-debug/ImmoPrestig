@@ -63,6 +63,7 @@ export function DocumentsParcelleDialog({
         country: agency.country || undefined,
         logo_url: agency.logo_url,
         siret: agency.siret || undefined,
+        pdf_header_text: agency.pdf_header_text || undefined,
       }
     : null;
 

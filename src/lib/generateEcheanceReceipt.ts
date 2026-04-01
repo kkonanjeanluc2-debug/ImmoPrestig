@@ -28,6 +28,8 @@ interface EcheanceReceiptData {
   validatedBy?: string;
   vendeur?: PartyInfo | null;
   acquereur?: PartyInfo | null;
+  previouslyPaid?: number;
+  remainingAfterPayment?: number;
 }
 
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {

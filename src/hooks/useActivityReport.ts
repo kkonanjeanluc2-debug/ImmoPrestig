@@ -354,5 +354,7 @@ export function useAllManagersReport(periodFrom: string, periodTo: string) {
       return reports.sort((a, b) => b.totalRevenue - a.totalRevenue);
     },
     enabled: !!user?.id && !!periodFrom && !!periodTo,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }

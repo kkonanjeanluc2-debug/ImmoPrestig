@@ -281,6 +281,14 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {mutationTarget && (
+        <MutationParcelleDialog
+          vente={mutationTarget}
+          open={!!mutationTarget}
+          onOpenChange={(open) => !open && setMutationTarget(null)}
+        />
+      )}
     </>
   );
 }

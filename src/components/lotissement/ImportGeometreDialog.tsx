@@ -340,15 +340,18 @@ export const ImportGeometreDialog = ({
 
       newWarnings.push(`Colonnes détectées : ${headers.filter(Boolean).join(", ")}`);
 
-      // Check if this is a guide format (cells contain multi-line blocks with COMMUNE/ILOT/LOT)
+      // Check if this is a guide format (table contains ILOT/LOT/SUPERFICIE header info)
       const isGuideFormat = (() => {
-        for (let i = 1; i < Math.min(rows.length, 5); i++) {
-          const cells = rows[i].querySelectorAll("td, th");
-          for (const cell of Array.from(cells)) {
-            const text = cell.textContent || "";
-            if (/ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text)) {
-              return true;
-            }
+        // Check the full table text for guide markers
+        const fullTableText = table.textContent || "";
+        if (/\bILOT\s*[:]\s*\d/i.test(fullTableText) && /\bLOT\s*[:]\s*\d/i.test(fullTableText)) {
+          return true;
+        }
+        // Also check row-by-row (ILOT and LOT may be in same row across cells)
+        for (let i = 0; i < Math.min(rows.length, 5); i++) {
+          const rowText = Array.from(rows[i].querySelectorAll("td, th")).map(c => c.textContent || "").join(" ");
+          if (/\bILOT\s*[:]\s*\d/i.test(rowText) && /\bLOT\s*[:]\s*\d/i.test(rowText)) {
+            return true;
           }
         }
         return false;

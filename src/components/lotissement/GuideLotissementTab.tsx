@@ -188,6 +188,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: lastMut.nouvel_acquereur?.cni_number || "",
           date_piece: "",
           status: "mute",
+          area: parcelle.area,
         });
       } else if (vente?.acquereur?.name && origAttributaire) {
         // Sold with original beneficiary, no mutations

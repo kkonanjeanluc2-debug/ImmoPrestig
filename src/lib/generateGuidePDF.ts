@@ -331,7 +331,37 @@ export async function generateGuidePDF(
       const zx = i * zigW + zigW / 2;
       doc.triangle(zx - zigW / 4, ph - patternH, zx, ph - patternH + 3, zx + zigW / 4, ph - patternH, "F");
     }
-    // MCLAU logo centered at top
+    // TOP-LEFT: District / Commune / Village (dynamic)
+    const leftX = margin + 5;
+    let yInfo = patternH + 12;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    if (cp.district) {
+      const distLines = cp.district.toUpperCase().split("\n");
+      distLines.forEach(line => {
+        doc.text(line.trim(), leftX, yInfo, { align: "left" });
+        yInfo += 5;
+      });
+    }
+    if (cp.commune) {
+      yInfo += 1;
+      doc.setLineWidth(0.4);
+      doc.setDrawColor(0, 0, 0);
+      const lineW = 50;
+      const lineStartX = leftX + 2;
+      doc.line(lineStartX, yInfo, lineStartX + lineW, yInfo);
+      yInfo += 5;
+      doc.text(`COMMUNE DE ${cp.commune.toUpperCase()}`, leftX, yInfo);
+      yInfo += 5;
+      doc.line(lineStartX, yInfo, lineStartX + lineW, yInfo);
+      yInfo += 6;
+    }
+    if (village) {
+      doc.text(`VILLAGE ${village.toUpperCase()}`, leftX, yInfo);
+    }
+
+    // TOP-CENTER: MCLAU logo
     const mclauLogo = await loadImageAsBase64("/images/mclau-logo.png");
     if (mclauLogo) {
       try {

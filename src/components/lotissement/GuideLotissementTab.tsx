@@ -16,6 +16,7 @@ import { fr } from "date-fns/locale";
 import { generateGuidePDF } from "@/lib/generateGuidePDF";
 import { useAgency } from "@/hooks/useAgency";
 import { useGuideTemplates } from "@/hooks/useGuideTemplates";
+import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
 import { ExportColumn } from "@/lib/exportData";
 
 interface GuideEntry {

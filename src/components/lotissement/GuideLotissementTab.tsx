@@ -39,10 +39,11 @@ interface GuideLotissementTabProps {
   lotissementId: string;
   lotissementName: string;
   guideTemplateId?: string | null;
+  attestationTemplateId?: string | null;
   canExport?: boolean;
 }
 
-export function GuideLotissementTab({ lotissementId, lotissementName, guideTemplateId, canExport = true }: GuideLotissementTabProps) {
+export function GuideLotissementTab({ lotissementId, lotissementName, guideTemplateId, attestationTemplateId, canExport = true }: GuideLotissementTabProps) {
   const { data: parcelles } = useParcelles(lotissementId);
   const { data: ventes } = useVentesParcelles(lotissementId);
   const { data: ilots } = useIlotsWithStats(lotissementId);

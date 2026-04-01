@@ -382,6 +382,7 @@ const OwnerDetails = () => {
 
       // Prepare late payments - payments from previous months collected (fully or partially) this month
       const latePayments = ownerTenants
+        .filter(tenant => tenant.contracts?.some(c => c.status === "active"))
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const propertyTitle = buildPropertyTitle(property, tenant);

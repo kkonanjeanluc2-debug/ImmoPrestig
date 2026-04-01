@@ -123,7 +123,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
               <TableHead>Paiement</TableHead>
               <TableHead>Commercial</TableHead>
               <TableHead>Progression</TableHead>
-              <TableHead className="w-[120px]">Actions</TableHead>
+              <TableHead className="w-[150px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

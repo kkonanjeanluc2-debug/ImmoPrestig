@@ -79,7 +79,7 @@ const ROLE_PERMISSIONS: Record<AppRole, Omit<Permissions, "isLoading" | "role" |
 };
 
 export function usePermissions(): Permissions {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const queryClient = useQueryClient();
 

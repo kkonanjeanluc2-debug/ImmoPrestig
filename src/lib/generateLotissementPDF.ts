@@ -1271,9 +1271,10 @@ export const generateAttestationVillageoise = async (
     yPos += 6;
 
     doc.setFontSize(11);
-    doc.text(`N°..........`, pageWidth / 2, yPos, { align: 'center' });
+    const nText = `N° ${parcelle.plot_number || '..........'}`;
+    doc.text(nText, pageWidth / 2, yPos, { align: 'center' });
     // Underline for N°
-    const nWidth = doc.getTextWidth('N°..........');
+    const nWidth = doc.getTextWidth(nText);
     yPos += 1.5;
     doc.line(pageWidth / 2 - nWidth / 2, yPos, pageWidth / 2 + nWidth / 2, yPos);
     yPos += 10;

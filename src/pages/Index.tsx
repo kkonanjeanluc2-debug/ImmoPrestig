@@ -85,13 +85,25 @@ const Index = () => {
   ).length;
   
   const now = new Date();
-  const thisMonth = now.getMonth();
-  const thisYear = now.getFullYear();
-  const monthEnd = new Date(thisYear, thisMonth + 1, 0);
-  const monthStartStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-01`;
-  const monthEndStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`;
 
-  const monthlyRevenue = getCollectedRevenueForPeriod(filteredPayments as any[], monthStartStr, monthEndStr);
+  // Use selected period for revenue calculation (based on paid_date)
+  const periodFromStr = `${period.from.getFullYear()}-${String(period.from.getMonth() + 1).padStart(2, '0')}-${String(period.from.getDate()).padStart(2, '0')}`;
+  const periodToStr = `${period.to.getFullYear()}-${String(period.to.getMonth() + 1).padStart(2, '0')}-${String(period.to.getDate()).padStart(2, '0')}`;
+
+  const monthlyRevenue = useMemo(() => {
+    return (filteredPayments || []).reduce((sum, p: any) => {
+      if (p._isVirtual) return sum;
+      const collectionDate = p.status === 'paid' ? (p.paid_date || p.created_at) : p.paid_date;
+      if (!collectionDate) return sum;
+      const dateOnly = collectionDate.substring(0, 10);
+      if (dateOnly >= periodFromStr && dateOnly <= periodToStr) {
+        return sum + (Number(p.paid_amount) || Number(p.amount) || 0);
+      }
+      return sum;
+    }, 0);
+  }, [filteredPayments, periodFromStr, periodToStr]);
+
+  const periodLabel = getPeriodLabel(period);
 
   // Calculate occupancy considering units (portes)
   const { totalUnits, occupiedUnits } = useMemo(() => {

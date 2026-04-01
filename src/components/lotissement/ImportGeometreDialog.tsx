@@ -549,19 +549,49 @@ export const ImportGeometreDialog = ({
           } else if (parcelle.beneficiaire) {
             attribution = "lotisseur";
           }
-          
-          const result = await createParcelle.mutateAsync({
-            lotissement_id: lotissementId,
-            ilot_id: ilotId,
-            plot_number: parcelle.plotNumber,
-            area: parcelle.area,
-            price: parcelle.price,
-            ...(attribution ? { attribution } : {}),
-            notes: [
-              parcelle.proprietaireTerrien ? `Propriétaire: ${parcelle.proprietaireTerrien}` : "",
-              parcelle.beneficiaire ? `Bénéficiaire: ${parcelle.beneficiaire}` : "",
-            ].filter(Boolean).join(" | ") || undefined,
-          } as any);
+
+          const notesValue = [
+            parcelle.proprietaireTerrien ? `Propriétaire: ${parcelle.proprietaireTerrien}` : "",
+            parcelle.beneficiaire ? `Bénéficiaire: ${parcelle.beneficiaire}` : "",
+          ].filter(Boolean).join(" | ") || undefined;
+
+          // Check if a parcelle with same plot_number already exists (including soft-deleted)
+          const { data: existing } = await supabase
+            .from("parcelles")
+            .select("id")
+            .eq("lotissement_id", lotissementId)
+            .eq("plot_number", parcelle.plotNumber)
+            .maybeSingle();
+
+          let result: any;
+          if (existing) {
+            // Restore / update existing parcelle
+            const { data: updated, error: updateErr } = await supabase
+              .from("parcelles")
+              .update({
+                deleted_at: null,
+                ilot_id: ilotId,
+                area: parcelle.area,
+                price: parcelle.price,
+                ...(attribution ? { attribution } : {}),
+                notes: notesValue,
+              })
+              .eq("id", existing.id)
+              .select()
+              .single();
+            if (updateErr) throw updateErr;
+            result = updated;
+          } else {
+            result = await createParcelle.mutateAsync({
+              lotissement_id: lotissementId,
+              ilot_id: ilotId,
+              plot_number: parcelle.plotNumber,
+              area: parcelle.area,
+              price: parcelle.price,
+              ...(attribution ? { attribution } : {}),
+              notes: notesValue,
+            } as any);
+          }
           successCount++;
           createdParcelles.push({ id: result.id, parcelle });
         } catch (parcelleErr) {

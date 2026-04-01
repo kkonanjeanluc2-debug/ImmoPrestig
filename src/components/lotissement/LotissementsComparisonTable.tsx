@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,24 +63,45 @@ interface LotissementStats {
 
 interface LotissementsComparisonTableProps {
   lotissements: Lotissement[];
-  parcelles: Parcelle[];
+  parcelles?: Parcelle[]; // kept for backward compat but ignored
   ventes: VenteParcelle[];
   echeances: EcheanceParcelle[];
 }
 
 export function LotissementsComparisonTable({
   lotissements,
-  parcelles,
   ventes,
   echeances,
 }: LotissementsComparisonTableProps) {
   const navigate = useNavigate();
+  const [allParcelles, setAllParcelles] = useState<Parcelle[]>([]);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      let all: Parcelle[] = [];
+      let offset = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("parcelles")
+          .select("id, lotissement_id, status, price, area")
+          .is("deleted_at", null)
+          .range(offset, offset + 999);
+        if (error || !data || data.length === 0) { hasMore = false; break; }
+        all = [...all, ...data as Parcelle[]];
+        offset += data.length;
+        if (data.length < 1000) hasMore = false;
+      }
+      setAllParcelles(all);
+    };
+    fetchAll();
+  }, [lotissements]);
 
   const stats = useMemo(() => {
     return lotissements.map((lot): LotissementStats => {
-      const lotParcelles = parcelles.filter((p) => p.lotissement_id === lot.id);
+      const lotParcelles = allParcelles.filter((p) => p.lotissement_id === lot.id);
       const lotVentes = ventes.filter((v) => {
-        const parcelle = parcelles.find((p) => p.id === v.parcelle_id);
+        const parcelle = allParcelles.find((p) => p.id === v.parcelle_id);
         return parcelle?.lotissement_id === lot.id;
       });
 
@@ -126,7 +148,7 @@ export function LotissementsComparisonTable({
         prixMoyenM2,
       };
     });
-  }, [lotissements, parcelles, ventes, echeances]);
+  }, [lotissements, allParcelles, ventes, echeances]);
 
   // Trier par taux de vente décroissant
   const sortedStats = [...stats].sort((a, b) => b.tauxVente - a.tauxVente);

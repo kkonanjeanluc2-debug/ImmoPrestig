@@ -1074,12 +1074,13 @@ export const generateAttestationVillageoise = async (
   ilotName?: string | null,
   chefImages?: AttestationChefImages | null,
   ancienBeneficiaire?: AncienBeneficiaireInfo | null,
-  compactLevel = 0
+  compactLevel = 0,
+  forceCession = false
 ): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const isCessionTemplate = template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR');
+  const isCessionTemplate = forceCession || (template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR'));
   const isAttributionTemplate = !isCessionTemplate;
   const margin = isAttributionTemplate
     ? compactLevel > 1

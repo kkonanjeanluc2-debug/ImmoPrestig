@@ -132,6 +132,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
             numero_piece: origNumeroPiece,
             date_piece: "",
             status: "cede",
+            area: parcelle.area,
           });
         }
 

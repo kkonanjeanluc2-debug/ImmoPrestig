@@ -294,8 +294,9 @@ export async function generateGuidePDF(
   if (options.coverPage) {
     const cp = options.coverPage;
 
-    // Load header logos image
-    const logosBase64 = await loadImageAsBase64("/images/guide-header-logos.png");
+    // Load individual logos
+    const mclauLogo = await loadImageAsBase64("/images/mclau-logo.png");
+    const armoiriesLogo = await loadImageAsBase64("/images/armoiries-ci.png");
 
     // Background: soft peach/cream gradient
     const bgBase = cp.bg_color && cp.bg_color !== "#FFFFFF" ? hexToRgb(cp.bg_color) : [255, 245, 235] as [number, number, number];
@@ -309,7 +310,6 @@ export async function generateGuidePDF(
     // Top decorative band
     doc.setFillColor(borderRgb[0], borderRgb[1], borderRgb[2]);
     doc.rect(0, 0, pw, patternH, "F");
-    // Add zigzag pattern overlay
     doc.setFillColor(255, 255, 255);
     const zigW = 8;
     for (let i = 0; i < pw / zigW; i++) {
@@ -336,8 +336,11 @@ export async function generateGuidePDF(
       doc.triangle(zx - zigW / 4, ph - patternH, zx, ph - patternH + 3, zx + zigW / 4, ph - patternH, "F");
     }
 
-    // Top-left: District / Region / Commune / Village info
-    let yInfo = patternH + 12;
+    // === HEADER: 3 columns - LEFT (District/Commune/Village) | CENTER (MCLAU) | RIGHT (Armoiries + République) ===
+    const headerY = patternH + 8;
+
+    // LEFT: District / Commune / Village
+    let yInfo = headerY;
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
@@ -349,7 +352,7 @@ export async function generateGuidePDF(
       });
     }
     if (cp.commune) {
-      yInfo += 2;
+      yInfo += 1;
       doc.setLineWidth(0.4);
       doc.setDrawColor(0, 0, 0);
       doc.line(margin + 5, yInfo, margin + 55, yInfo);
@@ -363,27 +366,33 @@ export async function generateGuidePDF(
       doc.text(`VILLAGE ${village.toUpperCase()}`, margin + 5, yInfo);
     }
 
-    // Center/Right: Logos (MCLAU + Coat of arms)
-    if (logosBase64) {
+    // CENTER: MCLAU logo
+    if (mclauLogo) {
       try {
-        // The image contains both logos side by side, place it center-right of header
-        const logoW = 120;
-        const logoH = 25;
-        const logoX = pw / 2 - 10;
-        const logoY = patternH + 8;
-        doc.addImage(logosBase64, "PNG", logoX, logoY, logoW, logoH);
-      } catch { /* ignore logo errors */ }
+        const mclauW = 55;
+        const mclauH = 22;
+        const mclauX = pw / 2 - mclauW / 2;
+        doc.addImage(mclauLogo, "PNG", mclauX, headerY, mclauW, mclauH);
+      } catch { /* ignore */ }
     }
 
-    // Right side: Republic info (below logos)
-    const rightX = pw - margin - 5;
-    let yRight = patternH + 38;
-    doc.setFontSize(9);
+    // RIGHT: Armoiries + République text
+    const rightColX = pw - margin - 50;
+    if (armoiriesLogo) {
+      try {
+        const armW = 28;
+        const armH = 28;
+        const armX = rightColX + (50 - armW) / 2;
+        doc.addImage(armoiriesLogo, "PNG", armX, headerY, armW, armH);
+      } catch { /* ignore */ }
+    }
+    const rightTextX = rightColX + 25;
+    const repY = headerY + 32;
+    doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
-    doc.text("REPUBLIQUE DE COTE D'IVOIRE", rightX, yRight, { align: "right" });
-    yRight += 5;
+    doc.text("REPUBLIQUE DE COTE D'IVOIRE", rightTextX, repY, { align: "center" });
     doc.setFont("helvetica", "italic");
-    doc.text("Union-Discipline-Travail", rightX, yRight, { align: "right" });
+    doc.text("Union-Discipline-Travail", rightTextX, repY + 4, { align: "center" });
 
     // Center: GUIDE DU LOTISSEMENT title
     const titleRgb = hexToRgb(cp.title_color);

@@ -303,7 +303,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
                 {filtered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      Aucune parcelle trouvée
+                      Aucun lot trouvé
                     </TableCell>
                   </TableRow>
                 ) : (

@@ -107,7 +107,7 @@ export function PlanMasse({ parcelles, lotissementName }: PlanMasseProps) {
     return (
       <Card className="py-12">
         <CardContent className="text-center">
-          <p className="text-muted-foreground">Aucune parcelle à afficher</p>
+          <p className="text-muted-foreground">Aucun lot à afficher</p>
         </CardContent>
       </Card>
     );

@@ -192,7 +192,7 @@ export function LotissementsComparisonTable({
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="font-semibold">Lotissement</TableHead>
-                <TableHead className="text-center font-semibold">Parcelles</TableHead>
+                <TableHead className="text-center font-semibold">Lots</TableHead>
                 <TableHead className="text-center font-semibold">Vendues</TableHead>
                 <TableHead className="text-center font-semibold">Réservées</TableHead>
                 <TableHead className="text-center font-semibold">Disponibles</TableHead>

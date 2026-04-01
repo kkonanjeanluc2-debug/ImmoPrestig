@@ -1307,14 +1307,15 @@ export const generateAttestationVillageoise = async (
   } else {
     // === ATTRIBUTION HEADER: Village logos + REPUBLIQUE + banner ===
     let headerLeftX = margin;
+    const logoStartY = yPos - 3;
+    const logoSize = 25;
     const villageLogoUrl = template?.village_logo_url;
     if (villageLogoUrl) {
       try {
         const logoBase64 = await loadImageAsBase64(villageLogoUrl);
         if (logoBase64) {
-          const logoSize = 22;
-          doc.addImage(logoBase64, 'PNG', margin, yPos - 3, logoSize, logoSize);
-          doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, yPos - 3, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', margin, logoStartY, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, logoStartY, logoSize, logoSize);
           headerLeftX = margin + logoSize + 4;
         }
       } catch {}
@@ -1337,7 +1338,10 @@ export const generateAttestationVillageoise = async (
       yPos += 4;
     }
     doc.setFont('helvetica', 'normal');
-    yPos += 4;
+
+    // Ensure banner starts below the logos
+    const logoBottomY = logoStartY + logoSize + 3;
+    yPos = Math.max(yPos + 4, logoBottomY);
 
     const bannerHeight = 28;
     const bannerColor1 = template?.banner_color_1 || '#003399';

@@ -220,6 +220,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: vente.acquereur.cni_number || "",
           date_piece: "",
           status: parcelle.status,
+          area: parcelle.area,
         });
       } else {
         // Single row

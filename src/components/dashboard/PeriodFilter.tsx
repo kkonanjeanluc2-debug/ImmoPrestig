@@ -19,14 +19,24 @@ export interface PeriodValue {
   to: Date;
 }
 
+export type PeriodPresetMode = "to-date" | "full-period";
+
+interface PeriodRangeOptions {
+  mode?: PeriodPresetMode;
+}
+
 interface PeriodFilterProps {
   value: PeriodValue;
   onChange: (value: PeriodValue) => void;
+  rangeMode?: PeriodPresetMode;
 }
 
-function getPresetRange(type: Exclude<PeriodType, "custom">): { from: Date; to: Date } {
+function getPresetRange(type: Exclude<PeriodType, "custom">, options: PeriodRangeOptions = {}): { from: Date; to: Date } {
   const now = new Date();
-  const to = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const mode = options.mode ?? "to-date";
+  const to = mode === "full-period"
+    ? new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+    : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
   if (type === "month") {
     const from = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -40,8 +50,8 @@ function getPresetRange(type: Exclude<PeriodType, "custom">): { from: Date; to: 
   return { from, to };
 }
 
-export function getDefaultPeriod(): PeriodValue {
-  const { from, to } = getPresetRange("month");
+export function getDefaultPeriod(options: PeriodRangeOptions = {}): PeriodValue {
+   const { from, to } = getPresetRange("month", options);
   return { type: "month", from, to };
 }
 
@@ -101,11 +111,11 @@ function DatePickerInput({ label, date, onSelect }: { label: string; date?: Date
   );
 }
 
-export function PeriodFilter({ value, onChange }: PeriodFilterProps) {
+export function PeriodFilter({ value, onChange, rangeMode = "to-date" }: PeriodFilterProps) {
   const isCustom = value.type === "custom";
 
   const handlePreset = (preset: Exclude<PeriodType, "custom">) => {
-    const { from, to } = getPresetRange(preset);
+    const { from, to } = getPresetRange(preset, { mode: rangeMode });
     onChange({ type: preset, from, to });
   };
 

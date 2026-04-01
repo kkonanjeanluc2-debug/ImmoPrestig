@@ -200,7 +200,10 @@ const OwnerDetails = () => {
       const monthStartStr = format(monthStart, "yyyy-MM-dd");
       const monthEndStr = format(monthEnd, "yyyy-MM-dd");
 
-      const tenantPayments = ownerTenants.map(tenant => {
+      const tenantPayments = ownerTenants.filter(tenant => {
+        const hasActiveContract = tenant.contracts?.some(c => c.status === "active");
+        return hasActiveContract;
+      }).map(tenant => {
         const property = ownerProperties.find(p => p.id === tenant.property_id);
         const activeContract = tenant.contracts?.find(c => c.status === "active");
         const monthlyRent = activeContract?.rent_amount || property?.price || 0;
@@ -310,6 +313,7 @@ const OwnerDetails = () => {
 
       // Prepare advance payments - multi-month payments, future payments, and overpayments
       const advancePayments = ownerTenants
+        .filter(tenant => tenant.contracts?.some(c => c.status === "active"))
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const propertyTitle = buildPropertyTitle(property, tenant);
@@ -378,6 +382,7 @@ const OwnerDetails = () => {
 
       // Prepare late payments - payments from previous months collected (fully or partially) this month
       const latePayments = ownerTenants
+        .filter(tenant => tenant.contracts?.some(c => c.status === "active"))
         .map(tenant => {
           const property = ownerProperties.find(p => p.id === tenant.property_id);
           const propertyTitle = buildPropertyTitle(property, tenant);

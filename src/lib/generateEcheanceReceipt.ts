@@ -204,11 +204,18 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   const dueDateFormatted = new Date(data.dueDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
   const details: [string, string][] = [
-    ["Prix total du bien", formatAmountWithCurrency(data.totalSalePrice)],
+    ["Prix total de l'échéance", formatAmountWithCurrency(data.totalSalePrice)],
+    ["Montant versé", formatAmountWithCurrency(data.amount)],
     ["Date d'échéance", dueDateFormatted],
     ["Date de paiement", paidDateFormatted],
     ["Mode de paiement", data.paymentMethod || "Non spécifié"],
   ];
+  if (data.previouslyPaid && data.previouslyPaid > 0) {
+    details.push(["Précédemment payé", formatAmountWithCurrency(data.previouslyPaid)]);
+  }
+  if (data.remainingAfterPayment !== undefined && data.remainingAfterPayment > 0) {
+    details.push(["Reste à payer", formatAmountWithCurrency(data.remainingAfterPayment)]);
+  }
   if (data.validatedBy) {
     details.push(["Validé par", data.validatedBy]);
   }

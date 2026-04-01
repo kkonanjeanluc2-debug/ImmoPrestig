@@ -211,7 +211,7 @@ export const ImportGeometreDialog = ({
           let cniNumber = "";
           let cniNature = "";
           for (const val of allValues) {
-            if (val === blockText) continue;
+            if (/\bILOT\s*[:]/i.test(val) || /\bLOT\s*[:]/i.test(val) || /SUPERFICIE/i.test(val) || /AFFECTATION/i.test(val)) continue;
             // Skip pure numbers that look like area/price
             if (/^\d+[\.,]?\d*$/.test(val) && !beneficiaireName) continue;
             if (!beneficiaireName && val.length > 2 && !/ILOT|LOT|COMMUNE|VILLAGE|SUPERFICIE|ATTESTATION|ATTRIBUT/i.test(val)) {

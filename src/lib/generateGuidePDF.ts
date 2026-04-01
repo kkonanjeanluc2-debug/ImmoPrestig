@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 
-interface GuideEntry {
+export interface GuideEntry {
   numero: number;
   ilot: string;
   lot: string;
@@ -13,9 +13,17 @@ interface GuideEntry {
   numero_piece: string;
   date_piece: string;
   status: string;
+  area?: number;
 }
 
-interface GuideOptions {
+interface LotBlock {
+  ilot: string;
+  lot: string;
+  area: number;
+  entries: GuideEntry[];
+}
+
+export interface GuideOptions {
   totalParcelles: number;
   agency?: {
     name: string;
@@ -33,21 +41,7 @@ interface GuideOptions {
     border_color: string;
     bg_color: string;
   };
-}
-
-async function loadImageAsBase64(url: string): Promise<string | null> {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
+  village?: string;
 }
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -55,36 +49,228 @@ function hexToRgb(hex: string): [number, number, number] {
   return [parseInt(h.substring(0, 2), 16), parseInt(h.substring(2, 4), 16), parseInt(h.substring(4, 6), 16)];
 }
 
+function groupEntriesByLot(entries: GuideEntry[]): LotBlock[] {
+  const map = new Map<string, LotBlock>();
+  entries.forEach(e => {
+    const key = `${e.ilot}__${e.lot}`;
+    if (!map.has(key)) {
+      map.set(key, { ilot: e.ilot, lot: e.lot, area: e.area || 0, entries: [] });
+    }
+    map.get(key)!.entries.push(e);
+  });
+  return Array.from(map.values());
+}
+
+function drawLotBlock(
+  doc: jsPDF,
+  block: LotBlock,
+  yStart: number,
+  pageWidth: number,
+  margin: number,
+  commune: string,
+  village: string,
+  lotissementName: string,
+) {
+  const contentWidth = pageWidth - margin * 2;
+  const x = margin;
+  let y = yStart;
+
+  // === Header line 1: COMMUNE / VILLAGE / LOTISSEMENT ===
+  const headerH = 7;
+  doc.setFillColor(240, 240, 240);
+  doc.rect(x, y, contentWidth, headerH, "F");
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+  doc.rect(x, y, contentWidth, headerH);
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+
+  const col1W = contentWidth / 3;
+  doc.text(`COMMUNE DE ${commune.toUpperCase()}`, x + 3, y + 5);
+  doc.text(`VILLAGE DE ${village.toUpperCase()}`, x + col1W + 3, y + 5);
+  doc.text(`LOTISSEMENT : ${lotissementName.toUpperCase()}`, x + col1W * 2 + 3, y + 5);
+  y += headerH;
+
+  // === Header line 2: ILOT / LOT / SUPERFICIE / AFFECTATION / ARRETE ===
+  doc.setFillColor(240, 240, 240);
+  doc.rect(x, y, contentWidth, headerH, "F");
+  doc.rect(x, y, contentWidth, headerH);
+
+  doc.setFontSize(8);
+  const segW = contentWidth / 5;
+  doc.text(`ILOT :  `, x + 3, y + 5);
+  doc.setFont("helvetica", "bold");
+  doc.text(`${block.ilot}`, x + 3 + doc.getTextWidth("ILOT :  "), y + 5);
+
+  doc.setFont("helvetica", "bold");
+  doc.text(`LOT : `, x + segW + 3, y + 5);
+  doc.text(`${block.lot}`, x + segW + 3 + doc.getTextWidth("LOT : "), y + 5);
+
+  const areaStr = block.area ? block.area.toString() : "";
+  doc.text(`SUPERFICIE (m2) : `, x + segW * 2 + 3, y + 5);
+  doc.text(areaStr, x + segW * 2 + 3 + doc.getTextWidth("SUPERFICIE (m2) : "), y + 5);
+
+  doc.setFont("helvetica", "normal");
+  doc.text("AFFECTATION :", x + segW * 3 + 3, y + 5);
+  doc.text("ARRETE N° :", x + segW * 4 + 3, y + 5);
+  y += headerH;
+
+  // === Table header ===
+  // Columns: N° | NOM ET PRENOMS | Attestation N° | DATE | ADRESSES ET CONTACTS | NATURE | N° | DATE
+  const tableHeaderH1 = 6; // "ATTRIBUTAIRES" / "ATTESTATION" / "PIECES" row
+  const tableHeaderH2 = 6; // sub-header row
+  const rowH = 8;
+  const maxRows = 3;
+
+  // Column widths
+  const cols = [
+    12,                          // N°
+    contentWidth * 0.22,         // NOM ET PRENOMS
+    contentWidth * 0.10,         // Attestation N°
+    contentWidth * 0.10,         // DATE
+    contentWidth * 0.16,         // ADRESSES ET CONTACTS
+    contentWidth * 0.12,         // NATURE
+    contentWidth * 0.12,         // N° Pièce
+    0,                           // DATE Pièce (remainder)
+  ];
+  cols[7] = contentWidth - cols.slice(0, 7).reduce((a, b) => a + b, 0);
+
+  // --- Merged header row ---
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+
+  // ATTRIBUTAIRES spans cols 0-1
+  const attrW = cols[0] + cols[1];
+  doc.rect(x, y, attrW, tableHeaderH1);
+  doc.text("ATTRIBUTAIRES", x + attrW / 2, y + 4, { align: "center" });
+
+  // ATTESTATION spans cols 2-3
+  const attestW = cols[2] + cols[3];
+  let cx = x + attrW;
+  doc.rect(cx, y, attestW, tableHeaderH1);
+  doc.text("ATTESTATION", cx + attestW / 2, y + 4, { align: "center" });
+
+  // ADRESSES ET CONTACTS spans col 4, merged across both rows
+  cx += attestW;
+  doc.rect(cx, y, cols[4], tableHeaderH1 + tableHeaderH2);
+  doc.text("ADRESSES ET", cx + cols[4] / 2, y + 3.5, { align: "center" });
+  doc.text("CONTACTS", cx + cols[4] / 2, y + 7.5, { align: "center" });
+
+  // PIECES spans cols 5-7
+  const piecesW = cols[5] + cols[6] + cols[7];
+  cx += cols[4];
+  doc.rect(cx, y, piecesW, tableHeaderH1);
+  doc.text("PIECES", cx + piecesW / 2, y + 4, { align: "center" });
+
+  y += tableHeaderH1;
+
+  // --- Sub-header row ---
+  let sx = x;
+  const subLabels = ["N°", "NOM ET PRENOMS", "N°", "DATE", "", "NATURE", "N°", "DATE"];
+  for (let i = 0; i < cols.length; i++) {
+    if (i === 4) {
+      // already drawn merged cell above
+      sx += cols[i];
+      continue;
+    }
+    doc.rect(sx, y, cols[i], tableHeaderH2);
+    doc.text(subLabels[i], sx + cols[i] / 2, y + 4, { align: "center" });
+    sx += cols[i];
+  }
+  y += tableHeaderH2;
+
+  // === Data rows (always 3 rows) ===
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+
+  for (let r = 0; r < maxRows; r++) {
+    const entry = block.entries[r];
+    let rx = x;
+
+    for (let c = 0; c < cols.length; c++) {
+      doc.rect(rx, y, cols[c], rowH);
+
+      let text = "";
+      if (entry) {
+        switch (c) {
+          case 0: text = String(r + 1); break;
+          case 1: text = entry.attributaire || ""; doc.setFont("helvetica", "bold"); break;
+          case 2: text = entry.attestation_numero || ""; break;
+          case 3: text = entry.attestation_date || ""; break;
+          case 4: text = entry.contact || ""; break;
+          case 5: text = entry.nature_piece || ""; break;
+          case 6: text = entry.numero_piece || ""; break;
+          case 7: text = entry.date_piece || ""; break;
+        }
+      } else {
+        if (c === 0) text = String(r + 1);
+      }
+
+      // Truncate if needed
+      const maxW = cols[c] - 2;
+      let displayText = text;
+      while (doc.getTextWidth(displayText) > maxW && displayText.length > 0) {
+        displayText = displayText.slice(0, -1);
+      }
+      if (displayText.length < text.length && displayText.length > 0) {
+        displayText = displayText.slice(0, -1) + "…";
+      }
+
+      const tx = c === 0 ? rx + cols[c] / 2 : rx + 1.5;
+      const align = c === 0 ? "center" as const : "left" as const;
+
+      // For contact field, handle multi-line (phone numbers)
+      if (c === 4 && entry?.contact) {
+        const phones = entry.contact.split(/[,;\/]/).map(p => p.trim()).filter(Boolean);
+        if (phones.length > 1) {
+          doc.setFontSize(6);
+          phones.forEach((phone, pi) => {
+            if (pi < 2) {
+              doc.text(phone, rx + 1.5, y + 3 + pi * 3.5);
+            }
+          });
+          doc.setFontSize(7);
+        } else {
+          doc.text(displayText, tx, y + rowH / 2 + 1, { align });
+        }
+      } else {
+        doc.text(displayText, tx, y + rowH / 2 + 1, { align });
+      }
+
+      if (c === 1) doc.setFont("helvetica", "normal");
+      rx += cols[c];
+    }
+
+    y += rowH;
+  }
+
+  return y;
+}
+
 export async function generateGuidePDF(
   entries: GuideEntry[],
   lotissementName: string,
   options: GuideOptions
 ) {
-  const hasCover = !!options.coverPage;
-  const doc = new jsPDF({ orientation: hasCover ? "portrait" : "landscape", unit: "mm", format: "a4" });
-  const margin = 10;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pw = doc.internal.pageSize.getWidth();  // 210
+  const ph = doc.internal.pageSize.getHeight(); // 297
+  const margin = 12;
 
-  // Load logo
-  let logoBase64: string | null = null;
-  if (options.agency?.logo_url) {
-    logoBase64 = await loadImageAsBase64(options.agency.logo_url);
-  }
+  const commune = options.coverPage?.commune || "";
+  const village = options.village || "";
 
-  // Group entries by ilot
-  const ilotGroups = new Map<string, GuideEntry[]>();
-  entries.forEach(e => {
-    const arr = ilotGroups.get(e.ilot) || [];
-    arr.push(e);
-    ilotGroups.set(e.ilot, arr);
-  });
+  // Group entries by lot
+  const lotBlocks = groupEntriesByLot(entries);
 
-  // ===== COVER PAGE (Portrait) =====
-  if (hasCover && options.coverPage) {
+  // === COVER PAGE (optional) ===
+  if (options.coverPage) {
     const cp = options.coverPage;
-    const pw = doc.internal.pageSize.getWidth(); // 210 portrait
-    const ph = doc.internal.pageSize.getHeight(); // 297 portrait
 
-    // Background
     if (cp.bg_color && cp.bg_color !== "#FFFFFF") {
       const bg = hexToRgb(cp.bg_color);
       doc.setFillColor(bg[0], bg[1], bg[2]);
@@ -93,7 +279,6 @@ export async function generateGuidePDF(
 
     let yPos = 35;
 
-    // District & Commune
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
@@ -109,7 +294,6 @@ export async function generateGuidePDF(
       yPos += 15;
     }
 
-    // Large "GUIDE" title
     yPos += 10;
     const titleRgb = hexToRgb(cp.title_color);
     doc.setFontSize(52);
@@ -118,7 +302,6 @@ export async function generateGuidePDF(
     doc.text("GUIDE", pw / 2, yPos, { align: "center" });
     yPos += 18;
 
-    // "LOTISSEMENT [NAME]"
     const subRgb = hexToRgb(cp.subtitle_color);
     doc.setFontSize(20);
     doc.setTextColor(subRgb[0], subRgb[1], subRgb[2]);
@@ -127,28 +310,32 @@ export async function generateGuidePDF(
 
     // Bordered box with ilot/lot ranges
     const borderRgb = hexToRgb(cp.border_color);
+    const ilotGroups = new Map<string, GuideEntry[]>();
+    entries.forEach(e => {
+      const arr = ilotGroups.get(e.ilot) || [];
+      arr.push(e);
+      ilotGroups.set(e.ilot, arr);
+    });
+
     const ilotEntries = Array.from(ilotGroups.entries());
     if (ilotEntries.length > 0) {
       const lineHeight = 9;
       const boxContentLines: string[] = [];
 
       ilotEntries.forEach(([ilot, iEntries], idx) => {
-        const lots = iEntries.map(e => e.lot).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+        const lots = [...new Set(iEntries.map(e => e.lot))].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
         boxContentLines.push(`ILOT N°${ilot}`);
         boxContentLines.push(lots.length > 1 ? `LOT N°${lots[0]} À LOT N°${lots[lots.length - 1]}` : `LOT N°${lots[0]}`);
-        if (idx < ilotEntries.length - 1) {
-          boxContentLines.push("&&");
-        }
+        if (idx < ilotEntries.length - 1) boxContentLines.push("&&");
       });
 
       const boxWidth = 140;
       const boxX = (pw - boxWidth) / 2;
       const boxPaddingTop = 12;
       const boxPaddingBottom = 6;
-      const maxBoxContentHeight = ph - yPos - 40; // Leave space for date at bottom
+      const maxBoxContentHeight = ph - yPos - 40;
       const maxLinesPerPage = Math.floor((maxBoxContentHeight - boxPaddingTop - boxPaddingBottom) / lineHeight);
 
-      // Split lines across pages if needed
       let lineIndex = 0;
       let isFirstBoxPage = true;
 
@@ -158,7 +345,6 @@ export async function generateGuidePDF(
 
         if (!isFirstBoxPage) {
           doc.addPage("a4", "portrait");
-          // Re-apply background
           if (cp.bg_color && cp.bg_color !== "#FFFFFF") {
             const bg = hexToRgb(cp.bg_color);
             doc.setFillColor(bg[0], bg[1], bg[2]);
@@ -193,7 +379,6 @@ export async function generateGuidePDF(
       }
     }
 
-    // Date
     const now = new Date();
     const monthNames = ["JANVIER", "FÉVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOÛT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DÉCEMBRE"];
     doc.setFontSize(15);
@@ -204,172 +389,40 @@ export async function generateGuidePDF(
     doc.setTextColor(0, 0, 0);
   }
 
-  // ===== TABLE PAGES (Landscape) =====
-  // All table pages are landscape
-  const landscapeW = 297; // A4 landscape width
-  const landscapeH = 210; // A4 landscape height
-  const contentWidth = landscapeW - margin * 2;
+  // === LOT PAGES (2 lots per page, portrait) ===
+  const blockHeight = 7 + 7 + 6 + 6 + (8 * 3); // header1 + header2 + tableHeader1 + tableHeader2 + 3 rows = 50mm
+  const gapBetweenBlocks = 12;
+  const footerHeight = 10;
 
-  const cols = [
-    { label: "N°", width: 10 },
-    { label: "Îlot", width: 18 },
-    { label: "Lot", width: 16 },
-    { label: "Attributaires\nNom & Prénoms", width: 52 },
-    { label: "Attestation\nN°", width: 22 },
-    { label: "Date", width: 22 },
-    { label: "Contact", width: 28 },
-    { label: "Équipement", width: 25 },
-    { label: "Nature\nPièce", width: 22 },
-    { label: "N° Pièce", width: 28 },
-    { label: "Date\nPièce", width: 22 },
-  ];
+  let blockIndex = 0;
 
-  const totalColWidth = cols.reduce((s, c) => s + c.width, 0);
-  const scale = contentWidth / totalColWidth;
-  cols.forEach(c => (c.width = Math.round(c.width * scale * 10) / 10));
+  while (blockIndex < lotBlocks.length) {
+    doc.addPage("a4", "portrait");
 
-  const rowHeight = 7;
-  const headerHeight = 10;
-
-  function drawPageHeader(pageNum: number, pageEntries?: GuideEntry[]) {
+    // First lot block
     let yPos = margin;
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    doc.text(`GUIDE LOTISSEMENT ${lotissementName.toUpperCase()}`, landscapeW / 2, yPos + 5, { align: "center" });
+    yPos = drawLotBlock(doc, lotBlocks[blockIndex], yPos, pw, margin, commune, village, lotissementName);
+    blockIndex++;
 
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${options.totalParcelles} PARCELLE${options.totalParcelles > 1 ? "S" : ""}`, landscapeW / 2, yPos + 10, { align: "center" });
-
-    // Dynamic ilot/lot range for this page
-    if (pageEntries && pageEntries.length > 0) {
-      const ilots = pageEntries.map(e => e.ilot);
-      const lots = pageEntries.map(e => e.lot);
-      const uniqueIlots = [...new Set(ilots)].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
-      const sortedLots = lots.sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
-      const ilotRange = uniqueIlots.length === 1 ? `Îlot N°${uniqueIlots[0]}` : `Îlot N°${uniqueIlots[0]} à N°${uniqueIlots[uniqueIlots.length - 1]}`;
-      const lotRange = `Lot N°${sortedLots[0]} à N°${sortedLots[sortedLots.length - 1]}`;
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "italic");
-      doc.text(`${ilotRange} / ${lotRange}`, landscapeW / 2, yPos + 14, { align: "center" });
-    }
-
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "normal");
-    doc.text(`PAGE | ${pageNum}`, landscapeW - margin, yPos + 5, { align: "right" });
-
-    return yPos + 18;
-  }
-
-  function drawTableHeader(yPos: number) {
-    doc.setFillColor(34, 139, 34);
-    doc.rect(margin, yPos, contentWidth, headerHeight, "F");
-
-    doc.setFontSize(6.5);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(255, 255, 255);
-
-    let xPos = margin;
-    cols.forEach(col => {
-      const lines = col.label.split("\n");
-      const lineHeight = 3.5;
-      const startY = yPos + (headerHeight - lines.length * lineHeight) / 2 + lineHeight;
-      lines.forEach((line, i) => {
-        doc.text(line, xPos + col.width / 2, startY + i * lineHeight, { align: "center" });
-      });
-      xPos += col.width;
-    });
-
-    doc.setTextColor(0, 0, 0);
-    return yPos + headerHeight;
-  }
-
-  function drawRow(entry: GuideEntry, yPos: number, isEven: boolean) {
-    if (isEven) {
-      doc.setFillColor(245, 245, 245);
-      doc.rect(margin, yPos, contentWidth, rowHeight, "F");
-    }
-
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.2);
-    doc.rect(margin, yPos, contentWidth, rowHeight);
-
-    let xPos = margin;
-    cols.forEach((col, i) => {
-      if (i > 0) doc.line(xPos, yPos, xPos, yPos + rowHeight);
-
-      doc.setFontSize(6.5);
-      doc.setFont("helvetica", i === 3 && entry.attributaire ? "bold" : "normal");
-
-      const values = [
-        String(entry.numero), entry.ilot, entry.lot,
-        entry.attributaire || "", entry.attestation_numero || "",
-        entry.attestation_date || "", entry.contact || "",
-        entry.equipement || "", entry.nature_piece || "",
-        entry.numero_piece || "", entry.date_piece || "",
-      ];
-
-      const text = values[i];
-      const align = i === 0 ? "center" : "left";
-      const tx = align === "center" ? xPos + col.width / 2 : xPos + 1.5;
-
-      const maxWidth = col.width - 3;
-      let displayText = text;
-      while (doc.getTextWidth(displayText) > maxWidth && displayText.length > 0) {
-        displayText = displayText.slice(0, -1);
+    // Second lot block if it fits
+    if (blockIndex < lotBlocks.length) {
+      yPos += gapBetweenBlocks;
+      if (yPos + blockHeight + footerHeight <= ph - margin) {
+        yPos = drawLotBlock(doc, lotBlocks[blockIndex], yPos, pw, margin, commune, village, lotissementName);
+        blockIndex++;
       }
-      if (displayText.length < text.length && displayText.length > 0) {
-        displayText = displayText.slice(0, -1) + "…";
-      }
-
-      doc.text(displayText, tx, yPos + rowHeight / 2 + 1.5, { align });
-      xPos += col.width;
-    });
-  }
-
-  // Render table pages
-  let pageNum = 1;
-  let entryIndex = 0;
-
-  while (entryIndex < entries.length) {
-    doc.addPage("a4", "landscape");
-
-    // First pass: determine which entries fit on this page
-    const pageStartIndex = entryIndex;
-    let tempY = margin + 18 + headerHeight; // margin + page header + table header height
-    const maxY = landscapeH - margin - 5;
-    let countOnPage = 0;
-    while (entryIndex + countOnPage < entries.length && tempY + rowHeight <= maxY) {
-      tempY += rowHeight;
-      countOnPage++;
-    }
-    const pageEntries = entries.slice(pageStartIndex, pageStartIndex + countOnPage);
-
-    let yPos = drawPageHeader(pageNum, pageEntries);
-    yPos = drawTableHeader(yPos);
-
-    let rowsOnPage = 0;
-
-    while (entryIndex < entries.length && yPos + rowHeight <= maxY) {
-      drawRow(entries[entryIndex], yPos, rowsOnPage % 2 === 0);
-      yPos += rowHeight;
-      entryIndex++;
-      rowsOnPage++;
     }
 
     // Footer
-    doc.setFontSize(6);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
-    doc.setTextColor(120, 120, 120);
-    doc.text(`Généré le ${new Date().toLocaleDateString("fr-FR")}`, margin, landscapeH - 5);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Guide de partage de lotissement ${lotissementName.toUpperCase()}`, pw / 2, ph - margin, { align: "center" });
     doc.setTextColor(0, 0, 0);
-
-    pageNum++;
   }
 
-  // If no cover page was added, remove the first blank page
-  if (!hasCover) {
+  // Remove the first blank page if no cover
+  if (!options.coverPage) {
     doc.deletePage(1);
   }
 

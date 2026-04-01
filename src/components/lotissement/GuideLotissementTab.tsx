@@ -16,6 +16,7 @@ import { fr } from "date-fns/locale";
 import { generateGuidePDF } from "@/lib/generateGuidePDF";
 import { useAgency } from "@/hooks/useAgency";
 import { useGuideTemplates } from "@/hooks/useGuideTemplates";
+import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
 import { ExportColumn } from "@/lib/exportData";
 
 interface GuideEntry {
@@ -31,21 +32,24 @@ interface GuideEntry {
   numero_piece: string;
   date_piece: string;
   status: string;
+  area?: number;
 }
 
 interface GuideLotissementTabProps {
   lotissementId: string;
   lotissementName: string;
   guideTemplateId?: string | null;
+  attestationTemplateId?: string | null;
   canExport?: boolean;
 }
 
-export function GuideLotissementTab({ lotissementId, lotissementName, guideTemplateId, canExport = true }: GuideLotissementTabProps) {
+export function GuideLotissementTab({ lotissementId, lotissementName, guideTemplateId, attestationTemplateId, canExport = true }: GuideLotissementTabProps) {
   const { data: parcelles } = useParcelles(lotissementId);
   const { data: ventes } = useVentesParcelles(lotissementId);
   const { data: ilots } = useIlotsWithStats(lotissementId);
   const { data: agency } = useAgency();
   const { data: guideTemplates = [] } = useGuideTemplates();
+  const { data: attestationTemplates = [] } = useAttestationTemplates();
   const { data: beneficiaires = [] } = useBeneficiairesLots(lotissementId);
   const { data: mutations = [] } = useMutationsParcellesByLotissement(lotissementId);
   const [search, setSearch] = useState("");
@@ -128,6 +132,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
             numero_piece: origNumeroPiece,
             date_piece: "",
             status: "cede",
+            area: parcelle.area,
           });
         }
 
@@ -145,6 +150,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: vente.acquereur?.cni_number || "",
           date_piece: "",
           status: "cede",
+          area: parcelle.area,
         });
 
         // For chained mutations (2nd+), show intermediate ancien_acquereurs as "Cédé"
@@ -163,6 +169,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
             numero_piece: mut.ancien_acquereur?.cni_number || "",
             date_piece: "",
             status: "cede",
+            area: parcelle.area,
           });
         }
 
@@ -181,6 +188,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: lastMut.nouvel_acquereur?.cni_number || "",
           date_piece: "",
           status: "mute",
+          area: parcelle.area,
         });
       } else if (vente?.acquereur?.name && origAttributaire) {
         // Sold with original beneficiary, no mutations
@@ -197,6 +205,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: origNumeroPiece,
           date_piece: "",
           status: "cede",
+          area: parcelle.area,
         });
         entries.push({
           numero: numero++,
@@ -211,6 +220,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: vente.acquereur.cni_number || "",
           date_piece: "",
           status: parcelle.status,
+          area: parcelle.area,
         });
       } else {
         // Single row
@@ -232,6 +242,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
           numero_piece: numeroPiece,
           date_piece: "",
           status: parcelle.status,
+          area: parcelle.area,
         });
       }
     });
@@ -270,9 +281,15 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
       ? guideTemplates.find(t => t.id === guideTemplateId)
       : guideTemplates.find(t => t.is_default);
 
+    // Get village from attestation template
+    const attTemplate = attestationTemplateId
+      ? attestationTemplates.find(t => t.id === attestationTemplateId)
+      : attestationTemplates.find(t => t.is_default);
+
     generateGuidePDF(guideEntries, lotissementName, {
       totalParcelles: parcelles?.length || 0,
       agency: agency || undefined,
+      village: (attTemplate as any)?.village || "",
       coverPage: template ? {
         district: template.district,
         commune: template.commune,

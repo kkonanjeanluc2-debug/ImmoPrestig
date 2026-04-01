@@ -90,10 +90,9 @@ const Lotissements = () => {
     setDeletingId(null);
   };
 
-  const totalParcelles = allParcelles?.length || 0;
-  const totalVendues = allParcelles?.filter(p => p.status === "vendu").length || 0;
-  const totalDisponibles = allParcelles?.filter(p => p.status === "disponible").length || 0;
-  const totalRevenue = allParcelles?.filter(p => p.status === "vendu").reduce((sum, p) => sum + p.price, 0) || 0;
+  const totalParcelles = parcellesStats?.global.total || 0;
+  const totalVendues = parcellesStats?.global.vendues || 0;
+  const totalDisponibles = parcellesStats?.global.disponibles || 0;
 
   return (
     <DashboardLayout>

@@ -152,6 +152,8 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_export_guide: "Exporter le guide (PDF/Excel)",
   can_import_geometre: "Import géomètre",
   can_access_repartition: "Accéder à la répartition",
+  can_cancel_vente_parcelle: "Annuler une vente de lot",
+  can_manage_mutations_parcelle: "Gérer les mutations de lots",
   can_view_ventes: "Voir les ventes immobilières",
   can_create_ventes: "Créer des ventes immobilières",
   can_edit_ventes: "Modifier les ventes immobilières",

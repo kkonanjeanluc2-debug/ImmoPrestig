@@ -169,6 +169,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
             numero_piece: mut.ancien_acquereur?.cni_number || "",
             date_piece: "",
             status: "cede",
+            area: parcelle.area,
           });
         }
 

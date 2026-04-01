@@ -59,6 +59,38 @@ export const usePayments = () => {
 
       if (contractsError) throw contractsError;
 
+      // Helper: normalize a month string to "YYYY-MM" for reliable comparison
+      const toYearMonth = (month: string): string | null => {
+        // Already ISO: "2026-05"
+        if (/^\d{4}-\d{2}$/.test(month)) return month;
+        // French format: "Mai 2026"
+        const parts = month.split(' ');
+        if (parts.length === 2) {
+          const idx = FRENCH_MONTHS.indexOf(parts[0]);
+          if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}`;
+        }
+        // Fallback: try substring
+        return month.length >= 7 ? month.substring(0, 7) : null;
+      };
+
+      // Helper: check if a payment covers a given "YYYY-MM" target
+      const paymentCoversMonth = (payment: any, targetYM: string, targetLabel: string): boolean => {
+        if (!payment.tenant_id) return false;
+        // Check payment_months array (handles multi-month and single-month)
+        if (payment.payment_months && Array.isArray(payment.payment_months)) {
+          for (const m of payment.payment_months) {
+            if (m === targetLabel || m === targetYM) return true;
+            const normalized = toYearMonth(m);
+            if (normalized === targetYM) return true;
+          }
+        }
+        // Fallback: check due_date
+        if (typeof payment.due_date === "string" && payment.due_date.startsWith(targetYM)) {
+          return true;
+        }
+        return false;
+      };
+
       // Always generate virtual payments for the CURRENT month
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
@@ -69,16 +101,7 @@ export const usePayments = () => {
       // Check which tenants already have a real payment for current month
       const existingCurrentMonthTenantIds = new Set(
         (data || [])
-          .filter((payment) => {
-            if (!payment.tenant_id) return false;
-            if (payment.payment_months && Array.isArray(payment.payment_months)) {
-              return (
-                payment.payment_months.includes(currentMonthLabel) ||
-                payment.payment_months.includes(currentMonthIso)
-              );
-            }
-            return typeof payment.due_date === "string" && payment.due_date.startsWith(currentMonthIso);
-          })
+          .filter((payment) => paymentCoversMonth(payment, currentMonthIso, currentMonthLabel))
           .map((payment) => payment.tenant_id)
       );
 
@@ -116,16 +139,7 @@ export const usePayments = () => {
 
         const existingNextMonthTenantIds = new Set(
           (data || [])
-            .filter((payment) => {
-              if (!payment.tenant_id) return false;
-              if (payment.payment_months && Array.isArray(payment.payment_months)) {
-                return (
-                  payment.payment_months.includes(nextMonthLabel) ||
-                  payment.payment_months.includes(nextMonthIso)
-                );
-              }
-              return typeof payment.due_date === "string" && payment.due_date.startsWith(nextMonthIso);
-            })
+            .filter((payment) => paymentCoversMonth(payment, nextMonthIso, nextMonthLabel))
             .map((payment) => payment.tenant_id)
         );
 

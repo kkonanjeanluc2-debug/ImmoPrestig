@@ -94,7 +94,7 @@ function ManagerReportCard({
 }) {
   const ROLE_LABELS: Record<string, string> = {
     admin: "Administrateur",
-    gestionnaire: "Gestionnaire",
+    gestionnaire: "Commercial",
     comptable: "Comptable",
     caissiere: "Caissière",
   };

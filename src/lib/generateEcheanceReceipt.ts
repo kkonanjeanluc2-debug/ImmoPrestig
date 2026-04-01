@@ -232,7 +232,10 @@ export const generateEcheanceReceipt = async (data: EcheanceReceiptData): Promis
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   const validatorText = data.validatedBy ? `, validé par ${data.validatedBy}` : "";
-  const declaration = `Le soussigné reconnaît avoir reçu la somme de ${formatAmountWithCurrency(data.amount)} au titre du paiement de l'échéance du ${dueDateFormatted} pour le bien "${data.propertyTitle}"${validatorText}.`;
+  const partialText = data.remainingAfterPayment && data.remainingAfterPayment > 0
+    ? ` Il reste un solde de ${formatAmountWithCurrency(data.remainingAfterPayment)} à régler.`
+    : "";
+  const declaration = `Le soussigné reconnaît avoir reçu la somme de ${formatAmountWithCurrency(data.amount)} au titre du paiement de l'échéance du ${dueDateFormatted} pour le bien "${data.propertyTitle}"${validatorText}.${partialText}`;
   const splitDecl = doc.splitTextToSize(declaration, pageWidth - 30);
   doc.text(splitDecl, 15, yPos, { lineHeightFactor: 1.5 });
   yPos += splitDecl.length * 5 + 20;

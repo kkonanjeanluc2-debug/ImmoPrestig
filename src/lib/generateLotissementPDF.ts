@@ -1221,40 +1221,62 @@ export const generateAttestationVillageoise = async (
 
     // Agency header text on the right of the logo
     const headerTextX = margin + 26;
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...primaryColor);
-    const agencyName = agency?.name?.toUpperCase() || '';
-    if (agencyName) {
-      doc.text(agencyName, headerTextX, yPos + 2);
-    }
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6);
-    doc.setTextColor(...textColor);
-    const agencyDetails = [agency?.address, agency?.city, agency?.phone, agency?.email].filter(Boolean).join(' • ');
-    if (agencyDetails) {
-      doc.text(agencyDetails, headerTextX, yPos + 7);
-    }
-    if (agency?.siret) {
-      doc.text(`RCCM: ${agency.siret}`, headerTextX, yPos + 11);
+    if (agency?.pdf_header_text) {
+      // Use custom header text (multi-line, bold)
+      const headerLines = agency.pdf_header_text.split('\n');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...primaryColor);
+      let hTextY = yPos + 2;
+      for (const hLine of headerLines) {
+        if (hLine.trim()) {
+          doc.text(hLine.trim(), headerTextX, hTextY);
+          hTextY += 5;
+        }
+      }
+    } else {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...primaryColor);
+      const agencyName = agency?.name?.toUpperCase() || '';
+      if (agencyName) {
+        doc.text(agencyName, headerTextX, yPos + 2);
+      }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      doc.setTextColor(...textColor);
+      const agencyDetails = [agency?.address, agency?.city, agency?.phone, agency?.email].filter(Boolean).join(' • ');
+      if (agencyDetails) {
+        doc.text(agencyDetails, headerTextX, yPos + 7);
+      }
+      if (agency?.siret) {
+        doc.text(`RCCM: ${agency.siret}`, headerTextX, yPos + 11);
+      }
     }
     yPos += 22;
 
-    // Colored dashes line (supports up to 4 alternating colors)
+    // Colored dashes line (supports up to 4 alternating colors, last one stretched)
     let dashColors: string[] = ['#FF8C00'];
     const rawLineColor = template?.header_line_color || '#FF8C00';
     try { const parsed = JSON.parse(rawLineColor); if (Array.isArray(parsed)) dashColors = parsed; } catch { dashColors = [rawLineColor]; }
     doc.setLineWidth(1.5);
     const dashWidth = 12;
     const dashGap = 5;
-    const totalDashesWidth = 5 * dashWidth + 4 * dashGap;
+    const numShortDashes = 4;
+    const stretchedWidth = 35;
+    const totalDashesWidth = numShortDashes * dashWidth + (numShortDashes) * dashGap + stretchedWidth;
     const dashStartX = (pageWidth - totalDashesWidth) / 2;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < numShortDashes; i++) {
       const dc = hexToRgb(dashColors[i % dashColors.length], 0);
       doc.setDrawColor(dc[0], dc[1], dc[2]);
       const x = dashStartX + i * (dashWidth + dashGap);
       doc.line(x, yPos, x + dashWidth, yPos);
     }
+    // Last dash: stretched
+    const lastDc = hexToRgb(dashColors[numShortDashes % dashColors.length], 0);
+    doc.setDrawColor(lastDc[0], lastDc[1], lastDc[2]);
+    const lastX = dashStartX + numShortDashes * (dashWidth + dashGap);
+    doc.line(lastX, yPos, lastX + stretchedWidth, yPos);
     yPos += 8;
 
     // Title: ATTESTATION DE CESSION

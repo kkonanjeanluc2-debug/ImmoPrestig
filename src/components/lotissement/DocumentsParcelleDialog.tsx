@@ -450,7 +450,9 @@ export function DocumentsParcelleDialog({
                     lotissement?.chef_village_titre || undefined,
                     ilotName,
                     chefImages,
-                    ancienBeneficiaire
+                    ancienBeneficiaire,
+                    0,
+                    true
                   );
                   downloadPDF(doc, `attestation-cession-${parcelleInfo.plot_number}.pdf`);
                   toast.success("Attestation de cession générée");

@@ -311,6 +311,7 @@ export const useCancelVenteParcelle = () => {
       queryClient.invalidateQueries({ queryKey: ["ventes-parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["echeances-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["ilots"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["beneficiaires"] });
     },

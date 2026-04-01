@@ -50,6 +50,7 @@ const Lotissements = () => {
   const navigate = useNavigate();
   const { data: lotissements, isLoading } = useLotissements();
   const { data: parcellesStats } = useParcellesStats();
+  const { data: allParcelles } = useParcelles();
   const { data: allVentes } = useVentesParcelles();
   const { data: allEcheances } = useEcheancesParcelles();
   const deleteLotissement = useSoftDeleteLotissement();

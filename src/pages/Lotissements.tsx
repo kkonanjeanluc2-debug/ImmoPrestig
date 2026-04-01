@@ -34,7 +34,7 @@ import {
   Map,
 } from "lucide-react";
 import { useLotissements, useSoftDeleteLotissement } from "@/hooks/useLotissements";
-import { useParcelles } from "@/hooks/useParcelles";
+import { useParcellesStats } from "@/hooks/useParcellesStats";
 import { useVentesParcelles } from "@/hooks/useVentesParcelles";
 import { useEcheancesParcelles } from "@/hooks/useEcheancesParcelles";
 import { usePermissions } from "@/hooks/usePermissions";

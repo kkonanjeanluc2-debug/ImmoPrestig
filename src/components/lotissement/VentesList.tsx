@@ -16,6 +16,7 @@ import { FileText, User, Banknote, Building2, Smartphone, CreditCard, Search, XC
 import { Input } from "@/components/ui/input";
 import { VenteWithDetails, useCancelVenteParcelle } from "@/hooks/useVentesParcelles";
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";
+import { MutationParcelleDialog } from "./MutationParcelleDialog";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
 import {

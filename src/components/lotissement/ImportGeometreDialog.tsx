@@ -268,53 +268,115 @@ export const ImportGeometreDialog = ({
 
       newWarnings.push(`Colonnes détectées : ${headers.filter(Boolean).join(", ")}`);
 
-      // Data rows
-      for (let i = 1; i < rows.length; i++) {
-        const cells = rows[i].querySelectorAll("td, th");
-        const record: Record<string, unknown> = {};
-        Array.from(cells).forEach((cell, idx) => {
-          const key = headers[idx] || `col_${idx + 1}`;
-          record[key] = cell.textContent?.trim() || "";
-        });
-
-        if (shouldSkipExcelRow(record)) continue;
-
-        let plotNumber = findValue(record, ["lots", "lot", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
-        if (!plotNumber) {
-          plotNumber = findValue(record, ["numero", "numéro", "num", "n°", "no", "ref", "reference", "référence", "id", "label", "name", "nom", "designation", "désignation"]);
+      // Check if this is a guide format (cells contain multi-line blocks with COMMUNE/ILOT/LOT)
+      const isGuideFormat = (() => {
+        for (let i = 1; i < Math.min(rows.length, 5); i++) {
+          const cells = rows[i].querySelectorAll("td, th");
+          for (const cell of Array.from(cells)) {
+            const text = cell.textContent || "";
+            if (/ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text)) {
+              return true;
+            }
+          }
         }
-        const area = parseNumber(findValue(record, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]));
-        const price = parseNumber(findValue(record, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
-        const ilotName = findValue(record, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
-        const proprietaireTerrien = findValue(record, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
-        const beneficiaire = findValue(record, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
+        return false;
+      })();
 
-        if (!plotNumber) {
-          const firstNonEmpty = Object.values(record).find(
-            (val) => val !== null && val !== undefined && String(val).trim() !== ""
-          );
-          if (firstNonEmpty !== undefined) plotNumber = firstNonEmpty;
+      if (isGuideFormat) {
+        newWarnings.push("Format guide détecté — extraction des valeurs ILOT, LOT, SUPERFICIE depuis les blocs");
+        // Parse guide format: each data row may have cells containing block text
+        for (let i = 1; i < rows.length; i++) {
+          const cells = rows[i].querySelectorAll("td, th");
+          // Find a cell that contains the guide block (ILOT/LOT/SUPERFICIE)
+          let blockText = "";
+          for (const cell of Array.from(cells)) {
+            const text = cell.textContent || "";
+            if (/ILOT\s*[:]\s*\d/i.test(text) && /LOT\s*[:]\s*\d/i.test(text)) {
+              blockText = text;
+              break;
+            }
+          }
+          if (!blockText) continue;
+
+          // Extract values from block text
+          const ilotMatch = blockText.match(/ILOT\s*[:]\s*(\d+)/i);
+          const lotMatch = blockText.match(/LOT\s*[:]\s*(\d+)/i);
+          const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+
+          const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
+          const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+          const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
+
+          if (!plotNumber) continue;
+          if (existingPlotNumbers.includes(String(plotNumber))) continue;
+
+          const parcelle: ParsedGeometreParcelle = {
+            plotNumber: String(plotNumber),
+            area,
+            price: 0,
+            ilotName: ilotName ? String(ilotName) : undefined,
+          };
+          parcelles.push(parcelle);
+
+          if (ilotName) {
+            const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
+            if (existingIlot) {
+              existingIlot.parcelles.push(parcelle);
+            } else {
+              ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+            }
+          }
         }
+      } else {
+        // Standard table format
+        // Data rows
+        for (let i = 1; i < rows.length; i++) {
+          const cells = rows[i].querySelectorAll("td, th");
+          const record: Record<string, unknown> = {};
+          Array.from(cells).forEach((cell, idx) => {
+            const key = headers[idx] || `col_${idx + 1}`;
+            record[key] = cell.textContent?.trim() || "";
+          });
 
-        if (!plotNumber) continue;
-        if (existingPlotNumbers.includes(String(plotNumber))) continue;
+          if (shouldSkipExcelRow(record)) continue;
 
-        const parcelle: ParsedGeometreParcelle = {
-          plotNumber: String(plotNumber),
-          area,
-          price: price || 0,
-          ilotName: ilotName ? String(ilotName) : undefined,
-          proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
-          beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
-        };
-        parcelles.push(parcelle);
+          let plotNumber = findValue(record, ["lots", "lot", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
+          if (!plotNumber) {
+            plotNumber = findValue(record, ["numero", "numéro", "num", "n°", "no", "ref", "reference", "référence", "id", "label", "name", "nom", "designation", "désignation"]);
+          }
+          const area = parseNumber(findValue(record, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]));
+          const price = parseNumber(findValue(record, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
+          const ilotName = findValue(record, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
+          const proprietaireTerrien = findValue(record, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
+          const beneficiaire = findValue(record, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
 
-        if (ilotName) {
-          const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
-          if (existingIlot) {
-            existingIlot.parcelles.push(parcelle);
-          } else {
-            ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+          if (!plotNumber) {
+            const firstNonEmpty = Object.values(record).find(
+              (val) => val !== null && val !== undefined && String(val).trim() !== ""
+            );
+            if (firstNonEmpty !== undefined) plotNumber = firstNonEmpty;
+          }
+
+          if (!plotNumber) continue;
+          if (existingPlotNumbers.includes(String(plotNumber))) continue;
+
+          const parcelle: ParsedGeometreParcelle = {
+            plotNumber: String(plotNumber),
+            area,
+            price: price || 0,
+            ilotName: ilotName ? String(ilotName) : undefined,
+            proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
+            beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
+          };
+          parcelles.push(parcelle);
+
+          if (ilotName) {
+            const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
+            if (existingIlot) {
+              existingIlot.parcelles.push(parcelle);
+            } else {
+              ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+            }
           }
         }
       }

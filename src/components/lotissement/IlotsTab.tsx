@@ -20,16 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -75,20 +65,16 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingIlot, setEditingIlot] = useState<IlotWithStats | null>(null);
-  const [deletingIlot, setDeletingIlot] = useState<IlotWithStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  const handleDelete = async () => {
-    if (!deletingIlot) return;
+  const handleDeleteSingle = async (ilot: IlotWithStats) => {
     try {
-      await deleteIlot.mutateAsync({ id: deletingIlot.id, name: deletingIlot.name });
-      toast.success("Îlot déplacé vers la corbeille");
-      setDeletingIlot(null);
-    } catch (error) {
-      toast.error("Erreur lors de la suppression de l'îlot");
+      await deleteIlot.mutateAsync({ id: ilot.id, name: ilot.name });
+      toast.success("Îlot supprimé");
+    } catch {
+      toast.error("Erreur lors de la suppression");
     }
   };
 
@@ -107,13 +93,15 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
       }
       toast.success(`${successCount} îlot(s) supprimé(s)`);
       setSelectedIds(new Set());
-      setShowBulkDeleteDialog(false);
+      
     } catch {
       toast.error("Erreur lors de la suppression");
     } finally {
       setIsBulkDeleting(false);
     }
   };
+
+
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
@@ -219,7 +207,8 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => setShowBulkDeleteDialog(true)}
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Supprimer ({selectedIds.size})
@@ -413,7 +402,7 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
                                 {canDelete && (
                                   <DropdownMenuItem
                                     className="text-destructive"
-                                    onClick={() => setDeletingIlot(ilot)}
+                                    onClick={() => handleDeleteSingle(ilot)}
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Supprimer
@@ -448,49 +437,6 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
           onOpenChange={(open) => !open && setEditingIlot(null)}
         />
       )}
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deletingIlot} onOpenChange={(open) => !open && setDeletingIlot(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer l'îlot ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              L'îlot "{deletingIlot?.name}" sera supprimé. Les parcelles associées ne seront pas supprimées mais ne seront plus liées à cet îlot.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Bulk Delete Confirmation */}
-      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer {selectedIds.size} îlot(s) ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Les îlots sélectionnés seront déplacés vers la corbeille. Les parcelles associées ne seront pas supprimées.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isBulkDeleting}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBulkDelete}
-              disabled={isBulkDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isBulkDeleting ? "Suppression..." : "Supprimer"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

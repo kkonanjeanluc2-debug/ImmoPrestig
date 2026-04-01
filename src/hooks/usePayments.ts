@@ -47,11 +47,11 @@ export const usePayments = () => {
       const now = new Date();
       const currentDay = now.getDate();
 
-      // Fetch active contracts with tenant info
+      // Fetch active contracts with tenant info (including start_date for lookback)
       const { data: activeContracts, error: contractsError } = await supabase
         .from("contracts")
         .select(`
-          id, user_id, rent_amount, tenant_id, property_id, unit_id,
+          id, user_id, rent_amount, tenant_id, property_id, unit_id, start_date,
           tenant:tenants(*, property:properties(*))
         `)
         .eq("status", "active")
@@ -61,22 +61,18 @@ export const usePayments = () => {
 
       // Helper: normalize a month string to "YYYY-MM" for reliable comparison
       const toYearMonth = (month: string): string | null => {
-        // Already ISO: "2026-05"
         if (/^\d{4}-\d{2}$/.test(month)) return month;
-        // French format: "Mai 2026"
         const parts = month.split(' ');
         if (parts.length === 2) {
           const idx = FRENCH_MONTHS.indexOf(parts[0]);
           if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}`;
         }
-        // Fallback: try substring
         return month.length >= 7 ? month.substring(0, 7) : null;
       };
 
       // Helper: check if a payment covers a given "YYYY-MM" target
       const paymentCoversMonth = (payment: any, targetYM: string, targetLabel: string): boolean => {
         if (!payment.tenant_id) return false;
-        // Check payment_months array (handles multi-month and single-month)
         if (payment.payment_months && Array.isArray(payment.payment_months)) {
           for (const m of payment.payment_months) {
             if (m === targetLabel || m === targetYM) return true;
@@ -84,89 +80,102 @@ export const usePayments = () => {
             if (normalized === targetYM) return true;
           }
         }
-        // Fallback: check due_date
         if (typeof payment.due_date === "string" && payment.due_date.startsWith(targetYM)) {
           return true;
         }
         return false;
       };
 
-      // Always generate virtual payments for the CURRENT month
+      // Generate virtual payments for ALL months from contract start to current (+ next from 15th)
+      // This ensures unpaid past months still appear with appropriate status
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
-      const currentMonthLabel = `${FRENCH_MONTHS[currentMonth]} ${currentYear}`;
-      const currentMonthIso = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-      const currentMonthDueDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(rentDueDay).padStart(2, '0')}`;
+      const currentDay = now.getDate();
 
-      // Check which tenants already have a real payment for current month
-      const existingCurrentMonthTenantIds = new Set(
-        (data || [])
-          .filter((payment) => paymentCoversMonth(payment, currentMonthIso, currentMonthLabel))
-          .map((payment) => payment.tenant_id)
-      );
+      // Determine the end month for virtual generation
+      const includeNextMonth = currentDay >= 15;
+      let endMonth = currentMonth;
+      let endYear = currentYear;
+      if (includeNextMonth) {
+        endMonth = currentMonth + 1;
+        if (endMonth > 11) { endMonth = 0; endYear = currentYear + 1; }
+      }
 
-      // Virtual payments for current month
-      const virtualCurrentMonth = (activeContracts || [])
-        .filter(c => !existingCurrentMonthTenantIds.has(c.tenant_id))
-        .map(contract => {
-          const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
-          return {
-            id: `auto-${contract.tenant_id}-${currentMonthLabel}`,
-            user_id: agencyUserId,
-            tenant_id: contract.tenant_id,
-            amount: contract.rent_amount,
-            due_date: currentMonthDueDate,
-            status: "pending",
-            method: null,
-            paid_date: null,
-            paid_amount: null,
-            payment_months: [currentMonthLabel],
-            created_at: now.toISOString(),
-            updated_at: now.toISOString(),
-            tenant: contract.tenant,
-            _isVirtual: true,
-          };
-        });
+      // Build a set of covered months per tenant from real payments
+      const tenantCoveredMonths = new Map<string, Set<string>>();
+      for (const payment of (data || [])) {
+        if (!payment.tenant_id) continue;
+        if (!tenantCoveredMonths.has(payment.tenant_id)) {
+          tenantCoveredMonths.set(payment.tenant_id, new Set());
+        }
+        const covered = tenantCoveredMonths.get(payment.tenant_id)!;
+        // Add months from payment_months array
+        if (payment.payment_months && Array.isArray(payment.payment_months)) {
+          for (const m of payment.payment_months) {
+            const ym = toYearMonth(m);
+            if (ym) covered.add(ym);
+          }
+        }
+        // Add month from due_date
+        if (typeof payment.due_date === "string" && payment.due_date.length >= 7) {
+          covered.add(payment.due_date.substring(0, 7));
+        }
+      }
 
-      // From the 15th, also generate virtual payments for NEXT month
-      let virtualNextMonth: any[] = [];
-      if (currentDay >= 15) {
-        const nextMonth = currentMonth + 1 > 11 ? 0 : currentMonth + 1;
-        const nextYear = currentMonth + 1 > 11 ? currentYear + 1 : currentYear;
-        const nextMonthLabel = `${FRENCH_MONTHS[nextMonth]} ${nextYear}`;
-        const nextMonthIso = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}`;
-        const nextMonthDueDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(rentDueDay).padStart(2, '0')}`;
+      // Generate virtual payments for each contract
+      const allVirtuals: any[] = [];
+      for (const contract of (activeContracts || [])) {
+        const tenantId = contract.tenant_id;
+        const covered = tenantCoveredMonths.get(tenantId) || new Set();
+        const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
 
-        const existingNextMonthTenantIds = new Set(
-          (data || [])
-            .filter((payment) => paymentCoversMonth(payment, nextMonthIso, nextMonthLabel))
-            .map((payment) => payment.tenant_id)
-        );
+        // Determine start month: contract start_date or max 12 months back
+        const contractStart = new Date((contract as any).start_date || now.toISOString());
+        const twelveMonthsAgo = new Date(currentYear, currentMonth - 12, 1);
+        const lookbackStart = contractStart > twelveMonthsAgo ? contractStart : twelveMonthsAgo;
+        let iterMonth = lookbackStart.getMonth();
+        let iterYear = lookbackStart.getFullYear();
 
-        virtualNextMonth = (activeContracts || [])
-          .filter(c => !existingNextMonthTenantIds.has(c.tenant_id))
-          .map(contract => {
-            const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
-            return {
-              id: `auto-${contract.tenant_id}-${nextMonthLabel}`,
+        // Iterate month by month until endMonth/endYear
+        while (iterYear < endYear || (iterYear === endYear && iterMonth <= endMonth)) {
+          const ym = `${iterYear}-${String(iterMonth + 1).padStart(2, '0')}`;
+          const monthLabel = `${FRENCH_MONTHS[iterMonth]} ${iterYear}`;
+          const dueDate = `${ym}-${String(rentDueDay).padStart(2, '0')}`;
+
+          if (!covered.has(ym)) {
+            // Determine status based on how overdue
+            const dueDateObj = new Date(dueDate);
+            const daysLate = Math.floor((now.getTime() - dueDateObj.getTime()) / (1000 * 60 * 60 * 24));
+            let status = "pending";
+            if (daysLate > 0) {
+              status = "late";
+            }
+
+            allVirtuals.push({
+              id: `auto-${tenantId}-${monthLabel}`,
               user_id: agencyUserId,
-              tenant_id: contract.tenant_id,
+              tenant_id: tenantId,
               amount: contract.rent_amount,
-              due_date: nextMonthDueDate,
-              status: "pending",
+              due_date: dueDate,
+              status,
               method: null,
               paid_date: null,
               paid_amount: null,
-              payment_months: [nextMonthLabel],
+              payment_months: [monthLabel],
               created_at: now.toISOString(),
               updated_at: now.toISOString(),
               tenant: contract.tenant,
               _isVirtual: true,
-            };
-          });
+            });
+          }
+
+          // Advance to next month
+          iterMonth++;
+          if (iterMonth > 11) { iterMonth = 0; iterYear++; }
+        }
       }
 
-      return [...(data || []), ...virtualCurrentMonth, ...virtualNextMonth] as any;
+      return [...(data || []), ...allVirtuals] as any;
     },
     enabled: !!user,
     staleTime: 0,

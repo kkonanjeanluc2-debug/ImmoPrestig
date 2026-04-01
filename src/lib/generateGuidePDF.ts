@@ -373,7 +373,9 @@ export async function generateGuidePDF(
         const mclauH = 22;
         const mclauX = pw / 2 - mclauW / 2;
         doc.addImage(mclauLogo, "PNG", mclauX, headerY, mclauW, mclauH);
-      } catch { /* ignore */ }
+      } catch (e) { console.error("MCLAU logo error:", e); }
+    } else {
+      console.warn("MCLAU logo not loaded");
     }
 
     // RIGHT: Armoiries + République text
@@ -384,7 +386,9 @@ export async function generateGuidePDF(
         const armH = 28;
         const armX = rightColX + (50 - armW) / 2;
         doc.addImage(armoiriesLogo, "PNG", armX, headerY, armW, armH);
-      } catch { /* ignore */ }
+      } catch (e) { console.error("Armoiries logo error:", e); }
+    } else {
+      console.warn("Armoiries logo not loaded");
     }
     // Republic text removed from cover page
 

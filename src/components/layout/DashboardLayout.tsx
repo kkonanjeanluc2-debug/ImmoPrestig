@@ -146,7 +146,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Prefetch all main routes data on mount for instant navigation
   const prefetchRoute = usePrefetchRoute();
   useEffect(() => {
-    const routes = ["/dashboard", "/properties", "/tenants", "/owners", "/payments", "/contracts", "/ventes-immobilieres", "/lotissements", "/settings"];
+    const routes = ["/dashboard", "/properties", "/tenants", "/owners", "/payments", "/contracts", "/ventes-immobilieres", "/lotissements", "/rapports", "/settings"];
     routes.forEach(r => prefetchRoute(r));
   }, [prefetchRoute]);
 

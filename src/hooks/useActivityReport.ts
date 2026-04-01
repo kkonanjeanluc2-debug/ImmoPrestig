@@ -275,6 +275,50 @@ function computeReportForUser(
   };
 }
 
+/** Prefetch helper: fetches a single user's activity report data */
+export async function fetchReportDataForPrefetch(userId: string, periodFrom: string, periodTo: string) {
+  const [profileRes, roleRes, rawData] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("user_id", userId).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+    fetchAllReportData(periodFrom, periodTo),
+  ]);
+  const report = computeReportForUser(userId, rawData, periodFrom, periodTo);
+  return {
+    ...report,
+    userId,
+    userName: profileRes.data?.full_name || "Utilisateur",
+    role: roleRes.data?.role || "gestionnaire",
+  } as ActivityReportData;
+}
+
+/** Prefetch helper: fetches all managers' report data */
+export async function fetchAllManagersReportForPrefetch(userId: string, periodFrom: string, periodTo: string) {
+  const { data: agency } = await supabase
+    .from("agencies")
+    .select("id, user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!agency) return [];
+  const { data: members } = await supabase
+    .from("agency_members")
+    .select("user_id, role")
+    .eq("agency_id", agency.id)
+    .eq("status", "active");
+  const userIds = [...new Set([agency.user_id, ...(members?.map(m => m.user_id) || [])])];
+  const [profilesRes, rolesRes, rawData] = await Promise.all([
+    supabase.from("profiles").select("user_id, full_name").in("user_id", userIds),
+    supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
+    fetchAllReportData(periodFrom, periodTo),
+  ]);
+  const profileMap = new Map(profilesRes.data?.map(p => [p.user_id, p.full_name || "Utilisateur"]) || []);
+  const roleMap = new Map(rolesRes.data?.map(r => [r.user_id, r.role]) || []);
+  const reports: ActivityReportData[] = userIds.map(uid => {
+    const report = computeReportForUser(uid, rawData, periodFrom, periodTo);
+    return { ...report, userId: uid, userName: profileMap.get(uid) || "Utilisateur", role: roleMap.get(uid) || "admin" };
+  });
+  return reports.sort((a, b) => b.totalRevenue - a.totalRevenue);
+}
+
 export function useActivityReport(periodFrom: string, periodTo: string) {
   const { user } = useAuth();
 
@@ -299,6 +343,8 @@ export function useActivityReport(periodFrom: string, periodTo: string) {
       } as ActivityReportData;
     },
     enabled: !!user?.id && !!periodFrom && !!periodTo,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -352,5 +398,7 @@ export function useAllManagersReport(periodFrom: string, periodTo: string) {
       return reports.sort((a, b) => b.totalRevenue - a.totalRevenue);
     },
     enabled: !!user?.id && !!periodFrom && !!periodTo,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }

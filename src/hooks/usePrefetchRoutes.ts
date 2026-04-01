@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfMonth, endOfMonth, format } from "date-fns";
+import { fetchReportDataForPrefetch, fetchAllManagersReportForPrefetch } from "./useActivityReport";
 
 // Map of routes to their prefetch functions
 const routePrefetchMap: Record<string, (queryClient: any, userId?: string) => void> = {
@@ -49,8 +50,16 @@ const routePrefetchMap: Record<string, (queryClient: any, userId?: string) => vo
     const now = new Date();
     const periodFrom = format(startOfMonth(now), "yyyy-MM-dd");
     const periodTo = format(endOfMonth(now), "yyyy-MM-dd");
-    qc.prefetchQuery({ queryKey: ["activity-report", userId, periodFrom, periodTo], staleTime: 5 * 60 * 1000 });
-    qc.prefetchQuery({ queryKey: ["all-managers-report", periodFrom, periodTo], staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({
+      queryKey: ["activity-report", userId, periodFrom, periodTo],
+      queryFn: () => fetchReportDataForPrefetch(userId!, periodFrom, periodTo),
+      staleTime: 5 * 60 * 1000,
+    });
+    qc.prefetchQuery({
+      queryKey: ["all-managers-report", periodFrom, periodTo],
+      queryFn: () => fetchAllManagersReportForPrefetch(userId!, periodFrom, periodTo),
+      staleTime: 5 * 60 * 1000,
+    });
     qc.prefetchQuery({ queryKey: ["agency"], queryFn: () => supabase.from("agencies").select("*").maybeSingle().then(r => r.data), staleTime: 5 * 60 * 1000 });
   },
 };

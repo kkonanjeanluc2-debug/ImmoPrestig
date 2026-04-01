@@ -103,7 +103,7 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
       electricity_meter: values.electricity_meter || null,
       water_meter: values.water_meter || null,
       gas_meter: values.gas_meter || null,
-      status: "draft",
+      status: "completed",
     });
 
     form.reset();

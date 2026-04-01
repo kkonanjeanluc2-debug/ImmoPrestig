@@ -182,7 +182,7 @@ export const useAllEcheancesWithDetails = (lotissementId?: string) => {
             )
           )
         `)
-        .eq("status", "pending")
+        .in("status", ["pending", "partial"])
         .order("due_date", { ascending: true });
 
       if (venteIds) {

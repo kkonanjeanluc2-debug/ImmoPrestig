@@ -127,7 +127,13 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredVentes.map((vente) => {
+            {filteredVentes.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  Aucun résultat trouvé
+                </TableCell>
+              </TableRow>
+            ) : filteredVentes.map((vente) => {
               const progress = vente.payment_type === "echelonne" 
                 ? `${vente.paid_installments || 0}/${vente.total_installments || 0}`
                 : "Complet";

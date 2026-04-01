@@ -42,6 +42,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const { data: assignableUsers } = useAssignableUsers();
   const [searchQuery, setSearchQuery] = useState("");
   const [cancelTarget, setCancelTarget] = useState<VenteWithDetails | null>(null);
+  const [mutationTarget, setMutationTarget] = useState<VenteWithDetails | null>(null);
   const cancelVente = useCancelVenteParcelle();
   
   const filteredVentes = useMemo(() => {

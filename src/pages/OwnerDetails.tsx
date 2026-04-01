@@ -200,7 +200,10 @@ const OwnerDetails = () => {
       const monthStartStr = format(monthStart, "yyyy-MM-dd");
       const monthEndStr = format(monthEnd, "yyyy-MM-dd");
 
-      const tenantPayments = ownerTenants.map(tenant => {
+      const tenantPayments = ownerTenants.filter(tenant => {
+        const hasActiveContract = tenant.contracts?.some(c => c.status === "active");
+        return hasActiveContract;
+      }).map(tenant => {
         const property = ownerProperties.find(p => p.id === tenant.property_id);
         const activeContract = tenant.contracts?.find(c => c.status === "active");
         const monthlyRent = activeContract?.rent_amount || property?.price || 0;

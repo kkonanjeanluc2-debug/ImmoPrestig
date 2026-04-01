@@ -133,6 +133,12 @@ const emptyForm: AttestationTemplateInsert = {
   village_logo_url: null,
   template_type: "attribution",
   header_line_color: "#FF8C00",
+  watermark_type: "none",
+  watermark_text: null,
+  watermark_image_url: null,
+  watermark_angle: "diagonal",
+  watermark_opacity: 0.1,
+  watermark_repeat: true,
 };
 
 export function AttestationTemplateManager({ templateType = "attribution" }: { templateType?: string }) {
@@ -206,6 +212,12 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       village_logo_url: t.village_logo_url || null,
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
+      watermark_type: (t as any).watermark_type || "none",
+      watermark_text: (t as any).watermark_text || null,
+      watermark_image_url: (t as any).watermark_image_url || null,
+      watermark_angle: (t as any).watermark_angle || "diagonal",
+      watermark_opacity: (t as any).watermark_opacity ?? 0.1,
+      watermark_repeat: (t as any).watermark_repeat ?? true,
     });
     setDialogOpen(true);
   };
@@ -232,6 +244,12 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       village_logo_url: t.village_logo_url || null,
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
+      watermark_type: (t as any).watermark_type || "none",
+      watermark_text: (t as any).watermark_text || null,
+      watermark_image_url: (t as any).watermark_image_url || null,
+      watermark_angle: (t as any).watermark_angle || "diagonal",
+      watermark_opacity: (t as any).watermark_opacity ?? 0.1,
+      watermark_repeat: (t as any).watermark_repeat ?? true,
     });
     setDialogOpen(true);
   };

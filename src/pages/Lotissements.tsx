@@ -73,12 +73,9 @@ const Lotissements = () => {
   );
 
   const getParcelleStats = (lotissementId: string) => {
-    const parcelles = allParcelles?.filter(p => p.lotissement_id === lotissementId) || [];
-    const total = parcelles.length;
-    const disponibles = parcelles.filter(p => p.status === "disponible").length;
-    const vendues = parcelles.filter(p => p.status === "vendu").length;
-    const reservees = parcelles.filter(p => p.status === "reserve").length;
-    return { total, disponibles, vendues, reservees };
+    return parcellesStats?.byLotissement[lotissementId] || {
+      total: 0, disponibles: 0, vendues: 0, reservees: 0, revenue: 0,
+    };
   };
 
   const handleDelete = async () => {

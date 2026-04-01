@@ -331,6 +331,17 @@ export async function generateGuidePDF(
       const zx = i * zigW + zigW / 2;
       doc.triangle(zx - zigW / 4, ph - patternH, zx, ph - patternH + 3, zx + zigW / 4, ph - patternH, "F");
     }
+    // MCLAU logo centered at top
+    const mclauLogo = await loadImageAsBase64("/images/mclau-logo.png");
+    if (mclauLogo) {
+      try {
+        const logoW = 50;
+        const logoH = 35;
+        const logoX = pw / 2 - logoW / 2;
+        const logoY = patternH + 8;
+        doc.addImage(mclauLogo, "PNG", logoX, logoY, logoW, logoH);
+      } catch (e) { console.error("MCLAU logo error:", e); }
+    }
 
     // Center: GUIDE DU LOTISSEMENT title
     const titleRgb = hexToRgb(cp.title_color);

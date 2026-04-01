@@ -2224,6 +2224,7 @@ export type Database = {
           can_access_settings: boolean
           can_access_subscription_tab: boolean
           can_access_whatsapp_tab: boolean
+          can_cancel_vente_parcelle: boolean
           can_collect_echeances_achats: boolean
           can_collect_echeances_lotissements: boolean
           can_collect_echeances_ventes: boolean
@@ -2277,6 +2278,7 @@ export type Database = {
           can_manage_automations: boolean
           can_manage_branding: boolean
           can_manage_mutations: boolean
+          can_manage_mutations_parcelle: boolean
           can_manage_team: boolean
           can_manage_templates: boolean
           can_send_reminders: boolean
@@ -2317,6 +2319,7 @@ export type Database = {
           can_access_settings?: boolean
           can_access_subscription_tab?: boolean
           can_access_whatsapp_tab?: boolean
+          can_cancel_vente_parcelle?: boolean
           can_collect_echeances_achats?: boolean
           can_collect_echeances_lotissements?: boolean
           can_collect_echeances_ventes?: boolean
@@ -2370,6 +2373,7 @@ export type Database = {
           can_manage_automations?: boolean
           can_manage_branding?: boolean
           can_manage_mutations?: boolean
+          can_manage_mutations_parcelle?: boolean
           can_manage_team?: boolean
           can_manage_templates?: boolean
           can_send_reminders?: boolean
@@ -2410,6 +2414,7 @@ export type Database = {
           can_access_settings?: boolean
           can_access_subscription_tab?: boolean
           can_access_whatsapp_tab?: boolean
+          can_cancel_vente_parcelle?: boolean
           can_collect_echeances_achats?: boolean
           can_collect_echeances_lotissements?: boolean
           can_collect_echeances_ventes?: boolean
@@ -2463,6 +2468,7 @@ export type Database = {
           can_manage_automations?: boolean
           can_manage_branding?: boolean
           can_manage_mutations?: boolean
+          can_manage_mutations_parcelle?: boolean
           can_manage_team?: boolean
           can_manage_templates?: boolean
           can_send_reminders?: boolean

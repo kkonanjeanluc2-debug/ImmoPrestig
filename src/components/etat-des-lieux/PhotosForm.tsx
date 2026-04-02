@@ -187,9 +187,9 @@ function PhotoCard({
   const [imgLoaded, setImgLoaded] = useState(false);
 
   // Load thumbnail on mount
-  useState(() => {
+  useEffect(() => {
     onLoadThumbnail();
-  });
+  }, []);
 
   return (
     <div className="border rounded-lg overflow-hidden group relative">

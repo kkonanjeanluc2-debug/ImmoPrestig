@@ -46,12 +46,6 @@ interface ColocationTenantsManagerProps {
     property?: {
       title?: string;
       address?: string;
-      owner?: {
-        name?: string;
-        email?: string | null;
-        phone?: string | null;
-        address?: string | null;
-      } | null;
     } | null;
     unit?: { unit_number?: string } | null;
     tenant?: { id: string; name: string } | null;

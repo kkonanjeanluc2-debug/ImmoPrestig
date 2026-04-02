@@ -353,6 +353,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
 
       toast.success("Locataire et contrat créés avec succès");
       form.reset();
+      setCniFile(null);
       setSelectedPropertyId("");
       setRentType("mensuel");
       setDailyRentDays("");

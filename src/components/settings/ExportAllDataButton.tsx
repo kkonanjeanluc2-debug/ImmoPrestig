@@ -433,6 +433,95 @@ export function ExportAllDataButton() {
         }
       }
 
+      // 3. Export array-based file sources (e.g. etats_des_lieux photos)
+      for (const source of ARRAY_FILE_SOURCES) {
+        setProgress(`Téléchargement ${source.folder}...`);
+        try {
+          const PAGE_SIZE = 1000;
+          let from = 0;
+          let hasMore = true;
+          let rowIndex = 0;
+
+          while (hasMore) {
+            const { data, error } = await (supabase as any)
+              .from(source.table)
+              .select(`id, ${source.arrayColumn}`)
+              .eq("user_id", user.id)
+              .not(source.arrayColumn, "is", null)
+              .range(from, from + PAGE_SIZE - 1);
+
+            if (error) throw error;
+
+            for (const row of (data || [])) {
+              const paths: string[] = row[source.arrayColumn] || [];
+              for (let k = 0; k < paths.length; k++) {
+                const filePath = paths[k];
+                if (!filePath) continue;
+                setProgress(`${source.folder} — enregistrement ${rowIndex + 1}, photo ${k + 1}`);
+                const blob = await downloadFile(filePath, source.bucket);
+                if (blob) {
+                  const ext = filePath.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
+                  const safeName = filePath.split('/').pop()?.replace(/[/\\?%*:|"<>]/g, '_') || `photo_${k}`;
+                  const fileName = safeName.match(/\.\w{2,5}$/) ? safeName : `${safeName}.${ext}`;
+                  zip.file(`${source.folder}/${row.id}/${fileName}`, blob);
+                  docCount++;
+                }
+              }
+              rowIndex++;
+            }
+
+            hasMore = (data?.length || 0) === PAGE_SIZE;
+            from += PAGE_SIZE;
+          }
+        } catch (err) {
+          console.warn(`Erreur array docs ${source.table}:`, err);
+        }
+      }
+
+      // 4. Export all files from storage buckets directly (catch any missed files)
+      const BUCKETS_TO_SCAN = ["documents", "documents-achats"];
+      for (const bucketName of BUCKETS_TO_SCAN) {
+        setProgress(`Scan bucket ${bucketName}...`);
+        try {
+          const { data: files } = await supabase.storage.from(bucketName).list(user.id, { limit: 1000 });
+          if (files && files.length > 0) {
+            for (const file of files) {
+              if (file.id && file.name) {
+                const filePath = `${user.id}/${file.name}`;
+                const blob = await downloadFile(filePath, bucketName);
+                if (blob) {
+                  zip.file(`Stockage ${bucketName}/${file.name}`, blob);
+                  docCount++;
+                }
+              }
+            }
+          }
+          // Also scan subdirectories
+          const { data: folders } = await supabase.storage.from(bucketName).list(user.id, { limit: 100 });
+          if (folders) {
+            for (const folder of folders) {
+              if (!folder.id && folder.name) {
+                const { data: subFiles } = await supabase.storage.from(bucketName).list(`${user.id}/${folder.name}`, { limit: 1000 });
+                if (subFiles) {
+                  for (const sf of subFiles) {
+                    if (sf.id && sf.name) {
+                      const filePath = `${user.id}/${folder.name}/${sf.name}`;
+                      const blob = await downloadFile(filePath, bucketName);
+                      if (blob) {
+                        zip.file(`Stockage ${bucketName}/${folder.name}/${sf.name}`, blob);
+                        docCount++;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`Erreur scan bucket ${bucketName}:`, err);
+        }
+      }
+
       fileCount += docCount;
 
       if (fileCount === 0) {

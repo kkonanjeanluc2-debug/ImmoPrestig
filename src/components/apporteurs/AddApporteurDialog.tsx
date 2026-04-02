@@ -115,7 +115,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
               <FormField control={form.control} name="email" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
-                  <FormControl><Input type="email" {...field} /></FormControl>
+                  <FormControl><Input type="email" placeholder="Ex: jean@email.com" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

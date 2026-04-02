@@ -905,7 +905,7 @@ const TenantDetails = () => {
       <TenantPortalAccessDialog
         open={portalAccessDialogOpen}
         onOpenChange={setPortalAccessDialogOpen}
-        tenant={{ id: tenant.id, name: tenant.name, email: tenant.email }}
+        tenant={{ id: tenant.id, name: tenant.name, email: tenant.email, phone: tenant.phone }}
       />
     </DashboardLayout>
   );

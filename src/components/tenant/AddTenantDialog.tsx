@@ -606,37 +606,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 />
               </div>
 
-              {/* Additional Tenant Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="birth_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date de naissance</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="birth_place"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lieu de naissance</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Abidjan" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+              {/* CNI/Passport Upload & Profession */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -652,19 +622,47 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="cni_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Numéro CNI</FormLabel>
-                      <FormControl>
-                        <Input placeholder="CI-0123456789" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <Label>CNI / Passeport</Label>
+                  <input
+                    ref={cniInputRef}
+                    type="file"
+                    accept="image/*,.pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setCniFile(file);
+                    }}
+                  />
+                  {cniFile ? (
+                    <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate flex-1">{cniFile.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => {
+                          setCniFile(null);
+                          if (cniInputRef.current) cniInputRef.current.value = "";
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start gap-2"
+                      onClick={() => cniInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Importer un fichier
+                    </Button>
                   )}
-                />
+                </div>
               </div>
 
               {/* Emergency Contact */}

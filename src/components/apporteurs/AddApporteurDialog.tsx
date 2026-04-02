@@ -99,7 +99,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
                 <FormLabel>Nom complet *</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input placeholder="Ex: Jean Kouassi" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

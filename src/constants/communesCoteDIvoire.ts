@@ -1,0 +1,18 @@
+export const COMMUNES_COTE_DIVOIRE = [
+  "Abobo", "Adjamé", "Anyama", "Attécoubé", "Bingerville", "Cocody",
+  "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Songon", "Treichville",
+  "Yopougon", "Abengourou", "Abidjan", "Aboisso", "Adiaké", "Adzopé",
+  "Agboville", "Agnibilékrou", "Akoupé", "Alépé", "Arrah", "Biankouma",
+  "Bocanda", "Bondoukou", "Bongouanou", "Bouaflé", "Bouaké", "Bouna",
+  "Boundiali", "Buyo", "Béoumi", "Dabakala", "Dabou", "Daloa",
+  "Danané", "Daoukro", "Dimbokro", "Divo", "Doropo", "Duékoué",
+  "Ferkessédougou", "Fresco", "Gagnoa", "Grand-Bassam", "Grand-Lahou",
+  "Guiglo", "Guéyo", "Guitry", "Issia", "Jacqueville", "Kani",
+  "Katiola", "Kong", "Korhogo", "Kouibly", "Lakota", "Man",
+  "Mankono", "Minignan", "Méagui", "Nassian", "Niakara", "Niakaramandougou",
+  "Odienné", "Oumé", "Prikro", "Rubino", "Sakassou", "San-Pédro",
+  "Sassandra", "Saïoua", "Séguela", "Sinfra", "Sipilou", "Soubré",
+  "Tabou", "Taï", "Tengréla", "Tiassalé", "Tiébissou", "Tingrela",
+  "Touba", "Toulépleu", "Toumodi", "Transua", "Tanda", "Vavoua",
+  "Yamoussoukro", "Zuénoula",
+].sort((a, b) => a.localeCompare(b, "fr"));

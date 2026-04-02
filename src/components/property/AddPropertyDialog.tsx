@@ -16,6 +16,7 @@ import { useCreatePropertyUnit } from "@/hooks/usePropertyUnits";
 import { useOwners } from "@/hooks/useOwners";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
+import { COMMUNES_COTE_DIVOIRE } from "@/constants/communesCoteDIvoire";
 import { cn } from "@/lib/utils";
 
 type PropertyCategory = "unique" | "immeuble" | null;
@@ -40,6 +41,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const [formData, setFormData] = useState({
     title: "",
     address: "",
+    city: "",
     price: "",
     type: "location",
     property_type: "appartement",
@@ -73,6 +75,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     setFormData({
       title: "",
       address: "",
+      city: "",
       price: "",
       type: "location",
       property_type: "appartement",
@@ -131,6 +134,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
       const result = await createProperty.mutateAsync({
         title: formData.title,
         address: formData.address,
+        city: formData.city || null,
         price: formData.price ? Number(formData.price) : 0,
         type: formData.type,
         property_type: formData.property_type,
@@ -437,14 +441,35 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="address">Adresse *</Label>
-            <Input
-              id="address"
-              placeholder="Ex: Cocody Riviera 3, Abidjan"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="address">Adresse *</Label>
+              <Input
+                id="address"
+                placeholder="Ex: Cocody Riviera 3"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">Commune</Label>
+              <Select
+                value={formData.city}
+                onValueChange={(value) => setFormData({ ...formData, city: value === "__none__" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une commune" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">
+                    <span className="text-muted-foreground">Aucune</span>
+                  </SelectItem>
+                  {COMMUNES_COTE_DIVOIRE.map((commune) => (
+                    <SelectItem key={commune} value={commune}>{commune}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {category !== "immeuble" && (

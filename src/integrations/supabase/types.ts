@@ -3653,6 +3653,7 @@ export type Database = {
           assigned_to: string | null
           bathrooms: number | null
           bedrooms: number | null
+          city: string | null
           created_at: string
           daily_rent_days: number | null
           daily_rent_discount: number | null
@@ -3678,6 +3679,7 @@ export type Database = {
           assigned_to?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
+          city?: string | null
           created_at?: string
           daily_rent_days?: number | null
           daily_rent_discount?: number | null
@@ -3703,6 +3705,7 @@ export type Database = {
           assigned_to?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
+          city?: string | null
           created_at?: string
           daily_rent_days?: number | null
           daily_rent_discount?: number | null

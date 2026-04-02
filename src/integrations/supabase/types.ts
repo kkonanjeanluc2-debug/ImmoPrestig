@@ -2913,7 +2913,7 @@ export type Database = {
           created_at: string
           default_contract_template_id: string | null
           deleted_at: string | null
-          email: string
+          email: string | null
           id: string
           management_contract_template_id: string | null
           management_type_id: string | null
@@ -2933,7 +2933,7 @@ export type Database = {
           created_at?: string
           default_contract_template_id?: string | null
           deleted_at?: string | null
-          email: string
+          email?: string | null
           id?: string
           management_contract_template_id?: string | null
           management_type_id?: string | null
@@ -2953,7 +2953,7 @@ export type Database = {
           created_at?: string
           default_contract_template_id?: string | null
           deleted_at?: string | null
-          email?: string
+          email?: string | null
           id?: string
           management_contract_template_id?: string | null
           management_type_id?: string | null

@@ -18,6 +18,7 @@ import { usePayments } from "@/hooks/usePayments";
 
 import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAgency } from "@/hooks/useAgency";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -29,6 +30,7 @@ const Index = () => {
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { hasPermission, role, isLoading: permissionsLoading } = usePermissions();
+  const { data: agency } = useAgency();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [period, setPeriod] = useState<PeriodValue>(getDefaultPeriod);
@@ -170,7 +172,7 @@ const Index = () => {
               Tableau de bord
             </h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              Bienvenue. Voici un aperçu de votre patrimoine immobilier.
+              Bienvenue{agency?.name ? ` — ${agency.name}` : ""}
             </p>
           </div>
           <PeriodFilter value={period} onChange={setPeriod} />

@@ -40,6 +40,7 @@ import {
   Calendar,
   CreditCard,
   Loader2,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -52,6 +53,8 @@ import { PAYMENT_OPERATORS } from "@/hooks/useAgency";
 import { useProperties } from "@/hooks/useProperties";
 import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
 import { useTenants } from "@/hooks/useTenants";
+import { useAgency } from "@/hooks/useAgency";
+import { generatePayoutReceiptPDF } from "@/lib/generatePayoutReceiptPDF";
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString("fr-FR") + " F CFA";
@@ -78,6 +81,7 @@ export function OwnerPayoutsSection({
   const { data: payments = [] } = usePayments();
   const createPayout = useCreateOwnerPayout();
   const deletePayout = useDeleteOwnerPayout();
+  const { data: agency } = useAgency();
 
   const [open, setOpen] = useState(false);
   const now = new Date();
@@ -418,9 +422,24 @@ export function OwnerPayoutsSection({
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <ArrowDownToLine className="h-4 w-4 text-primary" />
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20"
+                        onClick={() => generatePayoutReceiptPDF({
+                          ownerName: payout.owner?.name || "Propriétaire",
+                          amount: Number(payout.amount),
+                          payoutDate: payout.payout_date,
+                          payoutMonth: payout.payout_month || 1,
+                          payoutYear: payout.payout_year || new Date().getFullYear(),
+                          paymentMethod: payout.payment_method,
+                          recipientPhone: payout.recipient_phone,
+                          notes: payout.notes,
+                        }, agency)}
+                        title="Télécharger le reçu"
+                      >
+                        <Download className="h-4 w-4 text-primary" />
+                      </Button>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-foreground">

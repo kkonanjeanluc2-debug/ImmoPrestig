@@ -106,6 +106,8 @@ export function AgencySettings() {
         wave_api_key: (agency as any).wave_api_key || "",
         wave_webhook_secret: (agency as any).wave_webhook_secret || "",
         wave_sandbox: (agency as any).wave_sandbox ?? true,
+        notification_email: (agency as any).notification_email || "",
+        notification_whatsapp: (agency as any).notification_whatsapp || "",
       });
       setLogoUrl(agency.logo_url);
       setOnlineRentToggle(!!(agency as any).online_rent_enabled);
@@ -139,6 +141,8 @@ export function AgencySettings() {
         wave_api_key: (agency as any).wave_api_key || "",
         wave_webhook_secret: (agency as any).wave_webhook_secret || "",
         wave_sandbox: (agency as any).wave_sandbox ?? true,
+        notification_email: (agency as any).notification_email || "",
+        notification_whatsapp: (agency as any).notification_whatsapp || "",
       });
       setLogoUrl(agency.logo_url);
       setOnlineRentToggle(!!(agency as any).online_rent_enabled);

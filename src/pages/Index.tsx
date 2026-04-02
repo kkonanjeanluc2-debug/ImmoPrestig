@@ -18,6 +18,7 @@ import { usePayments } from "@/hooks/usePayments";
 
 import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAgency } from "@/hooks/useAgency";
 import { Navigate } from "react-router-dom";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { usePermissions } from "@/hooks/usePermissions";

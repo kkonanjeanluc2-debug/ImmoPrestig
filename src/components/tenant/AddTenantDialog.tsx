@@ -88,6 +88,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const [cniFile, setCniFile] = useState<File | null>(null);
   const [uploadingCni, setUploadingCni] = useState(false);
   const cniInputRef = useRef<HTMLInputElement>(null);
+  const [isColocation, setIsColocation] = useState(false);
   const [createdContractData, setCreatedContractData] = useState<{
     tenantName: string;
     tenantEmail?: string;

@@ -28,11 +28,11 @@ export function isValidEmail(email: string): boolean {
   if (labels.some((l) => l.length > 63 || l.length === 0)) return false;
 
   // Only allow specific domains
-  const allowedDomains = ["gmail.com", "hotmail.com", "hotmail.fr"];
+  const allowedDomains = ["gmail.com", "hotmail.com", "hotmail.fr", "yahoo.com", "yahoo.fr"];
   const domainLower = domain.toLowerCase();
   if (!allowedDomains.includes(domainLower)) return false;
 
   return true;
 }
 
-export const EMAIL_ERROR_MESSAGE = "Seules les adresses @gmail.com, @hotmail.com et @hotmail.fr sont acceptées";
+export const EMAIL_ERROR_MESSAGE = "Seules les adresses @gmail.com, @hotmail.com, @hotmail.fr, @yahoo.com et @yahoo.fr sont acceptées";

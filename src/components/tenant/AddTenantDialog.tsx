@@ -331,6 +331,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
           rent_amount: parseFloat(values.rent_amount),
           deposit: values.deposit ? parseFloat(values.deposit) : null,
           status: 'active',
+          is_colocation: isColocation,
         }),
       ]);
       contractCreated = true;

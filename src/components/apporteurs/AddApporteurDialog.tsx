@@ -124,7 +124,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="address" render={({ field }) => (
               <FormItem>
                 <FormLabel>Adresse</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input placeholder="Ex: Cocody, Abidjan" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

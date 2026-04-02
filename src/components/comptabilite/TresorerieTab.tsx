@@ -8,6 +8,7 @@ interface Props {
   data: ComptabiliteData;
   totalRevenue: number;
   totalReversements?: number;
+  totalApportCommissions?: number;
 }
 
 function formatCFA(amount: number) {

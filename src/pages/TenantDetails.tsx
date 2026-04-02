@@ -57,6 +57,7 @@ import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
 import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { TenantRequestsTab } from "@/components/tenant/TenantRequestsTab";
+import { TenantDocumentsTab } from "@/components/tenant/TenantDocumentsTab";
 
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";

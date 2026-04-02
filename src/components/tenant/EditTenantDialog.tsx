@@ -128,7 +128,6 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
       onSuccess?.();
     } catch (error: any) {
       console.error("Error updating tenant:", error);
-      // Check for duplicate error
       if (error?.message?.includes("duplicate") || error?.code === "23505") {
         if (error?.message?.includes("email")) {
           toast.error("Un locataire avec cet email existe déjà");
@@ -137,6 +136,8 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         } else {
           toast.error("Ce locataire existe déjà");
         }
+      } else if (error?.message) {
+        toast.error(error.message);
       } else {
         toast.error("Erreur lors de la modification du locataire");
       }

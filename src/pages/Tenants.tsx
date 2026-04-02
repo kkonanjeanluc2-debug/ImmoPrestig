@@ -357,6 +357,19 @@ export default function Tenants() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={communeFilter} onValueChange={setCommuneFilter}>
+                <SelectTrigger className="w-[220px] h-9">
+                  <SelectValue placeholder="Commune" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les communes</SelectItem>
+                  {COMMUNES_COTE_DIVOIRE.map((commune) => (
+                    <SelectItem key={commune} value={commune}>
+                      {commune}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {isAgencyOwner && assignableUsers.length > 1 && (
                 <Select value={assignedFilter} onValueChange={setAssignedFilter}>
                   <SelectTrigger className="w-[220px] h-9">

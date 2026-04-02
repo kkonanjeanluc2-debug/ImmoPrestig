@@ -395,7 +395,7 @@ const TABLE_CONFIGS: {
     ],
   },
   {
-    table: "interventions",
+    table: "property_interventions",
     fileName: "interventions.xlsx",
     sheetName: "Interventions",
     columns: [

@@ -132,7 +132,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="cni_number" render={({ field }) => (
               <FormItem>
                 <FormLabel>N° CNI</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input placeholder="Ex: CI-0123456789" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

@@ -41,6 +41,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
   const [formData, setFormData] = useState({
     title: "",
     address: "",
+    city: "",
     price: "",
     type: "location",
     property_type: "appartement",

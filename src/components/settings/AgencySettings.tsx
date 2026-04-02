@@ -62,9 +62,11 @@ export function AgencySettings() {
     geniuspay_public_key: "",
     geniuspay_secret_key: "",
     geniuspay_sandbox: false,
-    wave_api_key: "",
+        wave_api_key: "",
     wave_webhook_secret: "",
     wave_sandbox: true,
+    notification_email: "",
+    notification_whatsapp: "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);

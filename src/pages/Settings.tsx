@@ -359,6 +359,7 @@ const Settings = () => {
             <TabsContent value="agency" className="space-y-6">
               <AgencySettings />
               <PDFDocumentSettings />
+              <ExportAllDataButton />
             </TabsContent>
           )}
 

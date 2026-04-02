@@ -24,24 +24,36 @@ const FILE_SOURCES: FileSource[] = [
   { table: "documents", folder: "Documents", bucket: "documents", urlColumn: "file_url", nameColumn: "name" },
   { table: "documents_achats", folder: "Documents Achats", bucket: "documents-achats", urlColumn: "file_url", nameColumn: "name" },
   { table: "lotissement_documents", folder: "Documents Lotissements", bucket: "documents", urlColumn: "file_url", nameColumn: "name" },
-  { table: "tenants", folder: "CNI Locataires", bucket: "documents", urlColumn: "cni_document_url", nameColumn: "name" },
-  { table: "tenants", folder: "Avatars Locataires", bucket: null, urlColumn: "avatar_url", nameColumn: "name" },
+  { table: "tenants", folder: "CNI Locataires", bucket: "documents-achats", urlColumn: "cni_document_url", nameColumn: "name" },
+  { table: "tenants", folder: "Avatars Locataires", bucket: "property-images", urlColumn: "avatar_url", nameColumn: "name" },
   { table: "expenses", folder: "Justificatifs Dépenses", bucket: "documents", urlColumn: "receipt_url", nameColumn: "description" },
-  { table: "property_images", folder: "Photos Biens Locatifs", bucket: null, urlColumn: "image_url", nameColumn: "image_url" },
-  { table: "biens_vente_images", folder: "Photos Biens Vente", bucket: null, urlColumn: "image_url", nameColumn: "image_url" },
+  { table: "property_images", folder: "Photos Biens Locatifs", bucket: "property-images", urlColumn: "image_url", nameColumn: "image_url" },
+  { table: "biens_vente_images", folder: "Photos Biens Vente", bucket: "property-images", urlColumn: "image_url", nameColumn: "image_url" },
   { table: "unpaid_case_actions", folder: "Documents Impayés", bucket: "documents", urlColumn: "document_url", nameColumn: "document_url" },
-  { table: "properties", folder: "Images Biens Locatifs", bucket: null, urlColumn: "image_url", nameColumn: "title" },
-  { table: "biens_vente", folder: "Images Biens Vente", bucket: null, urlColumn: "image_url", nameColumn: "title" },
-  { table: "biens_achat", folder: "Images Biens Achat", bucket: null, urlColumn: "image_url", nameColumn: "title" },
+  { table: "properties", folder: "Images Biens Locatifs", bucket: "property-images", urlColumn: "image_url", nameColumn: "title" },
+  { table: "biens_vente", folder: "Images Biens Vente", bucket: "property-images", urlColumn: "image_url", nameColumn: "title" },
+  { table: "biens_achat", folder: "Images Biens Achat", bucket: "property-images", urlColumn: "image_url", nameColumn: "title" },
   { table: "agencies", folder: "Logo Agence", bucket: "agency-logos", urlColumn: "logo_url", nameColumn: "name" },
-  { table: "lotissements", folder: "Images Lotissements", bucket: null, urlColumn: "image_url", nameColumn: "name" },
-  { table: "lotissements", folder: "Signatures Chef Lotissements", bucket: null, urlColumn: "chef_signature_url", nameColumn: "name" },
-  { table: "lotissements", folder: "Cachets Chef Lotissements", bucket: null, urlColumn: "chef_stamp_url", nameColumn: "name" },
-  { table: "profiles", folder: "Avatars Profils", bucket: null, urlColumn: "avatar_url", nameColumn: "email" },
-  { table: "receipt_templates", folder: "Cachets Modèles Reçus", bucket: null, urlColumn: "stamp_image_url", nameColumn: "name" },
-  { table: "receipt_templates", folder: "Filigranes Modèles Reçus", bucket: null, urlColumn: "watermark_image_url", nameColumn: "name" },
-  { table: "attestation_templates", folder: "Logos Villages Attestations", bucket: null, urlColumn: "village_logo_url", nameColumn: "name" },
-  { table: "attestation_templates", folder: "Filigranes Attestations", bucket: null, urlColumn: "watermark_image_url", nameColumn: "name" },
+  { table: "lotissements", folder: "Images Lotissements", bucket: "property-images", urlColumn: "image_url", nameColumn: "name" },
+  { table: "lotissements", folder: "Signatures Chef Lotissements", bucket: "property-images", urlColumn: "chef_signature_url", nameColumn: "name" },
+  { table: "lotissements", folder: "Cachets Chef Lotissements", bucket: "property-images", urlColumn: "chef_stamp_url", nameColumn: "name" },
+  { table: "profiles", folder: "Avatars Profils", bucket: "property-images", urlColumn: "avatar_url", nameColumn: "email" },
+  { table: "receipt_templates", folder: "Cachets Modèles Reçus", bucket: "property-images", urlColumn: "stamp_image_url", nameColumn: "name" },
+  { table: "receipt_templates", folder: "Filigranes Modèles Reçus", bucket: "property-images", urlColumn: "watermark_image_url", nameColumn: "name" },
+  { table: "attestation_templates", folder: "Logos Villages Attestations", bucket: "property-images", urlColumn: "village_logo_url", nameColumn: "name" },
+  { table: "attestation_templates", folder: "Filigranes Attestations", bucket: "property-images", urlColumn: "watermark_image_url", nameColumn: "name" },
+];
+
+// Special array-based file sources (photos stored as string arrays)
+interface ArrayFileSource {
+  table: string;
+  folder: string;
+  bucket: string;
+  arrayColumn: string;
+}
+
+const ARRAY_FILE_SOURCES: ArrayFileSource[] = [
+  { table: "etats_des_lieux", folder: "Photos États des Lieux", bucket: "documents-achats", arrayColumn: "photos" },
 ];
 
 async function fetchFileRecords(source: FileSource, userId: string): Promise<FileRecord[]> {

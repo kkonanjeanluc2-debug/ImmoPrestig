@@ -391,6 +391,12 @@ const TenantDetails = () => {
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Documents</span>
             </TabsTrigger>
+            {activeContract?.is_colocation && (
+              <TabsTrigger value="colocation" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Colocation</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="payments">

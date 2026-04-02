@@ -8,6 +8,59 @@ import { Download, Loader2, Database, ShieldCheck } from "lucide-react";
 import JSZip from "jszip";
 import ExcelJS from "exceljs";
 
+interface DocRecord {
+  name: string;
+  file_url: string | null;
+  type?: string;
+}
+
+const DOCUMENT_SOURCES = [
+  { table: "documents", folder: "Documents", bucket: "documents" },
+  { table: "documents_achats", folder: "Documents Achats", bucket: "documents-achats" },
+  { table: "lotissement_documents", folder: "Documents Lotissements", bucket: null },
+] as const;
+
+async function fetchDocumentFiles(table: string, userId: string): Promise<DocRecord[]> {
+  const PAGE_SIZE = 1000;
+  let allRows: DocRecord[] = [];
+  let from = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await (supabase as any)
+      .from(table)
+      .select("name, file_url, type")
+      .eq("user_id", userId)
+      .not("file_url", "is", null)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    allRows = allRows.concat(data || []);
+    hasMore = (data?.length || 0) === PAGE_SIZE;
+    from += PAGE_SIZE;
+  }
+  return allRows;
+}
+
+async function downloadFileFromStorage(fileUrl: string, bucket: string | null): Promise<Blob | null> {
+  try {
+    // If the URL is a full public/signed URL, fetch directly
+    if (fileUrl.startsWith("http")) {
+      const response = await fetch(fileUrl);
+      if (!response.ok) return null;
+      return await response.blob();
+    }
+
+    // Otherwise it's a storage path - determine bucket
+    const storageBucket = bucket || "documents";
+    const { data, error } = await supabase.storage.from(storageBucket).download(fileUrl);
+    if (error || !data) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchAllRows(table: string, userId: string) {
   const PAGE_SIZE = 1000;
   let allRows: any[] = [];

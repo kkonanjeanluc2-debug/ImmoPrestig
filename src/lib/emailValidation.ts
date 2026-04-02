@@ -35,4 +35,4 @@ export function isValidEmail(email: string): boolean {
   return true;
 }
 
-export const EMAIL_ERROR_MESSAGE = "Seules les adresses @gmail.com, @hotmail.com et @hotmail.fr sont acceptées";
+export const EMAIL_ERROR_MESSAGE = "Seules les adresses @gmail.com, @hotmail.com, @hotmail.fr, @yahoo.com et @yahoo.fr sont acceptées";

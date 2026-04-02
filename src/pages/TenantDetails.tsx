@@ -868,12 +868,6 @@ const TenantDetails = () => {
                   property: tenant.property ? {
                     title: tenant.property.title,
                     address: tenant.property.address,
-                    owner: tenant.property.owner ? {
-                      name: tenant.property.owner.name,
-                      email: tenant.property.owner.email,
-                      phone: tenant.property.owner.phone,
-                      address: tenant.property.owner.address,
-                    } : null,
                   } : null,
                   unit: tenant.unit ? { unit_number: tenant.unit.unit_number } : null,
                   tenant: { id: tenant.id, name: tenant.name },

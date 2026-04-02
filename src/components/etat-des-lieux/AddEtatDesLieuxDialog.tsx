@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoomInspectionForm } from "./RoomInspectionForm";
 import { KeysForm } from "./KeysForm";
 import { MetersForm } from "./MetersForm";
+import { PhotosForm } from "./PhotosForm";
 
 const formSchema = z.object({
   type: z.enum(["entree", "sortie"]),

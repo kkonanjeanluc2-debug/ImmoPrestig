@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 
 const REQUESTS_SEEN_KEY = "tenant_requests_last_seen";
 

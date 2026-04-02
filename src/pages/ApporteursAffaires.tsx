@@ -197,5 +197,6 @@ export default function ApporteursAffaires() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </DashboardLayout>
   );
 }

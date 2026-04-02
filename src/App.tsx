@@ -52,6 +52,7 @@ const pageImports = {
   VendorOfferResponse: () => import("./pages/VendorOfferResponse"),
   Comptabilite: () => import("./pages/Comptabilite"),
   Rapports: () => import("./pages/Rapports"),
+  ApporteursAffaires: () => import("./pages/ApporteursAffaires"),
 };
 
 const Index = lazy(pageImports.Index);

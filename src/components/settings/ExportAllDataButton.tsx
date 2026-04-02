@@ -15,15 +15,7 @@ async function fetchAllRows(table: string, userId: string) {
   let hasMore = true;
 
   while (hasMore) {
-    let query = (supabase.from(table) as any).select("*").range(from, from + PAGE_SIZE - 1);
-    
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        query = query.eq(key, value);
-      });
-    } else {
-      query = query.eq("user_id", userId);
-    }
+    const query = (supabase as any).from(table).select("*").eq("user_id", userId).range(from, from + PAGE_SIZE - 1);
 
     const { data, error } = await query;
     if (error) throw error;

@@ -551,6 +551,7 @@ export default function Tenants() {
               id: accessDialogTenant.id,
               name: accessDialogTenant.name,
               email: accessDialogTenant.email,
+              phone: accessDialogTenant.phone,
             }}
           />
         )}

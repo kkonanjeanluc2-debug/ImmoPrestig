@@ -56,10 +56,11 @@ export const useCreateOwner = () => {
   return useMutation({
     mutationFn: async (owner: Omit<OwnerInsert, "user_id">) => {
       if (!user) throw new Error("User not authenticated");
+      const normalizedEmail = owner.email?.trim() ? owner.email.trim() : null;
       
       const { data, error } = await supabase
         .from("owners")
-        .insert({ ...owner, user_id: user.id })
+        .insert({ ...owner, email: normalizedEmail, user_id: user.id })
         .select()
         .single();
 

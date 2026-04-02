@@ -149,7 +149,7 @@ export function ImportOwnersDialog() {
         let isDuplicate = false;
         let duplicateReason = "";
         
-        const existingByEmail = existingOwners?.find(o => o.email.toLowerCase() === email);
+        const existingByEmail = email ? existingOwners?.find(o => o.email?.toLowerCase() === email) : null;
         if (existingByEmail) {
           isDuplicate = true;
           duplicateReason = `Email déjà utilisé par ${existingByEmail.name}`;

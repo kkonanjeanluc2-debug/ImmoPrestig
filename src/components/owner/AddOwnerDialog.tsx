@@ -100,7 +100,7 @@ export function AddOwnerDialog() {
     try {
       await createOwner.mutateAsync({
         name: data.name,
-        email: data.email,
+        email: data.email?.trim() || null,
         phone: data.phone || null,
         address: data.address || null,
         status: data.status,

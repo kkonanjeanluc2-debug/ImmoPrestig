@@ -148,6 +148,13 @@ const Comptabilite = () => {
       color: "text-primary",
       bgColor: "bg-primary/10",
     }] : []),
+    ...(totalApportCommissions > 0 ? [{
+      title: "Comm. apporteurs",
+      value: formatCFA(totalApportCommissions),
+      icon: Users,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+    }] : []),
     {
       title: "Impayés (loyers)",
       value: formatCFA(data.loyersImpayes),

@@ -281,14 +281,26 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       let cniDocumentUrl: string | null = null;
       if (cniFile) {
         setUploadingCni(true);
-        const fileExt = cniFile.name.split('.').pop();
-        const filePath = `cni-documents/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+
+        if (!authUser) {
+          throw new Error("Utilisateur non authentifié");
+        }
+
+        const fileExt = cniFile.name.split(".").pop();
+        const safeName = cniFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+        const filePath = `${authUser.id}/cni-documents/${Date.now()}-${safeName || `document.${fileExt || "pdf"}`}`;
         const { error: uploadError } = await supabase.storage
           .from("documents-achats")
-          .upload(filePath, cniFile);
-        if (uploadError) throw new Error("Erreur lors de l'upload du document CNI");
-        const { data: urlData } = supabase.storage.from("documents-achats").getPublicUrl(filePath);
-        cniDocumentUrl = urlData.publicUrl;
+          .upload(filePath, cniFile, { upsert: false });
+
+        if (uploadError) {
+          throw new Error(uploadError.message || "Erreur lors de l'upload du document CNI");
+        }
+
+        cniDocumentUrl = filePath;
         setUploadingCni(false);
       }
 

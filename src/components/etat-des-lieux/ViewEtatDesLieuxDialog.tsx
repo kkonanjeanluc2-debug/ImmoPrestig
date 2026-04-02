@@ -190,6 +190,10 @@ export function ViewEtatDesLieuxDialog({ etat, open, onOpenChange, tenantName, p
             <TabsContent value="keys" className="mt-4">
               <KeysForm keys={etat.keys_delivered} onChange={() => {}} readOnly />
             </TabsContent>
+
+            <TabsContent value="photos" className="mt-4">
+              <PhotosForm photos={etat.photos || []} onChange={() => {}} readOnly />
+            </TabsContent>
           </Tabs>
         </div>
       </DialogContent>

@@ -247,6 +247,10 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
               <TabsContent value="keys" className="mt-4">
                 <KeysForm keys={keys} onChange={setKeys} />
               </TabsContent>
+
+              <TabsContent value="photos" className="mt-4">
+                <PhotosForm photos={photos} onChange={setPhotos} />
+              </TabsContent>
             </Tabs>
 
             <div className="flex gap-3 pt-4 border-t">

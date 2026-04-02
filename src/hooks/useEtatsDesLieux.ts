@@ -147,6 +147,7 @@ export const useCreateEtatDesLieux = () => {
         user_id: user.id,
         rooms: JSON.parse(JSON.stringify(etat.rooms || [])),
         keys_delivered: JSON.parse(JSON.stringify(etat.keys_delivered || [])),
+        photos: etat.photos || [],
       };
       
       const { data, error } = await supabase

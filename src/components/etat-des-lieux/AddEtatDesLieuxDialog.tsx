@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoomInspectionForm } from "./RoomInspectionForm";
 import { KeysForm } from "./KeysForm";
 import { MetersForm } from "./MetersForm";
+import { PhotosForm } from "./PhotosForm";
 
 const formSchema = z.object({
   type: z.enum(["entree", "sortie"]),
@@ -70,6 +71,7 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
   const [open, setOpen] = useState(false);
   const [rooms, setRooms] = useState<RoomInspection[]>(defaultRooms);
   const [keys, setKeys] = useState<KeyItem[]>(defaultKeys);
+  const [photos, setPhotos] = useState<string[]>([]);
   
   const createEtatDesLieux = useCreateEtatDesLieux();
 
@@ -100,6 +102,7 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
       general_comments: values.general_comments || null,
       rooms,
       keys_delivered: keys,
+      photos,
       electricity_meter: values.electricity_meter || null,
       water_meter: values.water_meter || null,
       gas_meter: values.gas_meter || null,
@@ -109,6 +112,7 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
     form.reset();
     setRooms(defaultRooms);
     setKeys(defaultKeys);
+    setPhotos([]);
     setOpen(false);
   };
 
@@ -131,11 +135,12 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="general">Général</TabsTrigger>
                 <TabsTrigger value="rooms">Pièces</TabsTrigger>
                 <TabsTrigger value="meters">Compteurs</TabsTrigger>
                 <TabsTrigger value="keys">Clés</TabsTrigger>
+                <TabsTrigger value="photos">Photos</TabsTrigger>
               </TabsList>
 
               <TabsContent value="general" className="space-y-4 mt-4">
@@ -241,6 +246,10 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
 
               <TabsContent value="keys" className="mt-4">
                 <KeysForm keys={keys} onChange={setKeys} />
+              </TabsContent>
+
+              <TabsContent value="photos" className="mt-4">
+                <PhotosForm photos={photos} onChange={setPhotos} />
               </TabsContent>
             </Tabs>
 

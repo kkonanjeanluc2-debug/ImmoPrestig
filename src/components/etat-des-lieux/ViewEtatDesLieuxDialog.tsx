@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EtatDesLieux } from "@/hooks/useEtatsDesLieux";
 import { RoomInspectionForm } from "./RoomInspectionForm";
 import { KeysForm } from "./KeysForm";
-import { Zap, Droplets, Flame, Key, Home, Calendar, User, Download, Loader2 } from "lucide-react";
+import { PhotosForm } from "./PhotosForm";
+import { Zap, Droplets, Flame, Key, Home, Calendar, User, Download, Loader2, Camera } from "lucide-react";
 import { generateEtatDesLieuxPDF } from "@/lib/generateEtatDesLieuxPDF";
 import { toast } from "sonner";
 import { useAgency } from "@/hooks/useAgency";
@@ -138,10 +139,14 @@ export function ViewEtatDesLieuxDialog({ etat, open, onOpenChange, tenantName, p
           )}
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="rooms">Pièces ({etat.rooms.length})</TabsTrigger>
               <TabsTrigger value="meters">Compteurs</TabsTrigger>
               <TabsTrigger value="keys">Clés ({etat.keys_delivered.length})</TabsTrigger>
+              <TabsTrigger value="photos">
+                <Camera className="h-4 w-4 mr-1" />
+                Photos ({etat.photos?.length || 0})
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="rooms" className="mt-4">
@@ -184,6 +189,10 @@ export function ViewEtatDesLieuxDialog({ etat, open, onOpenChange, tenantName, p
 
             <TabsContent value="keys" className="mt-4">
               <KeysForm keys={etat.keys_delivered} onChange={() => {}} readOnly />
+            </TabsContent>
+
+            <TabsContent value="photos" className="mt-4">
+              <PhotosForm photos={etat.photos || []} onChange={() => {}} readOnly />
             </TabsContent>
           </Tabs>
         </div>

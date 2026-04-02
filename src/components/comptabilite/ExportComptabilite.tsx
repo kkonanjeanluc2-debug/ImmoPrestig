@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, FileSpreadsheet } from "lucide-react";
 import { ComptabiliteData, PaidRentDetail, ManagerRentGroup, ManagerRevenueGroup } from "@/hooks/useComptabilite";
 import { Expense, getSyscohadaAccount, REVENUE_ACCOUNTS } from "@/hooks/useExpenses";
 import { toast } from "sonner";
 import { createPDFDocument } from "@/lib/pdfFont";
 import { addPDFHeader, addPDFFooter, PDFAgencyInfo } from "@/lib/pdfHeader";
 import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
+import ExcelJS from "exceljs";
 
 interface Props {
   data: ComptabiliteData;

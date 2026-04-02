@@ -86,7 +86,8 @@ export function nameSimilarity(name1: string, name2: string): number {
 /**
  * Calculate email similarity with special handling for email addresses
  */
-export function emailSimilarity(email1: string, email2: string): number {
+export function emailSimilarity(email1: string | null | undefined, email2: string | null | undefined): number {
+  if (!email1 || !email2) return 0;
   const e1 = email1.toLowerCase().trim();
   const e2 = email2.toLowerCase().trim();
   

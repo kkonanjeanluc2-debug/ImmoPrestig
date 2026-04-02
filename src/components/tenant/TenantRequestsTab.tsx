@@ -44,7 +44,7 @@ interface TenantRequestsTabProps {
   tenantName?: string;
 }
 
-export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = false }: TenantRequestsTabProps) => {
+export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = false, tenantName }: TenantRequestsTabProps) => {
   const { data: requests = [], isLoading } = useTenantRequests(tenantId);
   const createRequest = useCreateTenantRequest();
   const updateRequest = useUpdateTenantRequest();
@@ -59,6 +59,52 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("reclamation");
   const [priority, setPriority] = useState("normale");
+
+  const sendNotifications = async (requestTitle: string, requestCategory: string, requestPriority: string, requestDescription: string) => {
+    try {
+      // Fetch agency settings for notification config
+      const { data: agency } = await supabase
+        .from("agencies")
+        .select("notification_email, notification_whatsapp, name, email")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!agency) return;
+
+      const catLabel = categoryLabels[requestCategory] || requestCategory;
+      const prioLabel = priorityLabels[requestPriority] || requestPriority;
+      const displayName = tenantName || "Un locataire";
+
+      // Send email notification
+      if (agency.notification_email) {
+        try {
+          await supabase.functions.invoke("send-tenant-request-notification", {
+            body: {
+              to: agency.notification_email,
+              agencyName: agency.name,
+              tenantName: displayName,
+              title: requestTitle,
+              category: catLabel,
+              priority: prioLabel,
+              description: requestDescription,
+            },
+          });
+        } catch (e) {
+          console.error("Erreur envoi email notification:", e);
+        }
+      }
+
+      // Open WhatsApp notification
+      if (agency.notification_whatsapp) {
+        const phone = agency.notification_whatsapp.replace(/[\s\-\(\)]/g, "").replace(/^\+/, "");
+        const message = `🔔 *Nouvelle requête locataire*\n\n👤 Locataire: ${displayName}\n📋 Catégorie: ${catLabel}\n⚡ Priorité: ${prioLabel}\n📝 Titre: ${requestTitle}${requestDescription ? `\n\nDescription: ${requestDescription}` : ""}`;
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, "_blank");
+      }
+    } catch (e) {
+      console.error("Erreur notifications:", e);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -75,6 +121,10 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
         description: description.trim() || undefined,
         priority,
       });
+
+      // Send notifications
+      await sendNotifications(title.trim(), category, priority, description.trim());
+
       toast.success("Requête envoyée avec succès");
       setDialogOpen(false);
       setTitle("");

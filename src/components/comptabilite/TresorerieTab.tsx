@@ -38,7 +38,7 @@ export function TresorerieTab({ data, totalRevenue, totalReversements = 0, total
   });
 
   const totalEntrees = totalRevenue;
-  const totalSorties = data.totalExpenses + totalReversements;
+  const totalSorties = data.totalExpenses + totalReversements + totalApportCommissions;
   const soldeNet = totalEntrees - totalSorties;
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
 

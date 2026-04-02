@@ -93,7 +93,7 @@ const Comptabilite = () => {
   const canViewPayouts = isAdminOrOwner || hasPermission("can_view_owner_payouts");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
-  const revenusNets = totalRevenue - totalReversements;
+  const revenusNets = totalRevenue - totalReversements - totalApportCommissions;
   const beneficeNet = revenusNets - data.totalExpenses;
   const margePercent = revenusNets > 0 ? Math.round((beneficeNet / revenusNets) * 100) : 0;
 

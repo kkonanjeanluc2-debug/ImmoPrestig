@@ -49,6 +49,9 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
   const updateTenant = useUpdateTenant();
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
   const [assignedTo, setAssignedTo] = useState<string | null>(null);
+  const [cniFile, setCniFile] = useState<File | null>(null);
+  const [existingCniUrl, setExistingCniUrl] = useState<string | null>(null);
+  const cniInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

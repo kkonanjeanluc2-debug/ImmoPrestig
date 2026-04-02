@@ -666,6 +666,121 @@ export type Database = {
           },
         ]
       }
+      apporteurs_affaires: {
+        Row: {
+          address: string | null
+          cni_number: string | null
+          commission_percentage: number | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          cni_number?: string | null
+          commission_percentage?: number | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          cni_number?: string | null
+          commission_percentage?: number | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      apports: {
+        Row: {
+          apport_date: string
+          apporteur_id: string
+          commission_amount: number | null
+          commission_percentage: number
+          created_at: string
+          description: string | null
+          id: string
+          paid_at: string | null
+          property_id: string | null
+          status: string
+          tenant_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          apport_date?: string
+          apporteur_id: string
+          commission_amount?: number | null
+          commission_percentage: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          paid_at?: string | null
+          property_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          apport_date?: string
+          apporteur_id?: string
+          commission_amount?: number | null
+          commission_percentage?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          paid_at?: string | null
+          property_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apports_apporteur_id_fkey"
+            columns: ["apporteur_id"]
+            isOneToOne: false
+            referencedRelation: "apporteurs_affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apports_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apports_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attestation_templates: {
         Row: {
           arrete_approbation: string | null

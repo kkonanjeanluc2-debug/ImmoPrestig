@@ -507,6 +507,7 @@ export function ExportAllDataButton() {
             <li>📍 Lotissements (parcelles, ventes)</li>
             <li>🤝 Apporteurs d'affaires et commissions</li>
             <li>📑 Documents et interventions</li>
+            <li>📄 Fichiers PDF et documents uploadés</li>
           </ul>
         </div>
 

@@ -494,7 +494,7 @@ export function ExportAllDataButton() {
           Export de données
         </CardTitle>
         <CardDescription>
-          Téléchargez l'ensemble de vos données sous forme de fichiers Excel compressés (ZIP)
+          Téléchargez l'ensemble de vos données (fichiers Excel + documents PDF) compressés en ZIP
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

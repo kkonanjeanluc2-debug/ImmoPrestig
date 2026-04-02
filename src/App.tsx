@@ -52,6 +52,7 @@ const pageImports = {
   VendorOfferResponse: () => import("./pages/VendorOfferResponse"),
   Comptabilite: () => import("./pages/Comptabilite"),
   Rapports: () => import("./pages/Rapports"),
+  ApporteursAffaires: () => import("./pages/ApporteursAffaires"),
 };
 
 const Index = lazy(pageImports.Index);
@@ -87,6 +88,7 @@ const Acquisitions = lazy(pageImports.Acquisitions);
 const VendorOfferResponse = lazy(pageImports.VendorOfferResponse);
 const Comptabilite = lazy(pageImports.Comptabilite);
 const Rapports = lazy(pageImports.Rapports);
+const ApporteursAffaires = lazy(pageImports.ApporteursAffaires);
 
 // Preload all pages in background after initial render
 function usePreloadPages() {
@@ -181,6 +183,7 @@ const App = () => {
                   <Route path="/impayes" element={<ProtectedRoute><FeatureProtectedRoute feature="gestion_impayes"><Impayes /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/comptabilite" element={<ProtectedRoute><Comptabilite /></ProtectedRoute>} />
                   <Route path="/rapports" element={<ProtectedRoute><Rapports /></ProtectedRoute>} />
+                  <Route path="/apporteurs" element={<ProtectedRoute><ApporteursAffaires /></ProtectedRoute>} />
                   <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />

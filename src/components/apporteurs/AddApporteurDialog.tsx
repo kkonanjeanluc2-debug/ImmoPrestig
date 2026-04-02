@@ -165,7 +165,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem>
                 <FormLabel>Notes</FormLabel>
-                <FormControl><Textarea rows={3} {...field} /></FormControl>
+                <FormControl><Textarea rows={3} placeholder="Informations complémentaires..." {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

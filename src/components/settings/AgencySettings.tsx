@@ -62,9 +62,11 @@ export function AgencySettings() {
     geniuspay_public_key: "",
     geniuspay_secret_key: "",
     geniuspay_sandbox: false,
-    wave_api_key: "",
+        wave_api_key: "",
     wave_webhook_secret: "",
     wave_sandbox: true,
+    notification_email: "",
+    notification_whatsapp: "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -104,6 +106,8 @@ export function AgencySettings() {
         wave_api_key: (agency as any).wave_api_key || "",
         wave_webhook_secret: (agency as any).wave_webhook_secret || "",
         wave_sandbox: (agency as any).wave_sandbox ?? true,
+        notification_email: (agency as any).notification_email || "",
+        notification_whatsapp: (agency as any).notification_whatsapp || "",
       });
       setLogoUrl(agency.logo_url);
       setOnlineRentToggle(!!(agency as any).online_rent_enabled);
@@ -137,6 +141,8 @@ export function AgencySettings() {
         wave_api_key: (agency as any).wave_api_key || "",
         wave_webhook_secret: (agency as any).wave_webhook_secret || "",
         wave_sandbox: (agency as any).wave_sandbox ?? true,
+        notification_email: (agency as any).notification_email || "",
+        notification_whatsapp: (agency as any).notification_whatsapp || "",
       });
       setLogoUrl(agency.logo_url);
       setOnlineRentToggle(!!(agency as any).online_rent_enabled);
@@ -230,6 +236,8 @@ export function AgencySettings() {
             wave_webhook_secret: formData.wave_webhook_secret || null,
             wave_sandbox: formData.wave_sandbox,
             online_rent_enabled: onlineRentToggle,
+            notification_email: formData.notification_email || null,
+            notification_whatsapp: formData.notification_whatsapp || null,
           })
           .eq('user_id', user.id);
 
@@ -265,6 +273,8 @@ export function AgencySettings() {
             wave_webhook_secret: formData.wave_webhook_secret || null,
             wave_sandbox: formData.wave_sandbox,
             online_rent_enabled: onlineRentToggle,
+            notification_email: formData.notification_email || null,
+            notification_whatsapp: formData.notification_whatsapp || null,
           });
 
         if (error) throw error;
@@ -786,6 +796,54 @@ export function AgencySettings() {
           </div>
         )}
 
+
+        {/* Notifications Requêtes Locataires */}
+        <div className="space-y-4 border-t pt-6">
+          <div className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-primary" />
+            <h3 className="font-medium">Notifications des requêtes locataires</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Configurez les coordonnées pour recevoir automatiquement les requêtes soumises par vos locataires.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="notification-email">Email de notification</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="notification-email"
+                  type="email"
+                  value={formData.notification_email}
+                  onChange={(e) => handleChange("notification_email", e.target.value)}
+                  placeholder="notifications@monagence.com"
+                  className="pl-10"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Recevez un email à chaque nouvelle requête locataire.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notification-whatsapp">WhatsApp de notification</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="notification-whatsapp"
+                  type="tel"
+                  value={formData.notification_whatsapp}
+                  onChange={(e) => handleChange("notification_whatsapp", e.target.value)}
+                  placeholder="+225 07 XX XX XX XX"
+                  className="pl-10"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Un lien WhatsApp sera ouvert pour notifier de la requête.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="flex justify-end pt-4">
           <Button

@@ -129,13 +129,6 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
               </FormItem>
             )} />
 
-            <FormField control={form.control} name="cni_number" render={({ field }) => (
-              <FormItem>
-                <FormLabel>N° CNI</FormLabel>
-                <FormControl><Input placeholder="Ex: CI-0123456789" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="commission_percentage" render={({ field }) => (

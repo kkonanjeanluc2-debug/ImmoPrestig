@@ -73,9 +73,13 @@ const Comptabilite = () => {
   const fromDateStr = period.from.toISOString().split("T")[0];
   const toDateStr = period.to.toISOString().split("T")[0];
   const { data: ownerPayouts = [] } = useOwnerPayouts(fromDateStr, toDateStr);
+  const { data: paidApportCommissions = [] } = usePaidApportCommissions(fromDateStr, toDateStr);
   const totalReversements = ownerPayouts
     .filter((p) => p.status === "completed")
     .reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalApportCommissions = paidApportCommissions.reduce(
+    (sum, a) => sum + (Number(a.commission_amount) || 0), 0
+  );
 
   const isAdminOrOwner = role === "super_admin" || role === "admin";
 

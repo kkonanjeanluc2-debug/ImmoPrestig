@@ -112,6 +112,7 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
     form.reset();
     setRooms(defaultRooms);
     setKeys(defaultKeys);
+    setPhotos([]);
     setOpen(false);
   };
 

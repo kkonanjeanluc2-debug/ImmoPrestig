@@ -135,11 +135,12 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="general">Général</TabsTrigger>
                 <TabsTrigger value="rooms">Pièces</TabsTrigger>
                 <TabsTrigger value="meters">Compteurs</TabsTrigger>
                 <TabsTrigger value="keys">Clés</TabsTrigger>
+                <TabsTrigger value="photos">Photos</TabsTrigger>
               </TabsList>
 
               <TabsContent value="general" className="space-y-4 mt-4">

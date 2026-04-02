@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 
 const REQUESTS_SEEN_KEY = "tenant_requests_last_seen";
 
@@ -18,6 +18,7 @@ export const useNewTenantRequestsCount = () => {
   const { user } = useAuth();
   const { isAdmin } = useIsAgencyOwner();
   const [lastSeen, setLastSeenState] = useState(() => getLastSeen());
+  const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ["new-tenant-requests-count", lastSeen],
@@ -34,6 +35,43 @@ export const useNewTenantRequestsCount = () => {
     enabled: !!user && isAdmin,
     staleTime: 30000,
   });
+
+  // Realtime subscription for instant updates
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+
+    const channel = supabase
+      .channel("tenant-requests-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "tenant_requests",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["new-tenant-requests-count"] });
+          queryClient.invalidateQueries({ queryKey: ["new-tenant-requests-list"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "tenant_requests",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["new-tenant-requests-count"] });
+          queryClient.invalidateQueries({ queryKey: ["new-tenant-requests-list"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isAdmin, queryClient]);
 
   const markAsSeen = useCallback(() => {
     setLastSeen();

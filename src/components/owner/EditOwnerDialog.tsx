@@ -38,7 +38,7 @@ import { toast } from "sonner";
 
 const ownerSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
-  email: z.string().trim().email("Email invalide").max(255),
+  email: z.string().trim().max(255).optional().or(z.literal("")).refine((val) => !val || z.string().email().safeParse(val).success, "Email invalide"),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
   address: z.string().trim().max(500).optional().or(z.literal("")),
   status: z.enum(["actif", "inactif"]),

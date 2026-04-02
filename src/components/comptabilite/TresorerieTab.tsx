@@ -8,6 +8,7 @@ interface Props {
   data: ComptabiliteData;
   totalRevenue: number;
   totalReversements?: number;
+  totalApportCommissions?: number;
 }
 
 function formatCFA(amount: number) {
@@ -20,7 +21,7 @@ const chartConfig = {
   solde: { label: "Solde cumulé", color: "hsl(var(--primary))" },
 };
 
-export function TresorerieTab({ data, totalRevenue, totalReversements = 0 }: Props) {
+export function TresorerieTab({ data, totalRevenue, totalReversements = 0, totalApportCommissions = 0 }: Props) {
   // Build cumulative cash flow data
   let cumul = 0;
   const cashFlowData = data.monthlyData.map((m) => {
@@ -37,7 +38,7 @@ export function TresorerieTab({ data, totalRevenue, totalReversements = 0 }: Pro
   });
 
   const totalEntrees = totalRevenue;
-  const totalSorties = data.totalExpenses + totalReversements;
+  const totalSorties = data.totalExpenses + totalReversements + totalApportCommissions;
   const soldeNet = totalEntrees - totalSorties;
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
 

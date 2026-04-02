@@ -859,6 +859,30 @@ const TenantDetails = () => {
             <TenantDocumentsTab tenant={tenant} />
           </TabsContent>
 
+          {activeContract?.is_colocation && (
+            <TabsContent value="colocation">
+              <ColocationTenantsManager
+                contractId={activeContract.id}
+                contract={{
+                  ...activeContract,
+                  property: tenant.property ? {
+                    title: tenant.property.title,
+                    address: tenant.property.address,
+                    owner: tenant.property.owner ? {
+                      name: tenant.property.owner.name,
+                      email: tenant.property.owner.email,
+                      phone: tenant.property.owner.phone,
+                      address: tenant.property.owner.address,
+                    } : null,
+                  } : null,
+                  unit: tenant.unit ? { unit_number: tenant.unit.unit_number } : null,
+                  tenant: { id: tenant.id, name: tenant.name },
+                }}
+                canEdit={canEdit}
+              />
+            </TabsContent>
+          )}
+
     </Tabs>
   </div>
 

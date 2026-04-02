@@ -24,24 +24,36 @@ const FILE_SOURCES: FileSource[] = [
   { table: "documents", folder: "Documents", bucket: "documents", urlColumn: "file_url", nameColumn: "name" },
   { table: "documents_achats", folder: "Documents Achats", bucket: "documents-achats", urlColumn: "file_url", nameColumn: "name" },
   { table: "lotissement_documents", folder: "Documents Lotissements", bucket: "documents", urlColumn: "file_url", nameColumn: "name" },
-  { table: "tenants", folder: "CNI Locataires", bucket: "documents", urlColumn: "cni_document_url", nameColumn: "name" },
-  { table: "tenants", folder: "Avatars Locataires", bucket: null, urlColumn: "avatar_url", nameColumn: "name" },
+  { table: "tenants", folder: "CNI Locataires", bucket: "documents-achats", urlColumn: "cni_document_url", nameColumn: "name" },
+  { table: "tenants", folder: "Avatars Locataires", bucket: "property-images", urlColumn: "avatar_url", nameColumn: "name" },
   { table: "expenses", folder: "Justificatifs Dépenses", bucket: "documents", urlColumn: "receipt_url", nameColumn: "description" },
-  { table: "property_images", folder: "Photos Biens Locatifs", bucket: null, urlColumn: "image_url", nameColumn: "image_url" },
-  { table: "biens_vente_images", folder: "Photos Biens Vente", bucket: null, urlColumn: "image_url", nameColumn: "image_url" },
+  { table: "property_images", folder: "Photos Biens Locatifs", bucket: "property-images", urlColumn: "image_url", nameColumn: "image_url" },
+  { table: "biens_vente_images", folder: "Photos Biens Vente", bucket: "property-images", urlColumn: "image_url", nameColumn: "image_url" },
   { table: "unpaid_case_actions", folder: "Documents Impayés", bucket: "documents", urlColumn: "document_url", nameColumn: "document_url" },
-  { table: "properties", folder: "Images Biens Locatifs", bucket: null, urlColumn: "image_url", nameColumn: "title" },
-  { table: "biens_vente", folder: "Images Biens Vente", bucket: null, urlColumn: "image_url", nameColumn: "title" },
-  { table: "biens_achat", folder: "Images Biens Achat", bucket: null, urlColumn: "image_url", nameColumn: "title" },
+  { table: "properties", folder: "Images Biens Locatifs", bucket: "property-images", urlColumn: "image_url", nameColumn: "title" },
+  { table: "biens_vente", folder: "Images Biens Vente", bucket: "property-images", urlColumn: "image_url", nameColumn: "title" },
+  { table: "biens_achat", folder: "Images Biens Achat", bucket: "property-images", urlColumn: "image_url", nameColumn: "title" },
   { table: "agencies", folder: "Logo Agence", bucket: "agency-logos", urlColumn: "logo_url", nameColumn: "name" },
-  { table: "lotissements", folder: "Images Lotissements", bucket: null, urlColumn: "image_url", nameColumn: "name" },
-  { table: "lotissements", folder: "Signatures Chef Lotissements", bucket: null, urlColumn: "chef_signature_url", nameColumn: "name" },
-  { table: "lotissements", folder: "Cachets Chef Lotissements", bucket: null, urlColumn: "chef_stamp_url", nameColumn: "name" },
-  { table: "profiles", folder: "Avatars Profils", bucket: null, urlColumn: "avatar_url", nameColumn: "email" },
-  { table: "receipt_templates", folder: "Cachets Modèles Reçus", bucket: null, urlColumn: "stamp_image_url", nameColumn: "name" },
-  { table: "receipt_templates", folder: "Filigranes Modèles Reçus", bucket: null, urlColumn: "watermark_image_url", nameColumn: "name" },
-  { table: "attestation_templates", folder: "Logos Villages Attestations", bucket: null, urlColumn: "village_logo_url", nameColumn: "name" },
-  { table: "attestation_templates", folder: "Filigranes Attestations", bucket: null, urlColumn: "watermark_image_url", nameColumn: "name" },
+  { table: "lotissements", folder: "Images Lotissements", bucket: "property-images", urlColumn: "image_url", nameColumn: "name" },
+  { table: "lotissements", folder: "Signatures Chef Lotissements", bucket: "property-images", urlColumn: "chef_signature_url", nameColumn: "name" },
+  { table: "lotissements", folder: "Cachets Chef Lotissements", bucket: "property-images", urlColumn: "chef_stamp_url", nameColumn: "name" },
+  { table: "profiles", folder: "Avatars Profils", bucket: "property-images", urlColumn: "avatar_url", nameColumn: "email" },
+  { table: "receipt_templates", folder: "Cachets Modèles Reçus", bucket: "property-images", urlColumn: "stamp_image_url", nameColumn: "name" },
+  { table: "receipt_templates", folder: "Filigranes Modèles Reçus", bucket: "property-images", urlColumn: "watermark_image_url", nameColumn: "name" },
+  { table: "attestation_templates", folder: "Logos Villages Attestations", bucket: "property-images", urlColumn: "village_logo_url", nameColumn: "name" },
+  { table: "attestation_templates", folder: "Filigranes Attestations", bucket: "property-images", urlColumn: "watermark_image_url", nameColumn: "name" },
+];
+
+// Special array-based file sources (photos stored as string arrays)
+interface ArrayFileSource {
+  table: string;
+  folder: string;
+  bucket: string;
+  arrayColumn: string;
+}
+
+const ARRAY_FILE_SOURCES: ArrayFileSource[] = [
+  { table: "etats_des_lieux", folder: "Photos États des Lieux", bucket: "documents-achats", arrayColumn: "photos" },
 ];
 
 async function fetchFileRecords(source: FileSource, userId: string): Promise<FileRecord[]> {
@@ -418,6 +430,95 @@ export function ExportAllDataButton() {
           }
         } catch (err) {
           console.warn(`Erreur docs ${source.table}:`, err);
+        }
+      }
+
+      // 3. Export array-based file sources (e.g. etats_des_lieux photos)
+      for (const source of ARRAY_FILE_SOURCES) {
+        setProgress(`Téléchargement ${source.folder}...`);
+        try {
+          const PAGE_SIZE = 1000;
+          let from = 0;
+          let hasMore = true;
+          let rowIndex = 0;
+
+          while (hasMore) {
+            const { data, error } = await (supabase as any)
+              .from(source.table)
+              .select(`id, ${source.arrayColumn}`)
+              .eq("user_id", user.id)
+              .not(source.arrayColumn, "is", null)
+              .range(from, from + PAGE_SIZE - 1);
+
+            if (error) throw error;
+
+            for (const row of (data || [])) {
+              const paths: string[] = row[source.arrayColumn] || [];
+              for (let k = 0; k < paths.length; k++) {
+                const filePath = paths[k];
+                if (!filePath) continue;
+                setProgress(`${source.folder} — enregistrement ${rowIndex + 1}, photo ${k + 1}`);
+                const blob = await downloadFile(filePath, source.bucket);
+                if (blob) {
+                  const ext = filePath.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
+                  const safeName = filePath.split('/').pop()?.replace(/[/\\?%*:|"<>]/g, '_') || `photo_${k}`;
+                  const fileName = safeName.match(/\.\w{2,5}$/) ? safeName : `${safeName}.${ext}`;
+                  zip.file(`${source.folder}/${row.id}/${fileName}`, blob);
+                  docCount++;
+                }
+              }
+              rowIndex++;
+            }
+
+            hasMore = (data?.length || 0) === PAGE_SIZE;
+            from += PAGE_SIZE;
+          }
+        } catch (err) {
+          console.warn(`Erreur array docs ${source.table}:`, err);
+        }
+      }
+
+      // 4. Export all files from storage buckets directly (catch any missed files)
+      const BUCKETS_TO_SCAN = ["documents", "documents-achats"];
+      for (const bucketName of BUCKETS_TO_SCAN) {
+        setProgress(`Scan bucket ${bucketName}...`);
+        try {
+          const { data: files } = await supabase.storage.from(bucketName).list(user.id, { limit: 1000 });
+          if (files && files.length > 0) {
+            for (const file of files) {
+              if (file.id && file.name) {
+                const filePath = `${user.id}/${file.name}`;
+                const blob = await downloadFile(filePath, bucketName);
+                if (blob) {
+                  zip.file(`Stockage ${bucketName}/${file.name}`, blob);
+                  docCount++;
+                }
+              }
+            }
+          }
+          // Also scan subdirectories
+          const { data: folders } = await supabase.storage.from(bucketName).list(user.id, { limit: 100 });
+          if (folders) {
+            for (const folder of folders) {
+              if (!folder.id && folder.name) {
+                const { data: subFiles } = await supabase.storage.from(bucketName).list(`${user.id}/${folder.name}`, { limit: 1000 });
+                if (subFiles) {
+                  for (const sf of subFiles) {
+                    if (sf.id && sf.name) {
+                      const filePath = `${user.id}/${folder.name}/${sf.name}`;
+                      const blob = await downloadFile(filePath, bucketName);
+                      if (blob) {
+                        zip.file(`Stockage ${bucketName}/${folder.name}/${sf.name}`, blob);
+                        docCount++;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`Erreur scan bucket ${bucketName}:`, err);
         }
       }
 

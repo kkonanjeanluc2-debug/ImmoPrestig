@@ -102,6 +102,7 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
       general_comments: values.general_comments || null,
       rooms,
       keys_delivered: keys,
+      photos,
       electricity_meter: values.electricity_meter || null,
       water_meter: values.water_meter || null,
       gas_meter: values.gas_meter || null,

@@ -141,7 +141,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
               <FormField control={form.control} name="commission_percentage" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Commission (%)</FormLabel>
-                  <FormControl><Input type="number" min={0} max={100} step={0.5} {...field} /></FormControl>
+                  <FormControl><Input type="number" min={0} max={100} step={0.5} placeholder="Ex: 5" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

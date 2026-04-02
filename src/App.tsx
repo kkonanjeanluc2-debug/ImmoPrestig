@@ -88,6 +88,7 @@ const Acquisitions = lazy(pageImports.Acquisitions);
 const VendorOfferResponse = lazy(pageImports.VendorOfferResponse);
 const Comptabilite = lazy(pageImports.Comptabilite);
 const Rapports = lazy(pageImports.Rapports);
+const ApporteursAffaires = lazy(pageImports.ApporteursAffaires);
 
 // Preload all pages in background after initial render
 function usePreloadPages() {

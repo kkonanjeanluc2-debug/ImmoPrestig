@@ -71,6 +71,7 @@ export function AddEtatDesLieuxDialog({ tenant, existingEntryEtat, trigger }: Ad
   const [open, setOpen] = useState(false);
   const [rooms, setRooms] = useState<RoomInspection[]>(defaultRooms);
   const [keys, setKeys] = useState<KeyItem[]>(defaultKeys);
+  const [photos, setPhotos] = useState<string[]>([]);
   
   const createEtatDesLieux = useCreateEtatDesLieux();
 

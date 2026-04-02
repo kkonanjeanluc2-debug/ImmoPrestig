@@ -236,6 +236,8 @@ export function AgencySettings() {
             wave_webhook_secret: formData.wave_webhook_secret || null,
             wave_sandbox: formData.wave_sandbox,
             online_rent_enabled: onlineRentToggle,
+            notification_email: formData.notification_email || null,
+            notification_whatsapp: formData.notification_whatsapp || null,
           })
           .eq('user_id', user.id);
 

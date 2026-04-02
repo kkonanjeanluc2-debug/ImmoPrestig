@@ -446,6 +446,8 @@ export type Database = {
           mobile_money_number: string | null
           mobile_money_provider: string | null
           name: string
+          notification_email: string | null
+          notification_whatsapp: string | null
           online_rent_enabled: boolean
           pdf_header_text: string | null
           pdf_primary_color: string | null
@@ -491,6 +493,8 @@ export type Database = {
           mobile_money_number?: string | null
           mobile_money_provider?: string | null
           name: string
+          notification_email?: string | null
+          notification_whatsapp?: string | null
           online_rent_enabled?: boolean
           pdf_header_text?: string | null
           pdf_primary_color?: string | null
@@ -536,6 +540,8 @@ export type Database = {
           mobile_money_number?: string | null
           mobile_money_provider?: string | null
           name?: string
+          notification_email?: string | null
+          notification_whatsapp?: string | null
           online_rent_enabled?: boolean
           pdf_header_text?: string | null
           pdf_primary_color?: string | null

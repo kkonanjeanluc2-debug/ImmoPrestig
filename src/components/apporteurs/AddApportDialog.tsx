@@ -1,13 +1,16 @@
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useCreateApport, type ApporteurAffaires } from "@/hooks/useApporteursAffaires";
 import { useProperties } from "@/hooks/useProperties";
 import { useQuery } from "@tanstack/react-query";
@@ -33,6 +36,8 @@ interface Props {
 export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   const createApport = useCreateApport();
   const { data: properties = [] } = useProperties();
+  const [propertyOpen, setPropertyOpen] = useState(false);
+  const [unitOpen, setUnitOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -50,7 +55,6 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   const selectedUnitId = useWatch({ control: form.control, name: "unit_id" });
   const commissionPct = useWatch({ control: form.control, name: "commission_percentage" });
 
-  // Fetch units for selected property
   const { data: units = [] } = useQuery({
     queryKey: ["property-units", selectedPropertyId],
     queryFn: async () => {
@@ -66,37 +70,28 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
     enabled: !!selectedPropertyId,
   });
 
-  // Get rent amount based on selection
   const rentAmount = useMemo(() => {
     if (selectedUnitId && units.length) {
-      const unit = units.find(u => u.id === selectedUnitId);
-      return unit?.rent_amount || 0;
+      return units.find(u => u.id === selectedUnitId)?.rent_amount || 0;
     }
     if (selectedPropertyId && !units.length) {
-      const prop = properties.find(p => p.id === selectedPropertyId);
-      return prop?.price || 0;
-    }
-    if (selectedPropertyId && units.length) {
-      // If property has units but none selected, don't auto-calc
-      return 0;
+      return properties.find(p => p.id === selectedPropertyId)?.price || 0;
     }
     return 0;
   }, [selectedPropertyId, selectedUnitId, units, properties]);
 
-  // Auto-calculate commission
   useEffect(() => {
     if (rentAmount > 0 && commissionPct > 0) {
-      const amount = Math.round((rentAmount * commissionPct) / 100);
-      form.setValue("commission_amount", amount);
+      form.setValue("commission_amount", Math.round((rentAmount * commissionPct) / 100));
     }
   }, [rentAmount, commissionPct, form]);
 
-  // Reset unit when property changes
   useEffect(() => {
     form.setValue("unit_id", "");
   }, [selectedPropertyId, form]);
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId);
+  const selectedUnit = units.find(u => u.id === selectedUnitId);
 
   const onSubmit = async (values: FormValues) => {
     await createApport.mutateAsync({
@@ -127,53 +122,105 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
               </FormItem>
             )} />
 
-            {/* Property selection */}
+            {/* Searchable property selector */}
             <FormField control={form.control} name="property_id" render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Bien concerné</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un bien" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {properties.map(p => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.title} — {p.price?.toLocaleString()} F
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={propertyOpen} onOpenChange={setPropertyOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
+                      >
+                        {selectedProperty
+                          ? `${selectedProperty.title} — ${selectedProperty.price?.toLocaleString()} F`
+                          : "Rechercher un bien..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto" align="start">
+                    <Command>
+                      <CommandInput placeholder="Rechercher un bien..." />
+                      <CommandList>
+                        <CommandEmpty>Aucun bien trouvé</CommandEmpty>
+                        <CommandGroup>
+                          {properties.map(p => (
+                            <CommandItem
+                              key={p.id}
+                              value={`${p.title} ${p.address || ""}`}
+                              onSelect={() => {
+                                field.onChange(p.id);
+                                setPropertyOpen(false);
+                              }}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", field.value === p.id ? "opacity-100" : "opacity-0")} />
+                              <div className="flex flex-col">
+                                <span>{p.title}</span>
+                                <span className="text-xs text-muted-foreground">{p.price?.toLocaleString()} F — {p.address}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )} />
 
-            {/* Unit selection if property has units */}
+            {/* Searchable unit selector */}
             {selectedPropertyId && units.length > 0 && (
               <FormField control={form.control} name="unit_id" render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Unité / Appartement</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une unité" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {units.map(u => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.unit_number} — {u.rent_amount?.toLocaleString()} F/mois
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={unitOpen} onOpenChange={setUnitOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
+                        >
+                          {selectedUnit
+                            ? `${selectedUnit.unit_number} — ${selectedUnit.rent_amount?.toLocaleString()} F/mois`
+                            : "Rechercher une unité..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto" align="start">
+                      <Command>
+                        <CommandInput placeholder="Rechercher une unité..." />
+                        <CommandList>
+                          <CommandEmpty>Aucune unité trouvée</CommandEmpty>
+                          <CommandGroup>
+                            {units.map(u => (
+                              <CommandItem
+                                key={u.id}
+                                value={u.unit_number}
+                                onSelect={() => {
+                                  field.onChange(u.id);
+                                  setUnitOpen(false);
+                                }}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", field.value === u.id ? "opacity-100" : "opacity-0")} />
+                                {u.unit_number} — {u.rent_amount?.toLocaleString()} F/mois
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )} />
             )}
 
-            {/* Rent info */}
             {rentAmount > 0 && (
               <div className="bg-muted/50 p-3 rounded-lg text-sm">
                 <span className="text-muted-foreground">Loyer mensuel :</span>{" "}

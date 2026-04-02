@@ -17,6 +17,7 @@ import { useOwners } from "@/hooks/useOwners";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
 import { COMMUNES_COTE_DIVOIRE } from "@/constants/communesCoteDIvoire";
+import { CommuneSelector } from "@/components/shared/CommuneSelector";
 import { cn } from "@/lib/utils";
 
 type PropertyCategory = "unique" | "immeuble" | null;

@@ -134,6 +134,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
       const result = await createProperty.mutateAsync({
         title: formData.title,
         address: formData.address,
+        city: formData.city || null,
         price: formData.price ? Number(formData.price) : 0,
         type: formData.type,
         property_type: formData.property_type,

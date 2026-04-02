@@ -18,6 +18,7 @@ export const useNewTenantRequestsCount = () => {
   const { user } = useAuth();
   const { isAdmin } = useIsAgencyOwner();
   const [lastSeen, setLastSeenState] = useState(() => getLastSeen());
+  const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ["new-tenant-requests-count", lastSeen],
@@ -34,6 +35,43 @@ export const useNewTenantRequestsCount = () => {
     enabled: !!user && isAdmin,
     staleTime: 30000,
   });
+
+  // Realtime subscription for instant updates
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+
+    const channel = supabase
+      .channel("tenant-requests-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "tenant_requests",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["new-tenant-requests-count"] });
+          queryClient.invalidateQueries({ queryKey: ["new-tenant-requests-list"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "tenant_requests",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["new-tenant-requests-count"] });
+          queryClient.invalidateQueries({ queryKey: ["new-tenant-requests-list"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isAdmin, queryClient]);
 
   const markAsSeen = useCallback(() => {
     setLastSeen();

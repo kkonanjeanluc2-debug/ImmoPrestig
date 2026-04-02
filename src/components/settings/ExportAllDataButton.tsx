@@ -8,6 +8,59 @@ import { Download, Loader2, Database, ShieldCheck } from "lucide-react";
 import JSZip from "jszip";
 import ExcelJS from "exceljs";
 
+interface DocRecord {
+  name: string;
+  file_url: string | null;
+  type?: string;
+}
+
+const DOCUMENT_SOURCES = [
+  { table: "documents", folder: "Documents", bucket: "documents" },
+  { table: "documents_achats", folder: "Documents Achats", bucket: "documents-achats" },
+  { table: "lotissement_documents", folder: "Documents Lotissements", bucket: null },
+] as const;
+
+async function fetchDocumentFiles(table: string, userId: string): Promise<DocRecord[]> {
+  const PAGE_SIZE = 1000;
+  let allRows: DocRecord[] = [];
+  let from = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await (supabase as any)
+      .from(table)
+      .select("name, file_url, type")
+      .eq("user_id", userId)
+      .not("file_url", "is", null)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    allRows = allRows.concat(data || []);
+    hasMore = (data?.length || 0) === PAGE_SIZE;
+    from += PAGE_SIZE;
+  }
+  return allRows;
+}
+
+async function downloadFileFromStorage(fileUrl: string, bucket: string | null): Promise<Blob | null> {
+  try {
+    // If the URL is a full public/signed URL, fetch directly
+    if (fileUrl.startsWith("http")) {
+      const response = await fetch(fileUrl);
+      if (!response.ok) return null;
+      return await response.blob();
+    }
+
+    // Otherwise it's a storage path - determine bucket
+    const storageBucket = bucket || "documents";
+    const { data, error } = await supabase.storage.from(storageBucket).download(fileUrl);
+    if (error || !data) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchAllRows(table: string, userId: string) {
   const PAGE_SIZE = 1000;
   let allRows: any[] = [];
@@ -360,16 +413,17 @@ export function ExportAllDataButton() {
     let fileCount = 0;
 
     try {
+      // 1. Export Excel files
       for (let i = 0; i < TABLE_CONFIGS.length; i++) {
         const config = TABLE_CONFIGS[i];
-        setProgress(`${i + 1}/${TABLE_CONFIGS.length} — ${config.sheetName}...`);
+        setProgress(`Excel ${i + 1}/${TABLE_CONFIGS.length} — ${config.sheetName}...`);
 
         try {
           const data = await fetchAllRows(config.table, user.id);
           if (data.length > 0) {
             const buffer = await createExcelBuffer(config.sheetName, data, config.columns);
             if (buffer) {
-              zip.file(config.fileName, buffer);
+              zip.file(`Données Excel/${config.fileName}`, buffer);
               fileCount++;
             }
           }
@@ -377,6 +431,34 @@ export function ExportAllDataButton() {
           console.warn(`Erreur pour ${config.table}:`, err);
         }
       }
+
+      // 2. Export PDF/document files from storage
+      let docCount = 0;
+      for (const source of DOCUMENT_SOURCES) {
+        setProgress(`Téléchargement ${source.folder}...`);
+        try {
+          const docs = await fetchDocumentFiles(source.table, user.id);
+          for (let j = 0; j < docs.length; j++) {
+            const doc = docs[j];
+            if (!doc.file_url) continue;
+            setProgress(`${source.folder} — ${j + 1}/${docs.length}`);
+            
+            const blob = await downloadFileFromStorage(doc.file_url, source.bucket);
+            if (blob) {
+              // Sanitize filename
+              const ext = doc.file_url.split('.').pop()?.toLowerCase() || 'pdf';
+              const safeName = doc.name.replace(/[/\\?%*:|"<>]/g, '_');
+              const fileName = safeName.endsWith(`.${ext}`) ? safeName : `${safeName}.${ext}`;
+              zip.file(`${source.folder}/${fileName}`, blob);
+              docCount++;
+            }
+          }
+        } catch (err) {
+          console.warn(`Erreur docs ${source.table}:`, err);
+        }
+      }
+
+      fileCount += docCount;
 
       if (fileCount === 0) {
         toast.info("Aucune donnée à exporter");
@@ -394,7 +476,7 @@ export function ExportAllDataButton() {
       link.click();
       URL.revokeObjectURL(link.href);
 
-      toast.success(`Export terminé — ${fileCount} fichier(s) exporté(s)`);
+      toast.success(`Export terminé — ${fileCount} élément(s) exporté(s) (dont ${docCount} document(s))`);
     } catch (error) {
       console.error("Erreur export:", error);
       toast.error("Erreur lors de l'export des données");
@@ -412,7 +494,7 @@ export function ExportAllDataButton() {
           Export de données
         </CardTitle>
         <CardDescription>
-          Téléchargez l'ensemble de vos données sous forme de fichiers Excel compressés (ZIP)
+          Téléchargez l'ensemble de vos données (fichiers Excel + documents PDF) compressés en ZIP
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -425,6 +507,7 @@ export function ExportAllDataButton() {
             <li>📍 Lotissements (parcelles, ventes)</li>
             <li>🤝 Apporteurs d'affaires et commissions</li>
             <li>📑 Documents et interventions</li>
+            <li>📄 Fichiers PDF et documents uploadés</li>
           </ul>
         </div>
 

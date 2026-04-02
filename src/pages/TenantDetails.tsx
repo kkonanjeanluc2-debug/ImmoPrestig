@@ -847,6 +847,10 @@ const TenantDetails = () => {
             />
           </TabsContent>
 
+          <TabsContent value="documents">
+            <TenantDocumentsTab tenant={tenant} />
+          </TabsContent>
+
     </Tabs>
   </div>
 

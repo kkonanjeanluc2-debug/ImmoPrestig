@@ -139,10 +139,14 @@ export function ViewEtatDesLieuxDialog({ etat, open, onOpenChange, tenantName, p
           )}
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="rooms">Pièces ({etat.rooms.length})</TabsTrigger>
               <TabsTrigger value="meters">Compteurs</TabsTrigger>
               <TabsTrigger value="keys">Clés ({etat.keys_delivered.length})</TabsTrigger>
+              <TabsTrigger value="photos">
+                <Camera className="h-4 w-4 mr-1" />
+                Photos ({etat.photos?.length || 0})
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="rooms" className="mt-4">

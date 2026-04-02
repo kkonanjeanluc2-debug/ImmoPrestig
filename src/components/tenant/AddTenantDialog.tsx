@@ -370,6 +370,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       setCniFile(null);
       setSelectedPropertyId("");
       setRentType("mensuel");
+      setIsColocation(false);
       setDailyRentDays("");
       setDailyRentDiscount("0");
       setOpen(false);

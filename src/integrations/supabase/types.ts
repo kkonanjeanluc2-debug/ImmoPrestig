@@ -1101,6 +1101,90 @@ export type Database = {
           },
         ]
       }
+      colocation_contract_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      colocation_tenants: {
+        Row: {
+          contract_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          is_principal: boolean
+          start_date: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_principal?: boolean
+          start_date: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_principal?: boolean
+          start_date?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colocation_tenants_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "colocation_tenants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_signatures: {
         Row: {
           contract_id: string
@@ -1200,6 +1284,7 @@ export type Database = {
           deposit: number | null
           end_date: string
           id: string
+          is_colocation: boolean
           property_id: string
           rent_amount: number
           signature_status: string | null
@@ -1216,6 +1301,7 @@ export type Database = {
           deposit?: number | null
           end_date: string
           id?: string
+          is_colocation?: boolean
           property_id: string
           rent_amount: number
           signature_status?: string | null
@@ -1232,6 +1318,7 @@ export type Database = {
           deposit?: number | null
           end_date?: string
           id?: string
+          is_colocation?: boolean
           property_id?: string
           rent_amount?: number
           signature_status?: string | null

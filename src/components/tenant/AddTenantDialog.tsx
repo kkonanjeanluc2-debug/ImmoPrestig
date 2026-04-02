@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2, Calendar } from "lucide-react";
+import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2, Calendar, Upload, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Tooltip,
@@ -56,10 +56,7 @@ const formSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
   email: z.string().trim().email("Email invalide").max(255).optional().or(z.literal("")),
   phone: z.string().trim().max(20).optional(),
-  birth_date: z.string().optional(),
-  birth_place: z.string().trim().max(100).optional(),
   profession: z.string().trim().max(100).optional(),
-  cni_number: z.string().trim().max(50).optional(),
   emergency_contact_name: z.string().trim().max(100).optional(),
   emergency_contact_phone: z.string().trim().max(20).optional(),
   property_id: z.string().uuid("Veuillez sélectionner un bien"),
@@ -88,14 +85,14 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const [dailyRentDays, setDailyRentDays] = useState<string>("");
   const [dailyRentDiscount, setDailyRentDiscount] = useState<string>("0");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [cniFile, setCniFile] = useState<File | null>(null);
+  const [uploadingCni, setUploadingCni] = useState(false);
+  const cniInputRef = useRef<HTMLInputElement>(null);
   const [createdContractData, setCreatedContractData] = useState<{
     tenantName: string;
     tenantEmail?: string;
     tenantPhone?: string;
-    tenantBirthDate?: string;
-    tenantBirthPlace?: string;
     tenantProfession?: string;
-    tenantCniNumber?: string;
     tenantEmergencyContact?: string;
     tenantEmergencyPhone?: string;
     propertyTitle: string;
@@ -152,10 +149,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       name: "",
       email: "",
       phone: "",
-      birth_date: "",
-      birth_place: "",
       profession: "",
-      cni_number: "",
       emergency_contact_name: "",
       emergency_contact_phone: "",
       property_id: "",
@@ -283,16 +277,29 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
         return;
       }
       
+      // Upload CNI document if provided
+      let cniDocumentUrl: string | null = null;
+      if (cniFile) {
+        setUploadingCni(true);
+        const fileExt = cniFile.name.split('.').pop();
+        const filePath = `cni-documents/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("documents-achats")
+          .upload(filePath, cniFile);
+        if (uploadError) throw new Error("Erreur lors de l'upload du document CNI");
+        const { data: urlData } = supabase.storage.from("documents-achats").getPublicUrl(filePath);
+        cniDocumentUrl = urlData.publicUrl;
+        setUploadingCni(false);
+      }
+
       // Create tenant with unit_id if applicable
       const tenant = await createTenant.mutateAsync({
         name: values.name,
         email: values.email?.trim() || null,
         phone: values.phone || null,
         property_id: values.property_id,
-        birth_date: values.birth_date || null,
-        birth_place: values.birth_place || null,
         profession: values.profession || null,
-        cni_number: values.cni_number || null,
+        cni_document_url: cniDocumentUrl,
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
         agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
@@ -330,10 +337,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
         tenantName: values.name,
         tenantEmail: values.email || undefined,
         tenantPhone: values.phone || undefined,
-        tenantBirthDate: values.birth_date || undefined,
-        tenantBirthPlace: values.birth_place || undefined,
         tenantProfession: values.profession || undefined,
-        tenantCniNumber: values.cni_number || undefined,
         tenantEmergencyContact: values.emergency_contact_name || undefined,
         tenantEmergencyPhone: values.emergency_contact_phone || undefined,
         propertyTitle: selectedProp?.title || "",
@@ -349,6 +353,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
 
       toast.success("Locataire et contrat créés avec succès");
       form.reset();
+      setCniFile(null);
       setSelectedPropertyId("");
       setRentType("mensuel");
       setDailyRentDays("");
@@ -602,37 +607,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 />
               </div>
 
-              {/* Additional Tenant Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="birth_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date de naissance</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="birth_place"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lieu de naissance</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Abidjan" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+              {/* CNI/Passport Upload & Profession */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -648,19 +623,47 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="cni_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Numéro CNI</FormLabel>
-                      <FormControl>
-                        <Input placeholder="CI-0123456789" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <Label>CNI / Passeport</Label>
+                  <input
+                    ref={cniInputRef}
+                    type="file"
+                    accept="image/*,.pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setCniFile(file);
+                    }}
+                  />
+                  {cniFile ? (
+                    <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate flex-1">{cniFile.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => {
+                          setCniFile(null);
+                          if (cniInputRef.current) cniInputRef.current.value = "";
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start gap-2"
+                      onClick={() => cniInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Importer un fichier
+                    </Button>
                   )}
-                />
+                </div>
               </div>
 
               {/* Emergency Contact */}

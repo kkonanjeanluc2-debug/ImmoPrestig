@@ -57,6 +57,7 @@ import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
 import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { TenantRequestsTab } from "@/components/tenant/TenantRequestsTab";
+import { TenantDocumentsTab } from "@/components/tenant/TenantDocumentsTab";
 
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";
@@ -383,6 +384,10 @@ const TenantDetails = () => {
             <TabsTrigger value="requests" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Requêtes</span>
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Documents</span>
             </TabsTrigger>
           </TabsList>
 
@@ -840,6 +845,10 @@ const TenantDetails = () => {
               propertyId={tenant.property_id || undefined}
               isLocataire={isLocataire}
             />
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <TenantDocumentsTab tenant={tenant} />
           </TabsContent>
 
     </Tabs>

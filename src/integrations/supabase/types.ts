@@ -4402,6 +4402,7 @@ export type Database = {
           avatar_url: string | null
           birth_date: string | null
           birth_place: string | null
+          cni_document_url: string | null
           cni_number: string | null
           created_at: string
           deleted_at: string | null
@@ -4426,6 +4427,7 @@ export type Database = {
           avatar_url?: string | null
           birth_date?: string | null
           birth_place?: string | null
+          cni_document_url?: string | null
           cni_number?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -4450,6 +4452,7 @@ export type Database = {
           avatar_url?: string | null
           birth_date?: string | null
           birth_place?: string | null
+          cni_document_url?: string | null
           cni_number?: string | null
           created_at?: string
           deleted_at?: string | null

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -20,20 +20,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, X, FileText } from "lucide-react";
 import { useUpdateTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { toast } from "sonner";
 import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
   email: z.string().trim().max(255).optional().or(z.literal("")).refine((val) => !val || z.string().email().safeParse(val).success, "Email invalide"),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
-  birth_date: z.string().optional().or(z.literal("")),
-  birth_place: z.string().trim().max(100).optional().or(z.literal("")),
   profession: z.string().trim().max(100).optional().or(z.literal("")),
-  cni_number: z.string().trim().max(50).optional().or(z.literal("")),
   emergency_contact_name: z.string().trim().max(100).optional().or(z.literal("")),
   emergency_contact_phone: z.string().trim().max(20).optional().or(z.literal("")),
 });
@@ -51,6 +49,9 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
   const updateTenant = useUpdateTenant();
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
   const [assignedTo, setAssignedTo] = useState<string | null>(null);
+  const [cniFile, setCniFile] = useState<File | null>(null);
+  const [existingCniUrl, setExistingCniUrl] = useState<string | null>(null);
+  const cniInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -58,10 +59,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
       name: "",
       email: "",
       phone: "",
-      birth_date: "",
-      birth_place: "",
       profession: "",
-      cni_number: "",
       emergency_contact_name: "",
       emergency_contact_phone: "",
     },
@@ -74,14 +72,13 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         name: tenant.name,
         email: tenant.email,
         phone: tenant.phone || "",
-        birth_date: (tenant as any).birth_date || "",
-        birth_place: (tenant as any).birth_place || "",
         profession: (tenant as any).profession || "",
-        cni_number: (tenant as any).cni_number || "",
         emergency_contact_name: (tenant as any).emergency_contact_name || "",
         emergency_contact_phone: (tenant as any).emergency_contact_phone || "",
       });
       setAssignedTo((tenant as any).assigned_to || null);
+      setExistingCniUrl((tenant as any).cni_document_url || null);
+      setCniFile(null);
     }
   }, [tenant, form]);
 
@@ -89,15 +86,26 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
     if (!tenant) return;
 
     try {
+      // Upload new CNI if provided
+      let cniDocumentUrl = existingCniUrl;
+      if (cniFile) {
+        const fileExt = cniFile.name.split('.').pop();
+        const filePath = `cni-documents/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("documents-achats")
+          .upload(filePath, cniFile);
+        if (uploadError) throw new Error("Erreur lors de l'upload du document CNI");
+        const { data: urlData } = supabase.storage.from("documents-achats").getPublicUrl(filePath);
+        cniDocumentUrl = urlData.publicUrl;
+      }
+
       await updateTenant.mutateAsync({
         id: tenant.id,
         name: values.name,
         email: values.email,
         phone: values.phone || null,
-        birth_date: values.birth_date || null,
-        birth_place: values.birth_place || null,
         profession: values.profession || null,
-        cni_number: values.cni_number || null,
+        cni_document_url: cniDocumentUrl,
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
         assigned_to: assignedTo,
@@ -178,36 +186,6 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="birth_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date de naissance</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="birth_place"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Lieu de naissance</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Abidjan" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
                     name="profession"
                     render={({ field }) => (
                       <FormItem>
@@ -220,19 +198,61 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="cni_number"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Numéro CNI</FormLabel>
-                        <FormControl>
-                          <Input placeholder="CI-0123456789" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <div className="space-y-2">
+                    <Label>CNI / Passeport</Label>
+                    <input
+                      ref={cniInputRef}
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) setCniFile(file);
+                      }}
+                    />
+                    {cniFile ? (
+                      <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                        <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm truncate flex-1">{cniFile.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => {
+                            setCniFile(null);
+                            if (cniInputRef.current) cniInputRef.current.value = "";
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : existingCniUrl ? (
+                      <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                        <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm truncate flex-1">Document existant</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => cniInputRef.current?.click()}
+                        >
+                          <Upload className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-start gap-2"
+                        onClick={() => cniInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4" />
+                        Importer un fichier
+                      </Button>
                     )}
-                  />
+                  </div>
                 </div>
 
                 <div className="space-y-2 pt-2 border-t border-dashed">

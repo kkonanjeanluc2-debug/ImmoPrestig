@@ -251,8 +251,12 @@ export default function Tenants() {
     const matchesOwner = ownerFilter === "all"
       ? true
       : tenant.property?.owner_id === ownerFilter;
+
+    const matchesCommune = communeFilter === "all"
+      ? true
+      : (tenant.property as any)?.city === communeFilter;
     
-    return matchesSearch && matchesAssigned && matchesOwner;
+    return matchesSearch && matchesAssigned && matchesOwner && matchesCommune;
   });
 
   // Compute stats

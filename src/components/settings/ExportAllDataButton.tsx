@@ -8,7 +8,7 @@ import { Download, Loader2, Database, ShieldCheck } from "lucide-react";
 import JSZip from "jszip";
 import ExcelJS from "exceljs";
 
-async function fetchAllRows(table: string, userId: string, filters?: Record<string, any>) {
+async function fetchAllRows(table: string, userId: string) {
   const PAGE_SIZE = 1000;
   let allRows: any[] = [];
   let from = 0;

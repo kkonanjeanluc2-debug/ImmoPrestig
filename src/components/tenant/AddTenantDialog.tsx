@@ -286,7 +286,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       // Create tenant with unit_id if applicable
       const tenant = await createTenant.mutateAsync({
         name: values.name,
-        email: values.email || "",
+        email: values.email?.trim() || null,
         phone: values.phone || null,
         property_id: values.property_id,
         birth_date: values.birth_date || null,

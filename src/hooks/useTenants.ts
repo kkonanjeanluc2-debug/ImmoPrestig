@@ -90,10 +90,17 @@ export const useCreateTenant = () => {
   return useMutation({
     mutationFn: async (tenant: Omit<TenantInsert, "user_id">) => {
       if (!user) throw new Error("User not authenticated");
+
+      const normalizedEmail = tenant.email?.trim() ? tenant.email.trim() : null;
       
       const { data, error } = await supabase
         .from("tenants")
-        .insert({ ...tenant, user_id: user.id, assigned_to: tenant.assigned_to ?? user.id })
+        .insert({
+          ...tenant,
+          email: normalizedEmail,
+          user_id: user.id,
+          assigned_to: tenant.assigned_to ?? user.id,
+        })
         .select()
         .single();
 

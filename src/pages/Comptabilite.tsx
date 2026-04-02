@@ -29,7 +29,8 @@ import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
 import { OwnerPayoutsSection } from "@/components/comptabilite/OwnerPayoutsSection";
 import { useOwnerPayouts } from "@/hooks/useOwnerPayouts";
-import { ArrowDownToLine } from "lucide-react";
+import { usePaidApportCommissions } from "@/hooks/usePaidApportCommissions";
+import { ArrowDownToLine, Users } from "lucide-react";
 
 const COLORS = [
   "hsl(var(--primary))",

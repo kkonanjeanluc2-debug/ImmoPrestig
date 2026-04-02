@@ -85,14 +85,14 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const [dailyRentDays, setDailyRentDays] = useState<string>("");
   const [dailyRentDiscount, setDailyRentDiscount] = useState<string>("0");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [cniFile, setCniFile] = useState<File | null>(null);
+  const [uploadingCni, setUploadingCni] = useState(false);
+  const cniInputRef = useRef<HTMLInputElement>(null);
   const [createdContractData, setCreatedContractData] = useState<{
     tenantName: string;
     tenantEmail?: string;
     tenantPhone?: string;
-    tenantBirthDate?: string;
-    tenantBirthPlace?: string;
     tenantProfession?: string;
-    tenantCniNumber?: string;
     tenantEmergencyContact?: string;
     tenantEmergencyPhone?: string;
     propertyTitle: string;

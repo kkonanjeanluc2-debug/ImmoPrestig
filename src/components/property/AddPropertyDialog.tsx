@@ -17,6 +17,7 @@ import { useOwners } from "@/hooks/useOwners";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { SubscriptionLimitAlert } from "@/components/subscription/SubscriptionLimitAlert";
 import { COMMUNES_COTE_DIVOIRE } from "@/constants/communesCoteDIvoire";
+import { CommuneSelector } from "@/components/shared/CommuneSelector";
 import { cn } from "@/lib/utils";
 
 type PropertyCategory = "unique" | "immeuble" | null;
@@ -453,22 +454,10 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="city">Commune</Label>
-              <Select
+              <CommuneSelector
                 value={formData.city}
-                onValueChange={(value) => setFormData({ ...formData, city: value === "__none__" ? "" : value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une commune" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">
-                    <span className="text-muted-foreground">Aucune</span>
-                  </SelectItem>
-                  {COMMUNES_COTE_DIVOIRE.map((commune) => (
-                    <SelectItem key={commune} value={commune}>{commune}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData({ ...formData, city: value })}
+              />
             </div>
           </div>
 

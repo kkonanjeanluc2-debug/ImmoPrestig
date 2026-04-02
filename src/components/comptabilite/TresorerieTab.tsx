@@ -21,7 +21,7 @@ const chartConfig = {
   solde: { label: "Solde cumulé", color: "hsl(var(--primary))" },
 };
 
-export function TresorerieTab({ data, totalRevenue, totalReversements = 0 }: Props) {
+export function TresorerieTab({ data, totalRevenue, totalReversements = 0, totalApportCommissions = 0 }: Props) {
   // Build cumulative cash flow data
   let cumul = 0;
   const cashFlowData = data.monthlyData.map((m) => {

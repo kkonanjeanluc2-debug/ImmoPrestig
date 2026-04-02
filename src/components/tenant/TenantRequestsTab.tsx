@@ -41,6 +41,7 @@ interface TenantRequestsTabProps {
   userId: string; // agency owner user_id
   propertyId?: string;
   isLocataire?: boolean;
+  tenantName?: string;
 }
 
 export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = false }: TenantRequestsTabProps) => {

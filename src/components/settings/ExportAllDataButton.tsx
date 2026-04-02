@@ -413,16 +413,17 @@ export function ExportAllDataButton() {
     let fileCount = 0;
 
     try {
+      // 1. Export Excel files
       for (let i = 0; i < TABLE_CONFIGS.length; i++) {
         const config = TABLE_CONFIGS[i];
-        setProgress(`${i + 1}/${TABLE_CONFIGS.length} — ${config.sheetName}...`);
+        setProgress(`Excel ${i + 1}/${TABLE_CONFIGS.length} — ${config.sheetName}...`);
 
         try {
           const data = await fetchAllRows(config.table, user.id);
           if (data.length > 0) {
             const buffer = await createExcelBuffer(config.sheetName, data, config.columns);
             if (buffer) {
-              zip.file(config.fileName, buffer);
+              zip.file(`Données Excel/${config.fileName}`, buffer);
               fileCount++;
             }
           }
@@ -430,6 +431,34 @@ export function ExportAllDataButton() {
           console.warn(`Erreur pour ${config.table}:`, err);
         }
       }
+
+      // 2. Export PDF/document files from storage
+      let docCount = 0;
+      for (const source of DOCUMENT_SOURCES) {
+        setProgress(`Téléchargement ${source.folder}...`);
+        try {
+          const docs = await fetchDocumentFiles(source.table, user.id);
+          for (let j = 0; j < docs.length; j++) {
+            const doc = docs[j];
+            if (!doc.file_url) continue;
+            setProgress(`${source.folder} — ${j + 1}/${docs.length}`);
+            
+            const blob = await downloadFileFromStorage(doc.file_url, source.bucket);
+            if (blob) {
+              // Sanitize filename
+              const ext = doc.file_url.split('.').pop()?.toLowerCase() || 'pdf';
+              const safeName = doc.name.replace(/[/\\?%*:|"<>]/g, '_');
+              const fileName = safeName.endsWith(`.${ext}`) ? safeName : `${safeName}.${ext}`;
+              zip.file(`${source.folder}/${fileName}`, blob);
+              docCount++;
+            }
+          }
+        } catch (err) {
+          console.warn(`Erreur docs ${source.table}:`, err);
+        }
+      }
+
+      fileCount += docCount;
 
       if (fileCount === 0) {
         toast.info("Aucune donnée à exporter");
@@ -447,7 +476,7 @@ export function ExportAllDataButton() {
       link.click();
       URL.revokeObjectURL(link.href);
 
-      toast.success(`Export terminé — ${fileCount} fichier(s) exporté(s)`);
+      toast.success(`Export terminé — ${fileCount} élément(s) exporté(s) (dont ${docCount} document(s))`);
     } catch (error) {
       console.error("Erreur export:", error);
       toast.error("Erreur lors de l'export des données");

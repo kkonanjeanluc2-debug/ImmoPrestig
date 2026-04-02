@@ -152,7 +152,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email *</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="jean@email.com" {...field} />
                       </FormControl>

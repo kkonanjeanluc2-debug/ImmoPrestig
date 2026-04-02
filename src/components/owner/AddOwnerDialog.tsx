@@ -200,7 +200,7 @@ export function AddOwnerDialog() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email *</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="jean@exemple.com" {...field} />
                   </FormControl>

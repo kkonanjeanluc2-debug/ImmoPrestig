@@ -75,6 +75,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     setFormData({
       title: "",
       address: "",
+      city: "",
       price: "",
       type: "location",
       property_type: "appartement",

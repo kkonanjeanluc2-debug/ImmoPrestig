@@ -58,6 +58,7 @@ import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccess
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { TenantRequestsTab } from "@/components/tenant/TenantRequestsTab";
 import { TenantDocumentsTab } from "@/components/tenant/TenantDocumentsTab";
+import { ColocationTenantsManager } from "@/components/colocation/ColocationTenantsManager";
 
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";

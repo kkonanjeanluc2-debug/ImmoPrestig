@@ -70,7 +70,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
     if (tenant) {
       form.reset({
         name: tenant.name,
-        email: tenant.email,
+        email: tenant.email || "",
         phone: tenant.phone || "",
         profession: (tenant as any).profession || "",
         emergency_contact_name: (tenant as any).emergency_contact_name || "",

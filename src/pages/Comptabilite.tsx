@@ -29,7 +29,8 @@ import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
 import { OwnerPayoutsSection } from "@/components/comptabilite/OwnerPayoutsSection";
 import { useOwnerPayouts } from "@/hooks/useOwnerPayouts";
-import { ArrowDownToLine } from "lucide-react";
+import { usePaidApportCommissions } from "@/hooks/usePaidApportCommissions";
+import { ArrowDownToLine, Users } from "lucide-react";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -72,9 +73,13 @@ const Comptabilite = () => {
   const fromDateStr = period.from.toISOString().split("T")[0];
   const toDateStr = period.to.toISOString().split("T")[0];
   const { data: ownerPayouts = [] } = useOwnerPayouts(fromDateStr, toDateStr);
+  const { data: paidApportCommissions = [] } = usePaidApportCommissions(fromDateStr, toDateStr);
   const totalReversements = ownerPayouts
     .filter((p) => p.status === "completed")
     .reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalApportCommissions = paidApportCommissions.reduce(
+    (sum, a) => sum + (Number(a.commission_amount) || 0), 0
+  );
 
   const isAdminOrOwner = role === "super_admin" || role === "admin";
 
@@ -88,7 +93,7 @@ const Comptabilite = () => {
   const canViewPayouts = isAdminOrOwner || hasPermission("can_view_owner_payouts");
 
   const totalPending = data.loyersEnAttente + data.ventesEnAttente + data.achatsEnAttente + data.lotissementsEnAttente;
-  const revenusNets = totalRevenue - totalReversements;
+  const revenusNets = totalRevenue - totalReversements - totalApportCommissions;
   const beneficeNet = revenusNets - data.totalExpenses;
   const margePercent = revenusNets > 0 ? Math.round((beneficeNet / revenusNets) * 100) : 0;
 
@@ -142,6 +147,13 @@ const Comptabilite = () => {
       icon: ArrowDownToLine,
       color: "text-primary",
       bgColor: "bg-primary/10",
+    }] : []),
+    ...(totalApportCommissions > 0 ? [{
+      title: "Comm. apporteurs",
+      value: formatCFA(totalApportCommissions),
+      icon: Users,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
     }] : []),
     {
       title: "Impayés (loyers)",

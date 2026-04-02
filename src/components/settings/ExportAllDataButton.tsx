@@ -461,21 +461,22 @@ export function ExportAllDataButton() {
 
       // 2. Export PDF/document files from storage
       let docCount = 0;
-      for (const source of DOCUMENT_SOURCES) {
+      for (const source of FILE_SOURCES) {
         setProgress(`Téléchargement ${source.folder}...`);
         try {
-          const docs = await fetchDocumentFiles(source.table, user.id);
+          const docs = await fetchFileRecords(source, user.id);
           for (let j = 0; j < docs.length; j++) {
             const doc = docs[j];
-            if (!doc.file_url) continue;
             setProgress(`${source.folder} — ${j + 1}/${docs.length}`);
             
-            const blob = await downloadFileFromStorage(doc.file_url, source.bucket);
+            const blob = await downloadFile(doc.url, source.bucket);
             if (blob) {
-              // Sanitize filename
-              const ext = doc.file_url.split('.').pop()?.toLowerCase() || 'pdf';
-              const safeName = doc.name.replace(/[/\\?%*:|"<>]/g, '_');
-              const fileName = safeName.endsWith(`.${ext}`) ? safeName : `${safeName}.${ext}`;
+              const ext = doc.url.split('.').pop()?.split('?')[0]?.toLowerCase() || 'pdf';
+              const rawName = doc.url.startsWith("http")
+                ? doc.url.split('/').pop()?.split('?')[0] || doc.name
+                : doc.name;
+              const safeName = rawName.replace(/[/\\?%*:|"<>]/g, '_');
+              const fileName = safeName.match(/\.\w{2,5}$/) ? safeName : `${safeName}.${ext}`;
               zip.file(`${source.folder}/${fileName}`, blob);
               docCount++;
             }

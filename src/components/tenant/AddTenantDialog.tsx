@@ -277,16 +277,29 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
         return;
       }
       
+      // Upload CNI document if provided
+      let cniDocumentUrl: string | null = null;
+      if (cniFile) {
+        setUploadingCni(true);
+        const fileExt = cniFile.name.split('.').pop();
+        const filePath = `cni-documents/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("documents-achats")
+          .upload(filePath, cniFile);
+        if (uploadError) throw new Error("Erreur lors de l'upload du document CNI");
+        const { data: urlData } = supabase.storage.from("documents-achats").getPublicUrl(filePath);
+        cniDocumentUrl = urlData.publicUrl;
+        setUploadingCni(false);
+      }
+
       // Create tenant with unit_id if applicable
       const tenant = await createTenant.mutateAsync({
         name: values.name,
         email: values.email?.trim() || null,
         phone: values.phone || null,
         property_id: values.property_id,
-        birth_date: values.birth_date || null,
-        birth_place: values.birth_place || null,
         profession: values.profession || null,
-        cni_number: values.cni_number || null,
+        cni_document_url: cniDocumentUrl,
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
         agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,

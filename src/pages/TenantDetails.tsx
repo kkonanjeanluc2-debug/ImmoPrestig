@@ -31,7 +31,8 @@ import {
   KeyRound,
   MessageSquare,
   ShieldOff,
-  AlertTriangle
+  AlertTriangle,
+  Users
 } from "lucide-react";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,6 +59,7 @@ import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccess
 import { useRevokeTenantPortalAccess } from "@/hooks/useTenantPortalAccess";
 import { TenantRequestsTab } from "@/components/tenant/TenantRequestsTab";
 import { TenantDocumentsTab } from "@/components/tenant/TenantDocumentsTab";
+import { ColocationTenantsManager } from "@/components/colocation/ColocationTenantsManager";
 
 import { toast } from "sonner";
 import { format, differenceInDays, isFuture, isPast } from "date-fns";
@@ -389,6 +391,12 @@ const TenantDetails = () => {
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Documents</span>
             </TabsTrigger>
+            {activeContract?.is_colocation && (
+              <TabsTrigger value="colocation" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Colocation</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="payments">
@@ -850,6 +858,24 @@ const TenantDetails = () => {
           <TabsContent value="documents">
             <TenantDocumentsTab tenant={tenant} />
           </TabsContent>
+
+          {activeContract?.is_colocation && (
+            <TabsContent value="colocation">
+              <ColocationTenantsManager
+                contractId={activeContract.id}
+                contract={{
+                  ...activeContract,
+                  property: tenant.property ? {
+                    title: tenant.property.title,
+                    address: tenant.property.address,
+                  } : null,
+                  unit: tenant.unit ? { unit_number: tenant.unit.unit_number } : null,
+                  tenant: { id: tenant.id, name: tenant.name },
+                }}
+                canEdit={canEdit}
+              />
+            </TabsContent>
+          )}
 
     </Tabs>
   </div>

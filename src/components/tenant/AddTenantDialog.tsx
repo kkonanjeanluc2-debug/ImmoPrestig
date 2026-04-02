@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2, Calendar, Upload, X } from "lucide-react";
+import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2, Calendar, Upload, X, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Tooltip,
@@ -88,6 +88,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const [cniFile, setCniFile] = useState<File | null>(null);
   const [uploadingCni, setUploadingCni] = useState(false);
   const cniInputRef = useRef<HTMLInputElement>(null);
+  const [isColocation, setIsColocation] = useState(false);
   const [createdContractData, setCreatedContractData] = useState<{
     tenantName: string;
     tenantEmail?: string;
@@ -330,6 +331,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
           rent_amount: parseFloat(values.rent_amount),
           deposit: values.deposit ? parseFloat(values.deposit) : null,
           status: 'active',
+          is_colocation: isColocation,
         }),
       ]);
       contractCreated = true;
@@ -368,6 +370,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       setCniFile(null);
       setSelectedPropertyId("");
       setRentType("mensuel");
+      setIsColocation(false);
       setDailyRentDays("");
       setDailyRentDiscount("0");
       setOpen(false);
@@ -1040,6 +1043,24 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                   </FormItem>
                 )}
               />
+
+              {/* Colocation Option */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                <input
+                  type="checkbox"
+                  id="is_colocation"
+                  checked={isColocation}
+                  onChange={(e) => setIsColocation(e.target.checked)}
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+                />
+                <label htmlFor="is_colocation" className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Users className="h-4 w-4 text-primary" />
+                  <div>
+                    <span className="font-medium">Contrat de colocation</span>
+                    <p className="text-xs text-muted-foreground">Permet d'ajouter plusieurs colocataires avec clause de solidarité</p>
+                  </div>
+                </label>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4">

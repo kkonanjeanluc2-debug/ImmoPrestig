@@ -4405,7 +4405,7 @@ export type Database = {
           cni_number: string | null
           created_at: string
           deleted_at: string | null
-          email: string
+          email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           has_portal_access: boolean
@@ -4429,7 +4429,7 @@ export type Database = {
           cni_number?: string | null
           created_at?: string
           deleted_at?: string | null
-          email: string
+          email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           has_portal_access?: boolean
@@ -4453,7 +4453,7 @@ export type Database = {
           cni_number?: string | null
           created_at?: string
           deleted_at?: string | null
-          email?: string
+          email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           has_portal_access?: boolean

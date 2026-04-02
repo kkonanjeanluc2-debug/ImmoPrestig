@@ -31,7 +31,8 @@ import {
   KeyRound,
   MessageSquare,
   ShieldOff,
-  AlertTriangle
+  AlertTriangle,
+  Users
 } from "lucide-react";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { useAuth } from "@/contexts/AuthContext";

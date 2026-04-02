@@ -172,7 +172,7 @@ const Index = () => {
               Tableau de bord
             </h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              Bienvenue. Voici un aperçu de votre patrimoine immobilier.
+              Bienvenue{agency?.name ? ` — ${agency.name}` : ""}
             </p>
           </div>
           <PeriodFilter value={period} onChange={setPeriod} />

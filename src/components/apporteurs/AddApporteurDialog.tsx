@@ -99,7 +99,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
                 <FormLabel>Nom complet *</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input placeholder="Ex: Jean Kouassi" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -108,14 +108,14 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
               <FormField control={form.control} name="phone" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Téléphone</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                   <FormControl><Input placeholder="Ex: 07 00 00 00 00" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="email" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
-                  <FormControl><Input type="email" {...field} /></FormControl>
+                  <FormControl><Input type="email" placeholder="Ex: jean@email.com" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -124,7 +124,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="address" render={({ field }) => (
               <FormItem>
                 <FormLabel>Adresse</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input placeholder="Ex: Cocody, Abidjan" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -132,7 +132,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="cni_number" render={({ field }) => (
               <FormItem>
                 <FormLabel>N° CNI</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input placeholder="Ex: CI-0123456789" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -141,7 +141,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
               <FormField control={form.control} name="commission_percentage" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Commission (%)</FormLabel>
-                  <FormControl><Input type="number" min={0} max={100} step={0.5} {...field} /></FormControl>
+                  <FormControl><Input type="number" min={0} max={100} step={0.5} placeholder="Ex: 5" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -165,7 +165,7 @@ export function AddApporteurDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem>
                 <FormLabel>Notes</FormLabel>
-                <FormControl><Textarea rows={3} {...field} /></FormControl>
+                <FormControl><Textarea rows={3} placeholder="Informations complémentaires..." {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

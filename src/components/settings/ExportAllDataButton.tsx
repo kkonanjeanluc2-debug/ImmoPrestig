@@ -8,50 +8,77 @@ import { Download, Loader2, Database, ShieldCheck } from "lucide-react";
 import JSZip from "jszip";
 import ExcelJS from "exceljs";
 
-interface DocRecord {
+interface FileRecord {
   name: string;
-  file_url: string | null;
-  type?: string;
+  url: string;
 }
 
-const DOCUMENT_SOURCES = [
-  { table: "documents", folder: "Documents", bucket: "documents" },
-  { table: "documents_achats", folder: "Documents Achats", bucket: "documents-achats" },
-  { table: "lotissement_documents", folder: "Documents Lotissements", bucket: null },
-] as const;
+interface FileSource {
+  table: string;
+  folder: string;
+  bucket: string | null;
+  urlColumn: string;
+  nameColumn: string;
+  extraSelect?: string;
+}
 
-async function fetchDocumentFiles(table: string, userId: string): Promise<DocRecord[]> {
+const FILE_SOURCES: FileSource[] = [
+  // Document tables
+  { table: "documents", folder: "Documents", bucket: "documents", urlColumn: "file_url", nameColumn: "name" },
+  { table: "documents_achats", folder: "Documents Achats", bucket: "documents-achats", urlColumn: "file_url", nameColumn: "name" },
+  { table: "lotissement_documents", folder: "Documents Lotissements", bucket: "documents", urlColumn: "file_url", nameColumn: "name" },
+  // Tenant CNI documents
+  { table: "tenants", folder: "CNI Locataires", bucket: "documents", urlColumn: "cni_document_url", nameColumn: "name" },
+  // Expense receipts
+  { table: "expenses", folder: "Justificatifs Dépenses", bucket: "documents", urlColumn: "receipt_url", nameColumn: "description" },
+  // Property images
+  { table: "property_images", folder: "Photos Biens Locatifs", bucket: null, urlColumn: "image_url", nameColumn: "image_url" },
+  // Biens vente images
+  { table: "biens_vente_images", folder: "Photos Biens Vente", bucket: null, urlColumn: "image_url", nameColumn: "image_url" },
+  // Unpaid case action documents
+  { table: "unpaid_case_actions", folder: "Documents Impayés", bucket: "documents", urlColumn: "document_url", nameColumn: "document_url" },
+];
+
+async function fetchFileRecords(source: FileSource, userId: string): Promise<FileRecord[]> {
   const PAGE_SIZE = 1000;
-  let allRows: DocRecord[] = [];
+  let allRows: FileRecord[] = [];
   let from = 0;
   let hasMore = true;
 
   while (hasMore) {
+    const selectCols = source.urlColumn === source.nameColumn
+      ? source.urlColumn
+      : `${source.nameColumn}, ${source.urlColumn}`;
+
     const { data, error } = await (supabase as any)
-      .from(table)
-      .select("name, file_url, type")
+      .from(source.table)
+      .select(selectCols)
       .eq("user_id", userId)
-      .not("file_url", "is", null)
+      .not(source.urlColumn, "is", null)
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) throw error;
-    allRows = allRows.concat(data || []);
+
+    const records = (data || []).map((row: any) => ({
+      name: row[source.nameColumn] || "fichier",
+      url: row[source.urlColumn],
+    })).filter((r: FileRecord) => r.url);
+
+    allRows = allRows.concat(records);
     hasMore = (data?.length || 0) === PAGE_SIZE;
     from += PAGE_SIZE;
   }
   return allRows;
 }
 
-async function downloadFileFromStorage(fileUrl: string, bucket: string | null): Promise<Blob | null> {
+async function downloadFile(fileUrl: string, bucket: string | null): Promise<Blob | null> {
   try {
-    // If the URL is a full public/signed URL, fetch directly
     if (fileUrl.startsWith("http")) {
       const response = await fetch(fileUrl);
       if (!response.ok) return null;
       return await response.blob();
     }
 
-    // Otherwise it's a storage path - determine bucket
     const storageBucket = bucket || "documents";
     const { data, error } = await supabase.storage.from(storageBucket).download(fileUrl);
     if (error || !data) return null;

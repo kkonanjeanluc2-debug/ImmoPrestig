@@ -1,3 +1,4 @@
+import { COMMUNES_COTE_DIVOIRE } from "@/constants/communesCoteDIvoire";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -134,6 +135,7 @@ export default function Tenants() {
   const [assignedFilter, setAssignedFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
+  const [communeFilter, setCommuneFilter] = useState("all");
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [accessDialogTenant, setAccessDialogTenant] = useState<TenantWithDetails | null>(null);
@@ -250,8 +252,12 @@ export default function Tenants() {
     const matchesOwner = ownerFilter === "all"
       ? true
       : tenant.property?.owner_id === ownerFilter;
+
+    const matchesCommune = communeFilter === "all"
+      ? true
+      : (tenant.property as any)?.city === communeFilter;
     
-    return matchesSearch && matchesAssigned && matchesOwner;
+    return matchesSearch && matchesAssigned && matchesOwner && matchesCommune;
   });
 
   // Compute stats
@@ -348,6 +354,19 @@ export default function Tenants() {
                   {owners.map((owner) => (
                     <SelectItem key={owner.id} value={owner.id}>
                       {owner.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={communeFilter} onValueChange={setCommuneFilter}>
+                <SelectTrigger className="w-[220px] h-9">
+                  <SelectValue placeholder="Commune" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les communes</SelectItem>
+                  {COMMUNES_COTE_DIVOIRE.map((commune) => (
+                    <SelectItem key={commune} value={commune}>
+                      {commune}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -441,14 +441,35 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="address">Adresse *</Label>
-            <Input
-              id="address"
-              placeholder="Ex: Cocody Riviera 3, Abidjan"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="address">Adresse *</Label>
+              <Input
+                id="address"
+                placeholder="Ex: Cocody Riviera 3"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">Commune</Label>
+              <Select
+                value={formData.city}
+                onValueChange={(value) => setFormData({ ...formData, city: value === "__none__" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une commune" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">
+                    <span className="text-muted-foreground">Aucune</span>
+                  </SelectItem>
+                  {COMMUNES_COTE_DIVOIRE.map((commune) => (
+                    <SelectItem key={commune} value={commune}>{commune}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {category !== "immeuble" && (

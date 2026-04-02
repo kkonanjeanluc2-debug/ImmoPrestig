@@ -81,6 +81,7 @@ export function OwnerPayoutsSection({
   const { data: payments = [] } = usePayments();
   const createPayout = useCreateOwnerPayout();
   const deletePayout = useDeleteOwnerPayout();
+  const { data: agency } = useAgency();
 
   const [open, setOpen] = useState(false);
   const now = new Date();

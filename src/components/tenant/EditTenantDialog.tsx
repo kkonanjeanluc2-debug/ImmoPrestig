@@ -72,14 +72,13 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         name: tenant.name,
         email: tenant.email,
         phone: tenant.phone || "",
-        birth_date: (tenant as any).birth_date || "",
-        birth_place: (tenant as any).birth_place || "",
         profession: (tenant as any).profession || "",
-        cni_number: (tenant as any).cni_number || "",
         emergency_contact_name: (tenant as any).emergency_contact_name || "",
         emergency_contact_phone: (tenant as any).emergency_contact_phone || "",
       });
       setAssignedTo((tenant as any).assigned_to || null);
+      setExistingCniUrl((tenant as any).cni_document_url || null);
+      setCniFile(null);
     }
   }, [tenant, form]);
 

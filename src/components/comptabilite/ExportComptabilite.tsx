@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, FileSpreadsheet } from "lucide-react";
 import { ComptabiliteData, PaidRentDetail, ManagerRentGroup, ManagerRevenueGroup } from "@/hooks/useComptabilite";
 import { Expense, getSyscohadaAccount, REVENUE_ACCOUNTS } from "@/hooks/useExpenses";
 import { toast } from "sonner";
 import { createPDFDocument } from "@/lib/pdfFont";
 import { addPDFHeader, addPDFFooter, PDFAgencyInfo } from "@/lib/pdfHeader";
 import { formatAmountForPDF, formatAmountWithCurrency } from "@/lib/pdfFormat";
+import ExcelJS from "exceljs";
 
 interface Props {
   data: ComptabiliteData;
@@ -642,6 +643,166 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
     }
   };
 
+  const saveExcelFile = async (wb: ExcelJS.Workbook, filename: string) => {
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const headerFill: ExcelJS.FillPattern = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A365D" } };
+  const headerFont: Partial<ExcelJS.Font> = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
+  const currencyFmt = '#,##0" F CFA"';
+
+  const exportCompteResultatExcel = async () => {
+    try {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("Compte de résultat");
+
+      ws.columns = [
+        { header: "Compte", key: "compte", width: 15 },
+        { header: "Libellé", key: "libelle", width: 40 },
+        { header: "Montant (F CFA)", key: "montant", width: 22 },
+      ];
+
+      // Style header
+      ws.getRow(1).eachCell((cell) => { cell.fill = headerFill; cell.font = headerFont; });
+
+      // Title row
+      ws.addRow(["", "CLASSE 7 — PRODUITS", ""]);
+      ws.lastRow!.getCell(2).font = { bold: true, size: 11 };
+
+      const revenueRows = [
+        { account: REVENUE_ACCOUNTS.loyers, amount: data.loyersEncaisses },
+        { account: REVENUE_ACCOUNTS.cautions, amount: data.cautionsEncaissees },
+        { account: REVENUE_ACCOUNTS.ventes, amount: data.ventesEncaissees },
+        { account: REVENUE_ACCOUNTS.achats, amount: data.achatsEncaisses },
+        { account: REVENUE_ACCOUNTS.lotissements, amount: data.lotissementsEncaisses },
+      ].filter(r => r.amount > 0);
+
+      revenueRows.forEach((r) => {
+        const row = ws.addRow([r.account.syscohada, r.account.label, r.amount]);
+        row.getCell(3).numFmt = currencyFmt;
+      });
+
+      const totalProdRow = ws.addRow(["", "TOTAL PRODUITS", totalRevenue]);
+      totalProdRow.eachCell((cell) => { cell.fill = headerFill; cell.font = headerFont; });
+      totalProdRow.getCell(3).numFmt = currencyFmt;
+
+      ws.addRow([]);
+      ws.addRow(["", "CLASSE 6 — CHARGES", ""]);
+      ws.lastRow!.getCell(2).font = { bold: true, size: 11 };
+
+      data.expensesByCategory.forEach((cat) => {
+        const info = getSyscohadaAccount(cat.name);
+        const row = ws.addRow([info?.syscohada || "658", info?.label || cat.name, cat.value]);
+        row.getCell(3).numFmt = currencyFmt;
+      });
+
+      const totalChargesRow = ws.addRow(["", "TOTAL CHARGES", data.totalExpenses]);
+      totalChargesRow.eachCell((cell) => { cell.fill = headerFill; cell.font = headerFont; });
+      totalChargesRow.getCell(3).numFmt = currencyFmt;
+
+      ws.addRow([]);
+      const resultRow = ws.addRow(["", "RÉSULTAT NET", benefice]);
+      resultRow.getCell(2).font = { bold: true, size: 12 };
+      resultRow.getCell(3).numFmt = currencyFmt;
+      resultRow.getCell(3).font = { bold: true, size: 12, color: { argb: benefice >= 0 ? "FF22C55E" : "FFEF4444" } };
+
+      await saveExcelFile(wb, `compte-resultat-syscohada-${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success("Compte de résultat Excel téléchargé");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de la génération Excel");
+    }
+  };
+
+  const exportJournalExcel = async () => {
+    try {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("Journal comptable");
+
+      ws.columns = [
+        { header: "Date", key: "date", width: 14 },
+        { header: "Compte", key: "compte", width: 12 },
+        { header: "Libellé", key: "libelle", width: 40 },
+        { header: "Débit (F CFA)", key: "debit", width: 20 },
+        { header: "Crédit (F CFA)", key: "credit", width: 20 },
+      ];
+
+      ws.getRow(1).eachCell((cell) => { cell.fill = headerFill; cell.font = headerFont; });
+
+      expenses.forEach((exp) => {
+        const info = getSyscohadaAccount(exp.category);
+        const date = new Date(exp.expense_date).toLocaleDateString("fr-FR");
+        const creditAccount = exp.payment_method === "especes" ? "571" : "521";
+
+        // Debit line
+        const dr = ws.addRow([date, info?.syscohada || "658", exp.description, Number(exp.amount), ""]);
+        dr.getCell(4).numFmt = currencyFmt;
+
+        // Credit line
+        const cr = ws.addRow(["", creditAccount, exp.description, "", Number(exp.amount)]);
+        cr.getCell(5).numFmt = currencyFmt;
+      });
+
+      await saveExcelFile(wb, `journal-comptable-${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success("Journal comptable Excel téléchargé");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de la génération Excel");
+    }
+  };
+
+  const exportTresorerieExcel = async () => {
+    try {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("Flux de trésorerie");
+
+      ws.columns = [
+        { header: "Mois", key: "mois", width: 12 },
+        { header: "Loyers", key: "loyers", width: 16 },
+        { header: "Ventes", key: "ventes", width: 16 },
+        { header: "Achats", key: "achats", width: 16 },
+        { header: "Lotissements", key: "lotissements", width: 16 },
+        { header: "Cautions", key: "cautions", width: 16 },
+        { header: "Total Entrées", key: "entrees", width: 18 },
+        { header: "Dépenses", key: "depenses", width: 16 },
+        { header: "Flux Net", key: "flux", width: 16 },
+      ];
+
+      ws.getRow(1).eachCell((cell) => { cell.fill = headerFill; cell.font = headerFont; });
+
+      data.monthlyData.forEach((m) => {
+        const entrees = m.loyers + m.ventes + m.achats + m.lotissements + m.cautions;
+        const flux = entrees - m.depenses;
+        const row = ws.addRow([m.name, m.loyers, m.ventes, m.achats, m.lotissements, m.cautions, entrees, m.depenses, flux]);
+        for (let i = 2; i <= 9; i++) row.getCell(i).numFmt = currencyFmt;
+        if (flux < 0) row.getCell(9).font = { color: { argb: "FFEF4444" } };
+      });
+
+      // Total row
+      const totals = data.monthlyData.reduce((acc, m) => ({
+        loyers: acc.loyers + m.loyers, ventes: acc.ventes + m.ventes, achats: acc.achats + m.achats,
+        lotissements: acc.lotissements + m.lotissements, cautions: acc.cautions + m.cautions, depenses: acc.depenses + m.depenses,
+      }), { loyers: 0, ventes: 0, achats: 0, lotissements: 0, cautions: 0, depenses: 0 });
+
+      const totalRow = ws.addRow(["TOTAL", totals.loyers, totals.ventes, totals.achats, totals.lotissements, totals.cautions, totalRevenue, data.totalExpenses, benefice]);
+      totalRow.eachCell((cell) => { cell.fill = headerFill; cell.font = headerFont; });
+      for (let i = 2; i <= 9; i++) totalRow.getCell(i).numFmt = currencyFmt;
+
+      await saveExcelFile(wb, `tresorerie-${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success("Flux de trésorerie Excel téléchargé");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de la génération Excel");
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -653,15 +814,28 @@ export function ExportComptabilite({ data, totalRevenue, expenses, periodLabel, 
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={exportCompteResultat} className="gap-2">
           <FileText className="h-4 w-4" />
-          Compte de résultat (SYSCOHADA)
+          Compte de résultat (PDF)
         </DropdownMenuItem>
         <DropdownMenuItem onClick={exportJournal} className="gap-2">
           <FileText className="h-4 w-4" />
-          Journal comptable
+          Journal comptable (PDF)
         </DropdownMenuItem>
         <DropdownMenuItem onClick={exportTresorerie} className="gap-2">
           <FileText className="h-4 w-4" />
-          Flux de trésorerie
+          Flux de trésorerie (PDF)
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={exportCompteResultatExcel} className="gap-2">
+          <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+          Compte de résultat (Excel)
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={exportJournalExcel} className="gap-2">
+          <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+          Journal comptable (Excel)
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={exportTresorerieExcel} className="gap-2">
+          <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+          Flux de trésorerie (Excel)
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

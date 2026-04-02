@@ -28,7 +28,7 @@ import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
-  email: z.string().trim().email("Email invalide").max(255),
+  email: z.string().trim().max(255).optional().or(z.literal("")).refine((val) => !val || z.string().email().safeParse(val).success, "Email invalide"),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
   birth_date: z.string().optional().or(z.literal("")),
   birth_place: z.string().trim().max(100).optional().or(z.literal("")),
@@ -152,7 +152,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email *</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="jean@email.com" {...field} />
                       </FormControl>

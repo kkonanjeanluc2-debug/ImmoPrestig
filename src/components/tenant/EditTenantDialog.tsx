@@ -20,11 +20,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, X, FileText } from "lucide-react";
 import { useUpdateTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { toast } from "sonner";
 import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";
 import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100),

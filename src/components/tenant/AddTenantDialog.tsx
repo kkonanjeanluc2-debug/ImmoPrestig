@@ -1042,6 +1042,24 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                   </FormItem>
                 )}
               />
+
+              {/* Colocation Option */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                <input
+                  type="checkbox"
+                  id="is_colocation"
+                  checked={isColocation}
+                  onChange={(e) => setIsColocation(e.target.checked)}
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+                />
+                <label htmlFor="is_colocation" className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Users className="h-4 w-4 text-primary" />
+                  <div>
+                    <span className="font-medium">Contrat de colocation</span>
+                    <p className="text-xs text-muted-foreground">Permet d'ajouter plusieurs colocataires avec clause de solidarité</p>
+                  </div>
+                </label>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4">

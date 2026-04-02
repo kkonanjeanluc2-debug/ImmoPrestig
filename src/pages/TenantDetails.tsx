@@ -852,6 +852,7 @@ const TenantDetails = () => {
               userId={tenant.user_id}
               propertyId={tenant.property_id || undefined}
               isLocataire={isLocataire}
+              tenantName={tenant.name}
             />
           </TabsContent>
 

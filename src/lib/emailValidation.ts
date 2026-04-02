@@ -28,7 +28,7 @@ export function isValidEmail(email: string): boolean {
   if (labels.some((l) => l.length > 63 || l.length === 0)) return false;
 
   // Only allow specific domains
-  const allowedDomains = ["gmail.com", "hotmail.com", "hotmail.fr"];
+  const allowedDomains = ["gmail.com", "hotmail.com", "hotmail.fr", "yahoo.com", "yahoo.fr"];
   const domainLower = domain.toLowerCase();
   if (!allowedDomains.includes(domainLower)) return false;
 

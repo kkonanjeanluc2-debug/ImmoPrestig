@@ -3,6 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsSuperAdmin } from "./useSuperAdmin";
 
+const invalidateSubscriptionQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
+  queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+  queryClient.invalidateQueries({ queryKey: ["all-agency-subscriptions"] });
+};
+
 export interface SubscriptionPlan {
   id: string;
   name: string;
@@ -72,7 +78,7 @@ export function useCreateSubscriptionPlan() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
+      invalidateSubscriptionQueries(queryClient);
     },
   });
 }
@@ -97,7 +103,7 @@ export function useUpdateSubscriptionPlan() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
+      invalidateSubscriptionQueries(queryClient);
     },
   });
 }
@@ -116,7 +122,7 @@ export function useDeleteSubscriptionPlan() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
+      invalidateSubscriptionQueries(queryClient);
     },
   });
 }

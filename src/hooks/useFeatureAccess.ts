@@ -40,9 +40,10 @@ const PLANS_WITH_ALL_FEATURES = ["Enterprise"];
 // Define which plan level unlocks which features
 const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {
   "Gratuit": [],
-  "Starter": ["rappels_automatiques", "assistant_ia", "gestion_impayes", "apporteurs_affaires"],
-  "Pro": ["rappels_automatiques", "rappels_sms", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "ventes_immobilieres", "achats_immobiliers", "assistant_ia", "gestion_impayes", "apporteurs_affaires"],
-  "Premium": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia", "gestion_impayes", "apporteurs_affaires"],
+  "Starter": ["rappels_automatiques", "assistant_ia", "gestion_impayes"],
+  "Pro": ["rappels_automatiques", "rappels_sms", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "ventes_immobilieres", "achats_immobiliers", "assistant_ia", "gestion_impayes"],
+  "Premium": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia", "gestion_impayes"],
+  "Prestige Max": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia", "gestion_impayes", "apporteurs_affaires"],
   "Enterprise": ["ventes_immobilieres", "achats_immobiliers", "lotissement", "rappels_sms", "rappels_automatiques", "quittances_personnalisees", "rapports_avances", "support_prioritaire", "support_dedie", "formation_personnalisee", "assistant_ia", "gestion_impayes", "apporteurs_affaires"],
 };
 

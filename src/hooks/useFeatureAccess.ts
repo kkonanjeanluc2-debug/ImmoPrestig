@@ -50,6 +50,7 @@ const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {
 
 export interface FeatureAccessResult {
   hasFeature: (feature: FeatureKey) => boolean;
+  hasFeatureByName: (featureName: string) => boolean;
   isLoading: boolean;
   planName: string;
   planFeatures: string[];

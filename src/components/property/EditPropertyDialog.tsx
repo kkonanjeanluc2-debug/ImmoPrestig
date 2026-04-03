@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Home, Building, X, ImageIcon, Loader2, User } from "lucide-react";
 import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
+import { CommuneSelector } from "@/components/shared/CommuneSelector";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUpdateProperty, Property } from "@/hooks/useProperties";
@@ -40,6 +41,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
     assigned_to: null as string | null,
     latitude: "",
     longitude: "",
+    city: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -69,6 +71,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         assigned_to: (property as any).assigned_to || null,
         latitude: (property as any).latitude?.toString() || "",
         longitude: (property as any).longitude?.toString() || "",
+        city: (property as any).city || "",
       });
       setImagePreview(property.image_url || null);
     }
@@ -154,6 +157,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         assigned_to: formData.assigned_to,
         latitude: formData.latitude ? Number(formData.latitude) : null,
         longitude: formData.longitude ? Number(formData.longitude) : null,
+        city: formData.city || null,
       });
 
       toast.success("Bien modifié avec succès !");
@@ -305,6 +309,14 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
               placeholder="Ex: Cocody Riviera 3, Abidjan"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Commune</Label>
+            <CommuneSelector
+              value={formData.city}
+              onChange={(value) => setFormData({ ...formData, city: value })}
             />
           </div>
 

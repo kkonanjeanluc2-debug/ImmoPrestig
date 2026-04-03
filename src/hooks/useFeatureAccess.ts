@@ -35,7 +35,7 @@ const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
 };
 
 // Plans that have all features by default (for display purposes)
-const PLANS_WITH_ALL_FEATURES = ["Enterprise", "Premium"];
+const PLANS_WITH_ALL_FEATURES = ["Enterprise"];
 
 // Define which plan level unlocks which features
 const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {

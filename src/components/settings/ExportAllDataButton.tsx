@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Download, Loader2, Database, ShieldCheck } from "lucide-react";
+import { Download, Loader2, Database, ShieldCheck, FileJson } from "lucide-react";
 import JSZip from "jszip";
 import ExcelJS from "exceljs";
 
@@ -418,6 +418,7 @@ export function ExportAllDataButton() {
   const { user } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState("");
+  const [isExportingJson, setIsExportingJson] = useState(false);
 
   const handleExport = async () => {
     if (!user) return;
@@ -591,6 +592,57 @@ export function ExportAllDataButton() {
     }
   };
 
+  const handleExportJson = async () => {
+    if (!user) return;
+
+    setIsExportingJson(true);
+    setProgress("");
+
+    try {
+      const allData: Record<string, any[]> = {};
+
+      for (let i = 0; i < TABLE_CONFIGS.length; i++) {
+        const config = TABLE_CONFIGS[i];
+        setProgress(`JSON ${i + 1}/${TABLE_CONFIGS.length} — ${config.sheetName}...`);
+
+        try {
+          const data = await fetchAllRows(config.table, user.id);
+          if (data.length > 0) {
+            allData[config.table] = data;
+          }
+        } catch (err) {
+          console.warn(`Erreur JSON pour ${config.table}:`, err);
+        }
+      }
+
+      if (Object.keys(allData).length === 0) {
+        toast.info("Aucune donnée à exporter");
+        return;
+      }
+
+      setProgress("Génération du fichier JSON...");
+      const jsonStr = JSON.stringify(allData, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `export_donnees_${dateStr}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+
+      const totalRecords = Object.values(allData).reduce((sum, arr) => sum + arr.length, 0);
+      toast.success(`Export JSON terminé — ${Object.keys(allData).length} table(s), ${totalRecords} enregistrement(s)`);
+    } catch (error) {
+      console.error("Erreur export JSON:", error);
+      toast.error("Erreur lors de l'export JSON");
+    } finally {
+      setIsExportingJson(false);
+      setProgress("");
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -623,19 +675,35 @@ export function ExportAllDataButton() {
           <span>Seules les données de votre agence sont exportées</span>
         </div>
 
-        <Button onClick={handleExport} disabled={isExporting} className="w-full sm:w-auto">
-          {isExporting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              {progress || "Export en cours..."}
-            </>
-          ) : (
-            <>
-              <Download className="h-4 w-4 mr-2" />
-              Exporter toutes mes données
-            </>
-          )}
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={handleExport} disabled={isExporting || isExportingJson} className="w-full sm:w-auto">
+            {isExporting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {progress || "Export en cours..."}
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Export ZIP (Excel + fichiers)
+              </>
+            )}
+          </Button>
+
+          <Button variant="outline" onClick={handleExportJson} disabled={isExporting || isExportingJson} className="w-full sm:w-auto">
+            {isExportingJson ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {progress || "Export JSON en cours..."}
+              </>
+            ) : (
+              <>
+                <FileJson className="h-4 w-4 mr-2" />
+                Export JSON (intégration)
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

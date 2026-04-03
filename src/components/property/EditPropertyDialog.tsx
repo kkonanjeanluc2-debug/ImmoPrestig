@@ -41,6 +41,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
     assigned_to: null as string | null,
     latitude: "",
     longitude: "",
+    city: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);

@@ -233,7 +233,7 @@ const Settings = () => {
                 <span>Promesses de vente</span>
               </TabsTrigger>
             )}
-            {(hasLotissement || hasVentesImmobilieres) && canAccessReservationFormsTab && (
+            {(hasLotissement || hasVentesImmobilieres) && canAccessReservationFormsTab && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="reservation-forms"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"

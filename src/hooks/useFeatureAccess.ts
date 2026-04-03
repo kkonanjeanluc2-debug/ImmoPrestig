@@ -77,7 +77,7 @@ export function useFeatureAccess(): FeatureAccessResult {
 
     const requiredPlanForFeature = (feature: FeatureKey): string => {
       // Find the minimum plan that has this feature
-      const planOrder = ["Gratuit", "Starter", "Pro", "Enterprise"];
+      const planOrder = ["Gratuit", "Starter", "Pro", "Premium", "Prestige Max", "Enterprise"];
       for (const plan of planOrder) {
         if (PLAN_FEATURE_LEVELS[plan]?.includes(feature)) {
           return plan;

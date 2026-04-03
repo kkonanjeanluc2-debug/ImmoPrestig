@@ -71,6 +71,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         assigned_to: (property as any).assigned_to || null,
         latitude: (property as any).latitude?.toString() || "",
         longitude: (property as any).longitude?.toString() || "",
+        city: (property as any).city || "",
       });
       setImagePreview(property.image_url || null);
     }

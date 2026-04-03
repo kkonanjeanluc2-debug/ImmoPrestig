@@ -35,11 +35,12 @@ const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
   apporteurs_affaires: ["Gestion des Apporteurs d'affaires"],
 };
 
-// Plans that have all features by default (for display purposes)
-const PLANS_WITH_ALL_FEATURES = ["Enterprise"];
-
 // Feature string that means "inherits all features from lower plans"
 const INHERIT_ALL_MARKER = "toutes les fonctionnalités de forfaits inférieurs";
+
+const PLAN_ORDER = ["Gratuit", "Starter", "Pro", "Premium", "Prestige Max", "Enterprise"] as const;
+
+const normalizeFeatureLabel = (value: string) => value.trim().toLowerCase();
 
 // Define which plan level unlocks which features
 const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {
@@ -66,36 +67,34 @@ export function useFeatureAccess(): FeatureAccessResult {
   return useMemo(() => {
     const planName = subscription?.plan?.name ?? "Gratuit";
     const planFeatures = (subscription?.plan?.features as string[]) ?? [];
+    const normalizedPlanFeatures = planFeatures.map(normalizeFeatureLabel);
 
     const hasFeature = (feature: FeatureKey): boolean => {
-      if (PLANS_WITH_ALL_FEATURES.includes(planName)) return true;
-      // If plan has "Toutes les fonctionnalités de forfaits inférieurs", use PLAN_FEATURE_LEVELS
-      const hasInheritAll = planFeatures.some(pf => pf.trim().toLowerCase() === INHERIT_ALL_MARKER);
-      if (hasInheritAll) {
-        // Check if any lower plan includes this feature
-        const planOrder = ["Gratuit", "Starter", "Pro", "Premium", "Prestige Max", "Enterprise"];
-        const currentIndex = planOrder.indexOf(planName);
-        for (let i = 0; i <= currentIndex; i++) {
-          if (PLAN_FEATURE_LEVELS[planOrder[i]]?.includes(feature)) return true;
-        }
+      const featureStrings = FEATURE_MAPPING[feature].map(normalizeFeatureLabel);
+
+      if (featureStrings.some((featureString) => normalizedPlanFeatures.includes(featureString))) {
+        return true;
       }
-      const featureStrings = FEATURE_MAPPING[feature];
-      // Use exact equality (case-insensitive, trimmed) to avoid false positives
-      return featureStrings.some(str => 
-        planFeatures.some(pf => pf.trim().toLowerCase() === str.trim().toLowerCase())
+
+      const hasInheritAll = normalizedPlanFeatures.includes(INHERIT_ALL_MARKER);
+      if (!hasInheritAll) return false;
+
+      const currentIndex = PLAN_ORDER.indexOf(planName as (typeof PLAN_ORDER)[number]);
+      if (currentIndex <= 0) return false;
+
+      return PLAN_ORDER.slice(0, currentIndex).some((plan) =>
+        PLAN_FEATURE_LEVELS[plan]?.includes(feature)
       );
     };
 
     // Dynamic: check if a raw feature name string exists in the plan's features
     const hasFeatureByName = (featureName: string): boolean => {
-      if (PLANS_WITH_ALL_FEATURES.includes(planName)) return true;
-      return planFeatures.some(pf => pf.trim().toLowerCase() === featureName.trim().toLowerCase());
+      return normalizedPlanFeatures.includes(normalizeFeatureLabel(featureName));
     };
 
     const requiredPlanForFeature = (feature: FeatureKey): string => {
       // Find the minimum plan that has this feature
-      const planOrder = ["Gratuit", "Starter", "Pro", "Premium", "Prestige Max", "Enterprise"];
-      for (const plan of planOrder) {
+      for (const plan of PLAN_ORDER) {
         if (PLAN_FEATURE_LEVELS[plan]?.includes(feature)) {
           return plan;
         }

@@ -156,7 +156,19 @@ export default function Tenants() {
   const { requestsByTenant } = useTenantsActiveRequestsMap();
   const { data: owners = [] } = useOwners();
 
-  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_tenants")) {
+  // Derive communes only from properties with status "loué"
+  const rentedCommunes = useMemo(() => {
+    if (!tenants) return [];
+    const communes = new Set<string>();
+    for (const tenant of tenants) {
+      const prop = tenant.property as any;
+      if (prop?.city && prop?.status === "loué") {
+        communes.add(prop.city);
+      }
+    }
+    return Array.from(communes).sort((a, b) => a.localeCompare(b, "fr"));
+  }, [tenants]);
+
     return <Navigate to="/dashboard" replace />;
   }
 

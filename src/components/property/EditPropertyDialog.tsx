@@ -157,6 +157,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
         assigned_to: formData.assigned_to,
         latitude: formData.latitude ? Number(formData.latitude) : null,
         longitude: formData.longitude ? Number(formData.longitude) : null,
+        city: formData.city || null,
       });
 
       toast.success("Bien modifié avec succès !");

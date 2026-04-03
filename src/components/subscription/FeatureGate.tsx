@@ -61,6 +61,10 @@ const FEATURE_LABELS: Record<FeatureKey, { title: string; description: string }>
     title: "Gestion des impayés",
     description: "Suivez les dossiers d'impayés et gérez les procédures de recouvrement de vos locataires.",
   },
+  apporteurs_affaires: {
+    title: "Apporteurs d'affaires",
+    description: "Gérez vos apporteurs d'affaires, suivez leurs commissions et leurs apports.",
+  },
 };
 
 export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {

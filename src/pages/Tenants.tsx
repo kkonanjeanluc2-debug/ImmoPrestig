@@ -1,4 +1,4 @@
-import { COMMUNES_COTE_DIVOIRE } from "@/constants/communesCoteDIvoire";
+import { useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

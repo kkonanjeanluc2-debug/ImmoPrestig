@@ -65,16 +65,18 @@ export function useFeatureAccess(): FeatureAccessResult {
     const planFeatures = (subscription?.plan?.features as string[]) ?? [];
 
     const hasFeature = (feature: FeatureKey): boolean => {
-      // Enterprise plan has all features
-      if (PLANS_WITH_ALL_FEATURES.includes(planName)) {
-        return true;
-      }
-
-      // Check if feature is in plan's feature list
+      if (PLANS_WITH_ALL_FEATURES.includes(planName)) return true;
       const featureStrings = FEATURE_MAPPING[feature];
+      // Use exact equality (case-insensitive, trimmed) to avoid false positives
       return featureStrings.some(str => 
-        planFeatures.some(pf => pf.toLowerCase().includes(str.toLowerCase()))
+        planFeatures.some(pf => pf.trim().toLowerCase() === str.trim().toLowerCase())
       );
+    };
+
+    // Dynamic: check if a raw feature name string exists in the plan's features
+    const hasFeatureByName = (featureName: string): boolean => {
+      if (PLANS_WITH_ALL_FEATURES.includes(planName)) return true;
+      return planFeatures.some(pf => pf.trim().toLowerCase() === featureName.trim().toLowerCase());
     };
 
     const requiredPlanForFeature = (feature: FeatureKey): string => {

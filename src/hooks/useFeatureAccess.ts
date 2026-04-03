@@ -92,6 +92,7 @@ export function useFeatureAccess(): FeatureAccessResult {
 
     return {
       hasFeature,
+      hasFeatureByName,
       isLoading,
       planName,
       planFeatures,

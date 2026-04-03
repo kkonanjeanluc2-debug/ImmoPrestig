@@ -3,6 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsSuperAdmin } from "./useSuperAdmin";
 
+const invalidateSubscriptionQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
+  queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+  queryClient.invalidateQueries({ queryKey: ["all-agency-subscriptions"] });
+};
+
 export interface SubscriptionPlan {
   id: string;
   name: string;
@@ -60,12 +66,6 @@ export function useSubscriptionPlans() {
 export function useCreateSubscriptionPlan() {
   const queryClient = useQueryClient();
 
-  const invalidateSubscriptionQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
-    queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
-    queryClient.invalidateQueries({ queryKey: ["all-agency-subscriptions"] });
-  };
-
   return useMutation({
     mutationFn: async (plan: Omit<SubscriptionPlan, "id" | "created_at" | "updated_at">) => {
       const { data, error } = await supabase
@@ -78,7 +78,7 @@ export function useCreateSubscriptionPlan() {
       return data;
     },
     onSuccess: () => {
-      invalidateSubscriptionQueries();
+      invalidateSubscriptionQueries(queryClient);
     },
   });
 }
@@ -86,12 +86,6 @@ export function useCreateSubscriptionPlan() {
 // Update a subscription plan (super admin only)
 export function useUpdateSubscriptionPlan() {
   const queryClient = useQueryClient();
-
-  const invalidateSubscriptionQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
-    queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
-    queryClient.invalidateQueries({ queryKey: ["all-agency-subscriptions"] });
-  };
 
   return useMutation({
     mutationFn: async ({
@@ -109,7 +103,7 @@ export function useUpdateSubscriptionPlan() {
       if (error) throw error;
     },
     onSuccess: () => {
-      invalidateSubscriptionQueries();
+      invalidateSubscriptionQueries(queryClient);
     },
   });
 }
@@ -117,12 +111,6 @@ export function useUpdateSubscriptionPlan() {
 // Delete a subscription plan (super admin only)
 export function useDeleteSubscriptionPlan() {
   const queryClient = useQueryClient();
-
-  const invalidateSubscriptionQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
-    queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
-    queryClient.invalidateQueries({ queryKey: ["all-agency-subscriptions"] });
-  };
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -134,7 +122,7 @@ export function useDeleteSubscriptionPlan() {
       if (error) throw error;
     },
     onSuccess: () => {
-      invalidateSubscriptionQueries();
+      invalidateSubscriptionQueries(queryClient);
     },
   });
 }

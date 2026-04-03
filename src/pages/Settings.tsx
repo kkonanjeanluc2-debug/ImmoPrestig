@@ -359,7 +359,7 @@ const Settings = () => {
             <TabsContent value="agency" className="space-y-6">
               <AgencySettings />
               <PDFDocumentSettings />
-              <ExportAllDataButton />
+              {planName !== "Starter" && <ExportAllDataButton />}
             </TabsContent>
           )}
 

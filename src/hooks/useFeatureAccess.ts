@@ -14,7 +14,8 @@ export type FeatureKey =
   | "support_dedie"
   | "formation_personnalisee"
   | "assistant_ia"
-  | "gestion_impayes";
+  | "gestion_impayes"
+  | "apporteurs_affaires";
 
 // Map feature keys to strings that appear in subscription_plans.features
 const FEATURE_MAPPING: Record<FeatureKey, string[]> = {

@@ -183,7 +183,7 @@ const App = () => {
                   <Route path="/impayes" element={<ProtectedRoute><FeatureProtectedRoute feature="gestion_impayes"><Impayes /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/comptabilite" element={<ProtectedRoute><Comptabilite /></ProtectedRoute>} />
                   <Route path="/rapports" element={<ProtectedRoute><Rapports /></ProtectedRoute>} />
-                  <Route path="/apporteurs" element={<ProtectedRoute><ApporteursAffaires /></ProtectedRoute>} />
+                  <Route path="/apporteurs" element={<ProtectedRoute><FeatureProtectedRoute feature="apporteurs_affaires"><ApporteursAffaires /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />

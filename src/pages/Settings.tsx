@@ -242,7 +242,7 @@ const Settings = () => {
                 <span>Fiches de réservation</span>
               </TabsTrigger>
             )}
-            {hasAchatsImmobiliers && canAccessAchatContractsTab && (
+            {hasAchatsImmobiliers && canAccessAchatContractsTab && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="achat-contracts"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"

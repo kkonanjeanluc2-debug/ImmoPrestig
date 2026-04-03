@@ -38,6 +38,9 @@ const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
 // Plans that have all features by default (for display purposes)
 const PLANS_WITH_ALL_FEATURES = ["Enterprise"];
 
+// Feature string that means "inherits all features from lower plans"
+const INHERIT_ALL_MARKER = "toutes les fonctionnalités de forfaits inférieurs";
+
 // Define which plan level unlocks which features
 const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {
   "Gratuit": [],

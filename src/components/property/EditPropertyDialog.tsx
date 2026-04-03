@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Home, Building, X, ImageIcon, Loader2, User } from "lucide-react";
 import { GpsPositionInput } from "@/components/shared/GpsPositionInput";
+import { CommuneSelector } from "@/components/shared/CommuneSelector";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUpdateProperty, Property } from "@/hooks/useProperties";

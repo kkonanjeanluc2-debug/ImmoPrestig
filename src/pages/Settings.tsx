@@ -215,7 +215,7 @@ const Settings = () => {
                 <span>Contrats de gestion</span>
               </TabsTrigger>
             )}
-            {hasVentesImmobilieres && canAccessSaleContractsTab && (
+            {hasVentesImmobilieres && canAccessSaleContractsTab && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="sale-contracts"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"

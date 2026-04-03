@@ -17,21 +17,22 @@ export type FeatureKey =
   | "gestion_impayes"
   | "apporteurs_affaires";
 
-// Map feature keys to strings that appear in subscription_plans.features
+// Map feature keys to exact strings that appear in subscription_plans.features
+// Matching is done with exact equality (case-insensitive) to avoid false positives
 const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
-  ventes_immobilieres: ["Ventes immobilières", "ventes immobilieres", "Toutes les fonctionnalités"],
-  achats_immobiliers: ["Achats immobiliers", "achats immobiliers", "Ventes immobilières", "ventes immobilieres", "Toutes les fonctionnalités"],
-  lotissement: ["Lotissement", "lotissement", "Toutes les fonctionnalités"],
-  rappels_sms: ["Rappels SMS & Email", "Rappels SMS", "rappels sms", "Rappels Whatsapp & Email", "Toutes les fonctionnalités"],
+  ventes_immobilieres: ["Ventes immobilières", "Toutes les fonctionnalités"],
+  achats_immobiliers: ["Achats immobiliers", "Ventes immobilières", "Toutes les fonctionnalités"],
+  lotissement: ["Lotissement", "Gestion des lotissements", "Toutes les fonctionnalités"],
+  rappels_sms: ["Rappels SMS & Email", "Rappels SMS", "Rappels Whatsapp & Email", "Toutes les fonctionnalités"],
   rappels_automatiques: ["Rappels automatiques", "Rappels SMS & Email", "Rappels Whatsapp & Email", "Planification des automatisations", "Toutes les fonctionnalités"],
-  quittances_personnalisees: ["Quittances personnalisées", "quittances personnalisees", "Toutes les fonctionnalités"],
-  rapports_avances: ["Rapports avancés", "rapports avances", "Toutes les fonctionnalités"],
+  quittances_personnalisees: ["Quittances personnalisées", "Toutes les fonctionnalités"],
+  rapports_avances: ["Rapports avancés", "Toutes les fonctionnalités"],
   support_prioritaire: ["Support prioritaire", "Support dédié", "Toutes les fonctionnalités"],
   support_dedie: ["Support dédié", "Toutes les fonctionnalités"],
   formation_personnalisee: ["Formation personnalisée", "Toutes les fonctionnalités"],
-  assistant_ia: ["Assistant IA", "assistant ia", "Toutes les fonctionnalités"],
-  gestion_impayes: ["Gestion des impayés", "gestion des impayes", "Toutes les fonctionnalités"],
-  apporteurs_affaires: ["Gestion des Apporteurs d'affaires", "apporteurs d'affaires"],
+  assistant_ia: ["Assistant IA", "Toutes les fonctionnalités"],
+  gestion_impayes: ["Gestion des impayés", "Toutes les fonctionnalités"],
+  apporteurs_affaires: ["Gestion des Apporteurs d'affaires"],
 };
 
 // Plans that have all features by default (for display purposes)

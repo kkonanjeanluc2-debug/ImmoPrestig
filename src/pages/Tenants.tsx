@@ -364,7 +364,7 @@ export default function Tenants() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les communes</SelectItem>
-                  {COMMUNES_COTE_DIVOIRE.map((commune) => (
+                  {rentedCommunes.map((commune) => (
                     <SelectItem key={commune} value={commune}>
                       {commune}
                     </SelectItem>

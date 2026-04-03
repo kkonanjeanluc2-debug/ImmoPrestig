@@ -20,18 +20,18 @@ export type FeatureKey =
 // Map feature keys to exact strings that appear in subscription_plans.features
 // Matching is done with exact equality (case-insensitive) to avoid false positives
 const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
-  ventes_immobilieres: ["Ventes immobilières", "Toutes les fonctionnalités"],
-  achats_immobiliers: ["Achats immobiliers", "Ventes immobilières", "Toutes les fonctionnalités"],
-  lotissement: ["Lotissement", "Gestion des lotissements", "Toutes les fonctionnalités"],
-  rappels_sms: ["Rappels SMS & Email", "Rappels SMS", "Rappels Whatsapp & Email", "Toutes les fonctionnalités"],
-  rappels_automatiques: ["Rappels automatiques", "Rappels SMS & Email", "Rappels Whatsapp & Email", "Planification des automatisations", "Toutes les fonctionnalités"],
-  quittances_personnalisees: ["Quittances personnalisées", "Toutes les fonctionnalités"],
-  rapports_avances: ["Rapports avancés", "Toutes les fonctionnalités"],
-  support_prioritaire: ["Support prioritaire", "Support dédié", "Toutes les fonctionnalités"],
-  support_dedie: ["Support dédié", "Toutes les fonctionnalités"],
-  formation_personnalisee: ["Formation personnalisée", "Toutes les fonctionnalités"],
-  assistant_ia: ["Assistant IA", "Toutes les fonctionnalités"],
-  gestion_impayes: ["Gestion des impayés", "Toutes les fonctionnalités"],
+  ventes_immobilieres: ["Ventes immobilières", "Ventes et Achats immobiliers", "CRM immobiliers"],
+  achats_immobiliers: ["Achats immobiliers", "Ventes et Achats immobiliers", "CRM immobiliers"],
+  lotissement: ["Lotissement", "Gestion des lotissements"],
+  rappels_sms: ["Rappels SMS & Email", "Rappels SMS", "Rappels Whatsapp & Email", "Rappels WhatsApp & Email"],
+  rappels_automatiques: ["Rappels automatiques", "Planification des automatisations"],
+  quittances_personnalisees: ["Quittances personnalisées"],
+  rapports_avances: ["Rapports avancés", "Rapports d'activité"],
+  support_prioritaire: ["Support prioritaire", "Support dédié"],
+  support_dedie: ["Support dédié"],
+  formation_personnalisee: ["Formation personnalisée"],
+  assistant_ia: ["Assistant IA"],
+  gestion_impayes: ["Gestion des impayés", "Gestion des impayés & Procédure d'expulsion"],
   apporteurs_affaires: ["Gestion des Apporteurs d'affaires"],
 };
 

@@ -312,6 +312,14 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
             />
           </div>
 
+          <div className="space-y-2">
+            <Label>Commune</Label>
+            <CommuneSelector
+              value={formData.city}
+              onChange={(value) => setFormData({ ...formData, city: value })}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">

@@ -215,7 +215,7 @@ const Settings = () => {
                 <span>Contrats de gestion</span>
               </TabsTrigger>
             )}
-            {hasVentesImmobilieres && canAccessSaleContractsTab && (
+            {hasVentesImmobilieres && canAccessSaleContractsTab && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="sale-contracts"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -224,7 +224,7 @@ const Settings = () => {
                 <span>Contrats de vente</span>
               </TabsTrigger>
             )}
-            {hasLotissement && canAccessPromesseVenteTab && (
+            {hasLotissement && canAccessPromesseVenteTab && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="promesse-vente"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -233,7 +233,7 @@ const Settings = () => {
                 <span>Promesses de vente</span>
               </TabsTrigger>
             )}
-            {(hasLotissement || hasVentesImmobilieres) && canAccessReservationFormsTab && (
+            {(hasLotissement || hasVentesImmobilieres) && canAccessReservationFormsTab && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="reservation-forms"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -242,7 +242,7 @@ const Settings = () => {
                 <span>Fiches de réservation</span>
               </TabsTrigger>
             )}
-            {hasAchatsImmobiliers && canAccessAchatContractsTab && (
+            {hasAchatsImmobiliers && canAccessAchatContractsTab && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="achat-contracts"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -251,7 +251,7 @@ const Settings = () => {
                 <span>Documents d'achat</span>
               </TabsTrigger>
             )}
-            {hasLotissement && canManageTemplates && (
+            {hasLotissement && canManageTemplates && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="attestation-templates"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"
@@ -260,7 +260,7 @@ const Settings = () => {
                 <span>Attestations</span>
               </TabsTrigger>
             )}
-            {hasLotissement && canManageTemplates && (
+            {hasLotissement && canManageTemplates && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="guide-templates"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"

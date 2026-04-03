@@ -1,4 +1,4 @@
-import { COMMUNES_COTE_DIVOIRE } from "@/constants/communesCoteDIvoire";
+import { useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -155,6 +155,19 @@ export default function Tenants() {
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
   const { requestsByTenant } = useTenantsActiveRequestsMap();
   const { data: owners = [] } = useOwners();
+
+  // Derive communes only from properties with status "loué"
+  const rentedCommunes = useMemo(() => {
+    if (!tenants) return [];
+    const communes = new Set<string>();
+    for (const tenant of tenants) {
+      const prop = tenant.property as any;
+      if (prop?.city && prop?.status === "loué") {
+        communes.add(prop.city);
+      }
+    }
+    return Array.from(communes).sort((a, b) => a.localeCompare(b, "fr"));
+  }, [tenants]);
 
   if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_tenants")) {
     return <Navigate to="/dashboard" replace />;
@@ -364,7 +377,7 @@ export default function Tenants() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les communes</SelectItem>
-                  {COMMUNES_COTE_DIVOIRE.map((commune) => (
+                  {rentedCommunes.map((commune) => (
                     <SelectItem key={commune} value={commune}>
                       {commune}
                     </SelectItem>

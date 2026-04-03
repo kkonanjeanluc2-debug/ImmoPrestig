@@ -251,7 +251,7 @@ const Settings = () => {
                 <span>Documents d'achat</span>
               </TabsTrigger>
             )}
-            {hasLotissement && canManageTemplates && (
+            {hasLotissement && canManageTemplates && planName !== "Prestige Max" && (
               <TabsTrigger
                 value="attestation-templates"
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2"

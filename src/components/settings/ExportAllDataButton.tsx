@@ -127,7 +127,41 @@ async function fetchAllRows(table: string, userId: string) {
   return allRows;
 }
 
-async function createExcelBuffer(sheetName: string, data: any[], columns: { key: string; label: string }[]) {
+interface ExportColumn {
+  key: string;
+  label: string;
+  value?: (row: any) => unknown;
+}
+
+function splitTenantName(name?: string | null) {
+  const normalizedName = name?.trim().replace(/\s+/g, " ") || "";
+
+  if (!normalizedName) {
+    return { firstName: "", lastName: "" };
+  }
+
+  const parts = normalizedName.split(" ");
+
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: "" };
+  }
+
+  if (parts.length === 2) {
+    return { firstName: parts[0], lastName: parts[1] };
+  }
+
+  return {
+    firstName: parts.slice(0, -1).join(" "),
+    lastName: parts[parts.length - 1],
+  };
+}
+
+function getExportCellValue(row: any, column: ExportColumn) {
+  const value = column.value ? column.value(row) : row[column.key];
+  return value === null || value === undefined ? "" : String(value);
+}
+
+async function createExcelBuffer(sheetName: string, data: any[], columns: ExportColumn[]) {
   if (data.length === 0) return null;
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet(sheetName);
@@ -138,15 +172,12 @@ async function createExcelBuffer(sheetName: string, data: any[], columns: { key:
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE0E0E0" } };
   });
   data.forEach(row => {
-    worksheet.addRow(columns.map(c => {
-      const val = row[c.key];
-      return val === null || val === undefined ? "" : String(val);
-    }));
+    worksheet.addRow(columns.map((column) => getExportCellValue(row, column)));
   });
   columns.forEach((_, i) => {
     const maxLen = Math.max(
       columns[i].label.length,
-      ...data.slice(0, 100).map(row => String(row[columns[i].key] ?? "").length)
+       ...data.slice(0, 100).map((row) => getExportCellValue(row, columns[i]).length)
     );
     worksheet.getColumn(i + 1).width = Math.min(maxLen + 2, 50);
   });
@@ -154,7 +185,7 @@ async function createExcelBuffer(sheetName: string, data: any[], columns: { key:
 }
 
 // Helper: auto-generate columns from first row keys
-function autoColumns(data: any[]): { key: string; label: string }[] {
+function autoColumns(data: any[]): ExportColumn[] {
   if (data.length === 0) return [];
   return Object.keys(data[0]).map(key => ({ key, label: key }));
 }
@@ -165,7 +196,7 @@ const TABLE_CONFIGS: {
   table: string;
   fileName: string;
   sheetName: string;
-  columns?: { key: string; label: string }[];
+  columns?: ExportColumn[];
 }[] = [
   {
     table: "properties", fileName: "biens_locatifs.xlsx", sheetName: "Biens locatifs",
@@ -179,7 +210,17 @@ const TABLE_CONFIGS: {
   {
     table: "tenants", fileName: "locataires.xlsx", sheetName: "Locataires",
     columns: [
-      { key: "id", label: "ID" }, { key: "first_name", label: "Prénom" }, { key: "last_name", label: "Nom" },
+      { key: "id", label: "ID" },
+      {
+        key: "first_name",
+        label: "Prénom",
+        value: (row) => row.first_name || splitTenantName(row.name).firstName,
+      },
+      {
+        key: "last_name",
+        label: "Nom",
+        value: (row) => row.last_name || splitTenantName(row.name).lastName,
+      },
       { key: "email", label: "Email" }, { key: "phone", label: "Téléphone" }, { key: "profession", label: "Profession" },
       { key: "cni_number", label: "N° CNI" }, { key: "status", label: "Statut" }, { key: "created_at", label: "Date création" },
     ],

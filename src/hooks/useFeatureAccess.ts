@@ -38,6 +38,9 @@ const FEATURE_MAPPING: Record<FeatureKey, string[]> = {
 // Plans that have all features by default (for display purposes)
 const PLANS_WITH_ALL_FEATURES = ["Enterprise"];
 
+// Feature string that means "inherits all features from lower plans"
+const INHERIT_ALL_MARKER = "toutes les fonctionnalités de forfaits inférieurs";
+
 // Define which plan level unlocks which features
 const PLAN_FEATURE_LEVELS: Record<string, FeatureKey[]> = {
   "Gratuit": [],
@@ -66,6 +69,16 @@ export function useFeatureAccess(): FeatureAccessResult {
 
     const hasFeature = (feature: FeatureKey): boolean => {
       if (PLANS_WITH_ALL_FEATURES.includes(planName)) return true;
+      // If plan has "Toutes les fonctionnalités de forfaits inférieurs", use PLAN_FEATURE_LEVELS
+      const hasInheritAll = planFeatures.some(pf => pf.trim().toLowerCase() === INHERIT_ALL_MARKER);
+      if (hasInheritAll) {
+        // Check if any lower plan includes this feature
+        const planOrder = ["Gratuit", "Starter", "Pro", "Premium", "Prestige Max", "Enterprise"];
+        const currentIndex = planOrder.indexOf(planName);
+        for (let i = 0; i <= currentIndex; i++) {
+          if (PLAN_FEATURE_LEVELS[planOrder[i]]?.includes(feature)) return true;
+        }
+      }
       const featureStrings = FEATURE_MAPPING[feature];
       // Use exact equality (case-insensitive, trimmed) to avoid false positives
       return featureStrings.some(str => 

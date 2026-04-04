@@ -1067,10 +1067,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const amount = Number(c.deposit || 0);
         if (amount <= 0) return;
 
-        const createdDate = c.created_at ? String(c.created_at).split("T")[0] : null;
-        const cautionDate = createdDate && createdDate >= fromDate && createdDate <= toDate
-          ? createdDate
-          : c.start_date;
+        const cautionDate = c.created_at ? String(c.created_at).split("T")[0] : c.start_date;
 
         result.cautionsEncaissees += amount;
         const date = new Date(cautionDate);

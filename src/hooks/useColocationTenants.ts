@@ -10,6 +10,7 @@ export interface ColocationTenant {
   start_date: string;
   end_date: string | null;
   status: string;
+  rent_share: number;
   user_id: string;
   created_at: string;
   updated_at: string;

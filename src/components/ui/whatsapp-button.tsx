@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
-import { generateWhatsAppUrl } from "@/lib/whatsapp";
+import { openWhatsApp } from "@/lib/whatsapp";
 
 interface WhatsAppButtonProps {
   phone?: string | null | undefined;
@@ -31,9 +31,7 @@ export function WhatsAppButton({
   
   const handleClick = (e: React.MouseEvent) => {
     onClick?.(e);
-
-    const url = generateWhatsAppUrl(phone ?? "", message);
-    window.open(url, "_blank");
+    openWhatsApp(phone ?? "", message);
   };
 
   return (

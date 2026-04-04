@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
-import { generateWhatsAppUrl } from "@/lib/whatsapp";
+import { openWhatsApp } from "@/lib/whatsapp";
 
 interface DemoRequestButtonProps {
   className?: string;
@@ -25,12 +25,11 @@ export function DemoRequestButton({
   }
 
   const handleClick = () => {
-    const url = generateWhatsAppUrl(
+    openWhatsApp(
       phone,
       "Bonjour ! Je souhaite demander une démo gratuite de votre plateforme de gestion immobilière."
     );
 
-    window.open(url, "_blank");
     onClick?.();
   };
 

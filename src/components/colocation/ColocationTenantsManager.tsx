@@ -103,6 +103,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
       toast.success("Colocataire ajouté avec succès");
       setAddDialogOpen(false);
       setSelectedTenantId("");
+      setRentShare("");
     } catch (error: any) {
       toast.error(error?.message || "Erreur lors de l'ajout du colocataire");
     }

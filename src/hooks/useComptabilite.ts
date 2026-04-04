@@ -167,6 +167,16 @@ function toYearMonth(m: string): string | null {
   return null;
 }
 
+function extractISODate(value?: string | null): string | null {
+  if (!value) return null;
+  return String(value).split("T")[0] || null;
+}
+
+function isDateWithinPeriod(value: string | null | undefined, fromDate: string, toDate: string): boolean {
+  const date = extractISODate(value);
+  return !!date && date >= fromDate && date <= toDate;
+}
+
 export function useComptabilite(periodFrom: Date, periodTo: Date) {
   const { user } = useAuth();
   const { data: allPayments } = usePayments();
@@ -417,7 +427,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
   });
 
    // Fetch cautions (security deposits) within the selected period.
-   // Use start_date as the deposit collection date (date d'encaissement réelle).
+   // Cash-basis proxy: use contract recording date, not contract start date.
    const { data: cautions } = useQuery({
      queryKey: ["comptabilite-cautions", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
      queryFn: async () => {
@@ -426,8 +436,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
          .select("id, deposit, start_date, created_at, tenant:tenants!contracts_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
          .gt("deposit", 0)
          .is("deleted_at", null)
-         .gte("start_date", fromDate)
-         .lte("start_date", toDate);
+          .gte("created_at", `${fromDate}T00:00:00`)
+          .lte("created_at", `${toDate}T23:59:59.999`);
        if (error) {
          console.error("Cautions query error:", error);
          throw error;
@@ -1064,7 +1074,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const amount = Number(c.deposit || 0);
         if (amount <= 0) return;
 
-        const cautionDate = c.start_date || String(c.created_at).split("T")[0];
+        const cautionDate = extractISODate(c.created_at);
+        if (!isDateWithinPeriod(cautionDate, fromDate, toDate)) return;
 
         result.cautionsEncaissees += amount;
         const date = new Date(cautionDate);

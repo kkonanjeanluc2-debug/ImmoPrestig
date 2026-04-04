@@ -32,7 +32,7 @@ export function formatPhoneForWhatsApp(phone: string): string {
 export function generateWhatsAppUrl(phone: string, message: string): string {
   const formattedPhone = formatPhoneForWhatsApp(phone);
   const encodedMessage = encodeURIComponent(message);
-  return `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+  return `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodedMessage}`;
 }
 
 /**

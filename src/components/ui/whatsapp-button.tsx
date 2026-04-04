@@ -44,10 +44,9 @@ export function WhatsAppButton({
       if (formattedPhone.startsWith("+")) {
         formattedPhone = formattedPhone.substring(1);
       }
-      url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+      url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
     } else {
-      // Share without specific phone number (opens WhatsApp with message to share)
-      url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     }
     
     window.open(url, "_blank");

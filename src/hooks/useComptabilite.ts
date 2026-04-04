@@ -416,29 +416,26 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
-  // Fetch cautions (security deposits) within the selected period.
-  // We consider both contract start_date and created_at to avoid missing deposits
-  // entered this month for contracts starting later (or backfilled contracts).
-  const { data: cautions } = useQuery({
-    queryKey: ["comptabilite-cautions", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contracts")
-        .select("id, deposit, start_date, created_at, tenant:tenants!contracts_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
-        .gt("deposit", 0)
-        .is("deleted_at", null);
-      if (error) {
-        console.error("Cautions query error:", error);
-        throw error;
-      }
-      // Filter by created_at (date d'encaissement/enregistrement) for cash-basis accounting
-      return (data || []).filter((c: any) => {
-        const createdDate = c.created_at ? String(c.created_at).split("T")[0] : null;
-        return createdDate ? createdDate >= fromDate && createdDate <= toDate : false;
-      });
-    },
-    enabled: !!user,
-  });
+   // Fetch cautions (security deposits) within the selected period.
+   // Use start_date as the deposit collection date (date d'encaissement réelle).
+   const { data: cautions } = useQuery({
+     queryKey: ["comptabilite-cautions", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+     queryFn: async () => {
+       const { data, error } = await supabase
+         .from("contracts")
+         .select("id, deposit, start_date, created_at, tenant:tenants!contracts_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
+         .gt("deposit", 0)
+         .is("deleted_at", null)
+         .gte("start_date", fromDate)
+         .lte("start_date", toDate);
+       if (error) {
+         console.error("Cautions query error:", error);
+         throw error;
+       }
+       return data || [];
+     },
+     enabled: !!user,
+   });
 
   const { data: expenses } = useQuery({
     queryKey: ["comptabilite-expenses", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
@@ -1067,7 +1064,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const amount = Number(c.deposit || 0);
         if (amount <= 0) return;
 
-        const cautionDate = c.created_at ? String(c.created_at).split("T")[0] : c.start_date;
+        const cautionDate = c.start_date || String(c.created_at).split("T")[0];
 
         result.cautionsEncaissees += amount;
         const date = new Date(cautionDate);

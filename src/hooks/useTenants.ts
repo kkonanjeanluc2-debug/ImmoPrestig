@@ -67,6 +67,18 @@ export const useTenants = () => {
 
       let tenants = data as TenantWithDetails[];
 
+      // Filter out non-principal colocation tenants (they appear in the principal's details)
+      const { data: nonPrincipalColocs } = await supabase
+        .from("colocation_tenants")
+        .select("tenant_id")
+        .eq("is_principal", false)
+        .eq("status", "active");
+
+      if (nonPrincipalColocs && nonPrincipalColocs.length > 0) {
+        const colocTenantIds = new Set(nonPrincipalColocs.map(ct => ct.tenant_id));
+        tenants = tenants.filter(tenant => !colocTenantIds.has(tenant.id));
+      }
+
       // Filter tenants for gestionnaire: only show tenants linked to their assigned properties
       if (isGestionnaire && assignedPropertyIds.length > 0) {
         tenants = tenants.filter(tenant => 

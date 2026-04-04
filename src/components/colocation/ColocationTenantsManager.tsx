@@ -67,6 +67,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
   const [newTenantPhone, setNewTenantPhone] = useState("");
   const [newTenantEmail, setNewTenantEmail] = useState("");
   const [newTenantProfession, setNewTenantProfession] = useState("");
+  const [rentShare, setRentShare] = useState("");
 
   const { data: colocationTenants = [], isLoading } = useColocationTenants(contractId);
   const { data: allTenants = [] } = useTenants();
@@ -86,6 +87,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
     setNewTenantPhone("");
     setNewTenantEmail("");
     setNewTenantProfession("");
+    setRentShare("");
   };
 
   const handleAddExistingTenant = async () => {
@@ -96,10 +98,12 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
         tenant_id: selectedTenantId,
         is_principal: colocationTenants.length === 0,
         start_date: new Date().toISOString().split("T")[0],
+        rent_share: rentShare ? parseFloat(rentShare) : 0,
       });
       toast.success("Colocataire ajouté avec succès");
       setAddDialogOpen(false);
       setSelectedTenantId("");
+      setRentShare("");
     } catch (error: any) {
       toast.error(error?.message || "Erreur lors de l'ajout du colocataire");
     }
@@ -123,6 +127,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
         tenant_id: newTenant.id,
         is_principal: colocationTenants.length === 0,
         start_date: new Date().toISOString().split("T")[0],
+        rent_share: rentShare ? parseFloat(rentShare) : 0,
       });
 
       toast.success("Nouveau colocataire créé et ajouté");
@@ -190,6 +195,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
   const activeTenants = colocationTenants.filter(ct => ct.status === "active");
   const departedTenants = colocationTenants.filter(ct => ct.status === "departed");
   const isAdding = addColocationTenant.isPending || createTenant.isPending;
+  const totalRentShares = activeTenants.reduce((sum, ct) => sum + (ct.rent_share || 0), 0);
 
   return (
     <Card>
@@ -242,6 +248,11 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
                     )}
                   </div>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    {ct.rent_share > 0 && (
+                      <span className="font-semibold text-foreground">
+                        {Number(ct.rent_share).toLocaleString('fr-FR')} FCFA
+                      </span>
+                    )}
                     {ct.tenant?.phone && (
                       <span className="flex items-center gap-1">
                         <Phone className="h-3 w-3" />
@@ -269,6 +280,15 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
               </div>
             ))}
           </>
+        )}
+
+        {activeTenants.length > 0 && (
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+            <span className="text-sm font-medium text-muted-foreground">Total des parts</span>
+            <span className={`text-sm font-bold ${totalRentShares === contract.rent_amount ? 'text-emerald-600' : 'text-amber-500'}`}>
+              {totalRentShares.toLocaleString('fr-FR')} / {contract.rent_amount.toLocaleString('fr-FR')} FCFA
+            </span>
+          </div>
         )}
 
         {departedTenants.length > 0 && (
@@ -322,14 +342,18 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
                   ))}
                 </SelectContent>
               </Select>
-              {availableTenants.length === 0 && (
+               {availableTenants.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   Aucun locataire disponible. Utilisez l'onglet "Nouveau" pour en créer un.
                 </p>
               )}
+              <div>
+                <Label>Part de loyer (FCFA) *</Label>
+                <Input type="number" value={rentShare} onChange={(e) => setRentShare(e.target.value)} placeholder="Ex: 25000" />
+              </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Annuler</Button>
-                <Button onClick={handleAddExistingTenant} disabled={!selectedTenantId || isAdding}>
+                <Button onClick={handleAddExistingTenant} disabled={!selectedTenantId || !rentShare || isAdding}>
                   {isAdding && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
                   Ajouter
                 </Button>
@@ -353,9 +377,13 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
                 <Label>Profession</Label>
                 <Input value={newTenantProfession} onChange={(e) => setNewTenantProfession(e.target.value)} placeholder="Profession" />
               </div>
+              <div>
+                <Label>Part de loyer (FCFA) *</Label>
+                <Input type="number" value={rentShare} onChange={(e) => setRentShare(e.target.value)} placeholder="Ex: 25000" />
+              </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Annuler</Button>
-                <Button onClick={handleAddNewTenant} disabled={!newTenantName.trim() || isAdding}>
+                <Button onClick={handleAddNewTenant} disabled={!newTenantName.trim() || !rentShare || isAdding}>
                   {isAdding && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
                   Créer et ajouter
                 </Button>

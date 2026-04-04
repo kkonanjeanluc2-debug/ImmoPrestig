@@ -1,0 +1,1 @@
+ALTER TABLE public.colocation_tenants ADD COLUMN rent_share numeric DEFAULT 0;

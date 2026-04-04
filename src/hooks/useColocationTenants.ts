@@ -55,6 +55,7 @@ export const useAddColocationTenant = () => {
       is_principal?: boolean;
       start_date: string;
       end_date?: string | null;
+      rent_share?: number;
     }) => {
       if (!user) throw new Error("User not authenticated");
 

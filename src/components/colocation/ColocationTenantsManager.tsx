@@ -87,6 +87,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
     setNewTenantPhone("");
     setNewTenantEmail("");
     setNewTenantProfession("");
+    setRentShare("");
   };
 
   const handleAddExistingTenant = async () => {

@@ -213,6 +213,8 @@ function PhotoCard({
             src={thumbnail}
             alt={`Photo ${index + 1}`}
             className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
             onLoad={() => setImgLoaded(true)}
           />
         ) : (

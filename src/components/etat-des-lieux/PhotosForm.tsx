@@ -186,10 +186,24 @@ function PhotoCard({
 }) {
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  // Load thumbnail on mount
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Lazy load thumbnail only when visible
   useEffect(() => {
-    onLoadThumbnail();
-  }, []);
+    const el = cardRef.current;
+    if (!el || thumbnail) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onLoadThumbnail();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [thumbnail]);
 
   return (
     <div className="border rounded-lg overflow-hidden group relative">

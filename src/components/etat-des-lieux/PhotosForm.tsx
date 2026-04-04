@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, Plus, Trash2, Download, ExternalLink, Loader2, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -186,19 +186,35 @@ function PhotoCard({
 }) {
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  // Load thumbnail on mount
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Lazy load thumbnail only when visible
   useEffect(() => {
-    onLoadThumbnail();
-  }, []);
+    const el = cardRef.current;
+    if (!el || thumbnail) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onLoadThumbnail();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [thumbnail]);
 
   return (
-    <div className="border rounded-lg overflow-hidden group relative">
+    <div ref={cardRef} className="border rounded-lg overflow-hidden group relative">
       <div className="aspect-square bg-muted flex items-center justify-center">
         {thumbnail ? (
           <img
             src={thumbnail}
             alt={`Photo ${index + 1}`}
             className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
             onLoad={() => setImgLoaded(true)}
           />
         ) : (

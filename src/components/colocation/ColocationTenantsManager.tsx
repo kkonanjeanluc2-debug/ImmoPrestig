@@ -98,6 +98,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
         tenant_id: selectedTenantId,
         is_principal: colocationTenants.length === 0,
         start_date: new Date().toISOString().split("T")[0],
+        rent_share: rentShare ? parseFloat(rentShare) : 0,
       });
       toast.success("Colocataire ajouté avec succès");
       setAddDialogOpen(false);

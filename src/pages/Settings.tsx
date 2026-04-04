@@ -18,6 +18,7 @@ import { PDFDocumentSettings } from "@/components/settings/PDFDocumentSettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { ReceiptTemplateManager } from "@/components/settings/ReceiptTemplateManager";
 import { ContractTemplateManager } from "@/components/settings/ContractTemplateManager";
+import { ColocationContractTemplateManager } from "@/components/settings/ColocationContractTemplateManager";
 import { SaleContractTemplateManager } from "@/components/settings/SaleContractTemplateManager";
 import { PromesseVenteTemplateManager } from "@/components/settings/PromesseVenteTemplateManager";
 import { ReservationFormTemplateManager } from "@/components/settings/ReservationFormTemplateManager";

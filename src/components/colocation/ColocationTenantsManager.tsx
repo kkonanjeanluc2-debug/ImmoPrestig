@@ -67,6 +67,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
   const [newTenantPhone, setNewTenantPhone] = useState("");
   const [newTenantEmail, setNewTenantEmail] = useState("");
   const [newTenantProfession, setNewTenantProfession] = useState("");
+  const [rentShare, setRentShare] = useState("");
 
   const { data: colocationTenants = [], isLoading } = useColocationTenants(contractId);
   const { data: allTenants = [] } = useTenants();

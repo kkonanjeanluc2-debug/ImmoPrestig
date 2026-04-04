@@ -1,37 +1,40 @@
 /**
- * Utility functions for WhatsApp integration using wa.me links
- * This approach opens WhatsApp with a pre-filled message - no API needed
+ * Utility functions for WhatsApp integration using click-to-chat links.
+ * This approach opens WhatsApp with a pre-filled message - no API needed.
  */
 
 import { getWhatsAppTemplates, WhatsAppTemplates } from "@/components/settings/WhatsAppSettings";
 
 /**
- * Format phone number for WhatsApp (remove spaces, dashes, and ensure country code)
+ * Format phone number for WhatsApp.
+ * Accepts local or international formats and only strips separators,
+ * preserving meaningful leading zeros entered by the user.
  */
 export function formatPhoneForWhatsApp(phone: string): string {
-  // Remove all non-digit characters except +
-  let cleaned = phone.replace(/[^\d+]/g, "");
-  
-  // If it starts with 0, assume it's a local number and needs country code
-  // Default to Senegal (+221) - adjust as needed for your region
-  if (cleaned.startsWith("0")) {
-    cleaned = "221" + cleaned.substring(1);
+  const cleaned = phone.trim().replace(/[^\d+]/g, "");
+
+  if (!cleaned) {
+    return "";
   }
-  
-  // Remove leading + if present (wa.me doesn't need it)
-  if (cleaned.startsWith("+")) {
-    cleaned = cleaned.substring(1);
-  }
-  
-  return cleaned;
+
+  const normalized = cleaned.startsWith("00")
+    ? `+${cleaned.slice(2)}`
+    : cleaned;
+
+  return normalized.startsWith("+") ? normalized.slice(1) : normalized;
 }
 
 /**
- * Generate a WhatsApp click-to-chat URL
+ * Generate a WhatsApp click-to-chat URL.
  */
 export function generateWhatsAppUrl(phone: string, message: string): string {
   const formattedPhone = formatPhoneForWhatsApp(phone);
   const encodedMessage = encodeURIComponent(message);
+
+  if (!formattedPhone) {
+    return `https://api.whatsapp.com/send?text=${encodedMessage}`;
+  }
+
   return `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodedMessage}`;
 }
 

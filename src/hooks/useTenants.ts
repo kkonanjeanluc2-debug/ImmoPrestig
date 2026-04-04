@@ -71,8 +71,7 @@ export const useTenants = () => {
       const { data: nonPrincipalColocs } = await supabase
         .from("colocation_tenants")
         .select("tenant_id")
-        .eq("is_principal", false)
-        .eq("status", "active");
+        .eq("is_principal", false);
 
       if (nonPrincipalColocs && nonPrincipalColocs.length > 0) {
         const colocTenantIds = new Set(nonPrincipalColocs.map(ct => ct.tenant_id));

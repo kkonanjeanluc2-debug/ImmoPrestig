@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { generateWhatsAppUrl } from "@/lib/whatsapp";
+import { openWhatsApp } from "@/lib/whatsapp";
 import { supabase } from "@/integrations/supabase/client";
 
 const categoryLabels: Record<string, string> = {
@@ -139,13 +139,7 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
       // Open WhatsApp notification
       if (agency.notification_whatsapp) {
         const message = `🔔 *Nouvelle requête locataire*\n\n👤 Locataire: ${displayName}\n📋 Catégorie: ${catLabel}\n⚡ Priorité: ${prioLabel}\n📝 Titre: ${requestTitle}${requestDescription ? `\n\nDescription: ${requestDescription}` : ""}`;
-        const waUrl = generateWhatsAppUrl(agency.notification_whatsapp, message);
-
-        if (whatsappPopup && !whatsappPopup.closed) {
-          whatsappPopup.location.href = waUrl;
-        } else {
-          window.open(waUrl, "_blank");
-        }
+        openWhatsApp(agency.notification_whatsapp, message, whatsappPopup);
       } else {
         whatsappPopup?.close();
       }

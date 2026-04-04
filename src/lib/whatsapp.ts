@@ -32,18 +32,53 @@ export function generateWhatsAppUrl(phone: string, message: string): string {
   const encodedMessage = encodeURIComponent(message);
 
   if (!formattedPhone) {
-    return `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    return `https://wa.me/?text=${encodedMessage}`;
   }
 
-  return `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodedMessage}`;
+  return `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+}
+
+/**
+ * Generate a WhatsApp native app URL.
+ */
+export function generateWhatsAppAppUrl(phone: string, message: string): string {
+  const formattedPhone = formatPhoneForWhatsApp(phone);
+  const encodedMessage = encodeURIComponent(message);
+
+  if (!formattedPhone) {
+    return `whatsapp://send?text=${encodedMessage}`;
+  }
+
+  return `whatsapp://send?phone=${formattedPhone}&text=${encodedMessage}`;
 }
 
 /**
  * Open WhatsApp with a pre-filled message
  */
-export function openWhatsApp(phone: string, message: string): void {
-  const url = generateWhatsAppUrl(phone, message);
-  window.open(url, "_blank");
+export function openWhatsApp(phone: string, message: string, existingWindow?: Window | null): Window | null {
+  const appUrl = generateWhatsAppAppUrl(phone, message);
+  const webUrl = generateWhatsAppUrl(phone, message);
+  const popup = existingWindow ?? window.open("", "_blank");
+
+  if (!popup) {
+    const fallbackWindow = window.open(webUrl, "_blank");
+
+    if (!fallbackWindow) {
+      window.location.href = webUrl;
+    }
+
+    return fallbackWindow;
+  }
+
+  popup.location.href = appUrl;
+
+  window.setTimeout(() => {
+    if (!popup.closed) {
+      popup.location.href = webUrl;
+    }
+  }, 1200);
+
+  return popup;
 }
 
 /**

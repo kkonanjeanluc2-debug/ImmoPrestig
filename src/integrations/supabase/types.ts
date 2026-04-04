@@ -1259,6 +1259,7 @@ export type Database = {
           end_date: string | null
           id: string
           is_principal: boolean
+          rent_share: number | null
           start_date: string
           status: string
           tenant_id: string
@@ -1271,6 +1272,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_principal?: boolean
+          rent_share?: number | null
           start_date: string
           status?: string
           tenant_id: string
@@ -1283,6 +1285,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_principal?: boolean
+          rent_share?: number | null
           start_date?: string
           status?: string
           tenant_id?: string

@@ -12,7 +12,7 @@ const escapeHtml = (value: string) =>
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
+    .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
 serve(async (req) => {
@@ -39,17 +39,24 @@ serve(async (req) => {
       });
     }
 
-    const safeAgencyName = escapeHtml((agencyName || "ImmoPrestige").trim());
-    const safeTenantName = escapeHtml((tenantName || "Non spécifié").trim());
-    const safeCategory = escapeHtml((category || "Non spécifiée").trim());
-    const safePriority = escapeHtml((priority || "Normale").trim());
-    const safeTitle = escapeHtml(title.trim());
-    const safeDescription = description ? escapeHtml(String(description).trim()) : "";
+    const agencyNameText = (agencyName || "ImmoPrestige").trim();
+    const tenantNameText = (tenantName || "Non spécifié").trim();
+    const categoryText = (category || "Non spécifiée").trim();
+    const priorityText = (priority || "Normale").trim();
+    const titleText = title.trim();
+    const descriptionText = description ? String(description).trim() : "";
+
+    const safeAgencyName = escapeHtml(agencyNameText);
+    const safeTenantName = escapeHtml(tenantNameText);
+    const safeCategory = escapeHtml(categoryText);
+    const safePriority = escapeHtml(priorityText);
+    const safeTitle = escapeHtml(titleText);
+    const safeDescription = descriptionText ? escapeHtml(descriptionText) : "";
 
     const emailResult = await sendEmail({
-      from: `${safeAgencyName} <noreply@immoprestigeci.com>`,
+      from: `${agencyNameText} <noreply@immoprestigeci.com>`,
       to: [to.trim()],
-      subject: `🔔 Nouvelle requête locataire: ${safeTitle}`,
+      subject: `🔔 Nouvelle requête locataire: ${titleText}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #1a365d; color: white; padding: 20px; border-radius: 8px 8px 0 0;">

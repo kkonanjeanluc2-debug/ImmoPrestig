@@ -195,6 +195,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
   const activeTenants = colocationTenants.filter(ct => ct.status === "active");
   const departedTenants = colocationTenants.filter(ct => ct.status === "departed");
   const isAdding = addColocationTenant.isPending || createTenant.isPending;
+  const totalRentShares = activeTenants.reduce((sum, ct) => sum + (ct.rent_share || 0), 0);
 
   return (
     <Card>

@@ -644,103 +644,43 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       });
     };
 
-    // Process payments - handle advance payments that cover multiple months
+    // Process payments - cash-basis: use paid_date as the accounting date
     if (payments) {
       payments.forEach((p: any) => {
-        const totalAmount = Number(p.paid_amount) || Number(p.amount);
         const status = normalizeStatus(p.status);
-        const paymentMonths = p.payment_months as string[] | null;
-        const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
         const paidDate = p.paid_date;
         const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
 
-        if (status === "paid") {
-          if (isMultiMonth) {
-            // Distribute across covered months
-            const perMonth = Math.round(totalAmount / paymentMonths.length);
-            const overlappingCount = countOverlappingMonths(paymentMonths, fromDate, toDate);
-            const overlappingAmount = perMonth * overlappingCount;
-            
-            result.loyersEncaisses += overlappingAmount;
-            
-            // Add to monthly buckets for each overlapping month
-            paymentMonths.forEach((m) => {
-              const ym = toYearMonth(m);
-              if (!ym) return;
-              const fromYM = fromDate.substring(0, 7);
-              const toYM = toDate.substring(0, 7);
-              if (ym < fromYM || ym > toYM) return;
-              
-              const [yearStr, monthStr] = ym.split("-");
-              const key = `${yearStr}-${parseInt(monthStr) - 1}`;
-              const monthly = monthlyMap.get(key);
-              if (monthly) {
-                monthly.loyers += perMonth;
-                monthly.total += perMonth;
-              }
-            });
-            
-            // Count payment method only for the portion within period
-            if (overlappingAmount > 0) {
-              const method = p.method || "Non spécifié";
-              methodMap.set(method, (methodMap.get(method) || 0) + overlappingAmount);
-            }
-          } else {
-            // Single month or no payment_months - use paid_date for bucket
-            if (isPaidInPeriod) {
-              result.loyersEncaisses += totalAmount;
-              const date = new Date(paidDate);
-              const key = `${date.getFullYear()}-${date.getMonth()}`;
-              const monthly = monthlyMap.get(key);
-              if (monthly) {
-                monthly.loyers += totalAmount;
-                monthly.total += totalAmount;
-              }
-              const method = p.method || "Non spécifié";
-              methodMap.set(method, (methodMap.get(method) || 0) + totalAmount);
-            } else if (paymentMonths && paymentMonths.length === 1) {
-              // Single month advance paid before period but covering this period
-              const ym = toYearMonth(paymentMonths[0]);
-              const fromYM = fromDate.substring(0, 7);
-              const toYM = toDate.substring(0, 7);
-              if (ym && ym >= fromYM && ym <= toYM) {
-                result.loyersEncaisses += totalAmount;
-                const [yearStr, monthStr] = ym.split("-");
-                const key = `${yearStr}-${parseInt(monthStr) - 1}`;
-                const monthly = monthlyMap.get(key);
-                if (monthly) {
-                  monthly.loyers += totalAmount;
-                  monthly.total += totalAmount;
-                }
-                const method = p.method || "Non spécifié";
-                methodMap.set(method, (methodMap.get(method) || 0) + totalAmount);
-              }
-            }
+        if (status === "paid" && isPaidInPeriod) {
+          const totalAmount = Number(p.paid_amount) || Number(p.amount);
+          result.loyersEncaisses += totalAmount;
+          
+          // Use paid_date for monthly bucket
+          const date = new Date(paidDate);
+          const key = `${date.getFullYear()}-${date.getMonth()}`;
+          const monthly = monthlyMap.get(key);
+          if (monthly) {
+            monthly.loyers += totalAmount;
+            monthly.total += totalAmount;
           }
+          const method = p.method || "Non spécifié";
+          methodMap.set(method, (methodMap.get(method) || 0) + totalAmount);
         } else if (status === "pending" || status === "overdue" || status === "late") {
-          // For partial payments, count paid_amount as revenue and remainder as pending/impayé
+          // For partial payments with paid_date in period, count paid portion as revenue
           const paidPortion = Number(p.paid_amount) || 0;
           const remainder = Number(p.amount) - paidPortion;
           
-          if (paidPortion > 0) {
-            // Count the paid portion as collected revenue
+          if (paidPortion > 0 && isPaidInPeriod) {
             result.loyersEncaisses += paidPortion;
-            
-            // Add to monthly bucket based on paid_date first, then due_date
-            const effectiveDate = (p.paid_date && p.paid_date >= fromDate && p.paid_date <= toDate) 
-              ? p.paid_date 
-              : p.due_date;
-            if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
-              const date = new Date(effectiveDate);
-              const key = `${date.getFullYear()}-${date.getMonth()}`;
-              const monthly = monthlyMap.get(key);
-              if (monthly) {
-                monthly.loyers += paidPortion;
-                monthly.total += paidPortion;
-              }
-              const method = p.method || "Non spécifié";
-              methodMap.set(method, (methodMap.get(method) || 0) + paidPortion);
+            const date = new Date(paidDate);
+            const key = `${date.getFullYear()}-${date.getMonth()}`;
+            const monthly = monthlyMap.get(key);
+            if (monthly) {
+              monthly.loyers += paidPortion;
+              monthly.total += paidPortion;
             }
+            const method = p.method || "Non spécifié";
+            methodMap.set(method, (methodMap.get(method) || 0) + paidPortion);
           }
           
           // Apply same logic as dashboard: ≥30 days overdue = impayé

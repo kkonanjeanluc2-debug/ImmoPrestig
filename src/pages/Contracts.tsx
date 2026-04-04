@@ -112,7 +112,7 @@ const Contracts = () => {
   const [signDialogOpen, setSignDialogOpen] = useState(false);
   const [contractToSign, setContractToSign] = useState<any>(null);
 
-  if (!permLoading && !isAdmin && !hasPermission("can_view_contracts")) {
+  if (!permLoading && !isAdmin && role !== "locataire" && !hasPermission("can_view_contracts")) {
     return <Navigate to="/dashboard" replace />;
   }
 

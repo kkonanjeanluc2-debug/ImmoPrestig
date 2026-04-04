@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, UserMinus, Crown, Download, Loader2, Phone, Mail } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Users, Plus, UserMinus, Crown, Download, Loader2, Phone, Mail, UserPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,8 +29,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useColocationTenants, useAddColocationTenant, useRemoveColocationTenant } from "@/hooks/useColocationTenants";
-import { useTenants } from "@/hooks/useTenants";
+import { useTenants, useCreateTenant } from "@/hooks/useTenants";
 import { generateColocationContractPDF } from "@/lib/generateColocationContract";
 import { DEFAULT_COLOCATION_CONTRACT_TEMPLATE } from "@/lib/colocationContractDefaults";
 import { useAgency } from "@/hooks/useAgency";
@@ -43,6 +46,7 @@ interface ColocationTenantsManagerProps {
     rent_amount: number;
     deposit: number | null;
     status: string;
+    property_id?: string;
     property?: {
       title?: string;
       address?: string;
@@ -58,12 +62,18 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
   const [removeDialogOpen, setRemoveDialogOpen] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const [addMode, setAddMode] = useState<"existing" | "new">("existing");
+  const [newTenantName, setNewTenantName] = useState("");
+  const [newTenantPhone, setNewTenantPhone] = useState("");
+  const [newTenantEmail, setNewTenantEmail] = useState("");
+  const [newTenantProfession, setNewTenantProfession] = useState("");
 
   const { data: colocationTenants = [], isLoading } = useColocationTenants(contractId);
   const { data: allTenants = [] } = useTenants();
   const { data: agency } = useAgency();
   const addColocationTenant = useAddColocationTenant();
   const removeColocationTenant = useRemoveColocationTenant();
+  const createTenant = useCreateTenant();
 
   // Filter out tenants already in this colocation
   const existingTenantIds = colocationTenants.map(ct => ct.tenant_id);
@@ -71,7 +81,14 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
     t => !existingTenantIds.includes(t.id) && !t.deleted_at
   );
 
-  const handleAddTenant = async () => {
+  const resetNewTenantForm = () => {
+    setNewTenantName("");
+    setNewTenantPhone("");
+    setNewTenantEmail("");
+    setNewTenantProfession("");
+  };
+
+  const handleAddExistingTenant = async () => {
     if (!selectedTenantId) return;
     try {
       await addColocationTenant.mutateAsync({
@@ -85,6 +102,34 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
       setSelectedTenantId("");
     } catch (error: any) {
       toast.error(error?.message || "Erreur lors de l'ajout du colocataire");
+    }
+  };
+
+  const handleAddNewTenant = async () => {
+    if (!newTenantName.trim()) return;
+    try {
+      // Create tenant first
+      const newTenant = await createTenant.mutateAsync({
+        name: newTenantName.trim(),
+        phone: newTenantPhone.trim() || null,
+        email: newTenantEmail.trim() || null,
+        profession: newTenantProfession.trim() || null,
+        property_id: contract.property_id || null,
+      });
+
+      // Then add as colocation tenant
+      await addColocationTenant.mutateAsync({
+        contract_id: contractId,
+        tenant_id: newTenant.id,
+        is_principal: colocationTenants.length === 0,
+        start_date: new Date().toISOString().split("T")[0],
+      });
+
+      toast.success("Nouveau colocataire créé et ajouté");
+      setAddDialogOpen(false);
+      resetNewTenantForm();
+    } catch (error: any) {
+      toast.error(error?.message || "Erreur lors de la création du colocataire");
     }
   };
 
@@ -144,6 +189,7 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
 
   const activeTenants = colocationTenants.filter(ct => ct.status === "active");
   const departedTenants = colocationTenants.filter(ct => ct.status === "departed");
+  const isAdding = addColocationTenant.isPending || createTenant.isPending;
 
   return (
     <Card>
@@ -239,40 +285,83 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
       </CardContent>
 
       {/* Add Colocataire Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) {
+          setSelectedTenantId("");
+          resetNewTenantForm();
+          setAddMode("existing");
+        }
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Ajouter un colocataire</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un locataire" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTenants.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name} {t.phone ? `(${t.phone})` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {availableTenants.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Aucun locataire disponible. Créez d'abord un locataire.
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Annuler</Button>
-            <Button
-              onClick={handleAddTenant}
-              disabled={!selectedTenantId || addColocationTenant.isPending}
-            >
-              {addColocationTenant.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-              Ajouter
-            </Button>
-          </DialogFooter>
+          <Tabs value={addMode} onValueChange={(v) => setAddMode(v as "existing" | "new")} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="existing" className="flex items-center gap-1">
+                <Users className="h-3.5 w-3.5" />
+                Existant
+              </TabsTrigger>
+              <TabsTrigger value="new" className="flex items-center gap-1">
+                <UserPlus className="h-3.5 w-3.5" />
+                Nouveau
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="existing" className="space-y-4 pt-2">
+              <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un locataire" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTenants.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} {t.phone ? `(${t.phone})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {availableTenants.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Aucun locataire disponible. Utilisez l'onglet "Nouveau" pour en créer un.
+                </p>
+              )}
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Annuler</Button>
+                <Button onClick={handleAddExistingTenant} disabled={!selectedTenantId || isAdding}>
+                  {isAdding && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                  Ajouter
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+
+            <TabsContent value="new" className="space-y-3 pt-2">
+              <div>
+                <Label>Nom complet *</Label>
+                <Input value={newTenantName} onChange={(e) => setNewTenantName(e.target.value)} placeholder="Nom et prénom" />
+              </div>
+              <div>
+                <Label>Téléphone</Label>
+                <Input value={newTenantPhone} onChange={(e) => setNewTenantPhone(e.target.value)} placeholder="07 XX XX XX XX" />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={newTenantEmail} onChange={(e) => setNewTenantEmail(e.target.value)} placeholder="email@exemple.com" />
+              </div>
+              <div>
+                <Label>Profession</Label>
+                <Input value={newTenantProfession} onChange={(e) => setNewTenantProfession(e.target.value)} placeholder="Profession" />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Annuler</Button>
+                <Button onClick={handleAddNewTenant} disabled={!newTenantName.trim() || isAdding}>
+                  {isAdding && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                  Créer et ajouter
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

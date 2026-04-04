@@ -176,32 +176,17 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
   const { data: payments } = useQuery({
     queryKey: ["comptabilite-payments", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
     queryFn: async () => {
-      // Fetch payments within the period by paid_date OR due_date
+      // Cash-basis: only fetch payments whose paid_date falls within the period
+      // Plus unpaid payments with due_date in period (for pending/impayés display)
       const { data: periodPayments, error } = await supabase
         .from("payments")
         .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .or(
-          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${fromDate},paid_date.lte.${toDate})`
+          `and(paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
       if (error) throw error;
 
-      // Also fetch advance payments (multi-month paid payments) that might have been paid BEFORE this period
-      // but cover months within this period
-      const { data: advancePayments, error: advError } = await supabase
-        .from("payments")
-        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
-        .eq("status", "paid")
-        .lt("paid_date", fromDate)
-        .not("payment_months", "is", null);
-      if (advError) throw advError;
-
-      // Filter advance payments whose payment_months overlap with the period
-      const existingIds = new Set((periodPayments || []).map((p: any) => p.id));
-      const relevantAdvance = (advancePayments || []).filter((p: any) =>
-        !existingIds.has(p.id) && paymentMonthsOverlapPeriod(p.payment_months, fromDate, toDate)
-      );
-
-      return [...(periodPayments || []), ...relevantAdvance];
+      return periodPayments || [];
     },
     enabled: !!user,
   });
@@ -659,103 +644,43 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       });
     };
 
-    // Process payments - handle advance payments that cover multiple months
+    // Process payments - cash-basis: use paid_date as the accounting date
     if (payments) {
       payments.forEach((p: any) => {
-        const totalAmount = Number(p.paid_amount) || Number(p.amount);
         const status = normalizeStatus(p.status);
-        const paymentMonths = p.payment_months as string[] | null;
-        const isMultiMonth = paymentMonths && Array.isArray(paymentMonths) && paymentMonths.length > 1;
         const paidDate = p.paid_date;
         const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
 
-        if (status === "paid") {
-          if (isMultiMonth) {
-            // Distribute across covered months
-            const perMonth = Math.round(totalAmount / paymentMonths.length);
-            const overlappingCount = countOverlappingMonths(paymentMonths, fromDate, toDate);
-            const overlappingAmount = perMonth * overlappingCount;
-            
-            result.loyersEncaisses += overlappingAmount;
-            
-            // Add to monthly buckets for each overlapping month
-            paymentMonths.forEach((m) => {
-              const ym = toYearMonth(m);
-              if (!ym) return;
-              const fromYM = fromDate.substring(0, 7);
-              const toYM = toDate.substring(0, 7);
-              if (ym < fromYM || ym > toYM) return;
-              
-              const [yearStr, monthStr] = ym.split("-");
-              const key = `${yearStr}-${parseInt(monthStr) - 1}`;
-              const monthly = monthlyMap.get(key);
-              if (monthly) {
-                monthly.loyers += perMonth;
-                monthly.total += perMonth;
-              }
-            });
-            
-            // Count payment method only for the portion within period
-            if (overlappingAmount > 0) {
-              const method = p.method || "Non spécifié";
-              methodMap.set(method, (methodMap.get(method) || 0) + overlappingAmount);
-            }
-          } else {
-            // Single month or no payment_months - use paid_date for bucket
-            if (isPaidInPeriod) {
-              result.loyersEncaisses += totalAmount;
-              const date = new Date(paidDate);
-              const key = `${date.getFullYear()}-${date.getMonth()}`;
-              const monthly = monthlyMap.get(key);
-              if (monthly) {
-                monthly.loyers += totalAmount;
-                monthly.total += totalAmount;
-              }
-              const method = p.method || "Non spécifié";
-              methodMap.set(method, (methodMap.get(method) || 0) + totalAmount);
-            } else if (paymentMonths && paymentMonths.length === 1) {
-              // Single month advance paid before period but covering this period
-              const ym = toYearMonth(paymentMonths[0]);
-              const fromYM = fromDate.substring(0, 7);
-              const toYM = toDate.substring(0, 7);
-              if (ym && ym >= fromYM && ym <= toYM) {
-                result.loyersEncaisses += totalAmount;
-                const [yearStr, monthStr] = ym.split("-");
-                const key = `${yearStr}-${parseInt(monthStr) - 1}`;
-                const monthly = monthlyMap.get(key);
-                if (monthly) {
-                  monthly.loyers += totalAmount;
-                  monthly.total += totalAmount;
-                }
-                const method = p.method || "Non spécifié";
-                methodMap.set(method, (methodMap.get(method) || 0) + totalAmount);
-              }
-            }
+        if (status === "paid" && isPaidInPeriod) {
+          const totalAmount = Number(p.paid_amount) || Number(p.amount);
+          result.loyersEncaisses += totalAmount;
+          
+          // Use paid_date for monthly bucket
+          const date = new Date(paidDate);
+          const key = `${date.getFullYear()}-${date.getMonth()}`;
+          const monthly = monthlyMap.get(key);
+          if (monthly) {
+            monthly.loyers += totalAmount;
+            monthly.total += totalAmount;
           }
+          const method = p.method || "Non spécifié";
+          methodMap.set(method, (methodMap.get(method) || 0) + totalAmount);
         } else if (status === "pending" || status === "overdue" || status === "late") {
-          // For partial payments, count paid_amount as revenue and remainder as pending/impayé
+          // For partial payments with paid_date in period, count paid portion as revenue
           const paidPortion = Number(p.paid_amount) || 0;
           const remainder = Number(p.amount) - paidPortion;
           
-          if (paidPortion > 0) {
-            // Count the paid portion as collected revenue
+          if (paidPortion > 0 && isPaidInPeriod) {
             result.loyersEncaisses += paidPortion;
-            
-            // Add to monthly bucket based on paid_date first, then due_date
-            const effectiveDate = (p.paid_date && p.paid_date >= fromDate && p.paid_date <= toDate) 
-              ? p.paid_date 
-              : p.due_date;
-            if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
-              const date = new Date(effectiveDate);
-              const key = `${date.getFullYear()}-${date.getMonth()}`;
-              const monthly = monthlyMap.get(key);
-              if (monthly) {
-                monthly.loyers += paidPortion;
-                monthly.total += paidPortion;
-              }
-              const method = p.method || "Non spécifié";
-              methodMap.set(method, (methodMap.get(method) || 0) + paidPortion);
+            const date = new Date(paidDate);
+            const key = `${date.getFullYear()}-${date.getMonth()}`;
+            const monthly = monthlyMap.get(key);
+            if (monthly) {
+              monthly.loyers += paidPortion;
+              monthly.total += paidPortion;
             }
+            const method = p.method || "Non spécifié";
+            methodMap.set(method, (methodMap.get(method) || 0) + paidPortion);
           }
           
           // Apply same logic as dashboard: ≥30 days overdue = impayé
@@ -778,8 +703,10 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const status = normalizeStatus(p.status);
         const isPaid = status === "paid";
         const isPartial = !isPaid && (Number(p.paid_amount) || 0) > 0;
+        const paidDate = p.paid_date;
+        const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
         
-        if (isPaid || isPartial) {
+        if ((isPaid || isPartial) && isPaidInPeriod) {
           const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const baseTenantName = p.tenant?.name || "Locataire inconnu";
@@ -789,63 +716,18 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           const ownerName = p.tenant?.property?.owner?.name || "";
           const allMonths = p.payment_months || [];
           const totalAmount = isPaid ? (Number(p.paid_amount) || Number(p.amount)) : Number(p.paid_amount);
-          const isMultiMonth = allMonths.length > 1;
-          const paidDate = p.paid_date;
-          const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
           const suffix = isPartial ? " (partiel)" : "";
 
-          if (isMultiMonth && isPaid) {
-            // For multi-month advance payments, only count the portion within the period
-            const overlapping = countOverlappingMonths(allMonths, fromDate, toDate);
-            if (overlapping > 0) {
-              const perMonth = Math.round(totalAmount / allMonths.length);
-              // Filter months to only those in period
-              const monthsInPeriod = allMonths.filter((m: string) => {
-                const ym = toYearMonth(m);
-                if (!ym) return false;
-                return ym >= fromDate.substring(0, 7) && ym <= toDate.substring(0, 7);
-              });
-              result.paidRentDetails.push({
-                tenantName,
-                months: monthsInPeriod,
-                amount: perMonth * overlapping,
-                paidDate: paidDate || p.due_date,
-                managerName: assignedTo || "__unassigned__",
-                paymentMethod: p.method || "Non spécifié",
-                ownerName,
-                propertyTitle,
-              });
-            }
-          } else if (isPartial) {
-            // Partial payment - show the paid portion
-            // Use paid_date if in period, otherwise due_date
-            const effectiveDate = (paidDate && paidDate >= fromDate && paidDate <= toDate) 
-              ? paidDate 
-              : p.due_date;
-            if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
-              result.paidRentDetails.push({
-                tenantName: tenantName + suffix,
-                months: allMonths.length > 0 ? allMonths : (p.due_date ? [p.due_date.substring(0, 7)] : []),
-                amount: totalAmount,
-                paidDate: paidDate || p.due_date,
-                managerName: assignedTo || "__unassigned__",
-                paymentMethod: p.method || "Non spécifié",
-                ownerName,
-                propertyTitle,
-              });
-            }
-          } else if (isPaidInPeriod || (allMonths.length === 1 && paymentMonthsOverlapPeriod(allMonths, fromDate, toDate))) {
-            result.paidRentDetails.push({
-              tenantName,
-              months: allMonths,
-              amount: totalAmount,
-              paidDate: paidDate || p.due_date,
-              managerName: assignedTo || "__unassigned__",
-              paymentMethod: p.method || "Non spécifié",
-              ownerName,
-              propertyTitle,
-            });
-          }
+          result.paidRentDetails.push({
+            tenantName: tenantName + suffix,
+            months: allMonths.length > 0 ? allMonths : (p.due_date ? [p.due_date.substring(0, 7)] : []),
+            amount: totalAmount,
+            paidDate: paidDate,
+            managerName: assignedTo || "__unassigned__",
+            paymentMethod: p.method || "Non spécifié",
+            ownerName,
+            propertyTitle,
+          });
         }
       });
       // Resolve manager names from profiles

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
+import { generateWhatsAppUrl } from "@/lib/whatsapp";
 
 interface WhatsAppButtonProps {
   phone?: string | null | undefined;
@@ -29,26 +30,9 @@ export function WhatsAppButton({
   const hasPhone = !!phone;
   
   const handleClick = (e: React.MouseEvent) => {
-    // Call custom onClick if provided
     onClick?.(e);
-    
-    // Build WhatsApp URL
-    let url: string;
-    
-    if (phone) {
-      // Format phone number for direct messaging
-      let formattedPhone = phone.replace(/[^\d+]/g, "");
-      if (formattedPhone.startsWith("0")) {
-        formattedPhone = "221" + formattedPhone.substring(1);
-      }
-      if (formattedPhone.startsWith("+")) {
-        formattedPhone = formattedPhone.substring(1);
-      }
-      url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
-    } else {
-      url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-    }
-    
+
+    const url = generateWhatsAppUrl(phone ?? "", message);
     window.open(url, "_blank");
   };
 

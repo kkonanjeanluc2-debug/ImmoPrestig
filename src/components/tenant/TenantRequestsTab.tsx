@@ -139,10 +139,7 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
       // Open WhatsApp notification
       if (agency.notification_whatsapp) {
         const message = `🔔 *Nouvelle requête locataire*\n\n👤 Locataire: ${displayName}\n📋 Catégorie: ${catLabel}\n⚡ Priorité: ${prioLabel}\n📝 Titre: ${requestTitle}${requestDescription ? `\n\nDescription: ${requestDescription}` : ""}`;
-        const normalizedPhone = agency.notification_whatsapp.trim().startsWith("0")
-          ? `225${agency.notification_whatsapp.trim().slice(1)}`
-          : agency.notification_whatsapp;
-        const waUrl = generateWhatsAppUrl(normalizedPhone, message);
+        const waUrl = generateWhatsAppUrl(agency.notification_whatsapp, message);
 
         if (whatsappPopup && !whatsappPopup.closed) {
           whatsappPopup.location.href = waUrl;

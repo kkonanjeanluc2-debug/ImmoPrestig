@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
+import { generateWhatsAppUrl } from "@/lib/whatsapp";
 
 interface DemoRequestButtonProps {
   className?: string;
@@ -19,29 +20,17 @@ export function DemoRequestButton({
   
   const phone = setting?.value;
   
-  // Don't render if no phone number is configured
   if (!phone) {
     return null;
   }
 
   const handleClick = () => {
-    // Format phone number for WhatsApp
-    let formattedPhone = phone.replace(/[^\d+]/g, "");
-    if (formattedPhone.startsWith("0")) {
-      formattedPhone = "225" + formattedPhone.substring(1);
-    }
-    if (formattedPhone.startsWith("+")) {
-      formattedPhone = formattedPhone.substring(1);
-    }
-    
-    const message = encodeURIComponent(
+    const url = generateWhatsAppUrl(
+      phone,
       "Bonjour ! Je souhaite demander une démo gratuite de votre plateforme de gestion immobilière."
     );
-    
-    const url = `https://wa.me/${formattedPhone}?text=${message}`;
+
     window.open(url, "_blank");
-    
-    // Call the onClick callback if provided
     onClick?.();
   };
 

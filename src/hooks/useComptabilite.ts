@@ -703,8 +703,10 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const status = normalizeStatus(p.status);
         const isPaid = status === "paid";
         const isPartial = !isPaid && (Number(p.paid_amount) || 0) > 0;
+        const paidDate = p.paid_date;
+        const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
         
-        if (isPaid || isPartial) {
+        if ((isPaid || isPartial) && isPaidInPeriod) {
           const assignedTo = p.tenant?.assigned_to;
           if (assignedTo) managerIds.add(assignedTo);
           const baseTenantName = p.tenant?.name || "Locataire inconnu";
@@ -714,63 +716,18 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           const ownerName = p.tenant?.property?.owner?.name || "";
           const allMonths = p.payment_months || [];
           const totalAmount = isPaid ? (Number(p.paid_amount) || Number(p.amount)) : Number(p.paid_amount);
-          const isMultiMonth = allMonths.length > 1;
-          const paidDate = p.paid_date;
-          const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
           const suffix = isPartial ? " (partiel)" : "";
 
-          if (isMultiMonth && isPaid) {
-            // For multi-month advance payments, only count the portion within the period
-            const overlapping = countOverlappingMonths(allMonths, fromDate, toDate);
-            if (overlapping > 0) {
-              const perMonth = Math.round(totalAmount / allMonths.length);
-              // Filter months to only those in period
-              const monthsInPeriod = allMonths.filter((m: string) => {
-                const ym = toYearMonth(m);
-                if (!ym) return false;
-                return ym >= fromDate.substring(0, 7) && ym <= toDate.substring(0, 7);
-              });
-              result.paidRentDetails.push({
-                tenantName,
-                months: monthsInPeriod,
-                amount: perMonth * overlapping,
-                paidDate: paidDate || p.due_date,
-                managerName: assignedTo || "__unassigned__",
-                paymentMethod: p.method || "Non spécifié",
-                ownerName,
-                propertyTitle,
-              });
-            }
-          } else if (isPartial) {
-            // Partial payment - show the paid portion
-            // Use paid_date if in period, otherwise due_date
-            const effectiveDate = (paidDate && paidDate >= fromDate && paidDate <= toDate) 
-              ? paidDate 
-              : p.due_date;
-            if (effectiveDate && effectiveDate >= fromDate && effectiveDate <= toDate) {
-              result.paidRentDetails.push({
-                tenantName: tenantName + suffix,
-                months: allMonths.length > 0 ? allMonths : (p.due_date ? [p.due_date.substring(0, 7)] : []),
-                amount: totalAmount,
-                paidDate: paidDate || p.due_date,
-                managerName: assignedTo || "__unassigned__",
-                paymentMethod: p.method || "Non spécifié",
-                ownerName,
-                propertyTitle,
-              });
-            }
-          } else if (isPaidInPeriod || (allMonths.length === 1 && paymentMonthsOverlapPeriod(allMonths, fromDate, toDate))) {
-            result.paidRentDetails.push({
-              tenantName,
-              months: allMonths,
-              amount: totalAmount,
-              paidDate: paidDate || p.due_date,
-              managerName: assignedTo || "__unassigned__",
-              paymentMethod: p.method || "Non spécifié",
-              ownerName,
-              propertyTitle,
-            });
-          }
+          result.paidRentDetails.push({
+            tenantName: tenantName + suffix,
+            months: allMonths.length > 0 ? allMonths : (p.due_date ? [p.due_date.substring(0, 7)] : []),
+            amount: totalAmount,
+            paidDate: paidDate,
+            managerName: assignedTo || "__unassigned__",
+            paymentMethod: p.method || "Non spécifié",
+            ownerName,
+            propertyTitle,
+          });
         }
       });
       // Resolve manager names from profiles

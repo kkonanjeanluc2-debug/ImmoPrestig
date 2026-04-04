@@ -206,7 +206,7 @@ function PhotoCard({
   }, [thumbnail]);
 
   return (
-    <div className="border rounded-lg overflow-hidden group relative">
+    <div ref={cardRef} className="border rounded-lg overflow-hidden group relative">
       <div className="aspect-square bg-muted flex items-center justify-center">
         {thumbnail ? (
           <img

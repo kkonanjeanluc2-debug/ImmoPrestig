@@ -502,7 +502,15 @@ export default function Tenants() {
                         {/* Bien */}
                         <td className="px-4 py-3">
                           <div className="max-w-[250px]">
-                            <p className="text-sm text-foreground break-words">{tenant.property?.title || "—"}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm text-foreground break-words">{tenant.property?.title || "—"}</p>
+                              {activeContract?.is_colocation && (
+                                <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20 whitespace-nowrap">
+                                  <Users className="h-3 w-3 mr-0.5" />
+                                  Coloc
+                                </Badge>
+                              )}
+                            </div>
                             {tenant.unit && (
                               <p className="text-xs text-muted-foreground break-words">{tenant.unit.unit_number}</p>
                             )}

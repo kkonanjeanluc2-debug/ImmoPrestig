@@ -282,6 +282,15 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
           </>
         )}
 
+        {activeTenants.length > 0 && (
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+            <span className="text-sm font-medium text-muted-foreground">Total des parts</span>
+            <span className={`text-sm font-bold ${totalRentShares === contract.rent_amount ? 'text-emerald-600' : 'text-amber-500'}`}>
+              {totalRentShares.toLocaleString('fr-FR')} / {contract.rent_amount.toLocaleString('fr-FR')} FCFA
+            </span>
+          </div>
+        )}
+
         {departedTenants.length > 0 && (
           <div className="pt-2 border-t">
             <p className="text-xs font-medium text-muted-foreground mb-2">Anciens colocataires</p>

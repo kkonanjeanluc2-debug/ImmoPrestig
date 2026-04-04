@@ -248,6 +248,11 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
                     )}
                   </div>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    {ct.rent_share > 0 && (
+                      <span className="font-semibold text-foreground">
+                        {Number(ct.rent_share).toLocaleString('fr-FR')} FCFA
+                      </span>
+                    )}
                     {ct.tenant?.phone && (
                       <span className="flex items-center gap-1">
                         <Phone className="h-3 w-3" />

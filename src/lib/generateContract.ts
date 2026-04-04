@@ -343,7 +343,17 @@ export const generateContractPDF = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   
-  const lines = filledContent.split("\n");
+  // Remove duplicate title line from template content (already rendered above)
+  const titleVariants = [
+    "CONTRAT DE BAIL À USAGE D'HABITATION",
+    "CONTRAT DE BAIL MEUBLÉ À USAGE D'HABITATION",
+    "CONTRAT DE BAIL MEUBLÉ JOURNALIER À USAGE D'HABITATION",
+    "CONTRAT DE BAIL A USAGE D'HABITATION",
+  ];
+  const lines = filledContent.split("\n").filter(line => {
+    const stripped = line.replace(/^#+\s*/, "").trim().toUpperCase();
+    return !titleVariants.some(t => stripped === t);
+  });
   
   for (const line of lines) {
     const trimmedLine = line.trim();

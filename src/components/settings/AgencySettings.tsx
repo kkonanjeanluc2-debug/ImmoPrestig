@@ -831,10 +831,10 @@ export function AgencySettings() {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="notification-whatsapp"
-                  type="tel"
+                  type="text"
                   value={formData.notification_whatsapp}
                   onChange={(e) => handleChange("notification_whatsapp", e.target.value)}
-                  placeholder="+225 07 XX XX XX XX"
+                  placeholder="+225 07 XX XX XX XX ou 0788645270"
                   className="pl-10"
                 />
               </div>

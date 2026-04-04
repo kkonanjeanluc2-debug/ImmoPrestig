@@ -169,7 +169,7 @@ export default function Tenants() {
     return Array.from(communes).sort((a, b) => a.localeCompare(b, "fr"));
   }, [tenants]);
 
-  if (!permLoading && role !== "super_admin" && role !== "admin" && !hasPermission("can_view_tenants")) {
+  if (!permLoading && role !== "super_admin" && role !== "admin" && role !== "locataire" && !hasPermission("can_view_tenants")) {
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -176,32 +176,17 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
   const { data: payments } = useQuery({
     queryKey: ["comptabilite-payments", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
     queryFn: async () => {
-      // Fetch payments within the period by paid_date OR due_date
+      // Cash-basis: only fetch payments whose paid_date falls within the period
+      // Plus unpaid payments with due_date in period (for pending/impayés display)
       const { data: periodPayments, error } = await supabase
         .from("payments")
         .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .or(
-          `and(status.eq.paid,paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${fromDate},paid_date.lte.${toDate})`
+          `and(paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
       if (error) throw error;
 
-      // Also fetch advance payments (multi-month paid payments) that might have been paid BEFORE this period
-      // but cover months within this period
-      const { data: advancePayments, error: advError } = await supabase
-        .from("payments")
-        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
-        .eq("status", "paid")
-        .lt("paid_date", fromDate)
-        .not("payment_months", "is", null);
-      if (advError) throw advError;
-
-      // Filter advance payments whose payment_months overlap with the period
-      const existingIds = new Set((periodPayments || []).map((p: any) => p.id));
-      const relevantAdvance = (advancePayments || []).filter((p: any) =>
-        !existingIds.has(p.id) && paymentMonthsOverlapPeriod(p.payment_months, fromDate, toDate)
-      );
-
-      return [...(periodPayments || []), ...relevantAdvance];
+      return periodPayments || [];
     },
     enabled: !!user,
   });

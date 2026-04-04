@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { generateWhatsAppUrl } from "@/lib/whatsapp";
 import { supabase } from "@/integrations/supabase/client";
 
 const categoryLabels: Record<string, string> = {
@@ -44,10 +46,42 @@ interface TenantRequestsTabProps {
   tenantName?: string;
 }
 
+const getAgencyNotificationConfig = async (userId: string) => {
+  const { data: agencyId, error: agencyIdError } = await supabase.rpc("get_user_agency_id", {
+    _user_id: userId,
+  });
+
+  if (agencyIdError) {
+    throw agencyIdError;
+  }
+
+  if (!agencyId) {
+    return null;
+  }
+
+  const { data: agency, error: agencyError } = await supabase
+    .from("agencies")
+    .select("notification_email, notification_whatsapp, name, email")
+    .eq("id", agencyId)
+    .maybeSingle();
+
+  if (agencyError) {
+    throw agencyError;
+  }
+
+  return agency;
+};
+
 export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = false, tenantName }: TenantRequestsTabProps) => {
   const { data: requests = [], isLoading } = useTenantRequests(tenantId);
   const createRequest = useCreateTenantRequest();
   const updateRequest = useUpdateTenantRequest();
+  const { data: agencyNotificationConfig } = useQuery({
+    queryKey: ["tenant-request-notification-config", userId],
+    queryFn: () => getAgencyNotificationConfig(userId),
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [respondDialogOpen, setRespondDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<TenantRequest | null>(null);
@@ -60,16 +94,20 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
   const [category, setCategory] = useState("reclamation");
   const [priority, setPriority] = useState("normale");
 
-  const sendNotifications = async (requestTitle: string, requestCategory: string, requestPriority: string, requestDescription: string) => {
+  const sendNotifications = async (
+    requestTitle: string,
+    requestCategory: string,
+    requestPriority: string,
+    requestDescription: string,
+    whatsappPopup?: Window | null,
+  ) => {
     try {
-      // Fetch agency settings for notification config
-      const { data: agency } = await supabase
-        .from("agencies")
-        .select("notification_email, notification_whatsapp, name, email")
-        .eq("user_id", userId)
-        .maybeSingle();
+      const agency = agencyNotificationConfig ?? await getAgencyNotificationConfig(userId);
 
-      if (!agency) return;
+      if (!agency) {
+        whatsappPopup?.close();
+        return;
+      }
 
       const catLabel = categoryLabels[requestCategory] || requestCategory;
       const prioLabel = priorityLabels[requestPriority] || requestPriority;
@@ -78,7 +116,7 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
       // Send email notification
       if (agency.notification_email) {
         try {
-          await supabase.functions.invoke("send-tenant-request-notification", {
+          const { error } = await supabase.functions.invoke("send-tenant-request-notification", {
             body: {
               to: agency.notification_email,
               agencyName: agency.name,
@@ -89,6 +127,10 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
               description: requestDescription,
             },
           });
+
+          if (error) {
+            console.error("Erreur envoi email notification:", error);
+          }
         } catch (e) {
           console.error("Erreur envoi email notification:", e);
         }
@@ -96,12 +138,22 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
 
       // Open WhatsApp notification
       if (agency.notification_whatsapp) {
-        const phone = agency.notification_whatsapp.replace(/[\s\-\(\)]/g, "").replace(/^\+/, "");
         const message = `🔔 *Nouvelle requête locataire*\n\n👤 Locataire: ${displayName}\n📋 Catégorie: ${catLabel}\n⚡ Priorité: ${prioLabel}\n📝 Titre: ${requestTitle}${requestDescription ? `\n\nDescription: ${requestDescription}` : ""}`;
-        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        window.open(waUrl, "_blank");
+        const normalizedPhone = agency.notification_whatsapp.trim().startsWith("0")
+          ? `225${agency.notification_whatsapp.trim().slice(1)}`
+          : agency.notification_whatsapp;
+        const waUrl = generateWhatsAppUrl(normalizedPhone, message);
+
+        if (whatsappPopup && !whatsappPopup.closed) {
+          whatsappPopup.location.href = waUrl;
+        } else {
+          window.open(waUrl, "_blank");
+        }
+      } else {
+        whatsappPopup?.close();
       }
     } catch (e) {
+      whatsappPopup?.close();
       console.error("Erreur notifications:", e);
     }
   };
@@ -111,6 +163,10 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
       toast.error("Le titre est requis");
       return;
     }
+
+    const shouldPrepareWhatsAppWindow = agencyNotificationConfig === undefined || !!agencyNotificationConfig?.notification_whatsapp;
+    const whatsappPopup = shouldPrepareWhatsAppWindow ? window.open("", "_blank") : null;
+
     try {
       await createRequest.mutateAsync({
         tenant_id: tenantId,
@@ -123,7 +179,7 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
       });
 
       // Send notifications
-      await sendNotifications(title.trim(), category, priority, description.trim());
+      await sendNotifications(title.trim(), category, priority, description.trim(), whatsappPopup);
 
       toast.success("Requête envoyée avec succès");
       setDialogOpen(false);
@@ -132,6 +188,7 @@ export const TenantRequestsTab = ({ tenantId, userId, propertyId, isLocataire = 
       setCategory("reclamation");
       setPriority("normale");
     } catch {
+      whatsappPopup?.close();
       toast.error("Erreur lors de l'envoi de la requête");
     }
   };

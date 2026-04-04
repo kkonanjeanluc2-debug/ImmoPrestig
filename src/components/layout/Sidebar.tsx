@@ -311,6 +311,9 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     .filter((item) => !(userRole?.role === "gestionnaire" && item.hiddenForGestionnaire))
                     .filter((item) => !item.featureKey || hasFeature(item.featureKey))
                     .filter((item) => {
+                      // Tenant portal items are explicitly allowed and should not depend on member permissions
+                      if (userRole?.role === "locataire") return true;
+
                       // Permission-based visibility for non-admin roles
                       if (userRole?.role === "super_admin" || userRole?.role === "admin") return true;
                       if (item.href === "/owners") return hasPermission("can_view_owners");

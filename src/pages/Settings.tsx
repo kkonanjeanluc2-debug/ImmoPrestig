@@ -382,31 +382,18 @@ const Settings = () => {
 
           {!isFreePlan && (
             <TabsContent value="contracts">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ScrollText className="h-5 w-5" />
-                    Modèles de contrats
-                  </CardTitle>
-                  <CardDescription>
-                    Gérez vos modèles de contrats de location et de colocation.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="location" className="w-full">
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="location">Location</TabsTrigger>
-                      <TabsTrigger value="colocation">Colocation</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="location">
-                      <ContractTemplateManager />
-                    </TabsContent>
-                    <TabsContent value="colocation">
-                      <ColocationContractTemplateManager />
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
+              <Tabs defaultValue="location" className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="location">Location</TabsTrigger>
+                  <TabsTrigger value="colocation">Colocation</TabsTrigger>
+                </TabsList>
+                <TabsContent value="location">
+                  <ContractTemplateManager />
+                </TabsContent>
+                <TabsContent value="colocation">
+                  <ColocationContractTemplateManager />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
           )}
 

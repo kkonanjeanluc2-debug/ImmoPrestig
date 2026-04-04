@@ -431,13 +431,10 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         console.error("Cautions query error:", error);
         throw error;
       }
-      // Filter client-side: include contracts where start_date OR created_at falls within the period
+      // Filter by created_at (date d'encaissement/enregistrement) for cash-basis accounting
       return (data || []).filter((c: any) => {
-        const startDate = c.start_date;
         const createdDate = c.created_at ? String(c.created_at).split("T")[0] : null;
-        const inPeriodByStart = startDate >= fromDate && startDate <= toDate;
-        const inPeriodByCreation = createdDate ? createdDate >= fromDate && createdDate <= toDate : false;
-        return inPeriodByStart || inPeriodByCreation;
+        return createdDate ? createdDate >= fromDate && createdDate <= toDate : false;
       });
     },
     enabled: !!user,
@@ -1070,10 +1067,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const amount = Number(c.deposit || 0);
         if (amount <= 0) return;
 
-        const createdDate = c.created_at ? String(c.created_at).split("T")[0] : null;
-        const cautionDate = createdDate && createdDate >= fromDate && createdDate <= toDate
-          ? createdDate
-          : c.start_date;
+        const cautionDate = c.created_at ? String(c.created_at).split("T")[0] : c.start_date;
 
         result.cautionsEncaissees += amount;
         const date = new Date(cautionDate);

@@ -368,9 +368,13 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
                 <Label>Profession</Label>
                 <Input value={newTenantProfession} onChange={(e) => setNewTenantProfession(e.target.value)} placeholder="Profession" />
               </div>
+              <div>
+                <Label>Part de loyer (FCFA) *</Label>
+                <Input type="number" value={rentShare} onChange={(e) => setRentShare(e.target.value)} placeholder="Ex: 25000" />
+              </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Annuler</Button>
-                <Button onClick={handleAddNewTenant} disabled={!newTenantName.trim() || isAdding}>
+                <Button onClick={handleAddNewTenant} disabled={!newTenantName.trim() || !rentShare || isAdding}>
                   {isAdding && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
                   Créer et ajouter
                 </Button>

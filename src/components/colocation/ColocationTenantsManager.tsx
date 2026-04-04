@@ -333,14 +333,18 @@ export function ColocationTenantsManager({ contractId, contract, canEdit = true 
                   ))}
                 </SelectContent>
               </Select>
-              {availableTenants.length === 0 && (
+               {availableTenants.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   Aucun locataire disponible. Utilisez l'onglet "Nouveau" pour en créer un.
                 </p>
               )}
+              <div>
+                <Label>Part de loyer (FCFA) *</Label>
+                <Input type="number" value={rentShare} onChange={(e) => setRentShare(e.target.value)} placeholder="Ex: 25000" />
+              </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Annuler</Button>
-                <Button onClick={handleAddExistingTenant} disabled={!selectedTenantId || isAdding}>
+                <Button onClick={handleAddExistingTenant} disabled={!selectedTenantId || !rentShare || isAdding}>
                   {isAdding && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
                   Ajouter
                 </Button>

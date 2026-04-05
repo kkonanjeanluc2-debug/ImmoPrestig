@@ -1,6 +1,7 @@
 type RevenuePayment = {
   amount: number | string;
   paid_amount?: number | string | null;
+  last_collected_amount?: number | string | null;
   paid_date?: string | null;
   due_date?: string | null;
   status?: string | null;

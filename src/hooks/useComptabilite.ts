@@ -190,7 +190,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       // Plus unpaid payments with due_date in period (for pending/impayés display)
       const { data: periodPayments, error } = await supabase
         .from("payments")
-        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
+        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, last_collected_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .or(
           `and(paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );
@@ -656,7 +656,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
 
         if (status === "paid" && isPaidInPeriod) {
-          const totalAmount = Number(p.paid_amount) || Number(p.amount);
+          // Use last_collected_amount if available (incremental), otherwise fall back to full amount
+          const lastCollected = Number(p.last_collected_amount) || 0;
+          const totalAmount = lastCollected > 0 ? lastCollected : (Number(p.paid_amount) || Number(p.amount));
           result.loyersEncaisses += totalAmount;
           
           // Use paid_date for monthly bucket
@@ -719,7 +721,10 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           const propertyTitle = p.tenant?.property?.title || "";
           const ownerName = p.tenant?.property?.owner?.name || "";
           const allMonths = p.payment_months || [];
-          const totalAmount = isPaid ? (Number(p.paid_amount) || Number(p.amount)) : Number(p.paid_amount);
+          const lastCollected = Number(p.last_collected_amount) || 0;
+          const totalAmount = isPaid
+            ? (lastCollected > 0 ? lastCollected : (Number(p.paid_amount) || Number(p.amount)))
+            : (lastCollected > 0 ? lastCollected : Number(p.paid_amount));
           const suffix = isPartial ? " (partiel)" : "";
 
           result.paidRentDetails.push({

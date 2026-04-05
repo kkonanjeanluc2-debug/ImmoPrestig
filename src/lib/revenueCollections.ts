@@ -1,6 +1,7 @@
 type RevenuePayment = {
   amount: number | string;
   paid_amount?: number | string | null;
+  last_collected_amount?: number | string | null;
   paid_date?: string | null;
   due_date?: string | null;
   status?: string | null;
@@ -98,7 +99,8 @@ export const getCollectedRevenueForPeriod = (
     if (!isPaidInPeriod) return sum;
 
     if (status === "paid") {
-      const totalAmount = Number(payment.paid_amount) || Number(payment.amount) || 0;
+      const lastCollected = Number(payment.last_collected_amount) || 0;
+      const totalAmount = lastCollected > 0 ? lastCollected : (Number(payment.paid_amount) || Number(payment.amount) || 0);
       return sum + totalAmount;
     }
 

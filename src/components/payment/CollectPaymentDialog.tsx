@@ -185,6 +185,7 @@ export function CollectPaymentDialog({
           status: isFullyPaid ? "paid" : undefined,
           paid_date: paidDate,
           paid_amount: newPaidAmount,
+          last_collected_amount: collectAmount,
           method: method,
           tenantName: tenantName,
         });

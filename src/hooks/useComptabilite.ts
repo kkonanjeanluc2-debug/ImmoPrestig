@@ -190,7 +190,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       // Plus unpaid payments with due_date in period (for pending/impayés display)
       const { data: periodPayments, error } = await supabase
         .from("payments")
-        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
+        .select("id, amount, status, due_date, paid_date, method, payment_months, paid_amount, last_collected_amount, tenant:tenants!payments_tenant_id_fkey(name, assigned_to, unit:property_units(unit_number), property:properties!tenants_property_id_fkey(title, owner:owners!properties_owner_id_fkey(name)))")
         .or(
           `and(paid_date.gte.${fromDate},paid_date.lte.${toDate}),and(status.neq.paid,due_date.gte.${fromDate},due_date.lte.${toDate})`
         );

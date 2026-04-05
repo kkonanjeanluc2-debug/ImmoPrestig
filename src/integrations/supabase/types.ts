@@ -3559,6 +3559,7 @@ export type Database = {
           created_at: string
           due_date: string
           id: string
+          last_collected_amount: number | null
           method: string | null
           paid_amount: number | null
           paid_date: string | null
@@ -3575,6 +3576,7 @@ export type Database = {
           created_at?: string
           due_date: string
           id?: string
+          last_collected_amount?: number | null
           method?: string | null
           paid_amount?: number | null
           paid_date?: string | null
@@ -3591,6 +3593,7 @@ export type Database = {
           created_at?: string
           due_date?: string
           id?: string
+          last_collected_amount?: number | null
           method?: string | null
           paid_amount?: number | null
           paid_date?: string | null

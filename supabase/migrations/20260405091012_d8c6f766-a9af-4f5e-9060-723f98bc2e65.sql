@@ -1,0 +1,1 @@
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS last_collected_amount numeric DEFAULT NULL;

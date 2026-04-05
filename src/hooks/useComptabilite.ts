@@ -721,7 +721,10 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
           const propertyTitle = p.tenant?.property?.title || "";
           const ownerName = p.tenant?.property?.owner?.name || "";
           const allMonths = p.payment_months || [];
-          const totalAmount = isPaid ? (Number(p.paid_amount) || Number(p.amount)) : Number(p.paid_amount);
+          const lastCollected = Number(p.last_collected_amount) || 0;
+          const totalAmount = isPaid
+            ? (lastCollected > 0 ? lastCollected : (Number(p.paid_amount) || Number(p.amount)))
+            : (lastCollected > 0 ? lastCollected : Number(p.paid_amount));
           const suffix = isPartial ? " (partiel)" : "";
 
           result.paidRentDetails.push({

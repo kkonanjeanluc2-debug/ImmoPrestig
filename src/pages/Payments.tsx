@@ -123,8 +123,13 @@ export default function Payments() {
   const { data: receiptTemplates = [] } = useReceiptTemplates();
   const { data: properties = [] } = useProperties();
 
+  const visiblePayments = (payments || []).filter((payment: any) => {
+    const tenantStatus = (payment.tenant as any)?.status;
+    return tenantStatus !== "inactive";
+  });
+
   // Collect assigned_to user IDs for gestionnaire name lookup
-  const gestionnaireIds = (payments || [])
+  const gestionnaireIds = visiblePayments
     .map((p: any) => p.tenant?.property?.assigned_to)
     .filter(Boolean);
   const { data: gestionnaireProfiles } = useUserProfiles(gestionnaireIds);
@@ -150,7 +155,7 @@ export default function Payments() {
   };
 
   // Get dates with payments for calendar highlighting
-  const paymentDates = (payments || []).reduce((acc, payment) => {
+  const paymentDates = visiblePayments.reduce((acc, payment) => {
     const date = payment.due_date;
     if (!acc[date]) {
       acc[date] = [];
@@ -159,7 +164,7 @@ export default function Payments() {
     return acc;
   }, {} as Record<string, typeof payments>);
 
-  const filteredPayments = (payments || []).filter(payment => {
+  const filteredPayments = visiblePayments.filter(payment => {
     const tenant = payment.tenant as any;
     const tenantName = tenant?.name || '';
     const propertyTitle = tenant?.property?.title || '';
@@ -221,7 +226,7 @@ export default function Payments() {
   const monthEndStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`;
 
   // Encaissements du mois: uniquement les paiements dont la date d'encaissement (paid_date ou created_at pour les paid sans paid_date) est dans le mois en cours
-  const monthlyCollected = (payments || []).reduce((sum, p: any) => {
+  const monthlyCollected = visiblePayments.reduce((sum, p: any) => {
     if (p._isVirtual) return sum;
     const status = p.status;
     const totalAmount = Number(p.paid_amount) || Number(p.amount);
@@ -243,18 +248,18 @@ export default function Payments() {
     return sum;
   }, 0);
 
-  const pendingFiltered = (payments || []).filter(p => getEffectiveStatus(p) === 'pending');
+  const pendingFiltered = visiblePayments.filter(p => getEffectiveStatus(p) === 'pending');
   const pendingAmount = pendingFiltered.reduce((sum, p) => {
     const paid = Number(p.paid_amount) || 0;
     return sum + (Number(p.amount) - paid);
   }, 0);
   const pendingCount = pendingFiltered.length;
 
-  const latePayments = (payments || []).filter(p => getEffectiveStatus(p) === 'late');
+  const latePayments = visiblePayments.filter(p => getEffectiveStatus(p) === 'late');
   const lateAmount = latePayments.reduce((sum, p) => sum + Number(p.amount), 0);
   const lateCount = latePayments.length;
 
-  const impayePayments = (payments || []).filter(p => getEffectiveStatus(p) === 'impaye');
+  const impayePayments = visiblePayments.filter(p => getEffectiveStatus(p) === 'impaye');
   const impayeAmount = impayePayments.reduce((sum, p) => sum + Number(p.amount), 0);
   const impayeCount = impayePayments.length;
 
@@ -332,7 +337,7 @@ export default function Payments() {
           </div>
           <div className="flex gap-2">
             <ExportDropdown
-              data={payments || []}
+                data={visiblePayments}
               filename="paiements"
               columns={[
                 { key: 'tenant', label: 'Locataire', format: (v) => v?.name || 'Inconnu' },
@@ -768,7 +773,7 @@ export default function Payments() {
                         <div className="p-8 text-center">
                           <Wallet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                           <p className="text-muted-foreground">
-                            {payments?.length === 0 
+                            {visiblePayments.length === 0 
                               ? "Aucun paiement enregistré."
                               : "Aucun paiement trouvé."}
                           </p>

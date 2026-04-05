@@ -656,7 +656,9 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
         const isPaidInPeriod = paidDate && paidDate >= fromDate && paidDate <= toDate;
 
         if (status === "paid" && isPaidInPeriod) {
-          const totalAmount = Number(p.paid_amount) || Number(p.amount);
+          // Use last_collected_amount if available (incremental), otherwise fall back to full amount
+          const lastCollected = Number(p.last_collected_amount) || 0;
+          const totalAmount = lastCollected > 0 ? lastCollected : (Number(p.paid_amount) || Number(p.amount));
           result.loyersEncaisses += totalAmount;
           
           // Use paid_date for monthly bucket

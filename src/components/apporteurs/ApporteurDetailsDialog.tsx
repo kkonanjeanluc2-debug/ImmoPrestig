@@ -3,12 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Phone, Mail, MapPin, CreditCard, FileText } from "lucide-react";
+import { Plus, Phone, Mail, MapPin, CreditCard, FileText, Download } from "lucide-react";
 import { useApports, useCreateApport, useUpdateApport, useDeleteApport, type ApporteurAffaires } from "@/hooks/useApporteursAffaires";
 import { useState } from "react";
 import { AddApportDialog } from "./AddApportDialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useAgency } from "@/hooks/useAgency";
+import { generateApportCommissionReceipt } from "@/lib/generateApportCommissionReceipt";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -24,9 +27,33 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props) {
   const { data: apports, isLoading } = useApports(apporteur.id);
+  const { data: agency } = useAgency();
   const updateApport = useUpdateApport();
   const deleteApport = useDeleteApport();
   const [showAddApport, setShowAddApport] = useState(false);
+
+  const handleDownloadReceipt = async (apport: any) => {
+    try {
+      await generateApportCommissionReceipt({
+        apporteurName: apporteur.name,
+        apporteurPhone: apporteur.phone,
+        apporteurEmail: apporteur.email,
+        apporteurAddress: apporteur.address,
+        apporteurCni: apporteur.cni_number,
+        commissionPercentage: apport.commission_percentage,
+        commissionAmount: apport.commission_amount || 0,
+        apportDate: apport.apport_date,
+        paidAt: apport.paid_at || new Date().toISOString(),
+        description: apport.description,
+        tenantName: apport.tenant?.name,
+        propertyTitle: apport.property?.title,
+        agency: agency || null,
+      });
+      toast.success("Reçu téléchargé");
+    } catch {
+      toast.error("Erreur lors de la génération du reçu");
+    }
+  };
 
   const totalCommissions = apports?.reduce((sum, a) => sum + (a.commission_amount || 0), 0) || 0;
   const paidCommissions = apports?.filter(a => a.status === "payee").reduce((sum, a) => sum + (a.commission_amount || 0), 0) || 0;
@@ -148,6 +175,16 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {apport.status === "payee" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadReceipt(apport)}
+                            title="Télécharger le reçu"
+                          >
+                            <Download className="h-3 w-3" />
+                          </Button>
+                        )}
                         {apport.status === "en_attente" && (
                           <Button
                             size="sm"

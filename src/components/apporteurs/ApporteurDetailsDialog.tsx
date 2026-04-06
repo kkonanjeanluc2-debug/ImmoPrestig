@@ -27,9 +27,33 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props) {
   const { data: apports, isLoading } = useApports(apporteur.id);
+  const { data: agency } = useAgency();
   const updateApport = useUpdateApport();
   const deleteApport = useDeleteApport();
   const [showAddApport, setShowAddApport] = useState(false);
+
+  const handleDownloadReceipt = async (apport: any) => {
+    try {
+      await generateApportCommissionReceipt({
+        apporteurName: apporteur.name,
+        apporteurPhone: apporteur.phone,
+        apporteurEmail: apporteur.email,
+        apporteurAddress: apporteur.address,
+        apporteurCni: apporteur.cni_number,
+        commissionPercentage: apport.commission_percentage,
+        commissionAmount: apport.commission_amount || 0,
+        apportDate: apport.apport_date,
+        paidAt: apport.paid_at || new Date().toISOString(),
+        description: apport.description,
+        tenantName: apport.tenant?.name,
+        propertyTitle: apport.property?.title,
+        agency: agency || null,
+      });
+      toast.success("Reçu téléchargé");
+    } catch {
+      toast.error("Erreur lors de la génération du reçu");
+    }
+  };
 
   const totalCommissions = apports?.reduce((sum, a) => sum + (a.commission_amount || 0), 0) || 0;
   const paidCommissions = apports?.filter(a => a.status === "payee").reduce((sum, a) => sum + (a.commission_amount || 0), 0) || 0;

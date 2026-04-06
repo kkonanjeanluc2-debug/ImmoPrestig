@@ -175,6 +175,16 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {apport.status === "payee" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadReceipt(apport)}
+                            title="Télécharger le reçu"
+                          >
+                            <Download className="h-3 w-3" />
+                          </Button>
+                        )}
                         {apport.status === "en_attente" && (
                           <Button
                             size="sm"

@@ -3,12 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Phone, Mail, MapPin, CreditCard, FileText } from "lucide-react";
+import { Plus, Phone, Mail, MapPin, CreditCard, FileText, Download } from "lucide-react";
 import { useApports, useCreateApport, useUpdateApport, useDeleteApport, type ApporteurAffaires } from "@/hooks/useApporteursAffaires";
 import { useState } from "react";
 import { AddApportDialog } from "./AddApportDialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useAgency } from "@/hooks/useAgency";
+import { generateApportCommissionReceipt } from "@/lib/generateApportCommissionReceipt";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;

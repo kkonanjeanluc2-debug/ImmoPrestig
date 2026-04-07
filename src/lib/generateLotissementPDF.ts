@@ -1087,50 +1087,50 @@ export const generateAttestationVillageoise = async (
       ? 10
       : compactLevel > 0
         ? 12
-        : 15
+        : 12
     : 20;
   const contentWidth = pageWidth - 2 * margin;
   const bottomMargin = isAttributionTemplate
     ? compactLevel > 1
       ? 8
       : compactLevel > 0
-        ? 12
-        : 18
+        ? 10
+        : 10
     : 25;
   let yPos = isAttributionTemplate
     ? compactLevel > 1
       ? 8
       : compactLevel > 0
-        ? 10
-        : 12
+        ? 8
+        : 10
     : 15;
   const bodyFontSize = isAttributionTemplate
     ? compactLevel > 1
       ? 7.6
       : compactLevel > 0
-        ? 8.4
-        : 9
+        ? 8
+        : 8.2
     : 9;
   const headingFontSize = isAttributionTemplate
     ? compactLevel > 1
       ? 8.8
       : compactLevel > 0
-        ? 9.4
-        : 10
+        ? 9
+        : 9.2
     : 10;
   const bodyLineHeight = isAttributionTemplate
     ? compactLevel > 1
       ? 3.8
       : compactLevel > 0
-        ? 4.1
-        : 4.5
+        ? 3.8
+        : 4
     : 4.5;
   const paragraphGap = isAttributionTemplate
     ? compactLevel > 1
       ? 0.8
       : compactLevel > 0
-        ? 1
-        : 1.5
+        ? 0.8
+        : 1
     : 1.5;
 
   const district = template?.district || "";

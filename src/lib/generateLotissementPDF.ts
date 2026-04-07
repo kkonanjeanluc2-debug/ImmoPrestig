@@ -1608,7 +1608,7 @@ export const generateAttestationVillageoise = async (
       }
 
       if (!trimmed) {
-        yPos += 3;
+        yPos += isAttributionTemplate ? 1.5 : 3;
         continue;
       }
 

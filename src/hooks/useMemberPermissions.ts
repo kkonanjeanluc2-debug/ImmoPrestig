@@ -96,6 +96,11 @@ export interface MemberPermissions {
   // Module access
   can_access_gestion_locative: boolean;
   can_access_crm_immobilier: boolean;
+  // Apporteurs d'affaires
+  can_view_apporteurs: boolean;
+  can_create_apporteurs: boolean;
+  can_edit_apporteurs: boolean;
+  can_delete_apporteurs: boolean;
   // Settings management
   can_access_settings: boolean;
   can_access_agency_tab: boolean;

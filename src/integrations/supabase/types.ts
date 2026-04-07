@@ -2441,6 +2441,7 @@ export type Database = {
           can_collect_echeances_ventes: boolean
           can_create_achats: boolean
           can_create_achats_documents: boolean
+          can_create_apporteurs: boolean
           can_create_biens_vente: boolean | null
           can_create_contracts: boolean
           can_create_demarches: boolean | null
@@ -2463,6 +2464,7 @@ export type Database = {
           can_create_vente_prospects: boolean | null
           can_create_ventes: boolean
           can_delete_achats: boolean
+          can_delete_apporteurs: boolean
           can_delete_contracts: boolean
           can_delete_documents: boolean
           can_delete_impayes: boolean
@@ -2473,6 +2475,7 @@ export type Database = {
           can_delete_tenants: boolean
           can_delete_ventes: boolean
           can_edit_achats: boolean
+          can_edit_apporteurs: boolean
           can_edit_biens_vente: boolean | null
           can_edit_contracts: boolean
           can_edit_impayes: boolean
@@ -2494,6 +2497,7 @@ export type Database = {
           can_manage_templates: boolean
           can_send_reminders: boolean
           can_view_achats: boolean
+          can_view_apporteurs: boolean
           can_view_comptabilite: boolean
           can_view_contracts: boolean
           can_view_documents: boolean
@@ -2536,6 +2540,7 @@ export type Database = {
           can_collect_echeances_ventes?: boolean
           can_create_achats?: boolean
           can_create_achats_documents?: boolean
+          can_create_apporteurs?: boolean
           can_create_biens_vente?: boolean | null
           can_create_contracts?: boolean
           can_create_demarches?: boolean | null
@@ -2558,6 +2563,7 @@ export type Database = {
           can_create_vente_prospects?: boolean | null
           can_create_ventes?: boolean
           can_delete_achats?: boolean
+          can_delete_apporteurs?: boolean
           can_delete_contracts?: boolean
           can_delete_documents?: boolean
           can_delete_impayes?: boolean
@@ -2568,6 +2574,7 @@ export type Database = {
           can_delete_tenants?: boolean
           can_delete_ventes?: boolean
           can_edit_achats?: boolean
+          can_edit_apporteurs?: boolean
           can_edit_biens_vente?: boolean | null
           can_edit_contracts?: boolean
           can_edit_impayes?: boolean
@@ -2589,6 +2596,7 @@ export type Database = {
           can_manage_templates?: boolean
           can_send_reminders?: boolean
           can_view_achats?: boolean
+          can_view_apporteurs?: boolean
           can_view_comptabilite?: boolean
           can_view_contracts?: boolean
           can_view_documents?: boolean
@@ -2631,6 +2639,7 @@ export type Database = {
           can_collect_echeances_ventes?: boolean
           can_create_achats?: boolean
           can_create_achats_documents?: boolean
+          can_create_apporteurs?: boolean
           can_create_biens_vente?: boolean | null
           can_create_contracts?: boolean
           can_create_demarches?: boolean | null
@@ -2653,6 +2662,7 @@ export type Database = {
           can_create_vente_prospects?: boolean | null
           can_create_ventes?: boolean
           can_delete_achats?: boolean
+          can_delete_apporteurs?: boolean
           can_delete_contracts?: boolean
           can_delete_documents?: boolean
           can_delete_impayes?: boolean
@@ -2663,6 +2673,7 @@ export type Database = {
           can_delete_tenants?: boolean
           can_delete_ventes?: boolean
           can_edit_achats?: boolean
+          can_edit_apporteurs?: boolean
           can_edit_biens_vente?: boolean | null
           can_edit_contracts?: boolean
           can_edit_impayes?: boolean
@@ -2684,6 +2695,7 @@ export type Database = {
           can_manage_templates?: boolean
           can_send_reminders?: boolean
           can_view_achats?: boolean
+          can_view_apporteurs?: boolean
           can_view_comptabilite?: boolean
           can_view_contracts?: boolean
           can_view_documents?: boolean

@@ -29,9 +29,12 @@ const STATUS_LABELS: Record<string, string> = {
 export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props) {
   const { data: apports, isLoading } = useApports(apporteur.id);
   const { data: agency } = useAgency();
+  const { data: receiptTemplates } = useReceiptTemplates();
   const updateApport = useUpdateApport();
   const deleteApport = useDeleteApport();
   const [showAddApport, setShowAddApport] = useState(false);
+
+  const defaultTemplate = receiptTemplates?.find(t => t.is_default) || receiptTemplates?.[0];
 
   const handleDownloadReceipt = async (apport: any) => {
     try {
@@ -49,6 +52,7 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
         tenantName: apport.tenant?.name,
         propertyTitle: apport.property?.title,
         agency: agency || null,
+        stampImageUrl: defaultTemplate?.stamp_image_url || null,
       });
       toast.success("Reçu téléchargé");
     } catch {

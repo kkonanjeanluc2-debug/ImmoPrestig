@@ -32,6 +32,7 @@ interface ApportCommissionReceiptData {
   tenantName?: string | null;
   propertyTitle?: string | null;
   agency?: PDFAgencyInfo | null;
+  stampImageUrl?: string | null;
 }
 
 const MARGIN = 15;

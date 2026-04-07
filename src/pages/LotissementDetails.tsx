@@ -96,12 +96,26 @@ const LotissementDetails = () => {
     let total = 0;
     if (ventes && ventes.length > 0) {
       ventes.forEach(vente => {
-        // Down payment: use vente created_at as payment date
-        const venteDate = new Date(vente.created_at);
-        if (venteDate >= revenuePeriod.from && venteDate <= revenuePeriod.to && (vente.down_payment || 0) > 0) {
-          total += vente.down_payment || 0;
+        const isCash = vente.payment_type === "comptant";
+        
+        if (isCash) {
+          // For cash sales: count total_price if no down_payment, otherwise count down_payment
+          const amount = (vente.down_payment && vente.down_payment > 0) ? vente.down_payment : vente.total_price;
+          const paymentDate = new Date(vente.sale_date);
+          if (paymentDate >= revenuePeriod.from && paymentDate <= revenuePeriod.to) {
+            total += amount;
+          }
+        } else {
+          // For installment sales: count down_payment at sale_date
+          if ((vente.down_payment || 0) > 0) {
+            const venteDate = new Date(vente.sale_date);
+            if (venteDate >= revenuePeriod.from && venteDate <= revenuePeriod.to) {
+              total += vente.down_payment || 0;
+            }
+          }
         }
         
+        // Count paid installments by their paid_date
         const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
         venteEcheances.forEach(echeance => {
           if (echeance.status === "paid" && echeance.paid_date) {

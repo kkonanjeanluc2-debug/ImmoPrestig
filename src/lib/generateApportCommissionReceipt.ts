@@ -154,7 +154,6 @@ export const generateApportCommissionReceipt = async (data: ApportCommissionRece
   yPos += 5;
   doc.setFont("helvetica", "italic");
   doc.text(agencyName, 50, yPos, { align: "center" });
-  doc.text(data.apporteurName, pageWidth - 50, yPos, { align: "center" });
 
   // Footer
   doc.setFillColor(...lightGray);

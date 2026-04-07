@@ -32,6 +32,7 @@ interface ApportCommissionReceiptData {
   tenantName?: string | null;
   propertyTitle?: string | null;
   agency?: PDFAgencyInfo | null;
+  stampImageUrl?: string | null;
 }
 
 const MARGIN = 15;
@@ -172,12 +173,12 @@ export const generateApportCommissionReceipt = async (data: ApportCommissionRece
   doc.text(agencyName, 50, yPos, { align: "center" });
   yPos += 3;
 
-  // Agency stamp/logo
-  if (data.agency?.logo_url) {
+  // Agency stamp/signature
+  if (data.stampImageUrl) {
     try {
-      const stampBase64 = await loadImageAsBase64(data.agency.logo_url);
+      const stampBase64 = await loadImageAsBase64(data.stampImageUrl);
       if (stampBase64) {
-        const stampSize = 25;
+        const stampSize = 30;
         doc.addImage(stampBase64, "PNG", 50 - stampSize / 2, yPos, stampSize, stampSize);
       }
     } catch {}

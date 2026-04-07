@@ -96,6 +96,11 @@ export interface MemberPermissions {
   // Module access
   can_access_gestion_locative: boolean;
   can_access_crm_immobilier: boolean;
+  // Apporteurs d'affaires
+  can_view_apporteurs: boolean;
+  can_create_apporteurs: boolean;
+  can_edit_apporteurs: boolean;
+  can_delete_apporteurs: boolean;
   // Settings management
   can_access_settings: boolean;
   can_access_agency_tab: boolean;
@@ -197,6 +202,10 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_owner_payouts: "Créer des reversements",
   can_access_gestion_locative: "Accès au module Gestion Locative",
   can_access_crm_immobilier: "Accès au module CRM Immobilier",
+  can_view_apporteurs: "Voir les apporteurs",
+  can_create_apporteurs: "Ajouter des apporteurs",
+  can_edit_apporteurs: "Modifier les apporteurs",
+  can_delete_apporteurs: "Supprimer les apporteurs",
   can_access_settings: "Accéder aux paramètres (global)",
   can_access_agency_tab: "Onglet Agence",
   can_access_management_tab: "Onglet Gestion",
@@ -253,6 +262,10 @@ export const PERMISSION_GROUPS = {
   modules: {
     label: "Accès aux modules",
     permissions: ["can_access_gestion_locative", "can_access_crm_immobilier"] as PermissionKey[],
+  },
+  apporteurs: {
+    label: "Apporteurs d'affaires",
+    permissions: ["can_view_apporteurs", "can_create_apporteurs", "can_edit_apporteurs", "can_delete_apporteurs"] as PermissionKey[],
   },
   settings: {
     label: "Paramètres",
@@ -347,6 +360,10 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_access_settings: true,
     can_access_gestion_locative: true,
     can_access_crm_immobilier: true,
+    can_view_apporteurs: true,
+    can_create_apporteurs: true,
+    can_edit_apporteurs: true,
+    can_delete_apporteurs: true,
     can_access_agency_tab: true,
     can_access_management_tab: true,
     can_access_subscription_tab: true,
@@ -438,6 +455,10 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_access_settings: false,
     can_access_gestion_locative: true,
     can_access_crm_immobilier: true,
+    can_view_apporteurs: false,
+    can_create_apporteurs: false,
+    can_edit_apporteurs: false,
+    can_delete_apporteurs: false,
     can_access_agency_tab: false,
     can_access_management_tab: false,
     can_access_subscription_tab: false,
@@ -529,6 +550,10 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_access_settings: false,
     can_access_gestion_locative: true,
     can_access_crm_immobilier: true,
+    can_view_apporteurs: false,
+    can_create_apporteurs: false,
+    can_edit_apporteurs: false,
+    can_delete_apporteurs: false,
     can_access_agency_tab: false,
     can_access_management_tab: false,
     can_access_subscription_tab: false,
@@ -620,6 +645,10 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_access_settings: false,
     can_access_gestion_locative: true,
     can_access_crm_immobilier: true,
+    can_view_apporteurs: false,
+    can_create_apporteurs: false,
+    can_edit_apporteurs: false,
+    can_delete_apporteurs: false,
     can_access_agency_tab: false,
     can_access_management_tab: false,
     can_access_subscription_tab: false,

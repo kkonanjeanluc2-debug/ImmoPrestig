@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useAgency } from "@/hooks/useAgency";
 import { generateApportCommissionReceipt } from "@/lib/generateApportCommissionReceipt";
+import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { toast } from "sonner";
 
 interface Props {

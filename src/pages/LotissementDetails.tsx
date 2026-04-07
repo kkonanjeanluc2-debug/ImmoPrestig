@@ -115,13 +115,18 @@ const LotissementDetails = () => {
           }
         }
         
-        // Count paid installments by their paid_date
+        // Count paid installments by their paid_date (full or partial)
         const venteEcheances = echeances?.filter(e => e.vente_id === vente.id) || [];
         venteEcheances.forEach(echeance => {
-          if (echeance.status === "paid" && echeance.paid_date) {
+          if (echeance.paid_date) {
             const paidDate = new Date(echeance.paid_date);
             if (paidDate >= revenuePeriod.from && paidDate <= revenuePeriod.to) {
-              total += echeance.paid_amount || echeance.amount;
+              if (echeance.status === "paid") {
+                total += echeance.paid_amount || echeance.amount;
+              } else if ((echeance.paid_amount || 0) > 0) {
+                // Partial payment on pending/late installment
+                total += echeance.paid_amount!;
+              }
             }
           }
         });

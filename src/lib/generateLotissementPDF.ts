@@ -1473,10 +1473,10 @@ export const generateAttestationVillageoise = async (
     doc.setFont('helvetica', 'normal');
 
     const bannerTopY = Math.max(
-      yPos + 4,
-      hasVillageLogos ? logoBottomY + logoBannerGap : yPos + 4
+      yPos + 2,
+      hasVillageLogos ? logoBottomY + 3 : yPos + 2
     );
-    const bannerHeight = 28;
+    const bannerHeight = 24;
     const bannerColor1 = template?.banner_color_1 || '#003399';
     const bannerColor2 = template?.banner_color_2 || null;
     const useBannerGradient = template?.banner_gradient && bannerColor2;

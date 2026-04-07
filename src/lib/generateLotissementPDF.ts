@@ -1087,50 +1087,50 @@ export const generateAttestationVillageoise = async (
       ? 10
       : compactLevel > 0
         ? 12
-        : 15
+        : 12
     : 20;
   const contentWidth = pageWidth - 2 * margin;
   const bottomMargin = isAttributionTemplate
     ? compactLevel > 1
       ? 8
       : compactLevel > 0
-        ? 12
-        : 18
+        ? 10
+        : 10
     : 25;
   let yPos = isAttributionTemplate
     ? compactLevel > 1
       ? 8
       : compactLevel > 0
-        ? 10
-        : 12
+        ? 8
+        : 10
     : 15;
   const bodyFontSize = isAttributionTemplate
     ? compactLevel > 1
       ? 7.6
       : compactLevel > 0
-        ? 8.4
-        : 9
+        ? 8
+        : 8.2
     : 9;
   const headingFontSize = isAttributionTemplate
     ? compactLevel > 1
       ? 8.8
       : compactLevel > 0
-        ? 9.4
-        : 10
+        ? 9
+        : 9.2
     : 10;
   const bodyLineHeight = isAttributionTemplate
     ? compactLevel > 1
       ? 3.8
       : compactLevel > 0
-        ? 4.1
-        : 4.5
+        ? 3.8
+        : 4
     : 4.5;
   const paragraphGap = isAttributionTemplate
     ? compactLevel > 1
       ? 0.8
       : compactLevel > 0
-        ? 1
-        : 1.5
+        ? 0.8
+        : 1
     : 1.5;
 
   const district = template?.district || "";
@@ -1473,10 +1473,10 @@ export const generateAttestationVillageoise = async (
     doc.setFont('helvetica', 'normal');
 
     const bannerTopY = Math.max(
-      yPos + 4,
-      hasVillageLogos ? logoBottomY + logoBannerGap : yPos + 4
+      yPos + 2,
+      hasVillageLogos ? logoBottomY + 3 : yPos + 2
     );
-    const bannerHeight = 28;
+    const bannerHeight = 24;
     const bannerColor1 = template?.banner_color_1 || '#003399';
     const bannerColor2 = template?.banner_color_2 || null;
     const useBannerGradient = template?.banner_gradient && bannerColor2;
@@ -1503,18 +1503,18 @@ export const generateAttestationVillageoise = async (
     }
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, bannerTopY + 8, { align: 'center' });
-    doc.setFontSize(9);
-    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, bannerTopY + 15, { align: 'center' });
-    doc.setFontSize(7);
+    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, bannerTopY + 7, { align: 'center' });
+    doc.setFontSize(8);
+    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, bannerTopY + 13, { align: 'center' });
+    doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
     if (arreteApprobation) {
-      doc.text(arreteApprobation, pageWidth / 2, bannerTopY + 22, { align: 'center' });
+      doc.text(arreteApprobation, pageWidth / 2, bannerTopY + 19, { align: 'center' });
     }
 
-    yPos = bannerTopY + bannerHeight + 10;
+    yPos = bannerTopY + bannerHeight + 6;
   }
 
   doc.setTextColor(...textColor);
@@ -1582,9 +1582,8 @@ export const generateAttestationVillageoise = async (
     }
 
     const lines = finalContent.split('\n');
-    const baseFontSize = 9;
-    const headingFontSize = 10;
-    const lineSpacing = 4.5;
+    const baseFontSize = bodyFontSize;
+    const lineSpacing = bodyLineHeight;
 
     for (const line of lines) {
       const trimmed = line.trim();
@@ -1609,7 +1608,7 @@ export const generateAttestationVillageoise = async (
       }
 
       if (!trimmed) {
-        yPos += 3;
+        yPos += isAttributionTemplate ? 1.5 : 3;
         continue;
       }
 

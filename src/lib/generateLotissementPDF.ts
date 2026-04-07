@@ -1503,18 +1503,18 @@ export const generateAttestationVillageoise = async (
     }
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, bannerTopY + 8, { align: 'center' });
-    doc.setFontSize(9);
-    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, bannerTopY + 15, { align: 'center' });
-    doc.setFontSize(7);
+    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, bannerTopY + 7, { align: 'center' });
+    doc.setFontSize(8);
+    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, bannerTopY + 13, { align: 'center' });
+    doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
     if (arreteApprobation) {
-      doc.text(arreteApprobation, pageWidth / 2, bannerTopY + 22, { align: 'center' });
+      doc.text(arreteApprobation, pageWidth / 2, bannerTopY + 19, { align: 'center' });
     }
 
-    yPos = bannerTopY + bannerHeight + 10;
+    yPos = bannerTopY + bannerHeight + 6;
   }
 
   doc.setTextColor(...textColor);

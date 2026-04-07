@@ -170,6 +170,18 @@ export const generateApportCommissionReceipt = async (data: ApportCommissionRece
   yPos += 5;
   doc.setFont("helvetica", "italic");
   doc.text(agencyName, 50, yPos, { align: "center" });
+  yPos += 3;
+
+  // Agency stamp/logo
+  if (data.agency?.logo_url) {
+    try {
+      const stampBase64 = await loadImageAsBase64(data.agency.logo_url);
+      if (stampBase64) {
+        const stampSize = 25;
+        doc.addImage(stampBase64, "PNG", 50 - stampSize / 2, yPos, stampSize, stampSize);
+      }
+    } catch {}
+  }
 
   // Footer
   doc.setFillColor(...lightGray);

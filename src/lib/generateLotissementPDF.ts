@@ -1582,9 +1582,8 @@ export const generateAttestationVillageoise = async (
     }
 
     const lines = finalContent.split('\n');
-    const baseFontSize = 9;
-    const headingFontSize = 10;
-    const lineSpacing = 4.5;
+    const baseFontSize = bodyFontSize;
+    const lineSpacing = bodyLineHeight;
 
     for (const line of lines) {
       const trimmed = line.trim();

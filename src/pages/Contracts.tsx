@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +67,7 @@ import { format, differenceInDays, addMonths, addYears } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
+import { supabase } from "@/integrations/supabase/client";
 import { GenerateContractDialog } from "@/components/contract/GenerateContractDialog";
 import { SignContractDialog } from "@/components/signature/SignContractDialog";
 
@@ -91,6 +93,7 @@ const Contracts = () => {
   const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const updateContract = useUpdateContract();
   const expireContract = useExpireContract();
+  const queryClient = useQueryClient();
   
   const isLocataire = userRole?.role === "locataire";
   const isAdmin = role === "super_admin" || role === "admin";
@@ -167,6 +170,45 @@ const Contracts = () => {
         end_date: format(newEndDate, "yyyy-MM-dd"),
         status: "active",
       });
+
+      // Update tenant status back to "actif" and restore portal access
+      if (selectedContract.tenant_id) {
+        const { data: tenantData } = await supabase
+          .from("tenants")
+          .select("portal_user_id")
+          .eq("id", selectedContract.tenant_id)
+          .single();
+
+        const updatePayload: Record<string, any> = { status: "actif" };
+        if (tenantData?.portal_user_id) {
+          updatePayload.has_portal_access = true;
+        }
+
+        await supabase
+          .from("tenants")
+          .update(updatePayload)
+          .eq("id", selectedContract.tenant_id);
+      }
+
+      // Update property status back to "loué"
+      if (selectedContract.property_id) {
+        await supabase
+          .from("properties")
+          .update({ status: "loué" })
+          .eq("id", selectedContract.property_id);
+      }
+
+      // Update unit status back to "loué" if applicable
+      if (selectedContract.unit_id) {
+        await supabase
+          .from("property_units")
+          .update({ status: "loué" })
+          .eq("id", selectedContract.unit_id);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units"] });
 
       toast.success("Contrat renouvelé avec succès");
       setRenewDialogOpen(false);

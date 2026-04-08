@@ -409,15 +409,6 @@ const PropertyDetails = () => {
 
             {/* Action buttons */}
             <div className="flex flex-wrap gap-2 pt-1">
-              <WhatsAppButton
-                message={generateMessage(property)}
-                variant="outline"
-                size="sm"
-                className="bg-white/10 border-white/20 text-white hover:bg-emerald hover:border-emerald hover:text-white backdrop-blur-sm"
-              >
-                <Share2 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Partager</span>
-              </WhatsAppButton>
               {property.type === "location" && (
                 <Button
                   variant="outline"

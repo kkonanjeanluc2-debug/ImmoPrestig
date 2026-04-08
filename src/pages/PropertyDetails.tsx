@@ -27,7 +27,9 @@ import {
   Loader2,
   User,
   Share2,
-  FileText
+  FileText,
+  Users,
+  Clock
 } from "lucide-react";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useWhatsAppPropertyMessage } from "@/hooks/useWhatsAppPropertyMessage";

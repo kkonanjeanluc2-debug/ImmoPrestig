@@ -42,6 +42,8 @@ interface ReceiptDataWithTemplate extends ReceiptData {
 interface PdfImageAsset {
   dataUrl: string;
   format: "PNG" | "JPEG";
+  naturalWidth?: number;
+  naturalHeight?: number;
 }
 
 // Convert database template to legacy format for compatibility

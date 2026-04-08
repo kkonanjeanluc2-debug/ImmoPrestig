@@ -150,17 +150,32 @@ const Properties = () => {
           </div>
           <div className="flex gap-2">
             <ExportDropdown
-              data={properties || []}
+              data={(() => {
+                const multiUnitTypes = ['maison', 'immeuble'];
+                const rows: Record<string, any>[] = [];
+                (properties || []).forEach(p => {
+                  const isMulti = multiUnitTypes.includes(p.property_type);
+                  const units = isMulti ? allUnits.filter(u => u.property_id === p.id) : [];
+                  if (isMulti && units.length > 0) {
+                    units.forEach(u => rows.push({ ...p, _unitNumber: u.unit_number, _unitStatus: u.status === 'disponible' ? 'Disponible' : 'Loué', _unitRent: u.rent_amount }));
+                  } else {
+                    rows.push({ ...p, _unitNumber: '', _unitStatus: '', _unitRent: '' });
+                  }
+                });
+                return rows;
+              })()}
               filename="biens"
               columns={[
                 { key: 'title', label: 'Titre' },
                 { key: 'address', label: 'Adresse' },
-                { key: 'property_type', label: 'Type', format: (v) => ({ maison: 'Maison', appartement: 'Appartement', villa: 'Villa', bureau: 'Bureau', commerce: 'Commerce', immeuble: 'Immeuble', meuble: 'Location meublée' }[v as string] || v) },
+                { key: 'property_type', label: 'Type', format: (v) => ({ maison: 'Maison à porte multiple', appartement: 'Appartement', villa: 'Villa', bureau: 'Bureau', commerce: 'Commerce', immeuble: 'Immeuble', meuble: 'Location meublée' }[v as string] || v) },
+                { key: '_unitNumber' as any, label: 'Porte' },
                 { key: 'type', label: 'Mode', format: (v) => v === 'location' ? 'Location' : 'Vente' },
                 { key: 'price', label: 'Prix (F CFA)', format: (v) => Number(v).toString() },
                 { key: 'area', label: 'Surface (m²)', format: (v) => v ? Number(v).toString() : '' },
                 { key: 'bedrooms', label: 'Pièces', format: (v) => v ? v.toString() : '' },
                 { key: 'bathrooms', label: 'Salles de bain', format: (v) => v ? v.toString() : '' },
+                { key: '_unitStatus' as any, label: 'Statut Porte', format: (v, row) => v || (row.status === 'disponible' ? 'Disponible' : row.status === 'loué' ? 'Loué' : row.status === 'vendu' ? 'Vendu' : 'En attente') },
                 { key: 'status', label: 'Statut', format: (v) => v === 'disponible' ? 'Disponible' : v === 'loué' ? 'Loué' : v === 'vendu' ? 'Vendu' : 'En attente' },
               ]}
             />

@@ -180,6 +180,7 @@ const Properties = () => {
                 { key: 'status', label: 'Statut', format: (v) => v === 'disponible' ? 'Disponible' : v === 'loué' ? 'Loué' : v === 'vendu' ? 'Vendu' : 'En attente' },
               ]}
             />
+            {canCreate && <ImportPropertiesDialog />}
             <PropertyTrashDialog />
             {canCreate && <AddPropertyDialog />}
           </div>

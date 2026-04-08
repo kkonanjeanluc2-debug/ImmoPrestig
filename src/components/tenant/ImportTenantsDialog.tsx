@@ -18,6 +18,9 @@ import { useUpdateProperty } from "@/hooks/useProperties";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const downloadTemplate = async () => {
   const workbook = new ExcelJS.Workbook();

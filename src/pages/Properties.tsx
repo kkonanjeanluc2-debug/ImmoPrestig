@@ -71,6 +71,7 @@ const Properties = () => {
   const { data: propertyTenantsAllMap = {} } = usePropertyTenantsAll();
   const navigate = useNavigate();
   const { data: expandedUnits = [], isLoading: unitsLoading } = usePropertyUnits(expandedPropertyId || undefined);
+  const { data: allUnits = [] } = useAllPropertyUnits();
 
   // Check if user is a gestionnaire (manager) - filter data to show only their assigned items
   const isGestionnaire = userRole?.role === "gestionnaire";

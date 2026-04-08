@@ -275,6 +275,7 @@ export function ImportTenantsDialog() {
           email: tenant.email,
           phone: tenant.phone || null,
           property_id: tenant.propertyId || null,
+          unit_id: tenant.unitId || null,
         });
 
         // Create contract if property and dates are provided
@@ -282,12 +283,21 @@ export function ImportTenantsDialog() {
           await createContract.mutateAsync({
             tenant_id: createdTenant.id,
             property_id: tenant.propertyId,
+            unit_id: tenant.unitId || null,
             start_date: tenant.startDate,
             end_date: tenant.endDate,
             rent_amount: tenant.rentAmount,
             deposit: tenant.deposit || null,
             status: "active",
           });
+
+          // Update unit status if applicable
+          if (tenant.unitId) {
+            await supabase
+              .from("property_units")
+              .update({ status: "loué" })
+              .eq("id", tenant.unitId);
+          }
 
           // Update property status
           await updateProperty.mutateAsync({

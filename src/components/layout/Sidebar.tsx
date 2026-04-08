@@ -1,3 +1,4 @@
+import React from "react";
 import { NavLink, useLocation, useNavigate, Link } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -188,6 +189,87 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const showText = !collapsed || mobileOpen;
+
+  const renderNavItem = (
+    item: { name: string; href: string; icon: typeof Building2 },
+    opts?: { badgeCount?: number; indent?: boolean }
+  ) => {
+    const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
+    const badgeCount = opts?.badgeCount || 0;
+    return (
+      <NavLink
+        key={item.name}
+        to={item.href}
+        onMouseEnter={() => prefetchRoute(item.href)}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group relative",
+          opts?.indent && "ml-2",
+          isActive
+            ? "bg-white/15 text-white shadow-sm shadow-white/5 backdrop-blur-sm"
+            : "text-white/60 hover:bg-white/8 hover:text-white/90"
+        )}
+      >
+        <div className="relative flex-shrink-0">
+          <item.icon className={cn(
+            "h-[18px] w-[18px] transition-all duration-200",
+            isActive ? "text-white" : "text-white/50 group-hover:text-white/80",
+            !showText && "mx-auto"
+          )} />
+          {badgeCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 flex items-center justify-center px-0.5 ring-2 ring-navy">
+              {badgeCount > 99 ? "99+" : badgeCount}
+            </span>
+          )}
+        </div>
+        {showText && (
+          <span className={cn(
+            "text-[13px] transition-colors duration-200",
+            isActive ? "font-semibold" : "font-medium"
+          )}>{item.name}</span>
+        )}
+        {isActive && showText && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-emerald rounded-r-full" />
+        )}
+      </NavLink>
+    );
+  };
+
+  const renderSectionLabel = (label: string) => {
+    if (!showText) return null;
+    return (
+      <p className="px-3 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">
+        {label}
+      </p>
+    );
+  };
+
+  const renderCollapsibleGroup = (
+    label: string,
+    icon: typeof Building2,
+    children: React.ReactNode
+  ) => (
+    <Collapsible defaultOpen className="space-y-0.5">
+      <CollapsibleTrigger className={cn(
+        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 w-full group",
+        "text-white/70 hover:bg-white/5 hover:text-white/90"
+      )}>
+        {React.createElement(icon, {
+          className: cn("h-[18px] w-[18px] flex-shrink-0 text-white/50", !showText && "mx-auto")
+        })}
+        {showText && (
+          <>
+            <span className="font-semibold text-[13px] flex-1 text-left">{label}</span>
+            <ChevronDown className="h-3.5 w-3.5 text-white/30 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          </>
+        )}
+      </CollapsibleTrigger>
+      <CollapsibleContent className={cn("space-y-0.5", showText && "pl-1")}>
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
   return (
     <>
       {/* Mobile Menu Button */}
@@ -195,7 +277,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         variant="ghost"
         size="icon"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-3 left-3 z-50 lg:hidden bg-navy text-primary-foreground hover:bg-navy-light"
+        className="fixed top-3 left-3 z-50 lg:hidden bg-navy text-white hover:bg-navy-light rounded-xl shadow-lg"
       >
         <Menu className="h-5 w-5" />
       </Button>
@@ -203,7 +285,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -211,35 +293,39 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
       {/* Sidebar */}
       <aside 
         className={cn(
-          "fixed left-0 top-0 z-50 h-screen bg-navy transition-all duration-300 ease-in-out flex flex-col",
-          // Mobile: slide in/out
+          "fixed left-0 top-0 z-50 h-screen transition-all duration-300 ease-in-out flex flex-col",
+          "bg-gradient-to-b from-navy via-navy to-[hsl(220,50%,12%)]",
           "lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
-          // Desktop: collapsed/expanded
-          collapsed ? "lg:w-16" : "lg:w-64",
-          "w-64"
+          collapsed ? "lg:w-[68px]" : "lg:w-[260px]",
+          "w-[260px]"
         )}
       >
-        {/* Logo */}
-        <div className="flex h-16 items-center justify-between px-4 border-b border-navy-light">
-          {(!collapsed || mobileOpen) && (
-            <div className="flex items-center gap-2">
-              <img 
-                src={platformLogo} 
-                alt={platformAppName} 
-                className="h-10 w-auto object-contain"
-              />
-              <span className="font-display text-xl text-primary-foreground font-semibold">
+        {/* Logo Section */}
+        <div className={cn(
+          "flex items-center justify-between px-4 h-[68px] border-b border-white/[0.06]",
+        )}>
+          {showText ? (
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-9 w-9 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/10">
+                <img 
+                  src={platformLogo} 
+                  alt={platformAppName} 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <span className="font-display text-[15px] text-white font-semibold truncate">
                 {platformAppName}
               </span>
             </div>
-          )}
-          {collapsed && !mobileOpen && (
-            <img 
-              src={platformLogo} 
-              alt={platformAppName} 
-              className="h-8 w-8 object-contain mx-auto"
-            />
+          ) : (
+            <div className="h-8 w-8 rounded-xl overflow-hidden mx-auto ring-1 ring-white/10">
+              <img 
+                src={platformLogo} 
+                alt={platformAppName} 
+                className="h-full w-full object-cover"
+              />
+            </div>
           )}
           
           {/* Mobile Close Button */}
@@ -247,74 +333,56 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             variant="ghost"
             size="icon"
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden text-primary-foreground hover:bg-navy-light"
+            className="lg:hidden text-white/60 hover:text-white hover:bg-white/10 rounded-xl h-8 w-8"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-          {/* Super Admin sees different navigation */}
+        <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          {/* Super Admin Navigation */}
           {userRole?.role === "super_admin" ? (
             <>
+              {renderSectionLabel("Administration")}
               {superAdminNavigation.map((item) => {
                 const isActive = location.pathname === item.href;
-                const showText = !collapsed || mobileOpen;
                 return (
                   <NavLink
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
                       isActive 
-                        ? "bg-purple-600 text-white" 
-                        : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
+                        ? "bg-purple-500/20 text-white shadow-sm backdrop-blur-sm" 
+                        : "text-white/60 hover:bg-white/8 hover:text-white/90"
                     )}
                   >
                     <item.icon className={cn(
-                      "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                      "h-[18px] w-[18px] flex-shrink-0",
                       !showText && "mx-auto"
                     )} />
                     {showText && (
-                      <span className="font-medium text-sm">{item.name}</span>
+                      <span className="font-medium text-[13px]">{item.name}</span>
+                    )}
+                    {isActive && showText && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-purple-400 rounded-r-full" />
                     )}
                   </NavLink>
                 );
               })}
             </>
-          ) : (() => {
-            const showText = !collapsed || mobileOpen;
-            return (
-              <>
-              {/* Gestion Locative - Collapsible Group */}
+          ) : (
+            <>
+              {/* Gestion Locative */}
               {(userRole?.role === "admin" || userRole?.role === "locataire" || hasPermission("can_access_gestion_locative")) && (
-              <Collapsible defaultOpen className="space-y-1">
-                <CollapsibleTrigger className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full group",
-                  "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                )}>
-                  <KeyRound className={cn(
-                    "h-5 w-5 flex-shrink-0",
-                    !showText && "mx-auto"
-                  )} />
-                  {showText && (
-                    <>
-                      <span className="font-medium text-sm flex-1 text-left">Gestion locative</span>
-                      <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
-                    </>
-                  )}
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pl-3 space-y-1">
-                  {gestionLocativeItems
+                renderCollapsibleGroup("Gestion locative", KeyRound, 
+                  gestionLocativeItems
                     .filter((item) => !(userRole?.role === "locataire" && item.hiddenForTenant))
                     .filter((item) => !(userRole?.role === "gestionnaire" && item.hiddenForGestionnaire))
                     .filter((item) => !item.featureKey || hasFeature(item.featureKey))
                     .filter((item) => {
-                      // Tenant portal items are explicitly allowed and should not depend on member permissions
                       if (userRole?.role === "locataire") return true;
-
-                      // Permission-based visibility for non-admin roles
                       if (userRole?.role === "super_admin" || userRole?.role === "admin") return true;
                       if (item.href === "/owners") return hasPermission("can_view_owners");
                       if (item.href === "/properties") return hasPermission("can_view_properties");
@@ -324,110 +392,32 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                       if (item.href === "/impayes") return hasPermission("can_view_impayes");
                       return true;
                     })
-                    .map((item) => {
-                      const isActive = location.pathname === item.href;
-                      const badgeCount = item.href === "/tenants" ? newRequestsCount : 0;
-                      return (
-                        <NavLink
-                          key={item.name}
-                          to={item.href}
-                          onMouseEnter={() => prefetchRoute(item.href)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
-                            isActive 
-                              ? "bg-emerald text-primary-foreground" 
-                              : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                          )}
-                        >
-                          <div className="relative flex-shrink-0">
-                            <item.icon className={cn(
-                              "h-4 w-4 transition-transform group-hover:scale-110",
-                              !showText && "mx-auto"
-                            )} />
-                            {badgeCount > 0 && (
-                              <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
-                                {badgeCount > 99 ? "99+" : badgeCount}
-                              </span>
-                            )}
-                          </div>
-                          {showText && (
-                            <span className="font-medium text-sm">{item.name}</span>
-                          )}
-                        </NavLink>
-                      );
-                    })}
-                </CollapsibleContent>
-              </Collapsible>
+                    .map((item) => renderNavItem(item, {
+                      badgeCount: item.href === "/tenants" ? newRequestsCount : 0,
+                      indent: true,
+                    }))
+                )
               )}
 
-              {/* CRM Immobilier - Collapsible Group */}
+              {/* CRM Immobilier */}
               {crmImmobilierItems.some(item => hasFeature(item.featureKey)) && (userRole?.role === "admin" || hasPermission("can_access_crm_immobilier")) && (
-                <Collapsible defaultOpen className="space-y-1 mt-2">
-                  <CollapsibleTrigger className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full group",
-                    "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                  )}>
-                    <Briefcase className={cn(
-                      "h-5 w-5 flex-shrink-0",
-                      !showText && "mx-auto"
-                    )} />
-                    {showText && (
-                      <>
-                        <span className="font-medium text-sm flex-1 text-left">CRM Immobilier</span>
-                        <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
-                      </>
-                    )}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pl-3 space-y-1">
-                    {crmImmobilierItems
-                      .filter((item) => {
-                        if (!hasFeature(item.featureKey)) return false;
-                        if (item.href === "/acquisitions" && !isAcquisitionsEnabled) return false;
-                        if (item.href === "/ventes-immobilieres") {
-                          return hasPermission("can_view_ventes");
-                        }
-                        if (item.href === "/achats-immobiliers" || item.href === "/acquisitions") {
-                          return hasPermission("can_view_achats");
-                        }
-                        return true;
-                      })
-                      .map((item) => {
-                        const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
-                        const badgeCount = item.href === "/ventes-immobilieres" ? newVenteProspectsCount : 0;
-                        return (
-                          <NavLink
-                            key={item.name}
-                            to={item.href}
-                            onMouseEnter={() => prefetchRoute(item.href)}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
-                              isActive 
-                                ? "bg-emerald text-primary-foreground" 
-                                : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                            )}
-                          >
-                            <div className="relative flex-shrink-0">
-                              <item.icon className={cn(
-                                "h-4 w-4 transition-transform group-hover:scale-110",
-                                !showText && "mx-auto"
-                              )} />
-                              {badgeCount > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
-                                  {badgeCount > 99 ? "99+" : badgeCount}
-                                </span>
-                              )}
-                            </div>
-                            {showText && (
-                              <span className="font-medium text-sm">{item.name}</span>
-                            )}
-                          </NavLink>
-                        );
-                      })}
-                  </CollapsibleContent>
-                </Collapsible>
+                renderCollapsibleGroup("CRM Immobilier", Briefcase,
+                  crmImmobilierItems
+                    .filter((item) => {
+                      if (!hasFeature(item.featureKey)) return false;
+                      if (item.href === "/acquisitions" && !isAcquisitionsEnabled) return false;
+                      if (item.href === "/ventes-immobilieres") return hasPermission("can_view_ventes");
+                      if (item.href === "/achats-immobiliers" || item.href === "/acquisitions") return hasPermission("can_view_achats");
+                      return true;
+                    })
+                    .map((item) => renderNavItem(item, {
+                      badgeCount: item.href === "/ventes-immobilieres" ? newVenteProspectsCount : 0,
+                      indent: true,
+                    }))
+                )
               )}
 
-              {/* Other navigation items (Lotissements, Comptabilité) - only show if feature is available */}
+              {/* Other navigation */}
               {otherNavigation
                 .filter((item) => {
                   if (item.href === "/comptabilite") {
@@ -445,182 +435,116 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   }
                   return !item.featureKey || hasFeature(item.featureKey);
                 })
-                .map((item) => {
-                  const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
-                  const badgeCount = item.href === "/lotissements" ? newLotProspectsCount : 0;
-                  
-                  return (
-                    <NavLink
-                      key={item.name}
-                      to={item.href}
-                      onMouseEnter={() => prefetchRoute(item.href)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
-                        isActive 
-                          ? "bg-emerald text-primary-foreground" 
-                          : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                      )}
-                    >
-                      <div className="relative flex-shrink-0">
-                        <item.icon className={cn(
-                          "h-5 w-5 transition-transform group-hover:scale-110",
-                          !showText && "mx-auto"
-                        )} />
-                        {badgeCount > 0 && (
-                          <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
-                            {badgeCount > 99 ? "99+" : badgeCount}
-                          </span>
-                        )}
-                      </div>
-                      {showText && (
-                        <span className="font-medium text-sm flex-1">{item.name}</span>
-                      )}
-                    </NavLink>
-                  );
-                })}
+                .map((item) => renderNavItem(item, {
+                  badgeCount: item.href === "/lotissements" ? newLotProspectsCount : 0,
+                }))}
               
-              {/* Separator before standalone items */}
-              <div className={cn("mt-4", showText ? "px-3" : "mx-3")}>
-                <div className="border-t border-navy-light" />
+              {/* Divider */}
+              <div className={cn("py-3", showText ? "px-3" : "px-2")}>
+                <div className="border-t border-white/[0.06]" />
               </div>
               
-              {/* Settings - show based on permission */}
-              {canAccessSettings && (
-                <NavLink
-                  to="/settings"
-                  onMouseEnter={() => prefetchRoute("/settings")}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group mt-2",
-                    location.pathname === "/settings"
-                      ? "bg-emerald text-primary-foreground" 
-                      : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                  )}
-                >
-                  <Settings className={cn(
-                    "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
-                    !showText && "mx-auto"
-                  )} />
-                  {showText && (
-                    <span className="font-medium text-sm">Paramètres</span>
-                  )}
-                </NavLink>
-              )}
+              {/* Settings */}
+              {canAccessSettings && renderNavItem({ name: "Paramètres", href: "/settings", icon: Settings })}
               
-              {/* Trash link with counter - admin only */}
-              {userRole?.role === "admin" && (
-                <NavLink
-                  to="/trash"
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                    location.pathname === "/trash"
-                      ? "bg-emerald text-primary-foreground" 
-                      : "text-primary-foreground/70 hover:bg-navy-light hover:text-primary-foreground"
-                  )}
-                >
-                  <div className="relative">
-                    <Trash2 className={cn(
-                      "h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
-                      !showText && "mx-auto"
-                    )} />
-                    {trashCount && trashCount.total > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
-                        {trashCount.total > 99 ? "99+" : trashCount.total}
-                      </span>
-                    )}
-                  </div>
-                  {showText && (
-                    <span className="font-medium text-sm">Corbeille</span>
-                  )}
-                </NavLink>
+              {/* Trash */}
+              {userRole?.role === "admin" && renderNavItem(
+                { name: "Corbeille", href: "/trash", icon: Trash2 },
+                { badgeCount: trashCount?.total || 0 }
               )}
-              </>
-            );
-          })()}
+            </>
+          )}
         </nav>
 
         {/* Install PWA Button */}
         {canInstall && (
-          <div className="px-3 pb-2">
+          <div className="px-2.5 pb-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleInstallClick}
               className={cn(
-                "w-full bg-emerald/10 border-emerald/30 text-emerald hover:bg-emerald/20 hover:text-emerald-light",
+                "w-full rounded-xl bg-emerald/10 text-emerald hover:bg-emerald/20 border border-emerald/20",
                 collapsed && !mobileOpen && "px-2"
               )}
             >
-              <Download className={cn("h-4 w-4", (!collapsed || mobileOpen) && "mr-2")} />
-              {(!collapsed || mobileOpen) && <span className="text-sm">Installer l'app</span>}
+              <Download className={cn("h-4 w-4", showText && "mr-2")} />
+              {showText && <span className="text-[13px]">Installer l'app</span>}
             </Button>
           </div>
         )}
 
-        {/* Agency/User info and logout */}
-        <div className="p-3 border-t border-navy-light">
-          {(!collapsed || mobileOpen) && (
-            <div className="mb-3 px-2">
-              {/* Super Admin branding */}
-              {userRole?.role === "super_admin" ? (
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="h-10 w-10 rounded-lg bg-purple-600 flex items-center justify-center">
+        {/* User Profile Section */}
+        <div className="border-t border-white/[0.06]">
+          {showText ? (
+            <div className="p-3 space-y-3">
+              {/* Agency/User Card */}
+              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.04]">
+                {userRole?.role === "super_admin" ? (
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
                     <Crown className="h-5 w-5 text-white" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-primary-foreground truncate">
-                      Super Admin
-                    </p>
-                    <p className="text-xs text-primary-foreground/50 truncate">
-                      Administrateur plateforme
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 mb-2">
-                  <Avatar className="h-10 w-10 border border-navy-light">
-                    <AvatarImage src={agency?.logo_url || undefined} alt={agency?.name || "Logo"} />
-                    <AvatarFallback className="bg-emerald/20 text-emerald text-sm font-semibold">
+                ) : (
+                  <Avatar className="h-10 w-10 rounded-xl border border-white/10 flex-shrink-0">
+                    <AvatarImage src={agency?.logo_url || undefined} alt={agency?.name || "Logo"} className="object-cover" />
+                    <AvatarFallback className="bg-gradient-to-br from-emerald/30 to-emerald/10 text-emerald text-sm font-semibold rounded-xl">
                       {agency?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-primary-foreground truncate">
-                      {agency?.name || "Mon agence"}
-                    </p>
-                    <p className="text-xs text-primary-foreground/50 truncate">
-                      {agency?.account_type === "proprietaire" ? "Propriétaire" : "Agence"}
-                    </p>
-                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-white truncate">
+                    {userRole?.role === "super_admin" ? "Super Admin" : (agency?.name || "Mon agence")}
+                  </p>
+                  <p className="text-[11px] text-white/40 truncate">
+                    {userRole?.role === "super_admin" ? "Administrateur plateforme" : (agency?.account_type === "proprietaire" ? "Propriétaire" : "Agence")}
+                  </p>
                 </div>
-              )}
-              {/* User email and role */}
-              <p className="text-xs text-primary-foreground/60 truncate">
-                {user?.email}
-              </p>
-              {userRole && (
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    "mt-1 text-[10px] px-1.5 py-0 h-5 gap-1",
-                    ROLE_BADGE_COLORS[userRole.role]
-                  )}
-                >
-                  {ROLE_ICONS[userRole.role]}
-                  {ROLE_LABELS[userRole.role]}
-                </Badge>
-              )}
+              </div>
+
+              {/* Email & Role */}
+              <div className="px-1 space-y-1.5">
+                <p className="text-[11px] text-white/40 truncate">
+                  {user?.email}
+                </p>
+                {userRole && (
+                  <Badge 
+                    variant="outline" 
+                    className={cn(
+                      "text-[10px] px-2 py-0.5 h-5 gap-1 rounded-full",
+                      ROLE_BADGE_COLORS[userRole.role]
+                    )}
+                  >
+                    {ROLE_ICONS[userRole.role]}
+                    {ROLE_LABELS[userRole.role]}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Logout */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  await signOut();
+                  navigate("/login");
+                }}
+                className="w-full text-white/50 hover:text-white hover:bg-white/8 justify-start rounded-xl h-9"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                <span className="text-[13px]">Déconnexion</span>
+              </Button>
             </div>
-          )}
-          {collapsed && !mobileOpen && (
-            <div className="flex flex-col items-center gap-2 mb-2">
+          ) : (
+            <div className="p-2 flex flex-col items-center gap-2">
               {userRole?.role === "super_admin" ? (
-                <div className="h-8 w-8 rounded-lg bg-purple-600 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-500/20">
                   <Crown className="h-4 w-4 text-white" />
                 </div>
               ) : (
-                <Avatar className="h-8 w-8 border border-navy-light">
-                  <AvatarImage src={agency?.logo_url || undefined} alt={agency?.name || "Logo"} />
-                  <AvatarFallback className="bg-emerald/20 text-emerald text-xs font-semibold">
+                <Avatar className="h-8 w-8 rounded-xl border border-white/10">
+                  <AvatarImage src={agency?.logo_url || undefined} alt={agency?.name || "Logo"} className="object-cover" />
+                  <AvatarFallback className="bg-gradient-to-br from-emerald/30 to-emerald/10 text-emerald text-xs font-semibold rounded-xl">
                     {agency?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}
                   </AvatarFallback>
                 </Avatar>
@@ -629,7 +553,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 <Badge 
                   variant="outline" 
                   className={cn(
-                    "p-1 h-6 w-6 flex items-center justify-center",
+                    "p-1 h-6 w-6 flex items-center justify-center rounded-lg",
                     ROLE_BADGE_COLORS[userRole.role]
                   )}
                   title={ROLE_LABELS[userRole.role]}
@@ -637,36 +561,36 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   {ROLE_ICONS[userRole.role]}
                 </Badge>
               )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={async () => {
+                  await signOut();
+                  navigate("/login");
+                }}
+                className="text-white/50 hover:text-white hover:bg-white/8 rounded-xl h-8 w-8"
+                title="Déconnexion"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={async () => {
-              await signOut();
-              navigate("/login");
-            }}
-            className="w-full text-primary-foreground/70 hover:text-primary-foreground hover:bg-navy-light justify-start"
-          >
-            <LogOut className={cn("h-4 w-4", (!collapsed || mobileOpen) && "mr-2")} />
-            {(!collapsed || mobileOpen) && <span className="text-sm">Déconnexion</span>}
-          </Button>
         </div>
 
-        {/* Collapse Button - Desktop only */}
-        <div className="p-3 border-t border-navy-light hidden lg:block">
+        {/* Collapse Toggle - Desktop only */}
+        <div className="p-2 border-t border-white/[0.06] hidden lg:block">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onCollapsedChange(!collapsed)}
-            className="w-full text-primary-foreground/70 hover:text-primary-foreground hover:bg-navy-light"
+            className="w-full text-white/40 hover:text-white/70 hover:bg-white/5 rounded-xl h-8"
           >
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />
             ) : (
               <>
                 <ChevronLeft className="h-4 w-4 mr-2" />
-                <span className="text-sm">Réduire</span>
+                <span className="text-[12px]">Réduire</span>
               </>
             )}
           </Button>

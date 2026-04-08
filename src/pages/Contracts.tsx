@@ -259,6 +259,7 @@ const Contracts = () => {
   const exportData = filteredContracts?.map((contract) => ({
     tenantName: getTenantName(contract.tenant_id),
     propertyName: getPropertyName(contract.property_id),
+    unitNumber: (contract as any).unit?.unit_number || "",
     startDate: format(new Date(contract.start_date), "dd/MM/yyyy"),
     endDate: format(new Date(contract.end_date), "dd/MM/yyyy"),
     rentAmount: `${contract.rent_amount?.toLocaleString()} FCFA`,
@@ -269,6 +270,7 @@ const Contracts = () => {
   const exportColumns = [
     { key: "tenantName" as const, label: "Locataire" },
     { key: "propertyName" as const, label: "Bien" },
+    { key: "unitNumber" as const, label: "Porte" },
     { key: "startDate" as const, label: "Date début" },
     { key: "endDate" as const, label: "Date fin" },
     { key: "rentAmount" as const, label: "Loyer" },

@@ -342,6 +342,7 @@ export default function Payments() {
               columns={[
                 { key: 'tenant', label: 'Locataire', format: (v) => v?.name || 'Inconnu' },
                 { key: 'tenant', label: 'Bien', format: (v) => v?.property?.title || 'Non assigné' },
+                { key: 'tenant', label: 'Porte', format: (v) => v?.unit?.unit_number || '' },
                 { key: 'amount', label: 'Montant (F CFA)', format: (v) => Number(v).toString() },
                 { key: 'due_date', label: 'Échéance', format: (v) => new Date(v).toLocaleDateString('fr-FR') },
                 { key: 'paid_date', label: 'Date de paiement', format: (v) => v ? new Date(v).toLocaleDateString('fr-FR') : '' },

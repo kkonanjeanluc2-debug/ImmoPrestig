@@ -511,7 +511,65 @@ const PropertyDetails = () => {
               </Card>
             )}
 
-            {/* Property Units (Multi-door management) */}
+            {/* Anciens locataires */}
+            {(() => {
+              const formerContracts = contracts.filter(
+                c => c.property_id === property.id && (c.status === "expired" || c.status === "terminated")
+              );
+              if (formerContracts.length === 0) return null;
+              return (
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Users className="h-5 w-5 text-muted-foreground" />
+                      Anciens locataires
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {formerContracts.map((contract) => {
+                        const tenant = (contract as any).tenant;
+                        const unit = (contract as any).unit;
+                        return (
+                          <div
+                            key={contract.id}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                          >
+                            <div className="p-2 bg-muted rounded-full">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-foreground text-sm">
+                                {tenant?.name || "Locataire inconnu"}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  {format(new Date(contract.start_date), "dd/MM/yyyy")} → {format(new Date(contract.end_date), "dd/MM/yyyy")}
+                                </span>
+                                {unit?.unit_number && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                    Porte {unit.unit_number}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-semibold text-foreground">
+                                {contract.rent_amount?.toLocaleString("fr-FR")} F
+                              </p>
+                              <Badge variant="outline" className="text-[10px] bg-muted-foreground/10 text-muted-foreground border-muted-foreground/20">
+                                {contract.status === "expired" ? "Expiré" : "Résilié"}
+                              </Badge>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
             {property.type === "location" && (property.property_type === "maison" || property.property_type === "immeuble") && (
               <Card className="border-0 shadow-md">
                 <CardHeader>

@@ -18,13 +18,14 @@ import { useUpdateProperty } from "@/hooks/useProperties";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const downloadTemplate = async () => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Locataires");
   
   // Add header row
-  worksheet.addRow(["Nom", "Email", "Téléphone", "Bien", "Date début", "Date fin", "Loyer", "Dépôt"]);
+  worksheet.addRow(["Nom", "Email", "Téléphone", "Bien", "Porte", "Date début", "Date fin", "Loyer", "Dépôt"]);
   
   // Style header row
   const headerRow = worksheet.getRow(1);
@@ -43,6 +44,7 @@ const downloadTemplate = async () => {
     "jean.dupont@email.com",
     "+221 77 123 45 67",
     "Appartement Centre-Ville",
+    "A1",
     "2024-01-01",
     "2024-12-31",
     150000,
@@ -55,6 +57,7 @@ const downloadTemplate = async () => {
     { width: 25 },
     { width: 18 },
     { width: 25 },
+    { width: 10 },
     { width: 12 },
     { width: 12 },
     { width: 10 },
@@ -77,6 +80,7 @@ interface ParsedTenant {
   email: string;
   phone?: string;
   propertyTitle?: string;
+  unitNumber?: string;
   startDate?: string;
   endDate?: string;
   rentAmount?: number;
@@ -84,6 +88,7 @@ interface ParsedTenant {
   isDuplicate?: boolean;
   duplicateReason?: string;
   propertyId?: string;
+  unitId?: string;
   isValid: boolean;
   errors: string[];
 }
@@ -148,12 +153,18 @@ export function ImportTenantsDialog() {
         }
       });
 
+      // Fetch all property units for matching
+      const { data: allUnits } = await supabase
+        .from("property_units")
+        .select("id, unit_number, property_id, status");
+
       const parsed: ParsedTenant[] = rows.map((row) => {
         const errors: string[] = [];
         const name = String(row["Nom"] || row["name"] || row["Name"] || "").trim();
         const email = String(row["Email"] || row["email"] || row["E-mail"] || "").trim().toLowerCase();
         const phone = String(row["Téléphone"] || row["phone"] || row["Phone"] || row["Tel"] || "").trim() || undefined;
         const propertyTitle = String(row["Bien"] || row["Property"] || row["property"] || "").trim() || undefined;
+        const unitNumber = String(row["Porte"] || row["Unit"] || row["unit"] || "").trim() || undefined;
         const startDate = row["Date début"] || row["Start Date"] || row["start_date"];
         const endDate = row["Date fin"] || row["End Date"] || row["end_date"];
         const rentAmount = Number(row["Loyer"] || row["Rent"] || row["rent_amount"]) || undefined;
@@ -183,16 +194,35 @@ export function ImportTenantsDialog() {
 
         // Match property
         let propertyId: string | undefined;
+        let unitId: string | undefined;
         if (propertyTitle) {
           const matchedProperty = properties?.find(p => 
             p.title.toLowerCase().includes(propertyTitle.toLowerCase()) ||
             propertyTitle.toLowerCase().includes(p.title.toLowerCase())
           );
           if (matchedProperty) {
-            if (matchedProperty.status === "disponible") {
-              propertyId = matchedProperty.id;
-            } else {
-              errors.push(`Bien "${propertyTitle}" non disponible`);
+            propertyId = matchedProperty.id;
+
+            // Match unit if specified
+            if (unitNumber && allUnits) {
+              const matchedUnit = allUnits.find(u => 
+                u.property_id === matchedProperty.id && 
+                u.unit_number.toLowerCase() === unitNumber.toLowerCase()
+              );
+              if (matchedUnit) {
+                if (matchedUnit.status === "disponible") {
+                  unitId = matchedUnit.id;
+                } else {
+                  errors.push(`Porte "${unitNumber}" non disponible`);
+                }
+              } else {
+                errors.push(`Porte "${unitNumber}" non trouvée pour ce bien`);
+              }
+            } else if (!unitNumber) {
+              // No unit specified - check property availability for non-unit properties
+              if (matchedProperty.status !== "disponible") {
+                errors.push(`Bien "${propertyTitle}" non disponible`);
+              }
             }
           } else {
             errors.push(`Bien "${propertyTitle}" non trouvé`);
@@ -204,6 +234,7 @@ export function ImportTenantsDialog() {
           email,
           phone,
           propertyTitle,
+          unitNumber,
           startDate: startDate ? String(startDate) : undefined,
           endDate: endDate ? String(endDate) : undefined,
           rentAmount,
@@ -211,6 +242,7 @@ export function ImportTenantsDialog() {
           isDuplicate,
           duplicateReason,
           propertyId,
+          unitId,
           isValid: errors.length === 0 && !isDuplicate,
           errors,
         };
@@ -243,6 +275,7 @@ export function ImportTenantsDialog() {
           email: tenant.email,
           phone: tenant.phone || null,
           property_id: tenant.propertyId || null,
+          unit_id: tenant.unitId || null,
         });
 
         // Create contract if property and dates are provided
@@ -250,12 +283,21 @@ export function ImportTenantsDialog() {
           await createContract.mutateAsync({
             tenant_id: createdTenant.id,
             property_id: tenant.propertyId,
+            unit_id: tenant.unitId || null,
             start_date: tenant.startDate,
             end_date: tenant.endDate,
             rent_amount: tenant.rentAmount,
             deposit: tenant.deposit || null,
             status: "active",
           });
+
+          // Update unit status if applicable
+          if (tenant.unitId) {
+            await supabase
+              .from("property_units")
+              .update({ status: "loué" })
+              .eq("id", tenant.unitId);
+          }
 
           // Update property status
           await updateProperty.mutateAsync({
@@ -302,7 +344,7 @@ export function ImportTenantsDialog() {
           <DialogTitle>Importer des locataires</DialogTitle>
           <DialogDescription>
             Importez des locataires depuis un fichier Excel (.xlsx, .xls) ou CSV.
-            Les colonnes attendues : Nom, Email, Téléphone, Bien, Date début, Date fin, Loyer, Dépôt.
+            Les colonnes attendues : Nom, Email, Téléphone, Bien, Porte, Date début, Date fin, Loyer, Dépôt.
           </DialogDescription>
         </DialogHeader>
 
@@ -384,7 +426,9 @@ export function ImportTenantsDialog() {
                           <p className="font-medium text-sm">{tenant.name || "—"}</p>
                           <p className="text-xs text-muted-foreground truncate">{tenant.email || "—"}</p>
                           {tenant.propertyTitle && (
-                            <p className="text-xs text-muted-foreground">Bien: {tenant.propertyTitle}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Bien: {tenant.propertyTitle}{tenant.unitNumber ? ` — Porte: ${tenant.unitNumber}` : ''}
+                            </p>
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-1">

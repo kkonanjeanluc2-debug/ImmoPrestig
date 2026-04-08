@@ -158,6 +158,29 @@ const Contracts = () => {
     if (!selectedContract) return;
 
     try {
+      // Check if another active contract exists on the same property+unit
+      let checkQuery = supabase
+        .from("contracts")
+        .select("id, tenant:tenants(name)")
+        .eq("property_id", selectedContract.property_id)
+        .eq("status", "active")
+        .neq("id", selectedContract.id);
+
+      if (selectedContract.unit_id) {
+        checkQuery = checkQuery.eq("unit_id", selectedContract.unit_id);
+      }
+
+      const { data: existingContracts } = await checkQuery;
+
+      if (existingContracts && existingContracts.length > 0) {
+        const occupantName = (existingContracts[0] as any)?.tenant?.name || "un autre locataire";
+        const msg = selectedContract.unit_id
+          ? `Impossible de renouveler : cette unité est déjà occupée par ${occupantName} avec un contrat actif.`
+          : `Impossible de renouveler : ce bien est déjà occupé par ${occupantName} avec un contrat actif.`;
+        toast.error(msg);
+        return;
+      }
+
       const duration = parseInt(renewDuration);
       const currentEndDate = new Date(selectedContract.end_date);
       const newEndDate =

@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { useProperties, useDeleteProperty, Property } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
 import { AddPropertyDialog } from "@/components/property/AddPropertyDialog";
+import { ImportPropertiesDialog } from "@/components/property/ImportPropertiesDialog";
 import { EditPropertyDialog } from "@/components/property/EditPropertyDialog";
 import { PropertyTrashDialog } from "@/components/property/PropertyTrashDialog";
 import { usePermissions } from "@/hooks/usePermissions";

@@ -27,7 +27,7 @@ import { usePropertyUnitsSummary } from "@/hooks/usePropertyUnitsSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { usePropertyTenants, usePropertyTenantsAll } from "@/hooks/usePropertyTenants";
-import { usePropertyUnits, PropertyUnit } from "@/hooks/usePropertyUnits";
+import { usePropertyUnits, useAllPropertyUnits, PropertyUnit } from "@/hooks/usePropertyUnits";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

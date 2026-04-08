@@ -153,12 +153,18 @@ export function ImportTenantsDialog() {
         }
       });
 
+      // Fetch all property units for matching
+      const { data: allUnits } = await supabase
+        .from("property_units")
+        .select("id, unit_number, property_id, status");
+
       const parsed: ParsedTenant[] = rows.map((row) => {
         const errors: string[] = [];
         const name = String(row["Nom"] || row["name"] || row["Name"] || "").trim();
         const email = String(row["Email"] || row["email"] || row["E-mail"] || "").trim().toLowerCase();
         const phone = String(row["Téléphone"] || row["phone"] || row["Phone"] || row["Tel"] || "").trim() || undefined;
         const propertyTitle = String(row["Bien"] || row["Property"] || row["property"] || "").trim() || undefined;
+        const unitNumber = String(row["Porte"] || row["Unit"] || row["unit"] || "").trim() || undefined;
         const startDate = row["Date début"] || row["Start Date"] || row["start_date"];
         const endDate = row["Date fin"] || row["End Date"] || row["end_date"];
         const rentAmount = Number(row["Loyer"] || row["Rent"] || row["rent_amount"]) || undefined;
@@ -188,16 +194,35 @@ export function ImportTenantsDialog() {
 
         // Match property
         let propertyId: string | undefined;
+        let unitId: string | undefined;
         if (propertyTitle) {
           const matchedProperty = properties?.find(p => 
             p.title.toLowerCase().includes(propertyTitle.toLowerCase()) ||
             propertyTitle.toLowerCase().includes(p.title.toLowerCase())
           );
           if (matchedProperty) {
-            if (matchedProperty.status === "disponible") {
-              propertyId = matchedProperty.id;
-            } else {
-              errors.push(`Bien "${propertyTitle}" non disponible`);
+            propertyId = matchedProperty.id;
+
+            // Match unit if specified
+            if (unitNumber && allUnits) {
+              const matchedUnit = allUnits.find(u => 
+                u.property_id === matchedProperty.id && 
+                u.unit_number.toLowerCase() === unitNumber.toLowerCase()
+              );
+              if (matchedUnit) {
+                if (matchedUnit.status === "disponible") {
+                  unitId = matchedUnit.id;
+                } else {
+                  errors.push(`Porte "${unitNumber}" non disponible`);
+                }
+              } else {
+                errors.push(`Porte "${unitNumber}" non trouvée pour ce bien`);
+              }
+            } else if (!unitNumber) {
+              // No unit specified - check property availability for non-unit properties
+              if (matchedProperty.status !== "disponible") {
+                errors.push(`Bien "${propertyTitle}" non disponible`);
+              }
             }
           } else {
             errors.push(`Bien "${propertyTitle}" non trouvé`);
@@ -209,6 +234,7 @@ export function ImportTenantsDialog() {
           email,
           phone,
           propertyTitle,
+          unitNumber,
           startDate: startDate ? String(startDate) : undefined,
           endDate: endDate ? String(endDate) : undefined,
           rentAmount,
@@ -216,6 +242,7 @@ export function ImportTenantsDialog() {
           isDuplicate,
           duplicateReason,
           propertyId,
+          unitId,
           isValid: errors.length === 0 && !isDuplicate,
           errors,
         };

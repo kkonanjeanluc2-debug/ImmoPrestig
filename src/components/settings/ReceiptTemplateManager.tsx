@@ -276,8 +276,21 @@ export function ReceiptTemplateManager() {
             reader.onloadend = () => resolve(reader.result as string);
             reader.readAsDataURL(stampBlob);
           });
-          const stampSize = 40;
-          doc.addImage(stampBase64, 'PNG', pageWidth - 20 - stampSize, yPos + 5, stampSize, stampSize);
+          const img = new Image();
+          await new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            img.src = stampBase64;
+          });
+          const maxSize = 40;
+          let sW = maxSize;
+          let sH = maxSize;
+          if (img.naturalWidth && img.naturalHeight) {
+            const ratio = img.naturalWidth / img.naturalHeight;
+            if (ratio > 1) { sW = maxSize; sH = maxSize / ratio; }
+            else { sH = maxSize; sW = maxSize * ratio; }
+          }
+          doc.addImage(stampBase64, 'PNG', pageWidth - 20 - sW, yPos + 5, sW, sH);
         } catch (e) {
           // ignore
         }

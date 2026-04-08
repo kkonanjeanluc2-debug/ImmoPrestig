@@ -454,11 +454,23 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
     const stampImage = await loadImageAsset(templates.stampImageUrl);
     if (stampImage) {
       console.log("[Receipt PDF] Stamp loaded, adding to PDF");
-      const stampSize = 32;
-      const stampX = pageWidth - 20 - stampSize;
+      const maxStampSize = 32;
+      let stampW = maxStampSize;
+      let stampH = maxStampSize;
+      if (stampImage.naturalWidth && stampImage.naturalHeight) {
+        const ratio = stampImage.naturalWidth / stampImage.naturalHeight;
+        if (ratio > 1) {
+          stampW = maxStampSize;
+          stampH = maxStampSize / ratio;
+        } else {
+          stampH = maxStampSize;
+          stampW = maxStampSize * ratio;
+        }
+      }
+      const stampX = pageWidth - 20 - stampW;
       const stampY = yPos + 3;
-      addImageToPdf(doc, stampImage, stampX, stampY, stampSize, stampSize);
-      yPos += stampSize + 4;
+      addImageToPdf(doc, stampImage, stampX, stampY, stampW, stampH);
+      yPos += stampH + 4;
     } else {
       console.warn("[Receipt PDF] Stamp image could not be loaded");
     }

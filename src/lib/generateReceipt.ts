@@ -93,8 +93,17 @@ const loadImageAsset = async (url: string): Promise<PdfImageAsset | null> => {
           resolve(null);
           return;
         }
-        console.log("[Receipt PDF] Image loaded successfully, format:", format);
-        resolve({ dataUrl, format });
+        // Load image to get natural dimensions
+        const img = new Image();
+        img.onload = () => {
+          console.log("[Receipt PDF] Image loaded successfully, format:", format, "dimensions:", img.naturalWidth, "x", img.naturalHeight);
+          resolve({ dataUrl, format, naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight });
+        };
+        img.onerror = () => {
+          console.log("[Receipt PDF] Image loaded (no dimensions), format:", format);
+          resolve({ dataUrl, format });
+        };
+        img.src = dataUrl;
       };
       reader.onerror = () => {
         console.warn("[Receipt PDF] FileReader error");

@@ -168,6 +168,45 @@ const Contracts = () => {
         status: "active",
       });
 
+      // Update tenant status back to "actif" and restore portal access
+      if (selectedContract.tenant_id) {
+        const { data: tenantData } = await supabase
+          .from("tenants")
+          .select("portal_user_id")
+          .eq("id", selectedContract.tenant_id)
+          .single();
+
+        const updatePayload: Record<string, any> = { status: "actif" };
+        if (tenantData?.portal_user_id) {
+          updatePayload.has_portal_access = true;
+        }
+
+        await supabase
+          .from("tenants")
+          .update(updatePayload)
+          .eq("id", selectedContract.tenant_id);
+      }
+
+      // Update property status back to "loué"
+      if (selectedContract.property_id) {
+        await supabase
+          .from("properties")
+          .update({ status: "loué" })
+          .eq("id", selectedContract.property_id);
+      }
+
+      // Update unit status back to "loué" if applicable
+      if (selectedContract.unit_id) {
+        await supabase
+          .from("property_units")
+          .update({ status: "loué" })
+          .eq("id", selectedContract.unit_id);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units"] });
+
       toast.success("Contrat renouvelé avec succès");
       setRenewDialogOpen(false);
       setSelectedContract(null);

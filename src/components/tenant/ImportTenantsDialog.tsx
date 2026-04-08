@@ -344,7 +344,7 @@ export function ImportTenantsDialog() {
           <DialogTitle>Importer des locataires</DialogTitle>
           <DialogDescription>
             Importez des locataires depuis un fichier Excel (.xlsx, .xls) ou CSV.
-            Les colonnes attendues : Nom, Email, Téléphone, Bien, Date début, Date fin, Loyer, Dépôt.
+            Les colonnes attendues : Nom, Email, Téléphone, Bien, Porte, Date début, Date fin, Loyer, Dépôt.
           </DialogDescription>
         </DialogHeader>
 

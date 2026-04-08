@@ -426,7 +426,9 @@ export function ImportTenantsDialog() {
                           <p className="font-medium text-sm">{tenant.name || "—"}</p>
                           <p className="text-xs text-muted-foreground truncate">{tenant.email || "—"}</p>
                           {tenant.propertyTitle && (
-                            <p className="text-xs text-muted-foreground">Bien: {tenant.propertyTitle}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Bien: {tenant.propertyTitle}{tenant.unitNumber ? ` — Porte: ${tenant.unitNumber}` : ''}
+                            </p>
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-1">

@@ -93,6 +93,7 @@ const Contracts = () => {
   const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const updateContract = useUpdateContract();
   const expireContract = useExpireContract();
+  const queryClient = useQueryClient();
   
   const isLocataire = userRole?.role === "locataire";
   const isAdmin = role === "super_admin" || role === "admin";

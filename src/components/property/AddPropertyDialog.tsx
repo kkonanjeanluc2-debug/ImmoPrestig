@@ -235,6 +235,13 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
     setLocalUnits(prev => prev.filter(u => u.id !== id));
   };
 
+  const getDefaultRent = (rooms: number) => {
+    if (rooms === 1) return 100000;
+    if (rooms === 2) return 150000;
+    if (rooms === 3) return 250000;
+    return 0;
+  };
+
   const addTemplate = (label: string, rooms: number) => {
     const existingCount = localUnits.filter(u => u.unit_number.toLowerCase().includes(label.toLowerCase())).length;
     const unitNumber = `${label} ${existingCount + 1}`;
@@ -242,7 +249,7 @@ export const AddPropertyDialog = ({ onSuccess }: AddPropertyDialogProps) => {
       id: crypto.randomUUID(),
       unit_number: unitNumber,
       rooms_count: rooms,
-      rent_amount: 0,
+      rent_amount: getDefaultRent(rooms),
       area: null,
       status: "disponible",
     };

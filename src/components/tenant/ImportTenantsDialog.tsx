@@ -24,7 +24,7 @@ const downloadTemplate = async () => {
   const worksheet = workbook.addWorksheet("Locataires");
   
   // Add header row
-  worksheet.addRow(["Nom", "Email", "Téléphone", "Bien", "Date début", "Date fin", "Loyer", "Dépôt"]);
+  worksheet.addRow(["Nom", "Email", "Téléphone", "Bien", "Porte", "Date début", "Date fin", "Loyer", "Dépôt"]);
   
   // Style header row
   const headerRow = worksheet.getRow(1);
@@ -43,6 +43,7 @@ const downloadTemplate = async () => {
     "jean.dupont@email.com",
     "+221 77 123 45 67",
     "Appartement Centre-Ville",
+    "A1",
     "2024-01-01",
     "2024-12-31",
     150000,
@@ -55,6 +56,7 @@ const downloadTemplate = async () => {
     { width: 25 },
     { width: 18 },
     { width: 25 },
+    { width: 10 },
     { width: 12 },
     { width: 12 },
     { width: 10 },

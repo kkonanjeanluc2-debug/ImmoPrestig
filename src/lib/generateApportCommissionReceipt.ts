@@ -178,8 +178,27 @@ export const generateApportCommissionReceipt = async (data: ApportCommissionRece
     try {
       const stampBase64 = await loadImageAsBase64(data.stampImageUrl);
       if (stampBase64) {
-        const stampSize = 30;
-        doc.addImage(stampBase64, "PNG", 50 - stampSize / 2, yPos, stampSize, stampSize);
+        // Load image to get natural dimensions and preserve aspect ratio
+        const img = new Image();
+        await new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = stampBase64;
+        });
+        const maxSize = 30;
+        let imgW = maxSize;
+        let imgH = maxSize;
+        if (img.naturalWidth && img.naturalHeight) {
+          const ratio = img.naturalWidth / img.naturalHeight;
+          if (ratio > 1) {
+            imgW = maxSize;
+            imgH = maxSize / ratio;
+          } else {
+            imgH = maxSize;
+            imgW = maxSize * ratio;
+          }
+        }
+        doc.addImage(stampBase64, "PNG", 50 - imgW / 2, yPos, imgW, imgH);
       }
     } catch {}
   }

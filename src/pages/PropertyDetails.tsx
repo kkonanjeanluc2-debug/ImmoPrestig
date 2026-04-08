@@ -339,56 +339,120 @@ const PropertyDetails = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start gap-3">
-            <Button variant="outline" size="icon" onClick={() => navigate("/properties")} className="shrink-0 mt-1">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground truncate">
-                {property.title}
-              </h1>
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1 truncate">
-                <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate">{property.address}</span>
-              </p>
-            </div>
+        {/* Hero Section */}
+        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-navy via-navy/95 to-primary/80 shadow-xl">
+          {/* Background image with overlay */}
+          <div className="absolute inset-0">
+            {property.image_url ? (
+              <img
+                src={property.image_url}
+                alt={property.title}
+                className="w-full h-full object-cover opacity-20"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-navy via-navy/90 to-primary/60" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/60 to-transparent" />
           </div>
-          <div className="flex flex-wrap gap-2">
-            <WhatsAppButton
-              message={generateMessage(property)}
-              variant="outline"
-              size="sm"
-              className="bg-emerald/10 border-emerald/30 hover:bg-emerald hover:text-white"
-            >
-              <Share2 className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Partager</span>
-            </WhatsAppButton>
-            {property.type === "location" && (
+
+          <div className="relative p-6 sm:p-8 flex flex-col gap-4">
+            {/* Back button + Title */}
+            <div className="flex items-start gap-3">
               <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/properties")}
+                className="shrink-0 mt-0.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="p-2 bg-white/10 backdrop-blur-sm rounded-lg">
+                    {typeIcons[property.property_type] || <Building className="h-5 w-5 text-white" />}
+                  </div>
+                  <Badge className="bg-white/15 backdrop-blur-sm border-white/20 text-white text-xs">
+                    {typeLabels[property.property_type] || property.property_type}
+                  </Badge>
+                  <Badge variant="outline" className={cn(
+                    "text-xs backdrop-blur-sm",
+                    property.status === "disponible" && "bg-emerald/20 text-emerald-300 border-emerald/30",
+                    property.status === "loué" && "bg-blue-400/20 text-blue-200 border-blue-400/30",
+                    property.status === "vendu" && "bg-purple-400/20 text-purple-200 border-purple-400/30",
+                    property.status === "en attente" && "bg-amber-400/20 text-amber-200 border-amber-400/30",
+                  )}>
+                    {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+                  </Badge>
+                </div>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white truncate">
+                  {property.title}
+                </h1>
+                <p className="flex items-center gap-1.5 text-sm text-white/70 mt-1.5">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{property.address}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Price highlight */}
+            <div className="flex items-end justify-between">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 border border-white/10">
+                <p className="text-xs text-white/60 uppercase tracking-wider mb-0.5">
+                  {property.type === "location" ? "Loyer mensuel" : "Prix de vente"}
+                </p>
+                <p className="text-2xl sm:text-3xl font-display font-bold text-white">
+                  {property.price.toLocaleString('fr-FR')} <span className="text-lg font-normal text-white/80">F CFA</span>
+                  {property.type === "location" && <span className="text-sm font-normal text-white/60">/mois</span>}
+                </p>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <WhatsAppButton
+                message={generateMessage(property)}
                 variant="outline"
                 size="sm"
-                onClick={() => setPeriodDialogOpen(true)}
-                disabled={generatingPDF}
-                className="bg-primary/10 border-primary/30 hover:bg-primary hover:text-primary-foreground"
+                className="bg-white/10 border-white/20 text-white hover:bg-emerald hover:border-emerald hover:text-white backdrop-blur-sm"
               >
-                <FileText className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Point mensuel</span>
-              </Button>
-            )}
-            {canEdit && (
-              <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
-                <Pencil className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Modifier</span>
-              </Button>
-            )}
-            {canDelete && (
-              <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Supprimer</span>
-              </Button>
-            )}
+                <Share2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Partager</span>
+              </WhatsAppButton>
+              {property.type === "location" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPeriodDialogOpen(true)}
+                  disabled={generatingPDF}
+                  className="bg-white/10 border-white/20 text-white hover:bg-primary hover:border-primary hover:text-white backdrop-blur-sm"
+                >
+                  <FileText className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Point mensuel</span>
+                </Button>
+              )}
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditDialogOpen(true)}
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+                >
+                  <Pencil className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Modifier</span>
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="bg-red-500/20 border-red-400/30 text-red-200 hover:bg-destructive hover:border-destructive hover:text-white backdrop-blur-sm"
+                >
+                  <Trash2 className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Supprimer</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -396,14 +460,58 @@ const PropertyDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
 
+            {/* Caractéristiques */}
+            <Card className="border-0 shadow-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Caractéristiques</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {property.bedrooms !== null && property.bedrooms !== undefined && (
+                    <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/10">
+                      <div className="p-2.5 bg-primary/15 rounded-xl">
+                        <Bed className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Pièces</p>
+                        <p className="text-xl font-bold text-foreground">{property.bedrooms}</p>
+                      </div>
+                    </div>
+                  )}
+                  {property.bathrooms !== null && property.bathrooms !== undefined && (
+                    <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/10">
+                      <div className="p-2.5 bg-primary/15 rounded-xl">
+                        <Bath className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Salles de bain</p>
+                        <p className="text-xl font-bold text-foreground">{property.bathrooms}</p>
+                      </div>
+                    </div>
+                  )}
+                  {property.area && (
+                    <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/10">
+                      <div className="p-2.5 bg-primary/15 rounded-xl">
+                        <Maximize className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Surface</p>
+                        <p className="text-xl font-bold text-foreground">{property.area} m²</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Description */}
             {property.description && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Description</CardTitle>
+              <Card className="border-0 shadow-md">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Description</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground whitespace-pre-wrap">
+                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                     {property.description}
                   </p>
                 </CardContent>
@@ -412,9 +520,9 @@ const PropertyDetails = () => {
 
             {/* Property Units (Multi-door management) */}
             {property.type === "location" && (property.property_type === "maison" || property.property_type === "immeuble") && (
-              <Card>
+              <Card className="border-0 shadow-md">
                 <CardHeader>
-                  <CardTitle>Gestion des portes</CardTitle>
+                  <CardTitle className="text-lg">Gestion des portes</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <PropertyUnitsManager propertyId={property.id} canEdit={canEdit} />
@@ -424,9 +532,9 @@ const PropertyDetails = () => {
 
             {/* Property Inventory (Furnished rental) */}
             {property.property_type === "meuble" && (
-              <Card>
+              <Card className="border-0 shadow-md">
                 <CardHeader>
-                  <CardTitle>Inventaire du mobilier</CardTitle>
+                  <CardTitle className="text-lg">Inventaire du mobilier</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <PropertyInventoryManager
@@ -443,114 +551,57 @@ const PropertyDetails = () => {
 
           {/* Info Sidebar */}
           <div className="space-y-4">
-            {/* Price Card */}
-            <Card className="bg-navy text-primary-foreground">
-              <CardContent className="p-6">
-                <p className="text-sm opacity-80 mb-1">
-                  {property.type === "location" ? "Loyer mensuel" : "Prix de vente"}
-                </p>
-                <p className="text-3xl font-display font-bold">
-                  {property.price.toLocaleString('fr-FR')} F CFA
-                  {property.type === "location" && <span className="text-lg font-normal">/mois</span>}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Details Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Caractéristiques</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {property.bedrooms !== null && property.bedrooms !== undefined && (
-                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Bed className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Pièces</p>
-                        <p className="font-semibold">{property.bedrooms}</p>
-                      </div>
+            {/* Owner Info */}
+            {owner && (
+              <Card className="border-0 shadow-md overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 to-transparent">
+                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Propriétaire</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-3">
+                  <div 
+                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-muted/50 transition-colors group"
+                    onClick={() => navigate("/owners")}
+                  >
+                    <div className="p-2.5 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full ring-2 ring-primary/10">
+                      <User className="h-5 w-5 text-primary" />
                     </div>
-                  )}
-                  {property.bathrooms !== null && property.bathrooms !== undefined && (
-                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Bath className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Salles de bain</p>
-                        <p className="font-semibold">{property.bathrooms}</p>
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{owner.name}</p>
+                      {owner.email && (
+                        <p className="text-xs text-muted-foreground truncate">{owner.email}</p>
+                      )}
+                      {owner.phone && (
+                        <p className="text-xs text-muted-foreground">{owner.phone}</p>
+                      )}
                     </div>
-                  )}
-                  {property.area && (
-                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Maximize className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Surface</p>
-                        <p className="font-semibold">{property.area} m²</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Type de bien</span>
-                    <span className="font-medium">{typeLabels[property.property_type] || property.property_type}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Statut</span>
-                    <Badge variant="outline" className={cn("text-xs", statusClasses[property.status])}>
-                      {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
-                    </Badge>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Dates & Meta */}
+            <Card className="border-0 shadow-md">
+              <CardContent className="p-5 space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="p-1.5 bg-muted rounded-lg">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Créé le</p>
+                    <p className="font-medium text-foreground">{new Date(property.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                   </div>
                 </div>
-
-                {/* Owner Info */}
-                {owner && (
-                  <>
-                    <Separator />
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground">Propriétaire</p>
-                      <div 
-                        className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
-                        onClick={() => navigate("/owners")}
-                      >
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <User className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{owner.name}</p>
-                          {owner.email && (
-                            <p className="text-xs text-muted-foreground">{owner.email}</p>
-                          )}
-                        </div>
-                      </div>
+                {property.updated_at !== property.created_at && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="p-1.5 bg-muted rounded-lg">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
-                  </>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Modifié le</p>
+                      <p className="font-medium text-foreground">{new Date(property.updated_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                  </div>
                 )}
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>Créé le {new Date(property.created_at).toLocaleDateString('fr-FR')}</span>
-                  </div>
-                  {property.updated_at !== property.created_at && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>Modifié le {new Date(property.updated_at).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                  )}
-                </div>
               </CardContent>
             </Card>
           </div>

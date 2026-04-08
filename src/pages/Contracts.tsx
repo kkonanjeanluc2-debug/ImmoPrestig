@@ -67,6 +67,7 @@ import { format, differenceInDays, addMonths, addYears } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
+import { supabase } from "@/integrations/supabase/client";
 import { GenerateContractDialog } from "@/components/contract/GenerateContractDialog";
 import { SignContractDialog } from "@/components/signature/SignContractDialog";
 

@@ -79,6 +79,7 @@ interface ParsedTenant {
   email: string;
   phone?: string;
   propertyTitle?: string;
+  unitNumber?: string;
   startDate?: string;
   endDate?: string;
   rentAmount?: number;
@@ -86,6 +87,7 @@ interface ParsedTenant {
   isDuplicate?: boolean;
   duplicateReason?: string;
   propertyId?: string;
+  unitId?: string;
   isValid: boolean;
   errors: string[];
 }

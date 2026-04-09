@@ -436,6 +436,11 @@ export function OwnerPayoutsSection({
                   onValueChange={(v) => {
                     setForm({ ...form, payment_method: v });
                     if (v === "especes") setProofFile(null);
+                    // Reset OTP state when method changes
+                    setOtpSent(false);
+                    setOtpCode("");
+                    setOtpVerified(false);
+                    setOtpError("");
                   }}
                 >
                   <SelectTrigger>

@@ -603,6 +603,8 @@ export function OwnerPayoutsSection({
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
                   (needsProof && !proofFile) ||
+                  (needsOtp && !otpVerified) ||
+                  (needsOtp && !form.recipient_phone) ||
                   uploading ||
                   createPayout.isPending
                 }

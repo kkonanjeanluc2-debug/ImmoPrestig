@@ -58,7 +58,8 @@ export function AddPaymentDialog({ onSuccess }: AddPaymentDialogProps) {
   const rentDueDay = agency?.rent_due_day ?? 10;
 
   const tenantsWithContracts = tenants?.filter(t => 
-    t.contracts?.some(c => c.status === 'active')
+    t.contracts?.some(c => c.status === 'active') &&
+    t.property?.property_type !== 'meuble'
   ) || [];
 
   const form = useForm<FormValues>({

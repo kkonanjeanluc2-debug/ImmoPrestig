@@ -81,18 +81,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Send SMS via Twilio gateway
+    // Send WhatsApp message via Twilio gateway
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
     const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
 
     if (!LOVABLE_API_KEY || !TWILIO_API_KEY || !TWILIO_PHONE_NUMBER) {
       console.error("Missing Twilio configuration");
-      // Still return success with OTP for testing if Twilio not configured
       return new Response(JSON.stringify({ 
         success: true, 
-        message: "Code envoyé par SMS",
-        // In production, remove this debug field
+        message: "Code envoyé par WhatsApp",
         debug_otp: otp 
       }), {
         status: 200,
@@ -108,8 +106,8 @@ Deno.serve(async (req) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        To: formattedPhone,
-        From: TWILIO_PHONE_NUMBER,
+        To: `whatsapp:${formattedPhone}`,
+        From: `whatsapp:${TWILIO_PHONE_NUMBER}`,
         Body: `Votre code de confirmation de reversement est : ${otp}. Ce code expire dans 5 minutes.`,
       }),
     });

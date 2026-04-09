@@ -323,7 +323,7 @@ export const EditPropertyDialog = ({ property, open, onOpenChange }: EditPropert
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">
-                {(formData.property_type === "maison" || formData.property_type === "immeuble") ? "Revenu mensuel (F CFA)" : "Loyer mensuel (F CFA) *"}
+                {formData.property_type === "meuble" ? "Loyer journalier (F CFA) *" : (formData.property_type === "maison" || formData.property_type === "immeuble") ? "Revenu mensuel (F CFA)" : "Loyer mensuel (F CFA) *"}
               </Label>
               <Input
                 id="price"

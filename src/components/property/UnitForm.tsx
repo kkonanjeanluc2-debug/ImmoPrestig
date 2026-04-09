@@ -94,7 +94,7 @@ export const UnitForm = ({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="rent_amount">Loyer mensuel (F CFA) *</Label>
+          <Label htmlFor="rent_amount">Loyer (F CFA) *</Label>
           <Input
             id="rent_amount"
             type="number"

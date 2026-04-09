@@ -89,6 +89,9 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const [uploadingCni, setUploadingCni] = useState(false);
   const cniInputRef = useRef<HTMLInputElement>(null);
   const [isColocation, setIsColocation] = useState(false);
+  const [reuseExistingTenant, setReuseExistingTenant] = useState(false);
+  const [selectedFormerTenantId, setSelectedFormerTenantId] = useState<string>("");
+  const [formerTenants, setFormerTenants] = useState<Array<{ id: string; name: string; email: string | null; phone: string | null; profession: string | null; emergency_contact_name: string | null; emergency_contact_phone: string | null; cni_document_url: string | null }>>([]);
   const [createdContractData, setCreatedContractData] = useState<{
     tenantName: string;
     tenantEmail?: string;
@@ -131,6 +134,50 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const selectedProperty = properties?.find(p => p.id === selectedPropertyId);
   const hasUnits = propertyUnits.length > 0;
 
+  // Fetch former tenants for meuble properties
+  useEffect(() => {
+    const fetchFormerTenants = async () => {
+      if (!selectedPropertyId || selectedProperty?.property_type !== "meuble") {
+        setFormerTenants([]);
+        return;
+      }
+      // Get tenants who had expired/terminated contracts on meuble properties
+      const { data } = await supabase
+        .from("tenants")
+        .select("id, name, email, phone, profession, emergency_contact_name, emergency_contact_phone, cni_document_url, property_id")
+        .is("deleted_at", null)
+        .eq("status", "ancien");
+
+      if (data) {
+        // Filter to those who had contracts on meuble properties
+        const { data: contractData } = await supabase
+          .from("contracts")
+          .select("tenant_id, property_id, properties!inner(property_type)")
+          .in("tenant_id", data.map(t => t.id))
+          .eq("properties.property_type", "meuble");
+
+        if (contractData) {
+          const meubleTenantIds = new Set(contractData.map((c: any) => c.tenant_id));
+          setFormerTenants(data.filter(t => meubleTenantIds.has(t.id)));
+        }
+      }
+    };
+    fetchFormerTenants();
+  }, [selectedPropertyId, selectedProperty?.property_type]);
+
+  const handleSelectFormerTenant = (tenantId: string) => {
+    setSelectedFormerTenantId(tenantId);
+    const tenant = formerTenants.find(t => t.id === tenantId);
+    if (tenant) {
+      form.setValue("name", tenant.name);
+      form.setValue("email", tenant.email || "");
+      form.setValue("phone", tenant.phone || "");
+      form.setValue("profession", tenant.profession || "");
+      form.setValue("emergency_contact_name", tenant.emergency_contact_name || "");
+      form.setValue("emergency_contact_phone", tenant.emergency_contact_phone || "");
+    }
+  };
+
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
@@ -141,6 +188,8 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       setRentType("mensuel");
       setDailyRentDays("");
       setDailyRentDiscount("0");
+      setReuseExistingTenant(false);
+      setSelectedFormerTenantId("");
     }
   };
 
@@ -278,9 +327,9 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
         return;
       }
       
-      // Upload CNI document if provided
+      // Upload CNI document if provided (only for new tenants)
       let cniDocumentUrl: string | null = null;
-      if (cniFile) {
+      if (cniFile && !reuseExistingTenant) {
         setUploadingCni(true);
         const {
           data: { user: authUser },
@@ -305,19 +354,41 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
         setUploadingCni(false);
       }
 
-      // Create tenant with unit_id if applicable
-      const tenant = await createTenant.mutateAsync({
-        name: values.name,
-        email: values.email?.trim() || null,
-        phone: values.phone || null,
-        property_id: values.property_id,
-        profession: values.profession || null,
-        cni_document_url: cniDocumentUrl,
-        emergency_contact_name: values.emergency_contact_name || null,
-        emergency_contact_phone: values.emergency_contact_phone || null,
-        agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
-      });
-      createdTenantId = tenant.id;
+      let tenant: any;
+      
+      if (reuseExistingTenant && selectedFormerTenantId) {
+        // Reuse existing tenant - update their info and status
+        const { data: updatedTenant, error: updateError } = await supabase
+          .from("tenants")
+          .update({
+            property_id: values.property_id,
+            status: "actif",
+            name: values.name,
+            email: values.email?.trim() || null,
+            phone: values.phone || null,
+          })
+          .eq("id", selectedFormerTenantId)
+          .select()
+          .single();
+        
+        if (updateError) throw updateError;
+        tenant = updatedTenant;
+        createdTenantId = null; // Don't rollback an existing tenant
+      } else {
+        // Create new tenant
+        tenant = await createTenant.mutateAsync({
+          name: values.name,
+          email: values.email?.trim() || null,
+          phone: values.phone || null,
+          property_id: values.property_id,
+          profession: values.profession || null,
+          cni_document_url: cniDocumentUrl,
+          emergency_contact_name: values.emergency_contact_name || null,
+          emergency_contact_phone: values.emergency_contact_phone || null,
+          agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
+        });
+        createdTenantId = tenant.id;
+      }
 
       // Update tenant with unit_id AND create contract in parallel
       const [, contract] = await Promise.all([
@@ -373,6 +444,8 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       setIsColocation(false);
       setDailyRentDays("");
       setDailyRentDiscount("0");
+      setReuseExistingTenant(false);
+      setSelectedFormerTenantId("");
       setOpen(false);
       setShowSuccessDialog(true);
       onSuccess?.();
@@ -577,6 +650,61 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
             {/* Tenant Info Section */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Informations du locataire</h3>
+              
+              {/* Option to reuse former tenant for meublé */}
+              {selectedProperty?.property_type === "meuble" && formerTenants.length > 0 && (
+                <div className="space-y-3 p-3 rounded-lg border border-dashed border-primary/30 bg-primary/5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="reuse-tenant"
+                      checked={reuseExistingTenant}
+                      onChange={(e) => {
+                        setReuseExistingTenant(e.target.checked);
+                        if (!e.target.checked) {
+                          setSelectedFormerTenantId("");
+                          form.reset({
+                            ...form.getValues(),
+                            name: "",
+                            email: "",
+                            phone: "",
+                            profession: "",
+                            emergency_contact_name: "",
+                            emergency_contact_phone: "",
+                          });
+                        }
+                      }}
+                      className="rounded border-input"
+                    />
+                    <Label htmlFor="reuse-tenant" className="text-sm font-medium cursor-pointer">
+                      Reloger un ancien locataire
+                    </Label>
+                  </div>
+                  
+                  {reuseExistingTenant && (
+                    <Select
+                      value={selectedFormerTenantId}
+                      onValueChange={handleSelectFormerTenant}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un ancien locataire" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border z-50">
+                        {formerTenants.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            <div className="flex flex-col">
+                              <span>{t.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {[t.phone, t.email].filter(Boolean).join(" • ") || "Aucun contact"}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
               
               <FormField
                 control={form.control}

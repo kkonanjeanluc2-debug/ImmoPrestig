@@ -327,9 +327,9 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
         return;
       }
       
-      // Upload CNI document if provided
+      // Upload CNI document if provided (only for new tenants)
       let cniDocumentUrl: string | null = null;
-      if (cniFile) {
+      if (cniFile && !reuseExistingTenant) {
         setUploadingCni(true);
         const {
           data: { user: authUser },
@@ -354,19 +354,41 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
         setUploadingCni(false);
       }
 
-      // Create tenant with unit_id if applicable
-      const tenant = await createTenant.mutateAsync({
-        name: values.name,
-        email: values.email?.trim() || null,
-        phone: values.phone || null,
-        property_id: values.property_id,
-        profession: values.profession || null,
-        cni_document_url: cniDocumentUrl,
-        emergency_contact_name: values.emergency_contact_name || null,
-        emergency_contact_phone: values.emergency_contact_phone || null,
-        agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
-      });
-      createdTenantId = tenant.id;
+      let tenant: any;
+      
+      if (reuseExistingTenant && selectedFormerTenantId) {
+        // Reuse existing tenant - update their info and status
+        const { data: updatedTenant, error: updateError } = await supabase
+          .from("tenants")
+          .update({
+            property_id: values.property_id,
+            status: "actif",
+            name: values.name,
+            email: values.email?.trim() || null,
+            phone: values.phone || null,
+          })
+          .eq("id", selectedFormerTenantId)
+          .select()
+          .single();
+        
+        if (updateError) throw updateError;
+        tenant = updatedTenant;
+        createdTenantId = null; // Don't rollback an existing tenant
+      } else {
+        // Create new tenant
+        tenant = await createTenant.mutateAsync({
+          name: values.name,
+          email: values.email?.trim() || null,
+          phone: values.phone || null,
+          property_id: values.property_id,
+          profession: values.profession || null,
+          cni_document_url: cniDocumentUrl,
+          emergency_contact_name: values.emergency_contact_name || null,
+          emergency_contact_phone: values.emergency_contact_phone || null,
+          agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
+        });
+        createdTenantId = tenant.id;
+      }
 
       // Update tenant with unit_id AND create contract in parallel
       const [, contract] = await Promise.all([

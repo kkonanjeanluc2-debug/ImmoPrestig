@@ -397,7 +397,7 @@ export function OwnerPayoutsSection({
                   onChange={(e) =>
                     setForm({ ...form, recipient_phone: e.target.value })
                   }
-                  placeholder="Ex: +229 97 00 00 00"
+                  placeholder="Ex: +225 07 00 00 00 00"
                 />
               </div>
               <div className="space-y-2">

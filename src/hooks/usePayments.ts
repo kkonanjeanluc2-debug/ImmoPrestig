@@ -178,7 +178,13 @@ export const usePayments = () => {
         }
       }
 
-      return [...(data || []), ...allVirtuals] as any;
+      // Filter out payments for "meuble" (furnished rental) properties
+      const filteredData = (data || []).filter((p: any) => {
+        const propType = p.tenant?.property?.property_type;
+        return propType !== 'meuble';
+      });
+
+      return [...filteredData, ...allVirtuals] as any;
     },
     enabled: !!user,
     staleTime: 0,

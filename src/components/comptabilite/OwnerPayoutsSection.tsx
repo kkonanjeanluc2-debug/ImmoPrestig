@@ -238,6 +238,7 @@ export function OwnerPayoutsSection({
   const handleSubmit = async () => {
     if (!form.owner_id || !form.amount || Number(form.amount) <= 0) return;
     if (needsProof && !proofFile) return;
+    if (needsOtp && !otpVerified) return;
 
     setUploading(true);
     let proofUrl: string | undefined;
@@ -276,6 +277,10 @@ export function OwnerPayoutsSection({
         onSuccess: () => {
           setOpen(false);
           setProofFile(null);
+          setOtpSent(false);
+          setOtpCode("");
+          setOtpVerified(false);
+          setOtpError("");
           const now = new Date();
           setForm({
             owner_id: "",

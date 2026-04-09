@@ -37,6 +37,8 @@ import {
   ArrowDownToLine,
   Plus,
   Trash2,
+  Send,
+  ShieldCheck,
   User,
   Calendar,
   CreditCard,

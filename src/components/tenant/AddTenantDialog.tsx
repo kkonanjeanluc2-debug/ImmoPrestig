@@ -89,6 +89,9 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const [uploadingCni, setUploadingCni] = useState(false);
   const cniInputRef = useRef<HTMLInputElement>(null);
   const [isColocation, setIsColocation] = useState(false);
+  const [reuseExistingTenant, setReuseExistingTenant] = useState(false);
+  const [selectedFormerTenantId, setSelectedFormerTenantId] = useState<string>("");
+  const [formerTenants, setFormerTenants] = useState<Array<{ id: string; name: string; email: string | null; phone: string | null; profession: string | null; emergency_contact_name: string | null; emergency_contact_phone: string | null; cni_document_url: string | null }>>([]);
   const [createdContractData, setCreatedContractData] = useState<{
     tenantName: string;
     tenantEmail?: string;

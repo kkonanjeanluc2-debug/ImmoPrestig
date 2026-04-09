@@ -134,6 +134,50 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const selectedProperty = properties?.find(p => p.id === selectedPropertyId);
   const hasUnits = propertyUnits.length > 0;
 
+  // Fetch former tenants for meuble properties
+  useEffect(() => {
+    const fetchFormerTenants = async () => {
+      if (!selectedPropertyId || selectedProperty?.property_type !== "meuble") {
+        setFormerTenants([]);
+        return;
+      }
+      // Get tenants who had expired/terminated contracts on meuble properties
+      const { data } = await supabase
+        .from("tenants")
+        .select("id, name, email, phone, profession, emergency_contact_name, emergency_contact_phone, cni_document_url, property_id")
+        .is("deleted_at", null)
+        .eq("status", "ancien");
+
+      if (data) {
+        // Filter to those who had contracts on meuble properties
+        const { data: contractData } = await supabase
+          .from("contracts")
+          .select("tenant_id, property_id, properties!inner(property_type)")
+          .in("tenant_id", data.map(t => t.id))
+          .eq("properties.property_type", "meuble");
+
+        if (contractData) {
+          const meubleTenantIds = new Set(contractData.map((c: any) => c.tenant_id));
+          setFormerTenants(data.filter(t => meubleTenantIds.has(t.id)));
+        }
+      }
+    };
+    fetchFormerTenants();
+  }, [selectedPropertyId, selectedProperty?.property_type]);
+
+  const handleSelectFormerTenant = (tenantId: string) => {
+    setSelectedFormerTenantId(tenantId);
+    const tenant = formerTenants.find(t => t.id === tenantId);
+    if (tenant) {
+      form.setValue("name", tenant.name);
+      form.setValue("email", tenant.email || "");
+      form.setValue("phone", tenant.phone || "");
+      form.setValue("profession", tenant.profession || "");
+      form.setValue("emergency_contact_name", tenant.emergency_contact_name || "");
+      form.setValue("emergency_contact_phone", tenant.emergency_contact_phone || "");
+    }
+  };
+
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
@@ -144,6 +188,8 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       setRentType("mensuel");
       setDailyRentDays("");
       setDailyRentDiscount("0");
+      setReuseExistingTenant(false);
+      setSelectedFormerTenantId("");
     }
   };
 

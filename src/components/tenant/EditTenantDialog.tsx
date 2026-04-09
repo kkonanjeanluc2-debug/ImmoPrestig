@@ -212,7 +212,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                   />
 
                   <div className="space-y-2">
-                    <Label>CNI / Passeport</Label>
+                    <Label>Documents du locataire</Label>
                     <input
                       ref={cniInputRef}
                       type="file"
@@ -255,15 +255,20 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                         </Button>
                       </div>
                     ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full justify-start gap-2"
-                        onClick={() => cniInputRef.current?.click()}
-                      >
-                        <Upload className="h-4 w-4" />
-                        Importer un fichier
-                      </Button>
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full justify-start gap-2"
+                          onClick={() => cniInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4" />
+                          Importer un fichier
+                        </Button>
+                        <p className="text-xs text-destructive">
+                          CNI, Attestation de travail, 3 bulletins de salaire, 3 dernières quittances de loyer de l'ancien bail (.pdf)
+                        </p>
+                      </>
                     )}
                   </div>
                 </div>

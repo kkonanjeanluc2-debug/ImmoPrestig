@@ -55,7 +55,7 @@ export function TenantDocumentsTab({ tenant }: TenantDocumentsTabProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Documents d'identité
+          Documents du locataire
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -67,8 +67,8 @@ export function TenantDocumentsTab({ tenant }: TenantDocumentsTabProps) {
                   <FileText className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-sm">CNI / Passeport</p>
-                  <p className="text-xs text-muted-foreground truncate">Document d'identité du locataire</p>
+                  <p className="font-medium text-sm">Documents du locataire</p>
+                  <p className="text-xs text-muted-foreground truncate">CNI, Attestation de travail, bulletins de salaire, quittances</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

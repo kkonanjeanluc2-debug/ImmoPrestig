@@ -369,9 +369,10 @@ export function OwnerPayoutsSection({
                 <Label>Mode de paiement</Label>
                 <Select
                   value={form.payment_method}
-                  onValueChange={(v) =>
-                    setForm({ ...form, payment_method: v })
-                  }
+                  onValueChange={(v) => {
+                    setForm({ ...form, payment_method: v });
+                    if (v === "especes") setProofFile(null);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />

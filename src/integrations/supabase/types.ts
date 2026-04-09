@@ -3079,6 +3079,7 @@ export type Database = {
           notes: string | null
           owner_id: string
           payment_method: string | null
+          payment_proof_url: string | null
           payout_date: string
           payout_month: number
           payout_year: number
@@ -3094,6 +3095,7 @@ export type Database = {
           notes?: string | null
           owner_id: string
           payment_method?: string | null
+          payment_proof_url?: string | null
           payout_date?: string
           payout_month: number
           payout_year: number
@@ -3109,6 +3111,7 @@ export type Database = {
           notes?: string | null
           owner_id?: string
           payment_method?: string | null
+          payment_proof_url?: string | null
           payout_date?: string
           payout_month?: number
           payout_year?: number

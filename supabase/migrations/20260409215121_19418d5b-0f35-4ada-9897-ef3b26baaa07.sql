@@ -1,0 +1,1 @@
+ALTER TABLE public.owner_payouts ADD COLUMN payment_proof_url text;

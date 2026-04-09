@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,8 @@ import {
   CreditCard,
   Loader2,
   Download,
+  Upload,
+  FileCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -84,6 +86,9 @@ export function OwnerPayoutsSection({
   const { data: agency } = useAgency();
 
   const [open, setOpen] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const now = new Date();
   const [form, setForm] = useState({
     owner_id: "",
@@ -167,8 +172,33 @@ export function OwnerPayoutsSection({
     setForm({ ...form, payout_year: year, amount });
   };
 
-  const handleSubmit = () => {
+  const needsProof = form.payment_method !== "especes";
+
+  const handleSubmit = async () => {
     if (!form.owner_id || !form.amount || Number(form.amount) <= 0) return;
+    if (needsProof && !proofFile) return;
+
+    setUploading(true);
+    let proofUrl: string | undefined;
+
+    try {
+      if (proofFile) {
+        const fileExt = proofFile.name.split(".").pop();
+        const filePath = `payout-proofs/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("agency-logos")
+          .upload(filePath, proofFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("agency-logos").getPublicUrl(filePath);
+        proofUrl = urlData.publicUrl;
+      }
+    } catch (err: any) {
+      toast.error("Erreur lors de l'upload de la preuve: " + (err.message || ""));
+      setUploading(false);
+      return;
+    }
+
+    setUploading(false);
     createPayout.mutate(
       {
         owner_id: form.owner_id,
@@ -179,10 +209,12 @@ export function OwnerPayoutsSection({
         payout_year: form.payout_year,
         recipient_phone: form.recipient_phone || undefined,
         notes: form.notes || undefined,
+        payment_proof_url: proofUrl,
       },
       {
         onSuccess: () => {
           setOpen(false);
+          setProofFile(null);
           const now = new Date();
           setForm({
             owner_id: "",

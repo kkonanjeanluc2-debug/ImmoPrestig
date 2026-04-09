@@ -647,11 +647,199 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
         )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Tenant Info Section */}
+            {/* Property Selection - FIRST */}
             <div className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Bien à louer</h3>
+              
+              <FormField
+                control={form.control}
+                name="property_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sélectionner un bien *</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setSelectedPropertyId(value);
+                        form.setValue("unit_id", "");
+                        const selectedProp = availableProperties.find(p => p.id === value);
+                        if (selectedProp && !hasUnits) {
+                          form.setValue('rent_amount', selectedProp.price.toString());
+                        }
+                      }} 
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={propertiesLoading ? "Chargement..." : "Choisir un bien"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background border z-50">
+                      {availableProperties.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            Aucun bien disponible
+                          </div>
+                        ) : (
+                          availableProperties.map((property) => (
+                            <SelectItem key={property.id} value={property.id}>
+                              <div className="flex flex-col">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span>{property.title}</span>
+                                  <span className="text-xs font-medium text-emerald">{property.price.toLocaleString('fr-FR')} F</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">{property.address}</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {selectedPropertyId && hasUnits && (
+                <FormField
+                  control={form.control}
+                  name="unit_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <DoorOpen className="h-4 w-4" />
+                        Sélectionner une porte *
+                      </FormLabel>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          const selectedUnit = propertyUnits.find(u => u.id === value);
+                          if (selectedUnit) {
+                            form.setValue('rent_amount', selectedUnit.rent_amount.toString());
+                          }
+                        }} 
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choisir une porte" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background border z-50">
+                          {availableUnits.length === 0 ? (
+                            <div className="p-2 text-sm text-muted-foreground text-center">
+                              Aucune porte disponible
+                            </div>
+                          ) : (
+                            availableUnits.map((unit) => (
+                              <SelectItem key={unit.id} value={unit.id}>
+                                <div className="flex items-center justify-between gap-4 w-full">
+                                  <div className="flex items-center gap-2">
+                                    <DoorOpen className="h-4 w-4 text-primary" />
+                                    <span>{unit.unit_number}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {unit.rooms_count} pièce{unit.rooms_count > 1 ? 's' : ''}
+                                    </Badge>
+                                  </div>
+                                  <span className="text-xs font-medium text-emerald">
+                                    {unit.rent_amount.toLocaleString('fr-FR')} F/mois
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {availableUnits.length === 0 && propertyUnits.length > 0 && (
+                        <p className="text-xs text-amber-600">
+                          Toutes les portes de ce bien sont louées.
+                        </p>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {selectedPropertyId && hasUnits && (
+                <div className="bg-muted/50 p-3 rounded-lg text-sm">
+                  <p className="text-muted-foreground">
+                    Ce bien comporte <strong>{propertyUnits.length}</strong> porte{propertyUnits.length > 1 ? 's' : ''}, 
+                    dont <strong>{availableUnits.length}</strong> disponible{availableUnits.length > 1 ? 's' : ''}.
+                  </p>
+                </div>
+              )}
+
+              {selectedProperty?.property_type === "meuble" && (
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="text-sm font-medium text-muted-foreground">Type de loyer</h3>
+                  
+                  <div className="space-y-2">
+                    <Label>Loyer mensuel ou journalier *</Label>
+                    <Select value={rentType} onValueChange={setRentType}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border z-50">
+                        <SelectItem value="mensuel">Loyer mensuel</SelectItem>
+                        <SelectItem value="journalier">Loyer journalier</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {rentType === "journalier" && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Nombre de jours *</Label>
+                          <Input
+                            type="number"
+                            placeholder="Ex: 3"
+                            min="1"
+                            value={dailyRentDays}
+                            onChange={(e) => setDailyRentDays(e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">La date de fin sera auto-calculée</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Réduction (%)</Label>
+                          <Input
+                            type="number"
+                            placeholder="Ex: 10"
+                            min="0"
+                            max="100"
+                            value={dailyRentDiscount}
+                            onChange={(e) => setDailyRentDiscount(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      {dailyTotal > 0 && (
+                        <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>{dailyRentDays} jours × {parseFloat(watchedRentAmount || "0").toLocaleString("fr-FR")} F CFA</span>
+                            <span>{(parseInt(dailyRentDays) * parseFloat(watchedRentAmount || "0")).toLocaleString("fr-FR")} F CFA</span>
+                          </div>
+                          {parseFloat(dailyRentDiscount) > 0 && (
+                            <div className="flex justify-between text-muted-foreground">
+                              <span>Réduction ({dailyRentDiscount}%)</span>
+                              <span>-{Math.round(parseInt(dailyRentDays) * parseFloat(watchedRentAmount || "0") * parseFloat(dailyRentDiscount) / 100).toLocaleString("fr-FR")} F CFA</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between font-semibold text-foreground border-t pt-1">
+                            <span>Montant total</span>
+                            <span>{dailyTotal.toLocaleString("fr-FR")} F CFA</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Tenant Info Section */}
+            <div className="space-y-4 pt-4 border-t">
               <h3 className="text-sm font-medium text-muted-foreground">Informations du locataire</h3>
               
-              {/* Option to reuse former tenant for meublé */}
               {selectedProperty?.property_type === "meuble" && formerTenants.length > 0 && (
                 <div className="space-y-3 p-3 rounded-lg border border-dashed border-primary/30 bg-primary/5">
                   <div className="flex items-center gap-2">
@@ -750,7 +938,6 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 />
               </div>
 
-              {/* CNI/Passport Upload & Profession */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -809,7 +996,6 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 </div>
               </div>
 
-              {/* Emergency Contact */}
               <div className="space-y-2 pt-2 border-t border-dashed">
                 <h4 className="text-sm font-medium text-muted-foreground">Contact d'urgence</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -843,202 +1029,6 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 </div>
               </div>
             </div>
-
-            {/* Property Selection */}
-            <div className="space-y-4 pt-4 border-t">
-              <h3 className="text-sm font-medium text-muted-foreground">Bien à louer</h3>
-              
-              <FormField
-                control={form.control}
-                name="property_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sélectionner un bien *</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setSelectedPropertyId(value);
-                        form.setValue("unit_id", "");
-                        // Don't auto-fill rent if property has units
-                        const selectedProp = availableProperties.find(p => p.id === value);
-                        if (selectedProp && !hasUnits) {
-                          form.setValue('rent_amount', selectedProp.price.toString());
-                        }
-                      }} 
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={propertiesLoading ? "Chargement..." : "Choisir un bien"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background border z-50">
-                      {availableProperties.length === 0 ? (
-                          <div className="p-2 text-sm text-muted-foreground text-center">
-                            Aucun bien disponible
-                          </div>
-                        ) : (
-                          availableProperties.map((property) => (
-                            <SelectItem key={property.id} value={property.id}>
-                              <div className="flex flex-col">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span>{property.title}</span>
-                                  <span className="text-xs font-medium text-emerald">{property.price.toLocaleString('fr-FR')} F</span>
-                                </div>
-                                <span className="text-xs text-muted-foreground">{property.address}</span>
-                              </div>
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Unit Selection - Only show if property has units */}
-              {selectedPropertyId && hasUnits && (
-                <FormField
-                  control={form.control}
-                  name="unit_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <DoorOpen className="h-4 w-4" />
-                        Sélectionner une porte *
-                      </FormLabel>
-                      <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          // Auto-fill rent from unit
-                          const selectedUnit = propertyUnits.find(u => u.id === value);
-                          if (selectedUnit) {
-                            form.setValue('rent_amount', selectedUnit.rent_amount.toString());
-                          }
-                        }} 
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choisir une porte" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-background border z-50">
-                          {availableUnits.length === 0 ? (
-                            <div className="p-2 text-sm text-muted-foreground text-center">
-                              Aucune porte disponible
-                            </div>
-                          ) : (
-                            availableUnits.map((unit) => (
-                              <SelectItem key={unit.id} value={unit.id}>
-                                <div className="flex items-center justify-between gap-4 w-full">
-                                  <div className="flex items-center gap-2">
-                                    <DoorOpen className="h-4 w-4 text-primary" />
-                                    <span>{unit.unit_number}</span>
-                                    <Badge variant="outline" className="text-xs">
-                                      {unit.rooms_count} pièce{unit.rooms_count > 1 ? 's' : ''}
-                                    </Badge>
-                                  </div>
-                                  <span className="text-xs font-medium text-emerald">
-                                    {unit.rent_amount.toLocaleString('fr-FR')} F/mois
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      {availableUnits.length === 0 && propertyUnits.length > 0 && (
-                        <p className="text-xs text-amber-600">
-                          Toutes les portes de ce bien sont louées.
-                        </p>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {/* Info about multi-unit property */}
-              {selectedPropertyId && hasUnits && (
-                <div className="bg-muted/50 p-3 rounded-lg text-sm">
-                  <p className="text-muted-foreground">
-                    Ce bien comporte <strong>{propertyUnits.length}</strong> porte{propertyUnits.length > 1 ? 's' : ''}, 
-                    dont <strong>{availableUnits.length}</strong> disponible{availableUnits.length > 1 ? 's' : ''}.
-                  </p>
-                </div>
-              )}
-
-            {/* Rent Type for furnished properties */}
-            {selectedProperty?.property_type === "meuble" && (
-              <div className="space-y-4 pt-4 border-t">
-                <h3 className="text-sm font-medium text-muted-foreground">Type de loyer</h3>
-                
-                <div className="space-y-2">
-                  <Label>Loyer mensuel ou journalier *</Label>
-                  <Select value={rentType} onValueChange={setRentType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border z-50">
-                      <SelectItem value="mensuel">Loyer mensuel</SelectItem>
-                      <SelectItem value="journalier">Loyer journalier</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {rentType === "journalier" && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Nombre de jours *</Label>
-                        <Input
-                          type="number"
-                          placeholder="Ex: 3"
-                          min="1"
-                          value={dailyRentDays}
-                          onChange={(e) => setDailyRentDays(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">La date de fin sera auto-calculée</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Réduction (%)</Label>
-                        <Input
-                          type="number"
-                          placeholder="Ex: 10"
-                          min="0"
-                          max="100"
-                          value={dailyRentDiscount}
-                          onChange={(e) => setDailyRentDiscount(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    {dailyTotal > 0 && (
-                      <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>{dailyRentDays} jours × {parseFloat(watchedRentAmount || "0").toLocaleString("fr-FR")} F CFA</span>
-                          <span>{(parseInt(dailyRentDays) * parseFloat(watchedRentAmount || "0")).toLocaleString("fr-FR")} F CFA</span>
-                        </div>
-                        {parseFloat(dailyRentDiscount) > 0 && (
-                          <div className="flex justify-between text-muted-foreground">
-                            <span>Réduction ({dailyRentDiscount}%)</span>
-                            <span>-{Math.round(parseInt(dailyRentDays) * parseFloat(watchedRentAmount || "0") * parseFloat(dailyRentDiscount) / 100).toLocaleString("fr-FR")} F CFA</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between font-semibold text-foreground border-t pt-1">
-                          <span>Montant total</span>
-                          <span>{dailyTotal.toLocaleString("fr-FR")} F CFA</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-            </div>
-
-            {/* Contract Details */}
             <div className="space-y-4 pt-4 border-t">
               <h3 className="text-sm font-medium text-muted-foreground">Détails du contrat</h3>
               

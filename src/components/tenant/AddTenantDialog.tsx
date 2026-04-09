@@ -651,6 +651,61 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Informations du locataire</h3>
               
+              {/* Option to reuse former tenant for meublé */}
+              {selectedProperty?.property_type === "meuble" && formerTenants.length > 0 && (
+                <div className="space-y-3 p-3 rounded-lg border border-dashed border-primary/30 bg-primary/5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="reuse-tenant"
+                      checked={reuseExistingTenant}
+                      onChange={(e) => {
+                        setReuseExistingTenant(e.target.checked);
+                        if (!e.target.checked) {
+                          setSelectedFormerTenantId("");
+                          form.reset({
+                            ...form.getValues(),
+                            name: "",
+                            email: "",
+                            phone: "",
+                            profession: "",
+                            emergency_contact_name: "",
+                            emergency_contact_phone: "",
+                          });
+                        }
+                      }}
+                      className="rounded border-input"
+                    />
+                    <Label htmlFor="reuse-tenant" className="text-sm font-medium cursor-pointer">
+                      Reloger un ancien locataire
+                    </Label>
+                  </div>
+                  
+                  {reuseExistingTenant && (
+                    <Select
+                      value={selectedFormerTenantId}
+                      onValueChange={handleSelectFormerTenant}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un ancien locataire" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border z-50">
+                        {formerTenants.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            <div className="flex flex-col">
+                              <span>{t.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {[t.phone, t.email].filter(Boolean).join(" • ") || "Aucun contact"}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+              
               <FormField
                 control={form.control}
                 name="name"

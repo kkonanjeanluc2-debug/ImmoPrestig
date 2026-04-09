@@ -114,11 +114,10 @@ Deno.serve(async (req) => {
 
     if (!smsResponse.ok) {
       const errData = await smsResponse.json();
-      console.error("Twilio error:", errData);
-      // Return success anyway - OTP is stored, user can still verify
+      console.error("Twilio WhatsApp error:", errData);
       return new Response(JSON.stringify({ 
         success: true, 
-        message: "Code généré mais l'envoi SMS a échoué. Contactez l'administrateur.",
+        message: "Code généré mais l'envoi WhatsApp a échoué. Contactez l'administrateur.",
         debug_otp: otp
       }), {
         status: 200,
@@ -128,7 +127,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: "Code envoyé par SMS" 
+      message: "Code envoyé par WhatsApp" 
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

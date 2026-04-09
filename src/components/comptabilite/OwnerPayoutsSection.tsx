@@ -57,6 +57,8 @@ import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
 import { useTenants } from "@/hooks/useTenants";
 import { useAgency } from "@/hooks/useAgency";
 import { generatePayoutReceiptPDF } from "@/lib/generatePayoutReceiptPDF";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString("fr-FR") + " F CFA";

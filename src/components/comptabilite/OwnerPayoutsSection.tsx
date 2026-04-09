@@ -345,6 +345,8 @@ export function OwnerPayoutsSection({
                   <SelectContent>
                     <SelectItem value="especes">Espèces</SelectItem>
                     <SelectItem value="virement">Virement bancaire</SelectItem>
+                    <SelectItem value="wave">Wave</SelectItem>
+                    <SelectItem value="cheque">Chèque</SelectItem>
                     {PAYMENT_OPERATORS.map((op) => (
                       <SelectItem key={op.value} value={op.value}>
                         {op.label}

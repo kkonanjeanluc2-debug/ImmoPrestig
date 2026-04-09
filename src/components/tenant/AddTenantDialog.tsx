@@ -444,6 +444,8 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       setIsColocation(false);
       setDailyRentDays("");
       setDailyRentDiscount("0");
+      setReuseExistingTenant(false);
+      setSelectedFormerTenantId("");
       setOpen(false);
       setShowSuccessDialog(true);
       onSuccess?.();

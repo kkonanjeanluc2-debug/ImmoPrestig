@@ -201,7 +201,7 @@ export function OwnerPayoutsSection({
       if (error) throw error;
       if (data?.success) {
         setOtpSent(true);
-        toast.success("Code envoyé par SMS au destinataire");
+        toast.success("Code envoyé par WhatsApp au destinataire");
       } else {
         throw new Error(data?.error || "Erreur d'envoi");
       }
@@ -480,7 +480,7 @@ export function OwnerPayoutsSection({
                 <div className="space-y-3 rounded-lg border border-border p-3 bg-muted/30">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <ShieldCheck className="h-4 w-4 text-primary" />
-                    Vérification par SMS
+                    Vérification par WhatsApp
                   </div>
                   {!otpSent ? (
                     <Button

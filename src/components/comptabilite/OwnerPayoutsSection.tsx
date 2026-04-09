@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePayments } from "@/hooks/usePayments";
@@ -36,6 +37,8 @@ import {
   ArrowDownToLine,
   Plus,
   Trash2,
+  Send,
+  ShieldCheck,
   User,
   Calendar,
   CreditCard,
@@ -90,6 +93,12 @@ export function OwnerPayoutsSection({
   const [open, setOpen] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpError, setOtpError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const now = new Date();
   const [form, setForm] = useState({
@@ -174,11 +183,62 @@ export function OwnerPayoutsSection({
     setForm({ ...form, payout_year: year, amount });
   };
 
-  const needsProof = form.payment_method !== "especes";
+  const isCashPayment = form.payment_method === "especes";
+  const needsProof = !isCashPayment;
+  const needsOtp = isCashPayment;
+
+  const handleSendOtp = async () => {
+    if (!form.recipient_phone) {
+      toast.error("Veuillez saisir le numéro de téléphone du destinataire");
+      return;
+    }
+    setOtpSending(true);
+    setOtpError("");
+    try {
+      const { data, error } = await supabase.functions.invoke("send-payout-otp", {
+        body: { phoneNumber: form.recipient_phone },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setOtpSent(true);
+        toast.success("Code envoyé par SMS au destinataire");
+      } else {
+        throw new Error(data?.error || "Erreur d'envoi");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'envoi du code");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) return;
+    setOtpVerifying(true);
+    setOtpError("");
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-payout-otp", {
+        body: { otpCode },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setOtpVerified(true);
+        setOtpError("");
+        toast.success("Code vérifié avec succès");
+      } else {
+        setOtpError(data?.error || "Code invalide");
+      }
+    } catch (err: any) {
+      setOtpError(err.message || "Erreur de vérification");
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.owner_id || !form.amount || Number(form.amount) <= 0) return;
     if (needsProof && !proofFile) return;
+    if (needsOtp && !otpVerified) return;
 
     setUploading(true);
     let proofUrl: string | undefined;
@@ -217,6 +277,10 @@ export function OwnerPayoutsSection({
         onSuccess: () => {
           setOpen(false);
           setProofFile(null);
+          setOtpSent(false);
+          setOtpCode("");
+          setOtpVerified(false);
+          setOtpError("");
           const now = new Date();
           setForm({
             owner_id: "",
@@ -372,6 +436,11 @@ export function OwnerPayoutsSection({
                   onValueChange={(v) => {
                     setForm({ ...form, payment_method: v });
                     if (v === "especes") setProofFile(null);
+                    // Reset OTP state when method changes
+                    setOtpSent(false);
+                    setOtpCode("");
+                    setOtpVerified(false);
+                    setOtpError("");
                   }}
                 >
                   <SelectTrigger>
@@ -391,15 +460,103 @@ export function OwnerPayoutsSection({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Téléphone destinataire</Label>
+                <Label>Téléphone destinataire {needsOtp ? "*" : ""}</Label>
                 <Input
                   value={form.recipient_phone}
-                  onChange={(e) =>
-                    setForm({ ...form, recipient_phone: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setForm({ ...form, recipient_phone: e.target.value });
+                    // Reset OTP state when phone changes
+                    if (otpSent) {
+                      setOtpSent(false);
+                      setOtpCode("");
+                      setOtpVerified(false);
+                      setOtpError("");
+                    }
+                  }}
                   placeholder="Ex: +225 07 00 00 00 00"
                 />
               </div>
+              {needsOtp && (
+                <div className="space-y-3 rounded-lg border border-border p-3 bg-muted/30">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    Vérification par SMS
+                  </div>
+                  {!otpSent ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={handleSendOtp}
+                      disabled={!form.recipient_phone || otpSending}
+                    >
+                      {otpSending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      Envoyer le code de confirmation
+                    </Button>
+                  ) : otpVerified ? (
+                    <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                      <ShieldCheck className="h-4 w-4" />
+                      Code vérifié avec succès
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Entrez le code à 6 chiffres envoyé au {form.recipient_phone}
+                      </p>
+                      <div className="flex justify-center">
+                        <InputOTP
+                          maxLength={6}
+                          value={otpCode}
+                          onChange={(value) => {
+                            setOtpCode(value);
+                            setOtpError("");
+                          }}
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      {otpError && (
+                        <p className="text-xs text-destructive text-center">{otpError}</p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={handleSendOtp}
+                          disabled={otpSending}
+                        >
+                          {otpSending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Renvoyer"}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="flex-1"
+                          onClick={handleVerifyOtp}
+                          disabled={otpCode.length !== 6 || otpVerifying}
+                        >
+                          {otpVerifying ? (
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                          ) : null}
+                          Vérifier
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Textarea
@@ -451,6 +608,8 @@ export function OwnerPayoutsSection({
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
                   (needsProof && !proofFile) ||
+                  (needsOtp && !otpVerified) ||
+                  (needsOtp && !form.recipient_phone) ||
                   uploading ||
                   createPayout.isPending
                 }

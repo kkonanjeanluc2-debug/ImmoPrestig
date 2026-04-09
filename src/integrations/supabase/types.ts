@@ -3636,6 +3636,36 @@ export type Database = {
           },
         ]
       }
+      payout_otps: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          otp_code: string
+          phone_number: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          otp_code: string
+          phone_number: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          phone_number?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           agency_id: string | null

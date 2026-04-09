@@ -121,9 +121,13 @@ export const usePayments = () => {
         }
       }
 
-      // Generate virtual payments for each contract
+      // Generate virtual payments for each contract (exclude "meuble" property type)
       const allVirtuals: any[] = [];
       for (const contract of (activeContracts || [])) {
+        // Skip furnished rental properties
+        const propertyType = (contract as any).tenant?.property?.property_type;
+        if (propertyType === 'meuble') continue;
+
         const tenantId = contract.tenant_id;
         const covered = tenantCoveredMonths.get(tenantId) || new Set();
         const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;

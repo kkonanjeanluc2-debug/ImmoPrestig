@@ -183,7 +183,57 @@ export function OwnerPayoutsSection({
     setForm({ ...form, payout_year: year, amount });
   };
 
-  const needsProof = form.payment_method !== "especes";
+  const isCashPayment = form.payment_method === "especes";
+  const needsProof = !isCashPayment;
+  const needsOtp = isCashPayment;
+
+  const handleSendOtp = async () => {
+    if (!form.recipient_phone) {
+      toast.error("Veuillez saisir le numéro de téléphone du destinataire");
+      return;
+    }
+    setOtpSending(true);
+    setOtpError("");
+    try {
+      const { data, error } = await supabase.functions.invoke("send-payout-otp", {
+        body: { phoneNumber: form.recipient_phone },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setOtpSent(true);
+        toast.success("Code envoyé par SMS au destinataire");
+      } else {
+        throw new Error(data?.error || "Erreur d'envoi");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'envoi du code");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) return;
+    setOtpVerifying(true);
+    setOtpError("");
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-payout-otp", {
+        body: { otpCode },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setOtpVerified(true);
+        setOtpError("");
+        toast.success("Code vérifié avec succès");
+      } else {
+        setOtpError(data?.error || "Code invalide");
+      }
+    } catch (err: any) {
+      setOtpError(err.message || "Erreur de vérification");
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.owner_id || !form.amount || Number(form.amount) <= 0) return;

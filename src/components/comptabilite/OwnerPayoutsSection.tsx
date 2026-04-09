@@ -408,6 +408,39 @@ export function OwnerPayoutsSection({
                   rows={2}
                 />
               </div>
+              {needsProof && (
+                <div className="space-y-2">
+                  <Label>Preuve de paiement *</Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {proofFile ? (
+                      <>
+                        <FileCheck className="h-4 w-4 text-emerald-500" />
+                        {proofFile.name}
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Importer la preuve
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-destructive">
+                    Reçu de transfert, capture d'écran ou bordereau (.pdf, .jpg, .png)
+                  </p>
+                </div>
+              )}
               <Button
                 className="w-full"
                 onClick={handleSubmit}
@@ -416,10 +449,12 @@ export function OwnerPayoutsSection({
                   !form.amount ||
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
+                  (needsProof && !proofFile) ||
+                  uploading ||
                   createPayout.isPending
                 }
               >
-                {createPayout.isPending ? (
+                {(createPayout.isPending || uploading) ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
                 Enregistrer

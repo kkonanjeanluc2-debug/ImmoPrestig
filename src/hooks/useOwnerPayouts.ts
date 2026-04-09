@@ -14,6 +14,7 @@ export interface OwnerPayout {
   payment_method: string;
   recipient_phone: string | null;
   notes: string | null;
+  payment_proof_url: string | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -70,6 +71,7 @@ export function useCreateOwnerPayout() {
       payout_year: number;
       recipient_phone?: string;
       notes?: string;
+      payment_proof_url?: string;
     }) => {
       if (!user) throw new Error("Non authentifié");
 

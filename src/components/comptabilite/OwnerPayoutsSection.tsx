@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,8 @@ import {
   CreditCard,
   Loader2,
   Download,
+  Upload,
+  FileCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -55,6 +57,8 @@ import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
 import { useTenants } from "@/hooks/useTenants";
 import { useAgency } from "@/hooks/useAgency";
 import { generatePayoutReceiptPDF } from "@/lib/generatePayoutReceiptPDF";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString("fr-FR") + " F CFA";
@@ -84,6 +88,9 @@ export function OwnerPayoutsSection({
   const { data: agency } = useAgency();
 
   const [open, setOpen] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const now = new Date();
   const [form, setForm] = useState({
     owner_id: "",
@@ -167,8 +174,33 @@ export function OwnerPayoutsSection({
     setForm({ ...form, payout_year: year, amount });
   };
 
-  const handleSubmit = () => {
+  const needsProof = form.payment_method !== "especes";
+
+  const handleSubmit = async () => {
     if (!form.owner_id || !form.amount || Number(form.amount) <= 0) return;
+    if (needsProof && !proofFile) return;
+
+    setUploading(true);
+    let proofUrl: string | undefined;
+
+    try {
+      if (proofFile) {
+        const fileExt = proofFile.name.split(".").pop();
+        const filePath = `payout-proofs/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("agency-logos")
+          .upload(filePath, proofFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("agency-logos").getPublicUrl(filePath);
+        proofUrl = urlData.publicUrl;
+      }
+    } catch (err: any) {
+      toast.error("Erreur lors de l'upload de la preuve: " + (err.message || ""));
+      setUploading(false);
+      return;
+    }
+
+    setUploading(false);
     createPayout.mutate(
       {
         owner_id: form.owner_id,
@@ -179,10 +211,12 @@ export function OwnerPayoutsSection({
         payout_year: form.payout_year,
         recipient_phone: form.recipient_phone || undefined,
         notes: form.notes || undefined,
+        payment_proof_url: proofUrl,
       },
       {
         onSuccess: () => {
           setOpen(false);
+          setProofFile(null);
           const now = new Date();
           setForm({
             owner_id: "",
@@ -335,9 +369,10 @@ export function OwnerPayoutsSection({
                 <Label>Mode de paiement</Label>
                 <Select
                   value={form.payment_method}
-                  onValueChange={(v) =>
-                    setForm({ ...form, payment_method: v })
-                  }
+                  onValueChange={(v) => {
+                    setForm({ ...form, payment_method: v });
+                    if (v === "especes") setProofFile(null);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -374,6 +409,39 @@ export function OwnerPayoutsSection({
                   rows={2}
                 />
               </div>
+              {needsProof && (
+                <div className="space-y-2">
+                  <Label>Preuve de paiement *</Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {proofFile ? (
+                      <>
+                        <FileCheck className="h-4 w-4 text-emerald-500" />
+                        {proofFile.name}
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Importer la preuve
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-destructive">
+                    Reçu de transfert, capture d'écran ou bordereau (.pdf, .jpg, .png)
+                  </p>
+                </div>
+              )}
               <Button
                 className="w-full"
                 onClick={handleSubmit}
@@ -382,10 +450,12 @@ export function OwnerPayoutsSection({
                   !form.amount ||
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
+                  (needsProof && !proofFile) ||
+                  uploading ||
                   createPayout.isPending
                 }
               >
-                {createPayout.isPending ? (
+                {(createPayout.isPending || uploading) ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
                 Enregistrer

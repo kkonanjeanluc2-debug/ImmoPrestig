@@ -5,6 +5,7 @@ import { formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 
 export interface PayoutReceiptData {
   ownerName: string;
+  ownerEmail?: string | null;
   amount: number;
   payoutDate: string;
   payoutMonth: number;
@@ -73,6 +74,14 @@ export const generatePayoutReceiptPDF = async (
   doc.text("Bénéficiaire :", margin + 8, y);
   doc.setFont("helvetica", "bold");
   doc.text(data.ownerName, margin + 45, y);
+  if (data.ownerEmail) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`(${data.ownerEmail})`, margin + 45 + doc.getTextWidth(data.ownerName) + 3, y);
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+  }
   y += 10;
 
   // Période

@@ -18,7 +18,7 @@ export interface OwnerPayout {
   status: string;
   created_at: string;
   updated_at: string;
-  owner?: { name: string } | null;
+  owner?: { name: string; email?: string | null } | null;
 }
 
 export function useOwnerPayouts(fromDate?: string, toDate?: string) {
@@ -29,7 +29,7 @@ export function useOwnerPayouts(fromDate?: string, toDate?: string) {
     queryFn: async () => {
       let query = supabase
         .from("owner_payouts")
-        .select("*, owner:owners!owner_payouts_owner_id_fkey(name)")
+        .select("*, owner:owners!owner_payouts_owner_id_fkey(name, email)")
         .order("payout_date", { ascending: false });
 
       if (fromDate) query = query.gte("payout_date", fromDate);

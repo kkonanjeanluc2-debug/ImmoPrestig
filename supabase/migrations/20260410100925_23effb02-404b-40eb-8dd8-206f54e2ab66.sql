@@ -1,0 +1,1 @@
+ALTER TABLE public.apports ADD COLUMN commission_type TEXT NOT NULL DEFAULT 'locataire';

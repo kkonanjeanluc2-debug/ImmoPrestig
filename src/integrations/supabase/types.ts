@@ -717,6 +717,7 @@ export type Database = {
           apporteur_id: string
           commission_amount: number | null
           commission_percentage: number
+          commission_type: string
           created_at: string
           description: string | null
           id: string
@@ -732,6 +733,7 @@ export type Database = {
           apporteur_id: string
           commission_amount?: number | null
           commission_percentage: number
+          commission_type?: string
           created_at?: string
           description?: string | null
           id?: string
@@ -747,6 +749,7 @@ export type Database = {
           apporteur_id?: string
           commission_amount?: number | null
           commission_percentage?: number
+          commission_type?: string
           created_at?: string
           description?: string | null
           id?: string

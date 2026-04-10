@@ -604,6 +604,7 @@ export function OwnerPayoutsSection({
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
                   (needsProof && !proofFile) ||
+                  (isCashPayment && ownerEmail && !otpVerified) ||
                   uploading ||
                   createPayout.isPending
                 }

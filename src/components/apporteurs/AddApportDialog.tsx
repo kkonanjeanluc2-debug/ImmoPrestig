@@ -85,11 +85,12 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
     return properties.find(p => p.id === selectedPropertyId)?.price || 0;
   }, [commissionType, selectedPropertyId, units, properties]);
 
-  // Loyer du locataire sélectionné
+  // Loyer du locataire sélectionné (from active contract)
   const tenantRent = useMemo(() => {
     if (commissionType !== "locataire" || !selectedTenantId) return 0;
     const tenant = tenants.find(t => t.id === selectedTenantId);
-    return tenant?.rent || 0;
+    const activeContract = tenant?.contracts?.find(c => c.status === "active");
+    return activeContract?.rent_amount || 0;
   }, [commissionType, selectedTenantId, tenants]);
 
   const baseAmount = commissionType === "bien" ? rentAmount : tenantRent;

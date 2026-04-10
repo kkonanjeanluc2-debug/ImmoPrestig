@@ -477,22 +477,78 @@ export function OwnerPayoutsSection({
                 <div className="space-y-3 rounded-lg border border-border p-3 bg-muted/30">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Mail className="h-4 w-4 text-primary" />
-                    Confirmation par email
+                    Confirmation par code OTP
                   </div>
                   {ownerEmail ? (
-                    <p className="text-xs text-muted-foreground">
-                      Un email sera envoyé à <strong>{ownerEmail}</strong> après l'enregistrement pour que le propriétaire confirme la réception par signature électronique.
-                    </p>
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        Un code de confirmation sera envoyé à <strong>{ownerEmail}</strong>. Le propriétaire doit vous communiquer ce code pour valider le reversement.
+                      </p>
+                      {!otpSent ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2"
+                          onClick={handleSendOtp}
+                          disabled={otpSending || !form.amount || Number(form.amount) <= 0}
+                        >
+                          {otpSending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Mail className="h-4 w-4" />
+                          )}
+                          Envoyer le code OTP
+                        </Button>
+                      ) : !otpVerified ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Code envoyé à {ownerEmail}
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value)}
+                              placeholder="Entrez le code à 6 chiffres"
+                              maxLength={6}
+                              className="font-mono text-center text-lg tracking-widest"
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleVerifyOtp}
+                              disabled={otpVerifying || otpCode.length !== 6}
+                            >
+                              {otpVerifying ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                "Vérifier"
+                              )}
+                            </Button>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-xs"
+                            onClick={handleSendOtp}
+                            disabled={otpSending}
+                          >
+                            Renvoyer le code
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Code vérifié — Reversement confirmé
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <p className="text-xs text-destructive">
-                      ⚠️ Ce propriétaire n'a pas d'email configuré. Ajoutez un email dans sa fiche pour envoyer une demande de confirmation.
+                      ⚠️ Ce propriétaire n'a pas d'email configuré. Ajoutez un email dans sa fiche pour envoyer un code de confirmation.
                     </p>
-                  )}
-                  {emailSent && (
-                    <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Email de confirmation envoyé
-                    </div>
                   )}
                 </div>
               )}

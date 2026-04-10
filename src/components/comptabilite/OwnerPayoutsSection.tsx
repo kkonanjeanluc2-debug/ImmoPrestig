@@ -225,15 +225,12 @@ export function OwnerPayoutsSection({
         payment_proof_url: proofUrl,
       },
       {
-        onSuccess: async (data) => {
-          // Send signature email if owner has email and it's cash payment
-          if (isCashPayment && ownerEmail && data?.id) {
-            await handleSendSignatureEmail(data.id);
-          }
-          
+        onSuccess: async () => {
           setOpen(false);
           setProofFile(null);
-          setEmailSent(false);
+          setOtpSent(false);
+          setOtpCode("");
+          setOtpVerified(false);
           const now = new Date();
           setForm({
             owner_id: "",

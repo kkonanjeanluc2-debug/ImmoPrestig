@@ -247,38 +247,59 @@ export function OwnerPayoutsSection({
     );
   };
 
-  const handleSendSignatureEmail = async (payoutId?: string) => {
+  const handleSendOtp = async () => {
     if (!ownerEmail || !selectedOwner) {
       toast.error("Ce propriétaire n'a pas d'adresse email configurée");
       return;
     }
 
-    setEmailSending(true);
+    setOtpSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-payout-signature-invite", {
+      const { data, error } = await supabase.functions.invoke("send-payout-otp", {
         body: {
-          payoutId: payoutId || "preview",
           ownerName: selectedOwner.name,
           ownerEmail: ownerEmail,
           amount: Number(form.amount),
           payoutMonth: FRENCH_MONTHS[form.payout_month - 1],
           payoutYear: form.payout_year,
-          paymentMethod: form.payment_method === "especes" ? "Espèces" : form.payment_method,
+          paymentMethod: "Espèces",
           agencyName: agency?.name || "L'agence",
           agencyEmail: agency?.email,
         },
       });
       if (error) throw error;
       if (data?.success) {
-        setEmailSent(true);
-        toast.success("Email de confirmation envoyé au propriétaire");
+        setOtpSent(true);
+        toast.success("Code OTP envoyé par email au propriétaire");
       } else {
         throw new Error(data?.error || "Erreur d'envoi");
       }
     } catch (err: any) {
-      toast.error(err.message || "Erreur lors de l'envoi de l'email");
+      toast.error(err.message || "Erreur lors de l'envoi du code OTP");
     } finally {
-      setEmailSending(false);
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!ownerEmail || !otpCode) return;
+
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-payout-otp", {
+        body: { ownerEmail, otpCode },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setOtpVerified(true);
+        toast.success("Code vérifié avec succès !");
+      } else {
+        toast.error(data?.error || "Code invalide ou expiré");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erreur de vérification");
+    } finally {
+      setOtpVerifying(false);
     }
   };
 

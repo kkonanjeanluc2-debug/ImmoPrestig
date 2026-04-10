@@ -37,7 +37,6 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   const createApport = useCreateApport();
   const { data: properties = [] } = useProperties();
   const [propertyOpen, setPropertyOpen] = useState(false);
-  const [unitOpen, setUnitOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -52,7 +51,6 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   });
 
   const selectedPropertyId = useWatch({ control: form.control, name: "property_id" });
-  const selectedUnitId = useWatch({ control: form.control, name: "unit_id" });
   const commissionPct = useWatch({ control: form.control, name: "commission_percentage" });
 
   const { data: units = [] } = useQuery({
@@ -93,7 +91,6 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   }, [selectedPropertyId, form]);
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId);
-  const selectedUnit = units.find(u => u.id === selectedUnitId);
 
   const onSubmit = async (values: FormValues) => {
     await createApport.mutateAsync({

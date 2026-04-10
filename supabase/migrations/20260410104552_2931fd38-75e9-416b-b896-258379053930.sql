@@ -1,0 +1,1 @@
+UPDATE public.unpaid_cases SET status = 'detected', updated_at = now() WHERE id = '06595841-b7e5-4cd9-97db-5d32a9497a7f';

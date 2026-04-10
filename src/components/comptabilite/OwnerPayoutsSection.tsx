@@ -654,6 +654,7 @@ export function OwnerPayoutsSection({
                         className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20"
                         onClick={() => generatePayoutReceiptPDF({
                           ownerName: payout.owner?.name || "Propriétaire",
+                          ownerEmail: payout.owner?.email,
                           amount: Number(payout.amount),
                           payoutDate: payout.payout_date,
                           payoutMonth: payout.payout_month || 1,

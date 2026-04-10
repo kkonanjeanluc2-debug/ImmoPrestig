@@ -180,8 +180,12 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
                           role="combobox"
                           className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
                         >
-                          {selectedTenant
-                            ? `${selectedTenant.name} — ${selectedTenant.rent?.toLocaleString()} F/mois`
+                        {selectedTenant
+                            ? (() => {
+                                const contract = selectedTenant.contracts?.find(c => c.status === "active");
+                                const rentAmt = contract?.rent_amount || 0;
+                                return `${selectedTenant.name} — ${rentAmt.toLocaleString()} F/mois`;
+                              })()
                             : "Rechercher un locataire..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -205,7 +209,7 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
                                 <Check className={cn("mr-2 h-4 w-4", field.value === t.id ? "opacity-100" : "opacity-0")} />
                                 <div className="flex flex-col">
                                   <span>{t.name}</span>
-                                  <span className="text-xs text-muted-foreground">{t.rent?.toLocaleString()} F/mois</span>
+                                  <span className="text-xs text-muted-foreground">{(t.contracts?.find(c => c.status === "active")?.rent_amount || 0).toLocaleString()} F/mois</span>
                                 </div>
                               </CommandItem>
                             ))}

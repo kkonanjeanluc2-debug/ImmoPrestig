@@ -53,6 +53,7 @@ const pageImports = {
   Comptabilite: () => import("./pages/Comptabilite"),
   Rapports: () => import("./pages/Rapports"),
   ApporteursAffaires: () => import("./pages/ApporteursAffaires"),
+  SignPayout: () => import("./pages/SignPayout"),
 };
 
 const Index = lazy(pageImports.Index);
@@ -89,6 +90,7 @@ const VendorOfferResponse = lazy(pageImports.VendorOfferResponse);
 const Comptabilite = lazy(pageImports.Comptabilite);
 const Rapports = lazy(pageImports.Rapports);
 const ApporteursAffaires = lazy(pageImports.ApporteursAffaires);
+const SignPayout = lazy(pageImports.SignPayout);
 
 // Preload all pages in background after initial render
 function usePreloadPages() {

@@ -1,8 +1,6 @@
 import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { usePayments } from "@/hooks/usePayments";
 import { getTenantCollectedAmountForPeriod } from "@/lib/monthlyPaymentTotals";
 import {
@@ -46,6 +44,8 @@ import {
   Download,
   Upload,
   FileCheck,
+  Mail,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {

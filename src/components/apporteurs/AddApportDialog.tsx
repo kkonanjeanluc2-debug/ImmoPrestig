@@ -295,7 +295,7 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
                 <FormLabel>Description</FormLabel>
-                <FormControl><Textarea rows={2} placeholder="Ex: Locataire apporté pour villa X" {...field} /></FormControl>
+                <FormControl><Textarea rows={2} placeholder={commissionType === "bien" ? "Ex: Bien apporté — Résidence Kouakou" : "Ex: Locataire apporté pour villa X"} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

@@ -96,7 +96,7 @@ export function UnpaidCasesList() {
         grouped.set(p.tenant_id, {
           tenantName: tenant?.name || "Locataire inconnu",
           propertyTitle: tenant?.property?.title || "Bien non assigné",
-          totalAmount: Number(p.amount),
+          totalAmount: Number(p.amount) - Number(p.paid_amount || 0),
           maxDaysLate: daysLate,
           earliestDueDate: p.due_date,
           tenantId: p.tenant_id,

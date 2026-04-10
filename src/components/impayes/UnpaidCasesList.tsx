@@ -88,7 +88,7 @@ export function UnpaidCasesList() {
       const daysLate = Math.max(0, differenceInDays(new Date(), new Date(p.due_date)));
       const existing = grouped.get(p.tenant_id);
       if (existing) {
-        existing.totalAmount += Number(p.amount);
+        existing.totalAmount += Number(p.amount) - Number(p.paid_amount || 0);
         existing.maxDaysLate = Math.max(existing.maxDaysLate, daysLate);
         if (p.due_date < existing.earliestDueDate) existing.earliestDueDate = p.due_date;
         existing.payments.push({ id: p.id, amount: Number(p.amount), dueDate: p.due_date });
@@ -96,7 +96,7 @@ export function UnpaidCasesList() {
         grouped.set(p.tenant_id, {
           tenantName: tenant?.name || "Locataire inconnu",
           propertyTitle: tenant?.property?.title || "Bien non assigné",
-          totalAmount: Number(p.amount),
+          totalAmount: Number(p.amount) - Number(p.paid_amount || 0),
           maxDaysLate: daysLate,
           earliestDueDate: p.due_date,
           tenantId: p.tenant_id,

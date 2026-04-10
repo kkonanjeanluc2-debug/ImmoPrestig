@@ -3669,6 +3669,71 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_signatures: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          payout_id: string
+          signature_data: string | null
+          signature_text: string | null
+          signature_token: string | null
+          signature_type: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          payout_id: string
+          signature_data?: string | null
+          signature_text?: string | null
+          signature_token?: string | null
+          signature_type?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          payout_id?: string
+          signature_data?: string | null
+          signature_text?: string | null
+          signature_token?: string | null
+          signature_type?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_signatures_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "owner_payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payouts: {
         Row: {
           agency_id: string | null

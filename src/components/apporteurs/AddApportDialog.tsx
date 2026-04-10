@@ -37,7 +37,6 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   const createApport = useCreateApport();
   const { data: properties = [] } = useProperties();
   const [propertyOpen, setPropertyOpen] = useState(false);
-  const [unitOpen, setUnitOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -52,7 +51,6 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   });
 
   const selectedPropertyId = useWatch({ control: form.control, name: "property_id" });
-  const selectedUnitId = useWatch({ control: form.control, name: "unit_id" });
   const commissionPct = useWatch({ control: form.control, name: "commission_percentage" });
 
   const { data: units = [] } = useQuery({
@@ -70,15 +68,16 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
     enabled: !!selectedPropertyId,
   });
 
+  // Rendement mensuel total du bien (somme de toutes les unités ou loyer du bien)
   const rentAmount = useMemo(() => {
-    if (selectedUnitId && units.length) {
-      return units.find(u => u.id === selectedUnitId)?.rent_amount || 0;
+    if (!selectedPropertyId) return 0;
+    if (units.length > 0) {
+      // Immeuble / maison à portes multiples : somme de tous les loyers
+      return units.reduce((sum, u) => sum + (u.rent_amount || 0), 0);
     }
-    if (selectedPropertyId && !units.length) {
-      return properties.find(p => p.id === selectedPropertyId)?.price || 0;
-    }
-    return 0;
-  }, [selectedPropertyId, selectedUnitId, units, properties]);
+    // Bien unique : prix/loyer du bien
+    return properties.find(p => p.id === selectedPropertyId)?.price || 0;
+  }, [selectedPropertyId, units, properties]);
 
   useEffect(() => {
     if (rentAmount > 0 && commissionPct > 0) {
@@ -86,12 +85,12 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
     }
   }, [rentAmount, commissionPct, form]);
 
+  // Reset unit when property changes (kept for data model)
   useEffect(() => {
     form.setValue("unit_id", "");
   }, [selectedPropertyId, form]);
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId);
-  const selectedUnit = units.find(u => u.id === selectedUnitId);
 
   const onSubmit = async (values: FormValues) => {
     await createApport.mutateAsync({
@@ -172,59 +171,17 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
               </FormItem>
             )} />
 
-            {/* Searchable unit selector */}
-            {selectedPropertyId && units.length > 0 && (
-              <FormField control={form.control} name="unit_id" render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Unité / Appartement</FormLabel>
-                  <Popover open={unitOpen} onOpenChange={setUnitOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
-                        >
-                          {selectedUnit
-                            ? `${selectedUnit.unit_number} — ${selectedUnit.rent_amount?.toLocaleString()} F/mois`
-                            : "Rechercher une unité..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto" align="start">
-                      <Command>
-                        <CommandInput placeholder="Rechercher une unité..." />
-                        <CommandList>
-                          <CommandEmpty>Aucune unité trouvée</CommandEmpty>
-                          <CommandGroup>
-                            {units.map(u => (
-                              <CommandItem
-                                key={u.id}
-                                value={u.unit_number}
-                                onSelect={() => {
-                                  field.onChange(u.id);
-                                  setUnitOpen(false);
-                                }}
-                              >
-                                <Check className={cn("mr-2 h-4 w-4", field.value === u.id ? "opacity-100" : "opacity-0")} />
-                                {u.unit_number} — {u.rent_amount?.toLocaleString()} F/mois
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )} />
-            )}
-
             {rentAmount > 0 && (
-              <div className="bg-muted/50 p-3 rounded-lg text-sm">
-                <span className="text-muted-foreground">Loyer mensuel :</span>{" "}
-                <span className="font-semibold">{rentAmount.toLocaleString()} FCFA</span>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+                <div>
+                  <span className="text-muted-foreground">Rendement mensuel du bien :</span>{" "}
+                  <span className="font-semibold">{rentAmount.toLocaleString()} FCFA</span>
+                </div>
+                {units.length > 1 && (
+                  <div className="text-xs text-muted-foreground">
+                    ({units.length} unités — somme des loyers)
+                  </div>
+                )}
               </div>
             )}
 

@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { usePayments } from "@/hooks/usePayments";
 import { getTenantCollectedAmountForPeriod } from "@/lib/monthlyPaymentTotals";
 import {

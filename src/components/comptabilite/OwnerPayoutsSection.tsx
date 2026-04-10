@@ -97,8 +97,11 @@ export function OwnerPayoutsSection({
   const [open, setOpen] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const now = new Date();
   const [form, setForm] = useState({
@@ -222,15 +225,12 @@ export function OwnerPayoutsSection({
         payment_proof_url: proofUrl,
       },
       {
-        onSuccess: async (data) => {
-          // Send signature email if owner has email and it's cash payment
-          if (isCashPayment && ownerEmail && data?.id) {
-            await handleSendSignatureEmail(data.id);
-          }
-          
+        onSuccess: async () => {
           setOpen(false);
           setProofFile(null);
-          setEmailSent(false);
+          setOtpSent(false);
+          setOtpCode("");
+          setOtpVerified(false);
           const now = new Date();
           setForm({
             owner_id: "",
@@ -247,38 +247,59 @@ export function OwnerPayoutsSection({
     );
   };
 
-  const handleSendSignatureEmail = async (payoutId?: string) => {
+  const handleSendOtp = async () => {
     if (!ownerEmail || !selectedOwner) {
       toast.error("Ce propriétaire n'a pas d'adresse email configurée");
       return;
     }
 
-    setEmailSending(true);
+    setOtpSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-payout-signature-invite", {
+      const { data, error } = await supabase.functions.invoke("send-payout-otp", {
         body: {
-          payoutId: payoutId || "preview",
           ownerName: selectedOwner.name,
           ownerEmail: ownerEmail,
           amount: Number(form.amount),
           payoutMonth: FRENCH_MONTHS[form.payout_month - 1],
           payoutYear: form.payout_year,
-          paymentMethod: form.payment_method === "especes" ? "Espèces" : form.payment_method,
+          paymentMethod: "Espèces",
           agencyName: agency?.name || "L'agence",
           agencyEmail: agency?.email,
         },
       });
       if (error) throw error;
       if (data?.success) {
-        setEmailSent(true);
-        toast.success("Email de confirmation envoyé au propriétaire");
+        setOtpSent(true);
+        toast.success("Code OTP envoyé par email au propriétaire");
       } else {
         throw new Error(data?.error || "Erreur d'envoi");
       }
     } catch (err: any) {
-      toast.error(err.message || "Erreur lors de l'envoi de l'email");
+      toast.error(err.message || "Erreur lors de l'envoi du code OTP");
     } finally {
-      setEmailSending(false);
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!ownerEmail || !otpCode) return;
+
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-payout-otp", {
+        body: { ownerEmail, otpCode },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setOtpVerified(true);
+        toast.success("Code vérifié avec succès !");
+      } else {
+        toast.error(data?.error || "Code invalide ou expiré");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erreur de vérification");
+    } finally {
+      setOtpVerifying(false);
     }
   };
 
@@ -421,7 +442,9 @@ export function OwnerPayoutsSection({
                   onValueChange={(v) => {
                     setForm({ ...form, payment_method: v });
                     if (v === "especes") setProofFile(null);
-                    setEmailSent(false);
+                    setOtpSent(false);
+                    setOtpCode("");
+                    setOtpVerified(false);
                   }}
                 >
                   <SelectTrigger>
@@ -454,22 +477,78 @@ export function OwnerPayoutsSection({
                 <div className="space-y-3 rounded-lg border border-border p-3 bg-muted/30">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Mail className="h-4 w-4 text-primary" />
-                    Confirmation par email
+                    Confirmation par code OTP
                   </div>
                   {ownerEmail ? (
-                    <p className="text-xs text-muted-foreground">
-                      Un email sera envoyé à <strong>{ownerEmail}</strong> après l'enregistrement pour que le propriétaire confirme la réception par signature électronique.
-                    </p>
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        Un code de confirmation sera envoyé à <strong>{ownerEmail}</strong>. Le propriétaire doit vous communiquer ce code pour valider le reversement.
+                      </p>
+                      {!otpSent ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2"
+                          onClick={handleSendOtp}
+                          disabled={otpSending || !form.amount || Number(form.amount) <= 0}
+                        >
+                          {otpSending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Mail className="h-4 w-4" />
+                          )}
+                          Envoyer le code OTP
+                        </Button>
+                      ) : !otpVerified ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Code envoyé à {ownerEmail}
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value)}
+                              placeholder="Entrez le code à 6 chiffres"
+                              maxLength={6}
+                              className="font-mono text-center text-lg tracking-widest"
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleVerifyOtp}
+                              disabled={otpVerifying || otpCode.length !== 6}
+                            >
+                              {otpVerifying ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                "Vérifier"
+                              )}
+                            </Button>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-xs"
+                            onClick={handleSendOtp}
+                            disabled={otpSending}
+                          >
+                            Renvoyer le code
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Code vérifié — Reversement confirmé
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <p className="text-xs text-destructive">
-                      ⚠️ Ce propriétaire n'a pas d'email configuré. Ajoutez un email dans sa fiche pour envoyer une demande de confirmation.
+                      ⚠️ Ce propriétaire n'a pas d'email configuré. Ajoutez un email dans sa fiche pour envoyer un code de confirmation.
                     </p>
-                  )}
-                  {emailSent && (
-                    <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Email de confirmation envoyé
-                    </div>
                   )}
                 </div>
               )}
@@ -525,6 +604,7 @@ export function OwnerPayoutsSection({
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
                   (needsProof && !proofFile) ||
+                  (isCashPayment && ownerEmail && !otpVerified) ||
                   uploading ||
                   createPayout.isPending
                 }

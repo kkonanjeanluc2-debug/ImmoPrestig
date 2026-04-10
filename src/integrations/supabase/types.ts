@@ -3639,6 +3639,45 @@ export type Database = {
           },
         ]
       }
+      payout_otp_codes: {
+        Row: {
+          amount: number | null
+          created_at: string
+          expires_at: string
+          id: string
+          otp_code: string
+          owner_email: string
+          payout_month: string | null
+          payout_year: number | null
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          otp_code: string
+          owner_email: string
+          payout_month?: string | null
+          payout_year?: number | null
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          owner_email?: string
+          payout_month?: string | null
+          payout_year?: number | null
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       payout_otps: {
         Row: {
           created_at: string

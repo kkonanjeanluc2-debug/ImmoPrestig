@@ -191,6 +191,7 @@ const App = () => {
                   <Route path="/sign-contract" element={<SignContract />} />
                   <Route path="/sign-vente" element={<SignVente />} />
                   <Route path="/sign-achat" element={<SignAchat />} />
+                  <Route path="/sign-payout" element={<SignPayout />} />
                   <Route path="/offre-vendeur/:token" element={<VendorOfferResponse />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

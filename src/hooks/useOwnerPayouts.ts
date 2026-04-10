@@ -18,7 +18,7 @@ export interface OwnerPayout {
   status: string;
   created_at: string;
   updated_at: string;
-  owner?: { name: string } | null;
+  owner?: { name: string; email?: string | null } | null;
 }
 
 export function useOwnerPayouts(fromDate?: string, toDate?: string) {

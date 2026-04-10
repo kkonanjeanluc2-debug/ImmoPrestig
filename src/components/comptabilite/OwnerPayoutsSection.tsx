@@ -36,8 +36,6 @@ import {
   ArrowDownToLine,
   Plus,
   Trash2,
-  Send,
-  ShieldCheck,
   User,
   Calendar,
   CreditCard,
@@ -75,6 +73,11 @@ interface OwnerPayoutsSectionProps {
   canCreate?: boolean;
 }
 
+const FRENCH_MONTHS = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+];
+
 export function OwnerPayoutsSection({
   fromDate,
   toDate,
@@ -97,7 +100,6 @@ export function OwnerPayoutsSection({
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const now = new Date();
   const [form, setForm] = useState({
     owner_id: "",
@@ -109,11 +111,6 @@ export function OwnerPayoutsSection({
     payout_month: now.getMonth() + 1,
     payout_year: now.getFullYear(),
   });
-
-  const FRENCH_MONTHS = [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
-  ];
 
   // Check if a payout already exists for this owner/month/year
   const isDuplicate = payouts.some(
@@ -128,7 +125,6 @@ export function OwnerPayoutsSection({
     const owner = owners.find((o) => o.id === ownerId) as OwnerWithManagementType | undefined;
     if (!owner) return "";
 
-    // Period = first and last day of the selected month
     const periodStart = `${year}-${String(month).padStart(2, "0")}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const periodEnd = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
@@ -183,60 +179,14 @@ export function OwnerPayoutsSection({
 
   const isCashPayment = form.payment_method === "especes";
   const needsProof = !isCashPayment;
-  const needsOtp = isCashPayment;
 
-  const handleSendOtp = async () => {
-    if (!form.recipient_phone) {
-      toast.error("Veuillez saisir le numéro de téléphone du destinataire");
-      return;
-    }
-    setOtpSending(true);
-    setOtpError("");
-    try {
-      const { data, error } = await supabase.functions.invoke("send-payout-otp", {
-        body: { phoneNumber: form.recipient_phone },
-      });
-      if (error) throw error;
-      if (data?.success) {
-        setOtpSent(true);
-        toast.success("Code envoyé par WhatsApp au destinataire");
-      } else {
-        throw new Error(data?.error || "Erreur d'envoi");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Erreur lors de l'envoi du code");
-    } finally {
-      setOtpSending(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (otpCode.length !== 6) return;
-    setOtpVerifying(true);
-    setOtpError("");
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-payout-otp", {
-        body: { otpCode },
-      });
-      if (error) throw error;
-      if (data?.success) {
-        setOtpVerified(true);
-        setOtpError("");
-        toast.success("Code vérifié avec succès");
-      } else {
-        setOtpError(data?.error || "Code invalide");
-      }
-    } catch (err: any) {
-      setOtpError(err.message || "Erreur de vérification");
-    } finally {
-      setOtpVerifying(false);
-    }
-  };
+  // Get selected owner's email
+  const selectedOwner = owners.find((o) => o.id === form.owner_id);
+  const ownerEmail = selectedOwner?.email;
 
   const handleSubmit = async () => {
     if (!form.owner_id || !form.amount || Number(form.amount) <= 0) return;
     if (needsProof && !proofFile) return;
-    if (needsOtp && !otpVerified) return;
 
     setUploading(true);
     let proofUrl: string | undefined;
@@ -272,13 +222,15 @@ export function OwnerPayoutsSection({
         payment_proof_url: proofUrl,
       },
       {
-        onSuccess: () => {
+        onSuccess: async (data) => {
+          // Send signature email if owner has email and it's cash payment
+          if (isCashPayment && ownerEmail && data?.id) {
+            await handleSendSignatureEmail(data.id);
+          }
+          
           setOpen(false);
           setProofFile(null);
-          setOtpSent(false);
-          setOtpCode("");
-          setOtpVerified(false);
-          setOtpError("");
+          setEmailSent(false);
           const now = new Date();
           setForm({
             owner_id: "",
@@ -293,6 +245,41 @@ export function OwnerPayoutsSection({
         },
       }
     );
+  };
+
+  const handleSendSignatureEmail = async (payoutId?: string) => {
+    if (!ownerEmail || !selectedOwner) {
+      toast.error("Ce propriétaire n'a pas d'adresse email configurée");
+      return;
+    }
+
+    setEmailSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-payout-signature-invite", {
+        body: {
+          payoutId: payoutId || "preview",
+          ownerName: selectedOwner.name,
+          ownerEmail: ownerEmail,
+          amount: Number(form.amount),
+          payoutMonth: FRENCH_MONTHS[form.payout_month - 1],
+          payoutYear: form.payout_year,
+          paymentMethod: form.payment_method === "especes" ? "Espèces" : form.payment_method,
+          agencyName: agency?.name || "L'agence",
+          agencyEmail: agency?.email,
+        },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setEmailSent(true);
+        toast.success("Email de confirmation envoyé au propriétaire");
+      } else {
+        throw new Error(data?.error || "Erreur d'envoi");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'envoi de l'email");
+    } finally {
+      setEmailSending(false);
+    }
   };
 
   const getOperatorLabel = (value: string): string => {
@@ -434,11 +421,7 @@ export function OwnerPayoutsSection({
                   onValueChange={(v) => {
                     setForm({ ...form, payment_method: v });
                     if (v === "especes") setProofFile(null);
-                    // Reset OTP state when method changes
-                    setOtpSent(false);
-                    setOtpCode("");
-                    setOtpVerified(false);
-                    setOtpError("");
+                    setEmailSent(false);
                   }}
                 >
                   <SelectTrigger>
@@ -458,103 +441,39 @@ export function OwnerPayoutsSection({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Téléphone destinataire {needsOtp ? "*" : ""}</Label>
+                <Label>Téléphone destinataire</Label>
                 <Input
                   value={form.recipient_phone}
-                  onChange={(e) => {
-                    setForm({ ...form, recipient_phone: e.target.value });
-                    // Reset OTP state when phone changes
-                    if (otpSent) {
-                      setOtpSent(false);
-                      setOtpCode("");
-                      setOtpVerified(false);
-                      setOtpError("");
-                    }
-                  }}
+                  onChange={(e) => setForm({ ...form, recipient_phone: e.target.value })}
                   placeholder="Ex: +225 07 00 00 00 00"
                 />
               </div>
-              {needsOtp && (
+
+              {/* Email signature section for cash payments */}
+              {isCashPayment && (
                 <div className="space-y-3 rounded-lg border border-border p-3 bg-muted/30">
                   <div className="flex items-center gap-2 text-sm font-medium">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    Vérification par WhatsApp
+                    <Mail className="h-4 w-4 text-primary" />
+                    Confirmation par email
                   </div>
-                  {!otpSent ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={handleSendOtp}
-                      disabled={!form.recipient_phone || otpSending}
-                    >
-                      {otpSending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                      Envoyer le code de confirmation
-                    </Button>
-                  ) : otpVerified ? (
-                    <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
-                      <ShieldCheck className="h-4 w-4" />
-                      Code vérifié avec succès
-                    </div>
+                  {ownerEmail ? (
+                    <p className="text-xs text-muted-foreground">
+                      Un email sera envoyé à <strong>{ownerEmail}</strong> après l'enregistrement pour que le propriétaire confirme la réception par signature électronique.
+                    </p>
                   ) : (
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">
-                        Entrez le code à 6 chiffres envoyé au {form.recipient_phone}
-                      </p>
-                      <div className="flex justify-center">
-                        <InputOTP
-                          maxLength={6}
-                          value={otpCode}
-                          onChange={(value) => {
-                            setOtpCode(value);
-                            setOtpError("");
-                          }}
-                        >
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
-                      </div>
-                      {otpError && (
-                        <p className="text-xs text-destructive text-center">{otpError}</p>
-                      )}
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={handleSendOtp}
-                          disabled={otpSending}
-                        >
-                          {otpSending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Renvoyer"}
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="flex-1"
-                          onClick={handleVerifyOtp}
-                          disabled={otpCode.length !== 6 || otpVerifying}
-                        >
-                          {otpVerifying ? (
-                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                          ) : null}
-                          Vérifier
-                        </Button>
-                      </div>
+                    <p className="text-xs text-destructive">
+                      ⚠️ Ce propriétaire n'a pas d'email configuré. Ajoutez un email dans sa fiche pour envoyer une demande de confirmation.
+                    </p>
+                  )}
+                  {emailSent && (
+                    <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Email de confirmation envoyé
                     </div>
                   )}
                 </div>
               )}
+
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Textarea
@@ -606,8 +525,6 @@ export function OwnerPayoutsSection({
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
                   (needsProof && !proofFile) ||
-                  (needsOtp && !otpVerified) ||
-                  (needsOtp && !form.recipient_phone) ||
                   uploading ||
                   createPayout.isPending
                 }

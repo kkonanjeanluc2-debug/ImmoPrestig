@@ -30,16 +30,22 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+
+const HIDDEN_PLANS_FOR_SALE_FIELDS = ["Starter", "Prestige Max"];
 
 export function AgencySettings() {
   const { user } = useAuth();
   const { data: agency, isLoading } = useAgency();
+  const { planName } = useFeatureAccess();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: onlineRentConfigSetting } = usePlatformSetting("online_rent_config_enabled");
   const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
   const isOnlineRentConfigEnabled = onlineRentConfigSetting?.value !== "false";
   const isKkiapayGloballyEnabled = kkiapayGlobalSetting?.value !== "false";
+
+  const shouldShowSaleFields = !HIDDEN_PLANS_FOR_SALE_FIELDS.includes(planName);
 
   const [formData, setFormData] = useState({
     account_type: "agence" as AccountType,
@@ -472,27 +478,29 @@ export function AgencySettings() {
           </div>
         )}
 
-        {/* Reservation Deposit Percentage */}
-        <div className="space-y-2">
-          <Label htmlFor="reservation-deposit">Acompte de réservation (lotissements)</Label>
-          <p className="text-xs text-muted-foreground">
-            Pourcentage du prix requis pour réserver une parcelle
-          </p>
-          <div className="relative">
-            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="reservation-deposit"
-              type="number"
-              min="5"
-              max="100"
-              step="5"
-              value={formData.reservation_deposit_percentage}
-              onChange={(e) => handleChange("reservation_deposit_percentage", e.target.value)}
-              placeholder="30"
-              className="pl-10"
-            />
+        {/* Reservation Deposit Percentage - Hidden for Starter and Prestige Max */}
+        {shouldShowSaleFields && (
+          <div className="space-y-2">
+            <Label htmlFor="reservation-deposit">Acompte de réservation (lotissements)</Label>
+            <p className="text-xs text-muted-foreground">
+              Pourcentage du prix requis pour réserver une parcelle
+            </p>
+            <div className="relative">
+              <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="reservation-deposit"
+                type="number"
+                min="5"
+                max="100"
+                step="5"
+                value={formData.reservation_deposit_percentage}
+                onChange={(e) => handleChange("reservation_deposit_percentage", e.target.value)}
+                placeholder="30"
+                className="pl-10"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Rent Due Day */}
         <div className="space-y-2">
@@ -516,27 +524,29 @@ export function AgencySettings() {
           </div>
         </div>
 
-        {/* Sale Commission Percentage */}
-        <div className="space-y-2">
-          <Label htmlFor="sale-commission">Commission sur ventes immobilières (%)</Label>
-          <div className="relative">
-            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="sale-commission"
-              type="number"
-              min="1"
-              max="10"
-              step="0.5"
-              value={formData.sale_commission_percentage}
-              onChange={(e) => handleChange("sale_commission_percentage", e.target.value)}
-              placeholder="5"
-              className="pl-10"
-            />
+        {/* Sale Commission Percentage - Hidden for Starter and Prestige Max */}
+        {shouldShowSaleFields && (
+          <div className="space-y-2">
+            <Label htmlFor="sale-commission">Commission sur ventes immobilières (%)</Label>
+            <div className="relative">
+              <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="sale-commission"
+                type="number"
+                min="1"
+                max="10"
+                step="0.5"
+                value={formData.sale_commission_percentage}
+                onChange={(e) => handleChange("sale_commission_percentage", e.target.value)}
+                placeholder="5"
+                className="pl-10"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Commission réglementée : 3% à 5% du prix de vente
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Commission réglementée : 3% à 5% du prix de vente
-          </p>
-        </div>
+        )}
 
         {/* Online Rent Payment Settings */}
         {isOnlineRentConfigEnabled && (

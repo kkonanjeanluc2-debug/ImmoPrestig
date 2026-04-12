@@ -34,7 +34,7 @@ export interface AgencySubscription {
   agency_id: string;
   plan_id: string;
   billing_cycle: string;
-  status: "active" | "cancelled" | "expired" | "trial";
+  status: "active" | "cancelled" | "expired" | "trial" | "pending_payment";
   starts_at: string;
   ends_at: string | null;
   trial_ends_at: string | null;

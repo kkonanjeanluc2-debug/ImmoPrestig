@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/hooks/useAgency";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { useAgencySubscription } from "@/hooks/useAgencySubscription";
-import { Loader2, Ban, AlertTriangle, Crown } from "lucide-react";
+import { Loader2, Ban, AlertTriangle, Crown, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo } from "react";

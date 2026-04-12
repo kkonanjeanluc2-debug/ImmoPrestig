@@ -107,6 +107,49 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  // Block access when subscription is pending payment
+  if (subscription?.status === "pending_payment" && !isTenant) {
+    // Allow admin to access settings page for payment
+    if (isAdmin && (location.pathname === "/settings" || location.pathname.startsWith("/settings"))) {
+      return <>{children}</>;
+    }
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-lg w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <CreditCard className="h-8 w-8 text-primary" />
+            </div>
+             <CardTitle>Paiement requis</CardTitle>
+             <CardDescription className="text-base mt-2">
+               {isAdmin
+                 ? "Veuillez souscrire à un forfait et effectuer le paiement pour accéder à l'application."
+                 : "L'abonnement de votre agence n'a pas encore été activé. Veuillez contacter votre administrateur pour finaliser le paiement."}
+             </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-3">
+            {isAdmin && (
+              <Button 
+                onClick={() => navigate(`/settings?tab=subscription&upgrade_plan=${encodeURIComponent(subscription?.plan_id || "")}`)}
+                className="gap-2"
+              >
+                <CreditCard className="h-4 w-4" />
+                Choisir un forfait et payer
+              </Button>
+            )}
+            <Button 
+              variant="outline" 
+              onClick={() => signOut()}
+            >
+              Se déconnecter
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Block access when subscription is expired
   if (isSubscriptionExpired && !isTenant) {
     // Allow admin to access settings page for renewal

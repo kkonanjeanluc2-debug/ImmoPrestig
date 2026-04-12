@@ -142,7 +142,9 @@ export function SubscriptionSettings() {
                   <div>
                     <h3 className="font-semibold text-lg">{subscription.plan.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {subscription.status === "trial" 
+                      {subscription.status === "pending_payment"
+                        ? "En attente de paiement — Veuillez choisir un forfait ci-dessous"
+                        : subscription.status === "trial" 
                         ? (() => {
                             const trialDays = subscription.trial_ends_at 
                               ? differenceInDays(parseISO(subscription.trial_ends_at), new Date())

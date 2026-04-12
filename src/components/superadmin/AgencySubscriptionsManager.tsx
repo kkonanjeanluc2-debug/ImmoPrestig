@@ -48,7 +48,6 @@ const formatPrice = (price: number) => {
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   active: { label: "Actif", variant: "default" },
   trial: { label: "Essai", variant: "outline" },
-  pending_payment: { label: "En attente", variant: "secondary" },
   cancelled: { label: "Annulé", variant: "secondary" },
   expired: { label: "Expiré", variant: "destructive" },
 };

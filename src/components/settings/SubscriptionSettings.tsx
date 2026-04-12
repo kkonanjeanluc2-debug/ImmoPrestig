@@ -44,7 +44,6 @@ const paymentMethodLabels: Record<string, string> = {
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
   active: { label: "Actif", variant: "default", icon: <CheckCircle2 className="h-3 w-3" /> },
   trial: { label: "Essai", variant: "secondary", icon: <Clock className="h-3 w-3" /> },
-  pending_payment: { label: "En attente de paiement", variant: "outline", icon: <Clock className="h-3 w-3" /> },
   expired: { label: "Expiré", variant: "destructive", icon: <XCircle className="h-3 w-3" /> },
   cancelled: { label: "Annulé", variant: "destructive", icon: <XCircle className="h-3 w-3" /> },
 };
@@ -142,9 +141,7 @@ export function SubscriptionSettings() {
                   <div>
                     <h3 className="font-semibold text-lg">{subscription.plan.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {subscription.status === "pending_payment"
-                        ? "En attente de paiement — Veuillez choisir un forfait ci-dessous"
-                        : subscription.status === "trial" 
+                      {subscription.status === "trial" 
                         ? (() => {
                             const trialDays = subscription.trial_ends_at 
                               ? differenceInDays(parseISO(subscription.trial_ends_at), new Date())

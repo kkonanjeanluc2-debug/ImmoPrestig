@@ -539,62 +539,11 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
             <Separator />
 
-            {/* Logo du village - only for attribution */}
-            {!isCession && (
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold">Logo du village</Label>
-              <p className="text-xs text-muted-foreground">
-                Importez le logo/image du village qui apparaîtra en haut à gauche de l'attestation d'attribution.
-              </p>
-              {form.village_logo_url ? (
-                <div className="flex items-center gap-4">
-                  <img
-                    src={form.village_logo_url}
-                    alt="Logo du village"
-                    className="w-20 h-20 object-contain border rounded-lg"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateField('village_logo_url', null)}
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Supprimer
-                  </Button>
-                </div>
-              ) : (
-                <div>
-                  <input
-                    ref={logoInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => logoInputRef.current?.click()}
-                    disabled={uploadingLogo}
-                  >
-                    {uploadingLogo ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Upload className="h-4 w-4 mr-2" />
-                    )}
-                    Importer le logo du village
-                  </Button>
-                </div>
-              )}
-            </div>
-            )}
-
-            {/* Logos gauche et droit - only for cession */}
-            {isCession && (
+            {/* Logos gauche et droit - for both attribution and cession */}
             <div className="space-y-4">
               <Label className="text-sm font-semibold">Logos de l'en-tête</Label>
               <p className="text-xs text-muted-foreground">
-                Importez les logos qui apparaîtront en haut à gauche et à droite de l'attestation de cession (ex: logo du district, logo du géomètre).
+                Importez les logos qui apparaîtront en haut à gauche et à droite de l'attestation (ex: logo du village, logo du district).
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Logo gauche */}
@@ -687,7 +636,6 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 </div>
               </div>
             </div>
-            )}
 
             <Separator />
 

@@ -1632,16 +1632,30 @@ export const generateAttestationVillageoise = async (
     const rightLogoX = pageWidth - headerLogoInsetX - logoSize;
     let hasVillageLogos = false;
     const villageLogoUrl = template?.village_logo_url;
-    if (villageLogoUrl) {
-      try {
-        const logoBase64 = await loadImageAsBase64(villageLogoUrl);
-        if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', leftLogoX, logoStartY, logoSize, logoSize);
-          doc.addImage(logoBase64, 'PNG', rightLogoX, logoStartY, logoSize, logoSize);
-          headerLeftX = leftLogoX + logoSize + 4;
-          hasVillageLogos = true;
-        }
-      } catch {}
+    const rightLogoUrl = template?.right_logo_url;
+    if (villageLogoUrl || rightLogoUrl) {
+      // Left logo
+      if (villageLogoUrl) {
+        try {
+          const logoBase64 = await loadImageAsBase64(villageLogoUrl);
+          if (logoBase64) {
+            doc.addImage(logoBase64, 'PNG', leftLogoX, logoStartY, logoSize, logoSize);
+            headerLeftX = leftLogoX + logoSize + 4;
+            hasVillageLogos = true;
+          }
+        } catch {}
+      }
+      // Right logo (use right_logo_url if set, otherwise duplicate left logo)
+      const actualRightLogoUrl = rightLogoUrl || villageLogoUrl;
+      if (actualRightLogoUrl) {
+        try {
+          const rLogoBase64 = await loadImageAsBase64(actualRightLogoUrl);
+          if (rLogoBase64) {
+            doc.addImage(rLogoBase64, 'PNG', rightLogoX, logoStartY, logoSize, logoSize);
+            hasVillageLogos = true;
+          }
+        } catch {}
+      }
     }
 
     doc.setFontSize(9);

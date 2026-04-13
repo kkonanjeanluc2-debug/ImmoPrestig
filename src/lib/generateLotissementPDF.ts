@@ -1388,7 +1388,7 @@ export const generateAttestationVillageoise = async (
   };
 
   drawDocumentBackground();
-  drawPageBorder();
+  drawPageBorderFn();
 
   // Draw watermark
   const drawWatermark = async (bodyTopY: number, bodyBottomY: number) => {

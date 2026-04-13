@@ -1050,6 +1050,9 @@ export interface AttestationTemplateData {
   watermark_angle?: string;
   watermark_opacity?: number;
   watermark_repeat?: boolean;
+  page_border_enabled?: boolean;
+  page_border_color?: string;
+  page_border_style?: string;
 }
 
 export interface AttestationChefImages {

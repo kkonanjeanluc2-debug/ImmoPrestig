@@ -63,6 +63,7 @@ import { useTenantsActiveRequestsMap, TenantActiveRequest } from "@/hooks/useTen
 import { MessageSquare } from "lucide-react";
 
 import { useAssignableUsers, useIsAgencyOwner } from "@/hooks/useAssignableUsers";
+import { useAgency } from "@/hooks/useAgency";
 
 const contractStatusConfig = {
   active: { label: "Actif", className: "bg-emerald/10 text-emerald border-emerald/20" },
@@ -72,7 +73,7 @@ const contractStatusConfig = {
 };
 
 
-function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean) {
+function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean, rentDueDayParam?: number) {
   // If tenant has been expelled
   if (isExpelled) {
     return { label: "Expulsé", className: "bg-muted text-muted-foreground border-muted-foreground/30" };
@@ -96,7 +97,7 @@ function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean) 
   // A month is considered late if: it's past the due date, contract was active, and no payment exists
   const now = new Date();
   const contractStart = new Date(activeContract.start_date);
-  const rentDueDay = 5; // Default due day
+  const rentDueDay = rentDueDayParam || 5;
   
   let unpaidMonths = 0;
   const checkStart = new Date(contractStart.getFullYear(), contractStart.getMonth(), 1);
@@ -170,7 +171,7 @@ function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean) 
     if (totalLate >= 3) {
       return { label: "Retard fréquent", className: "bg-orange-500/10 text-orange-600 border-orange-500/30" };
     }
-    return { label: `Retard ${maxLateDays}j+`, className: "bg-destructive/10 text-destructive border-destructive/30" };
+    return { label: `Retard ${maxLateDays}j`, className: "bg-destructive/10 text-destructive border-destructive/30" };
   }
   
   // Check if current month is paid

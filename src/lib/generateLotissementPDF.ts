@@ -1270,7 +1270,7 @@ export const generateAttestationVillageoise = async (
   };
 
   // Draw decorative page border
-  const drawPageBorder = () => {
+  drawPageBorderFn = () => {
     if (!template?.page_border_enabled) return;
     const borderColor = template.page_border_color || '#8B4513';
     const borderStyle = template.page_border_style || 'geometric';

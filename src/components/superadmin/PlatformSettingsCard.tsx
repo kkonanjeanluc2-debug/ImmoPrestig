@@ -254,7 +254,27 @@ export function PlatformSettingsCard() {
               </div>
               <Switch id="maileroo-email" checked={mailerooEmailEnabled}
                 onCheckedChange={(v) => { setMailerooEmailEnabled(v); setChanged(); }} />
+          </div>
+
+          {/* Video Demo Links */}
+          <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+            <Label className="flex items-center gap-2 text-base font-semibold">
+              <Video className="h-5 w-5 text-primary" />
+              Vidéos de démonstration
+            </Label>
+            <div className="space-y-2">
+              <Label htmlFor="youtube-demo">Lien YouTube</Label>
+              <Input id="youtube-demo" type="url" placeholder="https://www.youtube.com/embed/..."
+                value={youtubeDemoUrl} onChange={(e) => { setYoutubeDemoUrl(e.target.value); setChanged(); }} />
+              <p className="text-xs text-muted-foreground">Lien d'intégration YouTube (format embed recommandé)</p>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="tiktok-demo">Lien TikTok</Label>
+              <Input id="tiktok-demo" type="url" placeholder="https://www.tiktok.com/embed/..."
+                value={tiktokDemoUrl} onChange={(e) => { setTiktokDemoUrl(e.target.value); setChanged(); }} />
+              <p className="text-xs text-muted-foreground">Lien d'intégration TikTok (format embed recommandé)</p>
+            </div>
+          </div>
           </div>
         </div>
 

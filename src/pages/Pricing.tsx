@@ -706,6 +706,9 @@ const Pricing = () => {
           </div>
         </section>
 
+        {/* ===== VIDEO DEMOS ===== */}
+        <DemoVideosSection />
+
         {/* ===== SOCIAL PROOF ===== */}
         <section className="py-16 md:py-20">
           <div className="container mx-auto px-4">

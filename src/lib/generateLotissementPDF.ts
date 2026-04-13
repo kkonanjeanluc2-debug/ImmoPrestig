@@ -1145,6 +1145,23 @@ export const generateAttestationVillageoise = async (
   const chefTitre = chefVillageTitre || "";
   const lotOriginName = template?.lotissement_origin_name || lotissement.name;
   const arreteApprobation = template?.arrete_approbation || "";
+  const pageBorderContentInset = !template?.page_border_enabled
+    ? 0
+    : template.page_border_style === 'ornate'
+      ? 14
+      : template.page_border_style === 'geometric'
+        ? 12
+        : template.page_border_style === 'double'
+          ? 10
+          : template.page_border_style === 'dashes'
+            ? 9
+            : 10;
+  const headerLogoInsetX = Math.max(margin, pageBorderContentInset + 2);
+  const headerLogoMinY = pageBorderContentInset > 0 ? pageBorderContentInset + 1 : 0;
+
+  if (pageBorderContentInset > 0) {
+    yPos = Math.max(yPos, pageBorderContentInset + 4);
+  }
 
   const hexToRgb = (hex: string, fallback = 255): [number, number, number] => {
     const normalized = hex.replace('#', '');

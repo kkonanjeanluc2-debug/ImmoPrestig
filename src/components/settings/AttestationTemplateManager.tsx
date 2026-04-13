@@ -755,58 +755,70 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
             {/* Couleur des traits - only for cession */}
             {isCession && (() => {
+              const isTraitsEnabled = form.header_line_color !== "none" && form.header_line_color !== null;
               const parseColors = (val: string | null): string[] => {
-                if (!val) return ["#FF8C00"];
+                if (!val || val === "none") return ["#FF8C00"];
                 try { const arr = JSON.parse(val); return Array.isArray(arr) ? arr : [val]; } catch { return [val]; }
               };
               const colors = parseColors(form.header_line_color);
               const updateColors = (newColors: string[]) => updateField("header_line_color", JSON.stringify(newColors));
               return (
               <div className="space-y-3">
-                <Label className="text-sm font-semibold">Couleurs des traits décoratifs</Label>
+                <Label className="text-sm font-semibold">Traits décoratifs</Label>
                 <p className="text-xs text-muted-foreground">
-                  Choisissez jusqu'à 4 couleurs pour les tirets sous l'en-tête. Chaque tiret alternera entre les couleurs choisies.
+                  Tirets colorés sous l'en-tête du document.
                 </p>
-                <div className="space-y-2">
-                  {colors.map((c, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={c}
-                        onChange={(e) => { const nc = [...colors]; nc[i] = e.target.value; updateColors(nc); }}
-                        className="w-8 h-8 rounded cursor-pointer border border-border"
-                      />
-                      <Input
-                        value={c}
-                        onChange={(e) => { const nc = [...colors]; nc[i] = e.target.value; updateColors(nc); }}
-                        className="w-24 font-mono text-xs"
-                      />
-                      {colors.length > 1 && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { const nc = colors.filter((_, j) => j !== i); updateColors(nc); }}>
-                          <X className="h-3 w-3" />
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={isTraitsEnabled}
+                    onCheckedChange={(v) => updateField("header_line_color", v ? JSON.stringify(["#000000"]) : "none")}
+                  />
+                  <Label className="text-sm">Activer les traits</Label>
+                </div>
+                {isTraitsEnabled && (
+                  <>
+                    <div className="space-y-2">
+                      {colors.map((c, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={c}
+                            onChange={(e) => { const nc = [...colors]; nc[i] = e.target.value; updateColors(nc); }}
+                            className="w-8 h-8 rounded cursor-pointer border border-border"
+                          />
+                          <Input
+                            value={c}
+                            onChange={(e) => { const nc = [...colors]; nc[i] = e.target.value; updateColors(nc); }}
+                            className="w-24 font-mono text-xs"
+                          />
+                          {colors.length > 1 && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { const nc = colors.filter((_, j) => j !== i); updateColors(nc); }}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      {colors.length < 4 && (
+                        <Button variant="outline" size="sm" onClick={() => updateColors([...colors, "#008000"])}>
+                          <Plus className="h-3 w-3 mr-1" />
+                          Ajouter une couleur
                         </Button>
                       )}
                     </div>
-                  ))}
-                  {colors.length < 4 && (
-                    <Button variant="outline" size="sm" onClick={() => updateColors([...colors, "#008000"])}>
-                      <Plus className="h-3 w-3 mr-1" />
-                      Ajouter une couleur
-                    </Button>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-xs">Aperçu</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-1.5 w-8 rounded"
-                        style={{ backgroundColor: colors[i % colors.length] }}
-                      />
-                    ))}
-                  </div>
-                </div>
+                    <div>
+                      <Label className="text-xs">Aperçu</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="h-1.5 w-8 rounded"
+                            style={{ backgroundColor: colors[i % colors.length] }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               );
             })()}

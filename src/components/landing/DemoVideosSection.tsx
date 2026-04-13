@@ -21,22 +21,6 @@ export function DemoVideosSection() {
   return (
     <section className="py-16 md:py-20">
       <div className="container mx-auto px-4">
-        <motion.div
-          className="text-center mb-12"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={fadeUp}
-          custom={0}
-        >
-          <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-            Découvrez la plateforme en vidéo
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Regardez nos démonstrations pour voir comment gérer vos biens immobiliers facilement
-          </p>
-        </motion.div>
-
         <div className={`grid gap-8 max-w-5xl mx-auto ${youtubeUrl && tiktokUrl ? "md:grid-cols-2" : "md:grid-cols-1 max-w-3xl"}`}>
           {youtubeUrl && (
             <motion.div

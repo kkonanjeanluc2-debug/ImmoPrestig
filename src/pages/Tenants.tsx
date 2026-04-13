@@ -223,8 +223,8 @@ export default function Tenants() {
   const canDelete = hasPermission("can_delete_tenants");
   const { data: assignableUsers = [] } = useAssignableUsers();
   const { isOwner: isAgencyOwner } = useIsAgencyOwner();
-  const { agency } = useAgency();
-  const agencyRentDueDay = agency?.rent_due_day || 5;
+  const { data: agencyData } = useAgency();
+  const agencyRentDueDay = agencyData?.rent_due_day || 5;
   const { count: newRequestsCount, markAsSeen } = useNewTenantRequestsCount();
   const { data: newRequests } = useNewTenantRequests();
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);

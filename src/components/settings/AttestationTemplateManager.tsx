@@ -141,6 +141,9 @@ const emptyForm: AttestationTemplateInsert = {
   watermark_angle: "diagonal",
   watermark_opacity: 0.1,
   watermark_repeat: true,
+  page_border_enabled: false,
+  page_border_color: "#8B4513",
+  page_border_style: "geometric",
 };
 
 export function AttestationTemplateManager({ templateType = "attribution" }: { templateType?: string }) {

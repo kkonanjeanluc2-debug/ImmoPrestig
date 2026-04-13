@@ -1183,16 +1183,16 @@ export const generateAttestationVillageoise = async (
     doc.rect(0, 0, pageWidth, pageHeight, 'F');
   };
 
+  // drawPageBorder will be assigned later, after hexToRgb is defined
+  let drawPageBorderFn = () => {};
+
   const ensureSpace = (neededHeight: number) => {
     if (yPos + neededHeight <= pageHeight - bottomMargin) return;
     doc.addPage();
     drawDocumentBackground();
-    drawPageBorder();
+    drawPageBorderFn();
     yPos = template?.page_border_enabled ? 15 : margin;
   };
-
-  // Forward declaration - will be defined after hexToRgb
-  let drawPageBorder = () => {};
 
   const writeWrappedLines = (
     lines: string | string[],

@@ -87,6 +87,8 @@ export function PlatformSettingsCard() {
         upsertSetting.mutateAsync({ key: "sms_enabled", value: String(smsEnabled), description: "Activer ou désactiver l'envoi de SMS via Twilio" }),
         upsertSetting.mutateAsync({ key: "app_logo_url", value: appLogoUrl, description: "URL du logo de l'application" }),
         upsertSetting.mutateAsync({ key: "app_name", value: appName, description: "Nom de l'application affiché partout" }),
+        upsertSetting.mutateAsync({ key: "youtube_demo_url", value: youtubeDemoUrl, description: "Lien vidéo démo YouTube" }),
+        upsertSetting.mutateAsync({ key: "tiktok_demo_url", value: tiktokDemoUrl, description: "Lien vidéo démo TikTok" }),
       ]);
       setHasChanges(false);
       toast.success("Paramètres enregistrés");

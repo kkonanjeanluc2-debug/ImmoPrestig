@@ -1632,7 +1632,7 @@ export const generateAttestationVillageoise = async (
       const cleanedLine = trimmed.replace(/^\#{1,4}\s*/, '').replace(/\*\*/g, '').replace(/_/g, '').toUpperCase().trim();
       if (cleanedLine === 'LE CHEF DU VILLAGE') continue;
       if (cleanedLine.includes('LE CHEF DU VILLAGE')) continue;
-      if (cleanedLine.includes('LE CÉDANT') || cleanedLine.includes('LE CEDANT')) continue;
+      if (cleanedLine.includes('LE CÉDANT') || cleanedLine.includes('LE CEDANT') || cleanedLine.includes('PROPRIÉTAIRE TERRIEN') || cleanedLine.includes('PROPRIETAIRE TERRIEN')) continue;
       if (cleanedLine.includes('AGENCE') && cleanedLine.includes('PROMOTEUR')) continue;
       if (chef && cleanedLine === chef.toUpperCase()) continue;
       if (cleanedLine === 'SIGNATURE ET CACHET' || cleanedLine === 'SIGNATURE ET CACHET DU CHEF' || cleanedLine === 'CACHET ET SIGNATURE') continue;
@@ -1777,7 +1777,7 @@ export const generateAttestationVillageoise = async (
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text('LE CÉDANT', leftBlockCenter, yPos, { align: 'center' });
+     doc.text('LE PROPRIÉTAIRE TERRIEN', leftBlockCenter, yPos, { align: 'center' });
     doc.text('AGENCE / PROMOTEUR', rightBlockCenter, yPos, { align: 'center' });
     yPos += 15;
 

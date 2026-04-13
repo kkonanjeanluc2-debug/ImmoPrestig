@@ -189,6 +189,31 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
     }
   };
 
+  const handleRightLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingRightLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `right-logo-${Date.now()}.${fileExt}`;
+      const filePath = `attestation-logos/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('agency-assets')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from('agency-assets')
+        .getPublicUrl(filePath);
+      updateField('right_logo_url', urlData.publicUrl);
+      toast.success("Logo droit importé");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'import du logo");
+    } finally {
+      setUploadingRightLogo(false);
+      if (rightLogoInputRef.current) rightLogoInputRef.current.value = '';
+    }
+  };
+
   const handleWatermarkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

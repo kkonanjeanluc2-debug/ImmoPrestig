@@ -1488,7 +1488,9 @@ export const generateAttestationVillageoise = async (
     const leftLogoUrl = template?.village_logo_url;
     const rightLogoUrl = template?.right_logo_url;
     const logoSize = 25;
-    const logoStartY = yPos - 3;
+    const logoStartY = Math.max(yPos - 3, headerLogoMinY);
+    const leftLogoX = headerLogoInsetX;
+    const rightLogoX = pageWidth - headerLogoInsetX - logoSize;
     let hasLogos = false;
 
     // Left logo
@@ -1496,7 +1498,7 @@ export const generateAttestationVillageoise = async (
       try {
         const logoBase64 = await loadImageAsBase64(leftLogoUrl);
         if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', margin, logoStartY, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', leftLogoX, logoStartY, logoSize, logoSize);
           hasLogos = true;
         }
       } catch {}
@@ -1507,7 +1509,7 @@ export const generateAttestationVillageoise = async (
       try {
         const logoBase64 = await loadImageAsBase64(rightLogoUrl);
         if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, logoStartY, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', rightLogoX, logoStartY, logoSize, logoSize);
           hasLogos = true;
         }
       } catch {}

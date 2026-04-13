@@ -1414,27 +1414,52 @@ export const generateAttestationVillageoise = async (
     doc.line(lastX, yPos, lastX + stretchedWidth, yPos);
     yPos += 8;
 
-    // Title: ATTESTATION DE CESSION
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...textColor);
-    doc.text('ATTESTATION DE CESSION', pageWidth / 2, yPos, { align: 'center' });
-    yPos += 2;
-    // Underline
-    const titleWidth = doc.getTextWidth('ATTESTATION DE CESSION');
-    doc.setDrawColor(...textColor);
-    doc.setLineWidth(0.8);
-    doc.line(pageWidth / 2 - titleWidth / 2, yPos, pageWidth / 2 + titleWidth / 2, yPos);
-    yPos += 6;
-
-    doc.setFontSize(11);
+    // Title: ATTESTATION DE CESSION DE TERRAIN
+    const titleText = 'ATTESTATION DE CESSION DE TERRAIN';
     const nText = `N° ${parcelle.plot_number || '..........'}`;
-    doc.text(nText, pageWidth / 2, yPos, { align: 'center' });
-    // Underline for N°
-    const nWidth = doc.getTextWidth(nText);
-    yPos += 1.5;
-    doc.line(pageWidth / 2 - nWidth / 2, yPos, pageWidth / 2 + nWidth / 2, yPos);
-    yPos += 10;
+    const fullTitleText = `${titleText} ${nText}`;
+    
+    const titleBorderColor = (template as any)?.title_border_color;
+    
+    if (titleBorderColor) {
+      // Draw bordered title box
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      const fullWidth = doc.getTextWidth(fullTitleText);
+      const boxPaddingX = 12;
+      const boxPaddingY = 4;
+      const boxW = fullWidth + boxPaddingX * 2;
+      const boxH = 10 + boxPaddingY * 2;
+      const boxX = (pageWidth - boxW) / 2;
+      const boxY = yPos - 6;
+      
+      const bc = hexToRgb(titleBorderColor, 0);
+      doc.setDrawColor(bc[0], bc[1], bc[2]);
+      doc.setLineWidth(1.2);
+      doc.roundedRect(boxX, boxY, boxW, boxH, 2, 2, 'S');
+      
+      doc.setTextColor(...textColor);
+      doc.text(fullTitleText, pageWidth / 2, yPos + boxPaddingY, { align: 'center' });
+      yPos += boxH + 6;
+    } else {
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...textColor);
+      doc.text(titleText, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 2;
+      const titleWidth = doc.getTextWidth(titleText);
+      doc.setDrawColor(...textColor);
+      doc.setLineWidth(0.8);
+      doc.line(pageWidth / 2 - titleWidth / 2, yPos, pageWidth / 2 + titleWidth / 2, yPos);
+      yPos += 6;
+
+      doc.setFontSize(11);
+      doc.text(nText, pageWidth / 2, yPos, { align: 'center' });
+      const nWidth = doc.getTextWidth(nText);
+      yPos += 1.5;
+      doc.line(pageWidth / 2 - nWidth / 2, yPos, pageWidth / 2 + nWidth / 2, yPos);
+      yPos += 10;
+    }
 
     doc.setLineWidth(0.2);
 

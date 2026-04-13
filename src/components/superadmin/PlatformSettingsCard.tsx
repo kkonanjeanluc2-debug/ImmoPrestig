@@ -64,6 +64,12 @@ export function PlatformSettingsCard() {
 
       const nameSetting = settings.find(s => s.key === "app_name");
       if (nameSetting?.value) setAppName(nameSetting.value);
+
+      const ytSetting = settings.find(s => s.key === "youtube_demo_url");
+      if (ytSetting?.value) setYoutubeDemoUrl(ytSetting.value);
+
+      const ttSetting = settings.find(s => s.key === "tiktok_demo_url");
+      if (ttSetting?.value) setTiktokDemoUrl(ttSetting.value);
     }
   }, [settings]);
 

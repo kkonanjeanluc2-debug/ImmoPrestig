@@ -43,6 +43,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { motion } from "framer-motion";
 import { DashboardNavTabs } from "@/components/layout/DashboardNavTabs";
+import { DemoVideosSection } from "@/components/landing/DemoVideosSection";
 import dashboardPreview from "@/assets/dashboard-preview.png";
 import ownersPreview from "@/assets/owners-preview.png";
 import propertiesPreview from "@/assets/properties-preview.png";

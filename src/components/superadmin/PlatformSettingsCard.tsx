@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePlatformSettings, useUpdatePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
-import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone, Mail } from "lucide-react";
+import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone, Mail, Video } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBrandingSection } from "./PlatformBrandingSection";
 
@@ -26,6 +26,8 @@ export function PlatformSettingsCard() {
   const [smsEnabled, setSmsEnabled] = useState(true);
   const [appLogoUrl, setAppLogoUrl] = useState("");
   const [appName, setAppName] = useState("ImmoPrestige");
+  const [youtubeDemoUrl, setYoutubeDemoUrl] = useState("");
+  const [tiktokDemoUrl, setTiktokDemoUrl] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -62,6 +64,12 @@ export function PlatformSettingsCard() {
 
       const nameSetting = settings.find(s => s.key === "app_name");
       if (nameSetting?.value) setAppName(nameSetting.value);
+
+      const ytSetting = settings.find(s => s.key === "youtube_demo_url");
+      if (ytSetting?.value) setYoutubeDemoUrl(ytSetting.value);
+
+      const ttSetting = settings.find(s => s.key === "tiktok_demo_url");
+      if (ttSetting?.value) setTiktokDemoUrl(ttSetting.value);
     }
   }, [settings]);
 
@@ -79,6 +87,8 @@ export function PlatformSettingsCard() {
         upsertSetting.mutateAsync({ key: "sms_enabled", value: String(smsEnabled), description: "Activer ou désactiver l'envoi de SMS via Twilio" }),
         upsertSetting.mutateAsync({ key: "app_logo_url", value: appLogoUrl, description: "URL du logo de l'application" }),
         upsertSetting.mutateAsync({ key: "app_name", value: appName, description: "Nom de l'application affiché partout" }),
+        upsertSetting.mutateAsync({ key: "youtube_demo_url", value: youtubeDemoUrl, description: "Lien vidéo démo YouTube" }),
+        upsertSetting.mutateAsync({ key: "tiktok_demo_url", value: tiktokDemoUrl, description: "Lien vidéo démo TikTok" }),
       ]);
       setHasChanges(false);
       toast.success("Paramètres enregistrés");
@@ -244,7 +254,27 @@ export function PlatformSettingsCard() {
               </div>
               <Switch id="maileroo-email" checked={mailerooEmailEnabled}
                 onCheckedChange={(v) => { setMailerooEmailEnabled(v); setChanged(); }} />
+          </div>
+
+          {/* Video Demo Links */}
+          <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+            <Label className="flex items-center gap-2 text-base font-semibold">
+              <Video className="h-5 w-5 text-primary" />
+              Vidéos de démonstration
+            </Label>
+            <div className="space-y-2">
+              <Label htmlFor="youtube-demo">Lien YouTube</Label>
+              <Input id="youtube-demo" type="url" placeholder="https://www.youtube.com/embed/..."
+                value={youtubeDemoUrl} onChange={(e) => { setYoutubeDemoUrl(e.target.value); setChanged(); }} />
+              <p className="text-xs text-muted-foreground">Lien d'intégration YouTube (format embed recommandé)</p>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="tiktok-demo">Lien TikTok</Label>
+              <Input id="tiktok-demo" type="url" placeholder="https://www.tiktok.com/embed/..."
+                value={tiktokDemoUrl} onChange={(e) => { setTiktokDemoUrl(e.target.value); setChanged(); }} />
+              <p className="text-xs text-muted-foreground">Lien d'intégration TikTok (format embed recommandé)</p>
+            </div>
+          </div>
           </div>
         </div>
 

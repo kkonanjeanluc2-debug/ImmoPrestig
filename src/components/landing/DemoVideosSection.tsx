@@ -1,0 +1,98 @@
+import { motion } from "framer-motion";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.15, duration: 0.5 },
+  }),
+};
+
+export function DemoVideosSection() {
+  const { data: settings } = usePlatformSettings();
+
+  const youtubeUrl = settings?.find(s => s.key === "youtube_demo_url")?.value || "";
+  const tiktokUrl = settings?.find(s => s.key === "tiktok_demo_url")?.value || "";
+
+  if (!youtubeUrl && !tiktokUrl) return null;
+
+  return (
+    <section className="py-16 md:py-20">
+      <div className="container mx-auto px-4">
+        <motion.div
+          className="text-center mb-12"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeUp}
+          custom={0}
+        >
+          <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+            Découvrez la plateforme en vidéo
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Regardez nos démonstrations pour voir comment gérer vos biens immobiliers facilement
+          </p>
+        </motion.div>
+
+        <div className={`grid gap-8 max-w-5xl mx-auto ${youtubeUrl && tiktokUrl ? "md:grid-cols-2" : "md:grid-cols-1 max-w-3xl"}`}>
+          {youtubeUrl && (
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={0}
+              className="space-y-3"
+            >
+              <h3 className="text-lg font-semibold text-center flex items-center justify-center gap-2">
+                <svg className="h-5 w-5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                Démo YouTube
+              </h3>
+              <div className="relative w-full rounded-xl overflow-hidden border shadow-lg" style={{ paddingBottom: "56.25%" }}>
+                <iframe
+                  src={youtubeUrl}
+                  title="Démo YouTube"
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {tiktokUrl && (
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={1}
+              className="space-y-3"
+            >
+              <h3 className="text-lg font-semibold text-center flex items-center justify-center gap-2">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                </svg>
+                Démo TikTok
+              </h3>
+              <div className="relative w-full rounded-xl overflow-hidden border shadow-lg" style={{ paddingBottom: "56.25%" }}>
+                <iframe
+                  src={tiktokUrl}
+                  title="Démo TikTok"
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}

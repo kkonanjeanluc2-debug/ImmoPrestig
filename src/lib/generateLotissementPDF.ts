@@ -1621,19 +1621,21 @@ export const generateAttestationVillageoise = async (
   } else {
     // === ATTRIBUTION HEADER: Village logos + REPUBLIQUE + banner ===
     let headerLeftX = margin;
-    const logoStartY = yPos - 3;
     const logoSize = 25;
+    const logoStartY = Math.max(yPos - 3, headerLogoMinY);
     const logoBottomY = logoStartY + logoSize;
     const logoBannerGap = 6;
+    const leftLogoX = headerLogoInsetX;
+    const rightLogoX = pageWidth - headerLogoInsetX - logoSize;
     let hasVillageLogos = false;
     const villageLogoUrl = template?.village_logo_url;
     if (villageLogoUrl) {
       try {
         const logoBase64 = await loadImageAsBase64(villageLogoUrl);
         if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', margin, logoStartY, logoSize, logoSize);
-          doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, logoStartY, logoSize, logoSize);
-          headerLeftX = margin + logoSize + 4;
+          doc.addImage(logoBase64, 'PNG', leftLogoX, logoStartY, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', rightLogoX, logoStartY, logoSize, logoSize);
+          headerLeftX = leftLogoX + logoSize + 4;
           hasVillageLogos = true;
         }
       } catch {}

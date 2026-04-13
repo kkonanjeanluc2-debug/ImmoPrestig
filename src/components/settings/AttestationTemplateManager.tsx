@@ -131,6 +131,7 @@ const emptyForm: AttestationTemplateInsert = {
   doc_bg_color_2: null,
   doc_bg_gradient: false,
   village_logo_url: null,
+  right_logo_url: null,
   template_type: "attribution",
   header_line_color: "#FF8C00",
   watermark_type: "none",
@@ -157,7 +158,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
   const [templateToDelete, setTemplateToDelete] = useState<AttestationTemplate | null>(null);
   const [form, setForm] = useState<AttestationTemplateInsert>(emptyForm);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingRightLogo, setUploadingRightLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const rightLogoInputRef = useRef<HTMLInputElement>(null);
   const watermarkInputRef = useRef<HTMLInputElement>(null);
   const [uploadingWatermark, setUploadingWatermark] = useState(false);
 
@@ -183,6 +186,31 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
     } finally {
       setUploadingLogo(false);
       if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleRightLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingRightLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `right-logo-${Date.now()}.${fileExt}`;
+      const filePath = `attestation-logos/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('agency-assets')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from('agency-assets')
+        .getPublicUrl(filePath);
+      updateField('right_logo_url', urlData.publicUrl);
+      toast.success("Logo droit importé");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'import du logo");
+    } finally {
+      setUploadingRightLogo(false);
+      if (rightLogoInputRef.current) rightLogoInputRef.current.value = '';
     }
   };
 
@@ -237,6 +265,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       doc_bg_color_2: t.doc_bg_color_2 || null,
       doc_bg_gradient: t.doc_bg_gradient || false,
       village_logo_url: t.village_logo_url || null,
+      right_logo_url: (t as any).right_logo_url || null,
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
       watermark_type: (t as any).watermark_type || "none",
@@ -269,6 +298,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       doc_bg_color_2: t.doc_bg_color_2 || null,
       doc_bg_gradient: t.doc_bg_gradient || false,
       village_logo_url: t.village_logo_url || null,
+      right_logo_url: (t as any).right_logo_url || null,
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
       watermark_type: (t as any).watermark_type || "none",
@@ -544,6 +574,106 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                   </Button>
                 </div>
               )}
+            </div>
+            )}
+
+            {/* Logos gauche et droit - only for cession */}
+            {isCession && (
+            <div className="space-y-4">
+              <Label className="text-sm font-semibold">Logos de l'en-tête</Label>
+              <p className="text-xs text-muted-foreground">
+                Importez les logos qui apparaîtront en haut à gauche et à droite de l'attestation de cession (ex: logo du district, logo du géomètre).
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Logo gauche */}
+                <div className="space-y-2 border rounded-lg p-3">
+                  <Label className="text-xs font-medium">Logo gauche</Label>
+                  {form.village_logo_url ? (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={form.village_logo_url}
+                        alt="Logo gauche"
+                        className="w-16 h-16 object-contain border rounded-lg"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateField('village_logo_url', null)}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={uploadingLogo}
+                      >
+                        {uploadingLogo ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        Importer
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {/* Logo droit */}
+                <div className="space-y-2 border rounded-lg p-3">
+                  <Label className="text-xs font-medium">Logo droit</Label>
+                  {form.right_logo_url ? (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={form.right_logo_url}
+                        alt="Logo droit"
+                        className="w-16 h-16 object-contain border rounded-lg"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateField('right_logo_url', null)}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        ref={rightLogoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleRightLogoUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => rightLogoInputRef.current?.click()}
+                        disabled={uploadingRightLogo}
+                      >
+                        {uploadingRightLogo ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        Importer
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             )}
 

@@ -1041,6 +1041,7 @@ export interface AttestationTemplateData {
   doc_bg_color_2?: string | null;
   doc_bg_gradient?: boolean;
   village_logo_url?: string | null;
+  right_logo_url?: string | null;
   header_line_color?: string | null;
   watermark_type?: string;
   watermark_text?: string | null;
@@ -1338,52 +1339,56 @@ export const generateAttestationVillageoise = async (
   let watermarkBodyTopY = 0;
 
   if (isCessionTemplate) {
-    // === CESSION HEADER: Agency logo (left) + header text (right) + colored dashes + title ===
-    const logoUrl = agency?.logo_url;
-    if (logoUrl) {
+    // === CESSION HEADER: Left logo + district info + right logo + colored dashes + title ===
+    const leftLogoUrl = template?.village_logo_url;
+    const rightLogoUrl = template?.right_logo_url;
+    const logoSize = 25;
+    const logoStartY = yPos - 3;
+    let hasLogos = false;
+
+    // Left logo
+    if (leftLogoUrl) {
       try {
-        const logoBase64 = await loadImageAsBase64(logoUrl);
+        const logoBase64 = await loadImageAsBase64(leftLogoUrl);
         if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', margin, yPos - 3, 22, 22);
+          doc.addImage(logoBase64, 'PNG', margin, logoStartY, logoSize, logoSize);
+          hasLogos = true;
         }
       } catch {}
     }
 
-    // Agency header text on the right of the logo
-    const headerTextX = margin + 26;
-    if (agency?.pdf_header_text) {
-      // Use custom header text (multi-line, bold)
-      const headerLines = agency.pdf_header_text.split('\n');
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...primaryColor);
-      let hTextY = yPos + 2;
-      for (const hLine of headerLines) {
-        if (hLine.trim()) {
-          doc.text(hLine.trim(), headerTextX, hTextY);
-          hTextY += 5;
+    // Right logo
+    if (rightLogoUrl) {
+      try {
+        const logoBase64 = await loadImageAsBase64(rightLogoUrl);
+        if (logoBase64) {
+          doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, logoStartY, logoSize, logoSize);
+          hasLogos = true;
         }
-      }
-    } else {
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...primaryColor);
-      const agencyName = agency?.name?.toUpperCase() || '';
-      if (agencyName) {
-        doc.text(agencyName, headerTextX, yPos + 2);
-      }
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6);
-      doc.setTextColor(...textColor);
-      const agencyDetails = [agency?.address, agency?.city, agency?.phone, agency?.email].filter(Boolean).join(' • ');
-      if (agencyDetails) {
-        doc.text(agencyDetails, headerTextX, yPos + 7);
-      }
-      if (agency?.siret) {
-        doc.text(`RCCM: ${agency.siret}`, headerTextX, yPos + 11);
-      }
+      } catch {}
     }
-    yPos += 22;
+
+    // District/Region/Departement/Commune text centered between logos
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...textColor);
+    
+    const districtText = district ? `DISTRICT DU ${district.toUpperCase()}` : '';
+    // Build header lines from template fields
+    const cessionHeaderLines: string[] = [];
+    if (districtText) cessionHeaderLines.push(districtText);
+    if (commune) cessionHeaderLines.push(commune.toUpperCase());
+    if (village) cessionHeaderLines.push(`VILLAGE DE ${village.replace(/^Village de /i, '').trim().toUpperCase()}`);
+
+    let headerTextY = yPos;
+    for (const line of cessionHeaderLines) {
+      doc.text(line, pageWidth / 2, headerTextY, { align: 'center' });
+      headerTextY += 5;
+    }
+
+    // Position after logos/text
+    const logoBottomY = hasLogos ? logoStartY + logoSize : headerTextY;
+    yPos = Math.max(headerTextY + 2, logoBottomY + 3);
 
     // Colored dashes line (supports up to 4 alternating colors, last one stretched)
     let dashColors: string[] = ['#FF8C00'];

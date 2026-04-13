@@ -1,0 +1,1 @@
+ALTER TABLE public.attestation_templates ADD COLUMN right_logo_url TEXT DEFAULT NULL;

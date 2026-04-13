@@ -1391,56 +1391,73 @@ export const generateAttestationVillageoise = async (
     yPos = Math.max(headerTextY + 2, logoBottomY + 3);
 
     // Colored dashes line (supports up to 4 alternating colors, last one stretched)
-    let dashColors: string[] = ['#FF8C00'];
     const rawLineColor = template?.header_line_color || '#FF8C00';
-    try { const parsed = JSON.parse(rawLineColor); if (Array.isArray(parsed)) dashColors = parsed; } catch { dashColors = [rawLineColor]; }
-    doc.setLineWidth(1.5);
-    const dashWidth = 12;
-    const dashGap = 5;
-    const numShortDashes = 4;
-    const stretchedWidth = 35;
-    const totalDashesWidth = numShortDashes * dashWidth + (numShortDashes) * dashGap + stretchedWidth;
-    const dashStartX = (pageWidth - totalDashesWidth) / 2;
-    for (let i = 0; i < numShortDashes; i++) {
-      const dc = hexToRgb(dashColors[i % dashColors.length], 0);
-      doc.setDrawColor(dc[0], dc[1], dc[2]);
-      const x = dashStartX + i * (dashWidth + dashGap);
-      doc.line(x, yPos, x + dashWidth, yPos);
+    const traitsEnabled = rawLineColor !== 'none';
+    
+    if (traitsEnabled) {
+      let dashColors: string[] = ['#FF8C00'];
+      try { const parsed = JSON.parse(rawLineColor); if (Array.isArray(parsed)) dashColors = parsed; } catch { dashColors = [rawLineColor]; }
+      doc.setLineWidth(1.5);
+      const dashWidth = 12;
+      const dashGap = 5;
+      const numShortDashes = 4;
+      const stretchedWidth = 35;
+      const totalDashesWidth = numShortDashes * dashWidth + (numShortDashes) * dashGap + stretchedWidth;
+      const dashStartX = (pageWidth - totalDashesWidth) / 2;
+      for (let i = 0; i < numShortDashes; i++) {
+        const dc = hexToRgb(dashColors[i % dashColors.length], 0);
+        doc.setDrawColor(dc[0], dc[1], dc[2]);
+        const x = dashStartX + i * (dashWidth + dashGap);
+        doc.line(x, yPos, x + dashWidth, yPos);
+      }
+      const lastDc = hexToRgb(dashColors[numShortDashes % dashColors.length], 0);
+      doc.setDrawColor(lastDc[0], lastDc[1], lastDc[2]);
+      const lastX = dashStartX + numShortDashes * (dashWidth + dashGap);
+      doc.line(lastX, yPos, lastX + stretchedWidth, yPos);
+      yPos += 8;
     }
-    // Last dash: stretched
-    const lastDc = hexToRgb(dashColors[numShortDashes % dashColors.length], 0);
-    doc.setDrawColor(lastDc[0], lastDc[1], lastDc[2]);
-    const lastX = dashStartX + numShortDashes * (dashWidth + dashGap);
-    doc.line(lastX, yPos, lastX + stretchedWidth, yPos);
-    yPos += 8;
 
     // Title: ATTESTATION DE CESSION DE TERRAIN
     const titleText = 'ATTESTATION DE CESSION DE TERRAIN';
     const nText = `N° ${parcelle.plot_number || '..........'}`;
-    const fullTitleText = `${titleText} ${nText}`;
     
     const titleBorderColor = (template as any)?.title_border_color;
     
     if (titleBorderColor) {
-      // Draw bordered title box
+      // Draw title text first, then N° on separate line, all inside a rounded border
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      const fullWidth = doc.getTextWidth(fullTitleText);
-      const boxPaddingX = 12;
-      const boxPaddingY = 4;
-      const boxW = fullWidth + boxPaddingX * 2;
-      const boxH = 10 + boxPaddingY * 2;
+      const titleW = doc.getTextWidth(titleText);
+      doc.setFontSize(11);
+      const nW = doc.getTextWidth(nText);
+      
+      const boxPaddingX = 14;
+      const boxPaddingY = 5;
+      const innerW = Math.max(titleW, nW);
+      const boxW = innerW + boxPaddingX * 2;
+      const boxH = 22 + boxPaddingY * 2;
       const boxX = (pageWidth - boxW) / 2;
-      const boxY = yPos - 6;
+      const boxY = yPos - 2;
       
       const bc = hexToRgb(titleBorderColor, 0);
       doc.setDrawColor(bc[0], bc[1], bc[2]);
       doc.setLineWidth(1.2);
-      doc.roundedRect(boxX, boxY, boxW, boxH, 2, 2, 'S');
+      doc.roundedRect(boxX, boxY, boxW, boxH, 3, 3, 'S');
       
       doc.setTextColor(...textColor);
-      doc.text(fullTitleText, pageWidth / 2, yPos + boxPaddingY, { align: 'center' });
-      yPos += boxH + 6;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(titleText, pageWidth / 2, boxY + boxPaddingY + 6, { align: 'center' });
+      
+      doc.setFontSize(11);
+      const nTextY = boxY + boxPaddingY + 16;
+      doc.text(nText, pageWidth / 2, nTextY, { align: 'center' });
+      // Underline N°
+      doc.setDrawColor(...textColor);
+      doc.setLineWidth(0.5);
+      doc.line(pageWidth / 2 - nW / 2, nTextY + 1.5, pageWidth / 2 + nW / 2, nTextY + 1.5);
+      
+      yPos = boxY + boxH + 6;
     } else {
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');

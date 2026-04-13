@@ -313,7 +313,7 @@ export default function Tenants() {
 
 
   const filteredTenants = (tenants || []).filter(tenant => {
-    const paymentStatus = getPaymentStatusLabel(tenant);
+    const paymentStatus = getPaymentStatusLabel(tenant, undefined, agencyRentDueDay);
     
     // Status filter using button-based filters
     if (statusFilter === "uptodate") {
@@ -552,7 +552,7 @@ export default function Tenants() {
                 <tbody className="divide-y divide-border">
                   {filteredTenants.map((tenant) => {
                     const activeContract = tenant.contracts?.find(c => c.status === 'active') || tenant.contracts?.[0];
-                    const paymentStatus = getPaymentStatusLabel(tenant);
+                    const paymentStatus = getPaymentStatusLabel(tenant, undefined, agencyRentDueDay);
                     const propertyLabel = tenant.property
                       ? `${tenant.property.title}${tenant.unit ? `, ${tenant.unit.unit_number}` : ''}`
                       : "—";

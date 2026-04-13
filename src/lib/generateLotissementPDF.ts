@@ -1145,6 +1145,23 @@ export const generateAttestationVillageoise = async (
   const chefTitre = chefVillageTitre || "";
   const lotOriginName = template?.lotissement_origin_name || lotissement.name;
   const arreteApprobation = template?.arrete_approbation || "";
+  const pageBorderContentInset = !template?.page_border_enabled
+    ? 0
+    : template.page_border_style === 'ornate'
+      ? 14
+      : template.page_border_style === 'geometric'
+        ? 12
+        : template.page_border_style === 'double'
+          ? 10
+          : template.page_border_style === 'dashes'
+            ? 9
+            : 10;
+  const headerLogoInsetX = Math.max(margin, pageBorderContentInset + 2);
+  const headerLogoMinY = pageBorderContentInset > 0 ? pageBorderContentInset + 1 : 0;
+
+  if (pageBorderContentInset > 0) {
+    yPos = Math.max(yPos, pageBorderContentInset + 4);
+  }
 
   const hexToRgb = (hex: string, fallback = 255): [number, number, number] => {
     const normalized = hex.replace('#', '');
@@ -1471,7 +1488,9 @@ export const generateAttestationVillageoise = async (
     const leftLogoUrl = template?.village_logo_url;
     const rightLogoUrl = template?.right_logo_url;
     const logoSize = 25;
-    const logoStartY = yPos - 3;
+    const logoStartY = Math.max(yPos - 3, headerLogoMinY);
+    const leftLogoX = headerLogoInsetX;
+    const rightLogoX = pageWidth - headerLogoInsetX - logoSize;
     let hasLogos = false;
 
     // Left logo
@@ -1479,7 +1498,7 @@ export const generateAttestationVillageoise = async (
       try {
         const logoBase64 = await loadImageAsBase64(leftLogoUrl);
         if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', margin, logoStartY, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', leftLogoX, logoStartY, logoSize, logoSize);
           hasLogos = true;
         }
       } catch {}
@@ -1490,7 +1509,7 @@ export const generateAttestationVillageoise = async (
       try {
         const logoBase64 = await loadImageAsBase64(rightLogoUrl);
         if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, logoStartY, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', rightLogoX, logoStartY, logoSize, logoSize);
           hasLogos = true;
         }
       } catch {}
@@ -1602,19 +1621,21 @@ export const generateAttestationVillageoise = async (
   } else {
     // === ATTRIBUTION HEADER: Village logos + REPUBLIQUE + banner ===
     let headerLeftX = margin;
-    const logoStartY = yPos - 3;
     const logoSize = 25;
+    const logoStartY = Math.max(yPos - 3, headerLogoMinY);
     const logoBottomY = logoStartY + logoSize;
     const logoBannerGap = 6;
+    const leftLogoX = headerLogoInsetX;
+    const rightLogoX = pageWidth - headerLogoInsetX - logoSize;
     let hasVillageLogos = false;
     const villageLogoUrl = template?.village_logo_url;
     if (villageLogoUrl) {
       try {
         const logoBase64 = await loadImageAsBase64(villageLogoUrl);
         if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', margin, logoStartY, logoSize, logoSize);
-          doc.addImage(logoBase64, 'PNG', pageWidth - margin - logoSize, logoStartY, logoSize, logoSize);
-          headerLeftX = margin + logoSize + 4;
+          doc.addImage(logoBase64, 'PNG', leftLogoX, logoStartY, logoSize, logoSize);
+          doc.addImage(logoBase64, 'PNG', rightLogoX, logoStartY, logoSize, logoSize);
+          headerLeftX = leftLogoX + logoSize + 4;
           hasVillageLogos = true;
         }
       } catch {}

@@ -80,7 +80,6 @@ function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean) 
 
   const activeContract = tenant.contracts?.find(c => c.status === 'active');
   if (!activeContract) {
-    // No active contract = check if expired (could be expelled)
     const hasExpired = tenant.contracts?.some(c => c.status === 'expired');
     if (hasExpired) {
       return { label: "Expulsé", className: "bg-muted text-muted-foreground border-muted-foreground/30" };
@@ -90,18 +89,91 @@ function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean) 
   
   const payments = tenant.payments || [];
   
-  // Check for any late payments - if any exist, tenant is in "Retard"
+  // Check for any late payments in DB
   const latePayments = payments.filter(p => p.status === 'late');
-  if (latePayments.length > 0) {
-    const lateDays = Math.max(...latePayments.map(p => Math.ceil((new Date().getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24))));
-    if (latePayments.length >= 3) {
+  
+  // Also check for unpaid past months (virtual late payments logic)
+  // A month is considered late if: it's past the due date, contract was active, and no payment exists
+  const now = new Date();
+  const contractStart = new Date(activeContract.start_date);
+  const rentDueDay = 5; // Default due day
+  
+  let unpaidMonths = 0;
+  const checkStart = new Date(contractStart.getFullYear(), contractStart.getMonth(), 1);
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  for (let d = new Date(checkStart); d < currentMonth; d.setMonth(d.getMonth() + 1)) {
+    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const dueDate = new Date(d.getFullYear(), d.getMonth(), rentDueDay);
+    
+    // Only count if due date is past
+    if (dueDate < now) {
+      // Check if a payment exists for this month
+      const hasPayment = payments.some(p => {
+        const pDate = new Date(p.due_date);
+        const pKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}`;
+        return pKey === monthKey && (p.status === 'paid' || p.status === 'partial');
+      });
+      
+      if (!hasPayment) {
+        unpaidMonths++;
+      }
+    }
+  }
+  
+  // Also check current month if due date has passed
+  const currentDueDate = new Date(now.getFullYear(), now.getMonth(), rentDueDay);
+  if (now > currentDueDate) {
+    const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const hasCurrentPayment = payments.some(p => {
+      const pDate = new Date(p.due_date);
+      const pKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}`;
+      return pKey === currentKey && (p.status === 'paid' || p.status === 'partial');
+    });
+    if (!hasCurrentPayment) {
+      unpaidMonths++;
+    }
+  }
+  
+  const totalLate = latePayments.length + unpaidMonths;
+  
+  if (totalLate > 0) {
+    // Calculate max late days from both DB late payments and unpaid months
+    let maxLateDays = 0;
+    
+    if (latePayments.length > 0) {
+      maxLateDays = Math.max(...latePayments.map(p => 
+        Math.ceil((now.getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24))
+      ));
+    }
+    
+    if (unpaidMonths > 0) {
+      // Find the earliest unpaid month
+      for (let d = new Date(checkStart); d <= currentMonth; d.setMonth(d.getMonth() + 1)) {
+        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const dueDate = new Date(d.getFullYear(), d.getMonth(), rentDueDay);
+        if (dueDate < now) {
+          const hasPayment = payments.some(p => {
+            const pDate = new Date(p.due_date);
+            const pKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}`;
+            return pKey === monthKey && (p.status === 'paid' || p.status === 'partial');
+          });
+          if (!hasPayment) {
+            const days = Math.ceil((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+            maxLateDays = Math.max(maxLateDays, days);
+            break; // earliest unpaid gives max days
+          }
+        }
+      }
+    }
+    
+    if (totalLate >= 3) {
       return { label: "Retard fréquent", className: "bg-orange-500/10 text-orange-600 border-orange-500/30" };
     }
-    return { label: `Retard ${lateDays}j+`, className: "bg-destructive/10 text-destructive border-destructive/30" };
+    return { label: `Retard ${maxLateDays}j+`, className: "bg-destructive/10 text-destructive border-destructive/30" };
   }
   
   // Check if current month is paid
-  const now = new Date();
   const currentMonthPayments = payments.filter(p => {
     const dueDate = new Date(p.due_date);
     return dueDate.getMonth() === now.getMonth() && dueDate.getFullYear() === now.getFullYear();
@@ -112,7 +184,7 @@ function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean) 
     return { label: "À jour", className: "bg-emerald/10 text-emerald border-emerald/30" };
   }
   
-  // No late payments, current month not yet paid - still "À jour" (not overdue yet)
+  // No late payments, current month not yet due - still "À jour"
   return { label: "À jour", className: "bg-emerald/10 text-emerald border-emerald/30" };
 }
 

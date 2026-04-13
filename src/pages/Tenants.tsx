@@ -251,8 +251,9 @@ export default function Tenants() {
       if (paymentStatus?.label !== "Expulsé") return false;
     }
 
-    const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = tenant.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.property?.title?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const assignedTo = tenant.assigned_to;

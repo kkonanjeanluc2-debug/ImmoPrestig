@@ -1312,20 +1312,21 @@ export const generateAttestationVillageoise = async (
       try {
         const imgBase64 = await loadImageAsBase64(template.watermark_image_url);
         if (imgBase64) {
-          const imgSize = 35;
+          const imgSizeLarge = 90;
+          const imgSizeSmall = 45;
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
           if (repeat) {
-            const stepY = imgSize + 30;
-            const x1 = pageWidth * 0.22;
-            const x2 = pageWidth * 0.62;
+            const stepY = imgSizeSmall + 30;
+            const x1 = pageWidth * 0.18;
+            const x2 = pageWidth * 0.58;
             for (let y = bodyTopY; y < bodyBottomY; y += stepY) {
               if (gState) (doc as any).setGState(gState);
-              doc.addImage(imgBase64, 'PNG', x1, y, imgSize, imgSize);
-              doc.addImage(imgBase64, 'PNG', x2, y, imgSize, imgSize);
+              doc.addImage(imgBase64, 'PNG', x1, y, imgSizeSmall, imgSizeSmall);
+              doc.addImage(imgBase64, 'PNG', x2, y, imgSizeSmall, imgSizeSmall);
             }
           } else {
             if (gState) (doc as any).setGState(gState);
-            doc.addImage(imgBase64, 'PNG', (pageWidth - imgSize) / 2, (bodyTopY + bodyBottomY - imgSize) / 2, imgSize, imgSize);
+            doc.addImage(imgBase64, 'PNG', (pageWidth - imgSizeLarge) / 2, (bodyTopY + bodyBottomY - imgSizeLarge) / 2, imgSizeLarge, imgSizeLarge);
           }
           // Reset opacity
           const resetState = (doc as any).GState ? new (doc as any).GState({ opacity: 1 }) : null;

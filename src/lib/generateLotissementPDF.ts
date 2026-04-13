@@ -1187,8 +1187,12 @@ export const generateAttestationVillageoise = async (
     if (yPos + neededHeight <= pageHeight - bottomMargin) return;
     doc.addPage();
     drawDocumentBackground();
-    yPos = margin;
+    drawPageBorder();
+    yPos = template?.page_border_enabled ? 15 : margin;
   };
+
+  // Forward declaration - will be defined after hexToRgb
+  let drawPageBorder = () => {};
 
   const writeWrappedLines = (
     lines: string | string[],

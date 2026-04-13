@@ -1043,6 +1043,7 @@ export interface AttestationTemplateData {
   village_logo_url?: string | null;
   right_logo_url?: string | null;
   header_line_color?: string | null;
+  title_border_color?: string | null;
   watermark_type?: string;
   watermark_text?: string | null;
   watermark_image_url?: string | null;
@@ -1421,7 +1422,7 @@ export const generateAttestationVillageoise = async (
     const titleText = 'ATTESTATION DE CESSION DE TERRAIN';
     const nText = `N° ${parcelle.plot_number || '..........'}`;
     
-    const titleBorderColor = (template as any)?.title_border_color;
+    const titleBorderColor = template?.title_border_color;
     
     if (titleBorderColor) {
       // Draw title text first, then N° on separate line, all inside a rounded border

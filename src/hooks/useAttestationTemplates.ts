@@ -32,6 +32,9 @@ export interface AttestationTemplate {
   watermark_angle: string;
   watermark_opacity: number;
   watermark_repeat: boolean;
+  page_border_enabled: boolean;
+  page_border_color: string;
+  page_border_style: string;
   created_at: string;
   updated_at: string;
 }

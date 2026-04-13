@@ -26,6 +26,8 @@ export function PlatformSettingsCard() {
   const [smsEnabled, setSmsEnabled] = useState(true);
   const [appLogoUrl, setAppLogoUrl] = useState("");
   const [appName, setAppName] = useState("ImmoPrestige");
+  const [youtubeDemoUrl, setYoutubeDemoUrl] = useState("");
+  const [tiktokDemoUrl, setTiktokDemoUrl] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {

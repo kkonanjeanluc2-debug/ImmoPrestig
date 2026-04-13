@@ -1082,7 +1082,7 @@ export const generateAttestationVillageoise = async (
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const isCessionTemplate = forceCession || (template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR'));
+  const isCessionTemplate = forceCession || (template?.content && (template.content.includes('CÉDANT') || template.content.includes('PROPRIÉTAIRE TERRIEN')) && template.content.includes('PROMOTEUR'));
   const isAttributionTemplate = !isCessionTemplate;
   const margin = isAttributionTemplate
     ? compactLevel > 1
@@ -1768,8 +1768,8 @@ export const generateAttestationVillageoise = async (
     writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 1 });
   }
 
-  // Detect if this is a cession template (has CÉDANT + PROMOTEUR signatures)
-  const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') && templateContent.includes('PROMOTEUR'));
+  // Detect if this is a cession template (has PROPRIÉTAIRE TERRIEN or CÉDANT + PROMOTEUR signatures)
+  const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') || templateContent.includes('PROPRIÉTAIRE TERRIEN')) && templateContent.includes('PROMOTEUR');
 
   if (isCessionSignatures) {
     ensureSpace(45);

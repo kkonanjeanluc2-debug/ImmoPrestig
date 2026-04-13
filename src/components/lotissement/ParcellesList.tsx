@@ -150,12 +150,19 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
         doc_bg_color_1: (tpl as any).doc_bg_color_1 || null,
         doc_bg_color_2: (tpl as any).doc_bg_color_2 || null,
         doc_bg_gradient: (tpl as any).doc_bg_gradient || false,
+        village_logo_url: (tpl as any).village_logo_url || null,
+        right_logo_url: (tpl as any).right_logo_url || null,
+        header_line_color: (tpl as any).header_line_color || null,
+        title_border_color: (tpl as any).title_border_color || null,
         watermark_type: (tpl as any).watermark_type || 'none',
         watermark_text: (tpl as any).watermark_text || null,
         watermark_image_url: (tpl as any).watermark_image_url || null,
         watermark_angle: (tpl as any).watermark_angle || 'diagonal',
         watermark_opacity: (tpl as any).watermark_opacity ?? 0.1,
         watermark_repeat: (tpl as any).watermark_repeat ?? true,
+        page_border_enabled: (tpl as any).page_border_enabled || false,
+        page_border_color: (tpl as any).page_border_color || '#8B4513',
+        page_border_style: (tpl as any).page_border_style || 'geometric',
       } : null;
 
       const chefImages: AttestationChefImages = {

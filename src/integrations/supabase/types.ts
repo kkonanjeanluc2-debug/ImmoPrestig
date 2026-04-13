@@ -804,6 +804,9 @@ export type Database = {
           is_default: boolean
           lotissement_origin_name: string | null
           name: string
+          page_border_color: string | null
+          page_border_enabled: boolean | null
+          page_border_style: string | null
           right_logo_url: string | null
           template_type: string
           title_border_color: string | null
@@ -837,6 +840,9 @@ export type Database = {
           is_default?: boolean
           lotissement_origin_name?: string | null
           name: string
+          page_border_color?: string | null
+          page_border_enabled?: boolean | null
+          page_border_style?: string | null
           right_logo_url?: string | null
           template_type?: string
           title_border_color?: string | null
@@ -870,6 +876,9 @@ export type Database = {
           is_default?: boolean
           lotissement_origin_name?: string | null
           name?: string
+          page_border_color?: string | null
+          page_border_enabled?: boolean | null
+          page_border_style?: string | null
           right_logo_url?: string | null
           template_type?: string
           title_border_color?: string | null

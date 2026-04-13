@@ -1158,6 +1158,9 @@ export const generateAttestationVillageoise = async (
             : 10;
   const headerLogoInsetX = Math.max(margin, pageBorderContentInset + 2);
   const headerLogoMinY = pageBorderContentInset > 0 ? pageBorderContentInset + 1 : 0;
+  const headerBannerInsetX = template?.page_border_enabled
+    ? headerLogoInsetX + 2
+    : Math.max(0, margin - 5);
 
   if (pageBorderContentInset > 0) {
     yPos = Math.max(yPos, pageBorderContentInset + 4);
@@ -1668,9 +1671,10 @@ export const generateAttestationVillageoise = async (
     const bannerColor2 = template?.banner_color_2 || null;
     const useBannerGradient = template?.banner_gradient && bannerColor2;
 
+    const bannerX = headerBannerInsetX;
+    const bannerW = pageWidth - 2 * headerBannerInsetX;
+
     if (useBannerGradient) {
-      const bannerX = margin - 5;
-      const bannerW = pageWidth - 2 * (margin - 5);
       const c1 = hexToRgb(bannerColor1, 0);
       const c2 = hexToRgb(bannerColor2!, 0);
       const steps = 40;
@@ -1686,7 +1690,7 @@ export const generateAttestationVillageoise = async (
     } else {
       const banner = hexToRgb(bannerColor1, 0);
       doc.setFillColor(banner[0], banner[1], banner[2]);
-      doc.rect(margin - 5, bannerTopY, pageWidth - 2 * (margin - 5), bannerHeight, 'F');
+      doc.rect(bannerX, bannerTopY, bannerW, bannerHeight, 'F');
     }
 
     doc.setTextColor(255, 255, 255);

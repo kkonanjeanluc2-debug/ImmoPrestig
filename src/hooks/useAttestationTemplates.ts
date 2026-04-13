@@ -22,6 +22,7 @@ export interface AttestationTemplate {
   doc_bg_color_2: string | null;
   doc_bg_gradient: boolean;
   village_logo_url: string | null;
+  right_logo_url: string | null;
   template_type: string;
   header_line_color: string | null;
   watermark_type: string;

@@ -131,6 +131,7 @@ const emptyForm: AttestationTemplateInsert = {
   doc_bg_color_2: null,
   doc_bg_gradient: false,
   village_logo_url: null,
+  right_logo_url: null,
   template_type: "attribution",
   header_line_color: "#FF8C00",
   watermark_type: "none",
@@ -157,7 +158,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
   const [templateToDelete, setTemplateToDelete] = useState<AttestationTemplate | null>(null);
   const [form, setForm] = useState<AttestationTemplateInsert>(emptyForm);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingRightLogo, setUploadingRightLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const rightLogoInputRef = useRef<HTMLInputElement>(null);
   const watermarkInputRef = useRef<HTMLInputElement>(null);
   const [uploadingWatermark, setUploadingWatermark] = useState(false);
 

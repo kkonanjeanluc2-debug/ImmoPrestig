@@ -1425,18 +1425,16 @@ export const generateAttestationVillageoise = async (
     const titleBorderColor = template?.title_border_color;
     
     if (titleBorderColor) {
-      // Draw title text first, then N° on separate line, all inside a rounded border
-      doc.setFontSize(14);
+      // Draw title + N° on a single line inside a rounded border
+      const fullTitle = `ATTESTATION DE CESSION DE TERRAIN   ${nText}`;
+      doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
-      const titleW = doc.getTextWidth(titleText);
-      doc.setFontSize(11);
-      const nW = doc.getTextWidth(nText);
+      const fullW = doc.getTextWidth(fullTitle);
       
-      const boxPaddingX = 14;
-      const boxPaddingY = 5;
-      const innerW = Math.max(titleW, nW);
-      const boxW = innerW + boxPaddingX * 2;
-      const boxH = 22 + boxPaddingY * 2;
+      const boxPaddingX = 12;
+      const boxPaddingY = 6;
+      const boxW = fullW + boxPaddingX * 2;
+      const boxH = boxPaddingY * 2 + 8;
       const boxX = (pageWidth - boxW) / 2;
       const boxY = yPos - 2;
       
@@ -1446,17 +1444,7 @@ export const generateAttestationVillageoise = async (
       doc.roundedRect(boxX, boxY, boxW, boxH, 3, 3, 'S');
       
       doc.setTextColor(...textColor);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(titleText, pageWidth / 2, boxY + boxPaddingY + 6, { align: 'center' });
-      
-      doc.setFontSize(11);
-      const nTextY = boxY + boxPaddingY + 16;
-      doc.text(nText, pageWidth / 2, nTextY, { align: 'center' });
-      // Underline N°
-      doc.setDrawColor(...textColor);
-      doc.setLineWidth(0.5);
-      doc.line(pageWidth / 2 - nW / 2, nTextY + 1.5, pageWidth / 2 + nW / 2, nTextY + 1.5);
+      doc.text(fullTitle, pageWidth / 2, boxY + boxPaddingY + 5, { align: 'center' });
       
       yPos = boxY + boxH + 6;
     } else {

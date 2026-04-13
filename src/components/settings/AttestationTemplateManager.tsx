@@ -316,6 +316,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_angle: (t as any).watermark_angle || "diagonal",
       watermark_opacity: (t as any).watermark_opacity ?? 0.1,
       watermark_repeat: (t as any).watermark_repeat ?? true,
+      page_border_enabled: (t as any).page_border_enabled || false,
+      page_border_color: (t as any).page_border_color || '#8B4513',
+      page_border_style: (t as any).page_border_style || 'geometric',
     });
     setDialogOpen(true);
   };

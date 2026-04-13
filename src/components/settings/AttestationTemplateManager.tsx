@@ -141,6 +141,9 @@ const emptyForm: AttestationTemplateInsert = {
   watermark_angle: "diagonal",
   watermark_opacity: 0.1,
   watermark_repeat: true,
+  page_border_enabled: false,
+  page_border_color: "#8B4513",
+  page_border_style: "geometric",
 };
 
 export function AttestationTemplateManager({ templateType = "attribution" }: { templateType?: string }) {
@@ -276,6 +279,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_angle: (t as any).watermark_angle || "diagonal",
       watermark_opacity: (t as any).watermark_opacity ?? 0.1,
       watermark_repeat: (t as any).watermark_repeat ?? true,
+      page_border_enabled: (t as any).page_border_enabled || false,
+      page_border_color: (t as any).page_border_color || '#8B4513',
+      page_border_style: (t as any).page_border_style || 'geometric',
     });
     setDialogOpen(true);
   };
@@ -310,6 +316,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_angle: (t as any).watermark_angle || "diagonal",
       watermark_opacity: (t as any).watermark_opacity ?? 0.1,
       watermark_repeat: (t as any).watermark_repeat ?? true,
+      page_border_enabled: (t as any).page_border_enabled || false,
+      page_border_color: (t as any).page_border_color || '#8B4513',
+      page_border_style: (t as any).page_border_style || 'geometric',
     });
     setDialogOpen(true);
   };
@@ -1058,6 +1067,89 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 >
                   Supprimer la couleur de fond
                 </Button>
+              )}
+            </div>
+
+            {/* Bordure décorative de page */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Bordure décorative de page</Label>
+              <p className="text-xs text-muted-foreground">
+                Ajoutez une bordure décorative autour de l'ensemble du document (comme sur les attestations officielles).
+              </p>
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={form.page_border_enabled}
+                  onCheckedChange={(v) => updateField("page_border_enabled", v)}
+                />
+                <Label className="text-sm">Activer la bordure</Label>
+              </div>
+              {form.page_border_enabled && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Couleur de la bordure</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={form.page_border_color || "#8B4513"}
+                          onChange={(e) => updateField("page_border_color", e.target.value)}
+                          className="w-10 h-10 rounded cursor-pointer border border-border"
+                        />
+                        <Input
+                          value={form.page_border_color || "#8B4513"}
+                          onChange={(e) => updateField("page_border_color", e.target.value)}
+                          className="w-28 font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Style de bordure</Label>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { value: "geometric", label: "Géométrique", desc: "Cadre double avec motifs carrés" },
+                        { value: "dashes", label: "Tirets", desc: "Tirets colorés autour de la page" },
+                        { value: "double", label: "Double ligne", desc: "Double cadre simple" },
+                        { value: "ornate", label: "Orné", desc: "Cadre avec points et coins décorés" },
+                      ].map((style) => (
+                        <label key={style.value} className="flex items-start gap-2 cursor-pointer border rounded-lg p-2 hover:bg-accent/50 transition-colors">
+                          <input
+                            type="radio"
+                            name="page_border_style"
+                            value={style.value}
+                            checked={form.page_border_style === style.value}
+                            onChange={() => updateField("page_border_style", style.value)}
+                            className="accent-primary mt-0.5"
+                          />
+                          <div>
+                            <span className="text-sm font-medium">{style.label}</span>
+                            <p className="text-xs text-muted-foreground">{style.desc}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Aperçu</Label>
+                    <div
+                      className="mt-1 w-32 h-20 rounded relative"
+                      style={{
+                        border: form.page_border_style === 'double' || form.page_border_style === 'geometric' || form.page_border_style === 'ornate'
+                          ? `2px solid ${form.page_border_color || '#8B4513'}`
+                          : `2px dashed ${form.page_border_color || '#8B4513'}`,
+                      }}
+                    >
+                      {(form.page_border_style === 'double' || form.page_border_style === 'geometric' || form.page_border_style === 'ornate') && (
+                        <div
+                          className="absolute inset-1 rounded"
+                          style={{
+                            border: `1px solid ${form.page_border_color || '#8B4513'}`,
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 

@@ -282,6 +282,9 @@ export function DocumentsParcelleDialog({
                     watermark_angle: (attestationTemplate as any).watermark_angle || 'diagonal',
                     watermark_opacity: (attestationTemplate as any).watermark_opacity ?? 0.1,
                     watermark_repeat: (attestationTemplate as any).watermark_repeat ?? true,
+                    page_border_enabled: (attestationTemplate as any).page_border_enabled || false,
+                    page_border_color: (attestationTemplate as any).page_border_color || '#8B4513',
+                    page_border_style: (attestationTemplate as any).page_border_style || 'geometric',
                   } : null;
                   const chefImages: AttestationChefImages = {
                     stamp_url: lotissement?.chef_stamp_url || null,

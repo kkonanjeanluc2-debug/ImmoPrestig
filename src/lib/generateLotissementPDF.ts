@@ -1050,6 +1050,9 @@ export interface AttestationTemplateData {
   watermark_angle?: string;
   watermark_opacity?: number;
   watermark_repeat?: boolean;
+  page_border_enabled?: boolean;
+  page_border_color?: string;
+  page_border_style?: string;
 }
 
 export interface AttestationChefImages {
@@ -1180,11 +1183,15 @@ export const generateAttestationVillageoise = async (
     doc.rect(0, 0, pageWidth, pageHeight, 'F');
   };
 
+  // drawPageBorder will be assigned later, after hexToRgb is defined
+  let drawPageBorderFn = () => {};
+
   const ensureSpace = (neededHeight: number) => {
     if (yPos + neededHeight <= pageHeight - bottomMargin) return;
     doc.addPage();
     drawDocumentBackground();
-    yPos = margin;
+    drawPageBorderFn();
+    yPos = template?.page_border_enabled ? 15 : margin;
   };
 
   const writeWrappedLines = (
@@ -1262,7 +1269,126 @@ export const generateAttestationVillageoise = async (
     doc.setFont('helvetica', 'normal');
   };
 
+  // Draw decorative page border
+  drawPageBorderFn = () => {
+    if (!template?.page_border_enabled) return;
+    const borderColor = template.page_border_color || '#8B4513';
+    const borderStyle = template.page_border_style || 'geometric';
+    const bc = hexToRgb(borderColor, 0);
+    const bm = 4; // border margin from page edge
+    const pw = pageWidth;
+    const ph = pageHeight;
+
+    if (borderStyle === 'geometric') {
+      // Double rectangle frame with small repeated rectangles between them
+      const outerOffset = bm;
+      const innerOffset = bm + 6;
+      
+      // Outer rectangle
+      doc.setDrawColor(bc[0], bc[1], bc[2]);
+      doc.setLineWidth(0.8);
+      doc.rect(outerOffset, outerOffset, pw - 2 * outerOffset, ph - 2 * outerOffset, 'S');
+      
+      // Inner rectangle
+      doc.setLineWidth(0.5);
+      doc.rect(innerOffset, innerOffset, pw - 2 * innerOffset, ph - 2 * innerOffset, 'S');
+      
+      // Small decorative rectangles between outer and inner borders
+      doc.setFillColor(bc[0], bc[1], bc[2]);
+      const blockSize = 2.5;
+      const gap = 4;
+      const midOffset = (outerOffset + innerOffset) / 2;
+      
+      // Top and bottom edges
+      for (let x = outerOffset + gap; x < pw - outerOffset - gap; x += blockSize + gap) {
+        doc.rect(x, midOffset - blockSize / 2, blockSize, blockSize, 'F');
+        doc.rect(x, ph - midOffset - blockSize / 2, blockSize, blockSize, 'F');
+      }
+      // Left and right edges
+      for (let y = outerOffset + gap; y < ph - outerOffset - gap; y += blockSize + gap) {
+        doc.rect(midOffset - blockSize / 2, y, blockSize, blockSize, 'F');
+        doc.rect(pw - midOffset - blockSize / 2, y, blockSize, blockSize, 'F');
+      }
+    } else if (borderStyle === 'dashes') {
+      // Alternating colored dashes around the page
+      doc.setDrawColor(bc[0], bc[1], bc[2]);
+      doc.setLineWidth(2);
+      const dashLen = 8;
+      const gapLen = 4;
+      const offset = bm + 3;
+      
+      // Top
+      for (let x = offset; x < pw - offset; x += dashLen + gapLen) {
+        doc.line(x, offset, Math.min(x + dashLen, pw - offset), offset);
+      }
+      // Bottom
+      for (let x = offset; x < pw - offset; x += dashLen + gapLen) {
+        doc.line(x, ph - offset, Math.min(x + dashLen, pw - offset), ph - offset);
+      }
+      // Left
+      for (let y = offset; y < ph - offset; y += dashLen + gapLen) {
+        doc.line(offset, y, offset, Math.min(y + dashLen, ph - offset));
+      }
+      // Right
+      for (let y = offset; y < ph - offset; y += dashLen + gapLen) {
+        doc.line(pw - offset, y, pw - offset, Math.min(y + dashLen, ph - offset));
+      }
+    } else if (borderStyle === 'double') {
+      // Double line border
+      doc.setDrawColor(bc[0], bc[1], bc[2]);
+      doc.setLineWidth(1.2);
+      doc.rect(bm, bm, pw - 2 * bm, ph - 2 * bm, 'S');
+      doc.setLineWidth(0.5);
+      doc.rect(bm + 4, bm + 4, pw - 2 * (bm + 4), ph - 2 * (bm + 4), 'S');
+    } else if (borderStyle === 'ornate') {
+      // Ornate border with corner decorations and dotted pattern
+      const outerOffset = bm;
+      const innerOffset = bm + 8;
+      
+      // Outer thick border
+      doc.setDrawColor(bc[0], bc[1], bc[2]);
+      doc.setLineWidth(1.5);
+      doc.rect(outerOffset, outerOffset, pw - 2 * outerOffset, ph - 2 * outerOffset, 'S');
+      
+      // Inner thin border
+      doc.setLineWidth(0.4);
+      doc.rect(innerOffset, innerOffset, pw - 2 * innerOffset, ph - 2 * innerOffset, 'S');
+      
+      // Dots between borders
+      doc.setFillColor(bc[0], bc[1], bc[2]);
+      const dotR = 0.8;
+      const dotGap = 5;
+      const midOff = (outerOffset + innerOffset) / 2;
+      
+      for (let x = outerOffset + dotGap; x < pw - outerOffset; x += dotGap) {
+        doc.circle(x, midOff, dotR, 'F');
+        doc.circle(x, ph - midOff, dotR, 'F');
+      }
+      for (let y = outerOffset + dotGap; y < ph - outerOffset; y += dotGap) {
+        doc.circle(midOff, y, dotR, 'F');
+        doc.circle(pw - midOff, y, dotR, 'F');
+      }
+      
+      // Corner squares
+      const cornerSize = 4;
+      const corners = [
+        [outerOffset + 1, outerOffset + 1],
+        [pw - outerOffset - cornerSize - 1, outerOffset + 1],
+        [outerOffset + 1, ph - outerOffset - cornerSize - 1],
+        [pw - outerOffset - cornerSize - 1, ph - outerOffset - cornerSize - 1],
+      ];
+      for (const [cx, cy] of corners) {
+        doc.rect(cx, cy, cornerSize, cornerSize, 'FD');
+      }
+    }
+    
+    // Reset
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.2);
+  };
+
   drawDocumentBackground();
+  drawPageBorderFn();
 
   // Draw watermark
   const drawWatermark = async (bodyTopY: number, bodyBottomY: number) => {

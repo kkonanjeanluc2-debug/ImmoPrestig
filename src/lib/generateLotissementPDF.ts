@@ -1433,7 +1433,10 @@ export const generateAttestationVillageoise = async (
       
       const boxPaddingX = 12;
       const boxPaddingY = 6;
-      const boxW = fullW + boxPaddingX * 2;
+      // Ensure box doesn't overlap logos: keep inside logo boundaries with gap
+      const logoGap = hasLogos ? logoSize + 8 : 0;
+      const maxBoxW = pageWidth - 2 * margin - 2 * logoGap;
+      const boxW = Math.min(fullW + boxPaddingX * 2, maxBoxW);
       const boxH = boxPaddingY * 2 + 8;
       const boxX = (pageWidth - boxW) / 2;
       const boxY = yPos - 2;

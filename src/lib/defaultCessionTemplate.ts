@@ -35,7 +35,7 @@ En foi de quoi, cette présente attestation de cession est faite pour servir et 
 
 **Fait à {ville}, le {date_vente}**
 
-**LE CÉDANT**                                                                    **AGENCE / PROMOTEUR**
+**LE PROPRIÉTAIRE TERRIEN**                                                                    **AGENCE / PROMOTEUR**
 `;
 
 export const CESSION_VARIABLES = [
@@ -50,9 +50,9 @@ export const CESSION_VARIABLES = [
   { variable: "{beneficiaire_profession}", description: "Profession du bénéficiaire" },
   { variable: "{beneficiaire_telephone}", description: "Téléphone du bénéficiaire" },
   { variable: "{beneficiaire_adresse}", description: "Adresse du bénéficiaire" },
-  { variable: "{cedant_nom}", description: "Nom du cédant (attributaire)" },
-  { variable: "{cedant_cni}", description: "N° CNI du cédant" },
-  { variable: "{cedant_telephone}", description: "Téléphone du cédant" },
+  { variable: "{cedant_nom}", description: "Nom du propriétaire terrien" },
+  { variable: "{cedant_cni}", description: "N° CNI du propriétaire terrien" },
+  { variable: "{cedant_telephone}", description: "Téléphone du propriétaire terrien" },
   { variable: "{date_vente}", description: "Date de la cession" },
   { variable: "{ville}", description: "Ville (pour 'Fait à...')" },
   { variable: "{nom_agence}", description: "Nom de l'agence/promoteur" },

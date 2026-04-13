@@ -1082,7 +1082,7 @@ export const generateAttestationVillageoise = async (
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const isCessionTemplate = forceCession || (template?.content?.includes('CÉDANT') && template?.content?.includes('PROMOTEUR'));
+  const isCessionTemplate = forceCession || (template?.content && (template.content.includes('CÉDANT') || template.content.includes('PROPRIÉTAIRE TERRIEN')) && template.content.includes('PROMOTEUR'));
   const isAttributionTemplate = !isCessionTemplate;
   const margin = isAttributionTemplate
     ? compactLevel > 1
@@ -1632,7 +1632,7 @@ export const generateAttestationVillageoise = async (
       const cleanedLine = trimmed.replace(/^\#{1,4}\s*/, '').replace(/\*\*/g, '').replace(/_/g, '').toUpperCase().trim();
       if (cleanedLine === 'LE CHEF DU VILLAGE') continue;
       if (cleanedLine.includes('LE CHEF DU VILLAGE')) continue;
-      if (cleanedLine.includes('LE CÉDANT') || cleanedLine.includes('LE CEDANT')) continue;
+      if (cleanedLine.includes('LE CÉDANT') || cleanedLine.includes('LE CEDANT') || cleanedLine.includes('PROPRIÉTAIRE TERRIEN') || cleanedLine.includes('PROPRIETAIRE TERRIEN')) continue;
       if (cleanedLine.includes('AGENCE') && cleanedLine.includes('PROMOTEUR')) continue;
       if (chef && cleanedLine === chef.toUpperCase()) continue;
       if (cleanedLine === 'SIGNATURE ET CACHET' || cleanedLine === 'SIGNATURE ET CACHET DU CHEF' || cleanedLine === 'CACHET ET SIGNATURE') continue;
@@ -1768,8 +1768,8 @@ export const generateAttestationVillageoise = async (
     writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 1 });
   }
 
-  // Detect if this is a cession template (has CÉDANT + PROMOTEUR signatures)
-  const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') && templateContent.includes('PROMOTEUR'));
+  // Detect if this is a cession template (has PROPRIÉTAIRE TERRIEN or CÉDANT + PROMOTEUR signatures)
+  const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') || templateContent.includes('PROPRIÉTAIRE TERRIEN')) && templateContent.includes('PROMOTEUR');
 
   if (isCessionSignatures) {
     ensureSpace(45);
@@ -1777,7 +1777,7 @@ export const generateAttestationVillageoise = async (
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text('LE CÉDANT', leftBlockCenter, yPos, { align: 'center' });
+     doc.text('LE PROPRIÉTAIRE TERRIEN', leftBlockCenter, yPos, { align: 'center' });
     doc.text('AGENCE / PROMOTEUR', rightBlockCenter, yPos, { align: 'center' });
     yPos += 15;
 

@@ -552,6 +552,106 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
             </div>
             )}
 
+            {/* Logos gauche et droit - only for cession */}
+            {isCession && (
+            <div className="space-y-4">
+              <Label className="text-sm font-semibold">Logos de l'en-tête</Label>
+              <p className="text-xs text-muted-foreground">
+                Importez les logos qui apparaîtront en haut à gauche et à droite de l'attestation de cession (ex: logo du district, logo du géomètre).
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Logo gauche */}
+                <div className="space-y-2 border rounded-lg p-3">
+                  <Label className="text-xs font-medium">Logo gauche</Label>
+                  {form.village_logo_url ? (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={form.village_logo_url}
+                        alt="Logo gauche"
+                        className="w-16 h-16 object-contain border rounded-lg"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateField('village_logo_url', null)}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={uploadingLogo}
+                      >
+                        {uploadingLogo ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        Importer
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {/* Logo droit */}
+                <div className="space-y-2 border rounded-lg p-3">
+                  <Label className="text-xs font-medium">Logo droit</Label>
+                  {form.right_logo_url ? (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={form.right_logo_url}
+                        alt="Logo droit"
+                        className="w-16 h-16 object-contain border rounded-lg"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateField('right_logo_url', null)}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        ref={rightLogoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleRightLogoUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => rightLogoInputRef.current?.click()}
+                        disabled={uploadingRightLogo}
+                      >
+                        {uploadingRightLogo ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        Importer
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            )}
+
             <Separator />
 
             {/* Couleurs du bandeau - only for attribution */}

@@ -806,6 +806,7 @@ export type Database = {
           name: string
           right_logo_url: string | null
           template_type: string
+          title_border_color: string | null
           updated_at: string
           user_id: string
           village: string | null
@@ -838,6 +839,7 @@ export type Database = {
           name: string
           right_logo_url?: string | null
           template_type?: string
+          title_border_color?: string | null
           updated_at?: string
           user_id: string
           village?: string | null
@@ -870,6 +872,7 @@ export type Database = {
           name?: string
           right_logo_url?: string | null
           template_type?: string
+          title_border_color?: string | null
           updated_at?: string
           user_id?: string
           village?: string | null

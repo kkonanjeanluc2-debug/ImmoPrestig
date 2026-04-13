@@ -1,0 +1,1 @@
+ALTER TABLE public.attestation_templates ADD COLUMN title_border_color TEXT DEFAULT NULL;

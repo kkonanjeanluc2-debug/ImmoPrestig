@@ -1971,7 +1971,7 @@ const _generateAttestationVillageoiseInternal = async (
     doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
     yPos += cl >= 3 ? 6 : 12;
   } else {
-    ensureSpace(45);
+    ensureSpace(cl >= 3 ? 25 : 45);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);

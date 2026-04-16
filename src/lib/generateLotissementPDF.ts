@@ -1620,28 +1620,37 @@ const _generateAttestationVillageoiseInternal = async (
     if (titleBorderColor) {
       // Draw title + N° on a single line inside a rounded border
       const fullTitle = `ATTESTATION DE CESSION DE TERRAIN   ${nText}`;
-      doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
-      const fullW = doc.getTextWidth(fullTitle);
-      
+
       const boxPaddingX = 12;
       const boxPaddingY = 6;
       // Ensure box doesn't overlap logos: keep inside logo boundaries with gap
       const logoGap = hasLogos ? logoSize + 8 : 0;
       const maxBoxW = pageWidth - 2 * margin - 2 * logoGap;
+      const maxTextW = maxBoxW - boxPaddingX * 2;
+
+      // Dynamically shrink font size to fit text within the available width
+      let titleFontSize = 13;
+      doc.setFontSize(titleFontSize);
+      while (doc.getTextWidth(fullTitle) > maxTextW && titleFontSize > 8) {
+        titleFontSize -= 0.5;
+        doc.setFontSize(titleFontSize);
+      }
+
+      const fullW = doc.getTextWidth(fullTitle);
       const boxW = Math.min(fullW + boxPaddingX * 2, maxBoxW);
       const boxH = boxPaddingY * 2 + 8;
       const boxX = (pageWidth - boxW) / 2;
       const boxY = yPos - 2;
-      
+
       const bc = hexToRgb(titleBorderColor, 0);
       doc.setDrawColor(bc[0], bc[1], bc[2]);
       doc.setLineWidth(1.2);
       doc.roundedRect(boxX, boxY, boxW, boxH, 3, 3, 'S');
-      
+
       doc.setTextColor(...textColor);
       doc.text(fullTitle, pageWidth / 2, boxY + boxPaddingY + 5, { align: 'center' });
-      
+
       yPos = boxY + boxH + 6;
     } else {
       doc.setFontSize(16);

@@ -1508,7 +1508,7 @@ const _generateAttestationVillageoiseInternal = async (
     // === CESSION HEADER: Left logo + district info + right logo + colored dashes + title ===
     const leftLogoUrl = template?.village_logo_url;
     const rightLogoUrl = template?.right_logo_url;
-    const logoSize = 25;
+    const logoSize = cl >= 4 ? 18 : cl >= 2 ? 22 : 25;
     const logoStartY = Math.max(yPos - 3, headerLogoMinY);
     const leftLogoX = headerLogoInsetX;
     const rightLogoX = pageWidth - headerLogoInsetX - logoSize;

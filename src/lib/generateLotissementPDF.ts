@@ -1433,7 +1433,7 @@ const _generateAttestationVillageoiseInternal = async (
     const wmType = template?.watermark_type || 'none';
     if (wmType === 'none') return;
     const opacity = template?.watermark_opacity ?? 0.1;
-    const angle = template?.watermark_angle === 'horizontal' ? 0 : -45;
+    const angle = template?.watermark_angle === 'horizontal' ? 0 : 45;
     const repeat = template?.watermark_repeat ?? true;
 
     if (wmType === 'text' && template?.watermark_text) {

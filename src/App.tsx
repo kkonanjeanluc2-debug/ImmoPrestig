@@ -3,7 +3,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -15,7 +14,7 @@ import UpdatePrompt from "@/components/UpdatePrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PageSkeleton from "@/components/PageSkeleton";
-import { createIDBPersister } from "@/lib/queryPersister";
+
 
 // Lazy load pages for code splitting
 const pageImports = {
@@ -111,20 +110,14 @@ function usePreloadPages() {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
-      gcTime: 24 * 60 * 60 * 1000, // 24 hours - keep in cache for offline
-      refetchOnWindowFocus: false,
+      staleTime: 30 * 1000, // 30 seconds - data revalidates quickly
+      gcTime: 10 * 60 * 1000, // 10 minutes - shorter garbage collection
+      refetchOnWindowFocus: true, // Refresh when user returns to tab
       retry: 1,
-      networkMode: "offlineFirst", // Serve from cache first, then revalidate
-      refetchOnReconnect: true, // Auto-refresh when coming back online
-    },
-    mutations: {
-      networkMode: "offlineFirst",
+      refetchOnReconnect: true,
     },
   },
 });
-
-const persister = createIDBPersister();
 
 // Skeleton-based loader for perceived instant loading
 const PageLoader = () => <PageSkeleton />;
@@ -144,7 +137,7 @@ const App = () => {
   };
 
   return (
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60 * 1000 }}>
+    <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         {showSplash && <WelcomeScreen onComplete={handleSplashComplete} minDuration={5000} />}
         <PWAInstallBanner />
@@ -201,7 +194,7 @@ const App = () => {
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
-    </PersistQueryClientProvider>
+    </QueryClientProvider>
   );
 };
 

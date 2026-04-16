@@ -1642,7 +1642,7 @@ const _generateAttestationVillageoiseInternal = async (
   } else {
     // === ATTRIBUTION HEADER: Village logos + REPUBLIQUE + banner ===
     let headerLeftX = margin;
-    const logoSize = 25;
+    const logoSize = cl >= 4 ? 18 : cl >= 2 ? 22 : 25;
     const logoStartY = Math.max(yPos - 3, headerLogoMinY);
     const logoBottomY = logoStartY + logoSize;
     const logoBannerGap = 6;

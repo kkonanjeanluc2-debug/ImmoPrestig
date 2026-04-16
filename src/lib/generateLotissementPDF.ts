@@ -1831,7 +1831,7 @@ const _generateAttestationVillageoiseInternal = async (
       }
 
       if (!trimmed) {
-        yPos += isAttributionTemplate ? 1.5 : 3;
+        yPos += isAttributionTemplate ? (cl >= 4 ? 0.5 : cl >= 2 ? 1 : 1.5) : (cl >= 4 ? 1 : cl >= 2 ? 2 : 3);
         continue;
       }
 

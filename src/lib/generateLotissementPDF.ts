@@ -1466,17 +1466,14 @@ const _generateAttestationVillageoiseInternal = async (
           }
         }
       } else {
-        // Non-repeated mode: large centered watermark, sized to fit page
+        // Non-repeated mode: large watermark centered on the full page
         const centerX = pageWidth / 2;
-        const centerY = (bodyTopY + bodyBottomY) / 2;
-        // Available diagonal length (mm) used for sizing
+        const centerY = pageHeight / 2;
         const availableLength = angle === 0
           ? pageWidth - 2 * margin
-          : Math.sqrt(Math.pow(pageWidth - 2 * margin, 2) + Math.pow(bodyBottomY - bodyTopY, 2)) * 0.85;
-        // Approximate width per unit font size for helvetica bold (~0.55 * fontSize in pt; 1pt ≈ 0.3528mm)
+          : Math.sqrt(Math.pow(pageWidth - 2 * margin, 2) + Math.pow(pageHeight - 2 * margin, 2)) * 0.75;
         const approxWidthPerPt = text.length * 0.55 * 0.3528;
         let fontSize = Math.floor(availableLength / approxWidthPerPt);
-        // Clamp to a sensible large range
         fontSize = Math.max(60, Math.min(180, fontSize));
         doc.setFontSize(fontSize);
         doc.text(text, centerX, centerY, { align: 'center', angle, baseline: 'middle' });

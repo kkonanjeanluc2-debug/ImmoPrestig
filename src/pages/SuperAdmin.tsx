@@ -443,6 +443,7 @@ const SuperAdmin = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Compte</TableHead>
+                      <TableHead>Contact</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead className="text-center">Biens</TableHead>
@@ -479,9 +480,17 @@ const SuperAdmin = () => {
                             </div>
                           </TableCell>
                           <TableCell>
+                            <div className="text-sm">
+                              <p className="text-muted-foreground">{agency.phone || "—"}</p>
+                              {agency.city && (
+                                <p className="text-xs text-muted-foreground/70">{agency.city}{agency.country ? `, ${agency.country}` : ""}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
                             <Badge 
                               variant="outline" 
-                              className={agency.is_active 
+                              className={agency.is_active
                                 ? "bg-green-500/10 text-green-600 border-green-500/20" 
                                 : "bg-red-500/10 text-red-600 border-red-500/20"
                               }

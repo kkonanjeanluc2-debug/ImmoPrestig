@@ -1438,19 +1438,18 @@ const _generateAttestationVillageoiseInternal = async (
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
       // Use very light gray — closer to background
       const grayVal = Math.round(230 - opacity * 150);
       doc.setTextColor(grayVal, grayVal, grayVal);
-
-      const textW = doc.getTextWidth(text);
-      const rowH = 22;
-      // Two columns positioned at ~1/3 and ~2/3 of page width
-      const col1X = pageWidth * 0.18;
-      const col2X = pageWidth * 0.58;
+      doc.setFont('helvetica', 'bold');
 
       if (repeat) {
+        // Repeated mode: smaller font for tiling
+        doc.setFontSize(16);
+        const rowH = 22;
+        const col1X = pageWidth * 0.18;
+        const col2X = pageWidth * 0.58;
+
         if (angle === 0) {
           for (let y = bodyTopY; y < bodyBottomY; y += rowH) {
             doc.text(text, col1X, y);
@@ -1467,7 +1466,20 @@ const _generateAttestationVillageoiseInternal = async (
           }
         }
       } else {
-        doc.text(text, pageWidth / 2, pageHeight / 2, { align: 'center', angle });
+        // Non-repeated mode: large centered watermark, sized to fit page
+        const centerX = pageWidth / 2;
+        const centerY = (bodyTopY + bodyBottomY) / 2;
+        // Available diagonal length (mm) used for sizing
+        const availableLength = angle === 0
+          ? pageWidth - 2 * margin
+          : Math.sqrt(Math.pow(pageWidth - 2 * margin, 2) + Math.pow(bodyBottomY - bodyTopY, 2)) * 0.85;
+        // Approximate width per unit font size for helvetica bold (~0.55 * fontSize in pt; 1pt ≈ 0.3528mm)
+        const approxWidthPerPt = text.length * 0.55 * 0.3528;
+        let fontSize = Math.floor(availableLength / approxWidthPerPt);
+        // Clamp to a sensible large range
+        fontSize = Math.max(60, Math.min(180, fontSize));
+        doc.setFontSize(fontSize);
+        doc.text(text, centerX, centerY, { align: 'center', angle, baseline: 'middle' });
       }
       doc.setTextColor(...textColor);
     }

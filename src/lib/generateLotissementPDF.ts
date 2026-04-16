@@ -1089,7 +1089,7 @@ export const generateAttestationVillageoise = async (
     ancienBeneficiaire, compactLevel, forceCession
   );
   
-  const totalPages = result.internal.getNumberOfPages();
+  const totalPages = (result as any).internal.pages.length - 1;
   if (totalPages <= 1) return result;
   
   // Retry with increasing compact levels until it fits on one page
@@ -1099,7 +1099,8 @@ export const generateAttestationVillageoise = async (
       chefVillageName, template, chefVillageTitre, ilotName, chefImages,
       ancienBeneficiaire, level, forceCession
     );
-    if (retry.internal.getNumberOfPages() <= 1) return retry;
+    const retryPages = (retry as any).internal.pages.length - 1;
+    if (retryPages <= 1) return retry;
   }
   
   // Last resort: return most compact version (even if multi-page)

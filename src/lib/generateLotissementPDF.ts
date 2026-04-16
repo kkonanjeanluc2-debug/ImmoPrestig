@@ -1698,7 +1698,7 @@ const _generateAttestationVillageoiseInternal = async (
       yPos + 2,
       hasVillageLogos ? logoBottomY + 3 : yPos + 2
     );
-    const bannerHeight = 24;
+    const bannerHeight = cl >= 4 ? 18 : cl >= 2 ? 20 : 24;
     const bannerColor1 = template?.banner_color_1 || '#003399';
     const bannerColor2 = template?.banner_color_2 || null;
     const useBannerGradient = template?.banner_gradient && bannerColor2;

@@ -1956,20 +1956,20 @@ const _generateAttestationVillageoiseInternal = async (
   const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') || templateContent.includes('PROPRIÉTAIRE TERRIEN')) && templateContent.includes('PROMOTEUR');
 
   if (isCessionSignatures) {
-    ensureSpace(45);
+    ensureSpace(cl >= 3 ? 25 : 45);
     const leftBlockCenter = margin + 30;
-    doc.setFontSize(9);
+    doc.setFontSize(cl >= 3 ? 8 : 9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
      doc.text('LE PROPRIÉTAIRE TERRIEN', leftBlockCenter, yPos, { align: 'center' });
     doc.text('AGENCE / PROMOTEUR', rightBlockCenter, yPos, { align: 'center' });
-    yPos += 15;
+    yPos += cl >= 3 ? 10 : 15;
 
     // Signature lines
     doc.setDrawColor(150, 150, 150);
     doc.line(leftBlockCenter - 25, yPos, leftBlockCenter + 25, yPos);
     doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
-    yPos += 12;
+    yPos += cl >= 3 ? 6 : 12;
   } else {
     ensureSpace(45);
     doc.setFontSize(9);

@@ -1082,61 +1082,79 @@ export const generateAttestationVillageoise = async (
   compactLevel = 0,
   forceCession = false
 ): Promise<jsPDF> => {
+  // Auto-fit: try rendering, if it overflows one page, retry with higher compactLevel
+  const result = await _generateAttestationVillageoiseInternal(
+    parcelle, lotissement, acquereur, agency, saleDate, villageName,
+    chefVillageName, template, chefVillageTitre, ilotName, chefImages,
+    ancienBeneficiaire, compactLevel, forceCession
+  );
+  
+  const totalPages = (result as any).internal.pages.length - 1;
+  if (totalPages <= 1) return result;
+  
+  // Retry with increasing compact levels until it fits on one page
+  for (let level = Math.max(compactLevel + 1, 1); level <= 5; level++) {
+    const retry = await _generateAttestationVillageoiseInternal(
+      parcelle, lotissement, acquereur, agency, saleDate, villageName,
+      chefVillageName, template, chefVillageTitre, ilotName, chefImages,
+      ancienBeneficiaire, level, forceCession
+    );
+    const retryPages = (retry as any).internal.pages.length - 1;
+    if (retryPages <= 1) return retry;
+  }
+  
+  // Last resort: return most compact version (even if multi-page)
+  return await _generateAttestationVillageoiseInternal(
+    parcelle, lotissement, acquereur, agency, saleDate, villageName,
+    chefVillageName, template, chefVillageTitre, ilotName, chefImages,
+    ancienBeneficiaire, 5, forceCession
+  );
+};
+
+const _generateAttestationVillageoiseInternal = async (
+  parcelle: ParcelleInfo,
+  lotissement: LotissementInfo,
+  acquereur: AcquereurInfo,
+  agency: AgencyInfo | null,
+  saleDate: string,
+  villageName?: string,
+  chefVillageName?: string,
+  template?: AttestationTemplateData | null,
+  chefVillageTitre?: string,
+  ilotName?: string | null,
+  chefImages?: AttestationChefImages | null,
+  ancienBeneficiaire?: AncienBeneficiaireInfo | null,
+  compactLevel = 0,
+  forceCession = false
+): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const isCessionTemplate = forceCession || (template?.content && (template.content.includes('CÉDANT') || template.content.includes('PROPRIÉTAIRE TERRIEN')) && template.content.includes('PROMOTEUR'));
   const isAttributionTemplate = !isCessionTemplate;
+  const cl = compactLevel;
   const margin = isAttributionTemplate
-    ? compactLevel > 1
-      ? 10
-      : compactLevel > 0
-        ? 12
-        : 12
-    : 20;
+    ? cl >= 4 ? 8 : cl >= 2 ? 10 : 12
+    : cl >= 4 ? 12 : cl >= 2 ? 15 : 20;
   const contentWidth = pageWidth - 2 * margin;
   const bottomMargin = isAttributionTemplate
-    ? compactLevel > 1
-      ? 8
-      : compactLevel > 0
-        ? 10
-        : 10
-    : 25;
+    ? cl >= 4 ? 5 : cl >= 2 ? 8 : 10
+    : cl >= 4 ? 10 : cl >= 2 ? 15 : 25;
   let yPos = isAttributionTemplate
-    ? compactLevel > 1
-      ? 8
-      : compactLevel > 0
-        ? 8
-        : 10
-    : 15;
+    ? cl >= 3 ? 6 : cl >= 1 ? 8 : 10
+    : cl >= 3 ? 8 : cl >= 1 ? 10 : 15;
   const bodyFontSize = isAttributionTemplate
-    ? compactLevel > 1
-      ? 7.6
-      : compactLevel > 0
-        ? 8
-        : 8.2
-    : 9;
+    ? cl >= 5 ? 6.5 : cl >= 4 ? 7 : cl >= 3 ? 7.2 : cl >= 2 ? 7.6 : cl >= 1 ? 8 : 8.2
+    : cl >= 5 ? 7 : cl >= 4 ? 7.5 : cl >= 3 ? 8 : cl >= 2 ? 8.5 : 9;
   const headingFontSize = isAttributionTemplate
-    ? compactLevel > 1
-      ? 8.8
-      : compactLevel > 0
-        ? 9
-        : 9.2
-    : 10;
+    ? cl >= 5 ? 7.5 : cl >= 4 ? 8 : cl >= 3 ? 8.4 : cl >= 2 ? 8.8 : cl >= 1 ? 9 : 9.2
+    : cl >= 5 ? 8 : cl >= 4 ? 8.5 : cl >= 3 ? 9 : 10;
   const bodyLineHeight = isAttributionTemplate
-    ? compactLevel > 1
-      ? 3.8
-      : compactLevel > 0
-        ? 3.8
-        : 4
-    : 4.5;
+    ? cl >= 5 ? 3 : cl >= 4 ? 3.2 : cl >= 3 ? 3.4 : cl >= 2 ? 3.6 : cl >= 1 ? 3.8 : 4
+    : cl >= 5 ? 3.2 : cl >= 4 ? 3.5 : cl >= 3 ? 3.8 : cl >= 2 ? 4 : 4.5;
   const paragraphGap = isAttributionTemplate
-    ? compactLevel > 1
-      ? 0.8
-      : compactLevel > 0
-        ? 0.8
-        : 1
-    : 1.5;
+    ? cl >= 4 ? 0.3 : cl >= 3 ? 0.5 : cl >= 2 ? 0.6 : cl >= 1 ? 0.8 : 1
+    : cl >= 4 ? 0.5 : cl >= 3 ? 0.8 : cl >= 2 ? 1 : 1.5;
 
   const district = template?.district || "";
   const commune = template?.commune || "";
@@ -1490,7 +1508,7 @@ export const generateAttestationVillageoise = async (
     // === CESSION HEADER: Left logo + district info + right logo + colored dashes + title ===
     const leftLogoUrl = template?.village_logo_url;
     const rightLogoUrl = template?.right_logo_url;
-    const logoSize = 25;
+    const logoSize = cl >= 4 ? 18 : cl >= 2 ? 22 : 25;
     const logoStartY = Math.max(yPos - 3, headerLogoMinY);
     const leftLogoX = headerLogoInsetX;
     const rightLogoX = pageWidth - headerLogoInsetX - logoSize;
@@ -1624,7 +1642,7 @@ export const generateAttestationVillageoise = async (
   } else {
     // === ATTRIBUTION HEADER: Village logos + REPUBLIQUE + banner ===
     let headerLeftX = margin;
-    const logoSize = 25;
+    const logoSize = cl >= 4 ? 18 : cl >= 2 ? 22 : 25;
     const logoStartY = Math.max(yPos - 3, headerLogoMinY);
     const logoBottomY = logoStartY + logoSize;
     const logoBannerGap = 6;
@@ -1680,7 +1698,7 @@ export const generateAttestationVillageoise = async (
       yPos + 2,
       hasVillageLogos ? logoBottomY + 3 : yPos + 2
     );
-    const bannerHeight = 24;
+    const bannerHeight = cl >= 4 ? 18 : cl >= 2 ? 20 : 24;
     const bannerColor1 = template?.banner_color_1 || '#003399';
     const bannerColor2 = template?.banner_color_2 || null;
     const useBannerGradient = template?.banner_gradient && bannerColor2;
@@ -1813,7 +1831,7 @@ export const generateAttestationVillageoise = async (
       }
 
       if (!trimmed) {
-        yPos += isAttributionTemplate ? 1.5 : 3;
+        yPos += isAttributionTemplate ? (cl >= 4 ? 0.5 : cl >= 2 ? 1 : 1.5) : (cl >= 4 ? 1 : cl >= 2 ? 2 : 3);
         continue;
       }
 
@@ -1938,22 +1956,22 @@ export const generateAttestationVillageoise = async (
   const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') || templateContent.includes('PROPRIÉTAIRE TERRIEN')) && templateContent.includes('PROMOTEUR');
 
   if (isCessionSignatures) {
-    ensureSpace(45);
+    ensureSpace(cl >= 3 ? 25 : 45);
     const leftBlockCenter = margin + 30;
-    doc.setFontSize(9);
+    doc.setFontSize(cl >= 3 ? 8 : 9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
      doc.text('LE PROPRIÉTAIRE TERRIEN', leftBlockCenter, yPos, { align: 'center' });
     doc.text('AGENCE / PROMOTEUR', rightBlockCenter, yPos, { align: 'center' });
-    yPos += 15;
+    yPos += cl >= 3 ? 10 : 15;
 
     // Signature lines
     doc.setDrawColor(150, 150, 150);
     doc.line(leftBlockCenter - 25, yPos, leftBlockCenter + 25, yPos);
     doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
-    yPos += 12;
+    yPos += cl >= 3 ? 6 : 12;
   } else {
-    ensureSpace(45);
+    ensureSpace(cl >= 3 ? 25 : 45);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);

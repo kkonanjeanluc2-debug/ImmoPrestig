@@ -1132,56 +1132,29 @@ const _generateAttestationVillageoiseInternal = async (
   const pageHeight = doc.internal.pageSize.getHeight();
   const isCessionTemplate = forceCession || (template?.content && (template.content.includes('CÉDANT') || template.content.includes('PROPRIÉTAIRE TERRIEN')) && template.content.includes('PROMOTEUR'));
   const isAttributionTemplate = !isCessionTemplate;
+  const cl = compactLevel;
   const margin = isAttributionTemplate
-    ? compactLevel > 1
-      ? 10
-      : compactLevel > 0
-        ? 12
-        : 12
-    : 20;
+    ? cl >= 4 ? 8 : cl >= 2 ? 10 : 12
+    : cl >= 4 ? 12 : cl >= 2 ? 15 : 20;
   const contentWidth = pageWidth - 2 * margin;
   const bottomMargin = isAttributionTemplate
-    ? compactLevel > 1
-      ? 8
-      : compactLevel > 0
-        ? 10
-        : 10
-    : 25;
+    ? cl >= 4 ? 5 : cl >= 2 ? 8 : 10
+    : cl >= 4 ? 10 : cl >= 2 ? 15 : 25;
   let yPos = isAttributionTemplate
-    ? compactLevel > 1
-      ? 8
-      : compactLevel > 0
-        ? 8
-        : 10
-    : 15;
+    ? cl >= 3 ? 6 : cl >= 1 ? 8 : 10
+    : cl >= 3 ? 8 : cl >= 1 ? 10 : 15;
   const bodyFontSize = isAttributionTemplate
-    ? compactLevel > 1
-      ? 7.6
-      : compactLevel > 0
-        ? 8
-        : 8.2
-    : 9;
+    ? cl >= 5 ? 6.5 : cl >= 4 ? 7 : cl >= 3 ? 7.2 : cl >= 2 ? 7.6 : cl >= 1 ? 8 : 8.2
+    : cl >= 5 ? 7 : cl >= 4 ? 7.5 : cl >= 3 ? 8 : cl >= 2 ? 8.5 : 9;
   const headingFontSize = isAttributionTemplate
-    ? compactLevel > 1
-      ? 8.8
-      : compactLevel > 0
-        ? 9
-        : 9.2
-    : 10;
+    ? cl >= 5 ? 7.5 : cl >= 4 ? 8 : cl >= 3 ? 8.4 : cl >= 2 ? 8.8 : cl >= 1 ? 9 : 9.2
+    : cl >= 5 ? 8 : cl >= 4 ? 8.5 : cl >= 3 ? 9 : 10;
   const bodyLineHeight = isAttributionTemplate
-    ? compactLevel > 1
-      ? 3.8
-      : compactLevel > 0
-        ? 3.8
-        : 4
-    : 4.5;
+    ? cl >= 5 ? 3 : cl >= 4 ? 3.2 : cl >= 3 ? 3.4 : cl >= 2 ? 3.6 : cl >= 1 ? 3.8 : 4
+    : cl >= 5 ? 3.2 : cl >= 4 ? 3.5 : cl >= 3 ? 3.8 : cl >= 2 ? 4 : 4.5;
   const paragraphGap = isAttributionTemplate
-    ? compactLevel > 1
-      ? 0.8
-      : compactLevel > 0
-        ? 0.8
-        : 1
-    : 1.5;
+    ? cl >= 4 ? 0.3 : cl >= 3 ? 0.5 : cl >= 2 ? 0.6 : cl >= 1 ? 0.8 : 1
+    : cl >= 4 ? 0.5 : cl >= 3 ? 0.8 : cl >= 2 ? 1 : 1.5;
 
   const district = template?.district || "";
   const commune = template?.commune || "";

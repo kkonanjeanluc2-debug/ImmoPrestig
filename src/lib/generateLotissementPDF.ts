@@ -1466,25 +1466,26 @@ const _generateAttestationVillageoiseInternal = async (
           }
         }
       } else {
-        // Non-repeated mode: large watermark centered on the full page
+        // Non-repeated mode: large watermark centered within the content area
+        const contentWidth = pageWidth - 2 * margin;
+        const contentHeight = bodyBottomY - bodyTopY;
         const centerX = pageWidth / 2;
-        const centerY = pageHeight / 2;
-        // Available length in mm: full page width for horizontal, diagonal for oblique
-        // Apply a safety margin so the text never overflows the page edges
-        const safetyFactor = 0.9;
+        const centerY = bodyTopY + contentHeight / 2;
+
+        // Available length in mm: content width for horizontal, content diagonal for oblique
+        const safetyFactor = 0.92;
         const availableLength = angle === 0
-          ? (pageWidth - 2 * margin) * safetyFactor
-          : Math.sqrt(Math.pow(pageWidth - 2 * margin, 2) + Math.pow(pageHeight - 2 * margin, 2)) * 0.75;
+          ? contentWidth * safetyFactor
+          : Math.sqrt(contentWidth * contentWidth + contentHeight * contentHeight) * safetyFactor;
 
         // Iteratively find the largest font size that fits within availableLength
-        // jsPDF.getTextWidth returns width in current unit (mm)
-        let fontSize = 180;
+        let fontSize = 220;
         doc.setFontSize(fontSize);
         let measured = doc.getTextWidth(text);
         if (measured > availableLength) {
           fontSize = Math.floor(fontSize * (availableLength / measured));
         }
-        fontSize = Math.max(40, Math.min(180, fontSize));
+        fontSize = Math.max(40, Math.min(220, fontSize));
 
         // Final safety check: shrink further if still overflowing
         doc.setFontSize(fontSize);

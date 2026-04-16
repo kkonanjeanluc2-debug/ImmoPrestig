@@ -1082,6 +1082,50 @@ export const generateAttestationVillageoise = async (
   compactLevel = 0,
   forceCession = false
 ): Promise<jsPDF> => {
+  // Auto-fit: try rendering, if it overflows one page, retry with higher compactLevel
+  const result = await _generateAttestationVillageoiseInternal(
+    parcelle, lotissement, acquereur, agency, saleDate, villageName,
+    chefVillageName, template, chefVillageTitre, ilotName, chefImages,
+    ancienBeneficiaire, compactLevel, forceCession
+  );
+  
+  const totalPages = result.internal.getNumberOfPages();
+  if (totalPages <= 1) return result;
+  
+  // Retry with increasing compact levels until it fits on one page
+  for (let level = Math.max(compactLevel + 1, 1); level <= 5; level++) {
+    const retry = await _generateAttestationVillageoiseInternal(
+      parcelle, lotissement, acquereur, agency, saleDate, villageName,
+      chefVillageName, template, chefVillageTitre, ilotName, chefImages,
+      ancienBeneficiaire, level, forceCession
+    );
+    if (retry.internal.getNumberOfPages() <= 1) return retry;
+  }
+  
+  // Last resort: return most compact version (even if multi-page)
+  return await _generateAttestationVillageoiseInternal(
+    parcelle, lotissement, acquereur, agency, saleDate, villageName,
+    chefVillageName, template, chefVillageTitre, ilotName, chefImages,
+    ancienBeneficiaire, 5, forceCession
+  );
+};
+
+const _generateAttestationVillageoiseInternal = async (
+  parcelle: ParcelleInfo,
+  lotissement: LotissementInfo,
+  acquereur: AcquereurInfo,
+  agency: AgencyInfo | null,
+  saleDate: string,
+  villageName?: string,
+  chefVillageName?: string,
+  template?: AttestationTemplateData | null,
+  chefVillageTitre?: string,
+  ilotName?: string | null,
+  chefImages?: AttestationChefImages | null,
+  ancienBeneficiaire?: AncienBeneficiaireInfo | null,
+  compactLevel = 0,
+  forceCession = false
+): Promise<jsPDF> => {
   const doc = await createPDFDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();

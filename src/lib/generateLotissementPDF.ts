@@ -1433,8 +1433,18 @@ const _generateAttestationVillageoiseInternal = async (
     const wmType = template?.watermark_type || 'none';
     if (wmType === 'none') return;
     const opacity = template?.watermark_opacity ?? 0.1;
-    const angle = template?.watermark_angle === 'horizontal' ? 0 : -45;
     const repeat = template?.watermark_repeat ?? true;
+    const bodyHeight = bodyBottomY - bodyTopY;
+    const isHorizontal = template?.watermark_angle === 'horizontal';
+    const diagonalInsetX = contentWidth * 0.12;
+    const diagonalInsetY = bodyHeight * 0.12;
+    const diagonalStartX = margin + diagonalInsetX;
+    const diagonalStartY = bodyBottomY - diagonalInsetY;
+    const diagonalEndX = pageWidth - margin - diagonalInsetX;
+    const diagonalEndY = bodyTopY + diagonalInsetY;
+    const angle = isHorizontal
+      ? 0
+      : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
@@ -1466,19 +1476,17 @@ const _generateAttestationVillageoiseInternal = async (
           }
         }
       } else {
-        // Non-repeated mode: large watermark centered within the content area
-        const contentWidth = pageWidth - 2 * margin;
-        const contentHeight = bodyBottomY - bodyTopY;
-        const centerX = pageWidth / 2;
-        const centerY = bodyTopY + contentHeight / 2;
+        // Non-repeated mode: large watermark placed on an inset content diagonal
+        const centerX = isHorizontal ? pageWidth / 2 : (diagonalStartX + diagonalEndX) / 2;
+        const centerY = isHorizontal ? bodyTopY + bodyHeight / 2 : (diagonalStartY + diagonalEndY) / 2;
 
-        // Available length in mm: content width for horizontal, content diagonal for oblique
-        const safetyFactor = 0.92;
-        const availableLength = angle === 0
-          ? contentWidth * safetyFactor
-          : Math.sqrt(contentWidth * contentWidth + contentHeight * contentHeight) * safetyFactor;
+        const availableLength = isHorizontal
+          ? contentWidth * 0.92
+          : Math.sqrt(
+              Math.pow(diagonalEndX - diagonalStartX, 2) +
+              Math.pow(diagonalStartY - diagonalEndY, 2)
+            ) * 0.98;
 
-        // Iteratively find the largest font size that fits within availableLength
         let fontSize = 220;
         doc.setFontSize(fontSize);
         let measured = doc.getTextWidth(text);
@@ -1487,7 +1495,6 @@ const _generateAttestationVillageoiseInternal = async (
         }
         fontSize = Math.max(40, Math.min(220, fontSize));
 
-        // Final safety check: shrink further if still overflowing
         doc.setFontSize(fontSize);
         while (doc.getTextWidth(text) > availableLength && fontSize > 20) {
           fontSize -= 2;

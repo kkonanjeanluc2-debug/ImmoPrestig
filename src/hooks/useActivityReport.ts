@@ -356,12 +356,24 @@ export function useAllManagersReport(periodFrom: string, periodTo: string) {
     queryFn: async () => {
       if (!user?.id) return [];
 
-      // Get agency
-      const { data: agency } = await supabase
+      // Get agency: owner first, then via membership
+      let { data: agency } = await supabase
         .from("agencies")
         .select("id, user_id")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      if (!agency) {
+        const { data: membership } = await supabase
+          .from("agency_members")
+          .select("agency_id, agencies!inner(id, user_id)")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .maybeSingle();
+        if (membership?.agencies) {
+          agency = membership.agencies as any;
+        }
+      }
 
       if (!agency) return [];
 

@@ -823,7 +823,10 @@ export type Database = {
           watermark_angle: string | null
           watermark_image_url: string | null
           watermark_opacity: number | null
+          watermark_position_x: number | null
+          watermark_position_y: number | null
           watermark_repeat: boolean | null
+          watermark_rotation: number | null
           watermark_text: string | null
           watermark_type: string | null
         }
@@ -865,7 +868,10 @@ export type Database = {
           watermark_angle?: string | null
           watermark_image_url?: string | null
           watermark_opacity?: number | null
+          watermark_position_x?: number | null
+          watermark_position_y?: number | null
           watermark_repeat?: boolean | null
+          watermark_rotation?: number | null
           watermark_text?: string | null
           watermark_type?: string | null
         }
@@ -907,7 +913,10 @@ export type Database = {
           watermark_angle?: string | null
           watermark_image_url?: string | null
           watermark_opacity?: number | null
+          watermark_position_x?: number | null
+          watermark_position_y?: number | null
           watermark_repeat?: boolean | null
+          watermark_rotation?: number | null
           watermark_text?: string | null
           watermark_type?: string | null
         }

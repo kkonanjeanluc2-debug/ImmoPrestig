@@ -24,6 +24,14 @@ import { Plus, Pencil, Trash2, Star, FileText, Loader2, Copy, Info, Eye, Edit, U
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
+  estimatePreviewWatermarkImageSize,
+  estimatePreviewWatermarkTextSize,
+  estimateRepeatedWatermarkTextSize,
+  getAttestationRepeatedWatermarkRatios,
+  getAttestationWatermarkBounds,
+  getAttestationWatermarkPlacement,
+} from "@/lib/attestationWatermark";
+import {
   useAttestationTemplates,
   useCreateAttestationTemplate,
   useUpdateAttestationTemplate,

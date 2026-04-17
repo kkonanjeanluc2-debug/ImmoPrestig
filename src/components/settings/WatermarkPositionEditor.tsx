@@ -5,6 +5,8 @@ import { RotateCcw, Move, RotateCw } from "lucide-react";
 import {
   estimatePreviewWatermarkImageSize,
   estimatePreviewWatermarkTextSize,
+  estimateRepeatedWatermarkTextSize,
+  getAttestationRepeatedWatermarkRatios,
   getAttestationWatermarkBounds,
 } from "@/lib/attestationWatermark";
 

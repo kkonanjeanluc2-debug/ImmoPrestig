@@ -5,6 +5,8 @@ import { buildAttestationTemplateContent, formatAttestationPhone } from "@/lib/a
 import {
   estimatePreviewWatermarkImageSize,
   estimatePreviewWatermarkTextSize,
+  estimateRepeatedWatermarkTextSize,
+  getAttestationRepeatedWatermarkRatios,
   getAttestationWatermarkBounds,
   getAttestationWatermarkPlacement,
 } from "@/lib/attestationWatermark";

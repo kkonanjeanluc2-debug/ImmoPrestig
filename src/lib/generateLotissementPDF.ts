@@ -1624,7 +1624,7 @@ const _generateAttestationVillageoiseInternal = async (
       doc.setFont('helvetica', 'bold');
 
       const boxPaddingX = 12;
-      const boxPaddingY = 6;
+      const boxPaddingY = 3.5;
       // Ensure box doesn't overlap logos: keep inside logo boundaries with gap
       const logoGap = hasLogos ? logoSize + 8 : 0;
       const maxBoxW = pageWidth - 2 * margin - 2 * logoGap;
@@ -1640,17 +1640,26 @@ const _generateAttestationVillageoiseInternal = async (
 
       const fullW = doc.getTextWidth(fullTitle);
       const boxW = Math.min(fullW + boxPaddingX * 2, maxBoxW);
-      const boxH = boxPaddingY * 2 + 8;
+      const boxH = boxPaddingY * 2 + titleFontSize * 0.5;
       const boxX = (pageWidth - boxW) / 2;
       const boxY = yPos - 2;
 
       const bc = hexToRgb(titleBorderColor, 0);
-      doc.setDrawColor(bc[0], bc[1], bc[2]);
-      doc.setLineWidth(1.2);
-      doc.roundedRect(boxX, boxY, boxW, boxH, 3, 3, 'S');
+      const titleBgColor = (template as any)?.title_bg_color;
+      if (titleBgColor) {
+        const bg = hexToRgb(titleBgColor, 255);
+        doc.setFillColor(bg[0], bg[1], bg[2]);
+        doc.setDrawColor(bc[0], bc[1], bc[2]);
+        doc.setLineWidth(1.2);
+        doc.roundedRect(boxX, boxY, boxW, boxH, 3, 3, 'FD');
+      } else {
+        doc.setDrawColor(bc[0], bc[1], bc[2]);
+        doc.setLineWidth(1.2);
+        doc.roundedRect(boxX, boxY, boxW, boxH, 3, 3, 'S');
+      }
 
       doc.setTextColor(...textColor);
-      doc.text(fullTitle, pageWidth / 2, boxY + boxPaddingY + 5, { align: 'center' });
+      doc.text(fullTitle, pageWidth / 2, boxY + boxH / 2 + titleFontSize * 0.18, { align: 'center' });
 
       // Place logos on the SAME LINE as the title border, vertically centered
       const logoY = boxY + (boxH - logoSize) / 2;

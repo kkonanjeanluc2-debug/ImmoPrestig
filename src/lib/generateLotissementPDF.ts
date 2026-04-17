@@ -1440,16 +1440,24 @@ const _generateAttestationVillageoiseInternal = async (
     // afin d'éviter une diagonale trop basse ou collée aux bords de page.
     const diagonalStartX = isHorizontal
       ? margin + contentWidth * 0.04
-      : margin + contentWidth * 0.12;
+      : isCessionTemplate
+        ? margin + contentWidth * 0.05
+        : margin + contentWidth * 0.12;
     const diagonalStartY = isHorizontal
       ? bodyTopY + bodyHeight / 2
-      : bodyTopY + bodyHeight * 0.62;
+      : isCessionTemplate
+        ? bodyTopY + bodyHeight * 0.86
+        : bodyTopY + bodyHeight * 0.62;
     const diagonalEndX = isHorizontal
       ? pageWidth - margin - contentWidth * 0.04
-      : pageWidth - margin - contentWidth * 0.10;
+      : isCessionTemplate
+        ? pageWidth - margin - contentWidth * 0.07
+        : pageWidth - margin - contentWidth * 0.10;
     const diagonalEndY = isHorizontal
       ? bodyTopY + bodyHeight / 2
-      : bodyTopY + bodyHeight * 0.04;
+      : isCessionTemplate
+        ? bodyTopY + bodyHeight * 0.10
+        : bodyTopY + bodyHeight * 0.04;
     const angle = isHorizontal
       ? 0
       : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);

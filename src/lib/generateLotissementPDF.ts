@@ -1552,7 +1552,7 @@ const _generateAttestationVillageoiseInternal = async (
           const imgSizeLarge = 90;
           const imgSizeSmall = 45;
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
-          if (repeat) {
+          if (repeat && !hasCustomPos) {
             const stepY = imgSizeSmall + 30;
             const x1 = pageWidth * 0.18;
             const x2 = pageWidth * 0.58;

@@ -1476,7 +1476,7 @@ const _generateAttestationVillageoiseInternal = async (
     const customCenterY = hasCustomPos ? bodyTopY + (bodyHeight * (template!.watermark_position_y as number) / 100) : null;
     const angle = isHorizontal
       ? 0
-      : (!repeat && customRotation !== null)
+      : ((!repeat || hasCustomPos) && customRotation !== null)
         ? customRotation
         : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
 

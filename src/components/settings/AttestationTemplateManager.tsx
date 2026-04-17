@@ -1151,6 +1151,49 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                   </div>
                 </div>
               )}
+
+              {form.watermark_type !== "none" && !form.watermark_repeat && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 rounded-lg bg-muted/30 border border-dashed">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Position horizontale ({Math.round(form.watermark_position_x ?? 50)}%)</Label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={form.watermark_position_x ?? 50}
+                      onChange={(e) => updateField("watermark_position_x", parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Position verticale ({Math.round(form.watermark_position_y ?? 50)}%)</Label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={form.watermark_position_y ?? 50}
+                      onChange={(e) => updateField("watermark_position_y", parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Rotation ({Math.round(form.watermark_rotation ?? -45)}°)</Label>
+                    <input
+                      type="range"
+                      min="-180"
+                      max="180"
+                      step="1"
+                      value={form.watermark_rotation ?? -45}
+                      onChange={(e) => updateField("watermark_rotation", parseFloat(e.target.value))}
+                      className="w-full"
+                      disabled={form.watermark_angle === "horizontal"}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Désactivé en mode horizontal</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <Separator />

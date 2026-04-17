@@ -73,6 +73,9 @@ function AttestationPreview({
   watermarkAngle,
   watermarkOpacity,
   watermarkRepeat,
+  watermarkPositionX,
+  watermarkPositionY,
+  watermarkRotation,
 }: {
   content: string;
   templateType: string;
@@ -82,6 +85,9 @@ function AttestationPreview({
   watermarkAngle?: string | null;
   watermarkOpacity?: number | null;
   watermarkRepeat?: boolean | null;
+  watermarkPositionX?: number | null;
+  watermarkPositionY?: number | null;
+  watermarkRotation?: number | null;
 }) {
   const previewContent = useMemo(() => {
     if (!content) return "";

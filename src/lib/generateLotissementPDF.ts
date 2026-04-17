@@ -1487,14 +1487,14 @@ const _generateAttestationVillageoiseInternal = async (
         ]
       : isCessionTemplate
         ? [
-            mapAreaPoint(0.19, 0.73),
-            mapAreaPoint(0.42, 0.55),
-            mapAreaPoint(0.65, 0.37),
+            mapAreaPoint(0.5, 0.78),
+            mapAreaPoint(0.5, 0.5),
+            mapAreaPoint(0.5, 0.22),
           ]
         : [
-            mapAreaPoint(0.22, 0.28),
+            mapAreaPoint(0.5, 0.22),
             mapAreaPoint(0.5, 0.5),
-            mapAreaPoint(0.78, 0.72),
+            mapAreaPoint(0.5, 0.78),
           ];
     const diagonalStartX = placement.isHorizontal
       ? watermarkBounds.left + watermarkBounds.width * 0.04

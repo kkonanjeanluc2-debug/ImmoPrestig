@@ -2101,13 +2101,22 @@ const _generateAttestationVillageoiseInternal = async (
   const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') || templateContent.includes('PROPRIÉTAIRE TERRIEN')) && templateContent.includes('PROMOTEUR');
 
   if (isCessionSignatures) {
+    // Extract the actual signature labels from the template content (so user edits in the template are honored)
+    let leftLabel = 'LE PROPRIÉTAIRE TERRIEN';
+    let rightLabel = 'AGENCE / PROMOTEUR';
+    const sigLineMatch = templateContent.match(/\*\*([^*\n]*(?:PROPRIÉTAIRE TERRIEN|PROPRIETAIRE TERRIEN|CÉDANT|CEDANT)[^*\n]*)\*\*[\s\S]*?\*\*([^*\n]*(?:PROMOTEUR|AGENCE)[^*\n]*)\*\*/i);
+    if (sigLineMatch) {
+      leftLabel = sigLineMatch[1].trim();
+      rightLabel = sigLineMatch[2].trim();
+    }
+
     ensureSpace(cl >= 3 ? 25 : 45);
     const leftBlockCenter = margin + 30;
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-     doc.text('LE PROPRIÉTAIRE TERRIEN', leftBlockCenter, yPos, { align: 'center' });
-    doc.text('AGENCE / PROMOTEUR', rightBlockCenter, yPos, { align: 'center' });
+    doc.text(leftLabel, leftBlockCenter, yPos, { align: 'center' });
+    doc.text(rightLabel, rightBlockCenter, yPos, { align: 'center' });
     yPos += cl >= 3 ? 10 : 15;
 
     // Signature lines

@@ -1474,30 +1474,19 @@ const _generateAttestationVillageoiseInternal = async (
       pageBorderEnabled: template?.page_border_enabled,
       pageBorderStyle: template?.page_border_style,
     });
-    const centerX = watermarkBounds.left + (watermarkBounds.width * ((placement.parsedPositionX ?? 50) / 100));
-    const centerY = watermarkBounds.top + (watermarkBounds.height * ((placement.parsedPositionY ?? 50) / 100));
+    const centerXRatio = (placement.parsedPositionX ?? 50) / 100;
+    const centerYRatio = (placement.parsedPositionY ?? 50) / 100;
+    const centerX = watermarkBounds.left + (watermarkBounds.width * centerXRatio);
+    const centerY = watermarkBounds.top + (watermarkBounds.height * centerYRatio);
     const mapAreaPoint = (xRatio: number, yRatio: number) => ({
       x: watermarkBounds.left + watermarkBounds.width * xRatio,
       y: watermarkBounds.top + watermarkBounds.height * yRatio,
     });
-    const repeatedPositions = placement.isHorizontal
-      ? [
-          mapAreaPoint(0.5, 0.18),
-          mapAreaPoint(0.5, 0.38),
-          mapAreaPoint(0.5, 0.58),
-          mapAreaPoint(0.5, 0.78),
-        ]
-      : isCessionTemplate
-        ? [
-            mapAreaPoint(0.5, 0.78),
-            mapAreaPoint(0.5, 0.5),
-            mapAreaPoint(0.5, 0.22),
-          ]
-        : [
-            mapAreaPoint(0.5, 0.22),
-            mapAreaPoint(0.5, 0.5),
-            mapAreaPoint(0.5, 0.78),
-          ];
+    const repeatedPositions = getAttestationRepeatedWatermarkRatios({
+      centerX: centerXRatio,
+      centerY: centerYRatio,
+      isHorizontal: placement.isHorizontal,
+    }).map(({ x, y }) => mapAreaPoint(x, y));
     const diagonalStartX = placement.isHorizontal
       ? watermarkBounds.left + watermarkBounds.width * 0.04
       : isCessionTemplate
@@ -1530,15 +1519,17 @@ const _generateAttestationVillageoiseInternal = async (
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
-      // Use very light gray — closer to background
       const grayVal = Math.round(230 - opacity * 150);
       doc.setTextColor(grayVal, grayVal, grayVal);
       doc.setFont('helvetica', 'bold');
 
-      // Single placement is used when repeat is disabled, or when the user has
-      // meaningfully moved/rotated the watermark away from the default tiled layout.
-      if (repeat && !placement.useCustomSingle) {
-        doc.setFontSize(16);
+      if (repeat && repeatedPositions.length > 0) {
+        doc.setFontSize(estimateRepeatedWatermarkTextSize({
+          text,
+          bounds: watermarkBounds,
+          templateType,
+          isHorizontal: placement.isHorizontal,
+        }));
         for (const position of repeatedPositions) {
           doc.text(text, position.x, position.y, { align: 'center', angle, baseline: 'middle' });
         }
@@ -1570,7 +1561,7 @@ const _generateAttestationVillageoiseInternal = async (
           const imgSizeLarge = estimatePreviewWatermarkImageSize(watermarkBounds, true);
           const imgSizeSmall = estimatePreviewWatermarkImageSize(watermarkBounds, false);
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
-          if (repeat && !placement.useCustomSingle) {
+          if (repeat && repeatedPositions.length > 0) {
             for (const position of repeatedPositions) {
               if (gState) (doc as any).setGState(gState);
               doc.addImage(imgBase64, 'PNG', position.x - imgSizeSmall / 2, position.y - imgSizeSmall / 2, imgSizeSmall, imgSizeSmall);

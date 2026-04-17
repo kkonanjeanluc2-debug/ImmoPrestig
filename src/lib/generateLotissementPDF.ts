@@ -1436,13 +1436,20 @@ const _generateAttestationVillageoiseInternal = async (
     const repeat = template?.watermark_repeat ?? true;
     const bodyHeight = bodyBottomY - bodyTopY;
     const isHorizontal = template?.watermark_angle === 'horizontal';
-    // Diagonale traversant largement la zone de contenu (du bas-gauche au haut-droit)
-    const diagonalInsetX = contentWidth * 0.04;
-    const diagonalInsetY = bodyHeight * 0.04;
-    const diagonalStartX = margin + diagonalInsetX;
-    const diagonalStartY = bodyBottomY - diagonalInsetY;
-    const diagonalEndX = pageWidth - margin - diagonalInsetX;
-    const diagonalEndY = bodyTopY + diagonalInsetY;
+    // Pour l'oblique, on utilise une bande interne du contenu (référence capture utilisateur)
+    // afin d'éviter une diagonale trop basse ou collée aux bords de page.
+    const diagonalStartX = isHorizontal
+      ? margin + contentWidth * 0.04
+      : margin + contentWidth * 0.12;
+    const diagonalStartY = isHorizontal
+      ? bodyTopY + bodyHeight / 2
+      : bodyTopY + bodyHeight * 0.62;
+    const diagonalEndX = isHorizontal
+      ? pageWidth - margin - contentWidth * 0.04
+      : pageWidth - margin - contentWidth * 0.10;
+    const diagonalEndY = isHorizontal
+      ? bodyTopY + bodyHeight / 2
+      : bodyTopY + bodyHeight * 0.04;
     const angle = isHorizontal
       ? 0
       : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);

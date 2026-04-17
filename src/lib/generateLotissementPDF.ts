@@ -1045,6 +1045,7 @@ export interface AttestationTemplateData {
   right_logo_url?: string | null;
   header_line_color?: string | null;
   title_border_color?: string | null;
+  title_bg_color?: string | null;
   watermark_type?: string;
   watermark_text?: string | null;
   watermark_image_url?: string | null;

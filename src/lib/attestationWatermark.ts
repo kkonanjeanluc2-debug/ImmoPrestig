@@ -144,16 +144,24 @@ export const getAttestationWatermarkBounds = ({
   templateType,
   pageBorderEnabled,
   pageBorderStyle,
+  contentArea,
 }: AttestationWatermarkBoundsOptions): AttestationWatermarkBounds => {
   const pdfBaseWidth = 210;
   const scale = pageWidth / pdfBaseWidth;
   const margin = (templateType === "cession" ? 20 : 12) * scale;
   const pageBorderInset = getAttestationPageBorderContentInset(pageBorderEnabled, pageBorderStyle) * scale;
   const edgeInset = pageBorderEnabled ? pageBorderInset + (4 * scale) : Math.max(4 * scale, margin * 0.4);
-  const left = pageBorderEnabled ? Math.max(margin, edgeInset) : margin;
-  const top = edgeInset;
-  const right = pageWidth - left;
-  const bottom = pageHeight - edgeInset;
+  const fallbackLeft = pageBorderEnabled ? Math.max(margin, edgeInset) : margin;
+  const fallbackTop = edgeInset;
+  const fallbackRight = pageWidth - fallbackLeft;
+  const fallbackBottom = pageHeight - edgeInset;
+
+  // When a content area is provided, restrict the watermark zone to it.
+  // Otherwise, fall back to the full inner page area.
+  const left = contentArea ? Math.max(fallbackLeft, contentArea.left) : fallbackLeft;
+  const top = contentArea ? Math.max(fallbackTop, contentArea.top) : fallbackTop;
+  const right = contentArea ? Math.min(fallbackRight, contentArea.right) : fallbackRight;
+  const bottom = contentArea ? Math.min(fallbackBottom, contentArea.bottom) : fallbackBottom;
 
   return {
     left,

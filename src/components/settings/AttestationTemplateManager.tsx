@@ -1196,19 +1196,19 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 </div>
               )}
 
-              {form.watermark_type !== "none" && form.watermark_angle !== "oblique" && (
+              {form.watermark_type !== "none" && (
                 <div className="p-4 rounded-lg bg-muted/30 border border-dashed">
                   <WatermarkPositionEditor
                     positionX={form.watermark_position_x ?? 50}
                     positionY={form.watermark_position_y ?? 50}
-                    rotation={form.watermark_rotation ?? (templateType === "cession" ? -34 : -45)}
-                    onChange={({ positionX, positionY, rotation }) => {
+                    rotation={0}
+                    onChange={({ positionX, positionY }) => {
                       updateField("watermark_position_x", positionX);
                       updateField("watermark_position_y", positionY);
-                      updateField("watermark_rotation", rotation);
+                      updateField("watermark_rotation", 0);
                     }}
                     watermarkType={form.watermark_type ?? "none"}
-                    watermarkAngle={form.watermark_angle}
+                    watermarkAngle="horizontal"
                     watermarkText={form.watermark_text}
                     watermarkImageUrl={form.watermark_image_url}
                     watermarkRepeat={form.watermark_repeat ?? true}
@@ -1217,11 +1217,6 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                     pageBorderEnabled={form.page_border_enabled}
                     pageBorderStyle={form.page_border_style}
                   />
-                  {form.watermark_angle === "horizontal" && (
-                    <p className="text-[11px] text-muted-foreground mt-2 italic">
-                      Mode horizontal actif : la rotation est désactivée. Passez en mode oblique pour personnaliser l'angle.
-                    </p>
-                  )}
                 </div>
               )}
             </div>

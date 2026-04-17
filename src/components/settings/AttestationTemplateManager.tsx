@@ -35,6 +35,7 @@ import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES } from "@/lib/defau
 import { DEFAULT_CESSION_TEMPLATE, CESSION_VARIABLES } from "@/lib/defaultCessionTemplate";
 import { buildAttestationTemplateContent } from "@/lib/attestationTemplateContent";
 import { supabase } from "@/integrations/supabase/client";
+import { WatermarkPositionEditor } from "./WatermarkPositionEditor";
 
 const SAMPLE_DATA: Record<string, string> = {
   "{numero_lot}": "A-001",

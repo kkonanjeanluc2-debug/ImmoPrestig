@@ -1473,6 +1473,12 @@ const _generateAttestationVillageoiseInternal = async (
       templateType,
       pageBorderEnabled: template?.page_border_enabled,
       pageBorderStyle: template?.page_border_style,
+      contentArea: {
+        left: margin,
+        top: bodyTopY,
+        right: pageWidth - margin,
+        bottom: bodyBottomY,
+      },
     });
     const centerXRatio = (placement.parsedPositionX ?? 50) / 100;
     const centerYRatio = (placement.parsedPositionY ?? 50) / 100;
@@ -1523,32 +1529,31 @@ const _generateAttestationVillageoiseInternal = async (
       doc.setTextColor(grayVal, grayVal, grayVal);
       doc.setFont('helvetica', 'bold');
 
+      // Compute the exact font size that fills ~88% of the available length.
+      // We measure with a probe font size, then scale by the target ratio so
+      // the watermark text always uses the full content width with a
+      // reasonable side padding — regardless of the text's character count.
+      const fitFontSizeToWidth = (target: number) => {
+        const probeSize = 40;
+        doc.setFontSize(probeSize);
+        const measuredWidth = doc.getTextWidth(text) || 1;
+        const minFontSize = watermarkBounds.width * 0.06;
+        const maxFontSize = watermarkBounds.width * 0.28;
+        const computed = (target / measuredWidth) * probeSize;
+        return Math.max(minFontSize, Math.min(maxFontSize, computed));
+      };
+
       if (repeat && repeatedPositions.length > 0) {
-        doc.setFontSize(estimateRepeatedWatermarkTextSize({
-          text,
-          bounds: watermarkBounds,
-          templateType,
-          isHorizontal: placement.isHorizontal,
-        }));
+        const targetLength = (placement.isHorizontal
+          ? watermarkBounds.width * 0.92
+          : Math.hypot(diagonalEndX - diagonalStartX, diagonalStartY - diagonalEndY) * 0.98) * 0.88;
+        doc.setFontSize(fitFontSizeToWidth(targetLength));
         for (const position of repeatedPositions) {
           doc.text(text, position.x, position.y, { align: 'center', angle, baseline: 'middle' });
         }
       } else {
-        const minFontSize = watermarkBounds.width * 0.05;
-        let fontSize = estimatePreviewWatermarkTextSize({
-          text,
-          bounds: watermarkBounds,
-          centerX,
-          templateType,
-          isHorizontal: placement.isHorizontal,
-          hasCustomPos: placement.hasCustomPos,
-        });
-        doc.setFontSize(fontSize);
-        while (doc.getTextWidth(text) > availableLength && fontSize > minFontSize) {
-          fontSize -= 1;
-          doc.setFontSize(fontSize);
-        }
-
+        const targetLength = availableLength * 0.88;
+        doc.setFontSize(fitFontSizeToWidth(targetLength));
         doc.text(text, centerX, centerY, { align: 'center', angle, baseline: 'middle' });
       }
       doc.setTextColor(...textColor);

@@ -39,6 +39,17 @@ interface AttestationWatermarkBoundsOptions {
   templateType?: string;
   pageBorderEnabled?: boolean | null;
   pageBorderStyle?: string | null;
+  /**
+   * Optional body content rectangle. When provided, the watermark zone is restricted
+   * to the actual content area of the attestation (between header and footer,
+   * inside the side margins) instead of the full page.
+   */
+  contentArea?: {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+  } | null;
 }
 
 const parseNullableNumber = (value: number | string | null | undefined): number | null => {
@@ -133,16 +144,24 @@ export const getAttestationWatermarkBounds = ({
   templateType,
   pageBorderEnabled,
   pageBorderStyle,
+  contentArea,
 }: AttestationWatermarkBoundsOptions): AttestationWatermarkBounds => {
   const pdfBaseWidth = 210;
   const scale = pageWidth / pdfBaseWidth;
   const margin = (templateType === "cession" ? 20 : 12) * scale;
   const pageBorderInset = getAttestationPageBorderContentInset(pageBorderEnabled, pageBorderStyle) * scale;
   const edgeInset = pageBorderEnabled ? pageBorderInset + (4 * scale) : Math.max(4 * scale, margin * 0.4);
-  const left = pageBorderEnabled ? Math.max(margin, edgeInset) : margin;
-  const top = edgeInset;
-  const right = pageWidth - left;
-  const bottom = pageHeight - edgeInset;
+  const fallbackLeft = pageBorderEnabled ? Math.max(margin, edgeInset) : margin;
+  const fallbackTop = edgeInset;
+  const fallbackRight = pageWidth - fallbackLeft;
+  const fallbackBottom = pageHeight - edgeInset;
+
+  // When a content area is provided, restrict the watermark zone to it.
+  // Otherwise, fall back to the full inner page area.
+  const left = contentArea ? Math.max(fallbackLeft, contentArea.left) : fallbackLeft;
+  const top = contentArea ? Math.max(fallbackTop, contentArea.top) : fallbackTop;
+  const right = contentArea ? Math.min(fallbackRight, contentArea.right) : fallbackRight;
+  const bottom = contentArea ? Math.min(fallbackBottom, contentArea.bottom) : fallbackBottom;
 
   return {
     left,
@@ -195,14 +214,18 @@ export const estimatePreviewWatermarkTextSize = ({
       : bounds.top + bounds.height * 0.05;
 
   const availableLength = hasCustomPos
-    ? Math.max(bounds.width * 0.28, 2 * Math.min(centerX - bounds.left, bounds.right - centerX) * 0.9)
+    ? Math.max(bounds.width * 0.4, 2 * Math.min(centerX - bounds.left, bounds.right - centerX) * 0.92)
     : isHorizontal
       ? bounds.width * 0.92
       : Math.hypot(diagonalEndX - diagonalStartX, diagonalStartY - diagonalEndY) * 0.98;
 
-  const estimated = availableLength / Math.max(normalizedText.length * 0.58, 6);
-  const maxFontSize = hasCustomPos ? bounds.width * 0.15 : bounds.width * 0.19;
-  const minFontSize = bounds.width * 0.05;
+  // Target the text to fill ~88% of the available length so we keep a
+  // small but reasonable side padding while staying as large as possible.
+  const targetLength = availableLength * 0.88;
+  // Helvetica bold average glyph width ≈ 0.55 * fontSize
+  const estimated = targetLength / Math.max(normalizedText.length * 0.55, 4);
+  const maxFontSize = bounds.width * 0.28;
+  const minFontSize = bounds.width * 0.06;
 
   return Math.max(minFontSize, Math.min(maxFontSize, estimated));
 };

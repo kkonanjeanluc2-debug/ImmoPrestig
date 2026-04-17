@@ -1032,6 +1032,11 @@ export interface AttestationTemplateData {
   district?: string;
   commune?: string;
   village?: string;
+  header_ministere?: string | null;
+  header_region?: string | null;
+  header_departement?: string | null;
+  header_republique?: string | null;
+  header_devise?: string | null;
   lotissement_origin_name?: string;
   arrete_approbation?: string;
   content?: string;

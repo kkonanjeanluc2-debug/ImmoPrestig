@@ -2079,10 +2079,10 @@ const _generateAttestationVillageoiseInternal = async (
     ensureSpace(30);
     yPos += 5;
     const city = lotissement.city || agency?.city || '____________________';
-    doc.setFontSize(9);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(...textColor);
-    writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 1 });
+    writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'center', x: rightBlockCenter, width: 90, lineHeight: 6, extraAfter: 1 });
   }
 
   // Detect if this is a cession template (has PROPRIÉTAIRE TERRIEN or CÉDANT + PROMOTEUR signatures)
@@ -2091,7 +2091,7 @@ const _generateAttestationVillageoiseInternal = async (
   if (isCessionSignatures) {
     ensureSpace(cl >= 3 ? 25 : 45);
     const leftBlockCenter = margin + 30;
-    doc.setFontSize(cl >= 3 ? 8 : 9);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
      doc.text('LE PROPRIÉTAIRE TERRIEN', leftBlockCenter, yPos, { align: 'center' });

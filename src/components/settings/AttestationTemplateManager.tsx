@@ -1209,7 +1209,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 </div>
               )}
 
-              {form.watermark_type !== "none" && (
+              {form.watermark_type !== "none" && form.watermark_angle !== "oblique" && (
                 <div className="p-4 rounded-lg bg-muted/30 border border-dashed">
                   <WatermarkPositionEditor
                     positionX={form.watermark_position_x ?? 50}

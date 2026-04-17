@@ -1428,6 +1428,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                   watermarkAngle={form.watermark_angle}
                   watermarkOpacity={form.watermark_opacity}
                   watermarkRepeat={form.watermark_repeat}
+                  watermarkPositionX={form.watermark_position_x}
+                  watermarkPositionY={form.watermark_position_y}
+                  watermarkRotation={form.watermark_rotation}
                 />
               </TabsContent>
             </Tabs>

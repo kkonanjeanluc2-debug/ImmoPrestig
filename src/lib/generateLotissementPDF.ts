@@ -1469,11 +1469,20 @@ const _generateAttestationVillageoiseInternal = async (
       : isCessionTemplate
         ? bodyTopY + bodyHeight * 0.14
         : bodyTopY + bodyHeight * 0.05;
-    // Custom user position/rotation overrides for non-repeat mode
+    // Custom user position/rotation overrides are mapped to the useful page area
+    // (same mental model as the visual editor), not only the text body.
     const hasCustomPos = typeof template?.watermark_position_x === 'number' && typeof template?.watermark_position_y === 'number';
     const customRotation = typeof template?.watermark_rotation === 'number' ? template.watermark_rotation : null;
-    const customCenterX = hasCustomPos ? margin + (contentWidth * (template!.watermark_position_x as number) / 100) : null;
-    const customCenterY = hasCustomPos ? bodyTopY + (bodyHeight * (template!.watermark_position_y as number) / 100) : null;
+    const watermarkAreaLeft = template?.page_border_enabled ? Math.max(margin, pageBorderContentInset + 4) : margin;
+    const watermarkAreaRight = pageWidth - watermarkAreaLeft;
+    const watermarkAreaTop = template?.page_border_enabled ? pageBorderContentInset + 4 : Math.max(4, margin * 0.4);
+    const watermarkAreaBottom = template?.page_border_enabled
+      ? pageHeight - (pageBorderContentInset + 4)
+      : pageHeight - Math.max(4, margin * 0.4);
+    const watermarkAreaWidth = watermarkAreaRight - watermarkAreaLeft;
+    const watermarkAreaHeight = watermarkAreaBottom - watermarkAreaTop;
+    const customCenterX = hasCustomPos ? watermarkAreaLeft + (watermarkAreaWidth * (template!.watermark_position_x as number) / 100) : null;
+    const customCenterY = hasCustomPos ? watermarkAreaTop + (watermarkAreaHeight * (template!.watermark_position_y as number) / 100) : null;
     const angle = isHorizontal
       ? 0
       : ((!repeat || hasCustomPos) && customRotation !== null)

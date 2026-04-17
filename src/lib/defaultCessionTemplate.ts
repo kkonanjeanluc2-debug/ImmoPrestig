@@ -29,6 +29,10 @@ CNI n° **{cedant_cni}**
 
 ---
 
+**Mention de cession :** Ce lot, initialement attribué à **{ancien_beneficiaire_nom}** (CNI : {ancien_beneficiaire_cni}), Contact : {ancien_beneficiaire_telephone}, a été cédé au bénéficiaire désigné ci-dessus.
+
+---
+
 NB : Cette attestation sera consolidée par l'acquisition des documents administratifs (Attestation d'attribution villageoise, Enregistrement, Arrêté de Concession Définitive etc. qui garantiront votre propriété).
 
 En foi de quoi, cette présente attestation de cession est faite pour servir et faire valoir ce que de droit.
@@ -56,4 +60,7 @@ export const CESSION_VARIABLES = [
   { variable: "{date_vente}", description: "Date de la cession" },
   { variable: "{ville}", description: "Ville (pour 'Fait à...')" },
   { variable: "{nom_agence}", description: "Nom de l'agence/promoteur" },
+  { variable: "{ancien_beneficiaire_nom}", description: "Nom de l'ancien bénéficiaire (cession)" },
+  { variable: "{ancien_beneficiaire_cni}", description: "CNI de l'ancien bénéficiaire (cession)" },
+  { variable: "{ancien_beneficiaire_telephone}", description: "Téléphone de l'ancien bénéficiaire (cession)" },
 ];

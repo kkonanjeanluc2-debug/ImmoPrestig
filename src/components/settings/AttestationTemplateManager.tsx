@@ -1157,7 +1157,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 </div>
               )}
 
-              {form.watermark_type !== "none" && !form.watermark_repeat && (
+              {form.watermark_type !== "none" && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 rounded-lg bg-muted/30 border border-dashed">
                   <div className="space-y-1">
                     <Label className="text-xs">Position horizontale ({Math.round(form.watermark_position_x ?? 50)}%)</Label>

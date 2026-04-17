@@ -159,6 +159,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
         right_logo_url: (tpl as any).right_logo_url || null,
         header_line_color: (tpl as any).header_line_color || null,
         title_border_color: (tpl as any).title_border_color || null,
+        title_bg_color: (tpl as any).title_bg_color || null,
         watermark_type: (tpl as any).watermark_type || 'none',
         watermark_text: (tpl as any).watermark_text || null,
         watermark_image_url: (tpl as any).watermark_image_url || null,

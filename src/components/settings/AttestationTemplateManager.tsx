@@ -40,6 +40,7 @@ import {
   getAttestationWatermarkBounds,
   getAttestationWatermarkPlacement,
 } from "@/lib/attestationWatermark";
+import { BORDER_MOTIF_OPTIONS, isMotifBorderStyle } from "@/lib/attestationBorderMotifs";
 import { supabase } from "@/integrations/supabase/client";
 import { WatermarkPositionEditor } from "./WatermarkPositionEditor";
 
@@ -1387,25 +1388,84 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                       ))}
                     </div>
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Motifs thématiques (fruits & plantes)</Label>
+                    <p className="text-xs text-muted-foreground">Bordure répétée avec un motif local pour personnaliser l'attestation.</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                      {BORDER_MOTIF_OPTIONS.map((motif) => (
+                        <label
+                          key={motif.value}
+                          className={`flex flex-col items-center gap-1 cursor-pointer border rounded-lg p-2 transition-colors ${
+                            form.page_border_style === motif.value ? "border-primary bg-accent/40" : "hover:bg-accent/30"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="page_border_style"
+                            value={motif.value}
+                            checked={form.page_border_style === motif.value}
+                            onChange={() => updateField("page_border_style", motif.value)}
+                            className="sr-only"
+                          />
+                          <span className="text-2xl leading-none" aria-hidden>{motif.emoji}</span>
+                          <span className="text-xs font-medium text-center">{motif.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                   <div>
                     <Label className="text-xs">Aperçu</Label>
-                    <div
-                      className="mt-1 w-32 h-20 rounded relative"
-                      style={{
-                        border: form.page_border_style === 'double' || form.page_border_style === 'geometric' || form.page_border_style === 'ornate'
-                          ? `2px solid ${form.page_border_color || '#8B4513'}`
-                          : `2px dashed ${form.page_border_color || '#8B4513'}`,
-                      }}
-                    >
-                      {(form.page_border_style === 'double' || form.page_border_style === 'geometric' || form.page_border_style === 'ornate') && (
-                        <div
-                          className="absolute inset-1 rounded"
-                          style={{
-                            border: `1px solid ${form.page_border_color || '#8B4513'}`,
-                          }}
-                        />
-                      )}
-                    </div>
+                    {isMotifBorderStyle(form.page_border_style) ? (
+                      <div className="mt-1 w-40 h-24 rounded relative bg-background border border-dashed border-border overflow-hidden">
+                        {(() => {
+                          const motif = BORDER_MOTIF_OPTIONS.find((m) => m.value === form.page_border_style);
+                          if (!motif) return null;
+                          const emojis = Array.from({ length: 12 }, (_, i) => i);
+                          return (
+                            <>
+                              <div className="absolute top-0 left-0 right-0 flex justify-around text-sm">
+                                {emojis.slice(0, 6).map((i) => (
+                                  <span key={`t${i}`}>{motif.emoji}</span>
+                                ))}
+                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 flex justify-around text-sm">
+                                {emojis.slice(0, 6).map((i) => (
+                                  <span key={`b${i}`}>{motif.emoji}</span>
+                                ))}
+                              </div>
+                              <div className="absolute top-0 bottom-0 left-0 flex flex-col justify-around text-sm py-4">
+                                {emojis.slice(0, 3).map((i) => (
+                                  <span key={`l${i}`}>{motif.emoji}</span>
+                                ))}
+                              </div>
+                              <div className="absolute top-0 bottom-0 right-0 flex flex-col justify-around text-sm py-4">
+                                {emojis.slice(0, 3).map((i) => (
+                                  <span key={`r${i}`}>{motif.emoji}</span>
+                                ))}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    ) : (
+                      <div
+                        className="mt-1 w-32 h-20 rounded relative"
+                        style={{
+                          border: form.page_border_style === 'double' || form.page_border_style === 'geometric' || form.page_border_style === 'ornate'
+                            ? `2px solid ${form.page_border_color || '#8B4513'}`
+                            : `2px dashed ${form.page_border_color || '#8B4513'}`,
+                        }}
+                      >
+                        {(form.page_border_style === 'double' || form.page_border_style === 'geometric' || form.page_border_style === 'ornate') && (
+                          <div
+                            className="absolute inset-1 rounded"
+                            style={{
+                              border: `1px solid ${form.page_border_color || '#8B4513'}`,
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

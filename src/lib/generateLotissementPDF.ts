@@ -1968,14 +1968,11 @@ const _generateAttestationVillageoiseInternal = async (
       if (trimmed.startsWith('# ') || trimmed.startsWith('## ')) continue;
       if (isCessionTemplate && /^N°[\.\s…]+$/i.test(trimmed.replace(/\*\*/g, ''))) continue;
 
+      // Only filter pure signature labels (standalone lines that are JUST a signature heading),
+      // never filter content lines that happen to mention these keywords.
       const cleanedLine = trimmed.replace(/^\#{1,4}\s*/, '').replace(/\*\*/g, '').replace(/_/g, '').toUpperCase().trim();
       if (cleanedLine === 'LE CHEF DU VILLAGE') continue;
-      if (cleanedLine.includes('LE CHEF DU VILLAGE')) continue;
-      if (cleanedLine.includes('LE CÉDANT') || cleanedLine.includes('LE CEDANT') || cleanedLine.includes('PROPRIÉTAIRE TERRIEN') || cleanedLine.includes('PROPRIETAIRE TERRIEN')) continue;
-      if (cleanedLine.includes('AGENCE') && cleanedLine.includes('PROMOTEUR')) continue;
-      if (chef && cleanedLine === chef.toUpperCase()) continue;
       if (cleanedLine === 'SIGNATURE ET CACHET' || cleanedLine === 'SIGNATURE ET CACHET DU CHEF' || cleanedLine === 'CACHET ET SIGNATURE') continue;
-      if (/^SIGNATURE/i.test(cleanedLine)) continue;
 
       if (trimmed === '---') {
         ensureSpace(6);

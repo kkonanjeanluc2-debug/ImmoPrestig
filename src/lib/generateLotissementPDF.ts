@@ -1560,7 +1560,9 @@ const _generateAttestationVillageoiseInternal = async (
             }
           } else {
             if (gState) (doc as any).setGState(gState);
-            doc.addImage(imgBase64, 'PNG', (pageWidth - imgSizeLarge) / 2, (bodyTopY + bodyBottomY - imgSizeLarge) / 2, imgSizeLarge, imgSizeLarge);
+            const imgX = (customCenterX ?? pageWidth / 2) - imgSizeLarge / 2;
+            const imgY = (customCenterY ?? (bodyTopY + bodyBottomY) / 2) - imgSizeLarge / 2;
+            doc.addImage(imgBase64, 'PNG', imgX, imgY, imgSizeLarge, imgSizeLarge);
           }
           // Reset opacity
           const resetState = (doc as any).GState ? new (doc as any).GState({ opacity: 1 }) : null;

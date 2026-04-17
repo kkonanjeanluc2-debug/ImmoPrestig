@@ -2104,11 +2104,22 @@ const _generateAttestationVillageoiseInternal = async (
     // Extract the actual signature labels from the template content (so user edits in the template are honored)
     let leftLabel = 'LE PROPRIÉTAIRE TERRIEN';
     let rightLabel = 'AGENCE / PROMOTEUR';
-    const sigLineMatch = templateContent.match(/\*\*([^*\n]*(?:PROPRIÉTAIRE TERRIEN|PROPRIETAIRE TERRIEN|CÉDANT|CEDANT)[^*\n]*)\*\*[\s\S]*?\*\*([^*\n]*(?:PROMOTEUR|AGENCE)[^*\n]*)\*\*/i);
+    const sigLineMatch = templateContent.match(/\*\*([^*\n]*(?:PROPRIÉTAIRE TERRIEN|PROPRIETAIRE TERRIEN|CÉDANT|CEDANT|\{cedant_nom\}|\{nom_agence\})[^*\n]*)\*\*[\s\S]*?\*\*([^*\n]*(?:PROMOTEUR|AGENCE|\{nom_agence\}|\{cedant_nom\})[^*\n]*)\*\*/i);
     if (sigLineMatch) {
       leftLabel = sigLineMatch[1].trim();
       rightLabel = sigLineMatch[2].trim();
     }
+
+    // Replace template variables inside the extracted labels (e.g. {cedant_nom}, {nom_agence}…)
+    const replaceVars = (text: string): string => {
+      let out = text;
+      for (const [key, value] of Object.entries(variableData)) {
+        out = out.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value || '');
+      }
+      return out.trim();
+    };
+    leftLabel = replaceVars(leftLabel) || 'LE PROPRIÉTAIRE TERRIEN';
+    rightLabel = replaceVars(rightLabel) || 'AGENCE / PROMOTEUR';
 
     ensureSpace(cl >= 3 ? 25 : 45);
     const leftBlockCenter = margin + 30;

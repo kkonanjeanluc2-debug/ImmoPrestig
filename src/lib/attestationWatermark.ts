@@ -28,6 +28,11 @@ export interface AttestationWatermarkBounds {
   height: number;
 }
 
+export interface AttestationRepeatedWatermarkRatio {
+  x: number;
+  y: number;
+}
+
 interface AttestationWatermarkBoundsOptions {
   pageWidth: number;
   pageHeight: number;
@@ -101,9 +106,25 @@ export const getAttestationWatermarkPlacement = ({
     defaultRotation,
     customRotation,
     hasMeaningfulCustomPlacement,
-    useCustomSingle: !(watermarkRepeat ?? true) || hasMeaningfulCustomPlacement,
+    useCustomSingle: !(watermarkRepeat ?? true),
     isHorizontal: watermarkAngle === "horizontal",
   };
+};
+
+export const getAttestationRepeatedWatermarkRatios = ({
+  centerX = 0.5,
+  centerY = 0.5,
+  isHorizontal,
+}: {
+  centerX?: number;
+  centerY?: number;
+  isHorizontal: boolean;
+}): AttestationRepeatedWatermarkRatio[] => {
+  const offsets = isHorizontal ? [-0.3, -0.1, 0.1, 0.3] : [-0.28, 0, 0.28];
+
+  return offsets
+    .map((offset) => ({ x: centerX, y: centerY + offset }))
+    .filter(({ x, y }) => x >= 0.05 && x <= 0.95 && y >= 0.08 && y <= 0.92);
 };
 
 export const getAttestationWatermarkBounds = ({
@@ -184,6 +205,29 @@ export const estimatePreviewWatermarkTextSize = ({
   const minFontSize = bounds.width * 0.05;
 
   return Math.max(minFontSize, Math.min(maxFontSize, estimated));
+};
+
+export const estimateRepeatedWatermarkTextSize = ({
+  text,
+  bounds,
+  templateType,
+  isHorizontal,
+}: {
+  text: string;
+  bounds: AttestationWatermarkBounds;
+  templateType?: string;
+  isHorizontal: boolean;
+}) => {
+  const baseSize = estimatePreviewWatermarkTextSize({
+    text,
+    bounds,
+    centerX: bounds.left + bounds.width / 2,
+    templateType,
+    isHorizontal,
+    hasCustomPos: false,
+  });
+
+  return baseSize * 1.2;
 };
 
 export const estimatePreviewWatermarkImageSize = (

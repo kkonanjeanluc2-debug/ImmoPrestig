@@ -1,7 +1,12 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, Move, RotateCw } from "lucide-react";
+import {
+  estimatePreviewWatermarkImageSize,
+  estimatePreviewWatermarkTextSize,
+  getAttestationWatermarkBounds,
+} from "@/lib/attestationWatermark";
 
 interface WatermarkPositionEditorProps {
   positionX: number; // 0-100
@@ -9,11 +14,14 @@ interface WatermarkPositionEditorProps {
   rotation: number;  // -180..180
   onChange: (next: { positionX: number; positionY: number; rotation: number }) => void;
   watermarkType: string;
+  watermarkAngle?: string | null;
   watermarkText?: string | null;
   watermarkImageUrl?: string | null;
   opacity: number;
   disabled?: boolean;
   templateType?: string;
+  pageBorderEnabled?: boolean;
+  pageBorderStyle?: string | null;
 }
 
 /**
@@ -26,14 +34,44 @@ export function WatermarkPositionEditor({
   rotation,
   onChange,
   watermarkType,
+  watermarkAngle,
   watermarkText,
   watermarkImageUrl,
   opacity,
   disabled,
   templateType,
+  pageBorderEnabled,
+  pageBorderStyle,
 }: WatermarkPositionEditorProps) {
   const pageRef = useRef<HTMLDivElement>(null);
   const [draggingMode, setDraggingMode] = useState<null | "move" | "rotate">(null);
+  const pageWidth = 240;
+  const pageHeight = 339;
+  const isInteractionDisabled = disabled ?? false;
+  const rotationDisabled = watermarkAngle === "horizontal";
+  const effectiveRotation = rotationDisabled ? 0 : rotation;
+  const watermarkBounds = useMemo(
+    () => getAttestationWatermarkBounds({
+      pageWidth,
+      pageHeight,
+      templateType,
+      pageBorderEnabled,
+      pageBorderStyle,
+    }),
+    [pageBorderEnabled, pageBorderStyle, templateType]
+  );
+  const previewCenterX = watermarkBounds.left + (watermarkBounds.width * positionX) / 100;
+  const previewCenterY = watermarkBounds.top + (watermarkBounds.height * positionY) / 100;
+  const watermarkSize = watermarkType === "image"
+    ? estimatePreviewWatermarkImageSize(watermarkBounds, true)
+    : estimatePreviewWatermarkTextSize({
+        text: watermarkText || "",
+        bounds: watermarkBounds,
+        centerX: previewCenterX,
+        templateType,
+        isHorizontal: rotationDisabled,
+        hasCustomPos: true,
+      });
 
   const updateFromPointer = useCallback(
     (clientX: number, clientY: number, mode: "move" | "rotate") => {
@@ -42,8 +80,8 @@ export function WatermarkPositionEditor({
       const rect = el.getBoundingClientRect();
 
       if (mode === "move") {
-        const x = ((clientX - rect.left) / rect.width) * 100;
-        const y = ((clientY - rect.top) / rect.height) * 100;
+        const x = ((clientX - rect.left - watermarkBounds.left) / watermarkBounds.width) * 100;
+        const y = ((clientY - rect.top - watermarkBounds.top) / watermarkBounds.height) * 100;
         onChange({
           positionX: Math.max(0, Math.min(100, x)),
           positionY: Math.max(0, Math.min(100, y)),
@@ -51,8 +89,8 @@ export function WatermarkPositionEditor({
         });
       } else {
         // rotate around current watermark center
-        const centerX = rect.left + (positionX / 100) * rect.width;
-        const centerY = rect.top + (positionY / 100) * rect.height;
+        const centerX = rect.left + watermarkBounds.left + (positionX / 100) * watermarkBounds.width;
+        const centerY = rect.top + watermarkBounds.top + (positionY / 100) * watermarkBounds.height;
         const angleRad = Math.atan2(clientY - centerY, clientX - centerX);
         let angleDeg = angleRad * (180 / Math.PI);
         // Normalize to -180..180
@@ -65,7 +103,7 @@ export function WatermarkPositionEditor({
         });
       }
     },
-    [onChange, positionX, positionY, rotation]
+    [onChange, positionX, positionY, rotation, watermarkBounds]
   );
 
   useEffect(() => {
@@ -86,7 +124,7 @@ export function WatermarkPositionEditor({
   }, [draggingMode, updateFromPointer]);
 
   const handlePageClick = (e: React.PointerEvent) => {
-    if (disabled) return;
+    if (isInteractionDisabled) return;
     // Only react to direct page clicks (background), not the watermark handle
     if (e.target === e.currentTarget || (e.target as HTMLElement).dataset.role === "page-bg") {
       updateFromPointer(e.clientX, e.clientY, "move");
@@ -98,11 +136,9 @@ export function WatermarkPositionEditor({
   };
 
   // Rotate handle position: 60px from center along current rotation
-  const rotateHandleAngle = (rotation - 90) * (Math.PI / 180);
+  const rotateHandleAngle = (effectiveRotation - 90) * (Math.PI / 180);
   const handleOffsetX = Math.cos(rotateHandleAngle) * 50;
   const handleOffsetY = Math.sin(rotateHandleAngle) * 50;
-
-  const watermarkSize = watermarkType === "image" ? 70 : 50;
 
   return (
     <div className="space-y-3">
@@ -116,7 +152,7 @@ export function WatermarkPositionEditor({
           size="sm"
           variant="ghost"
           onClick={handleReset}
-          disabled={disabled}
+          disabled={isInteractionDisabled}
           className="h-7 text-xs"
         >
           <RotateCcw className="h-3 w-3 mr-1" />
@@ -125,7 +161,7 @@ export function WatermarkPositionEditor({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Glissez le filigrane sur la page pour le positionner. Utilisez la poignée bleue pour le faire pivoter.
+        Le repère suit maintenant la même zone utile que sur l'attestation générée.
       </p>
 
       <div className="flex flex-col items-center gap-3">
@@ -135,9 +171,9 @@ export function WatermarkPositionEditor({
           onPointerDown={handlePageClick}
           data-role="page-bg"
           className={`relative bg-white border-2 border-border rounded-md shadow-sm select-none ${
-            disabled ? "opacity-50 pointer-events-none" : "cursor-crosshair"
+            isInteractionDisabled ? "opacity-50 pointer-events-none" : "cursor-crosshair"
           }`}
-          style={{ width: 240, height: 339 /* ~A4 ratio */ }}
+          style={{ width: pageWidth, height: pageHeight /* ~A4 ratio */ }}
         >
           {/* Fake content lines for visual context */}
           <div className="absolute inset-0 p-3 pointer-events-none" data-role="page-bg">
@@ -153,14 +189,27 @@ export function WatermarkPositionEditor({
               />
             ))}
           </div>
+          <div
+            className="absolute pointer-events-none rounded-sm border border-dashed border-border/70 bg-primary/5"
+            style={{
+              left: watermarkBounds.left,
+              top: watermarkBounds.top,
+              width: watermarkBounds.width,
+              height: watermarkBounds.height,
+            }}
+          >
+            <span className="absolute left-1.5 top-1 text-[9px] uppercase tracking-wide text-muted-foreground">
+              Zone PDF
+            </span>
+          </div>
 
           {/* Watermark visual */}
           <div
             className="absolute pointer-events-none"
             style={{
-              left: `${positionX}%`,
-              top: `${positionY}%`,
-              transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+              left: previewCenterX,
+              top: previewCenterY,
+              transform: `translate(-50%, -50%) rotate(${effectiveRotation}deg)`,
               transformOrigin: "center",
             }}
           >
@@ -168,7 +217,7 @@ export function WatermarkPositionEditor({
               <span
                 className="font-bold whitespace-nowrap text-primary"
                 style={{
-                  fontSize: 14,
+                  fontSize: watermarkSize,
                   opacity: Math.max(0.25, opacity * 2),
                   letterSpacing: "0.05em",
                 }}
@@ -204,8 +253,8 @@ export function WatermarkPositionEditor({
               }}
               className="absolute w-6 h-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary border-2 border-white shadow-lg cursor-move hover:scale-110 transition-transform flex items-center justify-center"
               style={{
-                left: `${positionX}%`,
-                top: `${positionY}%`,
+                left: previewCenterX,
+                top: previewCenterY,
                 zIndex: 10,
               }}
               aria-label="Déplacer le filigrane"
@@ -215,7 +264,7 @@ export function WatermarkPositionEditor({
           )}
 
           {/* Rotation handle */}
-          {watermarkType !== "none" && (
+          {watermarkType !== "none" && !rotationDisabled && (
             <button
               type="button"
               onPointerDown={(e) => {
@@ -223,20 +272,20 @@ export function WatermarkPositionEditor({
                 e.preventDefault();
                 setDraggingMode("rotate");
               }}
-              className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500 border-2 border-white shadow-md cursor-grab active:cursor-grabbing hover:scale-110 transition-transform flex items-center justify-center"
+              className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent border-2 border-white shadow-md cursor-grab active:cursor-grabbing hover:scale-110 transition-transform flex items-center justify-center"
               style={{
-                left: `calc(${positionX}% + ${handleOffsetX}px)`,
-                top: `calc(${positionY}% + ${handleOffsetY}px)`,
+                left: previewCenterX + handleOffsetX,
+                top: previewCenterY + handleOffsetY,
                 zIndex: 11,
               }}
               aria-label="Faire pivoter le filigrane"
             >
-              <RotateCw className="h-2.5 w-2.5 text-white" />
+              <RotateCw className="h-2.5 w-2.5 text-accent-foreground" />
             </button>
           )}
 
           {/* Connection line between center and rotate handle */}
-          {watermarkType !== "none" && (
+          {watermarkType !== "none" && !rotationDisabled && (
             <svg
               className="absolute inset-0 pointer-events-none"
               width="100%"
@@ -244,11 +293,11 @@ export function WatermarkPositionEditor({
               style={{ zIndex: 9 }}
             >
               <line
-                x1={`${positionX}%`}
-                y1={`${positionY}%`}
-                x2={`calc(${positionX}% + ${handleOffsetX}px)` as any}
-                y2={`calc(${positionY}% + ${handleOffsetY}px)` as any}
-                stroke="rgb(59, 130, 246)"
+                x1={previewCenterX}
+                y1={previewCenterY}
+                x2={previewCenterX + handleOffsetX}
+                y2={previewCenterY + handleOffsetY}
+                stroke="hsl(var(--accent))"
                 strokeWidth="1.5"
                 strokeDasharray="3 2"
                 opacity="0.6"
@@ -269,7 +318,7 @@ export function WatermarkPositionEditor({
           </div>
           <div className="rounded bg-muted/50 px-2 py-1.5">
             <div className="text-[10px] text-muted-foreground uppercase">Angle</div>
-            <div className="text-xs font-mono font-semibold">{Math.round(rotation)}°</div>
+            <div className="text-xs font-mono font-semibold">{Math.round(effectiveRotation)}°</div>
           </div>
         </div>
       </div>

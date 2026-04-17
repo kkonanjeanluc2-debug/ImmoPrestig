@@ -34,6 +34,12 @@ import {
 import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES } from "@/lib/defaultAttestationTemplate";
 import { DEFAULT_CESSION_TEMPLATE, CESSION_VARIABLES } from "@/lib/defaultCessionTemplate";
 import { buildAttestationTemplateContent } from "@/lib/attestationTemplateContent";
+import {
+  estimatePreviewWatermarkImageSize,
+  estimatePreviewWatermarkTextSize,
+  getAttestationWatermarkBounds,
+  getAttestationWatermarkPlacement,
+} from "@/lib/attestationWatermark";
 import { supabase } from "@/integrations/supabase/client";
 import { WatermarkPositionEditor } from "./WatermarkPositionEditor";
 
@@ -77,6 +83,8 @@ function AttestationPreview({
   watermarkPositionX,
   watermarkPositionY,
   watermarkRotation,
+  pageBorderEnabled,
+  pageBorderStyle,
 }: {
   content: string;
   templateType: string;
@@ -89,6 +97,8 @@ function AttestationPreview({
   watermarkPositionX?: number | null;
   watermarkPositionY?: number | null;
   watermarkRotation?: number | null;
+  pageBorderEnabled?: boolean | null;
+  pageBorderStyle?: string | null;
 }) {
   const previewContent = useMemo(() => {
     if (!content) return "";
@@ -103,60 +113,72 @@ function AttestationPreview({
     });
   }, [content, templateType]);
 
+  const previewPageWidth = 210;
+  const previewPageHeight = 297;
+  const previewBounds = useMemo(
+    () => getAttestationWatermarkBounds({
+      pageWidth: previewPageWidth,
+      pageHeight: previewPageHeight,
+      templateType,
+      pageBorderEnabled,
+      pageBorderStyle,
+    }),
+    [pageBorderEnabled, pageBorderStyle, templateType]
+  );
+
   const renderWatermarkLayer = () => {
     if (!previewContent || watermarkType === "none") return null;
 
     const opacity = Math.max(0.04, Math.min(watermarkOpacity ?? 0.1, 0.4));
-    const repeatEnabled = watermarkRepeat ?? true;
-    const isHorizontal = watermarkAngle === "horizontal";
-    const defaultRotation = templateType === "cession" ? -34 : -45;
-    const parsedRotation = watermarkRotation === null || watermarkRotation === undefined
-      ? null
-      : Number(watermarkRotation);
-    const customRotation = parsedRotation !== null && Number.isFinite(parsedRotation)
-      ? parsedRotation
-      : defaultRotation;
-    const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${customRotation}deg)`;
-    const parsedX = watermarkPositionX === null || watermarkPositionX === undefined
-      ? null
-      : Number(watermarkPositionX);
-    const parsedY = watermarkPositionY === null || watermarkPositionY === undefined
-      ? null
-      : Number(watermarkPositionY);
-    const hasCustomPos = Number.isFinite(parsedX) && Number.isFinite(parsedY);
-    const hasMeaningfulCustomPlacement = hasCustomPos && (
-      Math.abs((parsedX as number) - 50) > 0.5 ||
-      Math.abs((parsedY as number) - 50) > 0.5 ||
-      (parsedRotation !== null && Number.isFinite(parsedRotation) && Math.abs(parsedRotation - defaultRotation) > 0.5)
-    );
-    const useCustomSingle = !repeatEnabled || hasMeaningfulCustomPlacement;
-    const customX = hasCustomPos ? `${parsedX}%` : "50%";
-    const customY = hasCustomPos ? `${parsedY}%` : "50%";
-
-    const positions = useCustomSingle
-      ? [{ left: customX, top: customY }]
-      : isHorizontal
+    const placement = getAttestationWatermarkPlacement({
+      templateType,
+      watermarkAngle,
+      watermarkRepeat,
+      watermarkPositionX,
+      watermarkPositionY,
+      watermarkRotation,
+    });
+    const centerX = previewBounds.left + (previewBounds.width * ((placement.parsedPositionX ?? 50) / 100));
+    const centerY = previewBounds.top + (previewBounds.height * ((placement.parsedPositionY ?? 50) / 100));
+    const toPercentX = (value: number) => `${(value / previewPageWidth) * 100}%`;
+    const toPercentY = (value: number) => `${(value / previewPageHeight) * 100}%`;
+    const mapAreaPoint = (xRatio: number, yRatio: number) => ({
+      left: toPercentX(previewBounds.left + previewBounds.width * xRatio),
+      top: toPercentY(previewBounds.top + previewBounds.height * yRatio),
+    });
+    const positions = placement.useCustomSingle
+      ? [{ left: toPercentX(centerX), top: toPercentY(centerY) }]
+      : placement.isHorizontal
         ? [
-            { left: "50%", top: "18%" },
-            { left: "50%", top: "38%" },
-            { left: "50%", top: "58%" },
-            { left: "50%", top: "78%" },
+            mapAreaPoint(0.5, 0.18),
+            mapAreaPoint(0.5, 0.38),
+            mapAreaPoint(0.5, 0.58),
+            mapAreaPoint(0.5, 0.78),
           ]
         : templateType === "cession"
           ? [
-              { left: "19%", top: "73%" },
-              { left: "42%", top: "55%" },
-              { left: "65%", top: "37%" },
+              mapAreaPoint(0.19, 0.73),
+              mapAreaPoint(0.42, 0.55),
+              mapAreaPoint(0.65, 0.37),
             ]
           : [
-              { left: "22%", top: "28%" },
-              { left: "50%", top: "50%" },
-              { left: "78%", top: "72%" },
+              mapAreaPoint(0.22, 0.28),
+              mapAreaPoint(0.5, 0.5),
+              mapAreaPoint(0.78, 0.72),
             ];
-
-    const size = useCustomSingle
-      ? (watermarkType === "image" ? 180 : templateType === "cession" ? 56 : 60)
-      : (watermarkType === "image" ? 90 : 28);
+    const size = placement.useCustomSingle
+      ? (watermarkType === "image"
+          ? estimatePreviewWatermarkImageSize(previewBounds, true)
+          : estimatePreviewWatermarkTextSize({
+              text: watermarkText || "",
+              bounds: previewBounds,
+              centerX,
+              templateType,
+              isHorizontal: placement.isHorizontal,
+              hasCustomPos: placement.hasCustomPos,
+            }))
+      : (watermarkType === "image" ? estimatePreviewWatermarkImageSize(previewBounds, false) : 20);
+    const rotation = `rotate(${placement.isHorizontal ? 0 : (placement.customRotation ?? placement.defaultRotation)}deg)`;
 
     return (
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -240,6 +262,15 @@ function AttestationPreview({
       </div>
       <ScrollArea className="h-[400px] border rounded-lg">
         <div className="relative min-h-[560px] overflow-hidden bg-background p-6">
+          <div
+            className="pointer-events-none absolute rounded-sm border border-dashed border-border/60 bg-primary/5"
+            style={{
+              left: `${(previewBounds.left / previewPageWidth) * 100}%`,
+              top: `${(previewBounds.top / previewPageHeight) * 100}%`,
+              width: `${(previewBounds.width / previewPageWidth) * 100}%`,
+              height: `${(previewBounds.height / previewPageHeight) * 100}%`,
+            }}
+          />
           {renderWatermarkLayer()}
           <div className="relative z-10 prose prose-sm max-w-none">
             {renderLines()}
@@ -391,7 +422,13 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
   const openCreate = () => {
     setEditingTemplate(null);
-    setForm({ ...emptyForm, content: defaultContent, template_type: templateType, is_default: templates.length === 0 });
+    setForm({
+      ...emptyForm,
+      content: defaultContent,
+      template_type: templateType,
+      is_default: templates.length === 0,
+      watermark_rotation: templateType === "cession" ? -34 : -45,
+    });
     setDialogOpen(true);
   };
 
@@ -433,7 +470,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_repeat: (t as any).watermark_repeat ?? true,
       watermark_position_x: (t as any).watermark_position_x ?? 50,
       watermark_position_y: (t as any).watermark_position_y ?? 50,
-      watermark_rotation: (t as any).watermark_rotation ?? -45,
+      watermark_rotation: (t as any).watermark_rotation ?? (templateType === "cession" ? -34 : -45),
       page_border_enabled: (t as any).page_border_enabled || false,
       page_border_color: (t as any).page_border_color || '#8B4513',
       page_border_style: (t as any).page_border_style || 'geometric',
@@ -479,7 +516,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_repeat: (t as any).watermark_repeat ?? true,
       watermark_position_x: (t as any).watermark_position_x ?? 50,
       watermark_position_y: (t as any).watermark_position_y ?? 50,
-      watermark_rotation: (t as any).watermark_rotation ?? -45,
+      watermark_rotation: (t as any).watermark_rotation ?? (templateType === "cession" ? -34 : -45),
       page_border_enabled: (t as any).page_border_enabled || false,
       page_border_color: (t as any).page_border_color || '#8B4513',
       page_border_style: (t as any).page_border_style || 'geometric',
@@ -1185,11 +1222,13 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                       updateField("watermark_rotation", rotation);
                     }}
                     watermarkType={form.watermark_type ?? "none"}
+                    watermarkAngle={form.watermark_angle}
                     watermarkText={form.watermark_text}
                     watermarkImageUrl={form.watermark_image_url}
                     opacity={form.watermark_opacity ?? 0.1}
-                    disabled={form.watermark_angle === "horizontal"}
                     templateType={templateType}
+                    pageBorderEnabled={form.page_border_enabled}
+                    pageBorderStyle={form.page_border_style}
                   />
                   {form.watermark_angle === "horizontal" && (
                     <p className="text-[11px] text-muted-foreground mt-2 italic">
@@ -1435,6 +1474,8 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                   watermarkPositionX={form.watermark_position_x}
                   watermarkPositionY={form.watermark_position_y}
                   watermarkRotation={form.watermark_rotation}
+                  pageBorderEnabled={form.page_border_enabled}
+                  pageBorderStyle={form.page_border_style}
                 />
               </TabsContent>
             </Tabs>

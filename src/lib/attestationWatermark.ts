@@ -214,14 +214,18 @@ export const estimatePreviewWatermarkTextSize = ({
       : bounds.top + bounds.height * 0.05;
 
   const availableLength = hasCustomPos
-    ? Math.max(bounds.width * 0.28, 2 * Math.min(centerX - bounds.left, bounds.right - centerX) * 0.9)
+    ? Math.max(bounds.width * 0.4, 2 * Math.min(centerX - bounds.left, bounds.right - centerX) * 0.92)
     : isHorizontal
       ? bounds.width * 0.92
       : Math.hypot(diagonalEndX - diagonalStartX, diagonalStartY - diagonalEndY) * 0.98;
 
-  const estimated = availableLength / Math.max(normalizedText.length * 0.58, 6);
-  const maxFontSize = hasCustomPos ? bounds.width * 0.15 : bounds.width * 0.19;
-  const minFontSize = bounds.width * 0.05;
+  // Target the text to fill ~88% of the available length so we keep a
+  // small but reasonable side padding while staying as large as possible.
+  const targetLength = availableLength * 0.88;
+  // Helvetica bold average glyph width ≈ 0.55 * fontSize
+  const estimated = targetLength / Math.max(normalizedText.length * 0.55, 4);
+  const maxFontSize = bounds.width * 0.28;
+  const minFontSize = bounds.width * 0.06;
 
   return Math.max(minFontSize, Math.min(maxFontSize, estimated));
 };

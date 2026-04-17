@@ -1151,14 +1151,14 @@ const _generateAttestationVillageoiseInternal = async (
     ? cl >= 3 ? 6 : cl >= 1 ? 8 : 10
     : cl >= 3 ? 8 : cl >= 1 ? 10 : 15;
   const bodyFontSize = isAttributionTemplate
-    ? cl >= 5 ? 6.5 : cl >= 4 ? 7 : cl >= 3 ? 7.2 : cl >= 2 ? 7.6 : cl >= 1 ? 8 : 8.2
-    : cl >= 5 ? 7 : cl >= 4 ? 7.5 : cl >= 3 ? 8 : cl >= 2 ? 8.5 : 9;
+    ? cl >= 5 ? 8 : cl >= 4 ? 9 : cl >= 3 ? 10 : cl >= 2 ? 11 : cl >= 1 ? 12.5 : 14
+    : cl >= 5 ? 8.5 : cl >= 4 ? 9.5 : cl >= 3 ? 10.5 : cl >= 2 ? 11.5 : cl >= 1 ? 13 : 14;
   const headingFontSize = isAttributionTemplate
-    ? cl >= 5 ? 7.5 : cl >= 4 ? 8 : cl >= 3 ? 8.4 : cl >= 2 ? 8.8 : cl >= 1 ? 9 : 9.2
-    : cl >= 5 ? 8 : cl >= 4 ? 8.5 : cl >= 3 ? 9 : 10;
+    ? cl >= 5 ? 9 : cl >= 4 ? 10 : cl >= 3 ? 11 : cl >= 2 ? 12 : cl >= 1 ? 13.5 : 15
+    : cl >= 5 ? 9.5 : cl >= 4 ? 10.5 : cl >= 3 ? 11.5 : cl >= 2 ? 12.5 : cl >= 1 ? 14 : 15;
   const bodyLineHeight = isAttributionTemplate
-    ? cl >= 5 ? 3 : cl >= 4 ? 3.2 : cl >= 3 ? 3.4 : cl >= 2 ? 3.6 : cl >= 1 ? 3.8 : 4
-    : cl >= 5 ? 3.2 : cl >= 4 ? 3.5 : cl >= 3 ? 3.8 : cl >= 2 ? 4 : 4.5;
+    ? cl >= 5 ? 3.6 : cl >= 4 ? 4 : cl >= 3 ? 4.4 : cl >= 2 ? 4.8 : cl >= 1 ? 5.4 : 6
+    : cl >= 5 ? 3.8 : cl >= 4 ? 4.2 : cl >= 3 ? 4.6 : cl >= 2 ? 5 : cl >= 1 ? 5.6 : 6;
   const paragraphGap = isAttributionTemplate
     ? cl >= 4 ? 0.3 : cl >= 3 ? 0.5 : cl >= 2 ? 0.6 : cl >= 1 ? 0.8 : 1
     : cl >= 4 ? 0.5 : cl >= 3 ? 0.8 : cl >= 2 ? 1 : 1.5;

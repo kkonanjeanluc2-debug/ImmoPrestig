@@ -2,6 +2,12 @@ import jsPDF from "jspdf";
 import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
 import { formatAmountForPDF, formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
 import { buildAttestationTemplateContent, formatAttestationPhone } from "@/lib/attestationTemplateContent";
+import {
+  estimatePreviewWatermarkImageSize,
+  estimatePreviewWatermarkTextSize,
+  getAttestationWatermarkBounds,
+  getAttestationWatermarkPlacement,
+} from "@/lib/attestationWatermark";
 
 interface AgencyInfo {
   name: string;
@@ -1442,69 +1448,78 @@ const _generateAttestationVillageoiseInternal = async (
   const drawWatermark = async (bodyTopY: number, bodyBottomY: number) => {
     const wmType = template?.watermark_type || 'none';
     if (wmType === 'none') return;
+    const templateType = isCessionTemplate ? 'cession' : 'attribution';
     const opacity = template?.watermark_opacity ?? 0.1;
     const repeat = template?.watermark_repeat ?? true;
     const bodyHeight = bodyBottomY - bodyTopY;
-    const isHorizontal = template?.watermark_angle === 'horizontal';
-    // Pour le modèle de cession, la référence utilisateur montre une diagonale
-    // plus couchée, qui traverse le corps depuis le bas-gauche jusqu'au haut-droit
-    // sans monter trop verticalement.
-    const diagonalStartX = isHorizontal
-      ? margin + contentWidth * 0.04
+    const placement = getAttestationWatermarkPlacement({
+      templateType,
+      watermarkAngle: template?.watermark_angle,
+      watermarkRepeat: template?.watermark_repeat,
+      watermarkPositionX: template?.watermark_position_x,
+      watermarkPositionY: template?.watermark_position_y,
+      watermarkRotation: template?.watermark_rotation,
+    });
+    const watermarkBounds = getAttestationWatermarkBounds({
+      pageWidth,
+      pageHeight,
+      templateType,
+      pageBorderEnabled: template?.page_border_enabled,
+      pageBorderStyle: template?.page_border_style,
+    });
+    const centerX = watermarkBounds.left + (watermarkBounds.width * ((placement.parsedPositionX ?? 50) / 100));
+    const centerY = watermarkBounds.top + (watermarkBounds.height * ((placement.parsedPositionY ?? 50) / 100));
+    const mapAreaPoint = (xRatio: number, yRatio: number) => ({
+      x: watermarkBounds.left + watermarkBounds.width * xRatio,
+      y: watermarkBounds.top + watermarkBounds.height * yRatio,
+    });
+    const repeatedPositions = placement.isHorizontal
+      ? [
+          mapAreaPoint(0.5, 0.18),
+          mapAreaPoint(0.5, 0.38),
+          mapAreaPoint(0.5, 0.58),
+          mapAreaPoint(0.5, 0.78),
+        ]
       : isCessionTemplate
-        ? margin + contentWidth * 0.01
-        : margin + contentWidth * 0.02;
-    const diagonalStartY = isHorizontal
-      ? bodyTopY + bodyHeight / 2
+        ? [
+            mapAreaPoint(0.19, 0.73),
+            mapAreaPoint(0.42, 0.55),
+            mapAreaPoint(0.65, 0.37),
+          ]
+        : [
+            mapAreaPoint(0.22, 0.28),
+            mapAreaPoint(0.5, 0.5),
+            mapAreaPoint(0.78, 0.72),
+          ];
+    const diagonalStartX = placement.isHorizontal
+      ? watermarkBounds.left + watermarkBounds.width * 0.04
       : isCessionTemplate
-        ? bodyTopY + bodyHeight * 0.88
-        : bodyTopY + bodyHeight * 0.95;
-    const diagonalEndX = isHorizontal
-      ? pageWidth - margin - contentWidth * 0.04
+        ? watermarkBounds.left + watermarkBounds.width * 0.01
+        : watermarkBounds.left + watermarkBounds.width * 0.02;
+    const diagonalStartY = placement.isHorizontal
+      ? watermarkBounds.top + watermarkBounds.height / 2
       : isCessionTemplate
-        ? pageWidth - margin - contentWidth * 0.01
-        : pageWidth - margin - contentWidth * 0.02;
-    const diagonalEndY = isHorizontal
-      ? bodyTopY + bodyHeight / 2
+        ? watermarkBounds.top + watermarkBounds.height * 0.88
+        : watermarkBounds.top + watermarkBounds.height * 0.95;
+    const diagonalEndX = placement.isHorizontal
+      ? watermarkBounds.right - watermarkBounds.width * 0.04
       : isCessionTemplate
-        ? bodyTopY + bodyHeight * 0.14
-        : bodyTopY + bodyHeight * 0.05;
-    // Custom user position/rotation overrides are mapped to the useful page area
-    // (same mental model as the visual editor), not only the text body.
-    const parsedPositionX = template?.watermark_position_x === null || template?.watermark_position_x === undefined
-      ? null
-      : Number(template.watermark_position_x);
-    const parsedPositionY = template?.watermark_position_y === null || template?.watermark_position_y === undefined
-      ? null
-      : Number(template.watermark_position_y);
-    const parsedRotation = template?.watermark_rotation === null || template?.watermark_rotation === undefined
-      ? null
-      : Number(template.watermark_rotation);
-    const hasCustomPos = Number.isFinite(parsedPositionX) && Number.isFinite(parsedPositionY);
-    const defaultRotation = isCessionTemplate ? -34 : -45;
-    const customRotation = parsedRotation !== null && Number.isFinite(parsedRotation) ? parsedRotation : null;
-    const hasMeaningfulCustomPlacement = hasCustomPos && (
-      Math.abs((parsedPositionX as number) - 50) > 0.5 ||
-      Math.abs((parsedPositionY as number) - 50) > 0.5 ||
-      (customRotation !== null && Math.abs(customRotation - defaultRotation) > 0.5)
-    );
-    const useCustomSingle = !repeat || hasMeaningfulCustomPlacement;
-    const watermarkAreaLeft = template?.page_border_enabled ? Math.max(margin, pageBorderContentInset + 4) : margin;
-    const watermarkAreaRight = pageWidth - watermarkAreaLeft;
-    const watermarkAreaTop = template?.page_border_enabled ? pageBorderContentInset + 4 : Math.max(4, margin * 0.4);
-    const watermarkAreaBottom = template?.page_border_enabled
-      ? pageHeight - (pageBorderContentInset + 4)
-      : pageHeight - Math.max(4, margin * 0.4);
-    const watermarkAreaWidth = watermarkAreaRight - watermarkAreaLeft;
-    const watermarkAreaHeight = watermarkAreaBottom - watermarkAreaTop;
-    const customCenterX = hasCustomPos ? watermarkAreaLeft + (watermarkAreaWidth * ((parsedPositionX as number) / 100)) : null;
-    const customCenterY = hasCustomPos ? watermarkAreaTop + (watermarkAreaHeight * ((parsedPositionY as number) / 100)) : null;
-    const defaultAngle = Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
-    const angle = isHorizontal
-      ? 0
-      : (useCustomSingle && customRotation !== null)
-        ? customRotation
-        : defaultAngle;
+        ? watermarkBounds.right - watermarkBounds.width * 0.01
+        : watermarkBounds.right - watermarkBounds.width * 0.02;
+    const diagonalEndY = placement.isHorizontal
+      ? watermarkBounds.top + watermarkBounds.height / 2
+      : isCessionTemplate
+        ? watermarkBounds.top + watermarkBounds.height * 0.14
+        : watermarkBounds.top + watermarkBounds.height * 0.05;
+    const availableLength = placement.hasCustomPos
+      ? Math.max(
+          watermarkBounds.width * 0.28,
+          2 * Math.min(centerX - watermarkBounds.left, watermarkBounds.right - centerX) * 0.9,
+        )
+      : placement.isHorizontal
+        ? watermarkBounds.width * 0.92
+        : Math.hypot(diagonalEndX - diagonalStartX, diagonalStartY - diagonalEndY) * 0.98;
+    const angle = placement.isHorizontal ? 0 : (placement.customRotation ?? placement.defaultRotation);
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
@@ -1515,68 +1530,24 @@ const _generateAttestationVillageoiseInternal = async (
 
       // Single placement is used when repeat is disabled, or when the user has
       // meaningfully moved/rotated the watermark away from the default tiled layout.
-      if (repeat && !useCustomSingle) {
-        // Repeated mode: smaller font for tiling
+      if (repeat && !placement.useCustomSingle) {
         doc.setFontSize(16);
-        const rowH = 22;
-        const col1X = pageWidth * 0.18;
-        const col2X = pageWidth * 0.58;
-
-        if (angle === 0) {
-          for (let y = bodyTopY; y < bodyBottomY; y += rowH) {
-            doc.text(text, col1X, y);
-            doc.text(text, col2X, y);
-          }
-        } else {
-          const stepY = 35;
-          let row = 0;
-          for (let y = bodyTopY; y < bodyBottomY; y += stepY) {
-            const offX = (row % 2) * 30;
-            doc.text(text, col1X + offX, y, { angle });
-            doc.text(text, col2X + offX, y, { angle });
-            row++;
-          }
+        for (const position of repeatedPositions) {
+          doc.text(text, position.x, position.y, { align: 'center', angle, baseline: 'middle' });
         }
       } else {
-        // Single watermark — uses custom position when provided, else default diagonal/horizontal center
-        const defaultCenterX = isHorizontal ? pageWidth / 2 : (diagonalStartX + diagonalEndX) / 2;
-        const defaultCenterY = isHorizontal ? bodyTopY + bodyHeight / 2 : (diagonalStartY + diagonalEndY) / 2;
-        const centerX = customCenterX ?? defaultCenterX;
-        const centerY = customCenterY ?? defaultCenterY;
-
-        // When user has set a custom position, base the available length on the
-        // distance from the chosen center to the page edges (so the text really
-        // shifts visibly with the position). Otherwise fall back to the full
-        // diagonal/horizontal length.
-        let availableLength: number;
-        if (hasCustomPos) {
-          const distToLeft = centerX - margin;
-          const distToRight = (pageWidth - margin) - centerX;
-          const horizontalRoom = 2 * Math.min(distToLeft, distToRight);
-          availableLength = Math.max(80, horizontalRoom * 0.9);
-        } else {
-          availableLength = isHorizontal
-            ? contentWidth * 0.92
-            : Math.sqrt(
-                Math.pow(diagonalEndX - diagonalStartX, 2) +
-                Math.pow(diagonalStartY - diagonalEndY, 2)
-              ) * 0.98;
-        }
-
-        const maxFontSize = hasCustomPos ? 90 : 220;
-        const minFontSize = hasCustomPos ? 24 : 40;
-
-        let fontSize = maxFontSize;
-        doc.setFontSize(fontSize);
-        let measured = doc.getTextWidth(text);
-        if (measured > availableLength) {
-          fontSize = Math.floor(fontSize * (availableLength / measured));
-        }
-        fontSize = Math.max(minFontSize, Math.min(maxFontSize, fontSize));
-
+        const minFontSize = watermarkBounds.width * 0.05;
+        let fontSize = estimatePreviewWatermarkTextSize({
+          text,
+          bounds: watermarkBounds,
+          centerX,
+          templateType,
+          isHorizontal: placement.isHorizontal,
+          hasCustomPos: placement.hasCustomPos,
+        });
         doc.setFontSize(fontSize);
         while (doc.getTextWidth(text) > availableLength && fontSize > minFontSize) {
-          fontSize -= 2;
+          fontSize -= 1;
           doc.setFontSize(fontSize);
         }
 
@@ -1589,22 +1560,18 @@ const _generateAttestationVillageoiseInternal = async (
       try {
         const imgBase64 = await loadImageAsBase64(template.watermark_image_url);
         if (imgBase64) {
-          const imgSizeLarge = 90;
-          const imgSizeSmall = 45;
+          const imgSizeLarge = estimatePreviewWatermarkImageSize(watermarkBounds, true);
+          const imgSizeSmall = estimatePreviewWatermarkImageSize(watermarkBounds, false);
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
-          if (repeat && !useCustomSingle) {
-            const stepY = imgSizeSmall + 30;
-            const x1 = pageWidth * 0.18;
-            const x2 = pageWidth * 0.58;
-            for (let y = bodyTopY; y < bodyBottomY; y += stepY) {
+          if (repeat && !placement.useCustomSingle) {
+            for (const position of repeatedPositions) {
               if (gState) (doc as any).setGState(gState);
-              doc.addImage(imgBase64, 'PNG', x1, y, imgSizeSmall, imgSizeSmall);
-              doc.addImage(imgBase64, 'PNG', x2, y, imgSizeSmall, imgSizeSmall);
+              doc.addImage(imgBase64, 'PNG', position.x - imgSizeSmall / 2, position.y - imgSizeSmall / 2, imgSizeSmall, imgSizeSmall);
             }
           } else {
             if (gState) (doc as any).setGState(gState);
-            const imgX = (customCenterX ?? pageWidth / 2) - imgSizeLarge / 2;
-            const imgY = (customCenterY ?? (bodyTopY + bodyBottomY) / 2) - imgSizeLarge / 2;
+            const imgX = centerX - imgSizeLarge / 2;
+            const imgY = centerY - imgSizeLarge / 2;
             doc.addImage(imgBase64, 'PNG', imgX, imgY, imgSizeLarge, imgSizeLarge);
           }
           // Reset opacity

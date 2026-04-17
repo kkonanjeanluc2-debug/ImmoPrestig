@@ -413,6 +413,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_position_x: (t as any).watermark_position_x ?? 50,
       watermark_position_y: (t as any).watermark_position_y ?? 50,
       watermark_rotation: (t as any).watermark_rotation ?? -45,
+      page_border_enabled: (t as any).page_border_enabled || false,
       page_border_color: (t as any).page_border_color || '#8B4513',
       page_border_style: (t as any).page_border_style || 'geometric',
     });

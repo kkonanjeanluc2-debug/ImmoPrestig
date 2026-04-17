@@ -1557,44 +1557,20 @@ const _generateAttestationVillageoiseInternal = async (
   let watermarkBodyTopY = 0;
 
   if (isCessionTemplate) {
-    // === CESSION HEADER: Left logo + district info + right logo + colored dashes + title ===
+    // === CESSION HEADER: District info text first, then logos aligned with title border ===
     const leftLogoUrl = template?.village_logo_url;
     const rightLogoUrl = template?.right_logo_url;
     const logoSize = cl >= 4 ? 18 : cl >= 2 ? 22 : 25;
-    const logoStartY = Math.max(yPos - 3, headerLogoMinY);
     const leftLogoX = headerLogoInsetX;
     const rightLogoX = pageWidth - headerLogoInsetX - logoSize;
-    let hasLogos = false;
+    const hasLogos = !!(leftLogoUrl || rightLogoUrl);
 
-    // Left logo
-    if (leftLogoUrl) {
-      try {
-        const logoBase64 = await loadImageAsBase64(leftLogoUrl);
-        if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', leftLogoX, logoStartY, logoSize, logoSize);
-          hasLogos = true;
-        }
-      } catch {}
-    }
-
-    // Right logo
-    if (rightLogoUrl) {
-      try {
-        const logoBase64 = await loadImageAsBase64(rightLogoUrl);
-        if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', rightLogoX, logoStartY, logoSize, logoSize);
-          hasLogos = true;
-        }
-      } catch {}
-    }
-
-    // District/Region/Departement/Commune text centered between logos
+    // District/Region/Departement/Commune text centered (top of page)
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...textColor);
     
     const districtText = district ? `DISTRICT DU ${district.toUpperCase()}` : '';
-    // Build header lines from template fields
     const cessionHeaderLines: string[] = [];
     if (districtText) cessionHeaderLines.push(districtText);
     if (commune) cessionHeaderLines.push(commune.toUpperCase());
@@ -1606,9 +1582,7 @@ const _generateAttestationVillageoiseInternal = async (
       headerTextY += 5;
     }
 
-    // Position after logos/text
-    const logoBottomY = hasLogos ? logoStartY + logoSize : headerTextY;
-    yPos = Math.max(headerTextY + 2, logoBottomY + 3);
+    yPos = headerTextY + 2;
 
     // Colored dashes line (supports up to 4 alternating colors, last one stretched)
     const rawLineColor = template?.header_line_color || '#FF8C00';

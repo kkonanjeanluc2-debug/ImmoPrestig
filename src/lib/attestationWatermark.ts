@@ -39,6 +39,17 @@ interface AttestationWatermarkBoundsOptions {
   templateType?: string;
   pageBorderEnabled?: boolean | null;
   pageBorderStyle?: string | null;
+  /**
+   * Optional body content rectangle. When provided, the watermark zone is restricted
+   * to the actual content area of the attestation (between header and footer,
+   * inside the side margins) instead of the full page.
+   */
+  contentArea?: {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+  } | null;
 }
 
 const parseNullableNumber = (value: number | string | null | undefined): number | null => {

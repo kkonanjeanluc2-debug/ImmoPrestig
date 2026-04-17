@@ -29,6 +29,10 @@ CNI n° **{cedant_cni}**
 
 ---
 
+**Mention de cession :** Ce lot, initialement attribué à **{ancien_beneficiaire_nom}** (CNI : {ancien_beneficiaire_cni}), Contact : {ancien_beneficiaire_telephone}, a été cédé au bénéficiaire désigné ci-dessus.
+
+---
+
 NB : Cette attestation sera consolidée par l'acquisition des documents administratifs (Attestation d'attribution villageoise, Enregistrement, Arrêté de Concession Définitive etc. qui garantiront votre propriété).
 
 En foi de quoi, cette présente attestation de cession est faite pour servir et faire valoir ce que de droit.

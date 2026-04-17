@@ -8,6 +8,7 @@ import {
   getAttestationWatermarkBounds,
   getAttestationWatermarkPlacement,
 } from "@/lib/attestationWatermark";
+import { drawMotifBorder, isMotifBorderStyle } from "@/lib/attestationBorderMotifs";
 
 interface AgencyInfo {
   name: string;

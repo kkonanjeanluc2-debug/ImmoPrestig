@@ -1,0 +1,1 @@
+ALTER TABLE public.attestation_templates ADD COLUMN IF NOT EXISTS title_bg_color text;

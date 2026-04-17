@@ -244,6 +244,7 @@ const emptyForm: AttestationTemplateInsert = {
   template_type: "attribution",
   header_line_color: "#FF8C00",
   title_border_color: null,
+  title_bg_color: null,
   watermark_type: "none",
   watermark_text: null,
   watermark_image_url: null,
@@ -382,6 +383,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
       title_border_color: (t as any).title_border_color || null,
+      title_bg_color: (t as any).title_bg_color || null,
       watermark_type: (t as any).watermark_type || "none",
       watermark_text: (t as any).watermark_text || null,
       watermark_image_url: (t as any).watermark_image_url || null,
@@ -419,6 +421,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
       title_border_color: (t as any).title_border_color || null,
+      title_bg_color: (t as any).title_bg_color || null,
       watermark_type: (t as any).watermark_type || "none",
       watermark_text: (t as any).watermark_text || null,
       watermark_image_url: (t as any).watermark_image_url || null,
@@ -904,29 +907,60 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                   <Label className="text-sm">Activer l'encadrement</Label>
                 </div>
                 {form.title_border_color && (
-                  <div className="flex items-center gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Couleur du cadre</Label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={form.title_border_color}
-                          onChange={(e) => updateField("title_border_color", e.target.value)}
-                          className="w-10 h-10 rounded cursor-pointer border border-border"
-                        />
-                        <Input
-                          value={form.title_border_color}
-                          onChange={(e) => updateField("title_border_color", e.target.value)}
-                          className="w-28 font-mono text-xs"
-                        />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Couleur du cadre</Label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={form.title_border_color}
+                            onChange={(e) => updateField("title_border_color", e.target.value)}
+                            className="w-10 h-10 rounded cursor-pointer border border-border"
+                          />
+                          <Input
+                            value={form.title_border_color}
+                            onChange={(e) => updateField("title_border_color", e.target.value)}
+                            className="w-28 font-mono text-xs"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Couleur de fond du cadre</Label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={form.title_bg_color || "#ffffff"}
+                            onChange={(e) => updateField("title_bg_color", e.target.value)}
+                            className="w-10 h-10 rounded cursor-pointer border border-border"
+                          />
+                          <Input
+                            value={form.title_bg_color || ""}
+                            placeholder="Aucun (transparent)"
+                            onChange={(e) => updateField("title_bg_color", e.target.value || null)}
+                            className="w-32 font-mono text-xs"
+                          />
+                          {form.title_bg_color && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => updateField("title_bg_color", null)}
+                              className="text-xs h-8"
+                            >
+                              Effacer
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex-1">
+                    <div>
                       <Label className="text-xs">Aperçu</Label>
                       <div
-                        className="mt-1 px-4 py-2 rounded text-center text-xs font-bold"
+                        className="mt-1 px-4 py-1.5 rounded text-center text-xs font-bold"
                         style={{
                           border: `2px solid ${form.title_border_color}`,
+                          backgroundColor: form.title_bg_color || "transparent",
                           color: "#333",
                         }}
                       >

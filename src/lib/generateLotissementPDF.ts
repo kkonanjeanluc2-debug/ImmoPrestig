@@ -2068,9 +2068,9 @@ const _generateAttestationVillageoiseInternal = async (
     }
 
     const city = lotissement.city || agency?.city || '____________________';
-    doc.setFontSize(9);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'right', x: pageWidth - margin, width: 70, lineHeight: 5, extraAfter: 2 });
+    writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'right', x: pageWidth - margin, width: 90, lineHeight: 6, extraAfter: 2 });
   }
 
   const rightBlockCenter = pageWidth - margin - 30;

@@ -1556,6 +1556,18 @@ const _generateAttestationVillageoiseInternal = async (
         for (const position of repeatedPositions) {
           doc.text(text, horizontalCenterX, position.y, { align: 'center', angle, baseline: 'middle' });
         }
+      } else if (!placement.isHorizontal && !placement.hasMeaningfulCustomPlacement) {
+        // Single oblique watermark: render along the actual diagonal of the
+        // content area (corner to corner), with the angle matching that
+        // diagonal so the text follows it exactly.
+        const dx = diagonalEndX - diagonalStartX;
+        const dy = diagonalEndY - diagonalStartY;
+        const diagAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+        const diagLength = Math.hypot(dx, dy);
+        const diagCenterX = (diagonalStartX + diagonalEndX) / 2;
+        const diagCenterY = (diagonalStartY + diagonalEndY) / 2;
+        doc.setFontSize(fitFontSizeToWidth(diagLength * 0.92));
+        doc.text(text, diagCenterX, diagCenterY, { align: 'center', angle: diagAngle, baseline: 'middle' });
       } else {
         const targetLength = availableLength * 0.7;
         doc.setFontSize(fitFontSizeToWidth(targetLength));

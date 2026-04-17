@@ -131,7 +131,7 @@ export const getAttestationRepeatedWatermarkRatios = ({
   centerY?: number;
   isHorizontal: boolean;
 }): AttestationRepeatedWatermarkRatio[] => {
-  const offsets = isHorizontal ? [-0.3, -0.1, 0.1, 0.3] : [-0.28, 0, 0.28];
+  const offsets = isHorizontal ? [-0.32, -0.18, -0.04, 0.10] : [-0.28, 0, 0.28];
 
   return offsets
     .map((offset) => ({ x: centerX, y: centerY + offset }))

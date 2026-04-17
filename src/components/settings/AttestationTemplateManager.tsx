@@ -112,28 +112,33 @@ function AttestationPreview({
     const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${customRotation}deg)`;
     const customX = typeof watermarkPositionX === "number" ? `${watermarkPositionX}%` : "50%";
     const customY = typeof watermarkPositionY === "number" ? `${watermarkPositionY}%` : "50%";
-    const positions = watermarkRepeat
-      ? isHorizontal
-        ? [
-            { left: "50%", top: "18%" },
-            { left: "50%", top: "38%" },
-            { left: "50%", top: "58%" },
-            { left: "50%", top: "78%" },
-          ]
-        : templateType === "cession"
+    // When user provides a custom position, always honor it (single placement).
+    // Repeat mode falls back to tiling only if no custom position is provided.
+    const hasCustomPos =
+      typeof watermarkPositionX === "number" && typeof watermarkPositionY === "number";
+
+    const positions = hasCustomPos
+      ? [{ left: customX, top: customY }]
+      : watermarkRepeat
+        ? isHorizontal
           ? [
-              { left: "19%", top: "73%" },
-              { left: "42%", top: "55%" },
-              { left: "65%", top: "37%" },
+              { left: "50%", top: "18%" },
+              { left: "50%", top: "38%" },
+              { left: "50%", top: "58%" },
+              { left: "50%", top: "78%" },
             ]
-          : [
-              { left: "22%", top: "28%" },
-              { left: "50%", top: "50%" },
-              { left: "78%", top: "72%" },
-            ]
-      : [
-          { left: customX, top: customY },
-        ];
+          : templateType === "cession"
+            ? [
+                { left: "19%", top: "73%" },
+                { left: "42%", top: "55%" },
+                { left: "65%", top: "37%" },
+              ]
+            : [
+                { left: "22%", top: "28%" },
+                { left: "50%", top: "50%" },
+                { left: "78%", top: "72%" },
+              ]
+        : [{ left: "50%", top: "50%" }];
 
     const size = watermarkRepeat ? (watermarkType === "image" ? 90 : 28) : (watermarkType === "image" ? 180 : templateType === "cession" ? 56 : 60);
 

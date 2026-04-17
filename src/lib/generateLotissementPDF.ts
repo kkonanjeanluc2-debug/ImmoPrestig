@@ -1519,23 +1519,41 @@ const _generateAttestationVillageoiseInternal = async (
         const centerX = customCenterX ?? defaultCenterX;
         const centerY = customCenterY ?? defaultCenterY;
 
-        const availableLength = isHorizontal
-          ? contentWidth * 0.92
-          : Math.sqrt(
-              Math.pow(diagonalEndX - diagonalStartX, 2) +
-              Math.pow(diagonalStartY - diagonalEndY, 2)
-            ) * 0.98;
+        // When user has set a custom position, base the available length on the
+        // distance from the chosen center to the page edges (so the text really
+        // shifts visibly with the position). Otherwise fall back to the full
+        // diagonal/horizontal length.
+        let availableLength: number;
+        if (hasCustomPos) {
+          // Distance from custom center to nearest horizontal edge (×2 to keep symmetric)
+          const distToLeft = centerX - margin;
+          const distToRight = (pageWidth - margin) - centerX;
+          const horizontalRoom = 2 * Math.min(distToLeft, distToRight);
+          availableLength = Math.max(80, horizontalRoom * 0.9);
+        } else {
+          availableLength = isHorizontal
+            ? contentWidth * 0.92
+            : Math.sqrt(
+                Math.pow(diagonalEndX - diagonalStartX, 2) +
+                Math.pow(diagonalStartY - diagonalEndY, 2)
+              ) * 0.98;
+        }
 
-        let fontSize = 220;
+        // Custom position: cap font size to keep watermark visually as a "stamp"
+        // so position changes are perceptible. Default mode keeps the large stretched look.
+        const maxFontSize = hasCustomPos ? 90 : 220;
+        const minFontSize = hasCustomPos ? 24 : 40;
+
+        let fontSize = maxFontSize;
         doc.setFontSize(fontSize);
         let measured = doc.getTextWidth(text);
         if (measured > availableLength) {
           fontSize = Math.floor(fontSize * (availableLength / measured));
         }
-        fontSize = Math.max(40, Math.min(220, fontSize));
+        fontSize = Math.max(minFontSize, Math.min(maxFontSize, fontSize));
 
         doc.setFontSize(fontSize);
-        while (doc.getTextWidth(text) > availableLength && fontSize > 20) {
+        while (doc.getTextWidth(text) > availableLength && fontSize > minFontSize) {
           fontSize -= 2;
           doc.setFontSize(fontSize);
         }

@@ -1543,18 +1543,23 @@ const _generateAttestationVillageoiseInternal = async (
         return Math.max(minFontSize, Math.min(maxFontSize, computed));
       };
 
+      // Always center each watermark line on the horizontal axis of the
+      // content area (pageWidth/2 when margins are symmetric). We cap the
+      // target width to ~70% of the content width so a clear, visible padding
+      // remains on both sides — making the centering visually obvious.
+      const horizontalCenterX = watermarkBounds.left + watermarkBounds.width / 2;
       if (repeat && repeatedPositions.length > 0) {
         const targetLength = (placement.isHorizontal
-          ? watermarkBounds.width * 0.92
-          : Math.hypot(diagonalEndX - diagonalStartX, diagonalStartY - diagonalEndY) * 0.98) * 0.88;
+          ? watermarkBounds.width
+          : Math.hypot(diagonalEndX - diagonalStartX, diagonalStartY - diagonalEndY)) * 0.7;
         doc.setFontSize(fitFontSizeToWidth(targetLength));
         for (const position of repeatedPositions) {
-          doc.text(text, position.x, position.y, { align: 'center', angle, baseline: 'middle' });
+          doc.text(text, horizontalCenterX, position.y, { align: 'center', angle, baseline: 'middle' });
         }
       } else {
-        const targetLength = availableLength * 0.88;
+        const targetLength = availableLength * 0.7;
         doc.setFontSize(fitFontSizeToWidth(targetLength));
-        doc.text(text, centerX, centerY, { align: 'center', angle, baseline: 'middle' });
+        doc.text(text, horizontalCenterX, centerY, { align: 'center', angle, baseline: 'middle' });
       }
       doc.setTextColor(...textColor);
     }
@@ -1566,14 +1571,15 @@ const _generateAttestationVillageoiseInternal = async (
           const imgSizeLarge = estimatePreviewWatermarkImageSize(watermarkBounds, true);
           const imgSizeSmall = estimatePreviewWatermarkImageSize(watermarkBounds, false);
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
+          const horizontalCenterX = watermarkBounds.left + watermarkBounds.width / 2;
           if (repeat && repeatedPositions.length > 0) {
             for (const position of repeatedPositions) {
               if (gState) (doc as any).setGState(gState);
-              doc.addImage(imgBase64, 'PNG', position.x - imgSizeSmall / 2, position.y - imgSizeSmall / 2, imgSizeSmall, imgSizeSmall);
+              doc.addImage(imgBase64, 'PNG', horizontalCenterX - imgSizeSmall / 2, position.y - imgSizeSmall / 2, imgSizeSmall, imgSizeSmall);
             }
           } else {
             if (gState) (doc as any).setGState(gState);
-            const imgX = centerX - imgSizeLarge / 2;
+            const imgX = horizontalCenterX - imgSizeLarge / 2;
             const imgY = centerY - imgSizeLarge / 2;
             doc.addImage(imgBase64, 'PNG', imgX, imgY, imgSizeLarge, imgSizeLarge);
           }

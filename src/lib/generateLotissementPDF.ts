@@ -1436,8 +1436,9 @@ const _generateAttestationVillageoiseInternal = async (
     const repeat = template?.watermark_repeat ?? true;
     const bodyHeight = bodyBottomY - bodyTopY;
     const isHorizontal = template?.watermark_angle === 'horizontal';
-    const diagonalInsetX = contentWidth * 0.12;
-    const diagonalInsetY = bodyHeight * 0.12;
+    // Diagonale traversant largement la zone de contenu (du bas-gauche au haut-droit)
+    const diagonalInsetX = contentWidth * 0.04;
+    const diagonalInsetY = bodyHeight * 0.04;
     const diagonalStartX = margin + diagonalInsetX;
     const diagonalStartY = bodyBottomY - diagonalInsetY;
     const diagonalEndX = pageWidth - margin - diagonalInsetX;

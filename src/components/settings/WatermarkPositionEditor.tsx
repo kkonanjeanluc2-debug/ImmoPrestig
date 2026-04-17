@@ -38,6 +38,7 @@ export function WatermarkPositionEditor({
   watermarkAngle,
   watermarkText,
   watermarkImageUrl,
+  watermarkRepeat,
   opacity,
   disabled,
   templateType,
@@ -63,6 +64,30 @@ export function WatermarkPositionEditor({
   );
   const previewCenterX = watermarkBounds.left + (watermarkBounds.width * positionX) / 100;
   const previewCenterY = watermarkBounds.top + (watermarkBounds.height * positionY) / 100;
+  const isCustomPlacement = Math.abs(positionX - 50) > 0.5
+    || Math.abs(positionY - 50) > 0.5
+    || (!rotationDisabled && Math.abs(rotation - (templateType === "cession" ? -34 : -45)) > 0.5);
+  const showRepeated = (watermarkRepeat ?? true) && !isCustomPlacement;
+  const isCession = templateType === "cession";
+  const repeatedRatios = showRepeated
+    ? rotationDisabled
+      ? [{ x: 0.5, y: 0.18 }, { x: 0.5, y: 0.38 }, { x: 0.5, y: 0.58 }, { x: 0.5, y: 0.78 }]
+      : isCession
+        ? [{ x: 0.5, y: 0.78 }, { x: 0.5, y: 0.5 }, { x: 0.5, y: 0.22 }]
+        : [{ x: 0.5, y: 0.22 }, { x: 0.5, y: 0.5 }, { x: 0.5, y: 0.78 }]
+    : [];
+  const repeatedSize = showRepeated
+    ? watermarkType === "image"
+      ? estimatePreviewWatermarkImageSize(watermarkBounds, false)
+      : estimatePreviewWatermarkTextSize({
+          text: watermarkText || "",
+          bounds: watermarkBounds,
+          centerX: watermarkBounds.left + watermarkBounds.width * 0.5,
+          templateType,
+          isHorizontal: rotationDisabled,
+          hasCustomPos: false,
+        }) * 0.55
+    : 0;
   const watermarkSize = watermarkType === "image"
     ? estimatePreviewWatermarkImageSize(watermarkBounds, true)
     : estimatePreviewWatermarkTextSize({

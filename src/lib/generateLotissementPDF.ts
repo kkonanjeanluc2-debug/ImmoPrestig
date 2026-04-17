@@ -1510,9 +1510,11 @@ const _generateAttestationVillageoiseInternal = async (
           }
         }
       } else {
-        // Non-repeated mode: large watermark placed on an inset content diagonal
-        const centerX = isHorizontal ? pageWidth / 2 : (diagonalStartX + diagonalEndX) / 2;
-        const centerY = isHorizontal ? bodyTopY + bodyHeight / 2 : (diagonalStartY + diagonalEndY) / 2;
+        // Non-repeated mode: large watermark, position can be customized by user
+        const defaultCenterX = isHorizontal ? pageWidth / 2 : (diagonalStartX + diagonalEndX) / 2;
+        const defaultCenterY = isHorizontal ? bodyTopY + bodyHeight / 2 : (diagonalStartY + diagonalEndY) / 2;
+        const centerX = customCenterX ?? defaultCenterX;
+        const centerY = customCenterY ?? defaultCenterY;
 
         const availableLength = isHorizontal
           ? contentWidth * 0.92

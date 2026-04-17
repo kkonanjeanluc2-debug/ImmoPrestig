@@ -1336,7 +1336,9 @@ const _generateAttestationVillageoiseInternal = async (
     const pw = pageWidth;
     const ph = pageHeight;
 
-    if (borderStyle === 'geometric') {
+    if (isMotifBorderStyle(borderStyle)) {
+      drawMotifBorder(doc, borderStyle, pw, ph, borderColor);
+    } else if (borderStyle === 'geometric') {
       // Double rectangle frame with small repeated rectangles between them
       const outerOffset = bm;
       const innerOffset = bm + 6;

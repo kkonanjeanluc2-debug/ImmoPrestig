@@ -421,6 +421,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       template_type: t.template_type || templateType,
       header_line_color: t.header_line_color || "#FF8C00",
       title_border_color: (t as any).title_border_color || null,
+      title_bg_color: (t as any).title_bg_color || null,
       watermark_type: (t as any).watermark_type || "none",
       watermark_text: (t as any).watermark_text || null,
       watermark_image_url: (t as any).watermark_image_url || null,

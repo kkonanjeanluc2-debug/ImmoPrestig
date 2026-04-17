@@ -5,6 +5,8 @@ import { RotateCcw, Move, RotateCw } from "lucide-react";
 import {
   estimatePreviewWatermarkImageSize,
   estimatePreviewWatermarkTextSize,
+  estimateRepeatedWatermarkTextSize,
+  getAttestationRepeatedWatermarkRatios,
   getAttestationWatermarkBounds,
 } from "@/lib/attestationWatermark";
 
@@ -67,26 +69,23 @@ export function WatermarkPositionEditor({
   const isCustomPlacement = Math.abs(positionX - 50) > 0.5
     || Math.abs(positionY - 50) > 0.5
     || (!rotationDisabled && Math.abs(rotation - (templateType === "cession" ? -34 : -45)) > 0.5);
-  const showRepeated = (watermarkRepeat ?? true) && !isCustomPlacement;
-  const isCession = templateType === "cession";
+  const showRepeated = watermarkType !== "none" && (watermarkRepeat ?? true);
   const repeatedRatios = showRepeated
-    ? rotationDisabled
-      ? [{ x: 0.5, y: 0.18 }, { x: 0.5, y: 0.38 }, { x: 0.5, y: 0.58 }, { x: 0.5, y: 0.78 }]
-      : isCession
-        ? [{ x: 0.5, y: 0.78 }, { x: 0.5, y: 0.5 }, { x: 0.5, y: 0.22 }]
-        : [{ x: 0.5, y: 0.22 }, { x: 0.5, y: 0.5 }, { x: 0.5, y: 0.78 }]
+    ? getAttestationRepeatedWatermarkRatios({
+        centerX: positionX / 100,
+        centerY: positionY / 100,
+        isHorizontal: rotationDisabled,
+      })
     : [];
   const repeatedSize = showRepeated
     ? watermarkType === "image"
       ? estimatePreviewWatermarkImageSize(watermarkBounds, false)
-      : estimatePreviewWatermarkTextSize({
+      : estimateRepeatedWatermarkTextSize({
           text: watermarkText || "",
           bounds: watermarkBounds,
-          centerX: watermarkBounds.left + watermarkBounds.width * 0.5,
           templateType,
           isHorizontal: rotationDisabled,
-          hasCustomPos: false,
-        }) * 0.55
+        })
     : 0;
   const watermarkSize = watermarkType === "image"
     ? estimatePreviewWatermarkImageSize(watermarkBounds, true)

@@ -809,6 +809,7 @@ export type Database = {
           page_border_style: string | null
           right_logo_url: string | null
           template_type: string
+          title_bg_color: string | null
           title_border_color: string | null
           updated_at: string
           user_id: string
@@ -845,6 +846,7 @@ export type Database = {
           page_border_style?: string | null
           right_logo_url?: string | null
           template_type?: string
+          title_bg_color?: string | null
           title_border_color?: string | null
           updated_at?: string
           user_id: string
@@ -881,6 +883,7 @@ export type Database = {
           page_border_style?: string | null
           right_logo_url?: string | null
           template_type?: string
+          title_bg_color?: string | null
           title_border_color?: string | null
           updated_at?: string
           user_id?: string

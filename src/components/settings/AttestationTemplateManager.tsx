@@ -311,7 +311,7 @@ const emptyForm: AttestationTemplateInsert = {
   watermark_type: "none",
   watermark_text: null,
   watermark_image_url: null,
-  watermark_angle: "diagonal",
+  watermark_angle: "horizontal",
   watermark_opacity: 0.1,
   watermark_repeat: true,
   watermark_position_x: 50,

@@ -42,12 +42,6 @@ import {
 import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES } from "@/lib/defaultAttestationTemplate";
 import { DEFAULT_CESSION_TEMPLATE, CESSION_VARIABLES } from "@/lib/defaultCessionTemplate";
 import { buildAttestationTemplateContent } from "@/lib/attestationTemplateContent";
-import {
-  estimatePreviewWatermarkImageSize,
-  estimatePreviewWatermarkTextSize,
-  getAttestationWatermarkBounds,
-  getAttestationWatermarkPlacement,
-} from "@/lib/attestationWatermark";
 import { BORDER_MOTIF_OPTIONS, isMotifBorderStyle } from "@/lib/attestationBorderMotifs";
 import { supabase } from "@/integrations/supabase/client";
 import { WatermarkPositionEditor } from "./WatermarkPositionEditor";
@@ -147,8 +141,10 @@ function AttestationPreview({
       watermarkPositionY,
       watermarkRotation,
     });
-    const centerX = previewBounds.left + (previewBounds.width * ((placement.parsedPositionX ?? 50) / 100));
-    const centerY = previewBounds.top + (previewBounds.height * ((placement.parsedPositionY ?? 50) / 100));
+    const centerXRatio = (placement.parsedPositionX ?? 50) / 100;
+    const centerYRatio = (placement.parsedPositionY ?? 50) / 100;
+    const centerX = previewBounds.left + (previewBounds.width * centerXRatio);
+    const centerY = previewBounds.top + (previewBounds.height * centerYRatio);
     const toPercentX = (value: number) => `${(value / previewPageWidth) * 100}%`;
     const toPercentY = (value: number) => `${(value / previewPageHeight) * 100}%`;
     const mapAreaPoint = (xRatio: number, yRatio: number) => ({
@@ -157,24 +153,11 @@ function AttestationPreview({
     });
     const positions = placement.useCustomSingle
       ? [{ left: toPercentX(centerX), top: toPercentY(centerY) }]
-      : placement.isHorizontal
-        ? [
-            mapAreaPoint(0.5, 0.18),
-            mapAreaPoint(0.5, 0.38),
-            mapAreaPoint(0.5, 0.58),
-            mapAreaPoint(0.5, 0.78),
-          ]
-        : templateType === "cession"
-          ? [
-              mapAreaPoint(0.19, 0.73),
-              mapAreaPoint(0.42, 0.55),
-              mapAreaPoint(0.65, 0.37),
-            ]
-          : [
-              mapAreaPoint(0.22, 0.28),
-              mapAreaPoint(0.5, 0.5),
-              mapAreaPoint(0.78, 0.72),
-            ];
+      : getAttestationRepeatedWatermarkRatios({
+          centerX: centerXRatio,
+          centerY: centerYRatio,
+          isHorizontal: placement.isHorizontal,
+        }).map(({ x, y }) => mapAreaPoint(x, y));
     const size = placement.useCustomSingle
       ? (watermarkType === "image"
           ? estimatePreviewWatermarkImageSize(previewBounds, true)
@@ -186,7 +169,14 @@ function AttestationPreview({
               isHorizontal: placement.isHorizontal,
               hasCustomPos: placement.hasCustomPos,
             }))
-      : (watermarkType === "image" ? estimatePreviewWatermarkImageSize(previewBounds, false) : 20);
+      : (watermarkType === "image"
+          ? estimatePreviewWatermarkImageSize(previewBounds, false)
+          : estimateRepeatedWatermarkTextSize({
+              text: watermarkText || "",
+              bounds: previewBounds,
+              templateType,
+              isHorizontal: placement.isHorizontal,
+            }));
     const rotation = `rotate(${placement.isHorizontal ? 0 : (placement.customRotation ?? placement.defaultRotation)}deg)`;
 
     return (

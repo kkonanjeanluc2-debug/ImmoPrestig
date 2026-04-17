@@ -1057,6 +1057,9 @@ export interface AttestationTemplateData {
   watermark_angle?: string;
   watermark_opacity?: number;
   watermark_repeat?: boolean;
+  watermark_position_x?: number | null;
+  watermark_position_y?: number | null;
+  watermark_rotation?: number | null;
   page_border_enabled?: boolean;
   page_border_color?: string;
   page_border_style?: string;
@@ -1466,9 +1469,16 @@ const _generateAttestationVillageoiseInternal = async (
       : isCessionTemplate
         ? bodyTopY + bodyHeight * 0.14
         : bodyTopY + bodyHeight * 0.05;
+    // Custom user position/rotation overrides for non-repeat mode
+    const hasCustomPos = typeof template?.watermark_position_x === 'number' && typeof template?.watermark_position_y === 'number';
+    const customRotation = typeof template?.watermark_rotation === 'number' ? template.watermark_rotation : null;
+    const customCenterX = hasCustomPos ? margin + (contentWidth * (template!.watermark_position_x as number) / 100) : null;
+    const customCenterY = hasCustomPos ? bodyTopY + (bodyHeight * (template!.watermark_position_y as number) / 100) : null;
     const angle = isHorizontal
       ? 0
-      : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
+      : (!repeat && customRotation !== null)
+        ? customRotation
+        : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
@@ -1500,9 +1510,11 @@ const _generateAttestationVillageoiseInternal = async (
           }
         }
       } else {
-        // Non-repeated mode: large watermark placed on an inset content diagonal
-        const centerX = isHorizontal ? pageWidth / 2 : (diagonalStartX + diagonalEndX) / 2;
-        const centerY = isHorizontal ? bodyTopY + bodyHeight / 2 : (diagonalStartY + diagonalEndY) / 2;
+        // Non-repeated mode: large watermark, position can be customized by user
+        const defaultCenterX = isHorizontal ? pageWidth / 2 : (diagonalStartX + diagonalEndX) / 2;
+        const defaultCenterY = isHorizontal ? bodyTopY + bodyHeight / 2 : (diagonalStartY + diagonalEndY) / 2;
+        const centerX = customCenterX ?? defaultCenterX;
+        const centerY = customCenterY ?? defaultCenterY;
 
         const availableLength = isHorizontal
           ? contentWidth * 0.92
@@ -1548,7 +1560,9 @@ const _generateAttestationVillageoiseInternal = async (
             }
           } else {
             if (gState) (doc as any).setGState(gState);
-            doc.addImage(imgBase64, 'PNG', (pageWidth - imgSizeLarge) / 2, (bodyTopY + bodyBottomY - imgSizeLarge) / 2, imgSizeLarge, imgSizeLarge);
+            const imgX = (customCenterX ?? pageWidth / 2) - imgSizeLarge / 2;
+            const imgY = (customCenterY ?? (bodyTopY + bodyBottomY) / 2) - imgSizeLarge / 2;
+            doc.addImage(imgBase64, 'PNG', imgX, imgY, imgSizeLarge, imgSizeLarge);
           }
           // Reset opacity
           const resetState = (doc as any).GState ? new (doc as any).GState({ opacity: 1 }) : null;

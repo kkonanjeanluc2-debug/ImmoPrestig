@@ -73,6 +73,9 @@ function AttestationPreview({
   watermarkAngle,
   watermarkOpacity,
   watermarkRepeat,
+  watermarkPositionX,
+  watermarkPositionY,
+  watermarkRotation,
 }: {
   content: string;
   templateType: string;
@@ -82,6 +85,9 @@ function AttestationPreview({
   watermarkAngle?: string | null;
   watermarkOpacity?: number | null;
   watermarkRepeat?: boolean | null;
+  watermarkPositionX?: number | null;
+  watermarkPositionY?: number | null;
+  watermarkRotation?: number | null;
 }) {
   const previewContent = useMemo(() => {
     if (!content) return "";
@@ -101,7 +107,11 @@ function AttestationPreview({
 
     const opacity = Math.max(0.04, Math.min(watermarkOpacity ?? 0.1, 0.4));
     const isHorizontal = watermarkAngle === "horizontal";
-    const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${templateType === "cession" ? -34 : -45}deg)`;
+    
+    const customRotation = typeof watermarkRotation === "number" ? watermarkRotation : (templateType === "cession" ? -34 : -45);
+    const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${customRotation}deg)`;
+    const customX = typeof watermarkPositionX === "number" ? `${watermarkPositionX}%` : "50%";
+    const customY = typeof watermarkPositionY === "number" ? `${watermarkPositionY}%` : "50%";
     const positions = watermarkRepeat
       ? isHorizontal
         ? [
@@ -122,10 +132,7 @@ function AttestationPreview({
               { left: "78%", top: "72%" },
             ]
       : [
-          {
-            left: templateType === "cession" && !isHorizontal ? "50%" : "50%",
-            top: templateType === "cession" && !isHorizontal ? "50%" : "50%",
-          },
+          { left: customX, top: customY },
         ];
 
     const size = watermarkRepeat ? (watermarkType === "image" ? 90 : 28) : (watermarkType === "image" ? 180 : templateType === "cession" ? 56 : 60);
@@ -256,6 +263,9 @@ const emptyForm: AttestationTemplateInsert = {
   watermark_angle: "diagonal",
   watermark_opacity: 0.1,
   watermark_repeat: true,
+  watermark_position_x: 50,
+  watermark_position_y: 50,
+  watermark_rotation: -45,
   page_border_enabled: false,
   page_border_color: "#8B4513",
   page_border_style: "geometric",
@@ -400,6 +410,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_angle: (t as any).watermark_angle || "diagonal",
       watermark_opacity: (t as any).watermark_opacity ?? 0.1,
       watermark_repeat: (t as any).watermark_repeat ?? true,
+      watermark_position_x: (t as any).watermark_position_x ?? 50,
+      watermark_position_y: (t as any).watermark_position_y ?? 50,
+      watermark_rotation: (t as any).watermark_rotation ?? -45,
       page_border_enabled: (t as any).page_border_enabled || false,
       page_border_color: (t as any).page_border_color || '#8B4513',
       page_border_style: (t as any).page_border_style || 'geometric',
@@ -443,6 +456,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_angle: (t as any).watermark_angle || "diagonal",
       watermark_opacity: (t as any).watermark_opacity ?? 0.1,
       watermark_repeat: (t as any).watermark_repeat ?? true,
+      watermark_position_x: (t as any).watermark_position_x ?? 50,
+      watermark_position_y: (t as any).watermark_position_y ?? 50,
+      watermark_rotation: (t as any).watermark_rotation ?? -45,
       page_border_enabled: (t as any).page_border_enabled || false,
       page_border_color: (t as any).page_border_color || '#8B4513',
       page_border_style: (t as any).page_border_style || 'geometric',
@@ -1135,6 +1151,49 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                   </div>
                 </div>
               )}
+
+              {form.watermark_type !== "none" && !form.watermark_repeat && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 rounded-lg bg-muted/30 border border-dashed">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Position horizontale ({Math.round(form.watermark_position_x ?? 50)}%)</Label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={form.watermark_position_x ?? 50}
+                      onChange={(e) => updateField("watermark_position_x", parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Position verticale ({Math.round(form.watermark_position_y ?? 50)}%)</Label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={form.watermark_position_y ?? 50}
+                      onChange={(e) => updateField("watermark_position_y", parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Rotation ({Math.round(form.watermark_rotation ?? -45)}°)</Label>
+                    <input
+                      type="range"
+                      min="-180"
+                      max="180"
+                      step="1"
+                      value={form.watermark_rotation ?? -45}
+                      onChange={(e) => updateField("watermark_rotation", parseFloat(e.target.value))}
+                      className="w-full"
+                      disabled={form.watermark_angle === "horizontal"}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Désactivé en mode horizontal</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <Separator />
@@ -1369,6 +1428,9 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                   watermarkAngle={form.watermark_angle}
                   watermarkOpacity={form.watermark_opacity}
                   watermarkRepeat={form.watermark_repeat}
+                  watermarkPositionX={form.watermark_position_x}
+                  watermarkPositionY={form.watermark_position_y}
+                  watermarkRotation={form.watermark_rotation}
                 />
               </TabsContent>
             </Tabs>

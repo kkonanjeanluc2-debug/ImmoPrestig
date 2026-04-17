@@ -107,41 +107,56 @@ function AttestationPreview({
     if (!previewContent || watermarkType === "none") return null;
 
     const opacity = Math.max(0.04, Math.min(watermarkOpacity ?? 0.1, 0.4));
+    const repeatEnabled = watermarkRepeat ?? true;
     const isHorizontal = watermarkAngle === "horizontal";
-    
-    const customRotation = typeof watermarkRotation === "number" ? watermarkRotation : (templateType === "cession" ? -34 : -45);
+    const defaultRotation = templateType === "cession" ? -34 : -45;
+    const parsedRotation = watermarkRotation === null || watermarkRotation === undefined
+      ? null
+      : Number(watermarkRotation);
+    const customRotation = parsedRotation !== null && Number.isFinite(parsedRotation)
+      ? parsedRotation
+      : defaultRotation;
     const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${customRotation}deg)`;
-    const customX = typeof watermarkPositionX === "number" ? `${watermarkPositionX}%` : "50%";
-    const customY = typeof watermarkPositionY === "number" ? `${watermarkPositionY}%` : "50%";
-    // When user provides a custom position, always honor it (single placement).
-    // Repeat mode falls back to tiling only if no custom position is provided.
-    const hasCustomPos =
-      typeof watermarkPositionX === "number" && typeof watermarkPositionY === "number";
+    const parsedX = watermarkPositionX === null || watermarkPositionX === undefined
+      ? null
+      : Number(watermarkPositionX);
+    const parsedY = watermarkPositionY === null || watermarkPositionY === undefined
+      ? null
+      : Number(watermarkPositionY);
+    const hasCustomPos = Number.isFinite(parsedX) && Number.isFinite(parsedY);
+    const hasMeaningfulCustomPlacement = hasCustomPos && (
+      Math.abs((parsedX as number) - 50) > 0.5 ||
+      Math.abs((parsedY as number) - 50) > 0.5 ||
+      (parsedRotation !== null && Number.isFinite(parsedRotation) && Math.abs(parsedRotation - defaultRotation) > 0.5)
+    );
+    const useCustomSingle = !repeatEnabled || hasMeaningfulCustomPlacement;
+    const customX = hasCustomPos ? `${parsedX}%` : "50%";
+    const customY = hasCustomPos ? `${parsedY}%` : "50%";
 
-    const positions = hasCustomPos
+    const positions = useCustomSingle
       ? [{ left: customX, top: customY }]
-      : watermarkRepeat
-        ? isHorizontal
+      : isHorizontal
+        ? [
+            { left: "50%", top: "18%" },
+            { left: "50%", top: "38%" },
+            { left: "50%", top: "58%" },
+            { left: "50%", top: "78%" },
+          ]
+        : templateType === "cession"
           ? [
-              { left: "50%", top: "18%" },
-              { left: "50%", top: "38%" },
-              { left: "50%", top: "58%" },
-              { left: "50%", top: "78%" },
+              { left: "19%", top: "73%" },
+              { left: "42%", top: "55%" },
+              { left: "65%", top: "37%" },
             ]
-          : templateType === "cession"
-            ? [
-                { left: "19%", top: "73%" },
-                { left: "42%", top: "55%" },
-                { left: "65%", top: "37%" },
-              ]
-            : [
-                { left: "22%", top: "28%" },
-                { left: "50%", top: "50%" },
-                { left: "78%", top: "72%" },
-              ]
-        : [{ left: "50%", top: "50%" }];
+          : [
+              { left: "22%", top: "28%" },
+              { left: "50%", top: "50%" },
+              { left: "78%", top: "72%" },
+            ];
 
-    const size = watermarkRepeat ? (watermarkType === "image" ? 90 : 28) : (watermarkType === "image" ? 180 : templateType === "cession" ? 56 : 60);
+    const size = useCustomSingle
+      ? (watermarkType === "image" ? 180 : templateType === "cession" ? 56 : 60)
+      : (watermarkType === "image" ? 90 : 28);
 
     return (
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">

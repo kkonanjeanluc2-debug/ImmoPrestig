@@ -43,15 +43,19 @@ export function DocumentsParcelleDialog({
 
   // Find attribution template
   const lotissementTemplateId = (vente.parcelle?.lotissement as any)?.attestation_template_id;
-  const attestationTemplate = lotissementTemplateId 
-    ? attestationTemplates.find(t => t.id === lotissementTemplateId) || null
-    : null;
+  const attestationTemplate = lotissementTemplateId
+    ? attestationTemplates.find((t) => t.id === lotissementTemplateId) || null
+    : attestationTemplates.find((t) => (t.template_type || "attribution") === "attribution" && t.is_default)
+      || attestationTemplates.find((t) => (t.template_type || "attribution") === "attribution")
+      || null;
 
   // Find cession template
   const cessionTemplateId = (vente.parcelle?.lotissement as any)?.cession_template_id;
   const cessionTemplate = cessionTemplateId
-    ? attestationTemplates.find(t => t.id === cessionTemplateId) || null
-    : null;
+    ? attestationTemplates.find((t) => t.id === cessionTemplateId) || null
+    : attestationTemplates.find((t) => (t.template_type || "attribution") === "cession" && t.is_default)
+      || attestationTemplates.find((t) => (t.template_type || "attribution") === "cession")
+      || null;
 
   const depositPercentage = agency?.reservation_deposit_percentage ?? 30;
 

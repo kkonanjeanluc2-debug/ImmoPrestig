@@ -1182,15 +1182,17 @@ const _generateAttestationVillageoiseInternal = async (
   const arreteApprobation = template?.arrete_approbation || "";
   const pageBorderContentInset = !template?.page_border_enabled
     ? 0
-    : template.page_border_style === 'ornate'
-      ? 14
-      : template.page_border_style === 'geometric'
-        ? 12
-        : template.page_border_style === 'double'
-          ? 10
-          : template.page_border_style === 'dashes'
-            ? 9
-            : 10;
+    : isMotifBorderStyle(template.page_border_style)
+      ? 16
+      : template.page_border_style === 'ornate'
+        ? 14
+        : template.page_border_style === 'geometric'
+          ? 12
+          : template.page_border_style === 'double'
+            ? 10
+            : template.page_border_style === 'dashes'
+              ? 9
+              : 10;
   const headerLogoInsetX = Math.max(margin, pageBorderContentInset + 2);
   const headerLogoMinY = pageBorderContentInset > 0 ? pageBorderContentInset + 1 : 0;
   const headerBannerInsetX = template?.page_border_enabled

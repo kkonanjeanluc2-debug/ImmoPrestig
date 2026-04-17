@@ -1176,20 +1176,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
               )}
 
               {form.watermark_type !== "none" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Orientation</Label>
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="wm_angle" value="diagonal" checked={form.watermark_angle === "diagonal"} onChange={() => updateField("watermark_angle", "diagonal")} className="accent-primary" />
-                        <span className="text-sm">Oblique (45°)</span>
-                      </label>
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="wm_angle" value="horizontal" checked={form.watermark_angle === "horizontal"} onChange={() => updateField("watermark_angle", "horizontal")} className="accent-primary" />
-                        <span className="text-sm">Horizontal</span>
-                      </label>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Opacité ({Math.round((form.watermark_opacity ?? 0.1) * 100)}%)</Label>
                     <input

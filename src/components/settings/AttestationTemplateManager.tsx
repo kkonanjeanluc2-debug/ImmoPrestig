@@ -35,6 +35,7 @@ import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES } from "@/lib/defau
 import { DEFAULT_CESSION_TEMPLATE, CESSION_VARIABLES } from "@/lib/defaultCessionTemplate";
 import { buildAttestationTemplateContent } from "@/lib/attestationTemplateContent";
 import { supabase } from "@/integrations/supabase/client";
+import { WatermarkPositionEditor } from "./WatermarkPositionEditor";
 
 const SAMPLE_DATA: Record<string, string> = {
   "{numero_lot}": "A-001",
@@ -1158,45 +1159,28 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
               )}
 
               {form.watermark_type !== "none" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 rounded-lg bg-muted/30 border border-dashed">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Position horizontale ({Math.round(form.watermark_position_x ?? 50)}%)</Label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={form.watermark_position_x ?? 50}
-                      onChange={(e) => updateField("watermark_position_x", parseFloat(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Position verticale ({Math.round(form.watermark_position_y ?? 50)}%)</Label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={form.watermark_position_y ?? 50}
-                      onChange={(e) => updateField("watermark_position_y", parseFloat(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Rotation ({Math.round(form.watermark_rotation ?? -45)}°)</Label>
-                    <input
-                      type="range"
-                      min="-180"
-                      max="180"
-                      step="1"
-                      value={form.watermark_rotation ?? -45}
-                      onChange={(e) => updateField("watermark_rotation", parseFloat(e.target.value))}
-                      className="w-full"
-                      disabled={form.watermark_angle === "horizontal"}
-                    />
-                    <p className="text-[10px] text-muted-foreground">Désactivé en mode horizontal</p>
-                  </div>
+                <div className="p-4 rounded-lg bg-muted/30 border border-dashed">
+                  <WatermarkPositionEditor
+                    positionX={form.watermark_position_x ?? 50}
+                    positionY={form.watermark_position_y ?? 50}
+                    rotation={form.watermark_rotation ?? (templateType === "cession" ? -34 : -45)}
+                    onChange={({ positionX, positionY, rotation }) => {
+                      updateField("watermark_position_x", positionX);
+                      updateField("watermark_position_y", positionY);
+                      updateField("watermark_rotation", rotation);
+                    }}
+                    watermarkType={form.watermark_type ?? "none"}
+                    watermarkText={form.watermark_text}
+                    watermarkImageUrl={form.watermark_image_url}
+                    opacity={form.watermark_opacity ?? 0.1}
+                    disabled={form.watermark_angle === "horizontal"}
+                    templateType={templateType}
+                  />
+                  {form.watermark_angle === "horizontal" && (
+                    <p className="text-[11px] text-muted-foreground mt-2 italic">
+                      Mode horizontal actif : la rotation est désactivée. Passez en mode oblique pour personnaliser l'angle.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

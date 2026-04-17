@@ -1469,9 +1469,16 @@ const _generateAttestationVillageoiseInternal = async (
       : isCessionTemplate
         ? bodyTopY + bodyHeight * 0.14
         : bodyTopY + bodyHeight * 0.05;
+    // Custom user position/rotation overrides for non-repeat mode
+    const hasCustomPos = typeof template?.watermark_position_x === 'number' && typeof template?.watermark_position_y === 'number';
+    const customRotation = typeof template?.watermark_rotation === 'number' ? template.watermark_rotation : null;
+    const customCenterX = hasCustomPos ? margin + (contentWidth * (template!.watermark_position_x as number) / 100) : null;
+    const customCenterY = hasCustomPos ? bodyTopY + (bodyHeight * (template!.watermark_position_y as number) / 100) : null;
     const angle = isHorizontal
       ? 0
-      : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
+      : (!repeat && customRotation !== null)
+        ? customRotation
+        : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;

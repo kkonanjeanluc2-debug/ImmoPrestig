@@ -2097,18 +2097,24 @@ const _generateAttestationVillageoiseInternal = async (
     writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'center', x: rightBlockCenter, width: 90, lineHeight: 6, extraAfter: 1 });
   }
 
-  // Detect if this is a cession template (has PROPRIÉTAIRE TERRIEN or CÉDANT + PROMOTEUR signatures)
-  const isCessionSignatures = templateContent && (templateContent.includes('CÉDANT') || templateContent.includes('PROPRIÉTAIRE TERRIEN')) && templateContent.includes('PROMOTEUR');
+  // Detect a signature line in the template: a single line containing exactly two **bold** labels
+  // separated by whitespace (spaces/tabs). The labels are taken verbatim from the template.
+  let leftLabel: string | null = null;
+  let rightLabel: string | null = null;
+  if (templateContent) {
+    const lines = templateContent.split(/\r?\n/);
+    for (const line of lines) {
+      const matches = [...line.matchAll(/\*\*([^*\n]+?)\*\*/g)];
+      if (matches.length === 2) {
+        leftLabel = matches[0][1].trim();
+        rightLabel = matches[1][1].trim();
+        break;
+      }
+    }
+  }
+  const isCessionSignatures = !!(leftLabel && rightLabel);
 
   if (isCessionSignatures) {
-    // Extract the actual signature labels from the template content (so user edits in the template are honored)
-    let leftLabel = 'LE PROPRIÉTAIRE TERRIEN';
-    let rightLabel = 'AGENCE / PROMOTEUR';
-    const sigLineMatch = templateContent.match(/\*\*([^*\n]*(?:PROPRIÉTAIRE TERRIEN|PROPRIETAIRE TERRIEN|CÉDANT|CEDANT)[^*\n]*)\*\*[\s\S]*?\*\*([^*\n]*(?:PROMOTEUR|AGENCE)[^*\n]*)\*\*/i);
-    if (sigLineMatch) {
-      leftLabel = sigLineMatch[1].trim();
-      rightLabel = sigLineMatch[2].trim();
-    }
 
     ensureSpace(cl >= 3 ? 25 : 45);
     const leftBlockCenter = margin + 30;

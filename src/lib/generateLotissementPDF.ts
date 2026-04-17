@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { createPDFDocument, PDF_FONT } from "@/lib/pdfFont";
 import { formatAmountForPDF, formatAmountWithCurrency, numberToWordsPDF } from "@/lib/pdfFormat";
+import { buildAttestationTemplateContent, formatAttestationPhone } from "@/lib/attestationTemplateContent";
 
 interface AgencyInfo {
   name: string;
@@ -1828,9 +1829,7 @@ const _generateAttestationVillageoiseInternal = async (
       '{beneficiaire_nom}': acquereur.name,
       '{beneficiaire_cni}': acquereur.cni_number || '___',
       '{beneficiaire_profession}': acquereur.profession || '___',
-      '{beneficiaire_telephone}': acquereur.phone
-        ? (acquereur.phone.match(/\d{10}/g) || [acquereur.phone]).join(' / ')
-        : '___',
+      '{beneficiaire_telephone}': formatAttestationPhone(acquereur.phone) || '___',
       '{beneficiaire_email}': acquereur.email || '___',
       '{beneficiaire_adresse}': acquereur.address || '___',
       '{beneficiaire_date_naissance}': acquereur.birth_date ? formatDate(acquereur.birth_date) : '___',
@@ -1843,26 +1842,12 @@ const _generateAttestationVillageoiseInternal = async (
       '{ancien_beneficiaire_telephone}': ancienBeneficiaire?.telephone || '',
       '{cedant_nom}': ancienBeneficiaire?.nom || '___',
       '{cedant_cni}': ancienBeneficiaire?.cni_number || '___',
-      '{cedant_telephone}': ancienBeneficiaire?.telephone
-        ? (ancienBeneficiaire.telephone.match(/\d{10}/g) || [ancienBeneficiaire.telephone]).join(' / ')
-        : '___',
+      '{cedant_telephone}': formatAttestationPhone(ancienBeneficiaire?.telephone) || '___',
     };
 
-    let finalContent = templateContent;
-    for (const [key, value] of Object.entries(variableData)) {
-      finalContent = finalContent.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value || '____________________');
-    }
-
-    if (ancienBeneficiaire?.nom) {
-      const formattedPhone = ancienBeneficiaire.telephone
-        ? (ancienBeneficiaire.telephone.match(/\d{10}/g) || [ancienBeneficiaire.telephone]).join(' / ')
-        : '';
-      const cessionMention = `\n\n**Mention de cession :** Ce lot, initialement attribué à **${ancienBeneficiaire.nom}**${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ''}${formattedPhone ? `, Contact : ${formattedPhone}` : ''}, a été cédé au bénéficiaire désigné ci-dessus.\n`;
-      const faitAIndex = finalContent.toLowerCase().indexOf('fait à');
-      finalContent = faitAIndex > 0
-        ? `${finalContent.substring(0, faitAIndex)}${cessionMention}\n${finalContent.substring(faitAIndex)}`
-        : `${finalContent}${cessionMention}`;
-    }
+    const finalContent = buildAttestationTemplateContent(templateContent, variableData, {
+      ancienBeneficiaire,
+    });
 
     const lines = finalContent.split('\n');
     const baseFontSize = bodyFontSize;

@@ -31,8 +31,9 @@ import {
   type AttestationTemplate,
   type AttestationTemplateInsert,
 } from "@/hooks/useAttestationTemplates";
-import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES, replaceAttestationVariables } from "@/lib/defaultAttestationTemplate";
+import { DEFAULT_ATTESTATION_TEMPLATE, ATTESTATION_VARIABLES } from "@/lib/defaultAttestationTemplate";
 import { DEFAULT_CESSION_TEMPLATE, CESSION_VARIABLES } from "@/lib/defaultCessionTemplate";
+import { buildAttestationTemplateContent } from "@/lib/attestationTemplateContent";
 import { supabase } from "@/integrations/supabase/client";
 
 const SAMPLE_DATA: Record<string, string> = {
@@ -60,11 +61,113 @@ const SAMPLE_DATA: Record<string, string> = {
   "{cedant_telephone}": "+225 05 06 07 08 09",
 };
 
-function AttestationPreview({ content }: { content: string }) {
+function AttestationPreview({
+  content,
+  templateType,
+  watermarkType,
+  watermarkText,
+  watermarkImageUrl,
+  watermarkAngle,
+  watermarkOpacity,
+  watermarkRepeat,
+}: {
+  content: string;
+  templateType: string;
+  watermarkType?: string | null;
+  watermarkText?: string | null;
+  watermarkImageUrl?: string | null;
+  watermarkAngle?: string | null;
+  watermarkOpacity?: number | null;
+  watermarkRepeat?: boolean | null;
+}) {
   const previewContent = useMemo(() => {
     if (!content) return "";
-    return replaceAttestationVariables(content, SAMPLE_DATA);
-  }, [content]);
+    return buildAttestationTemplateContent(content, SAMPLE_DATA, {
+      ancienBeneficiaire: templateType === "cession"
+        ? {
+            nom: SAMPLE_DATA["{cedant_nom}"],
+            cni_number: SAMPLE_DATA["{cedant_cni}"],
+            telephone: SAMPLE_DATA["{cedant_telephone}"],
+          }
+        : null,
+    });
+  }, [content, templateType]);
+
+  const renderWatermarkLayer = () => {
+    if (!previewContent || watermarkType === "none") return null;
+
+    const opacity = Math.max(0.04, Math.min(watermarkOpacity ?? 0.1, 0.4));
+    const isHorizontal = watermarkAngle === "horizontal";
+    const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${templateType === "cession" ? -34 : -45}deg)`;
+    const positions = watermarkRepeat
+      ? isHorizontal
+        ? [
+            { left: "50%", top: "18%" },
+            { left: "50%", top: "38%" },
+            { left: "50%", top: "58%" },
+            { left: "50%", top: "78%" },
+          ]
+        : templateType === "cession"
+          ? [
+              { left: "19%", top: "73%" },
+              { left: "42%", top: "55%" },
+              { left: "65%", top: "37%" },
+            ]
+          : [
+              { left: "22%", top: "28%" },
+              { left: "50%", top: "50%" },
+              { left: "78%", top: "72%" },
+            ]
+      : [
+          {
+            left: templateType === "cession" && !isHorizontal ? "50%" : "50%",
+            top: templateType === "cession" && !isHorizontal ? "50%" : "50%",
+          },
+        ];
+
+    const size = watermarkRepeat ? (watermarkType === "image" ? 90 : 28) : (watermarkType === "image" ? 180 : templateType === "cession" ? 56 : 60);
+
+    return (
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        {watermarkType === "text" && watermarkText?.trim() && positions.map((position, index) => (
+          <span
+            key={`${position.left}-${position.top}-${index}`}
+            className="absolute select-none whitespace-nowrap font-bold tracking-[0.08em]"
+            style={{
+              left: position.left,
+              top: position.top,
+              transform: `translate(-50%, -50%) ${rotation}`,
+              transformOrigin: "center",
+              opacity,
+              fontSize: `${size}px`,
+              color: "hsl(var(--foreground) / 0.14)",
+            }}
+          >
+            {watermarkText}
+          </span>
+        ))}
+
+        {watermarkType === "image" && watermarkImageUrl && positions.map((position, index) => (
+          <img
+            key={`${position.left}-${position.top}-${index}`}
+            src={watermarkImageUrl}
+            alt=""
+            loading="lazy"
+            className="absolute select-none object-contain"
+            style={{
+              left: position.left,
+              top: position.top,
+              width: `${size}px`,
+              height: `${size}px`,
+              transform: `translate(-50%, -50%) ${rotation}`,
+              transformOrigin: "center",
+              opacity,
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
 
   const renderLines = () => {
     if (!previewContent) {
@@ -105,8 +208,11 @@ function AttestationPreview({ content }: { content: string }) {
         <span>Aperçu avec données d'exemple. Les vraies valeurs seront insérées lors de la génération.</span>
       </div>
       <ScrollArea className="h-[400px] border rounded-lg">
-        <div className="p-6 bg-background prose prose-sm max-w-none">
-          {renderLines()}
+        <div className="relative min-h-[560px] overflow-hidden bg-background p-6">
+          {renderWatermarkLayer()}
+          <div className="relative z-10 prose prose-sm max-w-none">
+            {renderLines()}
+          </div>
         </div>
       </ScrollArea>
     </div>
@@ -1152,7 +1258,16 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
               </TabsContent>
 
               <TabsContent value="preview" className="mt-4">
-                <AttestationPreview content={form.content} />
+                <AttestationPreview
+                  content={form.content}
+                  templateType={templateType}
+                  watermarkType={form.watermark_type}
+                  watermarkText={form.watermark_text}
+                  watermarkImageUrl={form.watermark_image_url}
+                  watermarkAngle={form.watermark_angle}
+                  watermarkOpacity={form.watermark_opacity}
+                  watermarkRepeat={form.watermark_repeat}
+                />
               </TabsContent>
             </Tabs>
           </div>

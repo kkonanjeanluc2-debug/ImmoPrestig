@@ -1571,14 +1571,15 @@ const _generateAttestationVillageoiseInternal = async (
           const imgSizeLarge = estimatePreviewWatermarkImageSize(watermarkBounds, true);
           const imgSizeSmall = estimatePreviewWatermarkImageSize(watermarkBounds, false);
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
+          const horizontalCenterX = watermarkBounds.left + watermarkBounds.width / 2;
           if (repeat && repeatedPositions.length > 0) {
             for (const position of repeatedPositions) {
               if (gState) (doc as any).setGState(gState);
-              doc.addImage(imgBase64, 'PNG', position.x - imgSizeSmall / 2, position.y - imgSizeSmall / 2, imgSizeSmall, imgSizeSmall);
+              doc.addImage(imgBase64, 'PNG', horizontalCenterX - imgSizeSmall / 2, position.y - imgSizeSmall / 2, imgSizeSmall, imgSizeSmall);
             }
           } else {
             if (gState) (doc as any).setGState(gState);
-            const imgX = centerX - imgSizeLarge / 2;
+            const imgX = horizontalCenterX - imgSizeLarge / 2;
             const imgY = centerY - imgSizeLarge / 2;
             doc.addImage(imgBase64, 'PNG', imgX, imgY, imgSizeLarge, imgSizeLarge);
           }

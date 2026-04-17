@@ -1471,8 +1471,24 @@ const _generateAttestationVillageoiseInternal = async (
         : bodyTopY + bodyHeight * 0.05;
     // Custom user position/rotation overrides are mapped to the useful page area
     // (same mental model as the visual editor), not only the text body.
-    const hasCustomPos = typeof template?.watermark_position_x === 'number' && typeof template?.watermark_position_y === 'number';
-    const customRotation = typeof template?.watermark_rotation === 'number' ? template.watermark_rotation : null;
+    const parsedPositionX = template?.watermark_position_x === null || template?.watermark_position_x === undefined
+      ? null
+      : Number(template.watermark_position_x);
+    const parsedPositionY = template?.watermark_position_y === null || template?.watermark_position_y === undefined
+      ? null
+      : Number(template.watermark_position_y);
+    const parsedRotation = template?.watermark_rotation === null || template?.watermark_rotation === undefined
+      ? null
+      : Number(template.watermark_rotation);
+    const hasCustomPos = Number.isFinite(parsedPositionX) && Number.isFinite(parsedPositionY);
+    const defaultRotation = isCessionTemplate ? -34 : -45;
+    const customRotation = parsedRotation !== null && Number.isFinite(parsedRotation) ? parsedRotation : null;
+    const hasMeaningfulCustomPlacement = hasCustomPos && (
+      Math.abs((parsedPositionX as number) - 50) > 0.5 ||
+      Math.abs((parsedPositionY as number) - 50) > 0.5 ||
+      (customRotation !== null && Math.abs(customRotation - defaultRotation) > 0.5)
+    );
+    const useCustomSingle = !repeat || hasMeaningfulCustomPlacement;
     const watermarkAreaLeft = template?.page_border_enabled ? Math.max(margin, pageBorderContentInset + 4) : margin;
     const watermarkAreaRight = pageWidth - watermarkAreaLeft;
     const watermarkAreaTop = template?.page_border_enabled ? pageBorderContentInset + 4 : Math.max(4, margin * 0.4);
@@ -1481,13 +1497,14 @@ const _generateAttestationVillageoiseInternal = async (
       : pageHeight - Math.max(4, margin * 0.4);
     const watermarkAreaWidth = watermarkAreaRight - watermarkAreaLeft;
     const watermarkAreaHeight = watermarkAreaBottom - watermarkAreaTop;
-    const customCenterX = hasCustomPos ? watermarkAreaLeft + (watermarkAreaWidth * (template!.watermark_position_x as number) / 100) : null;
-    const customCenterY = hasCustomPos ? watermarkAreaTop + (watermarkAreaHeight * (template!.watermark_position_y as number) / 100) : null;
+    const customCenterX = hasCustomPos ? watermarkAreaLeft + (watermarkAreaWidth * ((parsedPositionX as number) / 100)) : null;
+    const customCenterY = hasCustomPos ? watermarkAreaTop + (watermarkAreaHeight * ((parsedPositionY as number) / 100)) : null;
+    const defaultAngle = Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
     const angle = isHorizontal
       ? 0
-      : ((!repeat || hasCustomPos) && customRotation !== null)
+      : (useCustomSingle && customRotation !== null)
         ? customRotation
-        : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);
+        : defaultAngle;
 
     if (wmType === 'text' && template?.watermark_text) {
       const text = template.watermark_text;
@@ -1496,9 +1513,8 @@ const _generateAttestationVillageoiseInternal = async (
       doc.setTextColor(grayVal, grayVal, grayVal);
       doc.setFont('helvetica', 'bold');
 
-      // If user has set a custom position, render a single watermark there (overrides repeat).
-      const useCustomSingle = hasCustomPos;
-
+      // Single placement is used when repeat is disabled, or when the user has
+      // meaningfully moved/rotated the watermark away from the default tiled layout.
       if (repeat && !useCustomSingle) {
         // Repeated mode: smaller font for tiling
         doc.setFontSize(16);
@@ -1534,7 +1550,6 @@ const _generateAttestationVillageoiseInternal = async (
         // diagonal/horizontal length.
         let availableLength: number;
         if (hasCustomPos) {
-          // Distance from custom center to nearest horizontal edge (×2 to keep symmetric)
           const distToLeft = centerX - margin;
           const distToRight = (pageWidth - margin) - centerX;
           const horizontalRoom = 2 * Math.min(distToLeft, distToRight);
@@ -1548,8 +1563,6 @@ const _generateAttestationVillageoiseInternal = async (
               ) * 0.98;
         }
 
-        // Custom position: cap font size to keep watermark visually as a "stamp"
-        // so position changes are perceptible. Default mode keeps the large stretched look.
         const maxFontSize = hasCustomPos ? 90 : 220;
         const minFontSize = hasCustomPos ? 24 : 40;
 
@@ -1579,7 +1592,7 @@ const _generateAttestationVillageoiseInternal = async (
           const imgSizeLarge = 90;
           const imgSizeSmall = 45;
           const gState = (doc as any).GState ? new (doc as any).GState({ opacity }) : null;
-          if (repeat && !hasCustomPos) {
+          if (repeat && !useCustomSingle) {
             const stepY = imgSizeSmall + 30;
             const x1 = pageWidth * 0.18;
             const x2 = pageWidth * 0.58;

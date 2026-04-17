@@ -134,8 +134,10 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
     try {
       const lotissementTemplateId = (lotissement as any)?.attestation_template_id;
       const tpl = lotissementTemplateId
-        ? attestationTemplates.find(t => t.id === lotissementTemplateId)
-        : attestationTemplates.find(t => t.is_default) || attestationTemplates[0] || null;
+        ? attestationTemplates.find((t) => t.id === lotissementTemplateId)
+        : attestationTemplates.find((t) => (t.template_type || 'attribution') === 'attribution' && t.is_default)
+          || attestationTemplates.find((t) => (t.template_type || 'attribution') === 'attribution')
+          || null;
 
       const templateData: AttestationTemplateData | null = tpl ? {
         district: tpl.district,

@@ -2097,14 +2097,15 @@ const _generateAttestationVillageoiseInternal = async (
     writeWrappedLines(`Fait à ${city}, le ${formatDate(saleDate)}`, { align: 'center', x: rightBlockCenter, width: 90, lineHeight: 6, extraAfter: 1 });
   }
 
-  // Detect a signature line in the template: a single line containing exactly two **bold** labels
-  // separated by whitespace (spaces/tabs). The labels are taken verbatim from the template.
+  // Detect THE signature line in the template: the LAST line containing exactly two **bold** labels.
+  // We scan from the bottom to prefer the actual signature row over any earlier bold pair
+  // (e.g. a line like **{nom_agence}**   **{nom_lotissement}** used as a header).
   let leftLabel: string | null = null;
   let rightLabel: string | null = null;
   if (templateContent) {
     const lines = templateContent.split(/\r?\n/);
-    for (const line of lines) {
-      const matches = [...line.matchAll(/\*\*([^*\n]+?)\*\*/g)];
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const matches = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
       if (matches.length === 2) {
         leftLabel = matches[0][1].trim();
         rightLabel = matches[1][1].trim();

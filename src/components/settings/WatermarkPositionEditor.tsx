@@ -17,6 +17,7 @@ interface WatermarkPositionEditorProps {
   watermarkAngle?: string | null;
   watermarkText?: string | null;
   watermarkImageUrl?: string | null;
+  watermarkRepeat?: boolean | null;
   opacity: number;
   disabled?: boolean;
   templateType?: string;

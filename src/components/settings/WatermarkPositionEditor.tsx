@@ -17,6 +17,7 @@ interface WatermarkPositionEditorProps {
   watermarkAngle?: string | null;
   watermarkText?: string | null;
   watermarkImageUrl?: string | null;
+  watermarkRepeat?: boolean | null;
   opacity: number;
   disabled?: boolean;
   templateType?: string;
@@ -37,6 +38,7 @@ export function WatermarkPositionEditor({
   watermarkAngle,
   watermarkText,
   watermarkImageUrl,
+  watermarkRepeat,
   opacity,
   disabled,
   templateType,
@@ -62,6 +64,30 @@ export function WatermarkPositionEditor({
   );
   const previewCenterX = watermarkBounds.left + (watermarkBounds.width * positionX) / 100;
   const previewCenterY = watermarkBounds.top + (watermarkBounds.height * positionY) / 100;
+  const isCustomPlacement = Math.abs(positionX - 50) > 0.5
+    || Math.abs(positionY - 50) > 0.5
+    || (!rotationDisabled && Math.abs(rotation - (templateType === "cession" ? -34 : -45)) > 0.5);
+  const showRepeated = (watermarkRepeat ?? true) && !isCustomPlacement;
+  const isCession = templateType === "cession";
+  const repeatedRatios = showRepeated
+    ? rotationDisabled
+      ? [{ x: 0.5, y: 0.18 }, { x: 0.5, y: 0.38 }, { x: 0.5, y: 0.58 }, { x: 0.5, y: 0.78 }]
+      : isCession
+        ? [{ x: 0.5, y: 0.78 }, { x: 0.5, y: 0.5 }, { x: 0.5, y: 0.22 }]
+        : [{ x: 0.5, y: 0.22 }, { x: 0.5, y: 0.5 }, { x: 0.5, y: 0.78 }]
+    : [];
+  const repeatedSize = showRepeated
+    ? watermarkType === "image"
+      ? estimatePreviewWatermarkImageSize(watermarkBounds, false)
+      : estimatePreviewWatermarkTextSize({
+          text: watermarkText || "",
+          bounds: watermarkBounds,
+          centerX: watermarkBounds.left + watermarkBounds.width * 0.5,
+          templateType,
+          isHorizontal: rotationDisabled,
+          hasCustomPos: false,
+        }) * 0.55
+    : 0;
   const watermarkSize = watermarkType === "image"
     ? estimatePreviewWatermarkImageSize(watermarkBounds, true)
     : estimatePreviewWatermarkTextSize({
@@ -203,44 +229,89 @@ export function WatermarkPositionEditor({
             </span>
           </div>
 
-          {/* Watermark visual */}
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              left: previewCenterX,
-              top: previewCenterY,
-              transform: `translate(-50%, -50%) rotate(${effectiveRotation}deg)`,
-              transformOrigin: "center",
-            }}
-          >
-            {watermarkType === "text" && watermarkText?.trim() && (
-              <span
-                className="font-bold whitespace-nowrap text-primary"
+          {/* Repeated watermark previews (background tiling) */}
+          {showRepeated && watermarkType !== "none" && repeatedRatios.map((ratio, idx) => {
+            const cx = watermarkBounds.left + watermarkBounds.width * ratio.x;
+            const cy = watermarkBounds.top + watermarkBounds.height * ratio.y;
+            return (
+              <div
+                key={`rep-${idx}`}
+                className="absolute pointer-events-none"
                 style={{
-                  fontSize: watermarkSize,
-                  opacity: Math.max(0.25, opacity * 2),
-                  letterSpacing: "0.05em",
+                  left: cx,
+                  top: cy,
+                  transform: `translate(-50%, -50%) rotate(${effectiveRotation}deg)`,
+                  transformOrigin: "center",
                 }}
               >
-                {watermarkText}
-              </span>
-            )}
-            {watermarkType === "image" && watermarkImageUrl && (
-              <img
-                src={watermarkImageUrl}
-                alt=""
-                className="object-contain"
-                style={{
-                  width: watermarkSize,
-                  height: watermarkSize,
-                  opacity: Math.max(0.25, opacity * 2),
-                }}
-              />
-            )}
-            {watermarkType === "none" && (
-              <span className="text-xs text-muted-foreground italic">Aucun filigrane</span>
-            )}
-          </div>
+                {watermarkType === "text" && watermarkText?.trim() && (
+                  <span
+                    className="font-bold whitespace-nowrap text-primary"
+                    style={{
+                      fontSize: repeatedSize,
+                      opacity: Math.max(0.2, opacity * 1.6),
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    {watermarkText}
+                  </span>
+                )}
+                {watermarkType === "image" && watermarkImageUrl && (
+                  <img
+                    src={watermarkImageUrl}
+                    alt=""
+                    className="object-contain"
+                    style={{
+                      width: repeatedSize,
+                      height: repeatedSize,
+                      opacity: Math.max(0.2, opacity * 1.6),
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+
+          {/* Watermark visual (main / single placement) */}
+          {!showRepeated && (
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: previewCenterX,
+                top: previewCenterY,
+                transform: `translate(-50%, -50%) rotate(${effectiveRotation}deg)`,
+                transformOrigin: "center",
+              }}
+            >
+              {watermarkType === "text" && watermarkText?.trim() && (
+                <span
+                  className="font-bold whitespace-nowrap text-primary"
+                  style={{
+                    fontSize: watermarkSize,
+                    opacity: Math.max(0.25, opacity * 2),
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {watermarkText}
+                </span>
+              )}
+              {watermarkType === "image" && watermarkImageUrl && (
+                <img
+                  src={watermarkImageUrl}
+                  alt=""
+                  className="object-contain"
+                  style={{
+                    width: watermarkSize,
+                    height: watermarkSize,
+                    opacity: Math.max(0.25, opacity * 2),
+                  }}
+                />
+              )}
+              {watermarkType === "none" && (
+                <span className="text-xs text-muted-foreground italic">Aucun filigrane</span>
+              )}
+            </div>
+          )}
 
           {/* Drag handle for moving (overlay on watermark center) */}
           {watermarkType !== "none" && (

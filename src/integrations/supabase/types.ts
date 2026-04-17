@@ -610,6 +610,13 @@ export type Database = {
             referencedRelation: "agencies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agency_members_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       agency_subscriptions: {
@@ -655,6 +662,13 @@ export type Database = {
             columns: ["agency_id"]
             isOneToOne: true
             referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_subscriptions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies_public"
             referencedColumns: ["id"]
           },
           {
@@ -3597,6 +3611,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "payment_transactions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "payment_transactions_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
@@ -3867,6 +3888,13 @@ export type Database = {
             columns: ["agency_id"]
             isOneToOne: false
             referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies_public"
             referencedColumns: ["id"]
           },
         ]
@@ -5469,7 +5497,135 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      agencies_public: {
+        Row: {
+          accent_color: string | null
+          account_type: Database["public"]["Enums"]["account_type"] | null
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          geniuspay_public_key: string | null
+          geniuspay_sandbox: boolean | null
+          id: string | null
+          invoice_counter: number | null
+          is_active: boolean | null
+          kkiapay_public_key: string | null
+          kkiapay_sandbox: boolean | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          mobile_money_number: string | null
+          mobile_money_provider: string | null
+          name: string | null
+          notification_email: string | null
+          notification_whatsapp: string | null
+          online_rent_enabled: boolean | null
+          pdf_header_text: string | null
+          pdf_primary_color: string | null
+          pdf_secondary_color: string | null
+          pdf_text_color: string | null
+          phone: string | null
+          primary_color: string | null
+          proforma_counter: number | null
+          receipt_counter: number | null
+          rent_due_day: number | null
+          reservation_deposit_percentage: number | null
+          sale_commission_percentage: number | null
+          sidebar_color: string | null
+          siret: string | null
+          updated_at: string | null
+          user_id: string | null
+          wave_sandbox: boolean | null
+          whatsapp_property_template: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          geniuspay_public_key?: string | null
+          geniuspay_sandbox?: boolean | null
+          id?: string | null
+          invoice_counter?: number | null
+          is_active?: boolean | null
+          kkiapay_public_key?: string | null
+          kkiapay_sandbox?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          mobile_money_number?: string | null
+          mobile_money_provider?: string | null
+          name?: string | null
+          notification_email?: string | null
+          notification_whatsapp?: string | null
+          online_rent_enabled?: boolean | null
+          pdf_header_text?: string | null
+          pdf_primary_color?: string | null
+          pdf_secondary_color?: string | null
+          pdf_text_color?: string | null
+          phone?: string | null
+          primary_color?: string | null
+          proforma_counter?: number | null
+          receipt_counter?: number | null
+          rent_due_day?: number | null
+          reservation_deposit_percentage?: number | null
+          sale_commission_percentage?: number | null
+          sidebar_color?: string | null
+          siret?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wave_sandbox?: boolean | null
+          whatsapp_property_template?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          geniuspay_public_key?: string | null
+          geniuspay_sandbox?: boolean | null
+          id?: string | null
+          invoice_counter?: number | null
+          is_active?: boolean | null
+          kkiapay_public_key?: string | null
+          kkiapay_sandbox?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          mobile_money_number?: string | null
+          mobile_money_provider?: string | null
+          name?: string | null
+          notification_email?: string | null
+          notification_whatsapp?: string | null
+          online_rent_enabled?: boolean | null
+          pdf_header_text?: string | null
+          pdf_primary_color?: string | null
+          pdf_secondary_color?: string | null
+          pdf_text_color?: string | null
+          phone?: string | null
+          primary_color?: string | null
+          proforma_counter?: number | null
+          receipt_counter?: number | null
+          rent_due_day?: number | null
+          reservation_deposit_percentage?: number | null
+          sale_commission_percentage?: number | null
+          sidebar_color?: string | null
+          siret?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wave_sandbox?: boolean | null
+          whatsapp_property_template?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_access_contract_via_property: {

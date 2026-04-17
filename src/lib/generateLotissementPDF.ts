@@ -1914,37 +1914,37 @@ const _generateAttestationVillageoiseInternal = async (
 
   const templateContent = template?.content || '';
 
-  const variableData: Record<string, string> = {
-    '{numero_lot}': parcelle.plot_number,
-    '{ilot}': ilotName || '',
-    '{nom_lotissement}': lotOriginName,
-    '{superficie}': parcelle.area > 0 ? parcelle.area.toLocaleString('fr-FR') : '___',
-    '{district}': district,
-    '{commune}': commune,
-    '{village}': village.replace(/^Village de /i, '').trim(),
-    '{chef_village_name}': isCessionTemplate ? '' : chef,
-    '{chef_village_titre}': isCessionTemplate ? '' : chefTitre,
-    '{arrete_approbation}': arreteApprobation,
-    '{beneficiaire_nom}': acquereur.name,
-    '{beneficiaire_cni}': acquereur.cni_number || '___',
-    '{beneficiaire_profession}': acquereur.profession || '___',
-    '{beneficiaire_telephone}': formatAttestationPhone(acquereur.phone) || '___',
-    '{beneficiaire_email}': acquereur.email || '___',
-    '{beneficiaire_adresse}': acquereur.address || '___',
-    '{beneficiaire_date_naissance}': acquereur.birth_date ? formatDate(acquereur.birth_date) : '___',
-    '{beneficiaire_lieu_naissance}': acquereur.birth_place || '___',
-    '{date_vente}': formatDate(saleDate),
-    '{ville}': lotissement.city || agency?.city || '___',
-    '{nom_agence}': agency?.name || '___',
-    '{ancien_beneficiaire_nom}': ancienBeneficiaire?.nom || '',
-    '{ancien_beneficiaire_cni}': ancienBeneficiaire?.cni_number || '',
-    '{ancien_beneficiaire_telephone}': ancienBeneficiaire?.telephone || '',
-    '{cedant_nom}': ancienBeneficiaire?.nom || '___',
-    '{cedant_cni}': ancienBeneficiaire?.cni_number || '___',
-    '{cedant_telephone}': formatAttestationPhone(ancienBeneficiaire?.telephone) || '___',
-  };
-
   if (templateContent) {
+    const variableData: Record<string, string> = {
+      '{numero_lot}': parcelle.plot_number,
+      '{ilot}': ilotName || '',
+      '{nom_lotissement}': lotOriginName,
+      '{superficie}': parcelle.area > 0 ? parcelle.area.toLocaleString('fr-FR') : '___',
+      '{district}': district,
+      '{commune}': commune,
+      '{village}': village.replace(/^Village de /i, '').trim(),
+      '{chef_village_name}': isCessionTemplate ? '' : chef,
+      '{chef_village_titre}': isCessionTemplate ? '' : chefTitre,
+      '{arrete_approbation}': arreteApprobation,
+      '{beneficiaire_nom}': acquereur.name,
+      '{beneficiaire_cni}': acquereur.cni_number || '___',
+      '{beneficiaire_profession}': acquereur.profession || '___',
+      '{beneficiaire_telephone}': formatAttestationPhone(acquereur.phone) || '___',
+      '{beneficiaire_email}': acquereur.email || '___',
+      '{beneficiaire_adresse}': acquereur.address || '___',
+      '{beneficiaire_date_naissance}': acquereur.birth_date ? formatDate(acquereur.birth_date) : '___',
+      '{beneficiaire_lieu_naissance}': acquereur.birth_place || '___',
+      '{date_vente}': formatDate(saleDate),
+      '{ville}': lotissement.city || agency?.city || '___',
+      '{nom_agence}': agency?.name || '___',
+      '{ancien_beneficiaire_nom}': ancienBeneficiaire?.nom || '',
+      '{ancien_beneficiaire_cni}': ancienBeneficiaire?.cni_number || '',
+      '{ancien_beneficiaire_telephone}': ancienBeneficiaire?.telephone || '',
+      '{cedant_nom}': ancienBeneficiaire?.nom || '___',
+      '{cedant_cni}': ancienBeneficiaire?.cni_number || '___',
+      '{cedant_telephone}': formatAttestationPhone(ancienBeneficiaire?.telephone) || '___',
+    };
+
     const finalContent = buildAttestationTemplateContent(templateContent, variableData, {
       ancienBeneficiaire,
     });
@@ -2104,22 +2104,11 @@ const _generateAttestationVillageoiseInternal = async (
     // Extract the actual signature labels from the template content (so user edits in the template are honored)
     let leftLabel = 'LE PROPRIÉTAIRE TERRIEN';
     let rightLabel = 'AGENCE / PROMOTEUR';
-    const sigLineMatch = templateContent.match(/\*\*([^*\n]*(?:PROPRIÉTAIRE TERRIEN|PROPRIETAIRE TERRIEN|CÉDANT|CEDANT|\{cedant_nom\}|\{nom_agence\})[^*\n]*)\*\*[\s\S]*?\*\*([^*\n]*(?:PROMOTEUR|AGENCE|\{nom_agence\}|\{cedant_nom\})[^*\n]*)\*\*/i);
+    const sigLineMatch = templateContent.match(/\*\*([^*\n]*(?:PROPRIÉTAIRE TERRIEN|PROPRIETAIRE TERRIEN|CÉDANT|CEDANT)[^*\n]*)\*\*[\s\S]*?\*\*([^*\n]*(?:PROMOTEUR|AGENCE)[^*\n]*)\*\*/i);
     if (sigLineMatch) {
       leftLabel = sigLineMatch[1].trim();
       rightLabel = sigLineMatch[2].trim();
     }
-
-    // Replace template variables inside the extracted labels (e.g. {cedant_nom}, {nom_agence}…)
-    const replaceVars = (text: string): string => {
-      let out = text;
-      for (const [key, value] of Object.entries(variableData)) {
-        out = out.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value || '');
-      }
-      return out.trim();
-    };
-    leftLabel = replaceVars(leftLabel) || 'LE PROPRIÉTAIRE TERRIEN';
-    rightLabel = replaceVars(rightLabel) || 'AGENCE / PROMOTEUR';
 
     ensureSpace(cl >= 3 ? 25 : 45);
     const leftBlockCenter = margin + 30;

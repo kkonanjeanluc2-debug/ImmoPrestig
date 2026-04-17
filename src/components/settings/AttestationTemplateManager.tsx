@@ -1121,7 +1121,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 Filigrane (Watermark)
               </Label>
               <p className="text-xs text-muted-foreground">
-                Ajoutez un filigrane en image/logo ou en texte sur le document. Le filigrane peut être oblique ou horizontal, répété en plusieurs exemplaires.
+                Ajoutez un filigrane en image/logo ou en texte sur le document. Le filigrane est affiché à l'horizontale, et peut être répété en plusieurs exemplaires.
               </p>
 
               {/* Type selector */}

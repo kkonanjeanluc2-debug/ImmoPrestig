@@ -638,18 +638,68 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
               <p className="text-xs text-muted-foreground">
                 Ces informations pré-remplissent les variables du modèle. Le nom et l'arrêté du Chef du village se configurent directement dans chaque lotissement.
               </p>
+              <div className="space-y-2 rounded-lg border border-dashed p-3">
+                <Label className="text-xs font-semibold text-muted-foreground">En-tête officiel (haut du document)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Bloc gauche : Ministère, Région, Département, Commune, Village. Bloc droit : République et Devise.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Ministère (gauche)</Label>
+                    <Textarea
+                      value={form.header_ministere || ""}
+                      onChange={(e) => updateField("header_ministere", e.target.value)}
+                      placeholder="Ex: Ministère d'État, Ministère de l'Intérieur et de la Sécurité"
+                      rows={2}
+                      className="text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">République (droite)</Label>
+                    <Input
+                      value={form.header_republique || ""}
+                      onChange={(e) => updateField("header_republique", e.target.value)}
+                      placeholder="Ex: République de Côte d'Ivoire"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Région (gauche)</Label>
+                    <Input
+                      value={form.header_region || ""}
+                      onChange={(e) => updateField("header_region", e.target.value)}
+                      placeholder="Ex: Région de la Marahoué"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Devise (droite)</Label>
+                    <Input
+                      value={form.header_devise || ""}
+                      onChange={(e) => updateField("header_devise", e.target.value)}
+                      placeholder="Ex: Union-Discipline-Travail"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Département (gauche)</Label>
+                    <Input
+                      value={form.header_departement || ""}
+                      onChange={(e) => updateField("header_departement", e.target.value)}
+                      placeholder="Ex: Département de Bouaflé"
+                    />
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <Label className="text-xs">District</Label>
+                  <Label className="text-xs">District (optionnel)</Label>
                   <Input value={form.district} onChange={(e) => updateField("district", e.target.value)} placeholder="Ex: District Autonome d'Abidjan" />
                 </div>
                 <div>
-                  <Label className="text-xs">Commune</Label>
-                  <Input value={form.commune} onChange={(e) => updateField("commune", e.target.value)} placeholder="Ex: Commune de Songon" />
+                  <Label className="text-xs">Commune (gauche)</Label>
+                  <Input value={form.commune} onChange={(e) => updateField("commune", e.target.value)} placeholder="Ex: Commune de BOUAFLE" />
                 </div>
                 <div>
-                  <Label className="text-xs">Village</Label>
-                  <Input value={form.village} onChange={(e) => updateField("village", e.target.value)} placeholder="Ex: Village de Songon Agban" />
+                  <Label className="text-xs">Village (gauche)</Label>
+                  <Input value={form.village} onChange={(e) => updateField("village", e.target.value)} placeholder="Ex: Village de LOPOUAFLA" />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

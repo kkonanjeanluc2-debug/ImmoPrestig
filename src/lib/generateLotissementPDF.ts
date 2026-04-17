@@ -1473,6 +1473,12 @@ const _generateAttestationVillageoiseInternal = async (
       templateType,
       pageBorderEnabled: template?.page_border_enabled,
       pageBorderStyle: template?.page_border_style,
+      contentArea: {
+        left: margin,
+        top: bodyTopY,
+        right: pageWidth - margin,
+        bottom: bodyBottomY,
+      },
     });
     const centerXRatio = (placement.parsedPositionX ?? 50) / 100;
     const centerYRatio = (placement.parsedPositionY ?? 50) / 100;

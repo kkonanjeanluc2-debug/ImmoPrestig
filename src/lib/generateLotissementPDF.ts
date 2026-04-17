@@ -1436,23 +1436,29 @@ const _generateAttestationVillageoiseInternal = async (
     const repeat = template?.watermark_repeat ?? true;
     const bodyHeight = bodyBottomY - bodyTopY;
     const isHorizontal = template?.watermark_angle === 'horizontal';
-    // Pour l'oblique, on utilise une bande interne du contenu (référence capture utilisateur)
-    // afin d'éviter une diagonale trop basse ou collée aux bords de page.
-    // Diagonale inspirée du modèle "KONGOYOBOUESSOU 2" : le texte oblique
-    // part du bas-gauche du corps et monte jusqu'au haut-droit du corps,
-    // en couvrant quasi toute la zone de contenu.
+    // Pour le modèle de cession, la référence utilisateur montre une diagonale
+    // plus couchée, qui traverse le corps depuis le bas-gauche jusqu'au haut-droit
+    // sans monter trop verticalement.
     const diagonalStartX = isHorizontal
       ? margin + contentWidth * 0.04
-      : margin + contentWidth * 0.02;
+      : isCessionTemplate
+        ? margin + contentWidth * 0.01
+        : margin + contentWidth * 0.02;
     const diagonalStartY = isHorizontal
       ? bodyTopY + bodyHeight / 2
-      : bodyTopY + bodyHeight * 0.95;
+      : isCessionTemplate
+        ? bodyTopY + bodyHeight * 0.88
+        : bodyTopY + bodyHeight * 0.95;
     const diagonalEndX = isHorizontal
       ? pageWidth - margin - contentWidth * 0.04
-      : pageWidth - margin - contentWidth * 0.02;
+      : isCessionTemplate
+        ? pageWidth - margin - contentWidth * 0.01
+        : pageWidth - margin - contentWidth * 0.02;
     const diagonalEndY = isHorizontal
       ? bodyTopY + bodyHeight / 2
-      : bodyTopY + bodyHeight * 0.05;
+      : isCessionTemplate
+        ? bodyTopY + bodyHeight * 0.14
+        : bodyTopY + bodyHeight * 0.05;
     const angle = isHorizontal
       ? 0
       : Math.atan2(diagonalStartY - diagonalEndY, diagonalEndX - diagonalStartX) * (180 / Math.PI);

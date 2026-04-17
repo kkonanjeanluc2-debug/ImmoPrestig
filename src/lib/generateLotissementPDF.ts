@@ -1057,6 +1057,9 @@ export interface AttestationTemplateData {
   watermark_angle?: string;
   watermark_opacity?: number;
   watermark_repeat?: boolean;
+  watermark_position_x?: number | null;
+  watermark_position_y?: number | null;
+  watermark_rotation?: number | null;
   page_border_enabled?: boolean;
   page_border_color?: string;
   page_border_style?: string;

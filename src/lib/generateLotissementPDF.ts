@@ -1566,24 +1566,57 @@ const _generateAttestationVillageoiseInternal = async (
     const rightLogoX = pageWidth - headerLogoInsetX - logoSize;
     const hasLogos = !!(leftLogoUrl || rightLogoUrl);
 
-    // District/Region/Departement/Commune text centered (top of page)
-    doc.setFontSize(8);
+    // === CESSION OFFICIAL HEADER (2 columns: left / right) ===
+    // Left column: Ministère, Région, Département, [District], Commune, Village
+    // Right column: République, Devise
+    const headerMinistere: string = (template as any)?.header_ministere || "";
+    const headerRegion: string = (template as any)?.header_region || "";
+    const headerDepartement: string = (template as any)?.header_departement || "";
+    const headerRepublique: string = (template as any)?.header_republique || "République de Côte d'Ivoire";
+    const headerDevise: string = (template as any)?.header_devise || "Union-Discipline-Travail";
+
+    const leftCol: string[] = [];
+    if (headerMinistere) leftCol.push(headerMinistere);
+    if (headerRegion) leftCol.push(headerRegion);
+    if (headerDepartement) leftCol.push(headerDepartement);
+    if (district) leftCol.push(district);
+    if (commune) leftCol.push(commune);
+    if (village) leftCol.push(village);
+
+    const rightCol: string[] = [];
+    if (headerRepublique) rightCol.push(headerRepublique);
+    if (headerDevise) rightCol.push(headerDevise);
+
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...textColor);
-    
-    const districtText = district ? `DISTRICT DU ${district.toUpperCase()}` : '';
-    const cessionHeaderLines: string[] = [];
-    if (districtText) cessionHeaderLines.push(districtText);
-    if (commune) cessionHeaderLines.push(commune.toUpperCase());
-    if (village) cessionHeaderLines.push(`VILLAGE DE ${village.replace(/^Village de /i, '').trim().toUpperCase()}`);
 
-    let headerTextY = yPos;
-    for (const line of cessionHeaderLines) {
-      doc.text(line, pageWidth / 2, headerTextY, { align: 'center' });
-      headerTextY += 5;
+    const colWidth = (pageWidth - margin * 2) / 2 - 4;
+    const leftX = margin;
+    const rightX = pageWidth - margin;
+    const lineGap = 4;
+    const blockGap = 2.5; // small gap between sub-blocks (Ministère wraps on multiple lines)
+
+    let leftY = yPos;
+    let rightY = yPos;
+
+    // Left column: each entry may wrap to multiple lines
+    for (const entry of leftCol) {
+      const wrapped = doc.splitTextToSize(entry, colWidth);
+      for (const line of wrapped) {
+        doc.text(line, leftX, leftY);
+        leftY += lineGap;
+      }
+      leftY += blockGap;
     }
 
-    yPos = headerTextY + 2;
+    // Right column: short single-line entries, right-aligned
+    for (const entry of rightCol) {
+      doc.text(entry, rightX, rightY, { align: 'right' });
+      rightY += lineGap + blockGap;
+    }
+
+    yPos = Math.max(leftY, rightY) + 2;
 
     // Colored dashes line (supports up to 4 alternating colors, last one stretched)
     const rawLineColor = template?.header_line_color || '#FF8C00';

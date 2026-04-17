@@ -60,4 +60,7 @@ export const CESSION_VARIABLES = [
   { variable: "{date_vente}", description: "Date de la cession" },
   { variable: "{ville}", description: "Ville (pour 'Fait à...')" },
   { variable: "{nom_agence}", description: "Nom de l'agence/promoteur" },
+  { variable: "{ancien_beneficiaire_nom}", description: "Nom de l'ancien bénéficiaire (cession)" },
+  { variable: "{ancien_beneficiaire_cni}", description: "CNI de l'ancien bénéficiaire (cession)" },
+  { variable: "{ancien_beneficiaire_telephone}", description: "Téléphone de l'ancien bénéficiaire (cession)" },
 ];

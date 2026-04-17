@@ -43,8 +43,10 @@ serve(async (req: Request) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Generate 6-digit OTP
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    // Generate cryptographically secure 6-digit OTP using Web Crypto API
+    const otpArray = new Uint32Array(1);
+    crypto.getRandomValues(otpArray);
+    const otp = String(100000 + (otpArray[0] % 900000)).padStart(6, "0");
     
     // Store OTP with 15 min expiry
     const serviceSupabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

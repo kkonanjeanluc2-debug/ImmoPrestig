@@ -57,6 +57,17 @@ export const getAttestationPageBorderContentInset = (
       return 10;
     case "dashes":
       return 9;
+    case "palmier":
+    case "avocat":
+    case "tomate":
+    case "cacao":
+    case "ananas":
+    case "hibiscus":
+    case "orange":
+    case "feuille":
+    case "banane":
+    case "cafe":
+      return 16;
     default:
       return 10;
   }

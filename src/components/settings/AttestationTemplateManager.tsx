@@ -108,6 +108,10 @@ function AttestationPreview({
     const opacity = Math.max(0.04, Math.min(watermarkOpacity ?? 0.1, 0.4));
     const isHorizontal = watermarkAngle === "horizontal";
     const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${templateType === "cession" ? -34 : -45}deg)`;
+    const customRotation = typeof watermarkRotation === "number" ? watermarkRotation : (templateType === "cession" ? -34 : -45);
+    const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${customRotation}deg)`;
+    const customX = typeof watermarkPositionX === "number" ? `${watermarkPositionX}%` : "50%";
+    const customY = typeof watermarkPositionY === "number" ? `${watermarkPositionY}%` : "50%";
     const positions = watermarkRepeat
       ? isHorizontal
         ? [
@@ -128,10 +132,7 @@ function AttestationPreview({
               { left: "78%", top: "72%" },
             ]
       : [
-          {
-            left: templateType === "cession" && !isHorizontal ? "50%" : "50%",
-            top: templateType === "cession" && !isHorizontal ? "50%" : "50%",
-          },
+          { left: customX, top: customY },
         ];
 
     const size = watermarkRepeat ? (watermarkType === "image" ? 90 : 28) : (watermarkType === "image" ? 180 : templateType === "cession" ? 56 : 60);

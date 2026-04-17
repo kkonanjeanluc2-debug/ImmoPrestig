@@ -311,7 +311,7 @@ const emptyForm: AttestationTemplateInsert = {
   watermark_type: "none",
   watermark_text: null,
   watermark_image_url: null,
-  watermark_angle: "diagonal",
+  watermark_angle: "horizontal",
   watermark_opacity: 0.1,
   watermark_repeat: true,
   watermark_position_x: 50,
@@ -464,7 +464,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_type: (t as any).watermark_type || "none",
       watermark_text: (t as any).watermark_text || null,
       watermark_image_url: (t as any).watermark_image_url || null,
-      watermark_angle: (t as any).watermark_angle || "diagonal",
+      watermark_angle: "horizontal",
       watermark_opacity: (t as any).watermark_opacity ?? 0.1,
       watermark_repeat: (t as any).watermark_repeat ?? true,
       watermark_position_x: (t as any).watermark_position_x ?? 50,
@@ -510,7 +510,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_type: (t as any).watermark_type || "none",
       watermark_text: (t as any).watermark_text || null,
       watermark_image_url: (t as any).watermark_image_url || null,
-      watermark_angle: (t as any).watermark_angle || "diagonal",
+      watermark_angle: "horizontal",
       watermark_opacity: (t as any).watermark_opacity ?? 0.1,
       watermark_repeat: (t as any).watermark_repeat ?? true,
       watermark_position_x: (t as any).watermark_position_x ?? 50,
@@ -1121,7 +1121,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 Filigrane (Watermark)
               </Label>
               <p className="text-xs text-muted-foreground">
-                Ajoutez un filigrane en image/logo ou en texte sur le document. Le filigrane peut être oblique ou horizontal, répété en plusieurs exemplaires.
+                Ajoutez un filigrane en image/logo ou en texte sur le document. Le filigrane est affiché à l'horizontale, et peut être répété en plusieurs exemplaires.
               </p>
 
               {/* Type selector */}
@@ -1176,20 +1176,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
               )}
 
               {form.watermark_type !== "none" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Orientation</Label>
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="wm_angle" value="diagonal" checked={form.watermark_angle === "diagonal"} onChange={() => updateField("watermark_angle", "diagonal")} className="accent-primary" />
-                        <span className="text-sm">Oblique (45°)</span>
-                      </label>
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="wm_angle" value="horizontal" checked={form.watermark_angle === "horizontal"} onChange={() => updateField("watermark_angle", "horizontal")} className="accent-primary" />
-                        <span className="text-sm">Horizontal</span>
-                      </label>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Opacité ({Math.round((form.watermark_opacity ?? 0.1) * 100)}%)</Label>
                     <input
@@ -1209,19 +1196,19 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                 </div>
               )}
 
-              {form.watermark_type !== "none" && form.watermark_angle !== "oblique" && (
+              {form.watermark_type !== "none" && (
                 <div className="p-4 rounded-lg bg-muted/30 border border-dashed">
                   <WatermarkPositionEditor
                     positionX={form.watermark_position_x ?? 50}
                     positionY={form.watermark_position_y ?? 50}
-                    rotation={form.watermark_rotation ?? (templateType === "cession" ? -34 : -45)}
-                    onChange={({ positionX, positionY, rotation }) => {
+                    rotation={0}
+                    onChange={({ positionX, positionY }) => {
                       updateField("watermark_position_x", positionX);
                       updateField("watermark_position_y", positionY);
-                      updateField("watermark_rotation", rotation);
+                      updateField("watermark_rotation", 0);
                     }}
                     watermarkType={form.watermark_type ?? "none"}
-                    watermarkAngle={form.watermark_angle}
+                    watermarkAngle="horizontal"
                     watermarkText={form.watermark_text}
                     watermarkImageUrl={form.watermark_image_url}
                     watermarkRepeat={form.watermark_repeat ?? true}
@@ -1230,11 +1217,6 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                     pageBorderEnabled={form.page_border_enabled}
                     pageBorderStyle={form.page_border_style}
                   />
-                  {form.watermark_angle === "horizontal" && (
-                    <p className="text-[11px] text-muted-foreground mt-2 italic">
-                      Mode horizontal actif : la rotation est désactivée. Passez en mode oblique pour personnaliser l'angle.
-                    </p>
-                  )}
                 </div>
               )}
             </div>

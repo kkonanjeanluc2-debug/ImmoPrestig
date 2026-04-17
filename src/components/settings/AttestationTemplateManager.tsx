@@ -244,6 +244,7 @@ const emptyForm: AttestationTemplateInsert = {
   template_type: "attribution",
   header_line_color: "#FF8C00",
   title_border_color: null,
+  title_bg_color: null,
   watermark_type: "none",
   watermark_text: null,
   watermark_image_url: null,

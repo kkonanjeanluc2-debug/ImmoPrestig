@@ -799,7 +799,12 @@ export type Database = {
           doc_bg_color_1: string | null
           doc_bg_color_2: string | null
           doc_bg_gradient: boolean | null
+          header_departement: string | null
+          header_devise: string | null
           header_line_color: string | null
+          header_ministere: string | null
+          header_region: string | null
+          header_republique: string | null
           id: string
           is_default: boolean
           lotissement_origin_name: string | null
@@ -836,7 +841,12 @@ export type Database = {
           doc_bg_color_1?: string | null
           doc_bg_color_2?: string | null
           doc_bg_gradient?: boolean | null
+          header_departement?: string | null
+          header_devise?: string | null
           header_line_color?: string | null
+          header_ministere?: string | null
+          header_region?: string | null
+          header_republique?: string | null
           id?: string
           is_default?: boolean
           lotissement_origin_name?: string | null
@@ -873,7 +883,12 @@ export type Database = {
           doc_bg_color_1?: string | null
           doc_bg_color_2?: string | null
           doc_bg_gradient?: boolean | null
+          header_departement?: string | null
+          header_devise?: string | null
           header_line_color?: string | null
+          header_ministere?: string | null
+          header_region?: string | null
+          header_republique?: string | null
           id?: string
           is_default?: boolean
           lotissement_origin_name?: string | null

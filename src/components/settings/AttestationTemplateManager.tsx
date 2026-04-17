@@ -510,7 +510,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
       watermark_type: (t as any).watermark_type || "none",
       watermark_text: (t as any).watermark_text || null,
       watermark_image_url: (t as any).watermark_image_url || null,
-      watermark_angle: (t as any).watermark_angle || "diagonal",
+      watermark_angle: "horizontal",
       watermark_opacity: (t as any).watermark_opacity ?? 0.1,
       watermark_repeat: (t as any).watermark_repeat ?? true,
       watermark_position_x: (t as any).watermark_position_x ?? 50,

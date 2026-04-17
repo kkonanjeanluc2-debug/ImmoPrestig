@@ -1651,11 +1651,27 @@ const _generateAttestationVillageoiseInternal = async (
       doc.setTextColor(...textColor);
       doc.text(fullTitle, pageWidth / 2, boxY + boxPaddingY + 5, { align: 'center' });
 
-      yPos = boxY + boxH + 6;
+      // Place logos on the SAME LINE as the title border, vertically centered
+      const logoY = boxY + (boxH - logoSize) / 2;
+      if (leftLogoUrl) {
+        try {
+          const logoBase64 = await loadImageAsBase64(leftLogoUrl);
+          if (logoBase64) doc.addImage(logoBase64, 'PNG', leftLogoX, logoY, logoSize, logoSize);
+        } catch {}
+      }
+      if (rightLogoUrl) {
+        try {
+          const logoBase64 = await loadImageAsBase64(rightLogoUrl);
+          if (logoBase64) doc.addImage(logoBase64, 'PNG', rightLogoX, logoY, logoSize, logoSize);
+        } catch {}
+      }
+
+      yPos = Math.max(boxY + boxH, logoY + logoSize) + 6;
     } else {
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...textColor);
+      const titleStartY = yPos;
       doc.text(titleText, pageWidth / 2, yPos, { align: 'center' });
       yPos += 2;
       const titleWidth = doc.getTextWidth(titleText);
@@ -1669,7 +1685,24 @@ const _generateAttestationVillageoiseInternal = async (
       const nWidth = doc.getTextWidth(nText);
       yPos += 1.5;
       doc.line(pageWidth / 2 - nWidth / 2, yPos, pageWidth / 2 + nWidth / 2, yPos);
-      yPos += 10;
+
+      // Place logos aligned with the title block (vertically centered)
+      const titleBlockHeight = yPos - titleStartY + 4;
+      const logoY = titleStartY - 4 + (titleBlockHeight - logoSize) / 2;
+      if (leftLogoUrl) {
+        try {
+          const logoBase64 = await loadImageAsBase64(leftLogoUrl);
+          if (logoBase64) doc.addImage(logoBase64, 'PNG', leftLogoX, logoY, logoSize, logoSize);
+        } catch {}
+      }
+      if (rightLogoUrl) {
+        try {
+          const logoBase64 = await loadImageAsBase64(rightLogoUrl);
+          if (logoBase64) doc.addImage(logoBase64, 'PNG', rightLogoX, logoY, logoSize, logoSize);
+        } catch {}
+      }
+
+      yPos = Math.max(yPos + 10, logoY + logoSize + 6);
     }
 
     doc.setLineWidth(0.2);

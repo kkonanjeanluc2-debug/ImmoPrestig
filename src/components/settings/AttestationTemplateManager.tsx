@@ -107,7 +107,7 @@ function AttestationPreview({
 
     const opacity = Math.max(0.04, Math.min(watermarkOpacity ?? 0.1, 0.4));
     const isHorizontal = watermarkAngle === "horizontal";
-    const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${templateType === "cession" ? -34 : -45}deg)`;
+    
     const customRotation = typeof watermarkRotation === "number" ? watermarkRotation : (templateType === "cession" ? -34 : -45);
     const rotation = isHorizontal ? "rotate(0deg)" : `rotate(${customRotation}deg)`;
     const customX = typeof watermarkPositionX === "number" ? `${watermarkPositionX}%` : "50%";

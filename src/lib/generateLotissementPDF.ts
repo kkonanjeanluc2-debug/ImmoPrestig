@@ -1487,7 +1487,10 @@ const _generateAttestationVillageoiseInternal = async (
       doc.setTextColor(grayVal, grayVal, grayVal);
       doc.setFont('helvetica', 'bold');
 
-      if (repeat) {
+      // If user has set a custom position, render a single watermark there (overrides repeat).
+      const useCustomSingle = hasCustomPos;
+
+      if (repeat && !useCustomSingle) {
         // Repeated mode: smaller font for tiling
         doc.setFontSize(16);
         const rowH = 22;
@@ -1510,7 +1513,7 @@ const _generateAttestationVillageoiseInternal = async (
           }
         }
       } else {
-        // Non-repeated mode: large watermark, position can be customized by user
+        // Single watermark — uses custom position when provided, else default diagonal/horizontal center
         const defaultCenterX = isHorizontal ? pageWidth / 2 : (diagonalStartX + diagonalEndX) / 2;
         const defaultCenterY = isHorizontal ? bodyTopY + bodyHeight / 2 : (diagonalStartY + diagonalEndY) / 2;
         const centerX = customCenterX ?? defaultCenterX;

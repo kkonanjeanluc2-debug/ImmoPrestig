@@ -34,17 +34,5 @@ export const buildAttestationTemplateContent = (
     );
   }
 
-  const hasCessionMention = /mention de cession\s*:/i.test(content);
-  const hasAncienVariable = /\{ancien_beneficiaire_nom\}/.test(content);
-
-  if (ancienBeneficiaire?.nom && !hasCessionMention && !hasAncienVariable) {
-    const cessionMention = `\n\n**Mention de cession :** Ce lot, initialement attribué à **${ancienBeneficiaire.nom}**${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ""}${formattedAncienPhone ? `, Contact : ${formattedAncienPhone}` : ""}, a été cédé au bénéficiaire désigné ci-dessus.\n`;
-    const faitAIndex = finalContent.toLowerCase().indexOf("fait à");
-
-    finalContent = faitAIndex > 0
-      ? `${finalContent.substring(0, faitAIndex)}${cessionMention}\n${finalContent.substring(faitAIndex)}`
-      : `${finalContent}${cessionMention}`;
-  }
-
   return finalContent;
 };

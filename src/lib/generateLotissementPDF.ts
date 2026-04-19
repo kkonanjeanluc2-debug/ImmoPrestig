@@ -2080,12 +2080,6 @@ const _generateAttestationVillageoiseInternal = async (
     );
     writeWrappedLines(`En foi de quoi, nous lui délivrons cette attestation pour servir et valoir ce que de droit.`, { lineHeight: 5, extraAfter: 5 });
 
-    if (ancienBeneficiaire?.nom) {
-      const cessionText = `Ce lot, initialement attribué à ${ancienBeneficiaire.nom}${ancienBeneficiaire.cni_number ? ` (CNI : ${ancienBeneficiaire.cni_number})` : ''}${ancienBeneficiaire.telephone ? `, Contact : ${ancienBeneficiaire.telephone}` : ''}, a été cédé au bénéficiaire désigné ci-dessus.`;
-      writeMixedMarkdownLine(`**Mention de cession :** ${cessionText}`, 5);
-      yPos += 4;
-    }
-
     const city = lotissement.city || agency?.city || '____________________';
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');

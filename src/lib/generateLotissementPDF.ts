@@ -1913,6 +1913,7 @@ const _generateAttestationVillageoiseInternal = async (
   doc.setFontSize(bodyFontSize);
 
   const templateContent = template?.content || '';
+  let renderedTemplateContent = '';
 
   if (templateContent) {
     const variableData: Record<string, string> = {
@@ -1948,6 +1949,7 @@ const _generateAttestationVillageoiseInternal = async (
     const finalContent = buildAttestationTemplateContent(templateContent, variableData, {
       ancienBeneficiaire,
     });
+    renderedTemplateContent = finalContent;
 
     const lines = finalContent.split('\n');
     const baseFontSize = bodyFontSize;
@@ -2087,8 +2089,8 @@ const _generateAttestationVillageoiseInternal = async (
   }
 
   const rightBlockCenter = pageWidth - margin - 30;
-  const templateHasFaitA = templateContent && templateContent.toLowerCase().includes('fait à');
-  if (!templateHasFaitA) {
+  const templateHasFaitA = renderedTemplateContent.toLowerCase().includes('fait à');
+  if (!templateContent && !templateHasFaitA) {
     ensureSpace(30);
     yPos += 5;
     const city = lotissement.city || agency?.city || '____________________';
@@ -2103,8 +2105,8 @@ const _generateAttestationVillageoiseInternal = async (
   // (e.g. a line like **{nom_agence}**   **{nom_lotissement}** used as a header).
   let leftLabel: string | null = null;
   let rightLabel: string | null = null;
-  if (templateContent) {
-    const lines = templateContent.split(/\r?\n/);
+  if (renderedTemplateContent) {
+    const lines = renderedTemplateContent.split(/\r?\n/);
     for (let i = lines.length - 1; i >= 0; i--) {
       const matches = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
       if (matches.length === 2) {
@@ -2132,7 +2134,7 @@ const _generateAttestationVillageoiseInternal = async (
     doc.line(leftBlockCenter - 25, yPos, leftBlockCenter + 25, yPos);
     doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
     yPos += cl >= 3 ? 6 : 12;
-  } else {
+  } else if (!templateContent) {
     ensureSpace(cl >= 3 ? 25 : 45);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');

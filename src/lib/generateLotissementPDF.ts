@@ -2127,13 +2127,7 @@ const _generateAttestationVillageoiseInternal = async (
     doc.setTextColor(...primaryColor);
     doc.text(leftLabel, leftBlockCenter, yPos, { align: 'center' });
     doc.text(rightLabel, rightBlockCenter, yPos, { align: 'center' });
-    yPos += cl >= 3 ? 10 : 15;
-
-    // Signature lines
-    doc.setDrawColor(150, 150, 150);
-    doc.line(leftBlockCenter - 25, yPos, leftBlockCenter + 25, yPos);
-    doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
-    yPos += cl >= 3 ? 6 : 12;
+    yPos += cl >= 3 ? 16 : 27;
   } else if (!templateContent) {
     ensureSpace(cl >= 3 ? 25 : 45);
     doc.setFontSize(9);

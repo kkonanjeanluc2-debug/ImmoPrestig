@@ -87,6 +87,40 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
   }
 };
 
+// Get natural dimensions of an image from base64 data URL
+const getImageDimensions = (dataUrl: string): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => resolve({ width: 1, height: 1 });
+    img.src = dataUrl;
+  });
+};
+
+// Draw an image fitted inside a square box (boxSize x boxSize) preserving aspect ratio, centered.
+// This guarantees both logos visually occupy the SAME bounding box regardless of source aspect ratio.
+const drawLogoFitted = async (
+  doc: jsPDF,
+  dataUrl: string,
+  boxX: number,
+  boxY: number,
+  boxSize: number,
+  format: string = 'PNG'
+) => {
+  const { width, height } = await getImageDimensions(dataUrl);
+  const ratio = width / height;
+  let drawW = boxSize;
+  let drawH = boxSize;
+  if (ratio > 1) {
+    drawH = boxSize / ratio;
+  } else if (ratio < 1) {
+    drawW = boxSize * ratio;
+  }
+  const offsetX = boxX + (boxSize - drawW) / 2;
+  const offsetY = boxY + (boxSize - drawH) / 2;
+  doc.addImage(dataUrl, format, offsetX, offsetY, drawW, drawH);
+};
+
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return date.toLocaleDateString("fr-FR", {

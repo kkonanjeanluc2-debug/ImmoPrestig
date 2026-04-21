@@ -432,14 +432,11 @@ export type Database = {
           email: string
           geniuspay_public_key: string | null
           geniuspay_sandbox: boolean | null
-          geniuspay_secret_key: string | null
           id: string
           invoice_counter: number
           is_active: boolean
-          kkiapay_private_key: string | null
           kkiapay_public_key: string | null
           kkiapay_sandbox: boolean | null
-          kkiapay_secret: string | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -464,9 +461,7 @@ export type Database = {
           siret: string | null
           updated_at: string
           user_id: string
-          wave_api_key: string | null
           wave_sandbox: boolean | null
-          wave_webhook_secret: string | null
           whatsapp_property_template: string | null
         }
         Insert: {
@@ -479,14 +474,11 @@ export type Database = {
           email: string
           geniuspay_public_key?: string | null
           geniuspay_sandbox?: boolean | null
-          geniuspay_secret_key?: string | null
           id?: string
           invoice_counter?: number
           is_active?: boolean
-          kkiapay_private_key?: string | null
           kkiapay_public_key?: string | null
           kkiapay_sandbox?: boolean | null
-          kkiapay_secret?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -511,9 +503,7 @@ export type Database = {
           siret?: string | null
           updated_at?: string
           user_id: string
-          wave_api_key?: string | null
           wave_sandbox?: boolean | null
-          wave_webhook_secret?: string | null
           whatsapp_property_template?: string | null
         }
         Update: {
@@ -526,14 +516,11 @@ export type Database = {
           email?: string
           geniuspay_public_key?: string | null
           geniuspay_sandbox?: boolean | null
-          geniuspay_secret_key?: string | null
           id?: string
           invoice_counter?: number
           is_active?: boolean
-          kkiapay_private_key?: string | null
           kkiapay_public_key?: string | null
           kkiapay_sandbox?: boolean | null
-          kkiapay_secret?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -558,9 +545,7 @@ export type Database = {
           siret?: string | null
           updated_at?: string
           user_id?: string
-          wave_api_key?: string | null
           wave_sandbox?: boolean | null
-          wave_webhook_secret?: string | null
           whatsapp_property_template?: string | null
         }
         Relationships: []
@@ -614,6 +599,57 @@ export type Database = {
             foreignKeyName: "agency_members_agency_id_fkey"
             columns: ["agency_id"]
             isOneToOne: false
+            referencedRelation: "agencies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_payment_credentials: {
+        Row: {
+          agency_id: string
+          created_at: string
+          geniuspay_secret_key_vault_id: string | null
+          id: string
+          kkiapay_private_key_vault_id: string | null
+          kkiapay_secret_vault_id: string | null
+          updated_at: string
+          wave_api_key_vault_id: string | null
+          wave_webhook_secret_vault_id: string | null
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          geniuspay_secret_key_vault_id?: string | null
+          id?: string
+          kkiapay_private_key_vault_id?: string | null
+          kkiapay_secret_vault_id?: string | null
+          updated_at?: string
+          wave_api_key_vault_id?: string | null
+          wave_webhook_secret_vault_id?: string | null
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          geniuspay_secret_key_vault_id?: string | null
+          id?: string
+          kkiapay_private_key_vault_id?: string | null
+          kkiapay_secret_vault_id?: string | null
+          updated_at?: string
+          wave_api_key_vault_id?: string | null
+          wave_webhook_secret_vault_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_payment_credentials_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_payment_credentials_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
             referencedRelation: "agencies_public"
             referencedColumns: ["id"]
           },
@@ -5743,6 +5779,14 @@ export type Database = {
           online_rent_enabled: boolean
         }[]
       }
+      get_agency_payment_secret: {
+        Args: { _agency_id: string; _field: string }
+        Returns: string
+      }
+      get_agency_payment_secret_by_owner: {
+        Args: { _field: string; _owner_user_id: string }
+        Returns: string
+      }
       get_agency_tenant_portal_count: {
         Args: { p_agency_id: string }
         Returns: number
@@ -5775,10 +5819,18 @@ export type Database = {
         Returns: boolean
       }
       is_agency_owner_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_agency_owner_or_admin_for: {
+        Args: { _agency_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_team_member_of_owned_agency: {
         Args: { _owner_user_id: string; _target_user_id: string }
         Returns: boolean
+      }
+      set_agency_payment_secret: {
+        Args: { _agency_id: string; _field: string; _value: string }
+        Returns: undefined
       }
       tenant_belongs_to_agency: {
         Args: { _agency_id: string; _portal_user_id: string }

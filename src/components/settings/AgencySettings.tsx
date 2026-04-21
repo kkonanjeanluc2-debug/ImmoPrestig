@@ -217,78 +217,74 @@ export function AgencySettings() {
     setIsSaving(true);
 
     try {
+      // Common, non-sensitive fields stored on `agencies`. Sensitive secrets
+      // (kkiapay_secret/private_key, wave_api_key/webhook_secret, geniuspay_secret_key)
+      // are persisted separately into the encrypted Vault via RPC.
+      const baseFields = {
+        account_type: formData.account_type,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        country: formData.country,
+        siret: formData.siret || null,
+        logo_url: logoUrl,
+        reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
+        rent_due_day: parseInt(formData.rent_due_day) || 10,
+        sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
+        mobile_money_number: formData.mobile_money_number || null,
+        mobile_money_provider: formData.mobile_money_provider || null,
+        kkiapay_public_key: formData.kkiapay_public_key || null,
+        kkiapay_sandbox: formData.kkiapay_sandbox,
+        geniuspay_public_key: formData.geniuspay_public_key || null,
+        geniuspay_sandbox: formData.geniuspay_sandbox,
+        wave_sandbox: formData.wave_sandbox,
+        online_rent_enabled: onlineRentToggle,
+        notification_email: formData.notification_email || null,
+        notification_whatsapp: formData.notification_whatsapp || null,
+      };
+
+      let agencyId: string | null = agency?.id ?? null;
+
       if (agency) {
-        // Update existing agency
         const { error } = await supabase
           .from('agencies')
-          .update({
-            account_type: formData.account_type,
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone || null,
-            address: formData.address || null,
-            city: formData.city || null,
-            country: formData.country,
-            siret: formData.siret || null,
-            logo_url: logoUrl,
-            reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
-            rent_due_day: parseInt(formData.rent_due_day) || 10,
-            sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
-            mobile_money_number: formData.mobile_money_number || null,
-            mobile_money_provider: formData.mobile_money_provider || null,
-            kkiapay_public_key: formData.kkiapay_public_key || null,
-            kkiapay_private_key: formData.kkiapay_private_key || null,
-            kkiapay_secret: formData.kkiapay_secret || null,
-            kkiapay_sandbox: formData.kkiapay_sandbox,
-            geniuspay_public_key: formData.geniuspay_public_key || null,
-            geniuspay_secret_key: formData.geniuspay_secret_key || null,
-            geniuspay_sandbox: formData.geniuspay_sandbox,
-            wave_api_key: formData.wave_api_key || null,
-            wave_webhook_secret: formData.wave_webhook_secret || null,
-            wave_sandbox: formData.wave_sandbox,
-            online_rent_enabled: onlineRentToggle,
-            notification_email: formData.notification_email || null,
-            notification_whatsapp: formData.notification_whatsapp || null,
-          })
+          .update(baseFields)
           .eq('user_id', user.id);
-
         if (error) throw error;
       } else {
-        // Create new agency
-        const { error } = await supabase
+        const { data: created, error } = await supabase
           .from('agencies')
-          .insert({
-            user_id: user.id,
-            account_type: formData.account_type,
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone || null,
-            address: formData.address || null,
-            city: formData.city || null,
-            country: formData.country,
-            siret: formData.siret || null,
-            logo_url: logoUrl,
-            reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
-            rent_due_day: parseInt(formData.rent_due_day) || 10,
-            sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
-            mobile_money_number: formData.mobile_money_number || null,
-            mobile_money_provider: formData.mobile_money_provider || null,
-            kkiapay_public_key: formData.kkiapay_public_key || null,
-            kkiapay_private_key: formData.kkiapay_private_key || null,
-            kkiapay_secret: formData.kkiapay_secret || null,
-            kkiapay_sandbox: formData.kkiapay_sandbox,
-            geniuspay_public_key: formData.geniuspay_public_key || null,
-            geniuspay_secret_key: formData.geniuspay_secret_key || null,
-            geniuspay_sandbox: formData.geniuspay_sandbox,
-            wave_api_key: formData.wave_api_key || null,
-            wave_webhook_secret: formData.wave_webhook_secret || null,
-            wave_sandbox: formData.wave_sandbox,
-            online_rent_enabled: onlineRentToggle,
-            notification_email: formData.notification_email || null,
-            notification_whatsapp: formData.notification_whatsapp || null,
-          });
-
+          .insert({ user_id: user.id, ...baseFields })
+          .select('id')
+          .single();
         if (error) throw error;
+        agencyId = created?.id ?? null;
+      }
+
+      // Persist sensitive secrets through the encrypted Vault.
+      // Authorisation is enforced inside the RPC: only owner/admin can set them.
+      if (agencyId) {
+        const secretFields: Array<{ field: string; value: string }> = [
+          { field: "kkiapay_secret", value: formData.kkiapay_secret },
+          { field: "kkiapay_private_key", value: formData.kkiapay_private_key },
+          { field: "wave_api_key", value: formData.wave_api_key },
+          { field: "wave_webhook_secret", value: formData.wave_webhook_secret },
+          { field: "geniuspay_secret_key", value: formData.geniuspay_secret_key },
+        ];
+
+        for (const { field, value } of secretFields) {
+          const { error: rpcError } = await supabase.rpc("set_agency_payment_secret", {
+            _agency_id: agencyId,
+            _field: field,
+            _value: value || "",
+          });
+          // Silently ignore permission errors (non-admin saving non-sensitive form).
+          if (rpcError && !/Not authorised/i.test(rpcError.message)) {
+            throw rpcError;
+          }
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ["agency"] });

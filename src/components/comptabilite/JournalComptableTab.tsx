@@ -17,22 +17,16 @@ import { useTenants } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 import { useOwnerPayouts } from "@/hooks/useOwnerPayouts";
 import { usePermissions } from "@/hooks/usePermissions";
+import {
+  JournalEntryDetailDialog,
+  type JournalEntryDetail,
+} from "./JournalEntryDetailDialog";
 
 type EntryType = "loyer" | "depense" | "reversement";
 
-interface JournalEntry {
-  id: string;
-  date: string;
-  type: EntryType;
-  account: string;
-  label: string;
+interface JournalEntry extends JournalEntryDetail {
   tenantId?: string | null;
-  tenantName?: string | null;
   propertyId?: string | null;
-  propertyTitle?: string | null;
-  debit: number; // sortie
-  credit: number; // entrée
-  reference?: string | null;
 }
 
 interface JournalComptableTabProps {

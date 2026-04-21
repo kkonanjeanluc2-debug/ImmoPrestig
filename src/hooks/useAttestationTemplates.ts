@@ -88,6 +88,8 @@ export const useCreateAttestationTemplate = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["attestation-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ventes-parcelles"] });
     },
   });
 };
@@ -116,6 +118,8 @@ export const useUpdateAttestationTemplate = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["attestation-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ventes-parcelles"] });
     },
   });
 };
@@ -132,6 +136,8 @@ export const useDeleteAttestationTemplate = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["attestation-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ventes-parcelles"] });
     },
   });
 };

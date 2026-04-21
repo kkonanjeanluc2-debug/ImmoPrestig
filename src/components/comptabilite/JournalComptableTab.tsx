@@ -81,6 +81,13 @@ export function JournalComptableTab({
   const [tenantFilter, setTenantFilter] = useState<string>("all");
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const openDetail = (e: JournalEntry) => {
+    setSelectedEntry(e);
+    setDetailOpen(true);
+  };
 
   const entries = useMemo<JournalEntry[]>(() => {
     const list: JournalEntry[] = [];
@@ -405,7 +412,11 @@ export function JournalComptableTab({
                   </tr>
                 ) : (
                   filteredEntries.map((e) => (
-                    <tr key={e.id} className="border-b border-border/50 hover:bg-muted/30">
+                    <tr
+                      key={e.id}
+                      onClick={() => openDetail(e)}
+                      className="border-b border-border/50 hover:bg-muted/40 cursor-pointer transition-colors"
+                    >
                       <td className="py-2 px-2 whitespace-nowrap text-foreground">
                         {formatDate(e.date)}
                       </td>
@@ -458,6 +469,12 @@ export function JournalComptableTab({
           </div>
         </CardContent>
       </Card>
+
+      <JournalEntryDetailDialog
+        entry={selectedEntry}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   );
 }

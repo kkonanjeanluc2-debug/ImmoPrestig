@@ -17,22 +17,16 @@ import { useTenants } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 import { useOwnerPayouts } from "@/hooks/useOwnerPayouts";
 import { usePermissions } from "@/hooks/usePermissions";
+import {
+  JournalEntryDetailDialog,
+  type JournalEntryDetail,
+} from "./JournalEntryDetailDialog";
 
 type EntryType = "loyer" | "depense" | "reversement";
 
-interface JournalEntry {
-  id: string;
-  date: string;
-  type: EntryType;
-  account: string;
-  label: string;
+interface JournalEntry extends JournalEntryDetail {
   tenantId?: string | null;
-  tenantName?: string | null;
   propertyId?: string | null;
-  propertyTitle?: string | null;
-  debit: number; // sortie
-  credit: number; // entrée
-  reference?: string | null;
 }
 
 interface JournalComptableTabProps {
@@ -87,6 +81,13 @@ export function JournalComptableTab({
   const [tenantFilter, setTenantFilter] = useState<string>("all");
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const openDetail = (e: JournalEntry) => {
+    setSelectedEntry(e);
+    setDetailOpen(true);
+  };
 
   const entries = useMemo<JournalEntry[]>(() => {
     const list: JournalEntry[] = [];
@@ -119,9 +120,12 @@ export function JournalComptableTab({
         tenantName: tenant?.name || null,
         propertyId: property?.id || null,
         propertyTitle: property?.title || null,
+        propertyAddress: property?.address || null,
+        unitNumber: p.tenant?.unit?.unit_number || tenant?.unit?.unit_number || null,
         debit: 0,
         credit: amount,
         reference: p.receipt_number || p.id.substring(0, 8),
+        source: { ...p, tenant },
       });
     });
 
@@ -138,9 +142,11 @@ export function JournalComptableTab({
         tenantName: null,
         propertyId: property?.id || null,
         propertyTitle: property?.title || null,
+        propertyAddress: property?.address || null,
         debit: Number(e.amount) || 0,
         credit: 0,
         reference: e.id.substring(0, 8),
+        source: e,
       });
     });
 
@@ -159,9 +165,11 @@ export function JournalComptableTab({
           tenantName: null,
           propertyId: null,
           propertyTitle: null,
+          ownerName: (po as any).owner?.name || null,
           debit: Number(po.amount) || 0,
           credit: 0,
           reference: po.id.substring(0, 8),
+          source: po,
         });
       });
 
@@ -404,7 +412,11 @@ export function JournalComptableTab({
                   </tr>
                 ) : (
                   filteredEntries.map((e) => (
-                    <tr key={e.id} className="border-b border-border/50 hover:bg-muted/30">
+                    <tr
+                      key={e.id}
+                      onClick={() => openDetail(e)}
+                      className="border-b border-border/50 hover:bg-muted/40 cursor-pointer transition-colors"
+                    >
                       <td className="py-2 px-2 whitespace-nowrap text-foreground">
                         {formatDate(e.date)}
                       </td>
@@ -457,6 +469,12 @@ export function JournalComptableTab({
           </div>
         </CardContent>
       </Card>
+
+      <JournalEntryDetailDialog
+        entry={selectedEntry}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   );
 }

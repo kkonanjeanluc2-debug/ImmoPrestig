@@ -248,7 +248,15 @@ export default function Payments() {
     return sum;
   }, 0);
 
-  const pendingFiltered = visiblePayments.filter(p => getEffectiveStatus(p) === 'pending');
+  // "En attente" = paiements dont l'échéance est atteinte (dueDate <= aujourd'hui)
+  // mais non encore payés. Les loyers virtuels futurs (mois prochain) ne sont
+  // pas comptés tant que leur échéance n'est pas arrivée.
+  const todayStr = `${thisYear}-${String(thisMonth + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const pendingFiltered = visiblePayments.filter(p => {
+    if (getEffectiveStatus(p) !== 'pending') return false;
+    const dueDateStr = typeof p.due_date === 'string' ? p.due_date.substring(0, 10) : '';
+    return dueDateStr && dueDateStr <= todayStr;
+  });
   const pendingAmount = pendingFiltered.reduce((sum, p) => {
     const paid = Number(p.paid_amount) || 0;
     return sum + (Number(p.amount) - paid);

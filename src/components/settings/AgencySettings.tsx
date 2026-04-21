@@ -85,73 +85,78 @@ export function AgencySettings() {
   const [showWaveWebhookSecret, setShowWaveWebhookSecret] = useState(false);
   const [onlineRentToggle, setOnlineRentToggle] = useState(false);
 
+  // Load encrypted secrets from Vault for the current agency (only owner/admin can read them)
+  const loadVaultSecrets = async (agencyId: string) => {
+    const fields = [
+      "kkiapay_secret",
+      "kkiapay_private_key",
+      "wave_api_key",
+      "wave_webhook_secret",
+      "geniuspay_secret_key",
+    ] as const;
+
+    const results = await Promise.all(
+      fields.map((field) =>
+        supabase.rpc("get_agency_payment_secret", { _agency_id: agencyId, _field: field })
+      )
+    );
+
+    const secrets: Record<string, string> = {};
+    fields.forEach((field, idx) => {
+      const { data, error } = results[idx];
+      // Silently ignore — non-admin members get a permission error and that's expected.
+      if (!error && data) secrets[field] = data as string;
+    });
+    return secrets;
+  };
+
+  const buildFormFromAgency = (agency: any, secrets: Record<string, string> = {}) => ({
+    account_type: agency.account_type,
+    name: agency.name,
+    email: agency.email,
+    phone: agency.phone || "",
+    address: agency.address || "",
+    city: agency.city || "",
+    country: agency.country || "Côte d'Ivoire",
+    siret: agency.siret || "",
+    reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
+    rent_due_day: ((agency as any).rent_due_day ?? 10).toString(),
+    sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
+    mobile_money_number: agency.mobile_money_number || "",
+    mobile_money_provider: agency.mobile_money_provider || "",
+    kkiapay_public_key: (agency as any).kkiapay_public_key || "",
+    kkiapay_private_key: secrets.kkiapay_private_key || "",
+    kkiapay_secret: secrets.kkiapay_secret || "",
+    kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
+    geniuspay_public_key: (agency as any).geniuspay_public_key || "",
+    geniuspay_secret_key: secrets.geniuspay_secret_key || "",
+    geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
+    wave_api_key: secrets.wave_api_key || "",
+    wave_webhook_secret: secrets.wave_webhook_secret || "",
+    wave_sandbox: (agency as any).wave_sandbox ?? true,
+    notification_email: (agency as any).notification_email || "",
+    notification_whatsapp: (agency as any).notification_whatsapp || "",
+  });
+
   // Initialize form when agency data loads
   useState(() => {
     if (agency) {
-      setFormData({
-        account_type: agency.account_type,
-        name: agency.name,
-        email: agency.email,
-        phone: agency.phone || "",
-        address: agency.address || "",
-        city: agency.city || "",
-        country: agency.country || "Côte d'Ivoire",
-        siret: agency.siret || "",
-        reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
-        rent_due_day: ((agency as any).rent_due_day ?? 10).toString(),
-        sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
-        mobile_money_number: agency.mobile_money_number || "",
-        mobile_money_provider: agency.mobile_money_provider || "",
-        kkiapay_public_key: (agency as any).kkiapay_public_key || "",
-        kkiapay_private_key: (agency as any).kkiapay_private_key || "",
-        kkiapay_secret: (agency as any).kkiapay_secret || "",
-        kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
-        geniuspay_public_key: (agency as any).geniuspay_public_key || "",
-        geniuspay_secret_key: (agency as any).geniuspay_secret_key || "",
-        geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
-        wave_api_key: (agency as any).wave_api_key || "",
-        wave_webhook_secret: (agency as any).wave_webhook_secret || "",
-        wave_sandbox: (agency as any).wave_sandbox ?? true,
-        notification_email: (agency as any).notification_email || "",
-        notification_whatsapp: (agency as any).notification_whatsapp || "",
+      loadVaultSecrets(agency.id).then((secrets) => {
+        setFormData(buildFormFromAgency(agency, secrets));
+        setLogoUrl(agency.logo_url);
+        setOnlineRentToggle(!!(agency as any).online_rent_enabled);
       });
-      setLogoUrl(agency.logo_url);
-      setOnlineRentToggle(!!(agency as any).online_rent_enabled);
     }
   });
 
   // Update form when agency data changes
   if (agency && !hasChanges) {
     if (formData.name !== agency.name || formData.email !== agency.email) {
-      setFormData({
-        account_type: agency.account_type,
-        name: agency.name,
-        email: agency.email,
-        phone: agency.phone || "",
-        address: agency.address || "",
-        city: agency.city || "",
-        country: agency.country || "Côte d'Ivoire",
-        siret: agency.siret || "",
-        reservation_deposit_percentage: (agency.reservation_deposit_percentage ?? 30).toString(),
-        rent_due_day: ((agency as any).rent_due_day ?? 10).toString(),
-        sale_commission_percentage: ((agency as any).sale_commission_percentage ?? 5).toString(),
-        mobile_money_number: agency.mobile_money_number || "",
-        mobile_money_provider: agency.mobile_money_provider || "",
-        kkiapay_public_key: (agency as any).kkiapay_public_key || "",
-        kkiapay_private_key: (agency as any).kkiapay_private_key || "",
-        kkiapay_secret: (agency as any).kkiapay_secret || "",
-        kkiapay_sandbox: (agency as any).kkiapay_sandbox || false,
-        geniuspay_public_key: (agency as any).geniuspay_public_key || "",
-        geniuspay_secret_key: (agency as any).geniuspay_secret_key || "",
-        geniuspay_sandbox: (agency as any).geniuspay_sandbox ?? true,
-        wave_api_key: (agency as any).wave_api_key || "",
-        wave_webhook_secret: (agency as any).wave_webhook_secret || "",
-        wave_sandbox: (agency as any).wave_sandbox ?? true,
-        notification_email: (agency as any).notification_email || "",
-        notification_whatsapp: (agency as any).notification_whatsapp || "",
+      loadVaultSecrets(agency.id).then((secrets) => {
+        setFormData(buildFormFromAgency(agency, secrets));
+        setLogoUrl(agency.logo_url);
+        setOnlineRentToggle(!!(agency as any).online_rent_enabled);
       });
-      setLogoUrl(agency.logo_url);
-      setOnlineRentToggle(!!(agency as any).online_rent_enabled);
     }
   }
 

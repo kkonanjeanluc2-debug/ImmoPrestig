@@ -40,15 +40,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get agency GeniusPay config - check direct ownership first, then membership
-    let agency: any = null;
+    // Resolve the agency-owner user_id (so we can fetch encrypted credentials from Vault)
+    let ownerUserId: string | null = null;
+    let agency: { geniuspay_public_key: string | null; geniuspay_sandbox: boolean | null } | null = null;
+
     const { data: ownedAgency } = await adminClient
       .from("agencies")
-      .select("geniuspay_public_key, geniuspay_secret_key, geniuspay_sandbox")
+      .select("user_id, geniuspay_public_key, geniuspay_sandbox")
       .eq("user_id", payment.user_id)
       .maybeSingle();
 
     if (ownedAgency) {
+      ownerUserId = ownedAgency.user_id;
       agency = ownedAgency;
     } else {
       // Payment created by team member - find agency via membership
@@ -62,15 +65,28 @@ Deno.serve(async (req) => {
       if (membership) {
         const { data: memberAgency } = await adminClient
           .from("agencies")
-          .select("geniuspay_public_key, geniuspay_secret_key, geniuspay_sandbox")
+          .select("user_id, geniuspay_public_key, geniuspay_sandbox")
           .eq("id", membership.agency_id)
           .maybeSingle();
-        agency = memberAgency;
+        if (memberAgency) {
+          ownerUserId = memberAgency.user_id;
+          agency = memberAgency;
+        }
       }
     }
 
+    // Fetch the encrypted secret key from Vault via security-definer RPC
+    let agencySecretKey: string | null = null;
+    if (ownerUserId) {
+      const { data: vaultSecret } = await adminClient.rpc(
+        "get_agency_payment_secret_by_owner",
+        { _owner_user_id: ownerUserId, _field: "geniuspay_secret_key" },
+      );
+      agencySecretKey = (vaultSecret as string | null) || null;
+    }
+
     // Use agency keys if configured, otherwise fall back to platform keys
-    const secretKey = agency?.geniuspay_secret_key || Deno.env.get("GENIUSPAY_SECRET_KEY");
+    const secretKey = agencySecretKey || Deno.env.get("GENIUSPAY_SECRET_KEY");
     const publicKey = agency?.geniuspay_public_key || Deno.env.get("GENIUSPAY_PUBLIC_KEY");
     const isSandbox = agency?.geniuspay_sandbox ?? false;
 

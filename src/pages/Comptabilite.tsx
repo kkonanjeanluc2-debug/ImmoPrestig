@@ -28,9 +28,10 @@ import { EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
 import { useAgency } from "@/hooks/useAgency";
 import { usePermissions } from "@/hooks/usePermissions";
 import { OwnerPayoutsSection } from "@/components/comptabilite/OwnerPayoutsSection";
+import { JournalComptableTab } from "@/components/comptabilite/JournalComptableTab";
 import { useOwnerPayouts } from "@/hooks/useOwnerPayouts";
 import { usePaidApportCommissions } from "@/hooks/usePaidApportCommissions";
-import { ArrowDownToLine, Users } from "lucide-react";
+import { ArrowDownToLine, Users, BookText } from "lucide-react";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -254,7 +255,21 @@ const Comptabilite = () => {
                 <span className="sm:hidden">Rev.</span>
               </TabsTrigger>
             )}
+            <TabsTrigger value="journal" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
+              <BookText className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="hidden sm:inline">Journal</span>
+              <span className="sm:hidden">Jrn.</span>
+            </TabsTrigger>
           </TabsList>
+
+          {/* === JOURNAL TAB === */}
+          <TabsContent value="journal" className="space-y-6">
+            <JournalComptableTab
+              periodFrom={period.from}
+              periodTo={period.to}
+              periodLabel={periodLabel.subtitle}
+            />
+          </TabsContent>
 
           {/* === OVERVIEW TAB === */}
           <TabsContent value="overview" className="space-y-6">

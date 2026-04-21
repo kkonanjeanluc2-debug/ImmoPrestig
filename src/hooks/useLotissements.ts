@@ -147,6 +147,8 @@ export const useUpdateLotissement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lotissements"] });
+      queryClient.invalidateQueries({ queryKey: ["ventes-parcelles"] });
+      queryClient.invalidateQueries({ queryKey: ["parcelles"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     },
   });

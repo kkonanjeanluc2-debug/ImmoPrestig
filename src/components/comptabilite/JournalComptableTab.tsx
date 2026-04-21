@@ -10,7 +10,17 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Download, ArrowUpRight, ArrowDownRight, Lock } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { Search, Download, ArrowUpRight, ArrowDownRight, Lock, Check, ChevronsUpDown } from "lucide-react";
 import { usePayments } from "@/hooks/usePayments";
 import { useExpenses, EXPENSE_CATEGORIES } from "@/hooks/useExpenses";
 import { useTenants } from "@/hooks/useTenants";

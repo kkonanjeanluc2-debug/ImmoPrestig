@@ -93,6 +93,25 @@ export function JournalComptableTab({
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [tenantPopoverOpen, setTenantPopoverOpen] = useState(false);
+  const [propertyPopoverOpen, setPropertyPopoverOpen] = useState(false);
+
+  const sortedTenants = useMemo(
+    () => tenants.slice().sort((a, b) => a.name.localeCompare(b.name)),
+    [tenants],
+  );
+  const sortedProperties = useMemo(
+    () => properties.slice().sort((a, b) => a.title.localeCompare(b.title)),
+    [properties],
+  );
+  const selectedTenantName =
+    tenantFilter === "all"
+      ? "Tous locataires"
+      : sortedTenants.find((t) => t.id === tenantFilter)?.name || "Tous locataires";
+  const selectedPropertyName =
+    propertyFilter === "all"
+      ? "Tous biens"
+      : sortedProperties.find((p) => p.id === propertyFilter)?.title || "Tous biens";
 
   const openDetail = (e: JournalEntry) => {
     setSelectedEntry(e);

@@ -45,10 +45,10 @@ Deno.serve(async (req) => {
 
     const userId = userData.user.id;
 
-    // Get agency for this user - include Wave keys
+    // Get agency for this user (no sensitive credentials in this table anymore)
     const { data: agency, error: agencyError } = await supabase
       .from("agencies")
-      .select("*, wave_api_key, wave_sandbox")
+      .select("*, wave_sandbox")
       .eq("user_id", userId)
       .single();
 

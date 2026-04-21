@@ -313,38 +313,100 @@ export function JournalComptableTab({
                 <SelectItem value="reversement">Reversements</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={tenantFilter} onValueChange={setTenantFilter}>
-              <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Locataire" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous locataires</SelectItem>
-                {tenants
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            <Select value={propertyFilter} onValueChange={setPropertyFilter}>
-              <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Bien" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous biens</SelectItem>
-                {properties
-                  .slice()
-                  .sort((a, b) => a.title.localeCompare(b.title))
-                  .map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.title}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <Popover open={tenantPopoverOpen} onOpenChange={setTenantPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="h-9 text-xs justify-between font-normal"
+                >
+                  <span className="truncate">{selectedTenantName}</span>
+                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-50 shrink-0 ml-2" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                <Command>
+                  <CommandInput placeholder="Rechercher un locataire..." className="h-9 text-xs" />
+                  <CommandList>
+                    <CommandEmpty>Aucun locataire trouvé.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="Tous locataires"
+                        onSelect={() => {
+                          setTenantFilter("all");
+                          setTenantPopoverOpen(false);
+                        }}
+                        className="text-xs"
+                      >
+                        <Check className={cn("mr-2 h-3.5 w-3.5", tenantFilter === "all" ? "opacity-100" : "opacity-0")} />
+                        Tous locataires
+                      </CommandItem>
+                      {sortedTenants.map((t) => (
+                        <CommandItem
+                          key={t.id}
+                          value={t.name}
+                          onSelect={() => {
+                            setTenantFilter(t.id);
+                            setTenantPopoverOpen(false);
+                          }}
+                          className="text-xs"
+                        >
+                          <Check className={cn("mr-2 h-3.5 w-3.5", tenantFilter === t.id ? "opacity-100" : "opacity-0")} />
+                          {t.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <Popover open={propertyPopoverOpen} onOpenChange={setPropertyPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="h-9 text-xs justify-between font-normal"
+                >
+                  <span className="truncate">{selectedPropertyName}</span>
+                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-50 shrink-0 ml-2" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                <Command>
+                  <CommandInput placeholder="Rechercher un bien..." className="h-9 text-xs" />
+                  <CommandList>
+                    <CommandEmpty>Aucun bien trouvé.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="Tous biens"
+                        onSelect={() => {
+                          setPropertyFilter("all");
+                          setPropertyPopoverOpen(false);
+                        }}
+                        className="text-xs"
+                      >
+                        <Check className={cn("mr-2 h-3.5 w-3.5", propertyFilter === "all" ? "opacity-100" : "opacity-0")} />
+                        Tous biens
+                      </CommandItem>
+                      {sortedProperties.map((p) => (
+                        <CommandItem
+                          key={p.id}
+                          value={p.title}
+                          onSelect={() => {
+                            setPropertyFilter(p.id);
+                            setPropertyPopoverOpen(false);
+                          }}
+                          className="text-xs"
+                        >
+                          <Check className={cn("mr-2 h-3.5 w-3.5", propertyFilter === p.id ? "opacity-100" : "opacity-0")} />
+                          {p.title}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex items-center justify-between gap-2">
             <p className="text-[11px] text-muted-foreground">

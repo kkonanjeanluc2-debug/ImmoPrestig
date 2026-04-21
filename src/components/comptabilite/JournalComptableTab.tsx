@@ -113,9 +113,12 @@ export function JournalComptableTab({
         tenantName: tenant?.name || null,
         propertyId: property?.id || null,
         propertyTitle: property?.title || null,
+        propertyAddress: property?.address || null,
+        unitNumber: p.tenant?.unit?.unit_number || tenant?.unit?.unit_number || null,
         debit: 0,
         credit: amount,
         reference: p.receipt_number || p.id.substring(0, 8),
+        source: { ...p, tenant },
       });
     });
 
@@ -132,9 +135,11 @@ export function JournalComptableTab({
         tenantName: null,
         propertyId: property?.id || null,
         propertyTitle: property?.title || null,
+        propertyAddress: property?.address || null,
         debit: Number(e.amount) || 0,
         credit: 0,
         reference: e.id.substring(0, 8),
+        source: e,
       });
     });
 
@@ -153,9 +158,11 @@ export function JournalComptableTab({
           tenantName: null,
           propertyId: null,
           propertyTitle: null,
+          ownerName: (po as any).owner?.name || null,
           debit: Number(po.amount) || 0,
           credit: 0,
           reference: po.id.substring(0, 8),
+          source: po,
         });
       });
 

@@ -1783,13 +1783,13 @@ const _generateAttestationVillageoiseInternal = async (
       if (leftLogoUrl) {
         try {
           const logoBase64 = await loadImageAsBase64(leftLogoUrl);
-          if (logoBase64) doc.addImage(logoBase64, 'PNG', leftLogoX, logoY, logoSize, logoSize);
+          if (logoBase64) await drawLogoFitted(doc, logoBase64, leftLogoX, logoY, logoSize);
         } catch {}
       }
       if (rightLogoUrl) {
         try {
           const logoBase64 = await loadImageAsBase64(rightLogoUrl);
-          if (logoBase64) doc.addImage(logoBase64, 'PNG', rightLogoX, logoY, logoSize, logoSize);
+          if (logoBase64) await drawLogoFitted(doc, logoBase64, rightLogoX, logoY, logoSize);
         } catch {}
       }
 

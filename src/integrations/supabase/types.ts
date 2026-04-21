@@ -5823,6 +5823,13 @@ export type Database = {
         Args: { _agency_id: string; _user_id: string }
         Returns: boolean
       }
+      is_role_in_agency: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_team_member_of_owned_agency: {
         Args: { _owner_user_id: string; _target_user_id: string }

@@ -45,10 +45,10 @@ Deno.serve(async (req) => {
 
     const userId = userData.user.id;
 
-    // Get agency for this user - include Wave keys
+    // Get agency for this user (no sensitive credentials in this table anymore)
     const { data: agency, error: agencyError } = await supabase
       .from("agencies")
-      .select("*, wave_api_key, wave_sandbox")
+      .select("*, wave_sandbox")
       .eq("user_id", userId)
       .single();
 
@@ -122,8 +122,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch encrypted Wave API key from Vault via security-definer RPC
+    const { data: vaultWaveKey } = await supabase.rpc(
+      "get_agency_payment_secret_by_owner",
+      { _owner_user_id: userId, _field: "wave_api_key" },
+    );
+
     // Use agency-level Wave API key, fallback to global secret
-    const waveApiKey = agency.wave_api_key || Deno.env.get("WAVE_API_KEY");
+    const waveApiKey = (vaultWaveKey as string | null) || Deno.env.get("WAVE_API_KEY");
     if (!waveApiKey) {
       return new Response(
         JSON.stringify({ error: "Configuration Wave CI manquante. Contactez l'administrateur." }),

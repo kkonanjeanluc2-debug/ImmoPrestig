@@ -215,23 +215,24 @@ export function TenantPayRentDialog({
     let currentPaymentId = paymentId;
     
     try {
-      // If this is a virtual payment, create a real one first
+      // If this is a virtual payment, create or resolve the real payment securely on the backend
       if (isVirtual && tenantId) {
-        const { data: created, error: createError } = await supabase
-          .from("payments")
-          .insert({
+        const { data: created, error: createError } = await supabase.functions.invoke("tenant-create-rent-payment", {
+          body: {
             tenant_id: tenantId,
-            amount: amount,
             due_date: dueDate,
-            status: "pending",
-            user_id: agencyUserId,
             payment_months: paymentMonths || null,
-          })
-          .select()
-          .single();
-        
-        if (createError) throw createError;
-        currentPaymentId = created.id;
+          },
+        });
+
+        if (createError) {
+          throw new Error(created?.error || createError.message || "Impossible de créer le paiement");
+        }
+        if (!created?.payment_id) {
+          throw new Error("Réponse invalide lors de la création du paiement");
+        }
+
+        currentPaymentId = created.payment_id;
         setPaymentId(currentPaymentId);
       }
 

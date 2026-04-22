@@ -1,13 +1,14 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders, validateAuth, unauthorizedResponse } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const auth = await validateAuth(req);
+  if (!auth.authenticated || !auth.userId) {
+    return unauthorizedResponse(auth.error);
   }
 
   try {
@@ -25,11 +26,27 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
+    const { data: tenant, error: tenantError } = await adminClient
+      .from("tenants")
+      .select("id")
+      .eq("portal_user_id", auth.userId)
+      .eq("has_portal_access", true)
+      .is("deleted_at", null)
+      .single();
+
+    if (tenantError || !tenant) {
+      return new Response(
+        JSON.stringify({ error: "Accès portail non autorisé" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get payment details with tenant and property info via contract
     const { data: payment, error: paymentError } = await adminClient
       .from("payments")
       .select("*, tenants(name, email, phone), contracts(properties(title))")
       .eq("id", payment_id)
+      .eq("tenant_id", tenant.id)
       .single();
 
     if (paymentError || !payment) {
@@ -101,7 +118,23 @@ Deno.serve(async (req) => {
       ? "https://sandbox.pay.genius.ci/api/v1/merchant/payments"
       : "https://pay.genius.ci/api/v1/merchant/payments";
 
-    const payAmount = amount || (payment.amount - (payment.paid_amount || 0));
+    const remainingAmount = Number(payment.amount) - Number(payment.paid_amount || 0);
+    const requestedAmount = Number(amount || 0);
+    const payAmount = requestedAmount > 0 ? requestedAmount : remainingAmount;
+
+    if (payAmount <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Montant invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (payAmount > remainingAmount) {
+      return new Response(
+        JSON.stringify({ error: "Le montant dépasse le reste à payer" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // GeniusPay requires a minimum amount of 200 FCFA
     if (payAmount < 200) {

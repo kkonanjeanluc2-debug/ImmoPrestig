@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    const tenant = payment.tenants as any;
+    const tenantProfile = payment.tenants as any;
     const contract = payment.contracts as any;
     const property = contract?.properties as any;
 
@@ -162,9 +162,9 @@ Deno.serve(async (req) => {
       amount: Math.round(payAmount),
       description: `Loyer ${dueMonth} - ${property?.title || ""}`,
       customer: {
-        email: tenant?.email || undefined,
-        name: tenant?.name || undefined,
-        phone: customer_phone || tenant?.phone || "",
+        email: tenantProfile?.email || undefined,
+        name: tenantProfile?.name || undefined,
+        phone: customer_phone || tenantProfile?.phone || "",
       },
       metadata: {
         payment_id: payment_id,

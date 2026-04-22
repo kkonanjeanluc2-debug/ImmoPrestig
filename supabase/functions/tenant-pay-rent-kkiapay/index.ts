@@ -44,10 +44,17 @@ Deno.serve(async (req) => {
     const payload: PayRentPayload = await req.json();
     const { payment_id, amount, customer_name, customer_phone, customer_email } = payload;
 
+    if (!amount || Number(amount) <= 0) {
+      return new Response(JSON.stringify({ error: "Montant invalide" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Verify the payment belongs to this tenant
     const { data: payment, error: paymentError } = await adminClient
       .from("payments")
-      .select("id, status, user_id, tenant_id")
+      .select("id, status, user_id, tenant_id, amount, paid_amount")
       .eq("id", payment_id)
       .eq("tenant_id", tenant.id)
       .single();
@@ -61,6 +68,14 @@ Deno.serve(async (req) => {
 
     if (payment.status === "paid") {
       return new Response(JSON.stringify({ error: "Ce paiement a déjà été effectué" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const remainingAmount = Number(payment.amount) - Number(payment.paid_amount || 0);
+    if (Number(amount) > remainingAmount) {
+      return new Response(JSON.stringify({ error: "Le montant dépasse le reste à payer" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -93,7 +108,7 @@ Deno.serve(async (req) => {
         success: true,
         payment_id: payment_id,
         public_key: KKIAPAY_PUBLIC_KEY,
-        amount: amount,
+        amount: Number(amount),
         name: customer_name || tenant.name,
         phone: customer_phone,
         email: customer_email || "",

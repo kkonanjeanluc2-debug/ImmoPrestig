@@ -165,7 +165,6 @@ export function GuidedTour() {
       run={run}
       steps={steps}
       continuous
-      hideCloseButton
       scrollToFirstStep
       showProgress={false}
       showSkipButton={false}

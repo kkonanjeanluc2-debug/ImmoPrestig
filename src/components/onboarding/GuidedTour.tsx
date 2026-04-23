@@ -70,7 +70,6 @@ export function GuidedTour() {
   const [lastAction, setLastAction] = useState<"later" | null>(null);
 
   const definition = useMemo(() => getTourDefinition(pathname), [pathname]);
-  const storageKey = useMemo(() => `${definition.key}:v${definition.version}`, [definition.key, definition.version]);
 
   const steps = useMemo(
     () => {
@@ -89,7 +88,7 @@ export function GuidedTour() {
         .upsert(
           {
             user_id: user.id,
-            tour_key: storageKey,
+            tour_key: definition.key,
             status: value.status,
             postponed_until: value.postponedUntil ?? null,
             tour_version: value.tourVersion,
@@ -101,7 +100,7 @@ export function GuidedTour() {
         console.error("Unable to persist guided tour state", error);
       }
     },
-    [storageKey, user?.id]
+    [definition.key, user?.id]
   );
 
   const handleLater = useCallback(() => {
@@ -137,7 +136,8 @@ export function GuidedTour() {
         .from("guided_tour_states")
         .select("status, updated_at, postponed_until, tour_version")
         .eq("user_id", user.id)
-        .eq("tour_key", storageKey)
+        .eq("tour_key", definition.key)
+        .eq("tour_version", definition.version)
         .maybeSingle();
 
       if (cancelled) return;
@@ -175,7 +175,7 @@ export function GuidedTour() {
     return () => {
       cancelled = true;
     };
-  }, [definition.version, pathname, steps.length, stepsReady, storageKey, user?.id]);
+  }, [definition.key, definition.version, pathname, steps.length, stepsReady, user?.id]);
 
   const handleCallback = useCallback(
     (data: EventData) => {

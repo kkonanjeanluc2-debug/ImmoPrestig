@@ -165,24 +165,22 @@ export function GuidedTour() {
       run={run}
       steps={steps}
       continuous
-      disableCloseOnEsc={false}
-      disableOverlayClose
       hideCloseButton
       scrollToFirstStep
       showProgress={false}
       showSkipButton={false}
-      callback={handleCallback}
+      onEvent={handleCallback}
       options={{
         arrowColor: 'hsl(var(--popover))',
         backgroundColor: 'hsl(var(--popover))',
         overlayColor: 'hsl(var(--foreground) / 0.45)',
+        overlayClickAction: false,
         primaryColor: 'hsl(var(--primary))',
         spotlightRadius: 12,
         textColor: 'hsl(var(--foreground))',
         zIndex: 1000,
       }}
       tooltipComponent={(props) => <TourTooltip {...props} onLater={handleLater} />}
-      styles={{}}
     />
   );
 }

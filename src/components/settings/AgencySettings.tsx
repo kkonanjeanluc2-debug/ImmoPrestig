@@ -223,6 +223,46 @@ export function AgencySettings() {
     }
   };
 
+  const handleLoginImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner une image valide");
+      return;
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error("L'image de connexion ne doit pas dépasser 4 Mo");
+      return;
+    }
+
+    setIsUploadingLoginImage(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/login-background.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("agency-assets")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("agency-assets")
+        .getPublicUrl(filePath);
+
+      setLoginImageUrl(urlData.publicUrl);
+      setHasChanges(true);
+      toast.success("Image de connexion uploadée avec succès");
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'upload de l'image de connexion");
+    } finally {
+      setIsUploadingLoginImage(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user?.id) return;
 
@@ -235,6 +275,7 @@ export function AgencySettings() {
       const baseFields = {
         account_type: formData.account_type,
         name: formData.name,
+        slug: formData.slug || createDefaultAgencySlug(formData.name, user.id),
         email: formData.email,
         phone: formData.phone || null,
         address: formData.address || null,
@@ -242,6 +283,7 @@ export function AgencySettings() {
         country: formData.country,
         siret: formData.siret || null,
         logo_url: logoUrl,
+        login_image_url: loginImageUrl,
         reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
         rent_due_day: parseInt(formData.rent_due_day) || 10,
         sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,

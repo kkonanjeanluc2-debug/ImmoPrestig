@@ -2173,6 +2173,7 @@ export type Database = {
           postponed_until: string | null
           status: string
           tour_key: string
+          tour_version: number
           updated_at: string
           user_id: string
         }
@@ -2182,6 +2183,7 @@ export type Database = {
           postponed_until?: string | null
           status: string
           tour_key: string
+          tour_version?: number
           updated_at?: string
           user_id: string
         }
@@ -2191,6 +2193,7 @@ export type Database = {
           postponed_until?: string | null
           status?: string
           tour_key?: string
+          tour_version?: number
           updated_at?: string
           user_id?: string
         }

@@ -166,9 +166,9 @@ export function GuidedTour() {
       steps={steps}
       continuous
       scrollToFirstStep
-      showProgress={false}
-      showSkipButton={false}
-      onEvent={handleCallback}
+      hideProgress
+      hideCloseButton
+      callback={handleCallback}
       options={{
         arrowColor: 'hsl(var(--popover))',
         backgroundColor: 'hsl(var(--popover))',

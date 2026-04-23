@@ -31,6 +31,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { buildAgencyLoginUrl, createAgencySlug, createDefaultAgencySlug } from "@/lib/agencyBranding";
 
 const HIDDEN_PLANS_FOR_SALE_FIELDS = ["Starter", "Prestige Max"];
 
@@ -40,6 +41,7 @@ export function AgencySettings() {
   const { planName } = useFeatureAccess();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const loginImageInputRef = useRef<HTMLInputElement>(null);
   const { data: onlineRentConfigSetting } = usePlatformSetting("online_rent_config_enabled");
   const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
   const isOnlineRentConfigEnabled = onlineRentConfigSetting?.value !== "false";
@@ -73,10 +75,13 @@ export function AgencySettings() {
     wave_sandbox: true,
     notification_email: "",
     notification_whatsapp: "",
+    slug: "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [loginImageUrl, setLoginImageUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingLoginImage, setIsUploadingLoginImage] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
@@ -136,6 +141,7 @@ export function AgencySettings() {
     wave_sandbox: (agency as any).wave_sandbox ?? true,
     notification_email: (agency as any).notification_email || "",
     notification_whatsapp: (agency as any).notification_whatsapp || "",
+    slug: agency.slug || "",
   });
 
   // Initialize form when agency data loads
@@ -144,6 +150,7 @@ export function AgencySettings() {
       loadVaultSecrets(agency.id).then((secrets) => {
         setFormData(buildFormFromAgency(agency, secrets));
         setLogoUrl(agency.logo_url);
+        setLoginImageUrl((agency as any).login_image_url || null);
         setOnlineRentToggle(!!(agency as any).online_rent_enabled);
       });
     }
@@ -155,6 +162,7 @@ export function AgencySettings() {
       loadVaultSecrets(agency.id).then((secrets) => {
         setFormData(buildFormFromAgency(agency, secrets));
         setLogoUrl(agency.logo_url);
+        setLoginImageUrl((agency as any).login_image_url || null);
         setOnlineRentToggle(!!(agency as any).online_rent_enabled);
       });
     }
@@ -163,6 +171,10 @@ export function AgencySettings() {
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
+  };
+
+  const handleSlugChange = (value: string) => {
+    handleChange("slug", createAgencySlug(value));
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

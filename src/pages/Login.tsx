@@ -34,7 +34,7 @@ const Login = () => {
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
-  const [agencyBranding, setAgencyBranding] = useState<{ agency_name: string; logo_url: string | null; login_image_url: string | null; slug: string; } | null>(null);
+  const [agencyBranding, setAgencyBranding] = useState<{ agency_name: string; logo_url: string | null; login_image_url: string | null; slug: string; is_default?: boolean; } | null>(null);
   const { signIn } = useAuth();
   const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
   const navigate = useNavigate();
@@ -76,6 +76,7 @@ const Login = () => {
 
   const displayLogo = agencyBranding?.logo_url || platformLogo;
   const displayAppName = agencyBranding?.agency_name || platformAppName;
+  const isDefaultBranding = agencyBranding?.is_default ?? false;
   const backgroundStyle = agencyBranding?.login_image_url
     ? {
         backgroundImage: `linear-gradient(hsl(var(--background) / 0.76), hsl(var(--background) / 0.88)), url(${agencyBranding.login_image_url})`,
@@ -180,7 +181,7 @@ const Login = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
           <CardDescription>
-            Connectez-vous pour accéder à votre espace de gestion immobilière{agencyBranding ? ` — ${agencyBranding.agency_name}` : ""}
+            Connectez-vous pour accéder à votre espace de gestion immobilière{agencyBranding && !isDefaultBranding ? ` — ${agencyBranding.agency_name}` : ""}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit} autoComplete="off">

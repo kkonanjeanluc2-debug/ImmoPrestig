@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { getTourDefinition } from "@/components/onboarding/tourConfig";
+import { supabase } from "@/integrations/supabase/client";
 
 type TourState = {
   status: "completed" | "skipped" | "postponed";
@@ -13,23 +14,6 @@ type TourState = {
 };
 
 const POSTPONE_DURATION_MS = 24 * 60 * 60 * 1000;
-
-function getStorageKey(userId: string, tourKey: string) {
-  return `guided-tour:${userId}:${tourKey}`;
-}
-
-function readTourState(userId: string, tourKey: string): TourState | null {
-  try {
-    const raw = localStorage.getItem(getStorageKey(userId, tourKey));
-    return raw ? (JSON.parse(raw) as TourState) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeTourState(userId: string, tourKey: string, value: TourState) {
-  localStorage.setItem(getStorageKey(userId, tourKey), JSON.stringify(value));
-}
 
 function TourTooltip(props: TooltipRenderProps & { onLater: () => void }) {
   const { step, index, size, backProps, primaryProps, tooltipProps, skipProps, isLastStep, onLater } = props;
@@ -81,6 +65,7 @@ export function GuidedTour() {
   const { user } = useAuth();
   const [run, setRun] = useState(false);
   const [stepsReady, setStepsReady] = useState(false);
+  const [stateLoaded, setStateLoaded] = useState(false);
   const [lastAction, setLastAction] = useState<"later" | null>(null);
 
   const definition = useMemo(() => getTourDefinition(pathname), [pathname]);
@@ -94,16 +79,31 @@ export function GuidedTour() {
   );
 
   const persistState = useCallback(
-    (value: TourState) => {
+    async (value: TourState) => {
       if (!user?.id) return;
-      writeTourState(user.id, definition.key, value);
+
+      const { error } = await (supabase as any)
+        .from("guided_tour_states")
+        .upsert(
+          {
+            user_id: user.id,
+            tour_key: definition.key,
+            status: value.status,
+            postponed_until: value.postponedUntil ?? null,
+          },
+          { onConflict: "user_id,tour_key" }
+        );
+
+      if (error) {
+        console.error("Unable to persist guided tour state", error);
+      }
     },
     [definition.key, user?.id]
   );
 
   const handleLater = useCallback(() => {
     setLastAction("later");
-    persistState({
+    void persistState({
       status: "postponed",
       updatedAt: new Date().toISOString(),
       postponedUntil: new Date(Date.now() + POSTPONE_DURATION_MS).toISOString(),
@@ -120,16 +120,53 @@ export function GuidedTour() {
   useEffect(() => {
     if (!user?.id || pathname === "/dashboard" || !stepsReady || steps.length === 0) {
       setRun(false);
+      setStateLoaded(false);
       return;
     }
 
-    const state = readTourState(user.id, definition.key);
-    const now = Date.now();
-    const postponedUntil = state?.postponedUntil ? new Date(state.postponedUntil).getTime() : 0;
-    const shouldRun = !state || (state.status === "postponed" && postponedUntil <= now);
+    let cancelled = false;
 
-    setRun(shouldRun);
-    setLastAction(null);
+    const loadState = async () => {
+      setStateLoaded(false);
+
+      const { data, error } = await (supabase as any)
+        .from("guided_tour_states")
+        .select("status, updated_at, postponed_until")
+        .eq("user_id", user.id)
+        .eq("tour_key", definition.key)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Unable to load guided tour state", error);
+        setRun(false);
+        setStateLoaded(true);
+        return;
+      }
+
+      const state = data
+        ? {
+            status: data.status as TourState["status"],
+            updatedAt: data.updated_at as string,
+            postponedUntil: (data.postponed_until as string | null) ?? undefined,
+          }
+        : null;
+
+      const now = Date.now();
+      const postponedUntil = state?.postponedUntil ? new Date(state.postponedUntil).getTime() : 0;
+      const shouldRun = !state || (state.status === "postponed" && postponedUntil <= now);
+
+      setRun(shouldRun);
+      setLastAction(null);
+      setStateLoaded(true);
+    };
+
+    void loadState();
+
+    return () => {
+      cancelled = true;
+    };
   }, [definition.key, pathname, steps.length, stepsReady, user?.id]);
 
   const handleCallback = useCallback(
@@ -138,13 +175,13 @@ export function GuidedTour() {
       if (lastAction === "later") return;
 
       if (status === STATUS.FINISHED) {
-        persistState({ status: "completed", updatedAt: new Date().toISOString() });
+        void persistState({ status: "completed", updatedAt: new Date().toISOString() });
         setRun(false);
         return;
       }
 
       if (status === STATUS.SKIPPED || action === ACTIONS.SKIP) {
-        persistState({ status: "skipped", updatedAt: new Date().toISOString() });
+        void persistState({ status: "skipped", updatedAt: new Date().toISOString() });
         setRun(false);
         return;
       }
@@ -156,7 +193,7 @@ export function GuidedTour() {
     [lastAction, persistState]
   );
 
-  if (!user?.id || pathname === "/dashboard" || steps.length === 0) {
+  if (!user?.id || pathname === "/dashboard" || steps.length === 0 || !stateLoaded) {
     return null;
   }
 

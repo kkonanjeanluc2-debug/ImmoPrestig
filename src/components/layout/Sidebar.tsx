@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { getDedicatedInstallPath, getDedicatedLoginPath } from "@/lib/dedicatedLogin";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCurrentUserRole, ROLE_LABELS, type AppRole } from "@/hooks/useUserRoles";
@@ -50,7 +51,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePrefetchRoute } from "@/hooks/usePrefetchRoutes";
-import { getDedicatedLoginPath } from "@/lib/dedicatedLogin";
 import {
   Collapsible,
   CollapsibleContent,
@@ -168,7 +168,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
 
   const handleInstallClick = async () => {
     if (isIOS) {
-      navigate("/install");
+      navigate(getDedicatedInstallPath());
     } else {
       await promptInstall();
     }

@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
         code: isAllowed ? "allowed" : "not_agency_member",
         message: isAllowed
           ? undefined
-          : "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
+          : "Ces identifiants ne sont pas liés à cette agence.",
       }),
       {
         status: 200,

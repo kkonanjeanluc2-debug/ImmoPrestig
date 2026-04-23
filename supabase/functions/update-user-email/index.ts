@@ -52,38 +52,56 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify caller is admin of the same agency as the target user
-    const { data: callerMembership } = await supabaseAdmin
+    // Get all agencies the caller can manage
+    const { data: callerMemberships, error: callerMembershipsError } = await supabaseAdmin
       .from("agency_members")
       .select("agency_id, role")
       .eq("user_id", caller.id)
-      .eq("status", "active")
-      .maybeSingle();
+      .eq("status", "active");
 
-    // Also check if caller is agency owner
-    const { data: callerAgency } = await supabaseAdmin
+    if (callerMembershipsError) {
+      throw callerMembershipsError;
+    }
+
+    const { data: callerOwnedAgency, error: callerOwnedAgencyError } = await supabaseAdmin
       .from("agencies")
       .select("id")
       .eq("user_id", caller.id)
       .maybeSingle();
 
-    const callerAgencyId = callerMembership?.agency_id || callerAgency?.id;
-    const isAdmin = callerMembership?.role === "admin" || !!callerAgency;
+    if (callerOwnedAgencyError) {
+      throw callerOwnedAgencyError;
+    }
 
-    if (!isAdmin || !callerAgencyId) {
+    const adminAgencyIds = (callerMemberships ?? [])
+      .filter((membership) => membership.role === "admin")
+      .map((membership) => membership.agency_id);
+
+    const managedAgencyIds = Array.from(
+      new Set([
+        ...(callerOwnedAgency?.id ? [callerOwnedAgency.id] : []),
+        ...adminAgencyIds,
+      ])
+    );
+
+    if (managedAgencyIds.length === 0) {
       return new Response(
         JSON.stringify({ error: "Vous n'avez pas les droits pour cette action" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Verify target user belongs to same agency
-    const { data: targetMembership } = await supabaseAdmin
+    // Verify target user belongs to one of the caller's managed agencies
+    const { data: targetMembership, error: targetMembershipError } = await supabaseAdmin
       .from("agency_members")
       .select("agency_id")
       .eq("user_id", userId)
-      .eq("agency_id", callerAgencyId)
+      .in("agency_id", managedAgencyIds)
       .maybeSingle();
+
+    if (targetMembershipError) {
+      throw targetMembershipError;
+    }
 
     if (!targetMembership) {
       return new Response(

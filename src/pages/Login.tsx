@@ -53,15 +53,17 @@ const Login = () => {
         return;
       }
 
-      const { data, error } = await supabase.rpc("get_agency_login_branding", { _slug: agencySlug });
+      const { data, error } = await supabase.functions.invoke("get-agency-login-branding", {
+        body: { slug: agencySlug },
+      });
 
       if (!cancelled) {
-        if (error || !data?.[0]) {
+        if (error || !data?.branding) {
           setAgencyBranding(null);
           return;
         }
 
-        setAgencyBranding(data[0]);
+        setAgencyBranding(data.branding);
       }
     };
 

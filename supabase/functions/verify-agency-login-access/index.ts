@@ -16,6 +16,11 @@ function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
+function addEmailToSet(store: Set<string>, value: string | null | undefined) {
+  if (!value) return;
+  store.add(normalizeEmail(value));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -68,14 +73,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const ownerEmail = normalizeEmail(agency.email);
-    if (ownerEmail === normalizedEmail) {
-      return new Response(JSON.stringify({ allowed: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const { data: members, error: membersError } = await supabaseAdmin
       .from("agency_members")
       .select("user_id")
@@ -87,32 +84,52 @@ Deno.serve(async (req) => {
     }
 
     const memberIds = members?.map((member) => member.user_id) ?? [];
+    const allowedUserIds = Array.from(new Set([agency.user_id, ...memberIds]));
+    const allowedIdentifiers = new Set<string>();
 
-    if (memberIds.length === 0) {
-      return new Response(
-        JSON.stringify({
-          allowed: false,
-          code: "not_agency_member",
-          message: "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    }
+    addEmailToSet(allowedIdentifiers, agency.email);
 
     const { data: profiles, error: profilesError } = await supabaseAdmin
       .from("profiles")
-      .select("email")
-      .in("user_id", memberIds);
+      .select("email, user_id")
+      .in("user_id", allowedUserIds);
 
     if (profilesError) {
       throw profilesError;
     }
 
-    const isAllowed =
-      profiles?.some((profile) => profile.email && normalizeEmail(profile.email) === normalizedEmail) ?? false;
+    profiles?.forEach((profile) => addEmailToSet(allowedIdentifiers, profile.email));
+
+    const { data: tenants, error: tenantsError } = await supabaseAdmin
+      .from("tenants")
+      .select("email, portal_user_id")
+      .in("user_id", allowedUserIds)
+      .eq("has_portal_access", true)
+      .is("deleted_at", null);
+
+    if (tenantsError) {
+      throw tenantsError;
+    }
+
+    tenants?.forEach((tenant) => addEmailToSet(allowedIdentifiers, tenant.email));
+
+    const authUserIds = Array.from(
+      new Set([
+        ...allowedUserIds,
+        ...(tenants?.map((tenant) => tenant.portal_user_id).filter((id): id is string => Boolean(id)) ?? []),
+      ]),
+    );
+
+    const authUsers = await Promise.all(
+      authUserIds.map(async (userId) => {
+        const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
+        return data.user?.email ?? null;
+      }),
+    );
+
+    authUsers.forEach((email) => addEmailToSet(allowedIdentifiers, email));
+
+    const isAllowed = allowedIdentifiers.has(normalizedEmail);
 
     return new Response(
       JSON.stringify({
@@ -120,7 +137,7 @@ Deno.serve(async (req) => {
         code: isAllowed ? "allowed" : "not_agency_member",
         message: isAllowed
           ? undefined
-          : "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
+          : "Ces identifiants ne sont pas liés à cette agence.",
       }),
       {
         status: 200,

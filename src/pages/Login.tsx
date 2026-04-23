@@ -13,6 +13,15 @@ import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
 import { getDedicatedInstallPath, setDedicatedLoginSlug } from "@/lib/dedicatedLogin";
 
+function isStandaloneApp() {
+  if (typeof window === "undefined") return false;
+
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
+
 // Convert phone number to pseudo-email for auth (must match edge function logic)
 function phoneToEmail(phone: string): string {
   const cleaned = phone.replace(/[^0-9+]/g, "");
@@ -78,6 +87,7 @@ const Login = () => {
   const displayLogo = agencyBranding?.logo_url || platformLogo;
   const displayAppName = agencyBranding?.agency_name || platformAppName;
   const isDefaultBranding = agencyBranding?.is_default ?? false;
+  const isDedicatedInstalledApp = !!agencySlug && isStandaloneApp();
   const backgroundStyle = agencyBranding?.login_image_url
     ? {
         backgroundImage: `linear-gradient(hsl(var(--background) / 0.76), hsl(var(--background) / 0.88)), url(${agencyBranding.login_image_url})`,
@@ -309,19 +319,23 @@ const Login = () => {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Se connecter
             </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Pas encore de compte ?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
-                S'inscrire
-              </Link>
-            </p>
-            <Link
-              to="/"
-              className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              <CreditCard className="h-4 w-4" />
-              Accueil
-            </Link>
+            {!isDedicatedInstalledApp && (
+              <>
+                <p className="text-sm text-muted-foreground text-center">
+                  Pas encore de compte ?{" "}
+                  <Link to="/signup" className="text-primary hover:underline font-medium">
+                    S'inscrire
+                  </Link>
+                </p>
+                <Link
+                  to="/"
+                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  Accueil
+                </Link>
+              </>
+            )}
             {agencySlug && (
               <Link
                 to={getDedicatedInstallPath()}
@@ -331,11 +345,13 @@ const Login = () => {
                 Installer l'application
               </Link>
             )}
-            <DemoRequestButton
-              variant="outline"
-              size="sm"
-              className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
-            />
+            {!isDedicatedInstalledApp && (
+              <DemoRequestButton
+                variant="outline"
+                size="sm"
+                className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+              />
+            )}
           </CardFooter>
         </form>
       </Card>

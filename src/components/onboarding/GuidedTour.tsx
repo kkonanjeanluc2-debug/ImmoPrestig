@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Joyride, { ACTIONS, CallBackProps, EVENTS, STATUS, TooltipRenderProps } from "react-joyride";
+import { ACTIONS, EVENTS, EventData, Joyride, STATUS, TooltipRenderProps } from "react-joyride";
 import { useLocation } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -86,7 +86,10 @@ export function GuidedTour() {
   const definition = useMemo(() => getTourDefinition(pathname), [pathname]);
 
   const steps = useMemo(
-    () => definition.steps.filter((step) => typeof step.target === "string" && !!document.querySelector(step.target)),
+    () => {
+      if (typeof document === "undefined") return [];
+      return definition.steps.filter((step) => typeof step.target === "string" && !!document.querySelector(step.target));
+    },
     [definition.steps, stepsReady]
   );
 
@@ -130,7 +133,7 @@ export function GuidedTour() {
   }, [definition.key, pathname, steps.length, stepsReady, user?.id]);
 
   const handleCallback = useCallback(
-    (data: CallBackProps) => {
+    (data: EventData) => {
       const { action, status, type } = data;
       if (lastAction === "later") return;
 

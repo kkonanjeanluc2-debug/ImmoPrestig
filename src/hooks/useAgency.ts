@@ -19,6 +19,7 @@ export interface Agency {
   user_id: string;
   account_type: AccountType;
   name: string;
+  slug: string;
   email: string;
   phone: string | null;
   address: string | null;
@@ -27,6 +28,7 @@ export interface Agency {
   latitude: number | null;
   longitude: number | null;
   logo_url: string | null;
+  login_image_url: string | null;
   siret: string | null;
   pdf_primary_color: string | null;
   pdf_secondary_color: string | null;

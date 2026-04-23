@@ -438,6 +438,7 @@ export type Database = {
           kkiapay_public_key: string | null
           kkiapay_sandbox: boolean | null
           latitude: number | null
+          login_image_url: string | null
           logo_url: string | null
           longitude: number | null
           mobile_money_number: string | null
@@ -459,6 +460,7 @@ export type Database = {
           sale_commission_percentage: number | null
           sidebar_color: string | null
           siret: string | null
+          slug: string
           updated_at: string
           user_id: string
           wave_sandbox: boolean | null
@@ -480,6 +482,7 @@ export type Database = {
           kkiapay_public_key?: string | null
           kkiapay_sandbox?: boolean | null
           latitude?: number | null
+          login_image_url?: string | null
           logo_url?: string | null
           longitude?: number | null
           mobile_money_number?: string | null
@@ -501,6 +504,7 @@ export type Database = {
           sale_commission_percentage?: number | null
           sidebar_color?: string | null
           siret?: string | null
+          slug: string
           updated_at?: string
           user_id: string
           wave_sandbox?: boolean | null
@@ -522,6 +526,7 @@ export type Database = {
           kkiapay_public_key?: string | null
           kkiapay_sandbox?: boolean | null
           latitude?: number | null
+          login_image_url?: string | null
           logo_url?: string | null
           longitude?: number | null
           mobile_money_number?: string | null
@@ -543,6 +548,7 @@ export type Database = {
           sale_commission_percentage?: number | null
           sidebar_color?: string | null
           siret?: string | null
+          slug?: string
           updated_at?: string
           user_id?: string
           wave_sandbox?: boolean | null
@@ -5804,6 +5810,16 @@ export type Database = {
       can_view_team_profile: {
         Args: { _target_user_id: string; _viewer_id: string }
         Returns: boolean
+      }
+      get_agency_login_branding: {
+        Args: { _slug: string }
+        Returns: {
+          agency_id: string
+          agency_name: string
+          login_image_url: string
+          logo_url: string
+          slug: string
+        }[]
       }
       get_agency_member_count: {
         Args: { p_agency_id: string }

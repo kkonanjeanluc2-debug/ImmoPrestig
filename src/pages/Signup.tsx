@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
 import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
+import { createDefaultAgencySlug } from "@/lib/agencyBranding";
 
 type AccountType = "agence" | "proprietaire";
 
@@ -116,17 +117,18 @@ const Signup = () => {
       if (data?.user) {
         const { data: agencyData, error: agencyError } = await supabase
           .from('agencies')
-          .insert({
+          .insert([{
             user_id: data.user.id,
             account_type: accountType,
             name: agencyName,
+            slug: createDefaultAgencySlug(agencyName, data.user.id),
             email: email,
             phone: phone,
             address: address || null,
             city: city || null,
             country: country,
             siret: siret || null,
-          })
+          }])
           .select('id')
           .single();
 

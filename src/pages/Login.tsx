@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -34,13 +34,53 @@ const Login = () => {
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [agencyBranding, setAgencyBranding] = useState<{ agency_name: string; logo_url: string | null; login_image_url: string | null; slug: string; } | null>(null);
   const { signIn } = useAuth();
   const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
   const navigate = useNavigate();
   const location = useLocation();
+  const { agencySlug } = useParams();
   const { toast } = useToast();
 
   const from = location.state?.from?.pathname || "/dashboard";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAgencyBranding = async () => {
+      if (!agencySlug) {
+        setAgencyBranding(null);
+        return;
+      }
+
+      const { data, error } = await supabase.rpc("get_agency_login_branding", { _slug: agencySlug });
+
+      if (!cancelled) {
+        if (error || !data?.[0]) {
+          setAgencyBranding(null);
+          return;
+        }
+
+        setAgencyBranding(data[0]);
+      }
+    };
+
+    void loadAgencyBranding();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [agencySlug]);
+
+  const displayLogo = agencyBranding?.logo_url || platformLogo;
+  const displayAppName = agencyBranding?.agency_name || platformAppName;
+  const backgroundStyle = agencyBranding?.login_image_url
+    ? {
+        backgroundImage: `linear-gradient(hsl(var(--background) / 0.76), hsl(var(--background) / 0.88)), url(${agencyBranding.login_image_url})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    : undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,14 +170,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4" style={backgroundStyle}>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto w-20 h-20 rounded-full overflow-hidden shadow-md">
-            <img src={platformLogo} alt={platformAppName} className="w-full h-full object-cover" />
+            <img src={displayLogo} alt={displayAppName} className="w-full h-full object-cover" />
           </div>
           <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
-          <CardDescription>Connectez-vous pour accéder à votre espace de gestion immobilière</CardDescription>
+          <CardDescription>
+            Connectez-vous pour accéder à votre espace de gestion immobilière{agencyBranding ? ` — ${agencyBranding.agency_name}` : ""}
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit} autoComplete="off">
           <CardContent className="space-y-4">

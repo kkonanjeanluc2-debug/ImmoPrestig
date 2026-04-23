@@ -31,6 +31,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { buildAgencyLoginUrl, createAgencySlug, createDefaultAgencySlug } from "@/lib/agencyBranding";
 
 const HIDDEN_PLANS_FOR_SALE_FIELDS = ["Starter", "Prestige Max"];
 
@@ -40,6 +41,7 @@ export function AgencySettings() {
   const { planName } = useFeatureAccess();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const loginImageInputRef = useRef<HTMLInputElement>(null);
   const { data: onlineRentConfigSetting } = usePlatformSetting("online_rent_config_enabled");
   const { data: kkiapayGlobalSetting } = usePlatformSetting("kkiapay_enabled");
   const isOnlineRentConfigEnabled = onlineRentConfigSetting?.value !== "false";
@@ -73,10 +75,13 @@ export function AgencySettings() {
     wave_sandbox: true,
     notification_email: "",
     notification_whatsapp: "",
+    slug: "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [loginImageUrl, setLoginImageUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingLoginImage, setIsUploadingLoginImage] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
@@ -136,6 +141,7 @@ export function AgencySettings() {
     wave_sandbox: (agency as any).wave_sandbox ?? true,
     notification_email: (agency as any).notification_email || "",
     notification_whatsapp: (agency as any).notification_whatsapp || "",
+    slug: agency.slug || "",
   });
 
   // Initialize form when agency data loads
@@ -144,6 +150,7 @@ export function AgencySettings() {
       loadVaultSecrets(agency.id).then((secrets) => {
         setFormData(buildFormFromAgency(agency, secrets));
         setLogoUrl(agency.logo_url);
+        setLoginImageUrl((agency as any).login_image_url || null);
         setOnlineRentToggle(!!(agency as any).online_rent_enabled);
       });
     }
@@ -155,6 +162,7 @@ export function AgencySettings() {
       loadVaultSecrets(agency.id).then((secrets) => {
         setFormData(buildFormFromAgency(agency, secrets));
         setLogoUrl(agency.logo_url);
+        setLoginImageUrl((agency as any).login_image_url || null);
         setOnlineRentToggle(!!(agency as any).online_rent_enabled);
       });
     }
@@ -163,6 +171,10 @@ export function AgencySettings() {
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
+  };
+
+  const handleSlugChange = (value: string) => {
+    handleChange("slug", createAgencySlug(value));
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,6 +223,48 @@ export function AgencySettings() {
     }
   };
 
+  const handleLoginImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner une image valide");
+      return;
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error("L'image de connexion ne doit pas dépasser 4 Mo");
+      return;
+    }
+
+    setIsUploadingLoginImage(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/login-background.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("agency-assets")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("agency-assets")
+        .getPublicUrl(filePath);
+
+      setLoginImageUrl(urlData.publicUrl);
+      setHasChanges(true);
+      toast.success("Image de connexion uploadée avec succès");
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'upload de l'image de connexion");
+    } finally {
+      setIsUploadingLoginImage(false);
+    }
+  };
+
+  const loginUrl = buildAgencyLoginUrl(formData.slug || createDefaultAgencySlug(formData.name, user?.id));
+
   const handleSave = async () => {
     if (!user?.id) return;
 
@@ -223,6 +277,7 @@ export function AgencySettings() {
       const baseFields = {
         account_type: formData.account_type,
         name: formData.name,
+        slug: formData.slug || createDefaultAgencySlug(formData.name, user.id),
         email: formData.email,
         phone: formData.phone || null,
         address: formData.address || null,
@@ -230,6 +285,7 @@ export function AgencySettings() {
         country: formData.country,
         siret: formData.siret || null,
         logo_url: logoUrl,
+        login_image_url: loginImageUrl,
         reservation_deposit_percentage: parseFloat(formData.reservation_deposit_percentage) || 30,
         rent_due_day: parseInt(formData.rent_due_day) || 10,
         sale_commission_percentage: parseFloat(formData.sale_commission_percentage) || 5,
@@ -256,7 +312,7 @@ export function AgencySettings() {
       } else {
         const { data: created, error } = await supabase
           .from('agencies')
-          .insert({ user_id: user.id, ...baseFields })
+          .insert([{ user_id: user.id, ...baseFields }])
           .select('id')
           .single();
         if (error) throw error;
@@ -421,6 +477,70 @@ export function AgencySettings() {
                 placeholder="+225 07 12 34 56 78"
                 className="pl-10"
               />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2 border-t pt-6">
+          <Label htmlFor="agency-slug">Lien de connexion dédié</Label>
+          <Input
+            id="agency-slug"
+            value={formData.slug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            placeholder="mon-agence"
+          />
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Input value={loginUrl} readOnly />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                await navigator.clipboard.writeText(loginUrl);
+                toast.success("Lien de connexion copié");
+              }}
+            >
+              Copier le lien
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Tous les membres de l'équipe qui se connectent avec ce lien verront l'image de connexion de l'agence.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <Label>Image de l'écran de connexion</Label>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="h-24 w-full max-w-64 overflow-hidden rounded-md border bg-muted/40">
+              {loginImageUrl ? (
+                <img src={loginImageUrl} alt="Image de connexion" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  Aucune image configurée
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <input
+                ref={loginImageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLoginImageUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => loginImageInputRef.current?.click()}
+                disabled={isUploadingLoginImage}
+              >
+                {isUploadingLoginImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+                Choisir une image
+              </Button>
+              {loginImageUrl ? (
+                <Button type="button" variant="ghost" onClick={() => { setLoginImageUrl(null); setHasChanges(true); }}>
+                  Retirer l'image
+                </Button>
+              ) : null}
             </div>
           </div>
         </div>

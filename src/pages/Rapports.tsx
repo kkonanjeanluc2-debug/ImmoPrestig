@@ -260,7 +260,7 @@ export default function Rapports() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <h1 data-tour="page-title" className="text-2xl font-bold text-foreground flex items-center gap-2">
               <BarChart3 className="h-6 w-6 text-primary" />
               Rapports d'activité
             </h1>
@@ -270,7 +270,7 @@ export default function Rapports() {
                 : "Suivez vos performances et votre activité"}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-tour="page-filters" className="flex items-center gap-2">
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue />

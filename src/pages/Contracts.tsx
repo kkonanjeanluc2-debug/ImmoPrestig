@@ -455,22 +455,24 @@ const Contracts = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">
+            <h1 data-tour="page-title" className="text-xl sm:text-2xl font-display font-bold text-foreground">
               Gestion des Contrats
             </h1>
             <p className="text-sm text-muted-foreground">
               {contracts?.length || 0} contrat{(contracts?.length || 0) > 1 ? "s" : ""} au total
             </p>
           </div>
+          <div data-tour="page-actions">
           <ExportDropdown
             data={exportData}
             filename="contrats"
             columns={exportColumns}
           />
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
+        <div data-tour="page-stats" className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:pb-2">
               <CardTitle className="text-xs sm:text-sm font-medium">Total</CardTitle>
@@ -517,10 +519,10 @@ const Contracts = () => {
         </div>
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="page-filters">
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+              <div data-tour="page-search" className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Rechercher par locataire ou bien..."

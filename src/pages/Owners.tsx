@@ -170,7 +170,7 @@ const Owners = () => {
         {/* Header */}
         <div className="flex flex-col gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
+            <h1 data-tour="page-title" className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
               Propriétaires
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -179,7 +179,7 @@ const Owners = () => {
           </div>
           
           {/* Action buttons - scrollable on mobile */}
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap">
+          <div data-tour="page-actions" className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap">
             <OwnerTrashDialog />
             {canCreate && <ImportOwnersDialog />}
             {canEdit && <MergeOwnersDialog />}
@@ -188,7 +188,7 @@ const Owners = () => {
         </div>
 
         {/* Search */}
-        <div className="relative w-full sm:max-w-md">
+        <div data-tour="page-search" className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Rechercher un propriétaire..."

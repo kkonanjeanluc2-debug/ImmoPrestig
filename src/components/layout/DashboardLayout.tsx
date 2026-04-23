@@ -27,6 +27,7 @@ import {
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import { GuidedTour } from "@/components/onboarding/GuidedTour";
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,
@@ -333,9 +334,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Page Content */}
-        <main className="p-4 lg:p-6">
+        <main className="p-4 lg:p-6" data-tour="page-content">
           {children}
         </main>
+        <GuidedTour />
       </div>
     </div>
   );

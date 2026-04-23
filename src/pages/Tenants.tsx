@@ -346,7 +346,7 @@ export default function Tenants() {
         {/* Header */}
         <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
+            <h1 data-tour="page-title" className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
               Locataires
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -355,7 +355,7 @@ export default function Tenants() {
           </div>
           
           {/* Action buttons - scrollable on mobile */}
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap">
+          <div data-tour="page-actions" className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap">
             <ExportDropdown
               data={tenants || []}
               filename="locataires"
@@ -394,9 +394,9 @@ export default function Tenants() {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col gap-3">
+        <div data-tour="page-filters" className="flex flex-col gap-3">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <div className="relative w-full sm:max-w-sm">
+            <div data-tour="page-search" className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Rechercher un locataire..."

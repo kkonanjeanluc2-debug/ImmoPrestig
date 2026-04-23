@@ -102,7 +102,7 @@ const Lotissements = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground flex items-center gap-2">
+            <h1 data-tour="page-title" className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground flex items-center gap-2">
               <Map className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               Lotissements
             </h1>
@@ -111,7 +111,7 @@ const Lotissements = () => {
             </p>
           </div>
           {canCreate && (
-            <Button onClick={() => setShowAddDialog(true)} className="gap-2 w-full sm:w-auto" size="sm">
+            <Button data-tour="page-actions" onClick={() => setShowAddDialog(true)} className="gap-2 w-full sm:w-auto" size="sm">
               <Plus className="h-4 w-4" />
               <span>Nouveau lotissement</span>
             </Button>
@@ -175,7 +175,7 @@ const Lotissements = () => {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
+        <div data-tour="page-search" className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Rechercher un lotissement..."

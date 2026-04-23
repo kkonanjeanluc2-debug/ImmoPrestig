@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthIndicator } from "@/components/common/PasswordStrengthIndicator";
+import { getDedicatedLoginPath } from "@/lib/dedicatedLogin";
 
 export function SecuritySettings() {
   const { user, signOut } = useAuth();
@@ -70,7 +71,7 @@ export function SecuritySettings() {
         title: "Déconnexion",
         description: "Vous avez été déconnecté de tous les appareils.",
       });
-      navigate("/login");
+      navigate(getDedicatedLoginPath());
     } catch (error) {
       toast({
         title: "Erreur",

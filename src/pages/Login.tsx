@@ -11,6 +11,7 @@ import { Loader2, Building2, User, Lock, CreditCard, Eye, EyeOff } from "lucide-
 import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
+import { setDedicatedLoginSlug } from "@/lib/dedicatedLogin";
 
 // Convert phone number to pseudo-email for auth (must match edge function logic)
 function phoneToEmail(phone: string): string {
@@ -84,6 +85,10 @@ const Login = () => {
         backgroundPosition: "center",
       }
     : undefined;
+
+  useEffect(() => {
+    setDedicatedLoginSlug(agencySlug ?? null);
+  }, [agencySlug]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

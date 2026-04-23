@@ -50,6 +50,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePrefetchRoute } from "@/hooks/usePrefetchRoutes";
+import { getDedicatedLoginPath } from "@/lib/dedicatedLogin";
 import {
   Collapsible,
   CollapsibleContent,
@@ -527,7 +528,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 size="sm"
                 onClick={async () => {
                   await signOut();
-                  navigate("/login");
+                  navigate(getDedicatedLoginPath());
                 }}
                 className="w-full text-white/50 hover:text-white hover:bg-white/8 justify-start rounded-xl h-9"
               >
@@ -566,7 +567,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 size="icon"
                 onClick={async () => {
                   await signOut();
-                  navigate("/login");
+                  navigate(getDedicatedLoginPath());
                 }}
                 className="text-white/50 hover:text-white hover:bg-white/8 rounded-xl h-8 w-8"
                 title="Déconnexion"

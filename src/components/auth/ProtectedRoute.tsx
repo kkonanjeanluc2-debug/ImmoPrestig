@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo } from "react";
 import { differenceInDays, parseISO } from "date-fns";
+import { getDedicatedLoginPath } from "@/lib/dedicatedLogin";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -65,7 +66,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to={getDedicatedLoginPath()} state={{ from: location }} replace />;
   }
 
   // Rediriger les locataires vers /payments s'ils accèdent à une route interdite

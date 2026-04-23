@@ -244,13 +244,13 @@ export function AgencySettings() {
       const filePath = `${user.id}/login-background.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("agency-assets")
+        .from("agency-logos")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from("agency-assets")
+        .from("agency-logos")
         .getPublicUrl(filePath);
 
       setLoginImageUrl(urlData.publicUrl);

@@ -340,7 +340,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <nav data-tour="sidebar-nav" className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {/* Super Admin Navigation */}
           {userRole?.role === "super_admin" ? (
             <>

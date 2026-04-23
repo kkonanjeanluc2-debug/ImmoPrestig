@@ -142,14 +142,14 @@ const Properties = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
+            <h1 data-tour="page-title" className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
               Biens immobiliers
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Gérez l'ensemble de votre patrimoine immobilier
             </p>
           </div>
-          <div className="flex gap-2">
+          <div data-tour="page-actions" className="flex gap-2">
             <ExportDropdown
               data={(() => {
                 const multiUnitTypes = ['maison', 'immeuble'];
@@ -187,8 +187,8 @@ const Properties = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col gap-3 p-3 sm:p-4 bg-card rounded-xl border border-border/50 shadow-card">
-          <div className="relative w-full">
+        <div data-tour="page-filters" className="flex flex-col gap-3 p-3 sm:p-4 bg-card rounded-xl border border-border/50 shadow-card">
+          <div data-tour="page-search" className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Rechercher..." 

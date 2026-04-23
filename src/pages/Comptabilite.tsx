@@ -187,8 +187,8 @@ const Comptabilite = () => {
         {/* Header */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg sm:text-2xl font-bold text-foreground">Comptabilité</h1>
-            <div className="flex items-center gap-2">
+            <h1 data-tour="page-title" className="text-lg sm:text-2xl font-bold text-foreground">Comptabilité</h1>
+            <div data-tour="page-actions" className="flex items-center gap-2">
               {canCreateExpense && (
                 <Button size="sm" onClick={() => setAddExpenseOpen(true)} variant="outline" className="gap-1 text-xs h-8 px-2 sm:px-3">
                   <Plus className="h-3.5 w-3.5" />
@@ -210,12 +210,14 @@ const Comptabilite = () => {
           <p className="text-xs text-muted-foreground">
             {periodLabel.subtitle} — Conforme SYSCOHADA
           </p>
-          <PeriodFilter value={period} onChange={setPeriod} />
+          <div data-tour="page-filters">
+            <PeriodFilter value={period} onChange={setPeriod} />
+          </div>
         </div>
 
         {/* Main tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="w-auto inline-flex h-auto p-0.5 sm:p-1 gap-0">
+          <TabsList data-tour="page-tabs" className="w-auto inline-flex h-auto p-0.5 sm:p-1 gap-0">
             <TabsTrigger value="overview" className="gap-1 text-[10px] sm:text-sm px-1 sm:px-3 py-1.5">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="hidden sm:inline">Vue d'ensemble</span>

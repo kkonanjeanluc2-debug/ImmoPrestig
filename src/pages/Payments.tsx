@@ -336,14 +336,14 @@ export default function Payments() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="pt-8 sm:pt-0">
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
+            <h1 data-tour="page-title" className="text-2xl sm:text-3xl font-display font-bold text-foreground">
               Paiements
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Suivi des loyers et encaissements
             </p>
           </div>
-          <div className="flex gap-2">
+          <div data-tour="page-actions" className="flex gap-2">
             <ExportDropdown
                 data={visiblePayments}
               filename="paiements"
@@ -372,7 +372,7 @@ export default function Payments() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "payments" | "impayes" | "commissions" | "account")}>
-          <TabsList className="flex flex-wrap h-auto gap-1 p-1">
+          <TabsList data-tour="page-tabs" className="flex flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="payments" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Wallet className="h-4 w-4" />
               <span className="hidden sm:inline">Paiements</span>
@@ -548,9 +548,9 @@ export default function Payments() {
                           Historique des paiements
                         </CardTitle>
                       </div>
-                      <div className="flex flex-col gap-3">
+                      <div data-tour="page-filters" className="flex flex-col gap-3">
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-end">
-                          <div className="relative">
+                          <div data-tour="page-search" className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               placeholder="Rechercher..."

@@ -152,7 +152,7 @@ const Settings = () => {
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
+          <h1 data-tour="page-title" className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
             Paramètres
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">
@@ -161,7 +161,7 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="flex flex-wrap h-auto gap-1 p-1 overflow-x-auto">
+          <TabsList data-tour="page-tabs" className="flex flex-wrap h-auto gap-1 p-1 overflow-x-auto">
             {canAccessAgencyTab && (
               <TabsTrigger
                 value="agency"

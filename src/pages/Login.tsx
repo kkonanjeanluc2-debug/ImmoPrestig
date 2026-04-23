@@ -135,6 +135,28 @@ const Login = () => {
       return;
     }
 
+    if (agencySlug) {
+      const { data: accessData, error: accessError } = await supabase.functions.invoke("verify-agency-login-access", {
+        body: {
+          slug: agencySlug,
+          loginEmail,
+        },
+      });
+
+      const isAllowed = !accessError && accessData?.allowed === true;
+
+      if (!isAllowed) {
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Accès refusé",
+          description:
+            accessData?.message || "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
+        });
+        return;
+      }
+    }
+
     if (!isLoading) setIsLoading(true);
 
     const { error, data } = await signIn(loginEmail, password);

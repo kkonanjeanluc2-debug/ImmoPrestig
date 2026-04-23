@@ -17,3 +17,10 @@ export function getDedicatedLoginPath() {
   const slug = window.sessionStorage.getItem(DEDICATED_LOGIN_SLUG_KEY);
   return slug ? `/${slug}/login` : "/login";
 }
+
+export function getDedicatedInstallPath() {
+  if (typeof window === "undefined") return "/install";
+
+  const slug = window.sessionStorage.getItem(DEDICATED_LOGIN_SLUG_KEY);
+  return slug ? `/${slug}/install` : "/install";
+}

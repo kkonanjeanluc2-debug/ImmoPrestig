@@ -182,6 +182,7 @@ const App = () => {
                   <Route path="/apporteurs" element={<ProtectedRoute><FeatureProtectedRoute feature="apporteurs_affaires"><ApporteursAffaires /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
+                  <Route path="/:agencySlug/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />
                   <Route path="/sign-vente" element={<SignVente />} />
                   <Route path="/sign-achat" element={<SignAchat />} />

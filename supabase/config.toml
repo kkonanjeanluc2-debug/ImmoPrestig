@@ -134,3 +134,6 @@ verify_jwt = false
 
 [functions.ai-advisor]
 verify_jwt = false
+
+[functions.verify-agency-login-access]
+verify_jwt = false

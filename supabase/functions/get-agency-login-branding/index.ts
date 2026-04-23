@@ -56,10 +56,34 @@ Deno.serve(async (req) => {
     }
 
     if (!data) {
-      return new Response(JSON.stringify({ branding: null }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const { data: settings, error: settingsError } = await supabaseAdmin
+        .from("platform_settings")
+        .select("key, value")
+        .in("key", ["app_name", "app_logo_url"]);
+
+      if (settingsError) {
+        throw settingsError;
+      }
+
+      const appName = settings?.find((setting) => setting.key === "app_name")?.value || "ImmoPrestige";
+      const appLogoUrl = settings?.find((setting) => setting.key === "app_logo_url")?.value || null;
+
+      return new Response(
+        JSON.stringify({
+          branding: {
+            agency_id: null,
+            agency_name: appName,
+            slug,
+            logo_url: appLogoUrl,
+            login_image_url: null,
+            is_default: true,
+          },
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     return new Response(
@@ -70,6 +94,7 @@ Deno.serve(async (req) => {
           slug: data.slug,
           logo_url: data.logo_url,
           login_image_url: data.login_image_url,
+          is_default: false,
         },
       }),
       {

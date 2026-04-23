@@ -90,7 +90,7 @@ const Login = () => {
   const isDedicatedInstalledApp = !!agencySlug && isStandaloneApp();
   const backgroundStyle = agencyBranding?.login_image_url
     ? {
-        backgroundImage: `linear-gradient(hsl(var(--background) / 0.76), hsl(var(--background) / 0.88)), url(${agencyBranding.login_image_url})`,
+        backgroundImage: `linear-gradient(hsl(var(--background) / 0.34), hsl(var(--background) / 0.52)), url(${agencyBranding.login_image_url})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }

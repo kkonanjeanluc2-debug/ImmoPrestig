@@ -182,9 +182,6 @@ export function GuidedTour() {
           textColor: 'hsl(var(--foreground))',
           zIndex: 1000,
         },
-        spotlight: {
-          borderRadius: 12,
-        },
       }}
     />
   );

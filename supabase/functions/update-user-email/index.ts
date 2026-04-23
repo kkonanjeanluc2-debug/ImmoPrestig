@@ -52,6 +52,40 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Allow users to update their own credentials directly
+    if (caller.id === userId) {
+      const updatePayload: Record<string, unknown> = {};
+      if (newEmail) {
+        updatePayload.email = newEmail;
+        updatePayload.email_confirm = true;
+      }
+      if (newPassword) {
+        updatePayload.password = newPassword;
+      }
+
+      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, updatePayload);
+
+      if (error) {
+        console.error("Error updating own user:", error);
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (newEmail) {
+        await supabaseAdmin
+          .from("profiles")
+          .update({ email: newEmail })
+          .eq("user_id", userId);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, email: data.user?.email }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get all agencies the caller can manage
     const { data: callerMemberships, error: callerMembershipsError } = await supabaseAdmin
       .from("agency_members")

@@ -116,7 +116,7 @@ const Signup = () => {
       if (data?.user) {
         const { data: agencyData, error: agencyError } = await supabase
           .from('agencies')
-          .insert({
+          .insert([{
             user_id: data.user.id,
             account_type: accountType,
             name: agencyName,
@@ -126,7 +126,7 @@ const Signup = () => {
             city: city || null,
             country: country,
             siret: siret || null,
-          })
+          }])
           .select('id')
           .single();
 

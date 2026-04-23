@@ -256,7 +256,7 @@ export function AgencySettings() {
       } else {
         const { data: created, error } = await supabase
           .from('agencies')
-          .insert({ user_id: user.id, ...baseFields })
+          .insert([{ user_id: user.id, ...baseFields }])
           .select('id')
           .single();
         if (error) throw error;

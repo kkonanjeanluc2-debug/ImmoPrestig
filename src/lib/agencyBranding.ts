@@ -25,12 +25,24 @@ export function createDefaultAgencySlug(name: string, uniqueSeed?: string) {
   return suffix ? `${base}-${suffix}` : base;
 }
 
+const AGENCY_LOGIN_PUBLIC_ORIGIN = "https://immoprestigeci.com";
+
 function getAgencyLoginOrigin() {
   if (typeof window === "undefined") {
-    return "";
+    return AGENCY_LOGIN_PUBLIC_ORIGIN;
   }
 
-  return window.location.origin;
+  const { origin, hostname } = window.location;
+  const isLovableHosted =
+    hostname.includes("lovableproject.com") ||
+    hostname.includes("lovable.app");
+  const isLocalDevelopment = hostname === "localhost" || hostname === "127.0.0.1";
+
+  if (isLocalDevelopment) {
+    return origin;
+  }
+
+  return isLovableHosted ? AGENCY_LOGIN_PUBLIC_ORIGIN : origin;
 }
 
 export function buildAgencyLoginUrl(slug: string) {

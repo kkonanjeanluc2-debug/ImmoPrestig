@@ -263,6 +263,8 @@ export function AgencySettings() {
     }
   };
 
+  const loginUrl = buildAgencyLoginUrl(formData.slug || createDefaultAgencySlug(formData.name, user?.id));
+
   const handleSave = async () => {
     if (!user?.id) return;
 
@@ -475,6 +477,70 @@ export function AgencySettings() {
                 placeholder="+225 07 12 34 56 78"
                 className="pl-10"
               />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2 border-t pt-6">
+          <Label htmlFor="agency-slug">Lien de connexion dédié</Label>
+          <Input
+            id="agency-slug"
+            value={formData.slug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            placeholder="mon-agence"
+          />
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Input value={loginUrl} readOnly />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                await navigator.clipboard.writeText(loginUrl);
+                toast.success("Lien de connexion copié");
+              }}
+            >
+              Copier le lien
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Tous les membres de l'équipe qui se connectent avec ce lien verront l'image de connexion de l'agence.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <Label>Image de l'écran de connexion</Label>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="h-24 w-full max-w-64 overflow-hidden rounded-md border bg-muted/40">
+              {loginImageUrl ? (
+                <img src={loginImageUrl} alt="Image de connexion" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  Aucune image configurée
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <input
+                ref={loginImageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLoginImageUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => loginImageInputRef.current?.click()}
+                disabled={isUploadingLoginImage}
+              >
+                {isUploadingLoginImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+                Choisir une image
+              </Button>
+              {loginImageUrl ? (
+                <Button type="button" variant="ghost" onClick={() => { setLoginImageUrl(null); setHasChanges(true); }}>
+                  Retirer l'image
+                </Button>
+              ) : null}
             </div>
           </div>
         </div>

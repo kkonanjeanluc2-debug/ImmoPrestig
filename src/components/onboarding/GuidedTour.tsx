@@ -11,6 +11,7 @@ type TourState = {
   status: "completed" | "skipped" | "postponed";
   updatedAt: string;
   postponedUntil?: string;
+  tourVersion: number;
 };
 
 const POSTPONE_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -90,8 +91,9 @@ export function GuidedTour() {
             tour_key: definition.key,
             status: value.status,
             postponed_until: value.postponedUntil ?? null,
+            tour_version: value.tourVersion,
           },
-          { onConflict: "user_id,tour_key" }
+          { onConflict: "user_id,tour_key,tour_version" }
         );
 
       if (error) {
@@ -107,9 +109,10 @@ export function GuidedTour() {
       status: "postponed",
       updatedAt: new Date().toISOString(),
       postponedUntil: new Date(Date.now() + POSTPONE_DURATION_MS).toISOString(),
+      tourVersion: definition.version,
     });
     setRun(false);
-  }, [persistState]);
+  }, [definition.version, persistState]);
 
   useEffect(() => {
     setStepsReady(false);
@@ -131,9 +134,10 @@ export function GuidedTour() {
 
       const { data, error } = await (supabase as any)
         .from("guided_tour_states")
-        .select("status, updated_at, postponed_until")
+        .select("status, updated_at, postponed_until, tour_version")
         .eq("user_id", user.id)
         .eq("tour_key", definition.key)
+        .eq("tour_version", definition.version)
         .maybeSingle();
 
       if (cancelled) return;
@@ -150,12 +154,16 @@ export function GuidedTour() {
             status: data.status as TourState["status"],
             updatedAt: data.updated_at as string,
             postponedUntil: (data.postponed_until as string | null) ?? undefined,
+            tourVersion: (data.tour_version as number | null) ?? 1,
           }
         : null;
 
       const now = Date.now();
       const postponedUntil = state?.postponedUntil ? new Date(state.postponedUntil).getTime() : 0;
-      const shouldRun = !state || (state.status === "postponed" && postponedUntil <= now);
+      const shouldRun =
+        !state ||
+        state.tourVersion !== definition.version ||
+        (state.status === "postponed" && postponedUntil <= now);
 
       setRun(shouldRun);
       setLastAction(null);
@@ -167,7 +175,7 @@ export function GuidedTour() {
     return () => {
       cancelled = true;
     };
-  }, [definition.key, pathname, steps.length, stepsReady, user?.id]);
+  }, [definition.key, definition.version, pathname, steps.length, stepsReady, user?.id]);
 
   const handleCallback = useCallback(
     (data: EventData) => {
@@ -175,13 +183,13 @@ export function GuidedTour() {
       if (lastAction === "later") return;
 
       if (status === STATUS.FINISHED) {
-        void persistState({ status: "completed", updatedAt: new Date().toISOString() });
+        void persistState({ status: "completed", updatedAt: new Date().toISOString(), tourVersion: definition.version });
         setRun(false);
         return;
       }
 
       if (status === STATUS.SKIPPED || action === ACTIONS.SKIP) {
-        void persistState({ status: "skipped", updatedAt: new Date().toISOString() });
+        void persistState({ status: "skipped", updatedAt: new Date().toISOString(), tourVersion: definition.version });
         setRun(false);
         return;
       }
@@ -190,7 +198,7 @@ export function GuidedTour() {
         setRun(false);
       }
     },
-    [lastAction, persistState]
+    [definition.version, lastAction, persistState]
   );
 
   if (!user?.id || pathname === "/dashboard" || steps.length === 0 || !stateLoaded) {

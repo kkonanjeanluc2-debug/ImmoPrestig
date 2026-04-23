@@ -137,7 +137,7 @@ const Login = () => {
 
     if (!isLoading) setIsLoading(true);
 
-    const { error } = await signIn(loginEmail, password);
+    const { error, data } = await signIn(loginEmail, password);
 
     if (error) {
       const newAttempts = attempts + 1;
@@ -154,6 +154,40 @@ const Login = () => {
       setIsLoading(false);
       return;
     }
+
+    if (agencySlug) {
+      const { data: accessData, error: accessError } = await supabase.functions.invoke("verify-agency-login-access", {
+        body: {
+          slug: agencySlug,
+          loginEmail,
+        },
+      });
+
+      const isAllowed = !accessError && accessData?.allowed === true;
+
+      if (!isAllowed) {
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Accès refusé",
+          description:
+            accessData?.message || "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
+        });
+        return;
+      }
+    }
+
+    if (!data?.user) {
+      setIsLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Erreur de connexion",
+        description: "Impossible de valider votre session. Veuillez réessayer.",
+      });
+      return;
+    }
+
     setAttempts(0);
     setLockedUntil(null);
 

@@ -2166,6 +2166,36 @@ export type Database = {
         }
         Relationships: []
       }
+      guided_tour_states: {
+        Row: {
+          created_at: string
+          id: string
+          postponed_until: string | null
+          status: string
+          tour_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          postponed_until?: string | null
+          status: string
+          tour_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          postponed_until?: string | null
+          status?: string
+          tour_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ilots: {
         Row: {
           assigned_to: string | null

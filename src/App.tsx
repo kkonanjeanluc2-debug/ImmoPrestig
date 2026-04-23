@@ -14,6 +14,7 @@ import UpdatePrompt from "@/components/UpdatePrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PageSkeleton from "@/components/PageSkeleton";
+import AppEntryRoute from "@/components/routing/AppEntryRoute";
 
 
 // Lazy load pages for code splitting
@@ -156,7 +157,7 @@ const App = () => {
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/" element={<Pricing />} />
+                  <Route path="/" element={<AppEntryRoute fallback={<Pricing />} />} />
                   <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                   
                   <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />

@@ -2,8 +2,20 @@ import { Step } from "react-joyride";
 
 export interface TourDefinition {
   key: string;
+  version: number;
   steps: Step[];
 }
+
+const tourVersions: Record<string, number> = {
+  properties: 1,
+  owners: 1,
+  payments: 1,
+  contracts: 1,
+  settings: 1,
+  comptabilite: 1,
+  lotissements: 1,
+  rapports: 1,
+};
 
 const baseSteps: Step[] = [
   {
@@ -23,7 +35,7 @@ const baseSteps: Step[] = [
   },
 ];
 
-const routeTours: Array<{ match: (pathname: string) => boolean; definition: TourDefinition }> = [
+const routeTours: Array<{ match: (pathname: string) => boolean; definition: Omit<TourDefinition, 'version'> }> = [
   {
     match: (pathname) => pathname === '/properties',
     definition: {
@@ -185,12 +197,18 @@ const routeTours: Array<{ match: (pathname: string) => boolean; definition: Tour
 
 export function getTourDefinition(pathname: string): TourDefinition {
   const matched = routeTours.find((entry) => entry.match(pathname));
-  if (matched) return matched.definition;
+  if (matched) {
+    return {
+      ...matched.definition,
+      version: tourVersions[matched.definition.key] ?? 1,
+    };
+  }
 
   const segment = pathname.split('/').filter(Boolean)[0] || 'general';
 
   return {
     key: `section-${segment}`,
+    version: tourVersions[`section-${segment}`] ?? 1,
     steps: baseSteps,
   };
 }

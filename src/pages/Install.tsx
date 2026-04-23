@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Smartphone, Check, Share, MoreVertical, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { setDedicatedLoginSlug, getDedicatedLoginPath } from "@/lib/dedicatedLogin";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -11,11 +12,14 @@ interface BeforeInstallPromptEvent extends Event {
 
 const Install = () => {
   const navigate = useNavigate();
+  const { agencySlug } = useParams();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
+    setDedicatedLoginSlug(agencySlug ?? null);
+
     // Check if already installed
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
@@ -42,7 +46,7 @@ const Install = () => {
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
-  }, []);
+  }, [agencySlug]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -70,7 +74,7 @@ const Install = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button className="w-full" onClick={() => navigate("/")}>
+            <Button className="w-full" onClick={() => navigate(getDedicatedLoginPath())}>
               Ouvrir l'application
             </Button>
           </CardContent>
@@ -82,7 +86,7 @@ const Install = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy/10 to-emerald/10 p-4">
       <div className="max-w-md mx-auto pt-8 space-y-6">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+        <Button variant="ghost" onClick={() => navigate(getDedicatedLoginPath())} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Retour
         </Button>

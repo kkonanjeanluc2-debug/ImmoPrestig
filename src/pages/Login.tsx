@@ -11,7 +11,7 @@ import { Loader2, Building2, User, Lock, CreditCard, Eye, EyeOff } from "lucide-
 import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
-import { setDedicatedLoginSlug } from "@/lib/dedicatedLogin";
+import { getDedicatedInstallPath, setDedicatedLoginSlug } from "@/lib/dedicatedLogin";
 
 // Convert phone number to pseudo-email for auth (must match edge function logic)
 function phoneToEmail(phone: string): string {
@@ -322,6 +322,15 @@ const Login = () => {
               <CreditCard className="h-4 w-4" />
               Accueil
             </Link>
+            {agencySlug && (
+              <Link
+                to={getDedicatedInstallPath()}
+                className="flex items-center justify-center gap-2 text-sm text-primary hover:underline transition-colors"
+              >
+                <Building2 className="h-4 w-4" />
+                Installer l'application
+              </Link>
+            )}
             <DemoRequestButton
               variant="outline"
               size="sm"

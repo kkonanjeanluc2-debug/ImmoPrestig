@@ -28,6 +28,7 @@ export function PlatformSettingsCard() {
   const [appName, setAppName] = useState("ImmoPrestige");
   const [youtubeDemoUrl, setYoutubeDemoUrl] = useState("");
   const [tiktokDemoUrl, setTiktokDemoUrl] = useState("");
+  const [trialDaysDefault, setTrialDaysDefault] = useState("30");
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {

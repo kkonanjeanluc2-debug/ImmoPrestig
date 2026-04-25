@@ -52,10 +52,11 @@ export function useAllAgencies() {
   return useQuery({
     queryKey: ["all-agencies"],
     queryFn: async () => {
-      // Get all agencies
+      // Get all agencies — only main accounts (agence or proprietaire), never team members or tenants
       const { data: agencies, error: agenciesError } = await supabase
         .from("agencies")
         .select("*")
+        .in("account_type", ["agence", "proprietaire"])
         .order("created_at", { ascending: false });
 
       if (agenciesError) throw agenciesError;

@@ -26,7 +26,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Building2, Check, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { CreditCard, Building2, Check, Calendar, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -35,6 +37,7 @@ import {
   useSubscriptionPlans,
   useAllAgencySubscriptions,
   useAssignSubscription,
+  useSetAgencyTrial,
 } from "@/hooks/useSubscriptionPlans";
 import { useAllAgencies, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 
@@ -57,11 +60,13 @@ export function AgencySubscriptionsManager() {
   const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
   const { data: subscriptions, isLoading: subscriptionsLoading } = useAllAgencySubscriptions();
   const assignSubscription = useAssignSubscription();
+  const setAgencyTrial = useSetAgencyTrial();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<AgencyWithProfile | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle | "lifetime">("monthly");
+  const [trialDays, setTrialDays] = useState<string>("30");
 
   const isLoading = agenciesLoading || plansLoading || subscriptionsLoading;
 
@@ -80,6 +85,17 @@ export function AgencySubscriptionsManager() {
     setSelectedAgency(agency);
     setSelectedPlanId(currentSub?.plan_id || "");
     setSelectedBillingCycle((currentSub?.billing_cycle || "monthly") as BillingCycle | "lifetime");
+
+    // Pre-fill trial days based on existing trial_ends_at if any
+    if (currentSub?.trial_ends_at) {
+      const remaining = Math.max(
+        0,
+        Math.ceil((new Date(currentSub.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      );
+      setTrialDays(String(remaining || 30));
+    } else {
+      setTrialDays("30");
+    }
     setIsDialogOpen(true);
   };
 
@@ -96,6 +112,30 @@ export function AgencySubscriptionsManager() {
         billing_cycle: selectedBillingCycle,
       });
       toast.success("Abonnement mis à jour avec succès");
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast.error("Une erreur est survenue");
+    }
+  };
+
+  const handleAssignTrial = async () => {
+    if (!selectedAgency || !selectedPlanId) {
+      toast.error("Veuillez sélectionner un forfait");
+      return;
+    }
+    const days = parseInt(trialDays, 10);
+    if (isNaN(days) || days < 1 || days > 365) {
+      toast.error("Veuillez saisir un nombre de jours valide (1-365)");
+      return;
+    }
+
+    try {
+      await setAgencyTrial.mutateAsync({
+        agency_id: selectedAgency.id,
+        plan_id: selectedPlanId,
+        trial_days: days,
+      });
+      toast.success(`Période d'essai de ${days} jours appliquée`);
       setIsDialogOpen(false);
     } catch (error) {
       toast.error("Une erreur est survenue");
@@ -329,6 +369,45 @@ export function AgencySubscriptionsManager() {
                 </div>
               </div>
             )}
+
+            <Separator />
+
+            {/* Trial period assignment */}
+            <div className="space-y-2 rounded-lg border border-dashed p-4 bg-muted/30">
+              <Label htmlFor="trial-days-input" className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-primary" />
+                Attribuer une période d'essai
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Définissez manuellement le nombre de jours d'essai gratuit pour cette agence sur le forfait sélectionné. Cliquez sur « Appliquer l'essai » pour activer.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="trial-days-input"
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={trialDays}
+                  className="w-28"
+                  onChange={(e) => setTrialDays(e.target.value)}
+                />
+                <span className="text-sm text-muted-foreground">jours</span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleAssignTrial}
+                  disabled={!selectedPlanId || setAgencyTrial.isPending}
+                  className="ml-auto"
+                >
+                  {setAgencyTrial.isPending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  ) : (
+                    <CalendarClock className="h-4 w-4 mr-2" />
+                  )}
+                  Appliquer l'essai
+                </Button>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
@@ -344,7 +423,7 @@ export function AgencySubscriptionsManager() {
               ) : (
                 <Check className="h-4 w-4 mr-2" />
               )}
-              Confirmer
+              Activer l'abonnement
             </Button>
           </DialogFooter>
         </DialogContent>

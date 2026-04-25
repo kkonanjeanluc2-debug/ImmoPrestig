@@ -8,12 +8,18 @@ interface TenantData {
   name: string;
   email: string;
   property: PropertyData[] | null;
+  unit?: UnitData[] | null;
+}
+
+interface UnitData {
+  unit_number: string | null;
 }
 
 interface PropertyData {
   id: string;
   title: string;
   address: string;
+  assigned_to?: string | null;
   owner: OwnerData[] | null;
 }
 

@@ -60,11 +60,13 @@ export function AgencySubscriptionsManager() {
   const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
   const { data: subscriptions, isLoading: subscriptionsLoading } = useAllAgencySubscriptions();
   const assignSubscription = useAssignSubscription();
+  const setAgencyTrial = useSetAgencyTrial();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<AgencyWithProfile | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle | "lifetime">("monthly");
+  const [trialDays, setTrialDays] = useState<string>("30");
 
   const isLoading = agenciesLoading || plansLoading || subscriptionsLoading;
 

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePlatformSettings, useUpdatePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
-import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone, Mail, Video } from "lucide-react";
+import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone, Mail, Video, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBrandingSection } from "./PlatformBrandingSection";
 
@@ -28,6 +28,7 @@ export function PlatformSettingsCard() {
   const [appName, setAppName] = useState("ImmoPrestige");
   const [youtubeDemoUrl, setYoutubeDemoUrl] = useState("");
   const [tiktokDemoUrl, setTiktokDemoUrl] = useState("");
+  const [trialDaysDefault, setTrialDaysDefault] = useState("30");
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -70,6 +71,9 @@ export function PlatformSettingsCard() {
 
       const ttSetting = settings.find(s => s.key === "tiktok_demo_url");
       if (ttSetting?.value) setTiktokDemoUrl(ttSetting.value);
+
+      const trialSetting = settings.find(s => s.key === "trial_days_default");
+      if (trialSetting?.value) setTrialDaysDefault(trialSetting.value);
     }
   }, [settings]);
 
@@ -89,6 +93,7 @@ export function PlatformSettingsCard() {
         upsertSetting.mutateAsync({ key: "app_name", value: appName, description: "Nom de l'application affiché partout" }),
         upsertSetting.mutateAsync({ key: "youtube_demo_url", value: youtubeDemoUrl, description: "Lien vidéo démo YouTube" }),
         upsertSetting.mutateAsync({ key: "tiktok_demo_url", value: tiktokDemoUrl, description: "Lien vidéo démo TikTok" }),
+        upsertSetting.mutateAsync({ key: "trial_days_default", value: trialDaysDefault, description: "Nombre de jours d'essai gratuit accordés à la création d'un nouveau compte" }),
       ]);
       setHasChanges(false);
       toast.success("Paramètres enregistrés");
@@ -162,6 +167,36 @@ export function PlatformSettingsCard() {
             </div>
             <p className="text-xs text-muted-foreground">
               Pourcentage affiché sur la page des tarifs pour les abonnements annuels
+            </p>
+          </div>
+
+          {/* Trial period duration */}
+          <div className="space-y-2">
+            <Label htmlFor="trial-days" className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-primary" />
+              Durée de la période d'essai gratuite
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="trial-days"
+                type="number"
+                min="0"
+                max="365"
+                placeholder="30"
+                value={trialDaysDefault}
+                className="w-24"
+                onChange={(e) => {
+                  const numValue = parseInt(e.target.value, 10);
+                  if (e.target.value === "" || (!isNaN(numValue) && numValue >= 0 && numValue <= 365)) {
+                    setTrialDaysDefault(e.target.value);
+                    setChanged();
+                  }
+                }}
+              />
+              <span className="text-muted-foreground">jours</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Nombre de jours d'essai accordés automatiquement à chaque nouvelle inscription. S'applique uniquement aux nouveaux comptes créés après modification.
             </p>
           </div>
 

@@ -93,6 +93,7 @@ export function PlatformSettingsCard() {
         upsertSetting.mutateAsync({ key: "app_name", value: appName, description: "Nom de l'application affiché partout" }),
         upsertSetting.mutateAsync({ key: "youtube_demo_url", value: youtubeDemoUrl, description: "Lien vidéo démo YouTube" }),
         upsertSetting.mutateAsync({ key: "tiktok_demo_url", value: tiktokDemoUrl, description: "Lien vidéo démo TikTok" }),
+        upsertSetting.mutateAsync({ key: "trial_days_default", value: trialDaysDefault, description: "Nombre de jours d'essai gratuit accordés à la création d'un nouveau compte" }),
       ]);
       setHasChanges(false);
       toast.success("Paramètres enregistrés");

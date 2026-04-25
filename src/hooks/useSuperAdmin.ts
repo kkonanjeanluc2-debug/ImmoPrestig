@@ -75,6 +75,45 @@ export function useAllAgencies() {
 
       if (rolesError) throw rolesError;
 
+      // Build a set of user_ids that are ONLY team members (agency_members)
+      // These must be excluded even if they accidentally have an agencies row
+      const { data: agencyMembersRaw, error: membersRawError } = await supabase
+        .from("agency_members")
+        .select("agency_id, user_id, status");
+
+      if (membersRawError) throw membersRawError;
+
+      // Set of user_ids that are sub-members of another agency (not owners)
+      const memberUserIds = new Set<string>(
+        (agencyMembersRaw || []).map((m) => m.user_id)
+      );
+
+      // Roles that belong to sub-accounts — never to a main account owner
+      const SUB_ACCOUNT_ROLES = new Set([
+        "gestionnaire", "comptable", "caissiere", "lecture_seule", "locataire"
+      ]);
+
+      // Filter: keep only accounts whose user is NOT a sub-member of another agency
+      // AND whose role is not a sub-account role
+      const mainAgencies = (agencies || []).filter((agency) => {
+        const userRole = (roles || []).find((r) => r.user_id === agency.user_id);
+        const role = userRole?.role as string | undefined;
+
+        // Exclude if the user has a sub-account role
+        if (role && SUB_ACCOUNT_ROLES.has(role)) return false;
+
+        // Exclude if this user_id appears as a member of another agency
+        // (meaning they were invited as a team member and shouldn't be a main account)
+        // BUT keep them if they are the OWNER of this agency (their own agency row)
+        const isMemberOfAnotherAgency = memberUserIds.has(agency.user_id) &&
+          !(agencyMembersRaw || []).some(
+            (m) => m.user_id === agency.user_id && m.agency_id === agency.id
+          );
+        if (isMemberOfAnotherAgency) return false;
+
+        return true;
+      });
+
       // Get all properties for stats
       const { data: properties, error: propertiesError } = await supabase
         .from("properties")
@@ -137,14 +176,12 @@ export function useAllAgencies() {
       if (paymentsError) throw paymentsError;
 
       // Get all agency members to include gestionnaire-created records
-      const { data: agencyMembers, error: membersError } = await supabase
-        .from("agency_members")
-        .select("agency_id, user_id, status");
+      // Note: agencyMembersRaw was already fetched above for filtering — reuse it
+      const agencyMembers = agencyMembersRaw;
+      if (membersRawError) throw membersRawError;
 
-      if (membersError) throw membersError;
-
-      // Combine data with stats
-      const agenciesWithProfiles: AgencyWithProfile[] = (agencies || []).map(
+      // Combine data with stats — use mainAgencies (already filtered above)
+      const agenciesWithProfiles: AgencyWithProfile[] = mainAgencies.map(
         (agency) => {
           const profile = (profiles || []).find(
             (p) => p.user_id === agency.user_id

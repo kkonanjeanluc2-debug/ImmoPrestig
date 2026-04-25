@@ -107,17 +107,26 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      const { error, data } = await signUp(email, password, agencyName);
+      const { error, data } = await signUp(email, password, agencyName, {
+        agency_name: agencyName,
+        account_type: accountType,
+        phone,
+        address,
+        city,
+        country,
+        siret,
+      });
 
       if (error) {
         throw error;
       }
 
-      // Create agency record and free subscription
+      // L'agence est créée automatiquement côté serveur par le trigger handle_new_user.
+      // On tente quand même un upsert client-side pour garantir le slug personnalisé si l'utilisateur a une session active.
       if (data?.user) {
-        const { data: agencyData, error: agencyError } = await supabase
+        const { error: agencyError } = await supabase
           .from('agencies')
-          .insert([{
+          .upsert({
             user_id: data.user.id,
             account_type: accountType,
             name: agencyName,
@@ -128,16 +137,11 @@ const Signup = () => {
             city: city || null,
             country: country,
             siret: siret || null,
-          }])
-          .select('id')
-          .single();
+          }, { onConflict: 'user_id', ignoreDuplicates: false });
 
         if (agencyError) {
-          console.error("Agency creation error:", agencyError);
+          console.error("Agency upsert (non-bloquant):", agencyError);
         }
-
-        // Note: Free subscription is automatically created by database trigger
-        // Plan upgrade will happen after successful payment in the checkout dialog
       }
 
       toast({

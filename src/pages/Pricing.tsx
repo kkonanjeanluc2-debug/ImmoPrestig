@@ -274,7 +274,7 @@ const Pricing = () => {
                 className="text-lg px-10 py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
                 onClick={startFree}
               >
-                Commencer gratuitement
+                Essayez 14 jours gratuitement
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </motion.div>
@@ -859,7 +859,7 @@ const Pricing = () => {
                 locative, leurs lotissements et leurs ventes immobilières avec {platformAppName}.
               </p>
               <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25 mb-4" onClick={startFree}>
-                Commencer gratuitement
+                Essayez 14 jours gratuitement
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <p className="text-sm text-muted-foreground">
@@ -1041,7 +1041,7 @@ const Pricing = () => {
                             variant={plan.is_popular ? "default" : "outline"}
                             onClick={() => handleSelectPlan(plan)}
                           >
-                            {plan.price_monthly === 0 ? "Commencer gratuitement" : "Choisir ce forfait"}
+                            {plan.price_monthly === 0 ? "Essayez 14 jours gratuitement" : "Choisir ce forfait"}
                           </Button>
                         </CardFooter>
                       </Card>
@@ -1134,7 +1134,7 @@ const Pricing = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-lg px-10 py-6 shadow-lg shadow-primary/25" onClick={startFree}>
-                Commencer gratuitement
+                Essayez 14 jours gratuitement
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button variant="outline" size="lg" className="text-lg px-8 py-6" onClick={openPricing}>

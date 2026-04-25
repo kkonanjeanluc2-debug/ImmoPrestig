@@ -71,6 +71,9 @@ export function PlatformSettingsCard() {
 
       const ttSetting = settings.find(s => s.key === "tiktok_demo_url");
       if (ttSetting?.value) setTiktokDemoUrl(ttSetting.value);
+
+      const trialSetting = settings.find(s => s.key === "trial_days_default");
+      if (trialSetting?.value) setTrialDaysDefault(trialSetting.value);
     }
   }, [settings]);
 

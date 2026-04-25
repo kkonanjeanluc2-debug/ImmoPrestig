@@ -85,6 +85,17 @@ export function AgencySubscriptionsManager() {
     setSelectedAgency(agency);
     setSelectedPlanId(currentSub?.plan_id || "");
     setSelectedBillingCycle((currentSub?.billing_cycle || "monthly") as BillingCycle | "lifetime");
+
+    // Pre-fill trial days based on existing trial_ends_at if any
+    if (currentSub?.trial_ends_at) {
+      const remaining = Math.max(
+        0,
+        Math.ceil((new Date(currentSub.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      );
+      setTrialDays(String(remaining || 30));
+    } else {
+      setTrialDays("30");
+    }
     setIsDialogOpen(true);
   };
 
@@ -101,6 +112,30 @@ export function AgencySubscriptionsManager() {
         billing_cycle: selectedBillingCycle,
       });
       toast.success("Abonnement mis à jour avec succès");
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast.error("Une erreur est survenue");
+    }
+  };
+
+  const handleAssignTrial = async () => {
+    if (!selectedAgency || !selectedPlanId) {
+      toast.error("Veuillez sélectionner un forfait");
+      return;
+    }
+    const days = parseInt(trialDays, 10);
+    if (isNaN(days) || days < 1 || days > 365) {
+      toast.error("Veuillez saisir un nombre de jours valide (1-365)");
+      return;
+    }
+
+    try {
+      await setAgencyTrial.mutateAsync({
+        agency_id: selectedAgency.id,
+        plan_id: selectedPlanId,
+        trial_days: days,
+      });
+      toast.success(`Période d'essai de ${days} jours appliquée`);
       setIsDialogOpen(false);
     } catch (error) {
       toast.error("Une erreur est survenue");

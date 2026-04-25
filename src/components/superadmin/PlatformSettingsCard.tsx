@@ -170,6 +170,36 @@ export function PlatformSettingsCard() {
             </p>
           </div>
 
+          {/* Trial period duration */}
+          <div className="space-y-2">
+            <Label htmlFor="trial-days" className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-primary" />
+              Durée de la période d'essai gratuite
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="trial-days"
+                type="number"
+                min="0"
+                max="365"
+                placeholder="30"
+                value={trialDaysDefault}
+                className="w-24"
+                onChange={(e) => {
+                  const numValue = parseInt(e.target.value, 10);
+                  if (e.target.value === "" || (!isNaN(numValue) && numValue >= 0 && numValue <= 365)) {
+                    setTrialDaysDefault(e.target.value);
+                    setChanged();
+                  }
+                }}
+              />
+              <span className="text-muted-foreground">jours</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Nombre de jours d'essai accordés automatiquement à chaque nouvelle inscription. S'applique uniquement aux nouveaux comptes créés après modification.
+            </p>
+          </div>
+
 
           {/* Online rent account */}
           <div className="flex items-center justify-between p-4 border rounded-lg">

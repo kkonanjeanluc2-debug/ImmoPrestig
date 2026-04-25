@@ -87,6 +87,10 @@ const SuperAdmin = () => {
   }
 
   const filteredAgencies = (agencies || []).filter((agency) => {
+    // Security guard: only show agence and proprietaire accounts — never team members or tenants
+    const isMainAccount = agency.account_type === "agence" || agency.account_type === "proprietaire";
+    if (!isMainAccount) return false;
+
     // Text search filter
     const matchesSearch = 
       agency.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -543,7 +547,8 @@ const SuperAdmin = () => {
                                   </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {(["super_admin", "admin", "gestionnaire", "lecture_seule"] as AppRole[]).map(
+                                  {/* Only admin-level roles are relevant for agency/proprietaire accounts */}
+                                  {(["super_admin", "admin"] as AppRole[]).map(
                                     (role) => (
                                       <SelectItem key={role} value={role}>
                                         <div className="flex items-center gap-2">

@@ -108,17 +108,99 @@ export function CollectPaymentDialog({
     if (!tenantId) return;
     setCheckingLate(true);
     try {
-      // Check late payments
-      const { data, error } = await supabase
+      const FRENCH_MONTHS_LOCAL = [
+        "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+      ];
+      const toYearMonthLocal = (month: string): string | null => {
+        if (/^\d{4}-\d{2}$/.test(month)) return month;
+        const parts = month.split(" ");
+        if (parts.length === 2) {
+          const idx = FRENCH_MONTHS_LOCAL.indexOf(parts[0]);
+          if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, "0")}`;
+        }
+        return month.length >= 7 ? month.substring(0, 7) : null;
+      };
+
+      // 1) Real late payments in DB
+      const { data: realLate } = await supabase
         .from("payments")
         .select("id, due_date, amount, payment_months, status")
         .eq("tenant_id", tenantId)
         .eq("status", "late")
         .order("due_date", { ascending: true });
 
-      if (!error && data) {
-        setLatePayments(data.filter(p => p.id !== paymentId));
+      const realLateFiltered = (realLate || []).filter((p) => p.id !== paymentId);
+
+      // 2) Detect virtual unpaid prior months (auto-generated, not yet in DB)
+      // Compare months covered by ALL real payments vs months expected from contract start
+      const currentDueYM = (dueDate || "").substring(0, 7); // "YYYY-MM"
+      const blockingVirtuals: any[] = [];
+
+      if (currentDueYM) {
+        const { data: contract } = await supabase
+          .from("contracts")
+          .select("start_date, rent_amount")
+          .eq("tenant_id", tenantId)
+          .eq("status", "active")
+          .is("deleted_at", null)
+          .order("start_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const { data: allPayments } = await supabase
+          .from("payments")
+          .select("id, due_date, payment_months")
+          .eq("tenant_id", tenantId);
+
+        const covered = new Set<string>();
+        for (const p of allPayments || []) {
+          if (p.payment_months && Array.isArray(p.payment_months)) {
+            for (const m of p.payment_months) {
+              const ym = toYearMonthLocal(m);
+              if (ym) covered.add(ym);
+            }
+          }
+          if (typeof p.due_date === "string" && p.due_date.length >= 7) {
+            covered.add(p.due_date.substring(0, 7));
+          }
+        }
+
+        // Iterate from contract start (capped at 12 months back) to month BEFORE currentDueYM
+        const now = new Date();
+        const contractStart = contract?.start_date ? new Date(contract.start_date) : now;
+        const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 12, 1);
+        const startDate = contractStart > twelveMonthsAgo ? contractStart : twelveMonthsAgo;
+
+        const [endY, endM] = currentDueYM.split("-").map(Number);
+        let iterY = startDate.getFullYear();
+        let iterM = startDate.getMonth(); // 0-indexed
+
+        while (iterY < endY || (iterY === endY && iterM + 1 < endM)) {
+          const ym = `${iterY}-${String(iterM + 1).padStart(2, "0")}`;
+          const monthLabel = `${FRENCH_MONTHS_LOCAL[iterM]} ${iterY}`;
+
+          if (!covered.has(ym)) {
+            // Check if it's actually overdue (past today)
+            const monthDate = new Date(iterY, iterM, 1);
+            if (monthDate < new Date(now.getFullYear(), now.getMonth(), 1) || 
+                (monthDate.getFullYear() === now.getFullYear() && monthDate.getMonth() === now.getMonth())) {
+              blockingVirtuals.push({
+                id: `auto-${tenantId}-${ym}`,
+                due_date: `${ym}-01`,
+                amount: contract?.rent_amount || 0,
+                payment_months: [monthLabel],
+                status: "late",
+              });
+            }
+          }
+
+          iterM++;
+          if (iterM > 11) { iterM = 0; iterY++; }
+        }
       }
+
+      setLatePayments([...realLateFiltered, ...blockingVirtuals]);
 
       // Check if tenant has been evicted
       const { data: tenantData } = await supabase
@@ -133,7 +215,7 @@ export function CollectPaymentDialog({
     } finally {
       setCheckingLate(false);
     }
-  }, [tenantId, paymentId]);
+  }, [tenantId, paymentId, dueDate]);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);

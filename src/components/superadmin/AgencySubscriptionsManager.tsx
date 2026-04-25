@@ -369,6 +369,45 @@ export function AgencySubscriptionsManager() {
                 </div>
               </div>
             )}
+
+            <Separator />
+
+            {/* Trial period assignment */}
+            <div className="space-y-2 rounded-lg border border-dashed p-4 bg-muted/30">
+              <Label htmlFor="trial-days-input" className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-primary" />
+                Attribuer une période d'essai
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Définissez manuellement le nombre de jours d'essai gratuit pour cette agence sur le forfait sélectionné. Cliquez sur « Appliquer l'essai » pour activer.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="trial-days-input"
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={trialDays}
+                  className="w-28"
+                  onChange={(e) => setTrialDays(e.target.value)}
+                />
+                <span className="text-sm text-muted-foreground">jours</span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleAssignTrial}
+                  disabled={!selectedPlanId || setAgencyTrial.isPending}
+                  className="ml-auto"
+                >
+                  {setAgencyTrial.isPending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  ) : (
+                    <CalendarClock className="h-4 w-4 mr-2" />
+                  )}
+                  Appliquer l'essai
+                </Button>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
@@ -384,7 +423,7 @@ export function AgencySubscriptionsManager() {
               ) : (
                 <Check className="h-4 w-4 mr-2" />
               )}
-              Confirmer
+              Activer l'abonnement
             </Button>
           </DialogFooter>
         </DialogContent>

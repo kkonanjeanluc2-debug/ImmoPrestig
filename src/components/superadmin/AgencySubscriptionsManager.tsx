@@ -37,6 +37,7 @@ import {
   useSubscriptionPlans,
   useAllAgencySubscriptions,
   useAssignSubscription,
+  useSetAgencyTrial,
 } from "@/hooks/useSubscriptionPlans";
 import { useAllAgencies, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 

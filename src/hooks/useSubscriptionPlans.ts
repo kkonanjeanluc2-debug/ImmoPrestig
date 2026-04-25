@@ -199,12 +199,14 @@ export function useAssignSubscription() {
         status: string;
         starts_at: string;
         ends_at?: string | null;
+        trial_ends_at?: string | null;
       } = {
         agency_id,
         plan_id,
         billing_cycle,
         status: "active",
         starts_at: new Date().toISOString(),
+        trial_ends_at: null,
       };
 
       // Lifetime subscriptions never expire
@@ -235,6 +237,48 @@ export function useAssignSubscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-agency-subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["all-agencies"] });
+    },
+  });
+}
+
+// Set/extend trial period for an agency (super admin only)
+export function useSetAgencyTrial() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      agency_id,
+      plan_id,
+      trial_days,
+    }: {
+      agency_id: string;
+      plan_id: string;
+      trial_days: number;
+    }) => {
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + trial_days);
+
+      const { error } = await supabase
+        .from("agency_subscriptions")
+        .upsert(
+          {
+            agency_id,
+            plan_id,
+            billing_cycle: "monthly",
+            status: "trial",
+            starts_at: new Date().toISOString(),
+            trial_ends_at: trialEnd.toISOString(),
+            ends_at: trialEnd.toISOString(),
+          },
+          { onConflict: "agency_id" }
+        );
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-agency-subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["all-agencies"] });
+      queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
     },
   });
 }

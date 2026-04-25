@@ -46,6 +46,14 @@ Deno.serve(async (req) => {
         );
       }
 
+      if (!waveWebhookSecret) {
+        console.error("WAVE_WEBHOOK_SECRET not configured");
+        return new Response(
+          JSON.stringify({ error: "Webhook secret not configured" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const expectedSignature = createHmac("sha256", waveWebhookSecret)
         .update(rawBody)
         .digest("hex");

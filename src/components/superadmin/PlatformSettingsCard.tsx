@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePlatformSettings, useUpdatePlatformSetting, useUpsertPlatformSetting } from "@/hooks/usePlatformSettings";
-import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone, Mail, Video } from "lucide-react";
+import { Settings, Save, Loader2, MessageCircle, Percent, CreditCard, Wallet, Smartphone, Mail, Video, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBrandingSection } from "./PlatformBrandingSection";
 

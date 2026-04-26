@@ -76,14 +76,22 @@ export function useNotifications(limit = 50) {
 
 export function useUnreadCount() {
   const { user } = useAuth();
+  const { data: userRole } = useCurrentUserRole();
+  const isLocataire = userRole?.role === "locataire";
 
   return useQuery({
-    queryKey: ["notifications-unread-count"],
+    queryKey: ["notifications-unread-count", isLocataire],
     queryFn: async () => {
-      const { count, error } = await supabase
+      let req = supabase
         .from("notifications")
         .select("*", { count: "exact", head: true })
         .eq("read", false);
+
+      if (isLocataire) {
+        req = req.eq("entity_type", "tenant_request");
+      }
+
+      const { count, error } = await req;
 
       if (error) throw error;
       return count || 0;

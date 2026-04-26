@@ -426,6 +426,7 @@ export function TenantPayRentDialog({
             </div>
           </div>
         ) : (
+        <>
         <div className="space-y-4 py-4">
           {/* Late payments warning */}
           {checkingLate ? (

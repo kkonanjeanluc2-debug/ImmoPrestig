@@ -121,6 +121,7 @@ const queryClient = new QueryClient({
 
 // RootRedirect: when the PWA relaunches (start_url="/"), redirect to the branded login
 // if an agencyId was previously stored. Otherwise show the normal Pricing page.
+// NOTE: we only return <Navigate> — never a lazy component (would break Suspense boundary).
 function RootRedirect() {
   const params = new URLSearchParams(window.location.search);
   let agencyId = params.get("agencyId") || localStorage.getItem("pwa_agency_id");
@@ -137,8 +138,8 @@ function RootRedirect() {
     return <Navigate to={`/login?agencyId=${agencyId}`} replace />;
   }
 
-  // Normal visit → show Pricing page
-  return <Pricing />;
+  // Normal visit → go to /pricing (handled by its own route inside Suspense)
+  return <Navigate to="/pricing" replace />;
 }
 
 // Skeleton-based loader for perceived instant loading
@@ -199,6 +200,7 @@ const App = () => {
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/" element={<RootRedirect />} />
+                  <Route path="/pricing" element={<Pricing />} />
                   <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                   
                   <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />

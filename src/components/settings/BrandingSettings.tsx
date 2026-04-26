@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { Palette, Save, Loader2, RotateCcw } from "lucide-react";
+import { Palette, Save, Loader2, RotateCcw, Link2, Copy, Check } from "lucide-react";
 
 const DEFAULT_COLORS = {
   primary: "#1e3a5f",
@@ -35,6 +35,21 @@ export function BrandingSettings() {
   const [sidebarColor, setSidebarColor] = useState(DEFAULT_COLORS.sidebar);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Correct dedicated login link: /login?agencyId=xxx
+  const loginLink = agency?.id
+    ? `${window.location.origin}/login?agencyId=${agency.id}`
+    : null;
+
+  const handleCopyLink = () => {
+    if (!loginLink) return;
+    navigator.clipboard.writeText(loginLink).then(() => {
+      setLinkCopied(true);
+      toast.success("Lien copié !");
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     if (agency) {
@@ -287,6 +302,43 @@ export function BrandingSettings() {
         </div>
       </CardContent>
     </Card>
+
+    {/* Lien de connexion dédié */}
+    {loginLink && (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Link2 className="h-5 w-5 text-primary" />
+            <CardTitle className="text-base">Lien de connexion dédié</CardTitle>
+          </div>
+          <CardDescription>
+            Partagez ce lien avec votre équipe pour qu'ils accèdent directement à votre page de connexion personnalisée avec votre logo et votre nom. Ce lien fonctionne aussi pour installer l'application PWA sur mobile.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              readOnly
+              value={loginLink}
+              className="font-mono text-sm bg-muted"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCopyLink}
+              className="shrink-0"
+            >
+              {linkCopied
+                ? <Check className="h-4 w-4 text-green-500" />
+                : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            ✓ Format correct — à utiliser tel quel pour le partage et l'installation PWA.
+          </p>
+        </CardContent>
+      </Card>
+    )}
   );
 }
 

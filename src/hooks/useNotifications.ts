@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrentUserRole } from "@/hooks/useUserRoles";
 import { useEffect } from "react";
 
 export type NotificationType = "info" | "warning" | "error" | "success";

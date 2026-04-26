@@ -557,6 +557,8 @@ export function TenantPayRentDialog({
             )}
           </Button>
         </DialogFooter>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );

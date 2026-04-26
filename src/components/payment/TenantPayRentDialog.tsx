@@ -390,11 +390,6 @@ export function TenantPayRentDialog({
     }
   };
 
-  // If agency hasn't enabled online payment, hide the button entirely
-  if (!isOnlinePaymentEnabled && !isLoadingAgency) {
-    return null;
-  }
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -414,6 +409,24 @@ export function TenantPayRentDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {!isOnlinePaymentEnabled && !isLoadingAgency ? (
+          <div className="py-4">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Le paiement en ligne n'est pas encore activé par votre agence.
+                Veuillez contacter votre agence pour régler votre loyer
+                directement (espèces, virement, Mobile Money, etc.).
+              </AlertDescription>
+            </Alert>
+            <div className="mt-4 flex justify-end">
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Fermer
+              </Button>
+            </div>
+          </div>
+        ) : (
+        <>
         <div className="space-y-4 py-4">
           {/* Late payments warning */}
           {checkingLate ? (
@@ -545,6 +558,8 @@ export function TenantPayRentDialog({
             )}
           </Button>
         </DialogFooter>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );

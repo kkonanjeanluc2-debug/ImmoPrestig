@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo } from "react";
 import { differenceInDays, parseISO } from "date-fns";
-import { getDedicatedLoginPath } from "@/lib/dedicatedLogin";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -66,7 +65,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to={getDedicatedLoginPath()} state={{ from: location }} replace />;
+    // Preserve the agencyId (branded login) when redirecting to /login
+    // Read from URL param first, then fall back to localStorage (set on first PWA launch)
+    const params = new URLSearchParams(window.location.search);
+    const agencyId = params.get("agencyId") || localStorage.getItem("pwa_agency_id");
+    const loginPath = agencyId ? `/login?agencyId=${agencyId}` : "/login";
+    return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
   // Rediriger les locataires vers /payments s'ils accèdent à une route interdite

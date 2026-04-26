@@ -330,6 +330,18 @@ export default function Payments() {
     return "bg-blue-500/20 text-blue-500";
   };
 
+  // Wait for permissions/role to load before rendering the page,
+  // otherwise role-dependent buttons (e.g. tenant "Payer") won't show.
+  if (permLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6 sm:space-y-8">

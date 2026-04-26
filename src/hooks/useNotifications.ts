@@ -20,16 +20,25 @@ export interface Notification {
 
 export function useNotifications(limit = 50) {
   const { user } = useAuth();
+  const { data: userRole } = useCurrentUserRole();
+  const isLocataire = userRole?.role === "locataire";
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["notifications", limit],
+    queryKey: ["notifications", limit, isLocataire],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let req = supabase
         .from("notifications")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
+
+      // Pour le portail locataire : uniquement les réponses de l'agence
+      if (isLocataire) {
+        req = req.eq("entity_type", "tenant_request");
+      }
+
+      const { data, error } = await req;
 
       if (error) throw error;
       return data as Notification[];

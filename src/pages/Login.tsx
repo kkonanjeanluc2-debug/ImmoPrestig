@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Building2, User, Lock, CreditCard, Eye, EyeOff } from "lucide-react";
+import { Loader2, User, Lock, CreditCard, Eye, EyeOff } from "lucide-react";
 import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
-import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
-import { useSearchParams } from "react-router-dom";
+import { isValidEmail } from "@/lib/emailValidation";
 
 // Convert phone number to pseudo-email for auth (must match edge function logic)
 function phoneToEmail(phone: string): string {

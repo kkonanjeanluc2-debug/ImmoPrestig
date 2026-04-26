@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { FeatureProtectedRoute } from "@/components/auth/FeatureProtectedRoute";
@@ -14,7 +14,6 @@ import UpdatePrompt from "@/components/UpdatePrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PageSkeleton from "@/components/PageSkeleton";
-import AppEntryRoute from "@/components/routing/AppEntryRoute";
 
 
 // Lazy load pages for code splitting
@@ -120,11 +119,54 @@ const queryClient = new QueryClient({
   },
 });
 
+// RootRedirect: when the PWA relaunches (start_url="/"), redirect to the branded login
+// if an agencyId was previously stored. Otherwise show the normal Pricing page.
+function RootRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  let agencyId = params.get("agencyId") || localStorage.getItem("pwa_agency_id");
+
+  // Fix malformed format: /?agencyId=xxx/login → strip the trailing "/login"
+  if (agencyId && agencyId.endsWith("/login")) {
+    agencyId = agencyId.replace(/\/login$/, "");
+    localStorage.setItem("pwa_agency_id", agencyId);
+  }
+
+  // If running as installed PWA AND we have an agencyId stored → go straight to branded login
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+  if (isStandalone && agencyId) {
+    return <Navigate to={`/login?agencyId=${agencyId}`} replace />;
+  }
+
+  // Normal visit → show Pricing page
+  return <Pricing />;
+}
+
 // Skeleton-based loader for perceived instant loading
 const PageLoader = () => <PageSkeleton />;
 
+// Persist agencyId from URL into localStorage on first load
+// Handles two formats:
+//   - /login?agencyId=xxx           (correct format)
+//   - /?agencyId=xxx/login          (malformed but used in practice — agencyId contains "/login")
+function usePersistAgencyId() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    let agencyId = params.get("agencyId");
+
+    // Fix malformed format: /?agencyId=xxx/login → strip the trailing "/login"
+    if (agencyId && agencyId.endsWith("/login")) {
+      agencyId = agencyId.replace(/\/login$/, "");
+    }
+
+    if (agencyId) {
+      localStorage.setItem("pwa_agency_id", agencyId);
+    }
+  }, []);
+}
+
 const App = () => {
   usePreloadPages();
+  usePersistAgencyId();
   
   const [showSplash, setShowSplash] = useState(() => {
     // Only show splash on first visit per session
@@ -153,11 +195,10 @@ const App = () => {
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/login" element={<Login />} />
-                  <Route path="/:agencySlug/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/" element={<AppEntryRoute fallback={<Pricing />} />} />
+                  <Route path="/" element={<RootRedirect />} />
                   <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                   
                   <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
@@ -183,7 +224,6 @@ const App = () => {
                   <Route path="/apporteurs" element={<ProtectedRoute><FeatureProtectedRoute feature="apporteurs_affaires"><ApporteursAffaires /></FeatureProtectedRoute></ProtectedRoute>} />
                   <Route path="/super-admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
-                  <Route path="/:agencySlug/install" element={<Install />} />
                   <Route path="/sign-contract" element={<SignContract />} />
                   <Route path="/sign-vente" element={<SignVente />} />
                   <Route path="/sign-achat" element={<SignAchat />} />

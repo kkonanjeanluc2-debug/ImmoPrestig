@@ -131,6 +131,7 @@ export function BrandingSettings() {
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -339,6 +340,7 @@ export function BrandingSettings() {
         </CardContent>
       </Card>
     )}
+    </>
   );
 }
 

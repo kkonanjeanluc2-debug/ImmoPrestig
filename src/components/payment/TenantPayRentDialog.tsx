@@ -122,7 +122,9 @@ export function TenantPayRentDialog({
     },
     enabled: !!agencyUserId,
   });
-  const isOnlinePaymentEnabled = !!(agency?.online_rent_enabled);
+  const isOnlinePaymentEnabled = !!(agency?.online_rent_enabled) 
+    || !!(agency?.geniuspay_public_key && agency.geniuspay_public_key.trim().length > 0)
+    || !!(agency?.kkiapay_public_key && agency.kkiapay_public_key.trim().length > 0);
 
   const dueMonth = new Date(dueDate).toLocaleDateString("fr-FR", {
     month: "long",
@@ -215,24 +217,23 @@ export function TenantPayRentDialog({
     let currentPaymentId = paymentId;
     
     try {
-      // If this is a virtual payment, create or resolve the real payment securely on the backend
+      // If this is a virtual payment, create a real one first
       if (isVirtual && tenantId) {
-        const { data: created, error: createError } = await supabase.functions.invoke("tenant-create-rent-payment", {
-          body: {
+        const { data: created, error: createError } = await supabase
+          .from("payments")
+          .insert({
             tenant_id: tenantId,
+            amount: amount,
             due_date: dueDate,
+            status: "pending",
+            user_id: agencyUserId,
             payment_months: paymentMonths || null,
-          },
-        });
-
-        if (createError) {
-          throw new Error(created?.error || createError.message || "Impossible de créer le paiement");
-        }
-        if (!created?.payment_id) {
-          throw new Error("Réponse invalide lors de la création du paiement");
-        }
-
-        currentPaymentId = created.payment_id;
+          })
+          .select()
+          .single();
+        
+        if (createError) throw createError;
+        currentPaymentId = created.id;
         setPaymentId(currentPaymentId);
       }
 
@@ -390,7 +391,7 @@ export function TenantPayRentDialog({
     }
   };
 
-  // If agency hasn't enabled online payment, hide the button entirely
+  // If no payment method is configured at all, hide the button
   if (!isOnlinePaymentEnabled && !isLoadingAgency) {
     return null;
   }

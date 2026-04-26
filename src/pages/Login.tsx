@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,7 @@ import { Loader2, Building2, User, Lock, CreditCard, Eye, EyeOff } from "lucide-
 import { usePlatformBranding } from "@/hooks/usePlatformBranding";
 import { DemoRequestButton } from "@/components/common/DemoRequestButton";
 import { isValidEmail, EMAIL_ERROR_MESSAGE } from "@/lib/emailValidation";
-import { getDedicatedInstallPath, setDedicatedLoginSlug } from "@/lib/dedicatedLogin";
-
-function isStandaloneApp() {
-  if (typeof window === "undefined") return false;
-
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
-  );
-}
+import { useSearchParams } from "react-router-dom";
 
 // Convert phone number to pseudo-email for auth (must match edge function logic)
 function phoneToEmail(phone: string): string {
@@ -44,61 +35,43 @@ const Login = () => {
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
-  const [agencyBranding, setAgencyBranding] = useState<{ agency_name: string; logo_url: string | null; login_image_url: string | null; slug: string; is_default?: boolean; } | null>(null);
+  const [agencyBranding, setAgencyBranding] = useState<{ name: string; logo_url: string | null; primary_color: string | null } | null>(null);
   const { signIn } = useAuth();
   const { logoUrl: platformLogo, appName: platformAppName } = usePlatformBranding();
   const navigate = useNavigate();
   const location = useLocation();
-  const { agencySlug } = useParams();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
   const from = location.state?.from?.pathname || "/dashboard";
 
+  // --- Branded login: resolve agencyId from URL param or localStorage (PWA relaunch) ---
   useEffect(() => {
-    let cancelled = false;
+    let agencyId = searchParams.get("agencyId") || localStorage.getItem("pwa_agency_id");
 
-    const loadAgencyBranding = async () => {
-      if (!agencySlug) {
-        setAgencyBranding(null);
-        return;
-      }
+    // Fix malformed format: /?agencyId=xxx/login → strip the trailing "/login"
+    if (agencyId && agencyId.endsWith("/login")) {
+      agencyId = agencyId.replace(/\/login$/, "");
+    }
 
-      const { data, error } = await supabase.functions.invoke("get-agency-login-branding", {
-        body: { slug: agencySlug },
+    if (!agencyId) return;
+
+    // Persist for future relaunches
+    localStorage.setItem("pwa_agency_id", agencyId);
+
+    // Fetch agency branding
+    supabase
+      .from("agencies")
+      .select("name, logo_url, primary_color")
+      .eq("id", agencyId)
+      .eq("is_active", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setAgencyBranding(data);
       });
+  }, [searchParams]);
 
-      if (!cancelled) {
-        if (error || !data?.branding) {
-          setAgencyBranding(null);
-          return;
-        }
-
-        setAgencyBranding(data.branding);
-      }
-    };
-
-    void loadAgencyBranding();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [agencySlug]);
-
-  const displayLogo = agencyBranding?.logo_url || platformLogo;
-  const displayAppName = agencyBranding?.agency_name || platformAppName;
-  const isDefaultBranding = agencyBranding?.is_default ?? false;
-  const isDedicatedInstalledApp = !!agencySlug && isStandaloneApp();
-  const backgroundStyle = agencyBranding?.login_image_url
-    ? {
-        backgroundImage: `linear-gradient(hsl(var(--background) / 0.34), hsl(var(--background) / 0.52)), url(${agencyBranding.login_image_url})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }
-    : undefined;
-
-  useEffect(() => {
-    setDedicatedLoginSlug(agencySlug ?? null);
-  }, [agencySlug]);
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,31 +123,9 @@ const Login = () => {
       return;
     }
 
-    if (agencySlug) {
-      const { data: accessData, error: accessError } = await supabase.functions.invoke("verify-agency-login-access", {
-        body: {
-          slug: agencySlug,
-          loginEmail,
-        },
-      });
-
-      const isAllowed = !accessError && accessData?.allowed === true;
-
-      if (!isAllowed) {
-        setIsLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Accès refusé",
-          description:
-            accessData?.message || "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
-        });
-        return;
-      }
-    }
-
     if (!isLoading) setIsLoading(true);
 
-    const { error, data } = await signIn(loginEmail, password);
+    const { error } = await signIn(loginEmail, password);
 
     if (error) {
       const newAttempts = attempts + 1;
@@ -191,40 +142,6 @@ const Login = () => {
       setIsLoading(false);
       return;
     }
-
-    if (agencySlug) {
-      const { data: accessData, error: accessError } = await supabase.functions.invoke("verify-agency-login-access", {
-        body: {
-          slug: agencySlug,
-          loginEmail,
-        },
-      });
-
-      const isAllowed = !accessError && accessData?.allowed === true;
-
-      if (!isAllowed) {
-        await supabase.auth.signOut();
-        setIsLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Accès refusé",
-          description:
-            accessData?.message || "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
-        });
-        return;
-      }
-    }
-
-    if (!data?.user) {
-      setIsLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Erreur de connexion",
-        description: "Impossible de valider votre session. Veuillez réessayer.",
-      });
-      return;
-    }
-
     setAttempts(0);
     setLockedUntil(null);
 
@@ -244,16 +161,27 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4" style={backgroundStyle}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto w-20 h-20 rounded-full overflow-hidden shadow-md">
-            <img src={displayLogo} alt={displayAppName} className="w-full h-full object-cover" />
+            <img
+              src={agencyBranding?.logo_url || platformLogo}
+              alt={agencyBranding?.name || platformAppName}
+              className="w-full h-full object-cover"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
-          <CardDescription>
-            Connectez-vous pour accéder à votre espace de gestion immobilière{agencyBranding && !isDefaultBranding ? ` — ${agencyBranding.agency_name}` : ""}
-          </CardDescription>
+          {agencyBranding ? (
+            <>
+              <CardTitle className="text-2xl font-bold">{agencyBranding.name}</CardTitle>
+              <CardDescription>Connectez-vous pour accéder à votre espace de gestion</CardDescription>
+            </>
+          ) : (
+            <>
+              <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
+              <CardDescription>Connectez-vous pour accéder à votre espace de gestion immobilière</CardDescription>
+            </>
+          )}
         </CardHeader>
         <form onSubmit={handleSubmit} autoComplete="off">
           <CardContent className="space-y-4">
@@ -319,39 +247,24 @@ const Login = () => {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Se connecter
             </Button>
-            {!isDedicatedInstalledApp && (
-              <>
-                <p className="text-sm text-muted-foreground text-center">
-                  Pas encore de compte ?{" "}
-                  <Link to="/signup" className="text-primary hover:underline font-medium">
-                    S'inscrire
-                  </Link>
-                </p>
-                <Link
-                  to="/"
-                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  Accueil
-                </Link>
-              </>
-            )}
-            {agencySlug && (
-              <Link
-                to={getDedicatedInstallPath()}
-                className="flex items-center justify-center gap-2 text-sm text-primary hover:underline transition-colors"
-              >
-                <Building2 className="h-4 w-4" />
-                Installer l'application
+            <p className="text-sm text-muted-foreground text-center">
+              Pas encore de compte ?{" "}
+              <Link to="/signup" className="text-primary hover:underline font-medium">
+                S'inscrire
               </Link>
-            )}
-            {!isDedicatedInstalledApp && (
-              <DemoRequestButton
-                variant="outline"
-                size="sm"
-                className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
-              />
-            )}
+            </p>
+            <Link
+              to="/"
+              className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <CreditCard className="h-4 w-4" />
+              Accueil
+            </Link>
+            <DemoRequestButton
+              variant="outline"
+              size="sm"
+              className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+            />
           </CardFooter>
         </form>
       </Card>

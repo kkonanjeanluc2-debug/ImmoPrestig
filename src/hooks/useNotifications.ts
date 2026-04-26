@@ -62,6 +62,7 @@ export function useNotifications(limit = 50) {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
         }
       )
       .subscribe();

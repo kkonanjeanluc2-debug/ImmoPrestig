@@ -328,7 +328,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Avatar>
               <div className="hidden md:flex flex-col items-start gap-0.5">
                 <p className="text-sm font-medium text-foreground leading-none">
-                  {isLocataire ? displayName : (ownAgency?.name || displayName)}
+                  {displayName}
                 </p>
                 <Badge 
                   variant="outline" 

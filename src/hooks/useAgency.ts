@@ -55,17 +55,10 @@ export function useAgency() {
     queryFn: async () => {
       if (!user?.id) return null;
 
-      // First, check if user owns an agency
-      const { data: ownedAgency, error: ownedError } = await supabase
-        .from("agencies")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (ownedError) throw ownedError;
-      if (ownedAgency) return ownedAgency as Agency;
-
-      // If not an owner, check if user is a member of an agency
+      // PRIORITY 1: Check if the user is an active member of an existing agency.
+      // This takes precedence over an "owned" agency because the owned one may be
+      // an auto-created shell from the signup trigger when the user was actually
+      // invited to join an existing agency.
       const { data: membership, error: memberError } = await supabase
         .from("agency_members")
         .select("agency_id")
@@ -74,17 +67,27 @@ export function useAgency() {
         .maybeSingle();
 
       if (memberError) throw memberError;
-      if (!membership) return null;
 
-      // Fetch the agency the user is a member of
-      const { data: memberAgency, error: agencyError } = await supabase
+      if (membership?.agency_id) {
+        const { data: memberAgency, error: agencyError } = await supabase
+          .from("agencies")
+          .select("*")
+          .eq("id", membership.agency_id)
+          .maybeSingle();
+
+        if (agencyError) throw agencyError;
+        if (memberAgency) return memberAgency as Agency;
+      }
+
+      // PRIORITY 2: Otherwise, return the agency owned by the user (standard case).
+      const { data: ownedAgency, error: ownedError } = await supabase
         .from("agencies")
         .select("*")
-        .eq("id", membership.agency_id)
+        .eq("user_id", user.id)
         .maybeSingle();
 
-      if (agencyError) throw agencyError;
-      return memberAgency as Agency | null;
+      if (ownedError) throw ownedError;
+      return (ownedAgency as Agency) ?? null;
     },
     enabled: !!user?.id,
   });

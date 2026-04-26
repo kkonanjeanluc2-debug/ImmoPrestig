@@ -90,7 +90,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     queryKey: ["tenant-agency", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      
+
       // Find the tenant record for this portal user
       const { data: tenant, error: tenantError } = await supabase
         .from("tenants")
@@ -98,18 +98,35 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         .eq("portal_user_id", user.id)
         .eq("has_portal_access", true)
         .maybeSingle();
-      
+
       if (tenantError || !tenant) return null;
-      
-      // Fetch the agency owned by the tenant's user_id
-      const { data: agencyData, error: agencyError } = await supabase
+
+      // Try first: agency directly owned by tenant.user_id
+      const { data: ownedAgency } = await supabase
         .from("agencies")
         .select("id, name, logo_url")
         .eq("user_id", tenant.user_id)
         .maybeSingle();
-      
-      if (agencyError) return null;
-      return agencyData;
+
+      if (ownedAgency) return ownedAgency;
+
+      // Fallback: tenant.user_id is a team member — resolve their agency
+      const { data: membership } = await supabase
+        .from("agency_members")
+        .select("agency_id")
+        .eq("user_id", tenant.user_id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (!membership?.agency_id) return null;
+
+      const { data: memberAgency } = await supabase
+        .from("agencies")
+        .select("id, name, logo_url")
+        .eq("id", membership.agency_id)
+        .maybeSingle();
+
+      return memberAgency;
     },
     enabled: !!user?.id && isLocataire,
   });

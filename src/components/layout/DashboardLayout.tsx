@@ -328,10 +328,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
 
-        {/* Trial/Expiry Banner */}
-        <div className="px-4 lg:px-6 pt-3">
-          <TrialBanner />
-        </div>
+        {/* Trial/Expiry Banner - hidden for tenant portal users */}
+        {!isLocataire && (
+          <div className="px-4 lg:px-6 pt-3">
+            <TrialBanner />
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="p-4 lg:p-6" data-tour="page-content">

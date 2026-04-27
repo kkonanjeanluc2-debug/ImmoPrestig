@@ -587,6 +587,19 @@ const SuperAdmin = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                onClick={() => setResetPasswordAgency({
+                                  user_id: agency.user_id,
+                                  name: agency.name,
+                                  email: agency.email,
+                                })}
+                                className="text-blue-600 hover:text-blue-600 hover:bg-blue-500/10"
+                                title="Réinitialiser le mot de passe"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => handleToggleStatus(agency)}
                                 disabled={toggleStatus.isPending}
                                 className={agency.is_active 

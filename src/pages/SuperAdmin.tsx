@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff, Home, CreditCard, TrendingUp, ClipboardList, Receipt, Wallet, MapPin, UserCheck } from "lucide-react";
+import { Building2, Users, Search, Trash2, Shield, Crown, UserCog, Eye, Loader2, Power, PowerOff, Home, CreditCard, TrendingUp, ClipboardList, Receipt, Wallet, MapPin, UserCheck, KeyRound } from "lucide-react";
+import { ResetAgencyPasswordDialog } from "@/components/superadmin/ResetAgencyPasswordDialog";
 import { useIsSuperAdmin, useAllAgencies, useDeleteAgency, useSuperAdminUpdateRole, useToggleAccountStatus, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 import { useLogSuperAdminAction, SuperAdminActionType } from "@/hooks/useSuperAdminAudit";
 import { AuditLogCard } from "@/components/superadmin/AuditLogCard";
@@ -66,6 +67,7 @@ const SuperAdmin = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AppRole>>({});
   const [activeTab, setActiveTab] = useState("overview");
+  const [resetPasswordAgency, setResetPasswordAgency] = useState<{ user_id: string; name: string; email: string | null } | null>(null);
 
   // Audit logging helper
   const logAudit = useCallback(async (
@@ -585,6 +587,19 @@ const SuperAdmin = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                onClick={() => setResetPasswordAgency({
+                                  user_id: agency.user_id,
+                                  name: agency.name,
+                                  email: agency.email,
+                                })}
+                                className="text-blue-600 hover:text-blue-600 hover:bg-blue-500/10"
+                                title="Réinitialiser le mot de passe"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => handleToggleStatus(agency)}
                                 disabled={toggleStatus.isPending}
                                 className={agency.is_active 
@@ -669,6 +684,13 @@ const SuperAdmin = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <ResetAgencyPasswordDialog
+        open={!!resetPasswordAgency}
+        onOpenChange={(open) => {
+          if (!open) setResetPasswordAgency(null);
+        }}
+        agency={resetPasswordAgency}
+      />
     </DashboardLayout>
   );
 };

@@ -67,6 +67,7 @@ const SuperAdmin = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AppRole>>({});
   const [activeTab, setActiveTab] = useState("overview");
+  const [resetPasswordAgency, setResetPasswordAgency] = useState<{ user_id: string; name: string; email: string | null } | null>(null);
 
   // Audit logging helper
   const logAudit = useCallback(async (

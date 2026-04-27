@@ -684,6 +684,13 @@ const SuperAdmin = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <ResetAgencyPasswordDialog
+        open={!!resetPasswordAgency}
+        onOpenChange={(open) => {
+          if (!open) setResetPasswordAgency(null);
+        }}
+        agency={resetPasswordAgency}
+      />
     </DashboardLayout>
   );
 };

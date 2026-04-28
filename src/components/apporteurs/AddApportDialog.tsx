@@ -10,18 +10,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Check, ChevronsUpDown, Building2, User } from "lucide-react";
+import { Check, ChevronsUpDown, Building2, User, Home, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateApport, type ApporteurAffaires } from "@/hooks/useApporteursAffaires";
 import { useProperties } from "@/hooks/useProperties";
 import { useTenants } from "@/hooks/useTenants";
+import { useVentesImmobilieres } from "@/hooks/useVentesImmobilieres";
+import { useVentesParcelles } from "@/hooks/useVentesParcelles";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const schema = z.object({
-  commission_type: z.enum(["locataire", "bien"]),
+  commission_type: z.enum(["locataire", "bien", "vente_bien", "vente_lot"]),
   property_id: z.string().optional().or(z.literal("")),
   tenant_id: z.string().optional().or(z.literal("")),
+  vente_immobiliere_id: z.string().optional().or(z.literal("")),
+  vente_parcelle_id: z.string().optional().or(z.literal("")),
   commission_percentage: z.coerce.number().min(0).max(100),
   commission_amount: z.coerce.number().min(0).optional(),
   description: z.string().max(500).optional().or(z.literal("")),
@@ -40,8 +45,14 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   const createApport = useCreateApport();
   const { data: properties = [] } = useProperties();
   const { data: tenants = [] } = useTenants();
+  const { hasFeature } = useFeatureAccess();
+  const canSellAccess = hasFeature("ventes_immobilieres") || hasFeature("lotissement");
+  const { data: ventesImmo = [] } = useVentesImmobilieres();
+  const { data: ventesParcelles = [] } = useVentesParcelles();
   const [propertyOpen, setPropertyOpen] = useState(false);
   const [tenantOpen, setTenantOpen] = useState(false);
+  const [venteImmoOpen, setVenteImmoOpen] = useState(false);
+  const [venteLotOpen, setVenteLotOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -49,6 +60,8 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
       commission_type: "locataire",
       property_id: "",
       tenant_id: "",
+      vente_immobiliere_id: "",
+      vente_parcelle_id: "",
       commission_percentage: apporteur.commission_percentage,
       commission_amount: 0,
       description: "",
@@ -59,6 +72,8 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   const commissionType = useWatch({ control: form.control, name: "commission_type" });
   const selectedPropertyId = useWatch({ control: form.control, name: "property_id" });
   const selectedTenantId = useWatch({ control: form.control, name: "tenant_id" });
+  const selectedVenteImmoId = useWatch({ control: form.control, name: "vente_immobiliere_id" });
+  const selectedVenteLotId = useWatch({ control: form.control, name: "vente_parcelle_id" });
   const commissionPct = useWatch({ control: form.control, name: "commission_percentage" });
 
   const { data: units = [] } = useQuery({
@@ -93,7 +108,29 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
     return activeContract?.rent_amount || 0;
   }, [commissionType, selectedTenantId, tenants]);
 
-  const baseAmount = commissionType === "bien" ? rentAmount : tenantRent;
+  // Prix de vente immobilière
+  const venteImmoPrice = useMemo(() => {
+    if (commissionType !== "vente_bien" || !selectedVenteImmoId) return 0;
+    return ventesImmo.find(v => v.id === selectedVenteImmoId)?.total_price || 0;
+  }, [commissionType, selectedVenteImmoId, ventesImmo]);
+
+  // Prix de vente lot (parcelle)
+  const venteLotPrice = useMemo(() => {
+    if (commissionType !== "vente_lot" || !selectedVenteLotId) return 0;
+    return ventesParcelles.find(v => v.id === selectedVenteLotId)?.total_price || 0;
+  }, [commissionType, selectedVenteLotId, ventesParcelles]);
+
+  const baseAmount =
+    commissionType === "bien" ? rentAmount :
+    commissionType === "locataire" ? tenantRent :
+    commissionType === "vente_bien" ? venteImmoPrice :
+    commissionType === "vente_lot" ? venteLotPrice : 0;
+
+  const baseLabel =
+    commissionType === "bien" ? "Rendement mensuel du bien" :
+    commissionType === "locataire" ? "Loyer du locataire" :
+    commissionType === "vente_bien" ? "Prix de vente du bien" :
+    commissionType === "vente_lot" ? "Prix de vente du lot" : "";
 
   useEffect(() => {
     if (baseAmount > 0 && commissionPct > 0) {
@@ -107,17 +144,23 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
   useEffect(() => {
     form.setValue("property_id", "");
     form.setValue("tenant_id", "");
+    form.setValue("vente_immobiliere_id", "");
+    form.setValue("vente_parcelle_id", "");
     form.setValue("commission_amount", 0);
   }, [commissionType, form]);
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId);
   const selectedTenant = tenants.find(t => t.id === selectedTenantId);
+  const selectedVenteImmo = ventesImmo.find(v => v.id === selectedVenteImmoId);
+  const selectedVenteLot = ventesParcelles.find(v => v.id === selectedVenteLotId);
 
   const onSubmit = async (values: FormValues) => {
     await createApport.mutateAsync({
       apporteur_id: apporteur.id,
       property_id: values.commission_type === "bien" ? (values.property_id || undefined) : undefined,
       tenant_id: values.commission_type === "locataire" ? (values.tenant_id || undefined) : undefined,
+      vente_immobiliere_id: values.commission_type === "vente_bien" ? (values.vente_immobiliere_id || undefined) : undefined,
+      vente_parcelle_id: values.commission_type === "vente_lot" ? (values.vente_parcelle_id || undefined) : undefined,
       commission_percentage: values.commission_percentage,
       commission_amount: values.commission_amount,
       commission_type: values.commission_type,
@@ -161,8 +204,23 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
                     <SelectItem value="bien">
                       <span className="flex items-center gap-2"><Building2 className="h-4 w-4" /> Sur bien (rendement mensuel)</span>
                     </SelectItem>
+                    {hasFeature("ventes_immobilieres") && (
+                      <SelectItem value="vente_bien">
+                        <span className="flex items-center gap-2"><Home className="h-4 w-4" /> Sur vente de bien immobilier</span>
+                      </SelectItem>
+                    )}
+                    {hasFeature("lotissement") && (
+                      <SelectItem value="vente_lot">
+                        <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Sur vente de lot (lotissement)</span>
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
+                {!canSellAccess && (
+                  <p className="text-xs text-muted-foreground">
+                    💎 Passez au forfait Premium pour activer les commissions sur ventes de biens et lots.
+                  </p>
+                )}
                 <FormMessage />
               </FormItem>
             )} />
@@ -275,13 +333,115 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
               )} />
             )}
 
+            {/* Vente immobilière selector */}
+            {commissionType === "vente_bien" && (
+              <FormField control={form.control} name="vente_immobiliere_id" render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Vente immobilière concernée</FormLabel>
+                  <Popover open={venteImmoOpen} onOpenChange={setVenteImmoOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
+                        >
+                          {selectedVenteImmo
+                            ? `${selectedVenteImmo.bien?.title || "Bien"} — ${selectedVenteImmo.total_price?.toLocaleString()} F`
+                            : "Rechercher une vente..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto" align="start">
+                      <Command>
+                        <CommandInput placeholder="Rechercher une vente..." />
+                        <CommandList>
+                          <CommandEmpty>Aucune vente trouvée</CommandEmpty>
+                          <CommandGroup>
+                            {ventesImmo.map(v => (
+                              <CommandItem
+                                key={v.id}
+                                value={`${v.bien?.title || ""} ${v.acquereur?.name || ""}`}
+                                onSelect={() => {
+                                  field.onChange(v.id);
+                                  setVenteImmoOpen(false);
+                                }}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", field.value === v.id ? "opacity-100" : "opacity-0")} />
+                                <div className="flex flex-col">
+                                  <span>{v.bien?.title || "Bien"} → {v.acquereur?.name || "Acquéreur"}</span>
+                                  <span className="text-xs text-muted-foreground">{v.total_price?.toLocaleString()} F — {new Date(v.sale_date).toLocaleDateString("fr-FR")}</span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            )}
+
+            {/* Vente lot selector */}
+            {commissionType === "vente_lot" && (
+              <FormField control={form.control} name="vente_parcelle_id" render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Vente de lot concernée</FormLabel>
+                  <Popover open={venteLotOpen} onOpenChange={setVenteLotOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
+                        >
+                          {selectedVenteLot
+                            ? `Lot ${selectedVenteLot.parcelle?.plot_number || ""} — ${selectedVenteLot.total_price?.toLocaleString()} F`
+                            : "Rechercher un lot vendu..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto" align="start">
+                      <Command>
+                        <CommandInput placeholder="Rechercher un lot..." />
+                        <CommandList>
+                          <CommandEmpty>Aucun lot vendu trouvé</CommandEmpty>
+                          <CommandGroup>
+                            {ventesParcelles.map(v => (
+                              <CommandItem
+                                key={v.id}
+                                value={`${v.parcelle?.plot_number || ""} ${v.parcelle?.lotissement?.name || ""} ${v.acquereur?.name || ""}`}
+                                onSelect={() => {
+                                  field.onChange(v.id);
+                                  setVenteLotOpen(false);
+                                }}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", field.value === v.id ? "opacity-100" : "opacity-0")} />
+                                <div className="flex flex-col">
+                                  <span>Lot {v.parcelle?.plot_number} — {v.parcelle?.lotissement?.name}</span>
+                                  <span className="text-xs text-muted-foreground">{v.total_price?.toLocaleString()} F → {v.acquereur?.name}</span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            )}
+
             {/* Info box */}
             {baseAmount > 0 && (
               <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
                 <div>
-                  <span className="text-muted-foreground">
-                    {commissionType === "bien" ? "Rendement mensuel du bien" : "Loyer du locataire"} :
-                  </span>{" "}
+                  <span className="text-muted-foreground">{baseLabel} :</span>{" "}
                   <span className="font-semibold">{baseAmount.toLocaleString()} FCFA</span>
                 </div>
                 {commissionType === "bien" && units.length > 1 && (
@@ -295,7 +455,12 @@ export function AddApportDialog({ open, onOpenChange, apporteur }: Props) {
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
                 <FormLabel>Description</FormLabel>
-                <FormControl><Textarea rows={2} placeholder={commissionType === "bien" ? "Ex: Bien apporté — Résidence Kouakou" : "Ex: Locataire apporté pour villa X"} {...field} /></FormControl>
+                <FormControl><Textarea rows={2} placeholder={
+                  commissionType === "bien" ? "Ex: Bien apporté — Résidence Kouakou" :
+                  commissionType === "vente_bien" ? "Ex: Vente apportée — Villa Cocody" :
+                  commissionType === "vente_lot" ? "Ex: Lot apporté — Lotissement Bingerville" :
+                  "Ex: Locataire apporté pour villa X"
+                } {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

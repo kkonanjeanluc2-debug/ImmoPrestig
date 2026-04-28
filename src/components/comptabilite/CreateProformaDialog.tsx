@@ -228,6 +228,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
   };
 
   const resetForm = () => {
+    setDocType("proforma");
     setInvoiceCategory("bien");
     setClientType(preselectedTenantId ? "locataire" : "locataire");
     setSelectedTenantId(preselectedTenantId || "");

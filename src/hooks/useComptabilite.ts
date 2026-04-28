@@ -573,6 +573,8 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       reservationsEncaissees: 0,
       cautionsEncaissees: 0,
       onlinePaymentsEncaisses: 0,
+      facturesServices706: 0,
+      facturesMarchandises707: 0,
       loyersEnAttente: 0,
       ventesEnAttente: 0,
       achatsEnAttente: 0,

@@ -47,6 +47,8 @@ export interface ComptabiliteData {
   reservationsEncaissees: number;
   cautionsEncaissees: number;
   onlinePaymentsEncaisses: number;
+  facturesServices706: number;
+  facturesMarchandises707: number;
   // Pending
   loyersEnAttente: number;
   ventesEnAttente: number;
@@ -461,7 +463,22 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
     enabled: !!user,
   });
 
-  // Extract manager IDs from all revenue sources for profile resolution
+  // Fetch issued invoices (definitive or converted) within the period — accrual basis on issue date
+  const { data: issuedInvoices } = useQuery({
+    queryKey: ["comptabilite-invoices", user?.id, periodFrom.toISOString(), periodTo.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("proforma_invoices")
+        .select("id, invoice_number, invoice_type, status, total_amount, description, items, created_at")
+        .eq("invoice_type", "definitive")
+        .neq("status", "cancelled")
+        .gte("created_at", `${fromDate}T00:00:00`)
+        .lte("created_at", `${toDate}T23:59:59.999`);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
   const managerUserIds = useMemo(() => {
     const ids = new Set<string>();
     if (payments) {

@@ -271,7 +271,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
           {trigger || (
             <Button size="sm" className="gap-1">
               <Plus className="h-3.5 w-3.5" />
-              Nouvelle proforma
+              Nouvelle facture
             </Button>
           )}
         </DialogTrigger>

@@ -689,7 +689,9 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
 
 
           <p className="text-[10px] text-muted-foreground italic">
-            Proforma – ne vaut pas facture. Ce document est une proposition commerciale.
+            {isEditing || docType === "proforma"
+              ? "Proforma – ne vaut pas facture. Ce document est une proposition commerciale."
+              : "Facture définitive – sera comptabilisée immédiatement après création."}
           </p>
 
           <Button
@@ -699,7 +701,9 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
           >
             {isEditing
               ? (updateProforma.isPending ? "Modification..." : "Modifier la facture proforma")
-              : (createProforma.isPending ? "Création..." : "Créer la facture proforma")}
+              : docType === "definitive"
+                ? (createProforma.isPending ? "Création..." : "Créer la facture")
+                : (createProforma.isPending ? "Création..." : "Créer la facture proforma")}
           </Button>
         </div>
       </DialogContent>

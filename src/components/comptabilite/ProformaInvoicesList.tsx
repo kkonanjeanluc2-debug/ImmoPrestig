@@ -190,9 +190,11 @@ export function ProformaInvoicesList({ tenantId, compact = false, canCreate = tr
                                 </DropdownMenuItem>
                               </>
                             )}
-                            <DropdownMenuItem onClick={() => setDeleteId(inv.id)} className="gap-2 text-xs text-destructive">
-                              <Trash2 className="h-3.5 w-3.5" /> Supprimer
-                            </DropdownMenuItem>
+                            {canDelete && (
+                              <DropdownMenuItem onClick={() => setDeleteId(inv.id)} className="gap-2 text-xs text-destructive">
+                                <Trash2 className="h-3.5 w-3.5" /> Supprimer
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

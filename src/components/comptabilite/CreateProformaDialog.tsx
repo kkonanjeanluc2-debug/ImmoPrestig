@@ -280,11 +280,48 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            {isEditing ? "Modifier la facture proforma" : "Créer une facture proforma"}
+            {isEditing
+              ? "Modifier la facture proforma"
+              : docType === "definitive"
+                ? "Créer une facture"
+                : "Créer une facture proforma"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Document type selector */}
+          {!isEditing && (
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Type de document</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={docType === "proforma" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2 h-10"
+                  onClick={() => setDocType("proforma")}
+                >
+                  <FileText className="h-4 w-4" />
+                  Facture proforma
+                </Button>
+                <Button
+                  type="button"
+                  variant={docType === "definitive" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2 h-10"
+                  onClick={() => setDocType("definitive")}
+                >
+                  <FileText className="h-4 w-4" />
+                  Facture
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                {docType === "proforma"
+                  ? "Une proforma est une proposition commerciale, à convertir en facture après validation."
+                  : "Une facture définitive est créée immédiatement et comptabilisée."}
+              </p>
+            </div>
+          )}
           {/* Invoice category selector */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold">Catégorie de facture</Label>

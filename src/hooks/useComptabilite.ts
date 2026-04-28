@@ -1226,7 +1226,31 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
 
     result.monthlyData = Array.from(monthlyMap.values());
 
-    const totalRevenue = result.loyersEncaisses + result.ventesEncaissees + result.achatsEncaisses + result.lotissementsEncaisses + result.reservationsEncaissees + result.cautionsEncaissees;
+    // Aggregate issued invoices — detect SYSCOHADA account (706 services vs 707 marchandises)
+    const MARCHANDISES_REGEX = /\b(marchandise|produit|matériel|materiel|bien|fourniture|article|stock|équipement|equipement)/i;
+    (issuedInvoices || []).forEach((inv: any) => {
+      const amount = Number(inv.total_amount || 0);
+      if (amount <= 0) return;
+      const haystack = [
+        inv.description || "",
+        ...((Array.isArray(inv.items) ? inv.items : []) as any[]).map((i: any) => i?.description || ""),
+      ].join(" ");
+      if (MARCHANDISES_REGEX.test(haystack)) {
+        result.facturesMarchandises707 += amount;
+      } else {
+        result.facturesServices706 += amount;
+      }
+    });
+
+    const totalRevenue =
+      result.loyersEncaisses +
+      result.ventesEncaissees +
+      result.achatsEncaisses +
+      result.lotissementsEncaisses +
+      result.reservationsEncaissees +
+      result.cautionsEncaissees +
+      result.facturesServices706 +
+      result.facturesMarchandises707;
 
     result.revenueByCategory = [
       { name: "Loyers", value: result.loyersEncaisses, color: "hsl(var(--primary))" },
@@ -1235,10 +1259,11 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       { name: "Lotissements", value: result.lotissementsEncaisses, color: "hsl(var(--navy-light))" },
       { name: "Réservations", value: result.reservationsEncaissees, color: "hsl(var(--accent))" },
       { name: "Cautions", value: result.cautionsEncaissees, color: "hsl(var(--muted-foreground))" },
+      { name: "Factures émises", value: result.facturesServices706 + result.facturesMarchandises707, color: "hsl(var(--primary-glow, var(--primary)))" },
     ].filter((c) => c.value > 0);
 
     result.byPaymentMethod = Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { data: result, totalRevenue };
-  }, [allPayments, payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, cautions, expenses, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, allPendingVentes, allPendingAchats, allPendingParcelles, periodFrom, periodTo]);
+  }, [allPayments, payments, echeancesVentes, ventesImmobilieres, echeancesAchats, achatsImmobiliers, echeancesParcelles, ventesParcelles, reservationsVente, reservationsParcelles, onlinePayments, cautions, expenses, issuedInvoices, managerProfiles, allEcheancesVentesNum, allEcheancesAchatsNum, allEcheancesParcellesNum, allPendingVentes, allPendingAchats, allPendingParcelles, periodFrom, periodTo]);
 }

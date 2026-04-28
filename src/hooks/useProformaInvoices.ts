@@ -136,9 +136,13 @@ export function useCreateProforma() {
       if (error) throw error;
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (result: any) => {
       queryClient.invalidateQueries({ queryKey: ["proforma-invoices"] });
-      toast.success("Facture proforma créée avec succès");
+      toast.success(
+        result?.invoice_type === "definitive"
+          ? "Facture créée avec succès"
+          : "Facture proforma créée avec succès"
+      );
     },
     onError: (error: any) => {
       toast.error(error.message || "Erreur lors de la création");

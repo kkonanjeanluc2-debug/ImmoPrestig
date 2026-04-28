@@ -91,6 +91,7 @@ export interface MemberPermissions {
   can_create_expenses: boolean;
   can_view_invoices: boolean;
   can_create_invoices: boolean;
+  can_delete_invoices: boolean;
   can_view_owner_payouts: boolean;
   can_create_owner_payouts: boolean;
   // Module access

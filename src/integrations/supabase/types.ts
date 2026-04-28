@@ -783,6 +783,8 @@ export type Database = {
           tenant_id: string | null
           updated_at: string
           user_id: string
+          vente_immobiliere_id: string | null
+          vente_parcelle_id: string | null
         }
         Insert: {
           apport_date?: string
@@ -799,6 +801,8 @@ export type Database = {
           tenant_id?: string | null
           updated_at?: string
           user_id: string
+          vente_immobiliere_id?: string | null
+          vente_parcelle_id?: string | null
         }
         Update: {
           apport_date?: string
@@ -815,6 +819,8 @@ export type Database = {
           tenant_id?: string | null
           updated_at?: string
           user_id?: string
+          vente_immobiliere_id?: string | null
+          vente_parcelle_id?: string | null
         }
         Relationships: [
           {
@@ -836,6 +842,20 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apports_vente_immobiliere_id_fkey"
+            columns: ["vente_immobiliere_id"]
+            isOneToOne: false
+            referencedRelation: "ventes_immobilieres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apports_vente_parcelle_id_fkey"
+            columns: ["vente_parcelle_id"]
+            isOneToOne: false
+            referencedRelation: "ventes_parcelles"
             referencedColumns: ["id"]
           },
         ]

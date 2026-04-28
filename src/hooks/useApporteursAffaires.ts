@@ -158,6 +158,8 @@ export interface ApportInput {
   apporteur_id: string;
   tenant_id?: string;
   property_id?: string;
+  vente_immobiliere_id?: string;
+  vente_parcelle_id?: string;
   commission_type?: string;
   commission_percentage: number;
   commission_amount?: number;

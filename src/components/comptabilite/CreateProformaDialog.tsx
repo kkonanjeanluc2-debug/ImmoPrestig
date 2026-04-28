@@ -38,6 +38,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
 
   const isEditing = !!editInvoice;
 
+  const [docType, setDocType] = useState<DocType>("proforma");
   const [invoiceCategory, setInvoiceCategory] = useState<InvoiceCategory>("bien");
   const [clientType, setClientType] = useState<ClientType>(preselectedTenantId ? "locataire" : "locataire");
   const [selectedTenantId, setSelectedTenantId] = useState(preselectedTenantId || "");

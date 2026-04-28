@@ -215,12 +215,15 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
         }
       );
     } else {
-      createProforma.mutate(payload, {
-        onSuccess: () => {
-          setOpen(false);
-          resetForm();
-        },
-      });
+      createProforma.mutate(
+        { ...payload, invoice_type: docType },
+        {
+          onSuccess: () => {
+            setOpen(false);
+            resetForm();
+          },
+        }
+      );
     }
   };
 

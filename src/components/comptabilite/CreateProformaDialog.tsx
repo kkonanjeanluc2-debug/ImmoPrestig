@@ -22,6 +22,7 @@ interface Props {
 
 type ClientType = "locataire" | "client" | "proprietaire";
 type InvoiceCategory = "bien" | "prestation";
+type DocType = "proforma" | "definitive";
 
 export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice, open: controlledOpen, onOpenChange }: Props) {
   const [internalOpen, setInternalOpen] = useState(false);

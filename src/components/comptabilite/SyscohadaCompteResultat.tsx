@@ -41,6 +41,8 @@ export function SyscohadaCompteResultat({ data, totalRevenue }: Props) {
     { code: REVENUE_ACCOUNTS.achats.syscohada, label: REVENUE_ACCOUNTS.achats.label, amount: data.achatsEncaisses },
     { code: REVENUE_ACCOUNTS.lotissements.syscohada, label: REVENUE_ACCOUNTS.lotissements.label, amount: data.lotissementsEncaisses },
     { code: REVENUE_ACCOUNTS.reservations.syscohada, label: REVENUE_ACCOUNTS.reservations.label, amount: data.reservationsEncaissees },
+    { code: REVENUE_ACCOUNTS.facturesServices.syscohada, label: REVENUE_ACCOUNTS.facturesServices.label, amount: data.facturesServices706 },
+    { code: REVENUE_ACCOUNTS.facturesMarchandises.syscohada, label: REVENUE_ACCOUNTS.facturesMarchandises.label, amount: data.facturesMarchandises707 },
   ].filter((l) => l.amount > 0);
 
   return (

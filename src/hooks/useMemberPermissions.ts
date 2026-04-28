@@ -91,6 +91,7 @@ export interface MemberPermissions {
   can_create_expenses: boolean;
   can_view_invoices: boolean;
   can_create_invoices: boolean;
+  can_delete_invoices: boolean;
   can_view_owner_payouts: boolean;
   can_create_owner_payouts: boolean;
   // Module access
@@ -198,6 +199,7 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   can_create_expenses: "Enregistrer des dépenses",
   can_view_invoices: "Voir les factures",
   can_create_invoices: "Créer des factures",
+  can_delete_invoices: "Supprimer les factures",
   can_view_owner_payouts: "Voir les reversements",
   can_create_owner_payouts: "Créer des reversements",
   can_access_gestion_locative: "Accès au module Gestion Locative",
@@ -273,7 +275,7 @@ export const PERMISSION_GROUPS = {
   },
   comptabilite: {
     label: "Comptabilité",
-    permissions: ["can_view_comptabilite", "can_export_comptabilite", "can_create_expenses", "can_view_invoices", "can_create_invoices", "can_view_owner_payouts", "can_create_owner_payouts"] as PermissionKey[],
+    permissions: ["can_view_comptabilite", "can_export_comptabilite", "can_create_expenses", "can_view_invoices", "can_create_invoices", "can_delete_invoices", "can_view_owner_payouts", "can_create_owner_payouts"] as PermissionKey[],
   },
   other: {
     label: "Autres",
@@ -355,6 +357,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_expenses: true,
     can_view_invoices: true,
     can_create_invoices: true,
+    can_delete_invoices: true,
     can_view_owner_payouts: true,
     can_create_owner_payouts: true,
     can_access_settings: true,
@@ -450,6 +453,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_expenses: false,
     can_view_invoices: false,
     can_create_invoices: false,
+    can_delete_invoices: false,
     can_view_owner_payouts: false,
     can_create_owner_payouts: false,
     can_access_settings: false,
@@ -545,6 +549,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_expenses: false,
     can_view_invoices: true,
     can_create_invoices: false,
+    can_delete_invoices: false,
     can_view_owner_payouts: true,
     can_create_owner_payouts: false,
     can_access_settings: false,
@@ -640,6 +645,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_expenses: false,
     can_view_invoices: false,
     can_create_invoices: false,
+    can_delete_invoices: false,
     can_view_owner_payouts: false,
     can_create_owner_payouts: false,
     can_access_settings: false,
@@ -737,6 +743,7 @@ export const DEFAULT_PERMISSIONS: Record<string, Partial<MemberPermissions>> = {
     can_create_expenses: true,
     can_view_invoices: true,
     can_create_invoices: true,
+    can_delete_invoices: true,
     can_view_owner_payouts: true,
     can_create_owner_payouts: true,
     can_access_settings: false,

@@ -41,6 +41,8 @@ export const REVENUE_ACCOUNTS = {
   lotissements: { label: "Ventes lotissements", syscohada: "702", classe: "Ventes de produits finis" },
   reservations: { label: "Dépôts de réservation", syscohada: "419", classe: "Avances et acomptes reçus" },
   cautions: { label: "Cautions locatives", syscohada: "165", classe: "Dépôts et cautionnements reçus" },
+  facturesServices: { label: "Factures émises — Services", syscohada: "706", classe: "Ventes de services" },
+  facturesMarchandises: { label: "Factures émises — Marchandises", syscohada: "707", classe: "Ventes de marchandises" },
 } as const;
 
 export interface Expense {

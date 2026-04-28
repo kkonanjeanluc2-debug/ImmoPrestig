@@ -10,6 +10,7 @@ import { useProformaInvoices, useConvertToInvoice, useUpdateProformaStatus, useD
 import { CreateProformaDialog } from "./CreateProformaDialog";
 import { generateProformaPDF } from "@/lib/generateProformaPDF";
 import { useAgency } from "@/hooks/useAgency";
+import { usePermissions } from "@/hooks/usePermissions";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -38,6 +39,9 @@ export function ProformaInvoicesList({ tenantId, compact = false, canCreate = tr
   const updateStatus = useUpdateProformaStatus();
   const deleteProforma = useDeleteProforma();
   const { data: agency } = useAgency();
+  const { role, hasPermission } = usePermissions();
+  const isAdmin = role === "admin" || role === "super_admin";
+  const canDelete = isAdmin || hasPermission("can_delete_invoices");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editInvoice, setEditInvoice] = useState<ProformaInvoice | null>(null);
   const [filter, setFilter] = useState<"all" | "proforma" | "definitive">("all");

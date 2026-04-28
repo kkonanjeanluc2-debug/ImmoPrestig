@@ -15,6 +15,7 @@ import OfflineIndicator from "@/components/OfflineIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PageSkeleton from "@/components/PageSkeleton";
 import AppEntryRoute from "@/components/routing/AppEntryRoute";
+import StandaloneSlugGuard from "@/components/routing/StandaloneSlugGuard";
 
 
 // Lazy load pages for code splitting
@@ -149,6 +150,7 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             <InactivityHandler />
+            <StandaloneSlugGuard />
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Routes>

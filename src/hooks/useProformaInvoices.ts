@@ -85,8 +85,10 @@ export function useCreateProforma() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateProformaData) => {
+    mutationFn: async (data: CreateProformaData & { invoice_type?: "proforma" | "definitive" }) => {
       if (!user) throw new Error("Non authentifié");
+
+      const isDefinitive = data.invoice_type === "definitive";
 
       // Get agency to generate number
       const { data: agency } = await supabase
@@ -96,9 +98,11 @@ export function useCreateProforma() {
         .limit(1)
         .single();
 
-      let invoiceNumber = `PF-${new Date().getFullYear()}-001`;
+      const year = new Date().getFullYear();
+      let invoiceNumber = isDefinitive ? `F-${year}-001` : `PF-${year}-001`;
       if (agency) {
-        const { data: numData } = await supabase.rpc("get_next_proforma_number", {
+        const rpcName = isDefinitive ? "get_next_invoice_number" : "get_next_proforma_number";
+        const { data: numData } = await supabase.rpc(rpcName, {
           _agency_id: agency.id,
         });
         if (numData) invoiceNumber = numData;
@@ -109,7 +113,8 @@ export function useCreateProforma() {
         .insert({
           user_id: user.id,
           invoice_number: invoiceNumber,
-          invoice_type: "proforma",
+          invoice_type: isDefinitive ? "definitive" : "proforma",
+          status: isDefinitive ? "validated" : "draft",
           tenant_name: data.tenant_name,
           tenant_id: data.tenant_id || null,
           tenant_phone: data.tenant_phone || null,
@@ -131,9 +136,13 @@ export function useCreateProforma() {
       if (error) throw error;
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (result: any) => {
       queryClient.invalidateQueries({ queryKey: ["proforma-invoices"] });
-      toast.success("Facture proforma créée avec succès");
+      toast.success(
+        result?.invoice_type === "definitive"
+          ? "Facture créée avec succès"
+          : "Facture proforma créée avec succès"
+      );
     },
     onError: (error: any) => {
       toast.error(error.message || "Erreur lors de la création");

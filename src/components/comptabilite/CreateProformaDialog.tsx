@@ -22,6 +22,7 @@ interface Props {
 
 type ClientType = "locataire" | "client" | "proprietaire";
 type InvoiceCategory = "bien" | "prestation";
+type DocType = "proforma" | "definitive";
 
 export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice, open: controlledOpen, onOpenChange }: Props) {
   const [internalOpen, setInternalOpen] = useState(false);
@@ -37,6 +38,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
 
   const isEditing = !!editInvoice;
 
+  const [docType, setDocType] = useState<DocType>("proforma");
   const [invoiceCategory, setInvoiceCategory] = useState<InvoiceCategory>("bien");
   const [clientType, setClientType] = useState<ClientType>(preselectedTenantId ? "locataire" : "locataire");
   const [selectedTenantId, setSelectedTenantId] = useState(preselectedTenantId || "");
@@ -213,16 +215,20 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
         }
       );
     } else {
-      createProforma.mutate(payload, {
-        onSuccess: () => {
-          setOpen(false);
-          resetForm();
-        },
-      });
+      createProforma.mutate(
+        { ...payload, invoice_type: docType },
+        {
+          onSuccess: () => {
+            setOpen(false);
+            resetForm();
+          },
+        }
+      );
     }
   };
 
   const resetForm = () => {
+    setDocType("proforma");
     setInvoiceCategory("bien");
     setClientType(preselectedTenantId ? "locataire" : "locataire");
     setSelectedTenantId(preselectedTenantId || "");
@@ -265,7 +271,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
           {trigger || (
             <Button size="sm" className="gap-1">
               <Plus className="h-3.5 w-3.5" />
-              Nouvelle proforma
+              Nouvelle facture
             </Button>
           )}
         </DialogTrigger>
@@ -274,11 +280,48 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            {isEditing ? "Modifier la facture proforma" : "Créer une facture proforma"}
+            {isEditing
+              ? "Modifier la facture proforma"
+              : docType === "definitive"
+                ? "Créer une facture"
+                : "Créer une facture proforma"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Document type selector */}
+          {!isEditing && (
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Type de document</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={docType === "proforma" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2 h-10"
+                  onClick={() => setDocType("proforma")}
+                >
+                  <FileText className="h-4 w-4" />
+                  Facture proforma
+                </Button>
+                <Button
+                  type="button"
+                  variant={docType === "definitive" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2 h-10"
+                  onClick={() => setDocType("definitive")}
+                >
+                  <FileText className="h-4 w-4" />
+                  Facture
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                {docType === "proforma"
+                  ? "Une proforma est une proposition commerciale, à convertir en facture après validation."
+                  : "Une facture définitive est créée immédiatement et comptabilisée."}
+              </p>
+            </div>
+          )}
           {/* Invoice category selector */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold">Catégorie de facture</Label>
@@ -646,7 +689,9 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
 
 
           <p className="text-[10px] text-muted-foreground italic">
-            Proforma – ne vaut pas facture. Ce document est une proposition commerciale.
+            {isEditing || docType === "proforma"
+              ? "Proforma – ne vaut pas facture. Ce document est une proposition commerciale."
+              : "Facture définitive – sera comptabilisée immédiatement après création."}
           </p>
 
           <Button
@@ -656,7 +701,9 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
           >
             {isEditing
               ? (updateProforma.isPending ? "Modification..." : "Modifier la facture proforma")
-              : (createProforma.isPending ? "Création..." : "Créer la facture proforma")}
+              : docType === "definitive"
+                ? (createProforma.isPending ? "Création..." : "Créer la facture")
+                : (createProforma.isPending ? "Création..." : "Créer la facture proforma")}
           </Button>
         </div>
       </DialogContent>

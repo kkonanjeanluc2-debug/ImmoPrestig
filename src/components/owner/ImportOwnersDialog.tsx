@@ -199,7 +199,7 @@ export function ImportOwnersDialog() {
       try {
         await createOwner.mutateAsync({
           name: owner.name,
-          email: owner.email,
+          email: owner.email || null,
           phone: owner.phone || null,
           address: owner.address || null,
           status: owner.status,

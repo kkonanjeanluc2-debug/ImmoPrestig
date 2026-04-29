@@ -36,7 +36,8 @@ const formSchema = z.object({
   emergency_contact_name: z.string().trim().max(100).optional().or(z.literal("")),
   emergency_contact_phone: z.string().trim().max(20).optional().or(z.literal("")),
   payment_timing: z.enum(["prepaid", "postpaid"]).default("prepaid"),
-});
+  grace_period_days_prepaid: z.coerce.number().int().min(0).max(60).default(0),
+  grace_period_days_postpaid: z.coerce.number().int().min(0).max(60).default(0),
 
 type FormValues = z.infer<typeof formSchema>;
 

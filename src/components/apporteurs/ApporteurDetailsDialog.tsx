@@ -13,6 +13,7 @@ import { useAgency } from "@/hooks/useAgency";
 import { generateApportCommissionReceipt } from "@/lib/generateApportCommissionReceipt";
 import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Props {
   open: boolean;
@@ -30,9 +31,14 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
   const { data: apports, isLoading } = useApports(apporteur.id);
   const { data: agency } = useAgency();
   const { data: receiptTemplates } = useReceiptTemplates();
+  const { hasPermission, role } = usePermissions();
   const updateApport = useUpdateApport();
   const deleteApport = useDeleteApport();
   const [showAddApport, setShowAddApport] = useState(false);
+  const isAdmin = role === "super_admin" || role === "admin";
+  const canCreate = isAdmin || hasPermission("can_create_apporteurs");
+  const canEdit = isAdmin || hasPermission("can_edit_apporteurs");
+  const canDelete = isAdmin || hasPermission("can_delete_apporteurs");
 
   const defaultTemplate = receiptTemplates?.find(t => t.is_default) || receiptTemplates?.[0];
 
@@ -137,10 +143,12 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
           {/* Apports table */}
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Historique des apports</h3>
-            <Button size="sm" onClick={() => setShowAddApport(true)} className="gap-1">
-              <Plus className="h-3 w-3" />
-              Ajouter
-            </Button>
+            {canCreate && (
+              <Button size="sm" onClick={() => setShowAddApport(true)} className="gap-1">
+                <Plus className="h-3 w-3" />
+                Ajouter
+              </Button>
+            )}
           </div>
 
           {isLoading ? (
@@ -190,7 +198,7 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
                             <Download className="h-3 w-3" />
                           </Button>
                         )}
-                        {apport.status === "en_attente" && (
+                        {canEdit && apport.status === "en_attente" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -199,14 +207,16 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
                             Payer
                           </Button>
                         )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive"
-                          onClick={() => deleteApport.mutate(apport.id)}
-                        >
-                          Suppr.
-                        </Button>
+                        {canDelete && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive"
+                            onClick={() => deleteApport.mutate(apport.id)}
+                          >
+                            Suppr.
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

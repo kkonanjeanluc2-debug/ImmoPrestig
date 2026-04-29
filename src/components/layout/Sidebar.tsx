@@ -391,6 +391,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                       if (item.href === "/contracts") return hasPermission("can_view_contracts");
                       if (item.href === "/payments") return hasPermission("can_view_payments");
                       if (item.href === "/impayes") return hasPermission("can_view_impayes");
+                      if (item.href === "/apporteurs") return hasPermission("can_view_apporteurs");
                       return true;
                     })
                     .map((item) => renderNavItem(item, {

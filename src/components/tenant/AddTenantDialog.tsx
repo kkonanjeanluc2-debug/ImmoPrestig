@@ -1241,7 +1241,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 />
               </div>
 
-
+              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
                 <input
                   type="checkbox"
                   id="is_colocation"

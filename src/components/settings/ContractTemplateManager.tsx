@@ -77,20 +77,55 @@ const SAMPLE_CONTRACT_DATA = {
 };
 
 const AVAILABLE_VARIABLES = [
+  // Bailleur
   { variable: "{bailleur}", description: "Nom du bailleur/agence" },
   { variable: "{bailleur_adresse}", description: "Adresse du bailleur" },
   { variable: "{bailleur_telephone}", description: "Téléphone du bailleur" },
   { variable: "{bailleur_email}", description: "Email du bailleur" },
+  { variable: "{bailleur_date_naissance}", description: "Date de naissance du bailleur" },
+  { variable: "{bailleur_lieu_naissance}", description: "Lieu de naissance du bailleur" },
+  { variable: "{bailleur_profession}", description: "Profession du bailleur" },
+  { variable: "{bailleur_cni}", description: "Numéro CNI du bailleur" },
+  // Propriétaire (gestion partagée)
+  { variable: "{proprietaire}", description: "Nom du propriétaire" },
+  { variable: "{proprietaire_adresse}", description: "Adresse du propriétaire" },
+  { variable: "{proprietaire_telephone}", description: "Téléphone du propriétaire" },
+  { variable: "{proprietaire_email}", description: "Email du propriétaire" },
+  { variable: "{proprietaire_date_naissance}", description: "Date de naissance du propriétaire" },
+  { variable: "{proprietaire_lieu_naissance}", description: "Lieu de naissance du propriétaire" },
+  { variable: "{proprietaire_profession}", description: "Profession du propriétaire" },
+  { variable: "{proprietaire_cni}", description: "Numéro CNI du propriétaire" },
+  // Agence
+  { variable: "{agence}", description: "Nom de l'agence" },
+  { variable: "{agence_adresse}", description: "Adresse de l'agence" },
+  { variable: "{agence_telephone}", description: "Téléphone de l'agence" },
+  { variable: "{agence_email}", description: "Email de l'agence" },
+  { variable: "{type_gestion}", description: "Type de gestion (simple, partagée, professionnelle)" },
+  // Locataire
   { variable: "{locataire}", description: "Nom du locataire" },
   { variable: "{locataire_email}", description: "Email du locataire" },
   { variable: "{locataire_telephone}", description: "Téléphone du locataire" },
+  { variable: "{locataire_date_naissance}", description: "Date de naissance du locataire" },
+  { variable: "{locataire_lieu_naissance}", description: "Lieu de naissance du locataire" },
+  { variable: "{locataire_profession}", description: "Profession du locataire" },
+  { variable: "{locataire_cni}", description: "Numéro CNI du locataire" },
+  { variable: "{contact_urgence_nom}", description: "Contact d'urgence (nom)" },
+  { variable: "{contact_urgence_telephone}", description: "Contact d'urgence (téléphone)" },
+  // Bien
   { variable: "{bien}", description: "Titre/nom du bien" },
   { variable: "{bien_adresse}", description: "Adresse du bien" },
   { variable: "{unite}", description: "Numéro de l'unité/porte" },
+  // Loyer
   { variable: "{loyer}", description: "Montant du loyer (ex: 150 000 FCFA)" },
   { variable: "{loyer_lettres}", description: "Loyer en lettres" },
+  { variable: "{type_loyer}", description: "Type de loyer (mensuel/journalier)" },
+  { variable: "{loyer_label}", description: "Libellé du loyer" },
+  { variable: "{nombre_jours}", description: "Nombre de jours (location journalière)" },
+  { variable: "{reduction}", description: "Réduction appliquée (%)" },
+  { variable: "{montant_total}", description: "Montant total (location journalière)" },
   { variable: "{caution}", description: "Montant de la caution" },
   { variable: "{caution_lettres}", description: "Caution en lettres" },
+  // Dates
   { variable: "{date_debut}", description: "Date de début du contrat" },
   { variable: "{date_fin}", description: "Date de fin du contrat" },
   { variable: "{date_jour}", description: "Date du jour (signature)" },

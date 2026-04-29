@@ -67,6 +67,8 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
       emergency_contact_name: "",
       emergency_contact_phone: "",
       payment_timing: "prepaid",
+      grace_period_days_prepaid: 0,
+      grace_period_days_postpaid: 0,
     },
   });
 

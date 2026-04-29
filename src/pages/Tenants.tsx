@@ -213,13 +213,13 @@ export default function Tenants() {
   const { requestsByTenant } = useTenantsActiveRequestsMap();
   const { data: owners = [] } = useOwners();
 
-  // Derive communes only from properties with status "loué"
+  // Derive communes from all tenants' properties (regardless of property status)
   const rentedCommunes = useMemo(() => {
     if (!tenants) return [];
     const communes = new Set<string>();
     for (const tenant of tenants) {
       const prop = tenant.property as any;
-      if (prop?.city && prop?.status === "loué") {
+      if (prop?.city) {
         communes.add(prop.city);
       }
     }

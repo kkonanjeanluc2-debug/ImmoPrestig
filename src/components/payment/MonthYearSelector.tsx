@@ -137,8 +137,14 @@ export function MonthYearSelector({
     return -1;
   })();
 
-  // Check if a month should be hidden (precedes advance-paid months)
+  // Check if a month should be hidden (precedes advance-paid months OR contract start)
   const isMonthHidden = (monthIndex: number) => {
+    if (contractStartDate) {
+      const startYear = contractStartDate.getFullYear();
+      const startMonth = contractStartDate.getMonth();
+      if (year < startYear) return true;
+      if (year === startYear && monthIndex < startMonth) return true;
+    }
     if (firstPaidMonthIndex === -1) return false; // No paid months, show all
     return monthIndex < firstPaidMonthIndex;
   };

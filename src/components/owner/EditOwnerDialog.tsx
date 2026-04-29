@@ -92,7 +92,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
     if (owner) {
       form.reset({
         name: owner.name,
-        email: owner.email,
+        email: owner.email || "",
         phone: owner.phone || "",
         address: owner.address || "",
         status: owner.status as "actif" | "inactif",
@@ -115,7 +115,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
       await updateOwner.mutateAsync({
         id: owner.id,
         name: data.name,
-        email: data.email,
+        email: data.email || null,
         phone: data.phone || null,
         address: data.address || null,
         status: data.status,

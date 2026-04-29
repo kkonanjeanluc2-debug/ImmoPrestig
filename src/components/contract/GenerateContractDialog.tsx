@@ -38,6 +38,7 @@ interface ManagementTypeData {
 interface DefaultContractTemplateData {
   id: string;
   name: string;
+  content?: string;
 }
 
 interface OwnerData {
@@ -106,24 +107,29 @@ export function GenerateContractDialog({
   const hasSignatures = !!(landlordSignature || tenantSignature);
   const isFullySigned = !!(landlordSignature && tenantSignature);
 
-  // Set owner's default template when dialog opens
+  // Set owner's default template when dialog opens, or default agency template.
   useEffect(() => {
     if (open && !hasSetOwnerTemplate && contractData.owner?.default_contract_template?.id) {
       setSelectedTemplateId(contractData.owner.default_contract_template.id);
+      setHasSetOwnerTemplate(true);
+    } else if (open && !hasSetOwnerTemplate && defaultTemplate?.id) {
+      setSelectedTemplateId(defaultTemplate.id);
       setHasSetOwnerTemplate(true);
     }
     if (!open) {
       setHasSetOwnerTemplate(false);
     }
-  }, [open, contractData.owner?.default_contract_template?.id, hasSetOwnerTemplate]);
+  }, [open, contractData.owner?.default_contract_template?.id, defaultTemplate?.id, hasSetOwnerTemplate]);
 
   const getSelectedTemplate = () => {
     if (selectedTemplateId && templates) {
-      return templates.find((t) => t.id === selectedTemplateId);
+      const selected = templates.find((t) => t.id === selectedTemplateId);
+      if (selected) return selected;
     }
     // Use owner's default template if available
     if (contractData.owner?.default_contract_template?.id && templates) {
-      return templates.find((t) => t.id === contractData.owner?.default_contract_template?.id);
+      const ownerTemplate = templates.find((t) => t.id === contractData.owner?.default_contract_template?.id);
+      if (ownerTemplate) return ownerTemplate;
     }
     return defaultTemplate;
   };

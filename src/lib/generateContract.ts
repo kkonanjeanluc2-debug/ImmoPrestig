@@ -139,12 +139,14 @@ export const replaceContractVariables = (
   const agencyPhone = data.agency?.phone || "";
   const agencyEmail = data.agency?.email || "";
 
-  // Bailleur fields default to the owner; fall back to the agency only if no owner
-  // is available so the {bailleur*} placeholders are never empty.
-  const bailleurDisplayName = ownerDisplayName || agencyName || "Le bailleur";
-  const bailleurAddress = ownerAddress || agencyAddress;
-  const bailleurPhone = ownerPhone || agencyPhone;
-  const bailleurEmail = ownerEmail || agencyEmail;
+  // Bailleur fields reflect the owner's actual data. If a field is missing on
+  // the owner, leave it empty — do NOT fall back to the agency, which would
+  // misrepresent the bailleur's contact info.
+  const hasOwner = Boolean(ownerDisplayName);
+  const bailleurDisplayName = ownerDisplayName || agencyName || "";
+  const bailleurAddress = hasOwner ? ownerAddress : agencyAddress;
+  const bailleurPhone = hasOwner ? ownerPhone : agencyPhone;
+  const bailleurEmail = hasOwner ? ownerEmail : agencyEmail;
 
   const replacements: Record<string, string> = {
     // Bailleur fields (main landlord section)

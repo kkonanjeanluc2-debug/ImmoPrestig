@@ -225,7 +225,69 @@ export const generateContractPDF = async (
   const textColor: [number, number, number] = [51, 51, 51];
   
   let yPos = margin;
-  
+
+  // ============ EN-TÊTE AGENCE ============
+  const agency = data.agency;
+  if (agency) {
+    let headerY = margin;
+    // Logo
+    if (agency.logo_url) {
+      try {
+        const response = await fetch(agency.logo_url);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        const dataUrl: string = await new Promise((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        const format = (agency.logo_url.toLowerCase().includes(".png") ? "PNG" : "JPEG");
+        doc.addImage(dataUrl, format, margin, headerY, 25, 25);
+      } catch (e) {
+        // Ignore logo errors
+      }
+    }
+
+    // Infos agence à droite
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...primaryColor);
+    doc.text(agency.name || "", pageWidth - margin, headerY + 5, { align: "right" });
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...textColor);
+    let infoY = headerY + 11;
+    if (agency.address) {
+      const addr = [agency.address, agency.city, agency.country].filter(Boolean).join(", ");
+      doc.text(addr, pageWidth - margin, infoY, { align: "right" });
+      infoY += 5;
+    }
+    if (agency.phone) {
+      doc.text(`Tél : ${agency.phone}`, pageWidth - margin, infoY, { align: "right" });
+      infoY += 5;
+    }
+    if (agency.email) {
+      doc.text(agency.email, pageWidth - margin, infoY, { align: "right" });
+      infoY += 5;
+    }
+
+    yPos = Math.max(headerY + 28, infoY) + 5;
+
+    // Ligne séparatrice
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 8;
+  }
+
+  // ============ TITRE ============
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...primaryColor);
+  doc.text("CONTRAT DE BAIL À USAGE D'HABITATION", pageWidth / 2, yPos, { align: "center" });
+  yPos += 10;
+
   // Replace variables in template
   const filledContent = replaceContractVariables(templateContent, data);
   

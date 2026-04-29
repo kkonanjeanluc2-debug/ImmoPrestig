@@ -77,6 +77,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         profession: (tenant as any).profession || "",
         emergency_contact_name: (tenant as any).emergency_contact_name || "",
         emergency_contact_phone: (tenant as any).emergency_contact_phone || "",
+        payment_timing: ((tenant as any).payment_timing as "prepaid" | "postpaid") || "prepaid",
       });
       setAssignedTo((tenant as any).assigned_to || null);
       setExistingCniUrl((tenant as any).cni_document_url || null);

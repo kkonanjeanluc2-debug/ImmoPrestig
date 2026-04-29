@@ -65,7 +65,7 @@ const downloadTemplate = async () => {
 
 interface ParsedOwner {
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   address?: string;
   status: "actif" | "inactif";

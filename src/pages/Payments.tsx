@@ -703,12 +703,29 @@ export default function Payments() {
                                   {/* Display paid months */}
                                   {(payment as any).payment_months && (payment as any).payment_months.length > 0 && (
                                     <div className="flex flex-wrap items-center gap-1 mt-2">
-                                      <span className="text-xs text-muted-foreground">Mois :</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {(payment as any)._consumedMonth ? "Mois consommé :" : "Mois :"}
+                                      </span>
                                       {(payment as any).payment_months.map((month: string) => (
-                                        <Badge key={month} variant="secondary" className="text-xs py-0">
+                                        <Badge
+                                          key={month}
+                                          variant="secondary"
+                                          className={`text-xs py-0 ${(payment as any)._consumedMonth ? "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-200" : ""}`}
+                                        >
+                                          {(payment as any)._consumedMonth && (
+                                            <span className="mr-1">📅</span>
+                                          )}
                                           {month}
+                                          {(payment as any)._consumedMonth && (
+                                            <span className="ml-1 text-[10px] opacity-75">(consommé)</span>
+                                          )}
                                         </Badge>
                                       ))}
+                                      {(payment as any)._paymentTiming === 'postpaid' && (
+                                        <Badge variant="outline" className="text-xs py-0 border-amber-400 text-amber-700 dark:text-amber-300">
+                                          Postpayé
+                                        </Badge>
+                                      )}
                                     </div>
                                   )}
                                 </div>

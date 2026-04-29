@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.has_agency_role_access_to_user(uuid, uuid, app_role[]) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.has_agency_role_access_to_user(uuid, uuid, app_role[]) TO authenticated;

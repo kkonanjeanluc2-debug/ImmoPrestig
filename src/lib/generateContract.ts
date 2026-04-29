@@ -350,7 +350,82 @@ export const generateContractPDF = async (
       }
     }
   }
-  
+
+  // ============ SIGNATURES ============
+  const signatureBlockHeight = 60;
+  if (yPos > pageHeight - signatureBlockHeight - margin) {
+    doc.addPage();
+    yPos = margin;
+  } else {
+    yPos += 10;
+  }
+
+  const todayStr = new Date().toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "italic");
+  doc.setTextColor(...textColor);
+  const placeForSignature = data.agency?.city || data.propertyAddress || "";
+  doc.text(`Fait à ${placeForSignature}, le ${todayStr}`, margin, yPos);
+  yPos += 12;
+
+  const colWidth = (pageWidth - margin * 2) / 2;
+  const leftX = margin;
+  const rightX = margin + colWidth;
+  const signatureY = yPos;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...primaryColor);
+  doc.text("LE BAILLEUR", leftX + colWidth / 2, signatureY, { align: "center" });
+  doc.text("LE LOCATAIRE", rightX + colWidth / 2, signatureY, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...textColor);
+
+  const landlordName = data.ownerName || data.agency?.name || "";
+  const tenantNameSig = data.tenantName || "";
+  doc.text(landlordName, leftX + colWidth / 2, signatureY + 6, { align: "center" });
+  doc.text(tenantNameSig, rightX + colWidth / 2, signatureY + 6, { align: "center" });
+
+  const landlordSig = data.signatures?.find((s) => s.signerType === "landlord");
+  const tenantSig = data.signatures?.find((s) => s.signerType === "tenant");
+
+  const sigBoxY = signatureY + 10;
+  const sigBoxHeight = 25;
+
+  const renderSignature = (sig: SignatureInfo | undefined, x: number) => {
+    if (!sig) {
+      doc.setDrawColor(...textColor);
+      doc.setLineWidth(0.3);
+      doc.line(x + 10, sigBoxY + sigBoxHeight, x + colWidth - 10, sigBoxY + sigBoxHeight);
+      return;
+    }
+    if (sig.signatureType === "drawn" && sig.signatureData) {
+      try {
+        doc.addImage(sig.signatureData, "PNG", x + colWidth / 2 - 25, sigBoxY, 50, sigBoxHeight);
+      } catch (e) {
+        // ignore
+      }
+    } else if (sig.signatureType === "typed" && sig.signatureText) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(14);
+      doc.setTextColor(...primaryColor);
+      doc.text(sig.signatureText, x + colWidth / 2, sigBoxY + sigBoxHeight / 2, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...textColor);
+    }
+  };
+
+  renderSignature(landlordSig, leftX);
+  renderSignature(tenantSig, rightX);
+
   return doc;
 };
 

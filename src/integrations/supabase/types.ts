@@ -5920,6 +5920,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      has_agency_role_access_to_user: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _target_user_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

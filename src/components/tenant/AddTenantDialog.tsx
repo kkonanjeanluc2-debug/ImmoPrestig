@@ -67,6 +67,7 @@ const formSchema = z.object({
   deposit: z.string().optional(),
   agency_fees: z.string().optional(),
   advance_months: z.string().optional(),
+  payment_timing: z.enum(["prepaid", "postpaid"]).default("prepaid"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -210,6 +211,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       deposit: "",
       agency_fees: "",
       advance_months: "0",
+      payment_timing: "prepaid",
     },
   });
 
@@ -386,6 +388,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
           emergency_contact_name: values.emergency_contact_name || null,
           emergency_contact_phone: values.emergency_contact_phone || null,
           agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
+          payment_timing: values.payment_timing || "prepaid",
         });
         createdTenantId = tenant.id;
       }
@@ -1167,7 +1170,36 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 )}
               />
 
-              {/* Colocation Option */}
+              {/* Payment Timing */}
+              <FormField
+                control={form.control}
+                name="payment_timing"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Modalité de paiement du loyer
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || "prepaid"}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background border z-50">
+                        <SelectItem value="prepaid">Paie avant de consommer (loyer payé d'avance)</SelectItem>
+                        <SelectItem value="postpaid">Consomme avant de payer (paiement en fin de mois)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Les locataires « consomme avant de payer » ne sont marqués « Retard » qu'après la fin du mois concerné.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
               <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
                 <input
                   type="checkbox"

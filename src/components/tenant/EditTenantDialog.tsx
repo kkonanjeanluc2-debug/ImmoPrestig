@@ -20,7 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, Upload, X, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Upload, X, FileText, Calendar } from "lucide-react";
 import { useUpdateTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { toast } from "sonner";
 import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";
@@ -34,6 +35,7 @@ const formSchema = z.object({
   profession: z.string().trim().max(100).optional().or(z.literal("")),
   emergency_contact_name: z.string().trim().max(100).optional().or(z.literal("")),
   emergency_contact_phone: z.string().trim().max(20).optional().or(z.literal("")),
+  payment_timing: z.enum(["prepaid", "postpaid"]).default("prepaid"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,6 +64,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
       profession: "",
       emergency_contact_name: "",
       emergency_contact_phone: "",
+      payment_timing: "prepaid",
     },
   });
 
@@ -75,6 +78,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         profession: (tenant as any).profession || "",
         emergency_contact_name: (tenant as any).emergency_contact_name || "",
         emergency_contact_phone: (tenant as any).emergency_contact_phone || "",
+        payment_timing: ((tenant as any).payment_timing as "prepaid" | "postpaid") || "prepaid",
       });
       setAssignedTo((tenant as any).assigned_to || null);
       setExistingCniUrl((tenant as any).cni_document_url || null);
@@ -120,8 +124,9 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         cni_document_url: cniDocumentUrl,
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
+        payment_timing: values.payment_timing || "prepaid",
         assigned_to: assignedTo,
-      });
+      } as any);
 
       toast.success("Locataire modifié avec succès");
       onOpenChange(false);
@@ -305,6 +310,34 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                     />
                   </div>
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="payment_timing"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Modalité de paiement du loyer
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "prepaid"}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background border z-50">
+                          <SelectItem value="prepaid">Paie avant de consommer (loyer payé d'avance)</SelectItem>
+                          <SelectItem value="postpaid">Consomme avant de payer (paiement en fin de mois)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        En mode « consomme avant de payer », le loyer n'est marqué « Retard » qu'après la fin du mois.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {isAgencyOwner && (
                   <div className="space-y-2">

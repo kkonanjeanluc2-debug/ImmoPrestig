@@ -4979,6 +4979,7 @@ export type Database = {
           has_portal_access: boolean
           id: string
           name: string
+          payment_timing: string
           phone: string | null
           portal_user_id: string | null
           profession: string | null
@@ -5004,6 +5005,7 @@ export type Database = {
           has_portal_access?: boolean
           id?: string
           name: string
+          payment_timing?: string
           phone?: string | null
           portal_user_id?: string | null
           profession?: string | null
@@ -5029,6 +5031,7 @@ export type Database = {
           has_portal_access?: boolean
           id?: string
           name?: string
+          payment_timing?: string
           phone?: string | null
           portal_user_id?: string | null
           profession?: string | null

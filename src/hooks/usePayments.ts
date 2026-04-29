@@ -131,6 +131,7 @@ export const usePayments = () => {
         const tenantId = contract.tenant_id;
         const covered = tenantCoveredMonths.get(tenantId) || new Set();
         const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
+        const paymentTiming = (contract as any).tenant?.payment_timing || 'prepaid';
 
         // Determine start month: contract start_date or max 12 months back
         const contractStart = new Date((contract as any).start_date || now.toISOString());
@@ -143,7 +144,15 @@ export const usePayments = () => {
         while (iterYear < endYear || (iterYear === endYear && iterMonth <= endMonth)) {
           const ym = `${iterYear}-${String(iterMonth + 1).padStart(2, '0')}`;
           const monthLabel = `${FRENCH_MONTHS[iterMonth]} ${iterYear}`;
-          const dueDate = `${ym}-${String(rentDueDay).padStart(2, '0')}`;
+          // For postpaid: due date = last day of the month (consume then pay)
+          // For prepaid: due date = configured rent_due_day of the month (pay then consume)
+          let dueDate: string;
+          if (paymentTiming === 'postpaid') {
+            const lastDay = new Date(iterYear, iterMonth + 1, 0).getDate();
+            dueDate = `${ym}-${String(lastDay).padStart(2, '0')}`;
+          } else {
+            dueDate = `${ym}-${String(rentDueDay).padStart(2, '0')}`;
+          }
 
           if (!covered.has(ym)) {
             // Determine status based on how overdue

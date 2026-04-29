@@ -347,6 +347,41 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                   )}
                 />
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="grace_period_days_prepaid"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Période de grâce — Prépayé (jours)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} max={60} {...field} />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Jours de tolérance après la date d'échéance avant le statut « Retard ».
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="grace_period_days_postpaid"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Période de grâce — Postpayé (jours)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} max={60} {...field} />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Jours de tolérance après la fin du mois avant le statut « Retard ».
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 {isAgencyOwner && (
                   <div className="space-y-2">
                     <Label>Gestionnaire assigné</Label>

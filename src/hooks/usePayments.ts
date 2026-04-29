@@ -162,7 +162,7 @@ export const usePayments = () => {
             const dueDateObj = new Date(dueDate);
             const daysLate = Math.floor((now.getTime() - dueDateObj.getTime()) / (1000 * 60 * 60 * 24));
             let status = "pending";
-            if (daysLate > 0) {
+            if (daysLate > graceDays) {
               status = "late";
             }
 

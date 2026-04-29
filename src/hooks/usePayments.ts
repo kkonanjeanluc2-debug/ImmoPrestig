@@ -145,13 +145,32 @@ export const usePayments = () => {
 
         // Iterate month by month until endMonth/endYear
         while (iterYear < endYear || (iterYear === endYear && iterMonth <= endMonth)) {
-          const ym = `${iterYear}-${String(iterMonth + 1).padStart(2, '0')}`;
-          const monthLabel = `${FRENCH_MONTHS[iterMonth]} ${iterYear}`;
-          // For postpaid: due date = last day of the month (consume then pay)
+          // For postpaid: the rent due in month N covers consumption of month N-1
+          // For prepaid: the rent due in month N covers month N
+          let consumedMonth = iterMonth;
+          let consumedYear = iterYear;
+          if (paymentTiming === 'postpaid') {
+            consumedMonth = iterMonth - 1;
+            consumedYear = iterYear;
+            if (consumedMonth < 0) { consumedMonth = 11; consumedYear = iterYear - 1; }
+
+            // Skip if consumed month is before the contract start
+            const consumedDate = new Date(consumedYear, consumedMonth, 1);
+            const contractStartMonthDate = new Date(contractStart.getFullYear(), contractStart.getMonth(), 1);
+            if (consumedDate < contractStartMonthDate) {
+              iterMonth++;
+              if (iterMonth > 11) { iterMonth = 0; iterYear++; }
+              continue;
+            }
+          }
+
+          const ym = `${consumedYear}-${String(consumedMonth + 1).padStart(2, '0')}`;
+          const monthLabel = `${FRENCH_MONTHS[consumedMonth]} ${consumedYear}`;
+          // For postpaid: due date = last day of the consumed month (consume then pay)
           // For prepaid: due date = configured rent_due_day of the month (pay then consume)
           let dueDate: string;
           if (paymentTiming === 'postpaid') {
-            const lastDay = new Date(iterYear, iterMonth + 1, 0).getDate();
+            const lastDay = new Date(consumedYear, consumedMonth + 1, 0).getDate();
             dueDate = `${ym}-${String(lastDay).padStart(2, '0')}`;
           } else {
             dueDate = `${ym}-${String(rentDueDay).padStart(2, '0')}`;

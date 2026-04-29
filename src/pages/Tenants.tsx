@@ -438,8 +438,8 @@ export default function Tenants() {
                 <SelectContent>
                   <SelectItem value="all">Toutes les communes</SelectItem>
                   {rentedCommunes.map((commune) => (
-                    <SelectItem key={commune} value={commune}>
-                      {commune}
+                    <SelectItem key={commune.name} value={commune.name}>
+                      {commune.name} ({commune.count})
                     </SelectItem>
                   ))}
                 </SelectContent>

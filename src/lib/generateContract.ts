@@ -116,25 +116,22 @@ export const replaceContractVariables = (
     year: "numeric",
   });
 
-  // Determine management category
-  const managementCategory = getManagementCategory(data.owner?.management_type?.name);
-  
-  // Determine what info to show based on management type
-  const showOwnerInfo = managementCategory === "simple" || managementCategory === "partagee";
-  const showAgencyInfo = managementCategory === "professionnelle" || managementCategory === "partagee";
+  // Apply the template AS-IS: each variable is filled with its real value.
+  // No conditional masking based on management type — the template alone decides
+  // what is displayed. The agency, the owner and the bailleur fields are always
+  // populated from the actual data when available.
 
-  // Owner info - only if showing owner info
-  const ownerDisplayName = showOwnerInfo ? (data.owner?.name || data.ownerName || "") : "";
-  const ownerAddress = showOwnerInfo ? (data.owner?.address || "") : "";
-  const ownerPhone = showOwnerInfo ? (data.owner?.phone || "") : "";
-  const ownerEmail = showOwnerInfo ? (data.owner?.email || "") : "";
-  const ownerBirthDate = showOwnerInfo && data.owner?.birth_date ? formatDate(data.owner.birth_date) : "";
-  const ownerBirthPlace = showOwnerInfo ? (data.owner?.birth_place || "") : "";
-  const ownerProfession = showOwnerInfo ? (data.owner?.profession || "") : "";
-  const ownerCni = showOwnerInfo ? (data.owner?.cni_number || "") : "";
+  // Owner info
+  const ownerDisplayName = data.owner?.name || data.ownerName || "";
+  const ownerAddress = data.owner?.address || "";
+  const ownerPhone = data.owner?.phone || "";
+  const ownerEmail = data.owner?.email || "";
+  const ownerBirthDate = data.owner?.birth_date ? formatDate(data.owner.birth_date) : "";
+  const ownerBirthPlace = data.owner?.birth_place || "";
+  const ownerProfession = data.owner?.profession || "";
+  const ownerCni = data.owner?.cni_number || "";
 
-  // Agency info - always populated when agency exists (the agency emits the contract
-  // regardless of management type). The management type only affects who is the "bailleur".
+  // Agency info
   const agencyName = data.agency?.name || "";
   const agencyAddress = data.agency
     ? [data.agency.address, data.agency.city, data.agency.country].filter(Boolean).join(", ")
@@ -142,31 +139,12 @@ export const replaceContractVariables = (
   const agencyPhone = data.agency?.phone || "";
   const agencyEmail = data.agency?.email || "";
 
-  // For bailleur fields, combine info based on management type
-  let bailleurDisplayName = "";
-  let bailleurAddress = "";
-  let bailleurPhone = "";
-  let bailleurEmail = "";
-  
-  if (managementCategory === "partagee") {
-    // Show owner name, agency manages
-    bailleurDisplayName = data.owner?.name || data.ownerName || "Le bailleur";
-    bailleurAddress = data.owner?.address || "";
-    bailleurPhone = data.owner?.phone || "";
-    bailleurEmail = data.owner?.email || "";
-  } else if (managementCategory === "simple") {
-    // Only owner info
-    bailleurDisplayName = data.owner?.name || data.ownerName || "Le bailleur";
-    bailleurAddress = data.owner?.address || "";
-    bailleurPhone = data.owner?.phone || "";
-    bailleurEmail = data.owner?.email || "";
-  } else {
-    // Professionnelle - only agency
-    bailleurDisplayName = data.agency?.name || "L'agence";
-    bailleurAddress = agencyAddress;
-    bailleurPhone = data.agency?.phone || "";
-    bailleurEmail = data.agency?.email || "";
-  }
+  // Bailleur fields default to the owner; fall back to the agency only if no owner
+  // is available so the {bailleur*} placeholders are never empty.
+  const bailleurDisplayName = ownerDisplayName || agencyName || "Le bailleur";
+  const bailleurAddress = ownerAddress || agencyAddress;
+  const bailleurPhone = ownerPhone || agencyPhone;
+  const bailleurEmail = ownerEmail || agencyEmail;
 
   const replacements: Record<string, string> = {
     // Bailleur fields (main landlord section)

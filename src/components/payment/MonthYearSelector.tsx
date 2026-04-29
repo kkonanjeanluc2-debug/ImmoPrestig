@@ -29,12 +29,14 @@ export function MonthYearSelector({
   const [year, setYear] = useState(new Date().getFullYear());
   const [paidMonths, setPaidMonths] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [contractStartDate, setContractStartDate] = useState<Date | null>(null);
 
   // Fetch already paid months for this tenant
   useEffect(() => {
     const fetchPaidMonths = async () => {
       if (!tenantId) {
         setPaidMonths([]);
+        setContractStartDate(null);
         return;
       }
 
@@ -57,6 +59,26 @@ export function MonthYearSelector({
         });
 
         setPaidMonths(allPaidMonths);
+
+        // Fetch active contract start date to limit selectable months
+        const { data: contractData } = await supabase
+          .from("contracts")
+          .select("start_date")
+          .eq("tenant_id", tenantId)
+          .eq("status", "active")
+          .is("deleted_at", null)
+          .order("start_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (contractData?.start_date) {
+          const sd = new Date(contractData.start_date);
+          setContractStartDate(sd);
+          // Default the displayed year to the contract start year if current year is before it
+          setYear((prev) => (prev < sd.getFullYear() ? sd.getFullYear() : prev));
+        } else {
+          setContractStartDate(null);
+        }
       } catch (error) {
         console.error("Error fetching paid months:", error);
       } finally {
@@ -115,8 +137,14 @@ export function MonthYearSelector({
     return -1;
   })();
 
-  // Check if a month should be hidden (precedes advance-paid months)
+  // Check if a month should be hidden (precedes advance-paid months OR contract start)
   const isMonthHidden = (monthIndex: number) => {
+    if (contractStartDate) {
+      const startYear = contractStartDate.getFullYear();
+      const startMonth = contractStartDate.getMonth();
+      if (year < startYear) return true;
+      if (year === startYear && monthIndex < startMonth) return true;
+    }
     if (firstPaidMonthIndex === -1) return false; // No paid months, show all
     return monthIndex < firstPaidMonthIndex;
   };

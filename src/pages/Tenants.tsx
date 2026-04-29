@@ -134,9 +134,15 @@ function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean, 
   
   for (let d = new Date(checkStart); d <= currentMonth; d.setMonth(d.getMonth() + 1)) {
     const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const dueDate = new Date(d.getFullYear(), d.getMonth(), rentDueDay);
-    
-    if (dueDate < now && !isMonthPaid(monthKey)) {
+    // Postpaid: due date = last day of month; Prepaid: due date = configured day
+    const dueDate = paymentTiming === 'postpaid'
+      ? new Date(d.getFullYear(), d.getMonth() + 1, 0)
+      : new Date(d.getFullYear(), d.getMonth(), rentDueDay);
+    // Apply grace period before considering "Retard"
+    const effectiveDueDate = new Date(dueDate);
+    effectiveDueDate.setDate(effectiveDueDate.getDate() + graceDays);
+
+    if (effectiveDueDate < now && !isMonthPaid(monthKey)) {
       unpaidMonths++;
       if (!earliestUnpaidDueDate) earliestUnpaidDueDate = dueDate;
     }

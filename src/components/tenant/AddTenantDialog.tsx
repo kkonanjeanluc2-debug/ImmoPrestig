@@ -388,6 +388,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
           emergency_contact_name: values.emergency_contact_name || null,
           emergency_contact_phone: values.emergency_contact_phone || null,
           agency_fees: values.agency_fees ? parseFloat(values.agency_fees) : null,
+          payment_timing: values.payment_timing || "prepaid",
         });
         createdTenantId = tenant.id;
       }

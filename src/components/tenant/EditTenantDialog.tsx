@@ -83,6 +83,8 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         emergency_contact_name: (tenant as any).emergency_contact_name || "",
         emergency_contact_phone: (tenant as any).emergency_contact_phone || "",
         payment_timing: ((tenant as any).payment_timing as "prepaid" | "postpaid") || "prepaid",
+        grace_period_days_prepaid: Number((tenant as any).grace_period_days_prepaid ?? 0),
+        grace_period_days_postpaid: Number((tenant as any).grace_period_days_postpaid ?? 0),
       });
       setAssignedTo((tenant as any).assigned_to || null);
       setExistingCniUrl((tenant as any).cni_document_url || null);

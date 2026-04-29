@@ -133,13 +133,14 @@ export const replaceContractVariables = (
   const ownerProfession = showOwnerInfo ? (data.owner?.profession || "") : "";
   const ownerCni = showOwnerInfo ? (data.owner?.cni_number || "") : "";
 
-  // Agency info - only if showing agency info
-  const agencyName = showAgencyInfo ? (data.agency?.name || "") : "";
-  const agencyAddress = showAgencyInfo && data.agency 
+  // Agency info - always populated when agency exists (the agency emits the contract
+  // regardless of management type). The management type only affects who is the "bailleur".
+  const agencyName = data.agency?.name || "";
+  const agencyAddress = data.agency
     ? [data.agency.address, data.agency.city, data.agency.country].filter(Boolean).join(", ")
     : "";
-  const agencyPhone = showAgencyInfo ? (data.agency?.phone || "") : "";
-  const agencyEmail = showAgencyInfo ? (data.agency?.email || "") : "";
+  const agencyPhone = data.agency?.phone || "";
+  const agencyEmail = data.agency?.email || "";
 
   // For bailleur fields, combine info based on management type
   let bailleurDisplayName = "";

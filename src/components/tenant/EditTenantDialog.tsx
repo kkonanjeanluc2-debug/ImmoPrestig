@@ -123,8 +123,9 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         cni_document_url: cniDocumentUrl,
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
+        payment_timing: values.payment_timing || "prepaid",
         assigned_to: assignedTo,
-      });
+      } as any);
 
       toast.success("Locataire modifié avec succès");
       onOpenChange(false);

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Phone, Mail, MapPin, CreditCard, FileText, Download } from "lucide-react";
-import { useApports, useCreateApport, useUpdateApport, useDeleteApport, type ApporteurAffaires } from "@/hooks/useApporteursAffaires";
+import { useApports, useCreateApport, useUpdateApport, useDeleteApport, type Apport, type ApporteurAffaires } from "@/hooks/useApporteursAffaires";
 import { useState } from "react";
 import { AddApportDialog } from "./AddApportDialog";
 import { format } from "date-fns";
@@ -42,7 +42,7 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
 
   const defaultTemplate = receiptTemplates?.find(t => t.is_default) || receiptTemplates?.[0];
 
-  const handleDownloadReceipt = async (apport: any) => {
+  const handleDownloadReceipt = async (apport: Apport) => {
     try {
       await generateApportCommissionReceipt({
         apporteurName: apporteur.name,
@@ -202,7 +202,7 @@ export function ApporteurDetailsDialog({ open, onOpenChange, apporteur }: Props)
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => updateApport.mutate({ id: apport.id, status: "payee", paid_at: new Date().toISOString() } as any)}
+                            onClick={() => updateApport.mutate({ id: apport.id, status: "payee", paid_at: new Date().toISOString() })}
                           >
                             Payer
                           </Button>

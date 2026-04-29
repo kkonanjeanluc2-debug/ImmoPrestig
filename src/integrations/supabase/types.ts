@@ -2622,6 +2622,7 @@ export type Database = {
           can_delete_contracts: boolean
           can_delete_documents: boolean
           can_delete_impayes: boolean
+          can_delete_invoices: boolean
           can_delete_lotissements: boolean
           can_delete_owners: boolean
           can_delete_payments: boolean
@@ -2721,6 +2722,7 @@ export type Database = {
           can_delete_contracts?: boolean
           can_delete_documents?: boolean
           can_delete_impayes?: boolean
+          can_delete_invoices?: boolean
           can_delete_lotissements?: boolean
           can_delete_owners?: boolean
           can_delete_payments?: boolean
@@ -2820,6 +2822,7 @@ export type Database = {
           can_delete_contracts?: boolean
           can_delete_documents?: boolean
           can_delete_impayes?: boolean
+          can_delete_invoices?: boolean
           can_delete_lotissements?: boolean
           can_delete_owners?: boolean
           can_delete_payments?: boolean

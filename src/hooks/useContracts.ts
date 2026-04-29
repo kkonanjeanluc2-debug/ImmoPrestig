@@ -29,7 +29,8 @@ export const useContracts = () => {
               birth_place,
               profession,
               cni_number,
-              management_type:management_types(name, type, percentage)
+              management_type:management_types(name, type, percentage),
+              default_contract_template:contract_templates(id, name)
             )
           ),
           tenant:tenants(*),

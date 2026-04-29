@@ -66,21 +66,6 @@ interface ContractData {
   dailyRentDiscount?: number | null;
 }
 
-const loadImageAsBase64 = async (url: string): Promise<string | null> => {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
-};
-
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return date.toLocaleDateString("fr-FR", {
@@ -241,81 +226,6 @@ export const generateContractPDF = async (
   
   let yPos = margin;
   
-  // Header with agency/company info and logo
-  if (data.agency) {
-    const headerStartY = yPos;
-    let logoLoaded = false;
-    
-    // Try to load and display logo
-    if (data.agency.logo_url) {
-      try {
-        const logoBase64 = await loadImageAsBase64(data.agency.logo_url);
-        if (logoBase64) {
-          // Draw logo on the left
-          doc.addImage(logoBase64, "PNG", margin, yPos, 30, 30);
-          logoLoaded = true;
-        }
-      } catch (e) {
-        // Continue without logo
-        console.log("Could not load logo:", e);
-      }
-    }
-    
-    // Company info - positioned based on whether logo exists
-    const textStartX = logoLoaded ? margin + 35 : margin;
-    
-    // Company name
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...primaryColor);
-    doc.text(data.agency.name, textStartX, yPos + 8);
-    
-    // Address line
-    const addressParts = [data.agency.address, data.agency.city, data.agency.country].filter(Boolean);
-    if (addressParts.length > 0) {
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...textColor);
-      doc.text(addressParts.join(", "), textStartX, yPos + 15);
-    }
-    
-    // Contact info (phone and email)
-    const contactParts: string[] = [];
-    if (data.agency.phone) contactParts.push(`Tél: ${data.agency.phone}`);
-    if (data.agency.email) contactParts.push(`Email: ${data.agency.email}`);
-    
-    if (contactParts.length > 0) {
-      doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      doc.text(contactParts.join(" | "), textStartX, yPos + 21);
-    }
-    
-    // Draw a separator line under the header
-    yPos = headerStartY + 35;
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPos, pageWidth - margin, yPos);
-    
-    yPos += 10;
-  }
-  
-  // Title - detect furnished type and rent type
-  const isFurnished = data.propertyType === "meuble" || templateContent.toLowerCase().includes("meublé") || templateContent.toLowerCase().includes("meublee") || templateContent.toLowerCase().includes("inventaire");
-  const isDaily = data.rentType === "journalier";
-  let contractTitle = "CONTRAT DE BAIL À USAGE D'HABITATION";
-  if (isFurnished && isDaily) {
-    contractTitle = "CONTRAT DE BAIL MEUBLÉ JOURNALIER À USAGE D'HABITATION";
-  } else if (isFurnished) {
-    contractTitle = "CONTRAT DE BAIL MEUBLÉ À USAGE D'HABITATION";
-  }
-  
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text(contractTitle, pageWidth / 2, yPos, { align: "center" });
-  
-  yPos += 15;
-  
   // Replace variables in template
   const filledContent = replaceContractVariables(templateContent, data);
   
@@ -324,17 +234,7 @@ export const generateContractPDF = async (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...textColor);
   
-  // Remove duplicate title line from template content (already rendered above)
-  const titleVariants = [
-    "CONTRAT DE BAIL À USAGE D'HABITATION",
-    "CONTRAT DE BAIL MEUBLÉ À USAGE D'HABITATION",
-    "CONTRAT DE BAIL MEUBLÉ JOURNALIER À USAGE D'HABITATION",
-    "CONTRAT DE BAIL A USAGE D'HABITATION",
-  ];
-  const lines = filledContent.split("\n").filter(line => {
-    const stripped = line.replace(/^#+\s*/, "").trim().toUpperCase();
-    return !titleVariants.some(t => stripped === t);
-  });
+  const lines = filledContent.split("\n");
   
   for (const line of lines) {
     const trimmedLine = line.trim();
@@ -387,125 +287,6 @@ export const generateContractPDF = async (
         yPos += 5;
       }
     }
-  }
-  
-  // Add signature section at the end
-  yPos += 20;
-  if (yPos > pageHeight - 100) {
-    doc.addPage();
-    yPos = margin;
-  }
-  
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...textColor);
-  
-  const signatureY = yPos;
-  const colWidth = (pageWidth - margin * 2 - 20) / 2;
-  
-  // Get signatures
-  const landlordSig = data.signatures?.find(s => s.signerType === "landlord");
-  const tenantSig = data.signatures?.find(s => s.signerType === "tenant");
-  
-  // Left signature (Bailleur)
-  doc.setFont("helvetica", "bold");
-  doc.text("Le Bailleur", margin, signatureY);
-  doc.setFont("helvetica", "normal");
-  
-  if (landlordSig) {
-    doc.text(landlordSig.signerName, margin, signatureY + 7);
-    
-    // Add signature image or text
-    if (landlordSig.signatureType === "drawn" && landlordSig.signatureData) {
-      try {
-        doc.addImage(landlordSig.signatureData, "PNG", margin, signatureY + 12, 60, 30);
-      } catch (e) {
-        // Fallback to text if image fails
-        doc.text("(Signature électronique)", margin, signatureY + 25);
-      }
-    } else if (landlordSig.signatureText) {
-      // Use italic for typed signature
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(16);
-      doc.text(landlordSig.signatureText, margin, signatureY + 25);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-    }
-    
-    // Timestamp
-    const landlordDate = new Date(landlordSig.signedAt);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(
-      `Signé le ${landlordDate.toLocaleDateString("fr-FR")} à ${landlordDate.toLocaleTimeString("fr-FR")}`,
-      margin,
-      signatureY + 48
-    );
-    doc.setTextColor(...textColor);
-    doc.setFontSize(10);
-  } else {
-    doc.text("Signature précédée de", margin, signatureY + 7);
-    doc.text('"Lu et approuvé"', margin, signatureY + 12);
-    doc.line(margin, signatureY + 45, margin + colWidth, signatureY + 45);
-  }
-  
-  // Right signature (Locataire)
-  const rightX = margin + colWidth + 20;
-  doc.setFont("helvetica", "bold");
-  doc.text("Le Locataire", rightX, signatureY);
-  doc.setFont("helvetica", "normal");
-  
-  if (tenantSig) {
-    doc.text(tenantSig.signerName, rightX, signatureY + 7);
-    
-    // Add signature image or text
-    if (tenantSig.signatureType === "drawn" && tenantSig.signatureData) {
-      try {
-        doc.addImage(tenantSig.signatureData, "PNG", rightX, signatureY + 12, 60, 30);
-      } catch (e) {
-        doc.text("(Signature électronique)", rightX, signatureY + 25);
-      }
-    } else if (tenantSig.signatureText) {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(16);
-      doc.text(tenantSig.signatureText, rightX, signatureY + 25);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-    }
-    
-    // Timestamp
-    const tenantDate = new Date(tenantSig.signedAt);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(
-      `Signé le ${tenantDate.toLocaleDateString("fr-FR")} à ${tenantDate.toLocaleTimeString("fr-FR")}`,
-      rightX,
-      signatureY + 48
-    );
-    doc.setTextColor(...textColor);
-    doc.setFontSize(10);
-  } else {
-    doc.text("Signature précédée de", rightX, signatureY + 7);
-    doc.text('"Lu et approuvé"', rightX, signatureY + 12);
-    doc.line(rightX, signatureY + 45, rightX + colWidth, signatureY + 45);
-  }
-  
-  // Add electronic signature notice if any signature exists
-  if (landlordSig || tenantSig) {
-    yPos = signatureY + 60;
-    if (yPos > pageHeight - 30) {
-      doc.addPage();
-      yPos = margin;
-    }
-    
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(
-      "Ce document a été signé électroniquement. Les signatures électroniques ont valeur légale conformément à la réglementation en vigueur.",
-      margin,
-      yPos,
-      { maxWidth: maxWidth }
-    );
   }
   
   return doc;

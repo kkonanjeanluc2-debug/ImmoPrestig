@@ -38,6 +38,7 @@ interface ManagementTypeData {
 interface DefaultContractTemplateData {
   id: string;
   name: string;
+  content?: string;
 }
 
 interface OwnerData {
@@ -106,31 +107,38 @@ export function GenerateContractDialog({
   const hasSignatures = !!(landlordSignature || tenantSignature);
   const isFullySigned = !!(landlordSignature && tenantSignature);
 
-  // Set owner's default template when dialog opens
+  // Set owner's default template when dialog opens, or default agency template.
   useEffect(() => {
     if (open && !hasSetOwnerTemplate && contractData.owner?.default_contract_template?.id) {
       setSelectedTemplateId(contractData.owner.default_contract_template.id);
+      setHasSetOwnerTemplate(true);
+    } else if (open && !hasSetOwnerTemplate && defaultTemplate?.id) {
+      setSelectedTemplateId(defaultTemplate.id);
       setHasSetOwnerTemplate(true);
     }
     if (!open) {
       setHasSetOwnerTemplate(false);
     }
-  }, [open, contractData.owner?.default_contract_template?.id, hasSetOwnerTemplate]);
+  }, [open, contractData.owner?.default_contract_template?.id, defaultTemplate?.id, hasSetOwnerTemplate]);
 
   const getSelectedTemplate = () => {
     if (selectedTemplateId && templates) {
-      return templates.find((t) => t.id === selectedTemplateId);
+      const selected = templates.find((t) => t.id === selectedTemplateId);
+      if (selected) return selected;
     }
     // Use owner's default template if available
     if (contractData.owner?.default_contract_template?.id && templates) {
-      return templates.find((t) => t.id === contractData.owner?.default_contract_template?.id);
+      const ownerTemplate = templates.find((t) => t.id === contractData.owner?.default_contract_template?.id);
+      if (ownerTemplate) return ownerTemplate;
     }
     return defaultTemplate;
   };
 
   const getTemplateContent = () => {
     const template = getSelectedTemplate();
-    return template?.content || DEFAULT_CONTRACT_TEMPLATE;
+    if (template?.content) return template.content;
+    if (selectedTemplateId || contractData.owner?.default_contract_template?.id) return null;
+    return DEFAULT_CONTRACT_TEMPLATE;
   };
 
   // Transform signatures for PDF
@@ -167,7 +175,9 @@ export function GenerateContractDialog({
   const handleDownload = async () => {
     setIsGenerating(true);
     try {
-      await downloadContractPDF(getTemplateContent(), fullContractData);
+      const templateContent = getTemplateContent();
+      if (!templateContent) throw new Error("Modèle de contrat introuvable ou inaccessible.");
+      await downloadContractPDF(templateContent, fullContractData);
       toast({
         title: "Contrat généré",
         description: "Le contrat a été téléchargé avec succès.",
@@ -186,7 +196,9 @@ export function GenerateContractDialog({
   const handlePrint = async () => {
     setIsGenerating(true);
     try {
-      await printContractPDF(getTemplateContent(), fullContractData);
+      const templateContent = getTemplateContent();
+      if (!templateContent) throw new Error("Modèle de contrat introuvable ou inaccessible.");
+      await printContractPDF(templateContent, fullContractData);
       toast({
         title: "Impression",
         description: "Le contrat a été ouvert pour impression.",

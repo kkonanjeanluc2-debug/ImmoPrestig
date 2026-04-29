@@ -11,6 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -191,6 +194,7 @@ export default function Tenants() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [communeFilter, setCommuneFilter] = useState("all");
+  const [communePopoverOpen, setCommunePopoverOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [accessDialogTenant, setAccessDialogTenant] = useState<TenantWithDetails | null>(null);
@@ -431,19 +435,51 @@ export default function Tenants() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={communeFilter} onValueChange={setCommuneFilter}>
-                <SelectTrigger className="w-[220px] h-9">
-                  <SelectValue placeholder="Commune" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les communes</SelectItem>
-                  {rentedCommunes.map((commune) => (
-                    <SelectItem key={commune.name} value={commune.name}>
-                      {commune.name} ({commune.count})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={communePopoverOpen} onOpenChange={setCommunePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={communePopoverOpen}
+                    className="w-[220px] h-9 justify-between font-normal"
+                  >
+                    <span className="truncate">
+                      {communeFilter === "all"
+                        ? "Toutes les communes"
+                        : `${communeFilter} (${rentedCommunes.find(c => c.name === communeFilter)?.count ?? 0})`}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[260px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Rechercher une commune..." />
+                    <CommandList>
+                      <CommandEmpty>Aucune commune trouvée.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="Toutes les communes"
+                          onSelect={() => { setCommuneFilter("all"); setCommunePopoverOpen(false); }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", communeFilter === "all" ? "opacity-100" : "opacity-0")} />
+                          Toutes les communes
+                        </CommandItem>
+                        {rentedCommunes.map((commune) => (
+                          <CommandItem
+                            key={commune.name}
+                            value={commune.name}
+                            onSelect={() => { setCommuneFilter(commune.name); setCommunePopoverOpen(false); }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", communeFilter === commune.name ? "opacity-100" : "opacity-0")} />
+                            <span className="flex-1">{commune.name}</span>
+                            <span className="text-muted-foreground text-xs ml-2">({commune.count})</span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {isAgencyOwner && assignableUsers.length > 1 && (
                 <Select value={assignedFilter} onValueChange={setAssignedFilter}>
                   <SelectTrigger className="w-[220px] h-9">

@@ -92,7 +92,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
     if (owner) {
       form.reset({
         name: owner.name,
-        email: owner.email,
+        email: owner.email || "",
         phone: owner.phone || "",
         address: owner.address || "",
         status: owner.status as "actif" | "inactif",

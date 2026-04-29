@@ -311,6 +311,34 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                   </div>
                 </div>
 
+                <FormField
+                  control={form.control}
+                  name="payment_timing"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Modalité de paiement du loyer
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "prepaid"}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background border z-50">
+                          <SelectItem value="prepaid">Paie avant de consommer (loyer payé d'avance)</SelectItem>
+                          <SelectItem value="postpaid">Consomme avant de payer (paiement en fin de mois)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        En mode « consomme avant de payer », le loyer n'est marqué « Retard » qu'après la fin du mois.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {isAgencyOwner && (
                   <div className="space-y-2">
                     <Label>Gestionnaire assigné</Label>

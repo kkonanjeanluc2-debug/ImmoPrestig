@@ -213,17 +213,19 @@ export default function Tenants() {
   const { requestsByTenant } = useTenantsActiveRequestsMap();
   const { data: owners = [] } = useOwners();
 
-  // Derive communes from all tenants' properties (regardless of property status)
+  // Derive communes from all tenants' properties with their counts
   const rentedCommunes = useMemo(() => {
-    if (!tenants) return [];
-    const communes = new Set<string>();
+    if (!tenants) return [] as { name: string; count: number }[];
+    const counts = new Map<string, number>();
     for (const tenant of tenants) {
       const prop = tenant.property as any;
       if (prop?.city) {
-        communes.add(prop.city);
+        counts.set(prop.city, (counts.get(prop.city) || 0) + 1);
       }
     }
-    return Array.from(communes).sort((a, b) => a.localeCompare(b, "fr"));
+    return Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
   }, [tenants]);
 
   if (!permLoading && role !== "super_admin" && role !== "admin" && role !== "locataire" && !hasPermission("can_view_tenants")) {
@@ -436,8 +438,8 @@ export default function Tenants() {
                 <SelectContent>
                   <SelectItem value="all">Toutes les communes</SelectItem>
                   {rentedCommunes.map((commune) => (
-                    <SelectItem key={commune} value={commune}>
-                      {commune}
+                    <SelectItem key={commune.name} value={commune.name}>
+                      {commune.name} ({commune.count})
                     </SelectItem>
                   ))}
                 </SelectContent>

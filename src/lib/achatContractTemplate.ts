@@ -403,6 +403,13 @@ export function replaceAchatContractVariables(
     "{acquereur_adresse}": data.acquereurAddress ? `Domicilié(e) à : ${data.acquereurAddress}` : "",
     "{acquereur_telephone}": data.acquereurPhone ? `Téléphone : ${data.acquereurPhone}` : "",
     "{acquereur_email}": data.acquereurEmail ? `Email : ${data.acquereurEmail}` : "",
+    "{agence}": data.agency?.name || "",
+    "{agence_adresse}": data.agency
+      ? [data.agency.address, data.agency.city, data.agency.country].filter(Boolean).join(", ")
+      : "",
+    "{agence_telephone}": data.agency?.phone || "",
+    "{agence_email}": data.agency?.email || "",
+    "{agence_ville}": data.agency?.city || "",
     "{type_bien}": data.propertyType || "",
     "{designation_bien}": data.propertyTitle || "",
     "{adresse_bien}": data.propertyAddress || "",

@@ -122,15 +122,30 @@ export function CollectPaymentDialog({
         return month.length >= 7 ? month.substring(0, 7) : null;
       };
 
-      // 1) Real late payments in DB
+      // 1) Real late payments in DB (statut "late" OU paiements partiels antérieurs non soldés)
+      const currentDueYMForFilter = (dueDate || "").substring(0, 7);
       const { data: realLate } = await supabase
         .from("payments")
-        .select("id, due_date, amount, payment_months, status")
+        .select("id, due_date, amount, paid_amount, payment_months, status")
         .eq("tenant_id", tenantId)
-        .eq("status", "late")
         .order("due_date", { ascending: true });
 
-      const realLateFiltered = (realLate || []).filter((p) => p.id !== paymentId);
+      const realLateFiltered = (realLate || []).filter((p: any) => {
+        if (p.id === paymentId) return false;
+        // Mois en retard
+        if (p.status === "late") return true;
+        // Paiement partiel antérieur (ou même mois différent) non soldé
+        const isPartial =
+          p.status !== "paid" &&
+          Number(p.paid_amount || 0) > 0 &&
+          Number(p.paid_amount || 0) < Number(p.amount || 0);
+        if (isPartial) {
+          const pYM = (p.due_date || "").substring(0, 7);
+          // Bloque si le partiel est sur un mois antérieur ou égal au mois courant
+          if (pYM && currentDueYMForFilter && pYM <= currentDueYMForFilter) return true;
+        }
+        return false;
+      });
 
       // 2) Detect virtual unpaid prior months (auto-generated, not yet in DB)
       // Compare months covered by ALL real payments vs months expected from contract start

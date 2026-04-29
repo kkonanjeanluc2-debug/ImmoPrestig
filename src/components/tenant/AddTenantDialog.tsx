@@ -1205,8 +1205,43 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 )}
               />
 
+              {/* Grace period days */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="grace_period_days_prepaid"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Période de grâce — Prépayé (jours)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} max={60} {...field} />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tolérance après la date d'échéance avant le statut « Retard ».
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="grace_period_days_postpaid"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Période de grâce — Postpayé (jours)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} max={60} {...field} />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tolérance après la fin du mois avant le statut « Retard ».
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+
                 <input
                   type="checkbox"
                   id="is_colocation"

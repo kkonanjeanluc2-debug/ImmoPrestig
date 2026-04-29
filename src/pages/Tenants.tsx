@@ -194,6 +194,7 @@ export default function Tenants() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [communeFilter, setCommuneFilter] = useState("all");
+  const [communePopoverOpen, setCommunePopoverOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [accessDialogTenant, setAccessDialogTenant] = useState<TenantWithDetails | null>(null);

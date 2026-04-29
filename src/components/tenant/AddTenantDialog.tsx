@@ -1170,7 +1170,36 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                 )}
               />
 
-              {/* Colocation Option */}
+              {/* Payment Timing */}
+              <FormField
+                control={form.control}
+                name="payment_timing"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Modalité de paiement du loyer
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || "prepaid"}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background border z-50">
+                        <SelectItem value="prepaid">Paie avant de consommer (loyer payé d'avance)</SelectItem>
+                        <SelectItem value="postpaid">Consomme avant de payer (paiement en fin de mois)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Les locataires « consomme avant de payer » ne sont marqués « Retard » qu'après la fin du mois concerné.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
               <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
                 <input
                   type="checkbox"

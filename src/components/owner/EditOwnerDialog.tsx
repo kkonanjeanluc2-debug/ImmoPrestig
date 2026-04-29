@@ -115,7 +115,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
       await updateOwner.mutateAsync({
         id: owner.id,
         name: data.name,
-        email: data.email,
+        email: data.email || null,
         phone: data.phone || null,
         address: data.address || null,
         status: data.status,

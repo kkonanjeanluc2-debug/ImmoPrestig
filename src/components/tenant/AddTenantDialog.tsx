@@ -211,6 +211,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       deposit: "",
       agency_fees: "",
       advance_months: "0",
+      payment_timing: "prepaid",
     },
   });
 

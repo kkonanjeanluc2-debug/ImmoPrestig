@@ -127,10 +127,12 @@ export const SAMPLE_SALE_CONTRACT_DATA = {
 
 // Variables disponibles pour les contrats de vente
 export const SALE_CONTRACT_VARIABLES = [
+  // Vendeur
   { variable: "{vendeur}", description: "Nom du vendeur/agence" },
   { variable: "{vendeur_adresse}", description: "Adresse du vendeur" },
   { variable: "{vendeur_telephone}", description: "Téléphone du vendeur" },
   { variable: "{vendeur_email}", description: "Email du vendeur" },
+  // Acquéreur
   { variable: "{acquereur}", description: "Nom de l'acquéreur" },
   { variable: "{acquereur_adresse}", description: "Adresse de l'acquéreur" },
   { variable: "{acquereur_telephone}", description: "Téléphone de l'acquéreur" },
@@ -139,17 +141,26 @@ export const SALE_CONTRACT_VARIABLES = [
   { variable: "{acquereur_date_naissance}", description: "Date de naissance de l'acquéreur" },
   { variable: "{acquereur_lieu_naissance}", description: "Lieu de naissance de l'acquéreur" },
   { variable: "{acquereur_profession}", description: "Profession de l'acquéreur" },
+  // Agence
+  { variable: "{agence}", description: "Nom de l'agence" },
+  { variable: "{agence_adresse}", description: "Adresse de l'agence" },
+  { variable: "{agence_telephone}", description: "Téléphone de l'agence" },
+  { variable: "{agence_email}", description: "Email de l'agence" },
+  { variable: "{agence_ville}", description: "Ville de l'agence" },
+  // Bien
   { variable: "{bien_titre}", description: "Titre du bien" },
   { variable: "{bien_adresse}", description: "Adresse du bien" },
   { variable: "{bien_type}", description: "Type de bien" },
   { variable: "{bien_superficie}", description: "Superficie du bien" },
   { variable: "{bien_description}", description: "Description du bien" },
+  // Prix & paiement
   { variable: "{prix}", description: "Prix de vente (ex: 85 000 000 FCFA)" },
   { variable: "{prix_lettres}", description: "Prix en lettres" },
   { variable: "{acompte}", description: "Montant de l'acompte" },
   { variable: "{solde}", description: "Solde restant dû" },
   { variable: "{mode_paiement}", description: "Mode de paiement" },
   { variable: "{charges_speciales}", description: "Charges et servitudes spéciales" },
+  // Lieu & date
   { variable: "{ville}", description: "Ville de signature" },
   { variable: "{date_jour}", description: "Date du jour (signature)" },
 ];
@@ -217,6 +228,10 @@ export function replaceSaleContractVariables(content: string, data: typeof SAMPL
     ? format(new Date(data.acquereurBirthDate), "d MMMM yyyy", { locale: fr }) 
     : "Non renseigné";
   
+  const agencyAddressFull = data.agency
+    ? [data.agency.address, data.agency.city, data.agency.country].filter(Boolean).join(", ")
+    : "";
+
   const replacements: Record<string, string> = {
     "{vendeur}": data.vendeurName || "",
     "{vendeur_adresse}": data.vendeurAddress || "",
@@ -230,6 +245,11 @@ export function replaceSaleContractVariables(content: string, data: typeof SAMPL
     "{acquereur_date_naissance}": birthDate,
     "{acquereur_lieu_naissance}": data.acquereurBirthPlace || "",
     "{acquereur_profession}": data.acquereurProfession || "",
+    "{agence}": data.agency?.name || "",
+    "{agence_adresse}": agencyAddressFull,
+    "{agence_telephone}": data.agency?.phone || "",
+    "{agence_email}": data.agency?.email || "",
+    "{agence_ville}": data.agency?.city || "",
     "{bien_titre}": data.bienTitle || "",
     "{bien_adresse}": data.bienAddress || "",
     "{bien_type}": data.bienType || "",

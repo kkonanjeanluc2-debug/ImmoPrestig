@@ -136,7 +136,9 @@ export function GenerateContractDialog({
 
   const getTemplateContent = () => {
     const template = getSelectedTemplate();
-    return template?.content || DEFAULT_CONTRACT_TEMPLATE;
+    if (template?.content) return template.content;
+    if (selectedTemplateId || contractData.owner?.default_contract_template?.id) return null;
+    return DEFAULT_CONTRACT_TEMPLATE;
   };
 
   // Transform signatures for PDF
@@ -173,7 +175,9 @@ export function GenerateContractDialog({
   const handleDownload = async () => {
     setIsGenerating(true);
     try {
-      await downloadContractPDF(getTemplateContent(), fullContractData);
+      const templateContent = getTemplateContent();
+      if (!templateContent) throw new Error("Modèle de contrat introuvable ou inaccessible.");
+      await downloadContractPDF(templateContent, fullContractData);
       toast({
         title: "Contrat généré",
         description: "Le contrat a été téléchargé avec succès.",
@@ -192,7 +196,9 @@ export function GenerateContractDialog({
   const handlePrint = async () => {
     setIsGenerating(true);
     try {
-      await printContractPDF(getTemplateContent(), fullContractData);
+      const templateContent = getTemplateContent();
+      if (!templateContent) throw new Error("Modèle de contrat introuvable ou inaccessible.");
+      await printContractPDF(templateContent, fullContractData);
       toast({
         title: "Impression",
         description: "Le contrat a été ouvert pour impression.",

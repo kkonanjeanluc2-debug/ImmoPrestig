@@ -20,7 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, Upload, X, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Upload, X, FileText, Calendar } from "lucide-react";
 import { useUpdateTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { toast } from "sonner";
 import { AssignUserSelect } from "@/components/assignment/AssignUserSelect";

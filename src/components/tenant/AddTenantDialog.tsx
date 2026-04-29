@@ -214,6 +214,8 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       agency_fees: "",
       advance_months: "0",
       payment_timing: "prepaid",
+      grace_period_days_prepaid: 0,
+      grace_period_days_postpaid: 0,
     },
   });
 

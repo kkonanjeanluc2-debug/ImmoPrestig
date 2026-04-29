@@ -36,6 +36,8 @@ const formSchema = z.object({
   emergency_contact_name: z.string().trim().max(100).optional().or(z.literal("")),
   emergency_contact_phone: z.string().trim().max(20).optional().or(z.literal("")),
   payment_timing: z.enum(["prepaid", "postpaid"]).default("prepaid"),
+  grace_period_days_prepaid: z.coerce.number().int().min(0).max(60).default(0),
+  grace_period_days_postpaid: z.coerce.number().int().min(0).max(60).default(0),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -65,6 +67,8 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
       emergency_contact_name: "",
       emergency_contact_phone: "",
       payment_timing: "prepaid",
+      grace_period_days_prepaid: 0,
+      grace_period_days_postpaid: 0,
     },
   });
 
@@ -79,6 +83,8 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         emergency_contact_name: (tenant as any).emergency_contact_name || "",
         emergency_contact_phone: (tenant as any).emergency_contact_phone || "",
         payment_timing: ((tenant as any).payment_timing as "prepaid" | "postpaid") || "prepaid",
+        grace_period_days_prepaid: Number((tenant as any).grace_period_days_prepaid ?? 0),
+        grace_period_days_postpaid: Number((tenant as any).grace_period_days_postpaid ?? 0),
       });
       setAssignedTo((tenant as any).assigned_to || null);
       setExistingCniUrl((tenant as any).cni_document_url || null);
@@ -125,6 +131,8 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
         payment_timing: values.payment_timing || "prepaid",
+        grace_period_days_prepaid: Number(values.grace_period_days_prepaid ?? 0),
+        grace_period_days_postpaid: Number(values.grace_period_days_postpaid ?? 0),
         assigned_to: assignedTo,
       } as any);
 
@@ -338,6 +346,41 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="grace_period_days_prepaid"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Période de grâce — Prépayé (jours)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} max={60} {...field} />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Jours de tolérance après la date d'échéance avant le statut « Retard ».
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="grace_period_days_postpaid"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Période de grâce — Postpayé (jours)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} max={60} {...field} />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Jours de tolérance après la fin du mois avant le statut « Retard ».
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {isAgencyOwner && (
                   <div className="space-y-2">

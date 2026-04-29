@@ -132,6 +132,9 @@ export const usePayments = () => {
         const covered = tenantCoveredMonths.get(tenantId) || new Set();
         const agencyUserId = (contract as any).user_id || (contract as any).tenant?.user_id || user!.id;
         const paymentTiming = (contract as any).tenant?.payment_timing || 'prepaid';
+        const gracePrepaid = Number((contract as any).tenant?.grace_period_days_prepaid ?? 0) || 0;
+        const gracePostpaid = Number((contract as any).tenant?.grace_period_days_postpaid ?? 0) || 0;
+        const graceDays = paymentTiming === 'postpaid' ? gracePostpaid : gracePrepaid;
 
         // Determine start month: contract start_date or max 12 months back
         const contractStart = new Date((contract as any).start_date || now.toISOString());
@@ -159,7 +162,7 @@ export const usePayments = () => {
             const dueDateObj = new Date(dueDate);
             const daysLate = Math.floor((now.getTime() - dueDateObj.getTime()) / (1000 * 60 * 60 * 24));
             let status = "pending";
-            if (daysLate > 0) {
+            if (daysLate > graceDays) {
               status = "late";
             }
 

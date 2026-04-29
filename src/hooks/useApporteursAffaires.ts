@@ -166,6 +166,7 @@ export interface ApportInput {
   description?: string;
   apport_date?: string;
   status?: string;
+  paid_at?: string | null;
 }
 
 export function useCreateApport() {

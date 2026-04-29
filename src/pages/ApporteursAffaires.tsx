@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, UserPlus } from "lucide-react";
+import { Navigate } from "react-router-dom";
 import { useApporteursAffaires, useDeleteApporteur, type ApporteurAffaires } from "@/hooks/useApporteursAffaires";
 import { AddApporteurDialog } from "@/components/apporteurs/AddApporteurDialog";
 import { ApporteurDetailsDialog } from "@/components/apporteurs/ApporteurDetailsDialog";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,11 +25,20 @@ import {
 export default function ApporteursAffaires() {
   const { data: apporteurs, isLoading } = useApporteursAffaires();
   const deleteApporteur = useDeleteApporteur();
+  const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editApporteur, setEditApporteur] = useState<ApporteurAffaires | null>(null);
   const [viewApporteur, setViewApporteur] = useState<ApporteurAffaires | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const isAdmin = role === "super_admin" || role === "admin";
+  const canCreate = isAdmin || hasPermission("can_create_apporteurs");
+  const canEdit = isAdmin || hasPermission("can_edit_apporteurs");
+  const canDelete = isAdmin || hasPermission("can_delete_apporteurs");
+
+  if (!permLoading && !isAdmin && !hasPermission("can_view_apporteurs")) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const filtered = apporteurs?.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -46,10 +57,12 @@ export default function ApporteursAffaires() {
           <h1 className="text-2xl font-bold text-foreground">Apporteurs d'affaires</h1>
           <p className="text-muted-foreground">Gérez vos apporteurs d'affaires et leurs commissions</p>
         </div>
-        <Button onClick={() => setShowAdd(true)} className="gap-2">
-          <UserPlus className="h-4 w-4" />
-          Ajouter un apporteur
-        </Button>
+        {canCreate && (
+          <Button onClick={() => setShowAdd(true)} className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            Ajouter un apporteur
+          </Button>
+        )}
       </div>
 
       {/* Stats */}
@@ -97,10 +110,12 @@ export default function ApporteursAffaires() {
             <div className="text-center py-12 space-y-3">
               <UserPlus className="h-12 w-12 mx-auto text-muted-foreground/40" />
               <p className="text-muted-foreground">Aucun apporteur trouvé</p>
-              <Button variant="outline" onClick={() => setShowAdd(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Ajouter un apporteur
-              </Button>
+              {canCreate && (
+                <Button variant="outline" onClick={() => setShowAdd(true)} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Ajouter un apporteur
+                </Button>
+              )}
             </div>
           ) : (
             <Table>
@@ -146,12 +161,16 @@ export default function ApporteursAffaires() {
                         <Button size="icon" variant="ghost" onClick={() => setViewApporteur(apporteur)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => setEditApporteur(apporteur)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setDeleteId(apporteur.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canEdit && (
+                          <Button size="icon" variant="ghost" onClick={() => setEditApporteur(apporteur)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setDeleteId(apporteur.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

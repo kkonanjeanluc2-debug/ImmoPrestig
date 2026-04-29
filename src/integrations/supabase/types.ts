@@ -5928,6 +5928,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_member_permission_for_user: {
+        Args: {
+          _actor_user_id: string
+          _permission: string
+          _target_user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

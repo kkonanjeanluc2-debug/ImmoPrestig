@@ -208,6 +208,7 @@ Chaque partie reconnaissant avoir reçu le sien.
 `;
 
 export const ACHAT_CONTRACT_VARIABLES = [
+  // Vendeur
   { variable: "{vendeur_nom}", description: "Nom du vendeur" },
   { variable: "{vendeur_profession}", description: "Profession du vendeur" },
   { variable: "{vendeur_naissance}", description: "Date et lieu de naissance du vendeur" },
@@ -215,6 +216,7 @@ export const ACHAT_CONTRACT_VARIABLES = [
   { variable: "{vendeur_adresse}", description: "Adresse du vendeur" },
   { variable: "{vendeur_telephone}", description: "Téléphone du vendeur" },
   { variable: "{vendeur_email}", description: "Email du vendeur" },
+  // Acquéreur
   { variable: "{acquereur_nom}", description: "Nom de l'acquéreur" },
   { variable: "{acquereur_profession}", description: "Profession de l'acquéreur" },
   { variable: "{acquereur_naissance}", description: "Date et lieu de naissance de l'acquéreur" },
@@ -222,15 +224,24 @@ export const ACHAT_CONTRACT_VARIABLES = [
   { variable: "{acquereur_adresse}", description: "Adresse de l'acquéreur" },
   { variable: "{acquereur_telephone}", description: "Téléphone de l'acquéreur" },
   { variable: "{acquereur_email}", description: "Email de l'acquéreur" },
+  // Agence
+  { variable: "{agence}", description: "Nom de l'agence" },
+  { variable: "{agence_adresse}", description: "Adresse de l'agence" },
+  { variable: "{agence_telephone}", description: "Téléphone de l'agence" },
+  { variable: "{agence_email}", description: "Email de l'agence" },
+  { variable: "{agence_ville}", description: "Ville de l'agence" },
+  // Bien
   { variable: "{type_bien}", description: "Type de bien (Terrain, Villa, etc.)" },
   { variable: "{designation_bien}", description: "Titre/désignation du bien" },
   { variable: "{adresse_bien}", description: "Adresse complète du bien" },
   { variable: "{superficie_bien}", description: "Superficie du bien" },
+  // Prix & paiement
   { variable: "{prix_vente}", description: "Prix de vente formaté" },
   { variable: "{prix_lettres}", description: "Prix en lettres" },
   { variable: "{modalites_paiement}", description: "Modalités de paiement (auto)" },
   { variable: "{frais_details}", description: "Détails des frais (notaire, agence)" },
   { variable: "{observations}", description: "Observations particulières" },
+  // Lieu & date
   { variable: "{ville}", description: "Ville de signature" },
   { variable: "{date_vente}", description: "Date de la vente" },
 ];
@@ -266,6 +277,14 @@ export const SAMPLE_ACHAT_CONTRACT_DATA = {
   notes: "",
   city: "Abidjan",
   saleDate: new Date().toISOString(),
+  agency: {
+    name: "Agence Immobilière ABC",
+    email: "contact@agence-abc.com",
+    phone: "+225 07 00 00 00 00",
+    address: "456 Rue de la République",
+    city: "Abidjan",
+    country: "Côte d'Ivoire",
+  },
 };
 
 function numberToWords(num: number): string {
@@ -384,6 +403,13 @@ export function replaceAchatContractVariables(
     "{acquereur_adresse}": data.acquereurAddress ? `Domicilié(e) à : ${data.acquereurAddress}` : "",
     "{acquereur_telephone}": data.acquereurPhone ? `Téléphone : ${data.acquereurPhone}` : "",
     "{acquereur_email}": data.acquereurEmail ? `Email : ${data.acquereurEmail}` : "",
+    "{agence}": data.agency?.name || "",
+    "{agence_adresse}": data.agency
+      ? [data.agency.address, data.agency.city, data.agency.country].filter(Boolean).join(", ")
+      : "",
+    "{agence_telephone}": data.agency?.phone || "",
+    "{agence_email}": data.agency?.email || "",
+    "{agence_ville}": data.agency?.city || "",
     "{type_bien}": data.propertyType || "",
     "{designation_bien}": data.propertyTitle || "",
     "{adresse_bien}": data.propertyAddress || "",

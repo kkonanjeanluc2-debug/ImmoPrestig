@@ -38,6 +38,7 @@ const formSchema = z.object({
   payment_timing: z.enum(["prepaid", "postpaid"]).default("prepaid"),
   grace_period_days_prepaid: z.coerce.number().int().min(0).max(60).default(0),
   grace_period_days_postpaid: z.coerce.number().int().min(0).max(60).default(0),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 

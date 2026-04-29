@@ -200,6 +200,8 @@ export const usePayments = () => {
               updated_at: now.toISOString(),
               tenant: contract.tenant,
               _isVirtual: true,
+              _paymentTiming: paymentTiming,
+              _consumedMonth: paymentTiming === 'postpaid' ? monthLabel : null,
             });
           }
 

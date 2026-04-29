@@ -65,7 +65,7 @@ const downloadTemplate = async () => {
 
 interface ParsedOwner {
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   address?: string;
   status: "actif" | "inactif";
@@ -135,15 +135,14 @@ export function ImportOwnersDialog() {
       const parsed: ParsedOwner[] = rows.map((row) => {
         const errors: string[] = [];
         const name = String(row["Nom"] || row["name"] || row["Name"] || "").trim();
-        const email = String(row["Email"] || row["email"] || row["E-mail"] || "").trim().toLowerCase();
+        const email = String(row["Email"] || row["email"] || row["E-mail"] || "").trim().toLowerCase() || undefined;
         const phone = String(row["Téléphone"] || row["phone"] || row["Phone"] || row["Tel"] || "").trim() || undefined;
         const address = String(row["Adresse"] || row["address"] || row["Address"] || "").trim() || undefined;
         const statusRaw = String(row["Statut"] || row["status"] || row["Status"] || "actif").trim().toLowerCase();
         const status: "actif" | "inactif" = statusRaw === "inactif" ? "inactif" : "actif";
 
         if (!name) errors.push("Nom requis");
-        if (!email) errors.push("Email requis");
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("Email invalide");
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("Email invalide");
 
         // Check for duplicates
         let isDuplicate = false;
@@ -200,7 +199,7 @@ export function ImportOwnersDialog() {
       try {
         await createOwner.mutateAsync({
           name: owner.name,
-          email: owner.email,
+          email: owner.email || null,
           phone: owner.phone || null,
           address: owner.address || null,
           status: owner.status,

@@ -248,11 +248,12 @@ export const generateContractPDF = async (
       }
     }
 
-    // Infos agence à droite
+    // Infos agence rapprochées du logo (alignées à gauche, juste après le logo)
+    const infoX = agency.logo_url ? margin + 30 : margin;
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
-    doc.text(agency.name || "", pageWidth - margin, headerY + 5, { align: "right" });
+    doc.text(agency.name || "", infoX, headerY + 5);
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
@@ -260,15 +261,15 @@ export const generateContractPDF = async (
     let infoY = headerY + 11;
     if (agency.address) {
       const addr = [agency.address, agency.city, agency.country].filter(Boolean).join(", ");
-      doc.text(addr, pageWidth - margin, infoY, { align: "right" });
+      doc.text(addr, infoX, infoY);
       infoY += 5;
     }
     if (agency.phone) {
-      doc.text(`Tél : ${agency.phone}`, pageWidth - margin, infoY, { align: "right" });
+      doc.text(`Tél : ${agency.phone}`, infoX, infoY);
       infoY += 5;
     }
     if (agency.email) {
-      doc.text(agency.email, pageWidth - margin, infoY, { align: "right" });
+      doc.text(agency.email, infoX, infoY);
       infoY += 5;
     }
 

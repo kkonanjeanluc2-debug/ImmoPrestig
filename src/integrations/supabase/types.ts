@@ -4976,6 +4976,8 @@ export type Database = {
           email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
+          grace_period_days_postpaid: number
+          grace_period_days_prepaid: number
           has_portal_access: boolean
           id: string
           name: string
@@ -5002,6 +5004,8 @@ export type Database = {
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          grace_period_days_postpaid?: number
+          grace_period_days_prepaid?: number
           has_portal_access?: boolean
           id?: string
           name: string
@@ -5028,6 +5032,8 @@ export type Database = {
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          grace_period_days_postpaid?: number
+          grace_period_days_prepaid?: number
           has_portal_access?: boolean
           id?: string
           name?: string

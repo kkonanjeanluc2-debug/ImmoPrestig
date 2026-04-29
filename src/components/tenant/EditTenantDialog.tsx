@@ -131,6 +131,8 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
         payment_timing: values.payment_timing || "prepaid",
+        grace_period_days_prepaid: Number(values.grace_period_days_prepaid ?? 0),
+        grace_period_days_postpaid: Number(values.grace_period_days_postpaid ?? 0),
         assigned_to: assignedTo,
       } as any);
 

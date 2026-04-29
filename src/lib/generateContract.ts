@@ -367,23 +367,25 @@ export const generateContractPDF = async (
     year: "numeric",
   });
 
+  const colWidth = (pageWidth - margin * 2) / 2;
+  const leftX = margin;
+  const rightX = margin + colWidth;
+
+  // "Fait à..." aligné à droite, au-dessus du bloc bailleur
   doc.setFontSize(10);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(...textColor);
   const placeForSignature = data.agency?.city || data.propertyAddress || "";
-  doc.text(`Fait à ${placeForSignature}, le ${todayStr}`, margin, yPos);
+  doc.text(`Fait à ${placeForSignature}, le ${todayStr}`, rightX + colWidth / 2, yPos, { align: "center" });
   yPos += 12;
 
-  const colWidth = (pageWidth - margin * 2) / 2;
-  const leftX = margin;
-  const rightX = margin + colWidth;
   const signatureY = yPos;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(...primaryColor);
-  doc.text("LE BAILLEUR", leftX + colWidth / 2, signatureY, { align: "center" });
-  doc.text("LE LOCATAIRE", rightX + colWidth / 2, signatureY, { align: "center" });
+  doc.text("LE LOCATAIRE", leftX + colWidth / 2, signatureY, { align: "center" });
+  doc.text("LE BAILLEUR", rightX + colWidth / 2, signatureY, { align: "center" });
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -391,8 +393,8 @@ export const generateContractPDF = async (
 
   const landlordName = data.ownerName || data.agency?.name || "";
   const tenantNameSig = data.tenantName || "";
-  doc.text(landlordName, leftX + colWidth / 2, signatureY + 6, { align: "center" });
-  doc.text(tenantNameSig, rightX + colWidth / 2, signatureY + 6, { align: "center" });
+  doc.text(tenantNameSig, leftX + colWidth / 2, signatureY + 6, { align: "center" });
+  doc.text(landlordName, rightX + colWidth / 2, signatureY + 6, { align: "center" });
 
   const landlordSig = data.signatures?.find((s) => s.signerType === "landlord");
   const tenantSig = data.signatures?.find((s) => s.signerType === "tenant");
@@ -424,8 +426,8 @@ export const generateContractPDF = async (
     }
   };
 
-  renderSignature(landlordSig, leftX);
-  renderSignature(tenantSig, rightX);
+  renderSignature(tenantSig, leftX);
+  renderSignature(landlordSig, rightX);
 
   return doc;
 };

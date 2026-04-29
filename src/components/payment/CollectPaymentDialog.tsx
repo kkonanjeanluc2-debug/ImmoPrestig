@@ -122,15 +122,30 @@ export function CollectPaymentDialog({
         return month.length >= 7 ? month.substring(0, 7) : null;
       };
 
-      // 1) Real late payments in DB
+      // 1) Real late payments in DB (statut "late" OU paiements partiels antérieurs non soldés)
+      const currentDueYMForFilter = (dueDate || "").substring(0, 7);
       const { data: realLate } = await supabase
         .from("payments")
-        .select("id, due_date, amount, payment_months, status")
+        .select("id, due_date, amount, paid_amount, payment_months, status")
         .eq("tenant_id", tenantId)
-        .eq("status", "late")
         .order("due_date", { ascending: true });
 
-      const realLateFiltered = (realLate || []).filter((p) => p.id !== paymentId);
+      const realLateFiltered = (realLate || []).filter((p: any) => {
+        if (p.id === paymentId) return false;
+        // Mois en retard
+        if (p.status === "late") return true;
+        // Paiement partiel antérieur (ou même mois différent) non soldé
+        const isPartial =
+          p.status !== "paid" &&
+          Number(p.paid_amount || 0) > 0 &&
+          Number(p.paid_amount || 0) < Number(p.amount || 0);
+        if (isPartial) {
+          const pYM = (p.due_date || "").substring(0, 7);
+          // Bloque si le partiel est sur un mois antérieur ou égal au mois courant
+          if (pYM && currentDueYMForFilter && pYM <= currentDueYMForFilter) return true;
+        }
+        return false;
+      });
 
       // 2) Detect virtual unpaid prior months (auto-generated, not yet in DB)
       // Compare months covered by ALL real payments vs months expected from contract start
@@ -422,15 +437,23 @@ export function CollectPaymentDialog({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <p className="font-medium mb-1">Ce locataire a {latePayments.length} mois en retard non réglé{latePayments.length > 1 ? "s" : ""} :</p>
+                <p className="font-medium mb-1">Ce locataire a {latePayments.length} loyer{latePayments.length > 1 ? "s" : ""} non soldé{latePayments.length > 1 ? "s" : ""} (retard ou paiement partiel) :</p>
                 <ul className="list-disc list-inside text-xs space-y-0.5">
-                  {latePayments.map((lp) => (
-                    <li key={lp.id}>
-                      {lp.payment_months?.length > 0 ? lp.payment_months.join(", ") : new Date(lp.due_date + "T00:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" })} — {Number(lp.amount).toLocaleString("fr-FR")} F CFA
-                    </li>
-                  ))}
+                  {latePayments.map((lp) => {
+                    const partialPaid = Number(lp.paid_amount || 0);
+                    const total = Number(lp.amount || 0);
+                    const isPartial = partialPaid > 0 && partialPaid < total;
+                    return (
+                      <li key={lp.id}>
+                        {lp.payment_months?.length > 0 ? lp.payment_months.join(", ") : new Date(lp.due_date + "T00:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" })} — {total.toLocaleString("fr-FR")} F CFA
+                        {isPartial && (
+                          <span className="text-amber-700"> (partiel : {partialPaid.toLocaleString("fr-FR")} payé, reste {(total - partialPaid).toLocaleString("fr-FR")})</span>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
-                <p className="mt-2 text-xs">Veuillez d'abord encaisser les mois en retard avant ce paiement.</p>
+                <p className="mt-2 text-xs">Veuillez d'abord solder ces loyers avant d'encaisser un autre mois.</p>
               </AlertDescription>
             </Alert>
           )}

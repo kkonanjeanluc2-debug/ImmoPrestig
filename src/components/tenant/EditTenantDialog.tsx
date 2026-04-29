@@ -63,6 +63,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange, onSuccess }: Edit
       profession: "",
       emergency_contact_name: "",
       emergency_contact_phone: "",
+      payment_timing: "prepaid",
     },
   });
 

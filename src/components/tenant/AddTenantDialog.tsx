@@ -67,6 +67,7 @@ const formSchema = z.object({
   deposit: z.string().optional(),
   agency_fees: z.string().optional(),
   advance_months: z.string().optional(),
+  payment_timing: z.enum(["prepaid", "postpaid"]).default("prepaid"),
 });
 
 type FormValues = z.infer<typeof formSchema>;

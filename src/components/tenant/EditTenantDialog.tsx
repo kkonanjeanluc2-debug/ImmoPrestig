@@ -34,6 +34,7 @@ const formSchema = z.object({
   profession: z.string().trim().max(100).optional().or(z.literal("")),
   emergency_contact_name: z.string().trim().max(100).optional().or(z.literal("")),
   emergency_contact_phone: z.string().trim().max(20).optional().or(z.literal("")),
+  payment_timing: z.enum(["prepaid", "postpaid"]).default("prepaid"),
 });
 
 type FormValues = z.infer<typeof formSchema>;

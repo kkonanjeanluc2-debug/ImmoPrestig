@@ -248,11 +248,12 @@ export const generateContractPDF = async (
       }
     }
 
-    // Infos agence à droite
+    // Infos agence rapprochées du logo (alignées à gauche, juste après le logo)
+    const infoX = agency.logo_url ? margin + 30 : margin;
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...primaryColor);
-    doc.text(agency.name || "", pageWidth - margin, headerY + 5, { align: "right" });
+    doc.text(agency.name || "", infoX, headerY + 5);
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
@@ -260,15 +261,15 @@ export const generateContractPDF = async (
     let infoY = headerY + 11;
     if (agency.address) {
       const addr = [agency.address, agency.city, agency.country].filter(Boolean).join(", ");
-      doc.text(addr, pageWidth - margin, infoY, { align: "right" });
+      doc.text(addr, infoX, infoY);
       infoY += 5;
     }
     if (agency.phone) {
-      doc.text(`Tél : ${agency.phone}`, pageWidth - margin, infoY, { align: "right" });
+      doc.text(`Tél : ${agency.phone}`, infoX, infoY);
       infoY += 5;
     }
     if (agency.email) {
-      doc.text(agency.email, pageWidth - margin, infoY, { align: "right" });
+      doc.text(agency.email, infoX, infoY);
       infoY += 5;
     }
 
@@ -366,23 +367,25 @@ export const generateContractPDF = async (
     year: "numeric",
   });
 
+  const colWidth = (pageWidth - margin * 2) / 2;
+  const leftX = margin;
+  const rightX = margin + colWidth;
+
+  // "Fait à..." aligné à droite, au-dessus du bloc bailleur
   doc.setFontSize(10);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(...textColor);
   const placeForSignature = data.agency?.city || data.propertyAddress || "";
-  doc.text(`Fait à ${placeForSignature}, le ${todayStr}`, margin, yPos);
+  doc.text(`Fait à ${placeForSignature}, le ${todayStr}`, rightX + colWidth / 2, yPos, { align: "center" });
   yPos += 12;
 
-  const colWidth = (pageWidth - margin * 2) / 2;
-  const leftX = margin;
-  const rightX = margin + colWidth;
   const signatureY = yPos;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(...primaryColor);
-  doc.text("LE BAILLEUR", leftX + colWidth / 2, signatureY, { align: "center" });
-  doc.text("LE LOCATAIRE", rightX + colWidth / 2, signatureY, { align: "center" });
+  doc.text("LE LOCATAIRE", leftX + colWidth / 2, signatureY, { align: "center" });
+  doc.text("LE BAILLEUR", rightX + colWidth / 2, signatureY, { align: "center" });
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -390,8 +393,8 @@ export const generateContractPDF = async (
 
   const landlordName = data.ownerName || data.agency?.name || "";
   const tenantNameSig = data.tenantName || "";
-  doc.text(landlordName, leftX + colWidth / 2, signatureY + 6, { align: "center" });
-  doc.text(tenantNameSig, rightX + colWidth / 2, signatureY + 6, { align: "center" });
+  doc.text(tenantNameSig, leftX + colWidth / 2, signatureY + 6, { align: "center" });
+  doc.text(landlordName, rightX + colWidth / 2, signatureY + 6, { align: "center" });
 
   const landlordSig = data.signatures?.find((s) => s.signerType === "landlord");
   const tenantSig = data.signatures?.find((s) => s.signerType === "tenant");
@@ -423,8 +426,8 @@ export const generateContractPDF = async (
     }
   };
 
-  renderSignature(landlordSig, leftX);
-  renderSignature(tenantSig, rightX);
+  renderSignature(tenantSig, leftX);
+  renderSignature(landlordSig, rightX);
 
   return doc;
 };

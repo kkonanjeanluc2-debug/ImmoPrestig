@@ -214,7 +214,20 @@ export function AgencySettings() {
         .getPublicUrl(filePath);
 
       setLogoUrl(urlData.publicUrl);
-      setHasChanges(true);
+
+      // Persist immediately to DB so the logo survives a page refresh even
+      // if the user does not click "Enregistrer".
+      if (agency?.id) {
+        const { error: updateError } = await supabase
+          .from("agencies")
+          .update({ logo_url: urlData.publicUrl })
+          .eq("id", agency.id);
+        if (updateError) throw updateError;
+        queryClient.invalidateQueries({ queryKey: ["agency"] });
+      } else {
+        setHasChanges(true);
+      }
+
       toast.success("Logo uploadé avec succès");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'upload du logo");

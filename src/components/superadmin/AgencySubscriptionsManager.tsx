@@ -357,6 +357,43 @@ export function AgencySubscriptionsManager() {
                 </div>
               </div>
             )}
+
+            {/* Attribuer une période d'essai */}
+            <div className="border rounded-lg p-4 space-y-3 bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+              <div className="flex items-center gap-2">
+                <Hourglass className="h-4 w-4 text-amber-600" />
+                <p className="text-sm font-medium">Attribuer une période d'essai</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Choisissez le forfait ci-dessus, saisissez le nombre de jours (1-365), puis cliquez sur "Appliquer l'essai". Le statut passera à "Essai" avec la date de fin recalculée.
+              </p>
+              <div className="flex items-end gap-2">
+                <div className="flex-1 space-y-1">
+                  <Label htmlFor="trial-days" className="text-xs">Nombre de jours d'essai</Label>
+                  <Input
+                    id="trial-days"
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={trialDays}
+                    onChange={(e) => setTrialDays(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleApplyTrial}
+                  disabled={!selectedPlanId || setAgencyTrial.isPending}
+                  className="border-amber-500 text-amber-700 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-950"
+                >
+                  {setAgencyTrial.isPending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  ) : (
+                    <Hourglass className="h-4 w-4 mr-2" />
+                  )}
+                  Appliquer l'essai
+                </Button>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>

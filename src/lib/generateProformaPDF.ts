@@ -32,14 +32,20 @@ export async function generateProformaPDF(invoice: ProformaInvoice, agency?: any
   const primaryColor = agency?.pdf_primary_color
     ? hexToRgb(agency.pdf_primary_color)
     : { r: 30, g: 58, b: 95 };
+  const secondaryColor = agency?.pdf_secondary_color
+    ? hexToRgb(agency.pdf_secondary_color)
+    : { r: 245, g: 245, b: 245 };
+  const headerTextColor = agency?.pdf_text_color
+    ? hexToRgb(agency.pdf_text_color)
+    : { r: 255, g: 255, b: 255 };
 
-  const isProforma = invoice.invoice_type === "proforma";
+  const isProforma = invoice.invoke_type === "proforma" ? true : invoice.invoice_type === "proforma";
 
   // Header
   doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b);
   doc.rect(0, 0, pageWidth, 40, "F");
 
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(headerTextColor.r, headerTextColor.g, headerTextColor.b);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
   doc.text(isProforma ? "FACTURE PROFORMA" : "FACTURE", pageWidth / 2, 18, { align: "center" });

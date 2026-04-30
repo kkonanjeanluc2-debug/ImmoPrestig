@@ -51,6 +51,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/hooks/useAgency";
+import { useIsAgencyOwner } from "@/hooks/useAssignableUsers";
 import { supabase } from "@/integrations/supabase/client";
 import {
   useAgencyMembers,
@@ -97,8 +98,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function TeamMembersSettings() {
-  const { user } = useAuth();
   const { data: agency, isLoading: agencyLoading } = useAgency();
+  const { isOwner, isLoading: ownerLoading } = useIsAgencyOwner();
   const { toast } = useToast();
   const { data: members, isLoading: membersLoading } = useAgencyMembers();
   const { data: limits, isLoading: limitsLoading } = useCanAddMember();
@@ -120,8 +121,7 @@ export function TeamMembersSettings() {
     role: "gestionnaire" as AppRole,
   });
 
-  const isLoading = agencyLoading || membersLoading || limitsLoading;
-  const isOwner = agency?.user_id === user?.id;
+  const isLoading = agencyLoading || ownerLoading || membersLoading || limitsLoading;
 
   const handleAddMember = async () => {
     if (!newMember.email || !newMember.full_name || !newMember.password) {

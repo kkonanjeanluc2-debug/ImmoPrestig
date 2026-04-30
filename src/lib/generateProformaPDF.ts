@@ -216,7 +216,7 @@ export async function generateProformaPDF(invoice: ProformaInvoice, agency?: any
 
   // Footer
   const pageHeight = doc.internal.pageSize.getHeight();
-  doc.setFillColor(245, 245, 245);
+  doc.setFillColor(secondaryColor.r, secondaryColor.g, secondaryColor.b);
   doc.rect(0, pageHeight - 20, pageWidth, 20, "F");
   doc.setFontSize(7);
   doc.setTextColor(150, 150, 150);

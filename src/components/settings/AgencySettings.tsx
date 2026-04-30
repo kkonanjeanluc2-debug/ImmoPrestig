@@ -267,7 +267,19 @@ export function AgencySettings() {
         .getPublicUrl(filePath);
 
       setLoginImageUrl(urlData.publicUrl);
-      setHasChanges(true);
+
+      // Persist immediately to DB so the image survives a refresh.
+      if (agency?.id) {
+        const { error: updateError } = await supabase
+          .from("agencies")
+          .update({ login_image_url: urlData.publicUrl })
+          .eq("id", agency.id);
+        if (updateError) throw updateError;
+        queryClient.invalidateQueries({ queryKey: ["agency"] });
+      } else {
+        setHasChanges(true);
+      }
+
       toast.success("Image de connexion uploadée avec succès");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'upload de l'image de connexion");

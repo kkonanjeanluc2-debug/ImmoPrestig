@@ -79,6 +79,28 @@ export function AgencySubscriptionsManager() {
     return plans?.find((p) => p.id === planId);
   };
 
+  const handleApplyTrial = async () => {
+    if (!selectedAgency || !selectedPlanId) {
+      toast.error("Veuillez sélectionner un forfait");
+      return;
+    }
+    if (!trialDays || trialDays < 1 || trialDays > 365) {
+      toast.error("Le nombre de jours doit être entre 1 et 365");
+      return;
+    }
+    try {
+      await setAgencyTrial.mutateAsync({
+        agency_id: selectedAgency.id,
+        plan_id: selectedPlanId,
+        trial_days: trialDays,
+      });
+      toast.success(`Période d'essai de ${trialDays} jour(s) appliquée`);
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast.error("Une erreur est survenue");
+    }
+  };
+
   const openAssignDialog = (agency: AgencyWithProfile) => {
     const currentSub = getAgencySubscription(agency.id);
     setSelectedAgency(agency);

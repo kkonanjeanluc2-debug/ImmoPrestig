@@ -8,7 +8,22 @@ function formatCFA(amount: number) {
   return `${formatAmountForPDF(amount)} F CFA`;
 }
 
-export function generateProformaPDF(invoice: ProformaInvoice, agency?: any) {
+const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+export async function generateProformaPDF(invoice: ProformaInvoice, agency?: any) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
@@ -53,15 +68,15 @@ export function generateProformaPDF(invoice: ProformaInvoice, agency?: any) {
     
     // Add agency logo if available
     if (agency.logo_url) {
-      try {
-        const logoSize = 18;
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = agency.logo_url;
-        doc.addImage(img, "PNG", margin, y - 3, logoSize, logoSize);
-        agencyTextStartX = margin + logoSize + 4;
-      } catch (e) {
-        console.warn("Could not load agency logo:", e);
+      const logoBase64 = await loadImageAsBase64(agency.logo_url);
+      if (logoBase64) {
+        try {
+          const logoSize = 18;
+          doc.addImage(logoBase64, "PNG", margin, y - 3, logoSize, logoSize);
+          agencyTextStartX = margin + logoSize + 4;
+        } catch (e) {
+          console.warn("Could not add agency logo:", e);
+        }
       }
     }
     

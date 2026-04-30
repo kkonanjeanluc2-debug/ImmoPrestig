@@ -50,8 +50,8 @@ export function ProformaInvoicesList({ tenantId, compact = false, canCreate = tr
     filter === "all" ? true : inv.invoice_type === filter
   );
 
-  const handleExportPDF = (invoice: ProformaInvoice) => {
-    generateProformaPDF(invoice, agency);
+  const handleExportPDF = async (invoice: ProformaInvoice) => {
+    await generateProformaPDF(invoice, agency);
   };
 
   const handleConvert = (id: string) => {

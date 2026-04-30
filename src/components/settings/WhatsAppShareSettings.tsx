@@ -72,7 +72,7 @@ export function WhatsAppShareSettings() {
       const { error } = await supabase
         .from('agencies')
         .update({ whatsapp_property_template: template })
-        .eq('user_id', user.id);
+        .eq('id', agency.id);
 
       if (error) throw error;
 

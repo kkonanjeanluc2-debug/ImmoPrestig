@@ -39,7 +39,7 @@ export async function generateProformaPDF(invoice: ProformaInvoice, agency?: any
     ? hexToRgb(agency.pdf_text_color)
     : { r: 255, g: 255, b: 255 };
 
-  const isProforma = invoice.invoke_type === "proforma" ? true : invoice.invoice_type === "proforma";
+  const isProforma = invoice.invoice_type === "proforma";
 
   // Header
   doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b);

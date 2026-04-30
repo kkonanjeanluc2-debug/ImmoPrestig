@@ -76,7 +76,7 @@ export function BrandingSettings() {
           accent_color: accentColor,
           sidebar_color: sidebarColor,
         })
-        .eq('user_id', user.id);
+        .eq('id', agency.id);
 
       if (error) throw error;
 

@@ -332,7 +332,7 @@ export function AgencySettings() {
         const { error } = await supabase
           .from('agencies')
           .update(baseFields)
-          .eq('user_id', user.id);
+          .eq('id', agency.id);
         if (error) throw error;
       } else {
         const { data: created, error } = await supabase

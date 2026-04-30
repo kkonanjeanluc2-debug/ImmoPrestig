@@ -26,7 +26,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Building2, Check, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { CreditCard, Building2, Check, Calendar, Hourglass } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -35,6 +36,7 @@ import {
   useSubscriptionPlans,
   useAllAgencySubscriptions,
   useAssignSubscription,
+  useSetAgencyTrial,
 } from "@/hooks/useSubscriptionPlans";
 import { useAllAgencies, AgencyWithProfile } from "@/hooks/useSuperAdmin";
 
@@ -57,11 +59,13 @@ export function AgencySubscriptionsManager() {
   const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
   const { data: subscriptions, isLoading: subscriptionsLoading } = useAllAgencySubscriptions();
   const assignSubscription = useAssignSubscription();
+  const setAgencyTrial = useSetAgencyTrial();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<AgencyWithProfile | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle | "lifetime">("monthly");
+  const [trialDays, setTrialDays] = useState<number>(30);
 
   const isLoading = agenciesLoading || plansLoading || subscriptionsLoading;
 
@@ -73,6 +77,28 @@ export function AgencySubscriptionsManager() {
   // Get plan by id
   const getPlanById = (planId: string) => {
     return plans?.find((p) => p.id === planId);
+  };
+
+  const handleApplyTrial = async () => {
+    if (!selectedAgency || !selectedPlanId) {
+      toast.error("Veuillez sélectionner un forfait");
+      return;
+    }
+    if (!trialDays || trialDays < 1 || trialDays > 365) {
+      toast.error("Le nombre de jours doit être entre 1 et 365");
+      return;
+    }
+    try {
+      await setAgencyTrial.mutateAsync({
+        agency_id: selectedAgency.id,
+        plan_id: selectedPlanId,
+        trial_days: trialDays,
+      });
+      toast.success(`Période d'essai de ${trialDays} jour(s) appliquée`);
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast.error("Une erreur est survenue");
+    }
   };
 
   const openAssignDialog = (agency: AgencyWithProfile) => {
@@ -331,6 +357,43 @@ export function AgencySubscriptionsManager() {
                 </div>
               </div>
             )}
+
+            {/* Attribuer une période d'essai */}
+            <div className="border rounded-lg p-4 space-y-3 bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+              <div className="flex items-center gap-2">
+                <Hourglass className="h-4 w-4 text-amber-600" />
+                <p className="text-sm font-medium">Attribuer une période d'essai</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Choisissez le forfait ci-dessus, saisissez le nombre de jours (1-365), puis cliquez sur "Appliquer l'essai". Le statut passera à "Essai" avec la date de fin recalculée.
+              </p>
+              <div className="flex items-end gap-2">
+                <div className="flex-1 space-y-1">
+                  <Label htmlFor="trial-days" className="text-xs">Nombre de jours d'essai</Label>
+                  <Input
+                    id="trial-days"
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={trialDays}
+                    onChange={(e) => setTrialDays(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleApplyTrial}
+                  disabled={!selectedPlanId || setAgencyTrial.isPending}
+                  className="border-amber-500 text-amber-700 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-950"
+                >
+                  {setAgencyTrial.isPending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  ) : (
+                    <Hourglass className="h-4 w-4 mr-2" />
+                  )}
+                  Appliquer l'essai
+                </Button>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>

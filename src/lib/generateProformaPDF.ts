@@ -89,14 +89,6 @@ export async function generateProformaPDF(invoice: ProformaInvoice, agency?: any
     if (agency.email) doc.text(agency.email, agencyTextStartX, y + 15);
     if (agency.siret) doc.text(`SIRET: ${agency.siret}`, agencyTextStartX, y + 20);
   }
-    doc.text(agency.name || "Agence", agencyTextStartX, y);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    if (agency.address) doc.text(agency.address, agencyTextStartX, y + 5);
-    if (agency.phone) doc.text(`Tél: ${agency.phone}`, agencyTextStartX, y + 10);
-    if (agency.email) doc.text(agency.email, agencyTextStartX, y + 15);
-    if (agency.siret) doc.text(`SIRET: ${agency.siret}`, agencyTextStartX, y + 20);
-  }
 
   // Right: Client (aligned to right edge)
   const rightX = pageWidth - margin;

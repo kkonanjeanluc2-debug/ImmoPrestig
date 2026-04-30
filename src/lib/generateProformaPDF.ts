@@ -197,7 +197,7 @@ export async function generateProformaPDF(invoice: ProformaInvoice, agency?: any
 
   doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b);
   doc.rect(labelX - 10, y - 1, totalX - labelX + 10, 10, "F");
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(headerTextColor.r, headerTextColor.g, headerTextColor.b);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.text("TOTAL TTC", labelX, y + 6);

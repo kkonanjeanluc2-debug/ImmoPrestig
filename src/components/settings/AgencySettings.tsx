@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,7 +145,7 @@ export function AgencySettings() {
   });
 
   // Initialize form when agency data loads
-  useState(() => {
+  useEffect(() => {
     if (agency) {
       loadVaultSecrets(agency.id).then((secrets) => {
         setFormData(buildFormFromAgency(agency, secrets));
@@ -154,19 +154,19 @@ export function AgencySettings() {
         setOnlineRentToggle(!!(agency as any).online_rent_enabled);
       });
     }
-  });
+  }, [agency?.id]);
 
-  // Update form when agency data changes
-  if (agency && !hasChanges) {
-    if (formData.name !== agency.name || formData.email !== agency.email) {
-      loadVaultSecrets(agency.id).then((secrets) => {
-        setFormData(buildFormFromAgency(agency, secrets));
-        setLogoUrl(agency.logo_url);
-        setLoginImageUrl((agency as any).login_image_url || null);
-        setOnlineRentToggle(!!(agency as any).online_rent_enabled);
-      });
-    }
-  }
+  // Update form when agency data changes, without overwriting unsaved edits.
+  useEffect(() => {
+    if (!agency || hasChanges) return;
+
+    loadVaultSecrets(agency.id).then((secrets) => {
+      setFormData(buildFormFromAgency(agency, secrets));
+      setLogoUrl(agency.logo_url);
+      setLoginImageUrl((agency as any).login_image_url || null);
+      setOnlineRentToggle(!!(agency as any).online_rent_enabled);
+    });
+  }, [agency, hasChanges]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

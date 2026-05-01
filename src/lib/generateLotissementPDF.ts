@@ -2174,57 +2174,16 @@ const _generateAttestationVillageoiseInternal = async (
   const isCessionSignatures = !!(leftLabel && rightLabel);
 
   if (isCessionSignatures) {
-
-    ensureSpace(cl >= 3 ? 35 : 55);
+    // Draw ONLY the signature labels exactly as defined in the template.
+    // No automatic injection of agency/cedant data — the template controls the content entirely.
+    ensureSpace(cl >= 3 ? 20 : 30);
     const leftBlockCenter = margin + 30;
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
     doc.text(leftLabel!, leftBlockCenter, yPos, { align: 'center' });
     doc.text(rightLabel!, rightBlockCenter, yPos, { align: 'center' });
-    yPos += 6;
-
-    // Determine which side is the cedant vs the agency/promoteur based on label keywords
-    const isAgencyLabel = (lbl: string) => /AGENCE|PROMOTEUR/i.test(lbl);
-    const leftIsAgency = isAgencyLabel(leftLabel || '');
-    const rightIsAgency = isAgencyLabel(rightLabel || '');
-
-    const cedantName = ancienBeneficiaire?.nom || '';
-    const cedantPhone = formatAttestationPhone(ancienBeneficiaire?.telephone);
-    const cedantCni = ancienBeneficiaire?.cni_number || '';
-    const agencyName = agency?.name || '';
-    const agencyPhone = agency?.phone || '';
-
-    const drawSignatureInfo = (x: number, isAgency: boolean) => {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(...primaryColor);
-      if (isAgency) {
-        if (agencyName) doc.text(agencyName, x, yPos, { align: 'center' });
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(...textColor);
-        if (agencyPhone) doc.text(agencyPhone, x, yPos + 5, { align: 'center' });
-      } else {
-        if (cedantName) doc.text(cedantName, x, yPos, { align: 'center' });
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(...textColor);
-        let subY = yPos + 5;
-        if (cedantCni) {
-          doc.text(`CNI: ${cedantCni}`, x, subY, { align: 'center' });
-          subY += 4;
-        }
-        if (cedantPhone) {
-          doc.text(cedantPhone, x, subY, { align: 'center' });
-        }
-      }
-    };
-
-    drawSignatureInfo(leftBlockCenter, leftIsAgency);
-    drawSignatureInfo(rightBlockCenter, rightIsAgency);
-
-    yPos += cl >= 3 ? 22 : 30;
+    yPos += cl >= 3 ? 18 : 25;
   } else if (!templateContent) {
     ensureSpace(cl >= 3 ? 25 : 45);
     doc.setFontSize(9);

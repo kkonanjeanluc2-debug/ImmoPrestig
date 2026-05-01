@@ -2002,37 +2002,32 @@ const _generateAttestationVillageoiseInternal = async (
       const line = lines[lineIdx];
       const trimmed = line.trim();
 
-      // For the ATTRIBUTION template, the banner already draws the title (N° + lotissement name).
-      // Rendering # / ## lines from the template would create a duplicate header.
-      // Skip them here; they are only rendered for CESSION templates which have no banner.
+      // Render markdown headings (# and ##) as styled titles instead of skipping them,
+      // so the user's customized template content (titles, subtitles) appears verbatim.
       if (trimmed.startsWith('# ')) {
-        if (!isAttributionTemplate) {
-          ensureSpace(10);
-          doc.setFontSize(headingFontSize + 3);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(...primaryColor);
-          writeWrappedLines(trimmed.substring(2).replace(/\*\*/g, ''), {
-            align: 'center', x: pageWidth / 2, width: contentWidth - 5,
-            lineHeight: lineSpacing + 1, extraAfter: 3,
-          });
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(...textColor);
-        }
+        ensureSpace(10);
+        doc.setFontSize(headingFontSize + 3);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...primaryColor);
+        writeWrappedLines(trimmed.substring(2).replace(/\*\*/g, ''), {
+          align: 'center', x: pageWidth / 2, width: contentWidth - 5,
+          lineHeight: lineSpacing + 1, extraAfter: 3,
+        });
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...textColor);
         continue;
       }
       if (trimmed.startsWith('## ')) {
-        if (!isAttributionTemplate) {
-          ensureSpace(8);
-          doc.setFontSize(headingFontSize + 1);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(...primaryColor);
-          writeWrappedLines(trimmed.substring(3).replace(/\*\*/g, ''), {
-            align: 'center', x: pageWidth / 2, width: contentWidth - 5,
-            lineHeight: lineSpacing, extraAfter: 2,
-          });
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(...textColor);
-        }
+        ensureSpace(8);
+        doc.setFontSize(headingFontSize + 1);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...primaryColor);
+        writeWrappedLines(trimmed.substring(3).replace(/\*\*/g, ''), {
+          align: 'center', x: pageWidth / 2, width: contentWidth - 5,
+          lineHeight: lineSpacing, extraAfter: 2,
+        });
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...textColor);
         continue;
       }
 
@@ -2049,32 +2044,11 @@ const _generateAttestationVillageoiseInternal = async (
         continue;
       }
 
-      // For attribution template: skip the arrete_approbation line if it was already
-      // rendered inside the banner (it appears as a standalone line in the default template).
-      if (isAttributionTemplate && arreteApprobation && trimmed === arreteApprobation) {
-        continue;
-      }
-
       if (trimmed.startsWith('### ')) {
         doc.setFontSize(headingFontSize);
         doc.setFont('helvetica', 'bold');
         writeWrappedLines(trimmed.substring(4), { align: 'center', x: pageWidth / 2, width: contentWidth - 10, lineHeight: 5, extraAfter: 2 });
         continue;
-      }
-
-      // For attribution template: intercept signature-related lines that belong to the
-      // dedicated footer block (LE CHEF DU VILLAGE, chef name, _Signature et cachet_, village name).
-      // These will be drawn properly by the signature block below — skip them here.
-      if (isAttributionTemplate) {
-        const isChefVillageHeading = /^#{0,3}\s*LE CHEF DU VILLAGE\s*$/i.test(trimmed);
-        const isSignatureCachet = /^_?signature et cachet_?$/i.test(trimmed.replace(/\*\*/g, '').trim());
-        const cleanedTrimmed = trimmed.replace(/\*\*/g, '').trim();
-        const isChefName = !!chef && chef !== '____________________' && cleanedTrimmed === chef;
-        const villageClean = village.replace(/^Village de /i, '').trim();
-        const isVillageName = !!villageClean && (cleanedTrimmed === villageClean || cleanedTrimmed === village);
-        if (isChefVillageHeading || isSignatureCachet || isChefName || isVillageName) {
-          continue;
-        }
       }
 
       doc.setFontSize(baseFontSize);
@@ -2210,26 +2184,18 @@ const _generateAttestationVillageoiseInternal = async (
     doc.text(leftLabel!, leftBlockCenter, yPos, { align: 'center' });
     doc.text(rightLabel!, rightBlockCenter, yPos, { align: 'center' });
     yPos += cl >= 3 ? 18 : 25;
-  } else if (!templateContent || isAttributionTemplate) {
-    // Attribution signature block — single right-aligned column:
-    // Line 1: "Fait à {ville}, le {date}"  (already rendered above in body)
-    // Line 2: "LE CHEF DU VILLAGE"
-    // Line 3: signature line / stamp
-    // Line 4: "Signature et cachet"
-    // Line 5: village name
-    ensureSpace(cl >= 3 ? 30 : 50);
-    yPos += 4;
-
-    const rightColX = pageWidth - margin - 20;
-
-    // LE CHEF DU VILLAGE
-    doc.setFontSize(10);
+  } else if (!templateContent) {
+    ensureSpace(cl >= 3 ? 25 : 45);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text('LE CHEF DU VILLAGE', rightColX, yPos, { align: 'center' });
-    yPos += cl >= 3 ? 12 : 18;
+    doc.text('LE CHEF DU VILLAGE', rightBlockCenter, yPos, { align: 'center' });
+    yPos += 5;
 
-    // Signature/stamp image or underline
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...textColor);
+    writeWrappedLines(chef, { align: 'center', x: rightBlockCenter, width: 60, lineHeight: 4.5, extraAfter: 3 });
+
     const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
     if (chefImageUrl) {
       try {
@@ -2241,42 +2207,24 @@ const _generateAttestationVillageoiseInternal = async (
           reader.onerror = () => resolve(null);
           reader.readAsDataURL(blob);
         });
+
         if (base64) {
           ensureSpace(32);
-          const imgWidth = 40;
-          const imgHeight = 25;
-          doc.addImage(base64, 'PNG', rightColX - imgWidth / 2, yPos, imgWidth, imgHeight);
-          yPos += 27;
+          const imgWidth = 45;
+          const imgHeight = 28;
+          doc.addImage(base64, 'PNG', rightBlockCenter - imgWidth / 2, yPos, imgWidth, imgHeight);
+          yPos += 30;
         }
       } catch {
-        doc.setDrawColor(150, 150, 150);
-        doc.setLineWidth(0.4);
-        doc.line(rightColX - 22, yPos, rightColX + 22, yPos);
-        yPos += cl >= 3 ? 8 : 12;
+        yPos += 12;
       }
     } else {
+      ensureSpace(14);
       doc.setDrawColor(150, 150, 150);
-      doc.setLineWidth(0.4);
-      doc.line(rightColX - 22, yPos, rightColX + 22, yPos);
-      yPos += cl >= 3 ? 8 : 12;
+      doc.line(rightBlockCenter - 25, yPos, rightBlockCenter + 25, yPos);
+      yPos += 12;
     }
-
-    // "Signature et cachet"
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(...textColor);
-    doc.text('Signature et cachet', rightColX, yPos, { align: 'center' });
-    yPos += cl >= 3 ? 6 : 8;
-
-    // Village name
-    const villageDisplay = village.replace(/^Village de /i, '').trim() || '____________________';
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...primaryColor);
-    doc.text(villageDisplay, rightColX, yPos, { align: 'center' });
-
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...textColor);
+  }
 
   return doc;
 };

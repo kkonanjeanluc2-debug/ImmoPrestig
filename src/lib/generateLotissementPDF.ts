@@ -2001,14 +2001,35 @@ const _generateAttestationVillageoiseInternal = async (
       if (lineIdx === signatureLineIndex) continue;
       const line = lines[lineIdx];
       const trimmed = line.trim();
-      if (trimmed.startsWith('# ') || trimmed.startsWith('## ')) continue;
-      if (isCessionTemplate && /^N°[\.\s…]+$/i.test(trimmed.replace(/\*\*/g, ''))) continue;
 
-      // Only filter pure signature labels (standalone lines that are JUST a signature heading),
-      // never filter content lines that happen to mention these keywords.
-      const cleanedLine = trimmed.replace(/^\#{1,4}\s*/, '').replace(/\*\*/g, '').replace(/_/g, '').toUpperCase().trim();
-      if (cleanedLine === 'LE CHEF DU VILLAGE') continue;
-      if (cleanedLine === 'SIGNATURE ET CACHET' || cleanedLine === 'SIGNATURE ET CACHET DU CHEF' || cleanedLine === 'CACHET ET SIGNATURE') continue;
+      // Render markdown headings (# and ##) as styled titles instead of skipping them,
+      // so the user's customized template content (titles, subtitles) appears verbatim.
+      if (trimmed.startsWith('# ')) {
+        ensureSpace(10);
+        doc.setFontSize(headingFontSize + 3);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...primaryColor);
+        writeWrappedLines(trimmed.substring(2).replace(/\*\*/g, ''), {
+          align: 'center', x: pageWidth / 2, width: contentWidth - 5,
+          lineHeight: lineSpacing + 1, extraAfter: 3,
+        });
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...textColor);
+        continue;
+      }
+      if (trimmed.startsWith('## ')) {
+        ensureSpace(8);
+        doc.setFontSize(headingFontSize + 1);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...primaryColor);
+        writeWrappedLines(trimmed.substring(3).replace(/\*\*/g, ''), {
+          align: 'center', x: pageWidth / 2, width: contentWidth - 5,
+          lineHeight: lineSpacing, extraAfter: 2,
+        });
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...textColor);
+        continue;
+      }
 
       if (trimmed === '---') {
         ensureSpace(6);

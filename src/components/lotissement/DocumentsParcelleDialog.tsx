@@ -455,6 +455,19 @@ export function DocumentsParcelleDialog({
                         };
                       }
                     }
+                    // Fallback: use lotissement's registered land owner (propriétaire terrien / chef de village)
+                    if (!ancienBeneficiaire || !ancienBeneficiaire.nom) {
+                      const proprietaireName = (lotissement as any)?.proprietaire_name
+                        || lotissement?.chef_village_name
+                        || "";
+                      if (proprietaireName) {
+                        ancienBeneficiaire = {
+                          nom: proprietaireName,
+                          cni_number: ancienBeneficiaire?.cni_number,
+                          telephone: ancienBeneficiaire?.telephone,
+                        };
+                      }
+                    }
                   }
 
                   // If mutations exist, use the last mutation's nouvel_acquereur as the document beneficiary

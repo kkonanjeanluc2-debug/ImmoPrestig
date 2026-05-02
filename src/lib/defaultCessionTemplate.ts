@@ -65,4 +65,8 @@ export const CESSION_VARIABLES = [
   { variable: "{ancien_beneficiaire_nom}", description: "Nom de l'ancien bénéficiaire (cession)" },
   { variable: "{ancien_beneficiaire_cni}", description: "CNI de l'ancien bénéficiaire (cession)" },
   { variable: "{ancien_beneficiaire_telephone}", description: "Téléphone de l'ancien bénéficiaire (cession)" },
+  {
+    variable: "<!-- signature: size=11 spacing=22 gap=4 bold=true italic=false font=helvetica color=#1A365D align=center -->",
+    description: "Mise en forme des signatures (taille, espacement vertical 'spacing', décalage haut 'gap', gras, italique, police, couleur hex, alignement). Place cette ligne juste avant la ligne des signatures.",
+  },
 ];

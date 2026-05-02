@@ -2254,9 +2254,8 @@ const _generateAttestationVillageoiseInternal = async (
       doc.text(leftLabel!, colCenterX, yPos, { align: 'center' });
       yPos += 8;
 
-      // Try to embed chef stamp/signature image if available
+      // Try to embed chef stamp/signature image if available (no signature line drawn)
       const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
-      let imageDrawn = false;
       if (chefImageUrl) {
         try {
           const response = await fetch(chefImageUrl);
@@ -2273,26 +2272,18 @@ const _generateAttestationVillageoiseInternal = async (
             const imgHeight = 24;
             doc.addImage(base64, 'PNG', colCenterX - imgWidth / 2, yPos, imgWidth, imgHeight);
             yPos += imgHeight + 2;
-            imageDrawn = true;
           }
         } catch { /* ignore */ }
       }
 
-      // 1) Signature line (drawn) — only if no stamp image was added
-      if (!imageDrawn) {
-        doc.setDrawColor(120, 120, 120);
-        doc.line(colCenterX - 25, yPos, colCenterX + 25, yPos);
-        yPos += 5;
-      }
-
-      // 2) "Signature et cachet" (italic small)
+      // 1) "Signature et cachet" (italic small)
       doc.setFontSize(8);
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(120, 120, 120);
       doc.text('Signature et cachet', colCenterX, yPos, { align: 'center' });
       yPos += 5;
 
-      // 3) Village name (bold) — use rightLabel from template (often **{village}**)
+      // 2) Village name (bold) — use rightLabel from template (often **{village}**)
       doc.setFontSize(sigStyle.size);
       try { doc.setFont(sigStyle.font, fontStyleHdr); } catch { doc.setFont('helvetica', fontStyleHdr); }
       doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);

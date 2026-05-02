@@ -1871,29 +1871,65 @@ const _generateAttestationVillageoiseInternal = async (
       }
     }
 
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...textColor);
-    doc.text("REPUBLIQUE DE COTE D'IVOIRE", pageWidth / 2, yPos, { align: 'center' });
-    yPos += 5;
+    const headerMinistere: string = (template as any)?.header_ministere || "";
+    const headerRegion: string = (template as any)?.header_region || "";
+    const headerDepartement: string = (template as any)?.header_departement || "";
+    const headerRepublique: string = (template as any)?.header_republique || "République de Côte d'Ivoire";
+    const headerDevise: string = (template as any)?.header_devise || "Union-Discipline-Travail";
+    const cleanVillage = village.replace(/^Village de /i, '').trim();
+
+    const leftCol = [
+      headerMinistere,
+      headerRegion,
+      headerDepartement,
+      district,
+      commune,
+      cleanVillage ? `Village de ${cleanVillage}` : "",
+    ].filter(Boolean);
+    const rightCol = [headerRepublique, headerDevise].filter(Boolean);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    if (commune) {
-      doc.text(commune.toUpperCase(), pageWidth / 2, yPos, { align: 'center' });
-      yPos += 4;
+    doc.setFontSize(cl >= 4 ? 7 : cl >= 2 ? 8 : 9);
+    doc.setTextColor(...textColor);
+
+    const actualRightLogoUrl = rightLogoUrl || villageLogoUrl;
+    const leftTextX = villageLogoUrl ? leftLogoX + logoSize + 4 : margin;
+    const rightTextX = actualRightLogoUrl ? rightLogoX - 4 : pageWidth - margin;
+    const leftTextWidth = Math.max(45, pageWidth / 2 - leftTextX - 5);
+    const rightTextWidth = Math.max(45, rightTextX - pageWidth / 2 - 5);
+    const headerLineGap = cl >= 4 ? 3.2 : 3.8;
+    const headerBlockGap = cl >= 4 ? 1 : 1.5;
+    let leftY = yPos;
+    let rightY = yPos;
+
+    for (const entry of leftCol) {
+      const wrapped = doc.splitTextToSize(entry, leftTextWidth);
+      for (const wrappedLine of wrapped) {
+        doc.text(wrappedLine, leftTextX, leftY);
+        leftY += headerLineGap;
+      }
+      leftY += headerBlockGap;
     }
-    if (village) {
-      doc.text(`VILLAGE DE ${village.replace(/^Village de /i, '').trim().toUpperCase()}`, pageWidth / 2, yPos, { align: 'center' });
-      yPos += 4;
+
+    for (const entry of rightCol) {
+      const wrapped = doc.splitTextToSize(entry, rightTextWidth);
+      for (const wrappedLine of wrapped) {
+        doc.text(wrappedLine, rightTextX, rightY, { align: 'right' });
+        rightY += headerLineGap;
+      }
+      rightY += headerBlockGap;
     }
+
+    yPos = Math.max(leftY, rightY, hasVillageLogos ? logoBottomY : yPos) + 2;
     doc.setFont('helvetica', 'normal');
 
     const bannerTopY = Math.max(
       yPos + 2,
       hasVillageLogos ? logoBottomY + 3 : yPos + 2
     );
-    const bannerHeight = cl >= 4 ? 18 : cl >= 2 ? 20 : 24;
+    const bannerHeight = arreteApprobation
+      ? cl >= 4 ? 22 : cl >= 2 ? 24 : 26
+      : cl >= 4 ? 18 : cl >= 2 ? 20 : 24;
     const bannerColor1 = template?.banner_color_1 || '#003399';
     const bannerColor2 = template?.banner_color_2 || null;
     const useBannerGradient = template?.banner_gradient && bannerColor2;
@@ -1958,6 +1994,16 @@ const _generateAttestationVillageoiseInternal = async (
       '{district}': district,
       '{commune}': commune,
       '{village}': village.replace(/^Village de /i, '').trim(),
+      '{header_ministere}': (template as any)?.header_ministere || '',
+      '{header_region}': (template as any)?.header_region || '',
+      '{header_departement}': (template as any)?.header_departement || '',
+      '{header_republique}': (template as any)?.header_republique || '',
+      '{header_devise}': (template as any)?.header_devise || '',
+      '{ministere}': (template as any)?.header_ministere || '',
+      '{region}': (template as any)?.header_region || '',
+      '{departement}': (template as any)?.header_departement || '',
+      '{republique}': (template as any)?.header_republique || '',
+      '{devise}': (template as any)?.header_devise || '',
       '{chef_village_name}': isCessionTemplate ? '' : chef,
       '{chef_village_titre}': isCessionTemplate ? '' : chefTitre,
       '{arrete_approbation}': arreteApprobation,

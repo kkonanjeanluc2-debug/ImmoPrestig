@@ -2027,7 +2027,6 @@ const _generateAttestationVillageoiseInternal = async (
         continue;
       }
       if (trimmed.startsWith('## ')) {
-        if (isAttributionTemplate) continue;
         ensureSpace(8);
         doc.setFontSize(headingFontSize + 1);
         doc.setFont('helvetica', 'bold');

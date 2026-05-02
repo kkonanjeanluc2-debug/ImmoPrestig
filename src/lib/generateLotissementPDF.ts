@@ -2222,14 +2222,17 @@ const _generateAttestationVillageoiseInternal = async (
         break;
       }
     }
-    // Find the signature labels line
-    for (let i = lines.length - 1; i >= 0; i--) {
-      if (directiveRe.test(lines[i])) continue;
-      const matches = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
-      if (matches.length === 2) {
-        leftLabel = matches[0][1].trim();
-        rightLabel = matches[1][1].trim();
-        break;
+    // Find the signature labels line (only for non-attribution templates — attribution templates
+    // contain their own signature block in markdown which is rendered as part of the template).
+    if (!isAttributionTemplate) {
+      for (let i = lines.length - 1; i >= 0; i--) {
+        if (directiveRe.test(lines[i])) continue;
+        const matches = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
+        if (matches.length === 2) {
+          leftLabel = matches[0][1].trim();
+          rightLabel = matches[1][1].trim();
+          break;
+        }
       }
     }
   }

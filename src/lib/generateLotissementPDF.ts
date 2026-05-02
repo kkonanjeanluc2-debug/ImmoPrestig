@@ -1991,10 +1991,14 @@ const _generateAttestationVillageoiseInternal = async (
 
     // Find the signature line index (last line with exactly two **bold** labels) so we can skip
     // it during text rendering — it will be drawn separately by the dedicated signature block below.
+    // For attribution templates we render the template AS-IS (the template itself contains the
+    // signature block: LE CHEF DU VILLAGE / chef name / Signature et cachet) so we never skip a line.
     let signatureLineIndex = -1;
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const m = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
-      if (m.length === 2) { signatureLineIndex = i; break; }
+    if (!isAttributionTemplate) {
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const m = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
+        if (m.length === 2) { signatureLineIndex = i; break; }
+      }
     }
 
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {

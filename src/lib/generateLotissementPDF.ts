@@ -2001,6 +2001,16 @@ const _generateAttestationVillageoiseInternal = async (
       }
     }
 
+    // For attribution templates: detect the start of the signature column zone.
+    // Everything from the H3 heading "### LE CHEF DU VILLAGE" (or the first line after "Fait à")
+    // onwards must be rendered as a right-aligned single column.
+    let signatureZoneStart = -1;
+    if (isAttributionTemplate) {
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim().startsWith('### ')) { signatureZoneStart = i; break; }
+      }
+    }
+
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       if (lineIdx === signatureLineIndex) continue;
       const line = lines[lineIdx];
@@ -2008,7 +2018,8 @@ const _generateAttestationVillageoiseInternal = async (
       // Detect right-alignment from leading whitespace (templates often use big indentation
       // to right-align signature blocks like "**LE CHEF DU VILLAGE**").
       const leadingSpaces = line.length - line.trimStart().length;
-      const indentRightAligned = leadingSpaces >= 20;
+      const inSignatureZone = isAttributionTemplate && signatureZoneStart !== -1 && lineIdx >= signatureZoneStart;
+      const indentRightAligned = leadingSpaces >= 20 || inSignatureZone;
 
       // Skip HTML comments (used as configuration directives, e.g. <!-- signature: ... -->)
       if (/^<!--[\s\S]*-->$/.test(trimmed)) continue;

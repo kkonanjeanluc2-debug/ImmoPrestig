@@ -2072,10 +2072,11 @@ const _generateAttestationVillageoiseInternal = async (
       if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
         const textLine = trimmed.replace(/\*\*/g, '');
         doc.setFont('helvetica', isFaitA ? 'italic' : 'bold');
+        const alignRight = isFaitA || indentRightAligned;
         writeWrappedLines(textLine, {
-          align: isFaitA ? 'center' : isCentered ? 'center' : 'left',
-          x: isFaitA ? pageWidth - margin - 30 : isCentered ? pageWidth / 2 : margin,
-          width: isFaitA ? 60 : contentWidth,
+          align: alignRight ? 'right' : isCentered ? 'center' : 'left',
+          x: alignRight ? pageWidth - margin : isCentered ? pageWidth / 2 : margin,
+          width: alignRight ? 80 : contentWidth,
           lineHeight: lineSpacing,
           extraAfter: 2,
         });
@@ -2086,7 +2087,14 @@ const _generateAttestationVillageoiseInternal = async (
       if (/^_[^_]+_$/.test(trimmed)) {
         doc.setFontSize(8);
         doc.setFont('helvetica', 'italic');
-        writeWrappedLines(trimmed.replace(/_/g, ''), { align: 'center', x: pageWidth / 2, width: contentWidth - 20, lineHeight: 4, extraAfter: 1 });
+        const alignRight = indentRightAligned;
+        writeWrappedLines(trimmed.replace(/_/g, ''), {
+          align: alignRight ? 'right' : 'center',
+          x: alignRight ? pageWidth - margin : pageWidth / 2,
+          width: alignRight ? 80 : contentWidth - 20,
+          lineHeight: 4,
+          extraAfter: 1,
+        });
         doc.setFont('helvetica', 'normal');
         continue;
       }
@@ -2098,10 +2106,11 @@ const _generateAttestationVillageoiseInternal = async (
       }
 
       doc.setFont('helvetica', 'normal');
+      const alignRightPlain = isFaitA || indentRightAligned;
       writeWrappedLines(trimmed, {
-        align: isFaitA ? 'center' : isCentered ? 'center' : 'left',
-        x: isFaitA ? pageWidth - margin - 30 : isCentered ? pageWidth / 2 : margin,
-        width: isFaitA ? 60 : contentWidth,
+        align: alignRightPlain ? 'right' : isCentered ? 'center' : 'left',
+        x: alignRightPlain ? pageWidth - margin : isCentered ? pageWidth / 2 : margin,
+        width: alignRightPlain ? 80 : contentWidth,
         lineHeight: lineSpacing,
         extraAfter: 1.5,
       });

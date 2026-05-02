@@ -2075,6 +2075,28 @@ const _generateAttestationVillageoiseInternal = async (
           doc.setTextColor(...primaryColor);
           writeWrappedLines(trimmed.substring(4), { align: 'right', x: pageWidth - margin, width: 80, lineHeight: 5, extraAfter: 2 });
           doc.setTextColor(...textColor);
+          // Embed chef stamp/signature image right under the "LE CHEF DU VILLAGE" heading
+          const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
+          if (chefImageUrl) {
+            try {
+              const response = await fetch(chefImageUrl);
+              const blob = await response.blob();
+              const base64 = await new Promise<string | null>((resolve) => {
+                const fr = new FileReader();
+                fr.onloadend = () => resolve(fr.result as string);
+                fr.onerror = () => resolve(null);
+                fr.readAsDataURL(blob);
+              });
+              if (base64) {
+                ensureSpace(28);
+                const imgWidth = 40;
+                const imgHeight = 24;
+                const colCenterX = pageWidth - margin - 30;
+                doc.addImage(base64, 'PNG', colCenterX - imgWidth / 2, yPos, imgWidth, imgHeight);
+                yPos += imgHeight + 1;
+              }
+            } catch { /* ignore */ }
+          }
         } else {
           writeWrappedLines(trimmed.substring(4), { align: 'center', x: pageWidth / 2, width: contentWidth - 10, lineHeight: 5, extraAfter: 2 });
         }

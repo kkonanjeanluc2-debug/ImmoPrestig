@@ -2002,6 +2002,9 @@ const _generateAttestationVillageoiseInternal = async (
       const line = lines[lineIdx];
       const trimmed = line.trim();
 
+      // Skip HTML comments (used as configuration directives, e.g. <!-- signature: ... -->)
+      if (/^<!--[\s\S]*-->$/.test(trimmed)) continue;
+
       // Render markdown headings (# and ##) as styled titles instead of skipping them,
       // so the user's customized template content (titles, subtitles) appears verbatim.
       if (trimmed.startsWith('# ')) {

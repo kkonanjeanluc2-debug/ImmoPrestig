@@ -1991,16 +1991,24 @@ const _generateAttestationVillageoiseInternal = async (
 
     // Find the signature line index (last line with exactly two **bold** labels) so we can skip
     // it during text rendering — it will be drawn separately by the dedicated signature block below.
+    // For attribution templates we render the template AS-IS (the template itself contains the
+    // signature block: LE CHEF DU VILLAGE / chef name / Signature et cachet) so we never skip a line.
     let signatureLineIndex = -1;
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const m = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
-      if (m.length === 2) { signatureLineIndex = i; break; }
+    if (!isAttributionTemplate) {
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const m = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
+        if (m.length === 2) { signatureLineIndex = i; break; }
+      }
     }
 
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       if (lineIdx === signatureLineIndex) continue;
       const line = lines[lineIdx];
       const trimmed = line.trim();
+      // Detect right-alignment from leading whitespace (templates often use big indentation
+      // to right-align signature blocks like "**LE CHEF DU VILLAGE**").
+      const leadingSpaces = line.length - line.trimStart().length;
+      const indentRightAligned = leadingSpaces >= 20;
 
       // Skip HTML comments (used as configuration directives, e.g. <!-- signature: ... -->)
       if (/^<!--[\s\S]*-->$/.test(trimmed)) continue;
@@ -2023,7 +2031,6 @@ const _generateAttestationVillageoiseInternal = async (
         continue;
       }
       if (trimmed.startsWith('## ')) {
-        if (isAttributionTemplate) continue;
         ensureSpace(8);
         doc.setFontSize(headingFontSize + 1);
         doc.setFont('helvetica', 'bold');
@@ -2065,10 +2072,11 @@ const _generateAttestationVillageoiseInternal = async (
       if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
         const textLine = trimmed.replace(/\*\*/g, '');
         doc.setFont('helvetica', isFaitA ? 'italic' : 'bold');
+        const alignRight = isFaitA || indentRightAligned;
         writeWrappedLines(textLine, {
-          align: isFaitA ? 'center' : isCentered ? 'center' : 'left',
-          x: isFaitA ? pageWidth - margin - 30 : isCentered ? pageWidth / 2 : margin,
-          width: isFaitA ? 60 : contentWidth,
+          align: alignRight ? 'right' : isCentered ? 'center' : 'left',
+          x: alignRight ? pageWidth - margin : isCentered ? pageWidth / 2 : margin,
+          width: alignRight ? 80 : contentWidth,
           lineHeight: lineSpacing,
           extraAfter: 2,
         });
@@ -2079,7 +2087,14 @@ const _generateAttestationVillageoiseInternal = async (
       if (/^_[^_]+_$/.test(trimmed)) {
         doc.setFontSize(8);
         doc.setFont('helvetica', 'italic');
-        writeWrappedLines(trimmed.replace(/_/g, ''), { align: 'center', x: pageWidth / 2, width: contentWidth - 20, lineHeight: 4, extraAfter: 1 });
+        const alignRight = indentRightAligned;
+        writeWrappedLines(trimmed.replace(/_/g, ''), {
+          align: alignRight ? 'right' : 'center',
+          x: alignRight ? pageWidth - margin : pageWidth / 2,
+          width: alignRight ? 80 : contentWidth - 20,
+          lineHeight: 4,
+          extraAfter: 1,
+        });
         doc.setFont('helvetica', 'normal');
         continue;
       }
@@ -2091,10 +2106,11 @@ const _generateAttestationVillageoiseInternal = async (
       }
 
       doc.setFont('helvetica', 'normal');
+      const alignRightPlain = isFaitA || indentRightAligned;
       writeWrappedLines(trimmed, {
-        align: isFaitA ? 'center' : isCentered ? 'center' : 'left',
-        x: isFaitA ? pageWidth - margin - 30 : isCentered ? pageWidth / 2 : margin,
-        width: isFaitA ? 60 : contentWidth,
+        align: alignRightPlain ? 'right' : isCentered ? 'center' : 'left',
+        x: alignRightPlain ? pageWidth - margin : isCentered ? pageWidth / 2 : margin,
+        width: alignRightPlain ? 80 : contentWidth,
         lineHeight: lineSpacing,
         extraAfter: 1.5,
       });
@@ -2219,14 +2235,17 @@ const _generateAttestationVillageoiseInternal = async (
         break;
       }
     }
-    // Find the signature labels line
-    for (let i = lines.length - 1; i >= 0; i--) {
-      if (directiveRe.test(lines[i])) continue;
-      const matches = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
-      if (matches.length === 2) {
-        leftLabel = matches[0][1].trim();
-        rightLabel = matches[1][1].trim();
-        break;
+    // Find the signature labels line (only for non-attribution templates — attribution templates
+    // contain their own signature block in markdown which is rendered as part of the template).
+    if (!isAttributionTemplate) {
+      for (let i = lines.length - 1; i >= 0; i--) {
+        if (directiveRe.test(lines[i])) continue;
+        const matches = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
+        if (matches.length === 2) {
+          leftLabel = matches[0][1].trim();
+          rightLabel = matches[1][1].trim();
+          break;
+        }
       }
     }
   }

@@ -1893,8 +1893,6 @@ const _generateAttestationVillageoiseInternal = async (
     // user's template content (rendered below). This guarantees the PDF reflects exactly
     // what is configured in the attestation template.
     yPos += 4;
-
-    yPos = bannerTopY + bannerHeight + 6;
   }
 
   doc.setTextColor(...textColor);

@@ -2042,6 +2042,8 @@ const _generateAttestationVillageoiseInternal = async (
         continue;
       }
       if (trimmed.startsWith('## ')) {
+        // Skip H2 in attribution templates: the lotissement name is already shown in the colored banner
+        if (isAttributionTemplate) continue;
         ensureSpace(8);
         doc.setFontSize(headingFontSize + 1);
         doc.setFont('helvetica', 'bold');
@@ -2056,6 +2058,8 @@ const _generateAttestationVillageoiseInternal = async (
       }
 
       if (trimmed === '---') {
+        // Skip horizontal rules in attribution templates to keep a clean layout
+        if (isAttributionTemplate) continue;
         ensureSpace(6);
         doc.setDrawColor(200, 200, 200);
         doc.line(margin, yPos, pageWidth - margin, yPos);

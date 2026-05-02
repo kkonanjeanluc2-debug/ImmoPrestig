@@ -2005,6 +2005,10 @@ const _generateAttestationVillageoiseInternal = async (
       if (lineIdx === signatureLineIndex) continue;
       const line = lines[lineIdx];
       const trimmed = line.trim();
+      // Detect right-alignment from leading whitespace (templates often use big indentation
+      // to right-align signature blocks like "**LE CHEF DU VILLAGE**").
+      const leadingSpaces = line.length - line.trimStart().length;
+      const indentRightAligned = leadingSpaces >= 20;
 
       // Skip HTML comments (used as configuration directives, e.g. <!-- signature: ... -->)
       if (/^<!--[\s\S]*-->$/.test(trimmed)) continue;

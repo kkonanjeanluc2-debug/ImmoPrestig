@@ -1889,50 +1889,10 @@ const _generateAttestationVillageoiseInternal = async (
     }
     doc.setFont('helvetica', 'normal');
 
-    const bannerTopY = Math.max(
-      yPos + 2,
-      hasVillageLogos ? logoBottomY + 3 : yPos + 2
-    );
-    const bannerHeight = cl >= 4 ? 18 : cl >= 2 ? 20 : 24;
-    const bannerColor1 = template?.banner_color_1 || '#003399';
-    const bannerColor2 = template?.banner_color_2 || null;
-    const useBannerGradient = template?.banner_gradient && bannerColor2;
-
-    const bannerX = headerBannerInsetX;
-    const bannerW = pageWidth - 2 * headerBannerInsetX;
-
-    if (useBannerGradient) {
-      const c1 = hexToRgb(bannerColor1, 0);
-      const c2 = hexToRgb(bannerColor2!, 0);
-      const steps = 40;
-      const stripW = bannerW / steps;
-      for (let i = 0; i < steps; i++) {
-        const t = i / (steps - 1);
-        const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
-        const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
-        const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
-        doc.setFillColor(r, g, b);
-        doc.rect(bannerX + i * stripW, bannerTopY, stripW + 0.5, bannerHeight, 'F');
-      }
-    } else {
-      const banner = hexToRgb(bannerColor1, 0);
-      doc.setFillColor(banner[0], banner[1], banner[2]);
-      doc.rect(bannerX, bannerTopY, bannerW, bannerHeight, 'F');
-    }
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, bannerTopY + 7, { align: 'center' });
-    doc.setFontSize(8);
-    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, bannerTopY + 13, { align: 'center' });
-    doc.setFontSize(6.5);
-    doc.setFont('helvetica', 'normal');
-    if (arreteApprobation) {
-      doc.text(arreteApprobation, pageWidth / 2, bannerTopY + 19, { align: 'center' });
-    }
-
-    yPos = bannerTopY + bannerHeight + 6;
+    // No automatic banner: the title and any additional headings come strictly from the
+    // user's template content (rendered below). This guarantees the PDF reflects exactly
+    // what is configured in the attestation template.
+    yPos += 4;
   }
 
   doc.setTextColor(...textColor);
@@ -2005,11 +1965,8 @@ const _generateAttestationVillageoiseInternal = async (
       // Skip HTML comments (used as configuration directives, e.g. <!-- signature: ... -->)
       if (/^<!--[\s\S]*-->$/.test(trimmed)) continue;
 
-      // Render markdown headings (# and ##) as styled titles.
-      // For attribution templates, the title is already drawn in the colored banner at the top
-      // of the page, so we skip the H1/H2 lines from the template to avoid duplicates.
+      // Render markdown headings (# and ##) as styled titles, exactly as defined in the template.
       if (trimmed.startsWith('# ')) {
-        if (isAttributionTemplate) continue;
         ensureSpace(10);
         doc.setFontSize(headingFontSize + 3);
         doc.setFont('helvetica', 'bold');
@@ -2023,7 +1980,6 @@ const _generateAttestationVillageoiseInternal = async (
         continue;
       }
       if (trimmed.startsWith('## ')) {
-        if (isAttributionTemplate) continue;
         ensureSpace(8);
         doc.setFontSize(headingFontSize + 1);
         doc.setFont('helvetica', 'bold');
@@ -2233,96 +2189,26 @@ const _generateAttestationVillageoiseInternal = async (
   const isCessionSignatures = !!(leftLabel && rightLabel);
 
   if (isCessionSignatures) {
-    // For attribution attestations, display the signature block as a single right-aligned column
-    // with 3 stacked lines under the "LE CHEF DU VILLAGE" label:
-    //   1) signature line (drawn line)
-    //   2) "Signature et cachet" (italic, small)
-    //   3) village name (bold)
-    if (isAttributionTemplate) {
-      ensureSpace(40 + sigStyle.gap);
-      if (sigStyle.gap) yPos += sigStyle.gap;
-      const colCenterX = pageWidth - margin - 30;
-
-      // Header label (e.g. "LE CHEF DU VILLAGE")
-      let fontStyleHdr: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal';
-      if (sigStyle.bold && sigStyle.italic) fontStyleHdr = 'bolditalic';
-      else if (sigStyle.bold) fontStyleHdr = 'bold';
-      else if (sigStyle.italic) fontStyleHdr = 'italic';
-      doc.setFontSize(sigStyle.size);
-      try { doc.setFont(sigStyle.font, fontStyleHdr); } catch { doc.setFont('helvetica', fontStyleHdr); }
-      doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
-      doc.text(leftLabel!, colCenterX, yPos, { align: 'center' });
-      yPos += 8;
-
-      // Try to embed chef stamp/signature image if available
-      const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
-      let imageDrawn = false;
-      if (chefImageUrl) {
-        try {
-          const response = await fetch(chefImageUrl);
-          const blob = await response.blob();
-          const base64 = await new Promise<string | null>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(blob);
-          });
-          if (base64) {
-            ensureSpace(32);
-            const imgWidth = 40;
-            const imgHeight = 24;
-            doc.addImage(base64, 'PNG', colCenterX - imgWidth / 2, yPos, imgWidth, imgHeight);
-            yPos += imgHeight + 2;
-            imageDrawn = true;
-          }
-        } catch { /* ignore */ }
-      }
-
-      // 1) Signature line (drawn) — only if no stamp image was added
-      if (!imageDrawn) {
-        doc.setDrawColor(120, 120, 120);
-        doc.line(colCenterX - 25, yPos, colCenterX + 25, yPos);
-        yPos += 5;
-      }
-
-      // 2) "Signature et cachet" (italic small)
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(120, 120, 120);
-      doc.text('Signature et cachet', colCenterX, yPos, { align: 'center' });
-      yPos += 5;
-
-      // 3) Village name (bold) — use rightLabel from template (often **{village}**)
-      doc.setFontSize(sigStyle.size);
-      try { doc.setFont(sigStyle.font, fontStyleHdr); } catch { doc.setFont('helvetica', fontStyleHdr); }
-      doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
-      doc.text(rightLabel!, colCenterX, yPos, { align: 'center' });
-      yPos += sigStyle.spacing;
-
-      doc.setTextColor(...textColor);
-      doc.setFont('helvetica', 'normal');
-    } else {
-      // Cession (and other) attestations: keep the original two-column signature layout.
-      // Style (font/size/spacing/gap/color/bold/italic/align) is fully configurable via the
-      // <!-- signature: ... --> directive in the template.
-      ensureSpace((sigStyle.spacing || 20) + sigStyle.gap + 4);
-      if (sigStyle.gap) yPos += sigStyle.gap;
-      const leftBlockCenter = margin + 30;
-      let fontStyle: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal';
-      if (sigStyle.bold && sigStyle.italic) fontStyle = 'bolditalic';
-      else if (sigStyle.bold) fontStyle = 'bold';
-      else if (sigStyle.italic) fontStyle = 'italic';
-      doc.setFontSize(sigStyle.size);
-      try { doc.setFont(sigStyle.font, fontStyle); } catch { doc.setFont('helvetica', fontStyle); }
-      doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
-      const leftX = sigStyle.align === 'left' ? margin : sigStyle.align === 'right' ? pageWidth - margin - 60 : leftBlockCenter;
-      const rightX = sigStyle.align === 'left' ? margin + 80 : sigStyle.align === 'right' ? pageWidth - margin : rightBlockCenter;
-      doc.text(leftLabel!, leftX, yPos, { align: sigStyle.align });
-      doc.text(rightLabel!, rightX, yPos, { align: sigStyle.align });
-      yPos += sigStyle.spacing;
-      doc.setTextColor(...textColor);
-      doc.setFont('helvetica', 'normal');
-    }
+    // Render the signature labels EXACTLY as defined in the template (two-column layout).
+    // Style (font/size/spacing/gap/color/bold/italic/align) is fully configurable via the
+    // <!-- signature: ... --> directive in the template.
+    ensureSpace((sigStyle.spacing || 20) + sigStyle.gap + 4);
+    if (sigStyle.gap) yPos += sigStyle.gap;
+    const leftBlockCenter = margin + 30;
+    let fontStyle: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal';
+    if (sigStyle.bold && sigStyle.italic) fontStyle = 'bolditalic';
+    else if (sigStyle.bold) fontStyle = 'bold';
+    else if (sigStyle.italic) fontStyle = 'italic';
+    doc.setFontSize(sigStyle.size);
+    try { doc.setFont(sigStyle.font, fontStyle); } catch { doc.setFont('helvetica', fontStyle); }
+    doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
+    const leftX = sigStyle.align === 'left' ? margin : sigStyle.align === 'right' ? pageWidth - margin - 60 : leftBlockCenter;
+    const rightX = sigStyle.align === 'left' ? margin + 80 : sigStyle.align === 'right' ? pageWidth - margin : rightBlockCenter;
+    doc.text(leftLabel!, leftX, yPos, { align: sigStyle.align });
+    doc.text(rightLabel!, rightX, yPos, { align: sigStyle.align });
+    yPos += sigStyle.spacing;
+    doc.setTextColor(...textColor);
+    doc.setFont('helvetica', 'normal');
   } else if (!templateContent) {
     ensureSpace(cl >= 3 ? 25 : 45);
     doc.setFontSize(9);

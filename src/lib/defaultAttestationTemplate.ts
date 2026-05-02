@@ -60,6 +60,10 @@ export const ATTESTATION_VARIABLES = [
   { variable: "{date_vente}", description: "Date de la vente" },
   { variable: "{ville}", description: "Ville (pour 'Fait à...')" },
   { variable: "{nom_agence}", description: "Nom de l'agence" },
+  {
+    variable: "<!-- signature: size=11 spacing=22 gap=4 bold=true italic=false font=helvetica color=#1A365D align=center -->",
+    description: "Mise en forme des signatures (taille, espacement 'spacing', décalage 'gap', gras, italique, police, couleur hex, alignement). Place cette ligne juste avant la ligne des signatures.",
+  },
 ];
 
 export const replaceAttestationVariables = (

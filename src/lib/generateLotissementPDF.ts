@@ -2191,6 +2191,18 @@ const _generateAttestationVillageoiseInternal = async (
 
       if (trimmed.includes('**')) {
         doc.setFontSize(baseFontSize);
+        if (indentRightAligned) {
+          const textLine = trimmed.replace(/\*\*/g, '');
+          doc.setFont('helvetica', 'normal');
+          writeWrappedLines(textLine, {
+            align: 'right',
+            x: pageWidth - margin,
+            width: 80,
+            lineHeight: lineSpacing,
+            extraAfter: 1.5,
+          });
+          continue;
+        }
         writeMixedMarkdownLine(trimmed, lineSpacing);
         continue;
       }

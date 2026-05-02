@@ -2189,96 +2189,26 @@ const _generateAttestationVillageoiseInternal = async (
   const isCessionSignatures = !!(leftLabel && rightLabel);
 
   if (isCessionSignatures) {
-    // For attribution attestations, display the signature block as a single right-aligned column
-    // with 3 stacked lines under the "LE CHEF DU VILLAGE" label:
-    //   1) signature line (drawn line)
-    //   2) "Signature et cachet" (italic, small)
-    //   3) village name (bold)
-    if (isAttributionTemplate) {
-      ensureSpace(40 + sigStyle.gap);
-      if (sigStyle.gap) yPos += sigStyle.gap;
-      const colCenterX = pageWidth - margin - 30;
-
-      // Header label (e.g. "LE CHEF DU VILLAGE")
-      let fontStyleHdr: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal';
-      if (sigStyle.bold && sigStyle.italic) fontStyleHdr = 'bolditalic';
-      else if (sigStyle.bold) fontStyleHdr = 'bold';
-      else if (sigStyle.italic) fontStyleHdr = 'italic';
-      doc.setFontSize(sigStyle.size);
-      try { doc.setFont(sigStyle.font, fontStyleHdr); } catch { doc.setFont('helvetica', fontStyleHdr); }
-      doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
-      doc.text(leftLabel!, colCenterX, yPos, { align: 'center' });
-      yPos += 8;
-
-      // Try to embed chef stamp/signature image if available
-      const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
-      let imageDrawn = false;
-      if (chefImageUrl) {
-        try {
-          const response = await fetch(chefImageUrl);
-          const blob = await response.blob();
-          const base64 = await new Promise<string | null>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(blob);
-          });
-          if (base64) {
-            ensureSpace(32);
-            const imgWidth = 40;
-            const imgHeight = 24;
-            doc.addImage(base64, 'PNG', colCenterX - imgWidth / 2, yPos, imgWidth, imgHeight);
-            yPos += imgHeight + 2;
-            imageDrawn = true;
-          }
-        } catch { /* ignore */ }
-      }
-
-      // 1) Signature line (drawn) — only if no stamp image was added
-      if (!imageDrawn) {
-        doc.setDrawColor(120, 120, 120);
-        doc.line(colCenterX - 25, yPos, colCenterX + 25, yPos);
-        yPos += 5;
-      }
-
-      // 2) "Signature et cachet" (italic small)
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(120, 120, 120);
-      doc.text('Signature et cachet', colCenterX, yPos, { align: 'center' });
-      yPos += 5;
-
-      // 3) Village name (bold) — use rightLabel from template (often **{village}**)
-      doc.setFontSize(sigStyle.size);
-      try { doc.setFont(sigStyle.font, fontStyleHdr); } catch { doc.setFont('helvetica', fontStyleHdr); }
-      doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
-      doc.text(rightLabel!, colCenterX, yPos, { align: 'center' });
-      yPos += sigStyle.spacing;
-
-      doc.setTextColor(...textColor);
-      doc.setFont('helvetica', 'normal');
-    } else {
-      // Cession (and other) attestations: keep the original two-column signature layout.
-      // Style (font/size/spacing/gap/color/bold/italic/align) is fully configurable via the
-      // <!-- signature: ... --> directive in the template.
-      ensureSpace((sigStyle.spacing || 20) + sigStyle.gap + 4);
-      if (sigStyle.gap) yPos += sigStyle.gap;
-      const leftBlockCenter = margin + 30;
-      let fontStyle: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal';
-      if (sigStyle.bold && sigStyle.italic) fontStyle = 'bolditalic';
-      else if (sigStyle.bold) fontStyle = 'bold';
-      else if (sigStyle.italic) fontStyle = 'italic';
-      doc.setFontSize(sigStyle.size);
-      try { doc.setFont(sigStyle.font, fontStyle); } catch { doc.setFont('helvetica', fontStyle); }
-      doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
-      const leftX = sigStyle.align === 'left' ? margin : sigStyle.align === 'right' ? pageWidth - margin - 60 : leftBlockCenter;
-      const rightX = sigStyle.align === 'left' ? margin + 80 : sigStyle.align === 'right' ? pageWidth - margin : rightBlockCenter;
-      doc.text(leftLabel!, leftX, yPos, { align: sigStyle.align });
-      doc.text(rightLabel!, rightX, yPos, { align: sigStyle.align });
-      yPos += sigStyle.spacing;
-      doc.setTextColor(...textColor);
-      doc.setFont('helvetica', 'normal');
-    }
+    // Render the signature labels EXACTLY as defined in the template (two-column layout).
+    // Style (font/size/spacing/gap/color/bold/italic/align) is fully configurable via the
+    // <!-- signature: ... --> directive in the template.
+    ensureSpace((sigStyle.spacing || 20) + sigStyle.gap + 4);
+    if (sigStyle.gap) yPos += sigStyle.gap;
+    const leftBlockCenter = margin + 30;
+    let fontStyle: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal';
+    if (sigStyle.bold && sigStyle.italic) fontStyle = 'bolditalic';
+    else if (sigStyle.bold) fontStyle = 'bold';
+    else if (sigStyle.italic) fontStyle = 'italic';
+    doc.setFontSize(sigStyle.size);
+    try { doc.setFont(sigStyle.font, fontStyle); } catch { doc.setFont('helvetica', fontStyle); }
+    doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
+    const leftX = sigStyle.align === 'left' ? margin : sigStyle.align === 'right' ? pageWidth - margin - 60 : leftBlockCenter;
+    const rightX = sigStyle.align === 'left' ? margin + 80 : sigStyle.align === 'right' ? pageWidth - margin : rightBlockCenter;
+    doc.text(leftLabel!, leftX, yPos, { align: sigStyle.align });
+    doc.text(rightLabel!, rightX, yPos, { align: sigStyle.align });
+    yPos += sigStyle.spacing;
+    doc.setTextColor(...textColor);
+    doc.setFont('helvetica', 'normal');
   } else if (!templateContent) {
     ensureSpace(cl >= 3 ? 25 : 45);
     doc.setFontSize(9);

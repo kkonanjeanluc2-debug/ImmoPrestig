@@ -2071,7 +2071,14 @@ const _generateAttestationVillageoiseInternal = async (
       if (trimmed.startsWith('### ')) {
         doc.setFontSize(headingFontSize);
         doc.setFont('helvetica', 'bold');
-        writeWrappedLines(trimmed.substring(4), { align: 'center', x: pageWidth / 2, width: contentWidth - 10, lineHeight: 5, extraAfter: 2 });
+        if (indentRightAligned) {
+          doc.setTextColor(...primaryColor);
+          writeWrappedLines(trimmed.substring(4), { align: 'right', x: pageWidth - margin, width: 80, lineHeight: 5, extraAfter: 2 });
+          doc.setTextColor(...textColor);
+        } else {
+          writeWrappedLines(trimmed.substring(4), { align: 'center', x: pageWidth / 2, width: contentWidth - 10, lineHeight: 5, extraAfter: 2 });
+        }
+        doc.setFont('helvetica', 'normal');
         continue;
       }
 

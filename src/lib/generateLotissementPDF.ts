@@ -2160,9 +2160,62 @@ const _generateAttestationVillageoiseInternal = async (
   // (e.g. a line like **{nom_agence}**   **{nom_lotissement}** used as a header).
   let leftLabel: string | null = null;
   let rightLabel: string | null = null;
+  // Signature style options — configurable via a directive comment in the template, e.g.:
+  //   <!-- signature: size=12 spacing=22 gap=18 bold=true italic=false font=helvetica color=#1A365D align=center -->
+  // The directive may appear anywhere in the template; the LAST occurrence wins.
+  const sigStyle: {
+    size: number;
+    spacing: number; // vertical space reserved AFTER labels (mm)
+    gap: number;     // vertical offset BEFORE labels (mm) — extra top spacing
+    bold: boolean;
+    italic: boolean;
+    font: string;
+    color: [number, number, number];
+    align: 'center' | 'left' | 'right';
+  } = {
+    size: 11,
+    spacing: cl >= 3 ? 18 : 25,
+    gap: 0,
+    bold: true,
+    italic: false,
+    font: 'helvetica',
+    color: primaryColor,
+    align: 'center',
+  };
+
+  const parseHexColor = (hex: string): [number, number, number] | null => {
+    const m = hex.trim().replace('#', '');
+    if (!/^[0-9a-fA-F]{6}$/.test(m)) return null;
+    return [parseInt(m.slice(0, 2), 16), parseInt(m.slice(2, 4), 16), parseInt(m.slice(4, 6), 16)];
+  };
+
   if (renderedTemplateContent) {
     const lines = renderedTemplateContent.split(/\r?\n/);
+    // Parse signature directive (last occurrence wins)
+    const directiveRe = /<!--\s*signature\s*:\s*([^>]*?)\s*-->/i;
     for (let i = lines.length - 1; i >= 0; i--) {
+      const dm = lines[i].match(directiveRe);
+      if (dm) {
+        const params = dm[1];
+        const get = (key: string) => {
+          const r = new RegExp(`${key}\\s*=\\s*("([^"]*)"|'([^']*)'|([^\\s]+))`, 'i');
+          const x = params.match(r);
+          return x ? (x[2] ?? x[3] ?? x[4] ?? '').trim() : null;
+        };
+        const size = get('size'); if (size && !isNaN(+size)) sigStyle.size = +size;
+        const spacing = get('spacing'); if (spacing && !isNaN(+spacing)) sigStyle.spacing = +spacing;
+        const gap = get('gap'); if (gap && !isNaN(+gap)) sigStyle.gap = +gap;
+        const bold = get('bold'); if (bold !== null) sigStyle.bold = /^(1|true|yes|oui)$/i.test(bold);
+        const italic = get('italic'); if (italic !== null) sigStyle.italic = /^(1|true|yes|oui)$/i.test(italic);
+        const font = get('font'); if (font) sigStyle.font = font;
+        const color = get('color'); if (color) { const c = parseHexColor(color); if (c) sigStyle.color = c; }
+        const align = get('align'); if (align && /^(center|left|right)$/i.test(align)) sigStyle.align = align.toLowerCase() as any;
+        break;
+      }
+    }
+    // Find the signature labels line
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (directiveRe.test(lines[i])) continue;
       const matches = [...lines[i].matchAll(/\*\*([^*\n]+?)\*\*/g)];
       if (matches.length === 2) {
         leftLabel = matches[0][1].trim();
@@ -2175,15 +2228,25 @@ const _generateAttestationVillageoiseInternal = async (
 
   if (isCessionSignatures) {
     // Draw ONLY the signature labels exactly as defined in the template.
-    // No automatic injection of agency/cedant data — the template controls the content entirely.
-    ensureSpace(cl >= 3 ? 20 : 30);
+    // Style (font/size/spacing/gap/color/bold/italic/align) is fully configurable via the
+    // <!-- signature: ... --> directive in the template.
+    ensureSpace((sigStyle.spacing || 20) + sigStyle.gap + 4);
+    if (sigStyle.gap) yPos += sigStyle.gap;
     const leftBlockCenter = margin + 30;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...primaryColor);
-    doc.text(leftLabel!, leftBlockCenter, yPos, { align: 'center' });
-    doc.text(rightLabel!, rightBlockCenter, yPos, { align: 'center' });
-    yPos += cl >= 3 ? 18 : 25;
+    let fontStyle: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal';
+    if (sigStyle.bold && sigStyle.italic) fontStyle = 'bolditalic';
+    else if (sigStyle.bold) fontStyle = 'bold';
+    else if (sigStyle.italic) fontStyle = 'italic';
+    doc.setFontSize(sigStyle.size);
+    try { doc.setFont(sigStyle.font, fontStyle); } catch { doc.setFont('helvetica', fontStyle); }
+    doc.setTextColor(sigStyle.color[0], sigStyle.color[1], sigStyle.color[2]);
+    const leftX = sigStyle.align === 'left' ? margin : sigStyle.align === 'right' ? pageWidth - margin - 60 : leftBlockCenter;
+    const rightX = sigStyle.align === 'left' ? margin + 80 : sigStyle.align === 'right' ? pageWidth - margin : rightBlockCenter;
+    doc.text(leftLabel!, leftX, yPos, { align: sigStyle.align });
+    doc.text(rightLabel!, rightX, yPos, { align: sigStyle.align });
+    yPos += sigStyle.spacing;
+    doc.setTextColor(...textColor);
+    doc.setFont('helvetica', 'normal');
   } else if (!templateContent) {
     ensureSpace(cl >= 3 ? 25 : 45);
     doc.setFontSize(9);

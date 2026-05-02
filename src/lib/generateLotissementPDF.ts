@@ -2001,6 +2001,16 @@ const _generateAttestationVillageoiseInternal = async (
       }
     }
 
+    // For attribution templates: detect the start of the signature column zone.
+    // Everything from the H3 heading "### LE CHEF DU VILLAGE" (or the first line after "Fait à")
+    // onwards must be rendered as a right-aligned single column.
+    let signatureZoneStart = -1;
+    if (isAttributionTemplate) {
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim().startsWith('### ')) { signatureZoneStart = i; break; }
+      }
+    }
+
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       if (lineIdx === signatureLineIndex) continue;
       const line = lines[lineIdx];
@@ -2008,7 +2018,8 @@ const _generateAttestationVillageoiseInternal = async (
       // Detect right-alignment from leading whitespace (templates often use big indentation
       // to right-align signature blocks like "**LE CHEF DU VILLAGE**").
       const leadingSpaces = line.length - line.trimStart().length;
-      const indentRightAligned = leadingSpaces >= 20;
+      const inSignatureZone = isAttributionTemplate && signatureZoneStart !== -1 && lineIdx >= signatureZoneStart;
+      const indentRightAligned = leadingSpaces >= 20 || inSignatureZone;
 
       // Skip HTML comments (used as configuration directives, e.g. <!-- signature: ... -->)
       if (/^<!--[\s\S]*-->$/.test(trimmed)) continue;
@@ -2060,7 +2071,36 @@ const _generateAttestationVillageoiseInternal = async (
       if (trimmed.startsWith('### ')) {
         doc.setFontSize(headingFontSize);
         doc.setFont('helvetica', 'bold');
-        writeWrappedLines(trimmed.substring(4), { align: 'center', x: pageWidth / 2, width: contentWidth - 10, lineHeight: 5, extraAfter: 2 });
+        if (indentRightAligned) {
+          doc.setTextColor(...primaryColor);
+          writeWrappedLines(trimmed.substring(4), { align: 'right', x: pageWidth - margin, width: 80, lineHeight: 5, extraAfter: 2 });
+          doc.setTextColor(...textColor);
+          // Embed chef stamp/signature image right under the "LE CHEF DU VILLAGE" heading
+          const chefImageUrl = chefImages?.stamp_url || chefImages?.signature_url;
+          if (chefImageUrl) {
+            try {
+              const response = await fetch(chefImageUrl);
+              const blob = await response.blob();
+              const base64 = await new Promise<string | null>((resolve) => {
+                const fr = new FileReader();
+                fr.onloadend = () => resolve(fr.result as string);
+                fr.onerror = () => resolve(null);
+                fr.readAsDataURL(blob);
+              });
+              if (base64) {
+                ensureSpace(28);
+                const imgWidth = 40;
+                const imgHeight = 24;
+                const colCenterX = pageWidth - margin - 30;
+                doc.addImage(base64, 'PNG', colCenterX - imgWidth / 2, yPos, imgWidth, imgHeight);
+                yPos += imgHeight + 1;
+              }
+            } catch { /* ignore */ }
+          }
+        } else {
+          writeWrappedLines(trimmed.substring(4), { align: 'center', x: pageWidth / 2, width: contentWidth - 10, lineHeight: 5, extraAfter: 2 });
+        }
+        doc.setFont('helvetica', 'normal');
         continue;
       }
 

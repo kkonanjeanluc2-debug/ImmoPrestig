@@ -39,6 +39,8 @@ En foi de quoi, cette présente attestation de cession est faite pour servir et 
 
 **Fait à {ville}, le {date_vente}**
 
+<!-- signature: size=11 spacing=22 gap=4 bold=true italic=false font=helvetica color=#1A365D align=center -->
+
 **LE PROPRIÉTAIRE TERRIEN**                                                                    **AGENCE / PROMOTEUR**
 `;
 

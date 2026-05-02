@@ -1889,48 +1889,10 @@ const _generateAttestationVillageoiseInternal = async (
     }
     doc.setFont('helvetica', 'normal');
 
-    const bannerTopY = Math.max(
-      yPos + 2,
-      hasVillageLogos ? logoBottomY + 3 : yPos + 2
-    );
-    const bannerHeight = cl >= 4 ? 18 : cl >= 2 ? 20 : 24;
-    const bannerColor1 = template?.banner_color_1 || '#003399';
-    const bannerColor2 = template?.banner_color_2 || null;
-    const useBannerGradient = template?.banner_gradient && bannerColor2;
-
-    const bannerX = headerBannerInsetX;
-    const bannerW = pageWidth - 2 * headerBannerInsetX;
-
-    if (useBannerGradient) {
-      const c1 = hexToRgb(bannerColor1, 0);
-      const c2 = hexToRgb(bannerColor2!, 0);
-      const steps = 40;
-      const stripW = bannerW / steps;
-      for (let i = 0; i < steps; i++) {
-        const t = i / (steps - 1);
-        const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
-        const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
-        const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
-        doc.setFillColor(r, g, b);
-        doc.rect(bannerX + i * stripW, bannerTopY, stripW + 0.5, bannerHeight, 'F');
-      }
-    } else {
-      const banner = hexToRgb(bannerColor1, 0);
-      doc.setFillColor(banner[0], banner[1], banner[2]);
-      doc.rect(bannerX, bannerTopY, bannerW, bannerHeight, 'F');
-    }
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`ATTESTATION D'ATTRIBUTION N°${parcelle.plot_number}`, pageWidth / 2, bannerTopY + 7, { align: 'center' });
-    doc.setFontSize(8);
-    doc.text(lotOriginName.toUpperCase(), pageWidth / 2, bannerTopY + 13, { align: 'center' });
-    doc.setFontSize(6.5);
-    doc.setFont('helvetica', 'normal');
-    if (arreteApprobation) {
-      doc.text(arreteApprobation, pageWidth / 2, bannerTopY + 19, { align: 'center' });
-    }
+    // No automatic banner: the title and any additional headings come strictly from the
+    // user's template content (rendered below). This guarantees the PDF reflects exactly
+    // what is configured in the attestation template.
+    yPos += 4;
 
     yPos = bannerTopY + bannerHeight + 6;
   }

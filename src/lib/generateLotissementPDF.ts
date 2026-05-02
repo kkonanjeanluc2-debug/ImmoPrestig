@@ -1965,11 +1965,8 @@ const _generateAttestationVillageoiseInternal = async (
       // Skip HTML comments (used as configuration directives, e.g. <!-- signature: ... -->)
       if (/^<!--[\s\S]*-->$/.test(trimmed)) continue;
 
-      // Render markdown headings (# and ##) as styled titles.
-      // For attribution templates, the title is already drawn in the colored banner at the top
-      // of the page, so we skip the H1/H2 lines from the template to avoid duplicates.
+      // Render markdown headings (# and ##) as styled titles, exactly as defined in the template.
       if (trimmed.startsWith('# ')) {
-        if (isAttributionTemplate) continue;
         ensureSpace(10);
         doc.setFontSize(headingFontSize + 3);
         doc.setFont('helvetica', 'bold');
@@ -1983,7 +1980,6 @@ const _generateAttestationVillageoiseInternal = async (
         continue;
       }
       if (trimmed.startsWith('## ')) {
-        if (isAttributionTemplate) continue;
         ensureSpace(8);
         doc.setFontSize(headingFontSize + 1);
         doc.setFont('helvetica', 'bold');

@@ -9,6 +9,7 @@ interface DepositReceiptData {
   amount: number;
   date: string;
   signerName?: string;
+  stampImageUrl?: string | null;
   agency?: {
     name: string;
     email?: string;

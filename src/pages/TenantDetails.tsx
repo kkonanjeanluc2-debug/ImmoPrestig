@@ -48,6 +48,7 @@ import { CollectPaymentDialog } from "@/components/payment/CollectPaymentDialog"
 import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateAgencyFeesReceipt } from "@/lib/generateAgencyFeesReceipt";
+import { generateDepositReceipt } from "@/lib/generateDepositReceipt";
 import { useAgency } from "@/hooks/useAgency";
 import { useAssignedUserName } from "@/hooks/useAssignedUserProfile";
 import { useQuery } from "@tanstack/react-query";

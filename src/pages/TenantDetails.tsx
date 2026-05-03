@@ -733,7 +733,7 @@ const TenantDetails = () => {
                       {format(new Date(activeContract.end_date), "dd/MM/yyyy")}
                     </span>
                   </div>
-                  {activeContract.deposit && (
+                  {activeContract.deposit && Number(activeContract.deposit) > 0 && (
                     <>
                       <Separator />
                       <div className="flex justify-between text-sm">
@@ -742,6 +742,46 @@ const TenantDetails = () => {
                           {Number(activeContract.deposit).toLocaleString('fr-FR')} F CFA
                         </span>
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        disabled={downloadingDeposit}
+                        onClick={async () => {
+                          setDownloadingDeposit(true);
+                          try {
+                            await generateDepositReceipt({
+                              tenantName: tenant.name,
+                              tenantEmail: tenant.email,
+                              propertyTitle: tenant.unit?.unit_number || tenant.property?.title || "Bien immobilier",
+                              propertyAddress: tenant.property?.address,
+                              amount: Number(activeContract.deposit),
+                              date: activeContract.start_date || tenant.created_at,
+                              signerName: user?.user_metadata?.full_name || agency?.name || "le bailleur",
+                              agency: agency ? {
+                                name: agency.name,
+                                email: agency.email,
+                                phone: agency.phone || undefined,
+                                address: agency.address || undefined,
+                                city: agency.city || undefined,
+                                country: agency.country || undefined,
+                                logo_url: agency.logo_url,
+                              } : undefined,
+                            });
+                          } catch {
+                            toast.error("Erreur lors de la génération du reçu");
+                          } finally {
+                            setDownloadingDeposit(false);
+                          }
+                        }}
+                      >
+                        {downloadingDeposit ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Download className="h-4 w-4 mr-2" />
+                        )}
+                        Télécharger le reçu de caution
+                      </Button>
                     </>
                   )}
                 </CardContent>

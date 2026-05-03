@@ -98,6 +98,7 @@ const TenantDetails = () => {
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
   const { data: ownAgency } = useAgency();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
   const deleteTenant = useDeleteTenant();
   const { hasPermission } = usePermissions();
   const canEdit = hasPermission("can_edit_tenants");

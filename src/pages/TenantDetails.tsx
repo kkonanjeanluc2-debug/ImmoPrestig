@@ -49,6 +49,7 @@ import { TenantPayRentDialog } from "@/components/payment/TenantPayRentDialog";
 import { generateRentReceipt, getPaymentPeriod } from "@/lib/generateReceipt";
 import { generateAgencyFeesReceipt } from "@/lib/generateAgencyFeesReceipt";
 import { generateDepositReceipt } from "@/lib/generateDepositReceipt";
+import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { useAgency } from "@/hooks/useAgency";
 import { useAssignedUserName } from "@/hooks/useAssignedUserProfile";
 import { useQuery } from "@tanstack/react-query";
@@ -97,6 +98,7 @@ const TenantDetails = () => {
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
   const { data: ownAgency } = useAgency();
+  const { data: receiptTemplates = [] } = useReceiptTemplates();
   const deleteTenant = useDeleteTenant();
   const { hasPermission } = usePermissions();
   const canEdit = hasPermission("can_edit_tenants");
@@ -758,6 +760,7 @@ const TenantDetails = () => {
                               amount: Number(activeContract.deposit),
                               date: activeContract.start_date || tenant.created_at,
                               signerName: user?.user_metadata?.full_name || agency?.name || "le bailleur",
+                              stampImageUrl: receiptTemplates.find((t) => t.is_default)?.stamp_image_url || receiptTemplates[0]?.stamp_image_url || null,
                               agency: agency ? {
                                 name: agency.name,
                                 email: agency.email,

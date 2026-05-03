@@ -164,13 +164,42 @@ export const generateDepositReceipt = async (data: DepositReceiptData): Promise<
   const splitDecl = doc.splitTextToSize(declaration, pageWidth - 30);
   doc.text(splitDecl, 15, yPos, { lineHeightFactor: 1.5 });
 
-  yPos += splitDecl.length * 5 + 25;
+  yPos += splitDecl.length * 5 + 10;
 
   doc.setFont("helvetica", "normal");
   doc.text(`Fait le ${receiptDate}`, pageWidth - 20, yPos, { align: "right" });
-  yPos += 15;
+  yPos += 6;
   doc.setFont("helvetica", "italic");
   doc.text("Cachet / Signature de l'agence", pageWidth - 20, yPos, { align: "right" });
+
+  // Cachet de l'agence (comme sur les quittances)
+  if (data.stampImageUrl) {
+    try {
+      const stampBase64 = await loadImageAsBase64(data.stampImageUrl);
+      if (stampBase64) {
+        const img = new Image();
+        await new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = stampBase64;
+        });
+        const maxStampSize = 32;
+        let stampW = maxStampSize;
+        let stampH = maxStampSize;
+        if (img.naturalWidth && img.naturalHeight) {
+          const ratio = img.naturalWidth / img.naturalHeight;
+          if (ratio > 1) {
+            stampH = maxStampSize / ratio;
+          } else {
+            stampW = maxStampSize * ratio;
+          }
+        }
+        const stampX = pageWidth - 20 - stampW;
+        const stampY = yPos + 3;
+        doc.addImage(stampBase64, "PNG", stampX, stampY, stampW, stampH);
+      }
+    } catch {}
+  }
 
   const pageHeight = doc.internal.pageSize.getHeight();
   doc.setFillColor(...lightGray);

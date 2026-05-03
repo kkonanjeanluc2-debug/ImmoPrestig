@@ -169,7 +169,7 @@ export const generateDepositReceipt = async (data: DepositReceiptData): Promise<
   doc.text(`Fait le ${receiptDate}`, pageWidth - 20, yPos, { align: "right" });
   yPos += 15;
   doc.setFont("helvetica", "italic");
-  doc.text(`Signature: ${signerName}`, pageWidth - 20, yPos, { align: "right" });
+  doc.text("Cachet / Signature de l'agence", pageWidth - 20, yPos, { align: "right" });
 
   const pageHeight = doc.internal.pageSize.getHeight();
   doc.setFillColor(...lightGray);

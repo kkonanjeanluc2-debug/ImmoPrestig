@@ -413,6 +413,109 @@ const TenantDetails = () => {
             {/* Payment Status Chart */}
             <TenantPaymentStatusChart payments={tenant.payments || []} />
 
+            {/* Impayés et retards */}
+            {(() => {
+              const overdueList = (tenant.payments || [])
+                .filter((p) => {
+                  if (p.status === 'paid' || p.status === 'cancelled') return false;
+                  return isPast(new Date(p.due_date));
+                })
+                .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+
+              if (overdueList.length === 0) return null;
+
+              const totalOverdue = overdueList.reduce(
+                (sum, p) => sum + (Number(p.amount) - Number((p as any).paid_amount || 0)),
+                0,
+              );
+
+              return (
+                <Card className="border-destructive/30">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="h-5 w-5" />
+                      Impayés & retards ({overdueList.length})
+                    </CardTitle>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Total dû</p>
+                      <p className="font-bold text-destructive">
+                        {totalOverdue.toLocaleString('fr-FR')} F CFA
+                      </p>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {overdueList.map((payment) => {
+                        const dueDate = new Date(payment.due_date);
+                        const daysLate = Math.max(0, differenceInDays(new Date(), dueDate));
+                        const isImpaye = daysLate >= 30;
+                        const remaining =
+                          Number(payment.amount) - Number((payment as any).paid_amount || 0);
+                        return (
+                          <div
+                            key={payment.id}
+                            className="flex items-center justify-between p-3 rounded-lg bg-destructive/5 border border-destructive/20"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-destructive/15 text-destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-foreground text-sm">
+                                  Échéance du {format(dueDate, "dd MMMM yyyy", { locale: fr })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {isImpaye ? 'Impayé' : 'En retard'} • {daysLate} jour{daysLate > 1 ? 's' : ''} de retard
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-right mr-2">
+                                <p className="font-bold text-destructive">
+                                  {remaining.toLocaleString('fr-FR')} F CFA
+                                </p>
+                                {Number((payment as any).paid_amount || 0) > 0 && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Sur {Number(payment.amount).toLocaleString('fr-FR')}
+                                  </p>
+                                )}
+                              </div>
+                              {isLocataire && (
+                                <TenantPayRentDialog
+                                  paymentId={payment.id}
+                                  amount={Number(payment.amount)}
+                                  paidAmount={Number((payment as any).paid_amount || 0)}
+                                  dueDate={payment.due_date}
+                                  propertyTitle={tenant.property?.title || "Bien immobilier"}
+                                  tenantPhone={tenant.phone}
+                                  agencyUserId={payment.user_id}
+                                  isVirtual={false}
+                                  tenantId={tenant.id}
+                                  paymentMonths={(payment as any).payment_months || undefined}
+                                />
+                              )}
+                              {!isLocataire && canCollectPayment && (
+                                <CollectPaymentDialog
+                                  paymentId={payment.id}
+                                  tenantName={tenant.name}
+                                  tenantEmail={tenant.email}
+                                  amount={Number(payment.amount)}
+                                  dueDate={payment.due_date}
+                                  propertyTitle={tenant.property?.title || "Bien immobilier"}
+                                  propertyAddress={tenant.property?.address}
+                                  currentMethod={payment.method}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
             {/* Payment History */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">

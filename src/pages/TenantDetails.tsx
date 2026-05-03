@@ -108,6 +108,7 @@ const TenantDetails = () => {
   const [whatsappHistoryOpen, setWhatsappHistoryOpen] = useState(false);
   const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null);
   const [downloadingAgencyFees, setDownloadingAgencyFees] = useState(false);
+  const [downloadingDeposit, setDownloadingDeposit] = useState(false);
   const [portalAccessDialogOpen, setPortalAccessDialogOpen] = useState(false);
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
   const revokeAccess = useRevokeTenantPortalAccess();

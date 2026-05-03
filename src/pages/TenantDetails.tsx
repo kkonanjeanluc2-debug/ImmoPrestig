@@ -760,6 +760,7 @@ const TenantDetails = () => {
                               amount: Number(activeContract.deposit),
                               date: activeContract.start_date || tenant.created_at,
                               signerName: user?.user_metadata?.full_name || agency?.name || "le bailleur",
+                              stampImageUrl: receiptTemplates.find((t) => t.is_default)?.stamp_image_url || receiptTemplates[0]?.stamp_image_url || null,
                               agency: agency ? {
                                 name: agency.name,
                                 email: agency.email,

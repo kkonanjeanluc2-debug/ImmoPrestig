@@ -84,7 +84,7 @@ export const generateDepositReceipt = async (data: DepositReceiptData): Promise<
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("REÇU DE CAUTION / DÉPÔT DE GARANTIE", data.agency ? pageWidth - 15 : pageWidth / 2, 18, {
+  doc.text("REÇU DE CAUTION", data.agency ? pageWidth - 15 : pageWidth / 2, 18, {
     align: data.agency ? "right" : "center",
   });
 
@@ -105,35 +105,33 @@ export const generateDepositReceipt = async (data: DepositReceiptData): Promise<
 
   yPos += 35;
 
+  const colWidth = (pageWidth - 30) / 2;
+  const col1X = 15;
+  const col2X = 15 + colWidth;
+
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("LOCATAIRE", 15, yPos);
+  doc.text("LOCATAIRE", col1X, yPos);
+  doc.text("BIEN LOUÉ", col2X, yPos);
+
   doc.setTextColor(...textColor);
   doc.setFont("helvetica", "normal");
-  doc.text(data.tenantName, 15, yPos + 7);
+  doc.setFontSize(10);
+  doc.text(data.tenantName, col1X, yPos + 7);
   if (data.tenantEmail) {
     doc.setFontSize(9);
-    doc.text(data.tenantEmail, 15, yPos + 12);
+    doc.text(data.tenantEmail, col1X, yPos + 12);
+  }
+
+  doc.setFontSize(10);
+  doc.text(data.propertyTitle, col2X, yPos + 7);
+  if (data.propertyAddress) {
+    doc.setFontSize(9);
+    doc.text(data.propertyAddress, col2X, yPos + 12);
   }
 
   yPos += 25;
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...primaryColor);
-  doc.text("BIEN LOUÉ", 15, yPos);
-  doc.setTextColor(...textColor);
-  doc.setFont("helvetica", "normal");
-  yPos += 7;
-  doc.text(data.propertyTitle, 15, yPos);
-  if (data.propertyAddress) {
-    yPos += 5;
-    doc.setFontSize(9);
-    doc.text(data.propertyAddress, 15, yPos);
-  }
-
-  yPos += 20;
 
   doc.setFillColor(...primaryColor);
   doc.roundedRect(15, yPos, pageWidth - 30, 35, 3, 3, "F");

@@ -71,12 +71,12 @@ export function UnpaidCasesList() {
   // Auto-detect late payments not yet converted to unpaid cases
   const latePaymentsDetected = useMemo<DetectedLatePayment[]>(() => {
     if (!payments) return [];
-    const existingPaymentIds = new Set((cases || []).map(c => c.payment_id).filter(Boolean));
-    const tenantIdsWithCase = new Set((cases || []).map(c => c.tenant_id));
-    
+    // Only exclude payments already linked to an ACTIVE unpaid case (not resolved/cancelled)
+    const activeCases = (cases || []).filter(c => !["resolved", "eviction_cancelled"].includes(c.status));
+    const existingPaymentIds = new Set(activeCases.map(c => c.payment_id).filter(Boolean));
+
     const latePayments = payments.filter(p => {
       if (existingPaymentIds.has(p.id)) return false;
-      if (tenantIdsWithCase.has(p.tenant_id)) return false;
       if (p.status === "paid" || p.status === "cancelled") return false;
       return new Date(p.due_date) < new Date();
     });

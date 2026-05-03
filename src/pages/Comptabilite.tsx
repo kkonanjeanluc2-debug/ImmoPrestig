@@ -744,7 +744,7 @@ const Comptabilite = () => {
           {/* === FACTURES TAB === */}
           {canViewInvoices && (
             <TabsContent value="factures" className="space-y-6">
-              <ProformaInvoicesList canCreate={isAdminOrOwner || hasPermission("can_create_invoices")} />
+              <ProformaInvoicesList canCreate={isAdminOrOwner || hasPermission("can_create_invoices")} fromDate={fromDateStr} toDate={toDateStr} />
             </TabsContent>
           )}
 

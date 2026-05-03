@@ -31,9 +31,11 @@ interface Props {
   tenantId?: string;
   compact?: boolean;
   canCreate?: boolean;
+  fromDate?: string;
+  toDate?: string;
 }
 
-export function ProformaInvoicesList({ tenantId, compact = false, canCreate = true }: Props) {
+export function ProformaInvoicesList({ tenantId, compact = false, canCreate = true, fromDate, toDate }: Props) {
   const { data: invoices, isLoading } = useProformaInvoices(tenantId);
   const convertToInvoice = useConvertToInvoice();
   const updateStatus = useUpdateProformaStatus();
@@ -46,9 +48,19 @@ export function ProformaInvoicesList({ tenantId, compact = false, canCreate = tr
   const [editInvoice, setEditInvoice] = useState<ProformaInvoice | null>(null);
   const [filter, setFilter] = useState<"all" | "proforma" | "definitive">("all");
 
-  const filtered = (invoices || []).filter((inv) =>
-    filter === "all" ? true : inv.invoice_type === filter
-  );
+  const filtered = (invoices || []).filter((inv) => {
+    if (filter !== "all" && inv.invoice_type !== filter) return false;
+    if (fromDate || toDate) {
+      const created = new Date(inv.created_at).getTime();
+      if (fromDate && created < new Date(fromDate).getTime()) return false;
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        if (created > end.getTime()) return false;
+      }
+    }
+    return true;
+  });
 
   const handleExportPDF = async (invoice: ProformaInvoice) => {
     await generateProformaPDF(invoice, agency);

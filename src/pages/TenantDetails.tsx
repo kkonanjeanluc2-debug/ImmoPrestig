@@ -55,6 +55,7 @@ import { useAssignedUserName } from "@/hooks/useAssignedUserProfile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
+import { usePayments } from "@/hooks/usePayments";
 import { TenantEtatsDesLieuxTab } from "@/components/etat-des-lieux/TenantEtatsDesLieuxTab";
 import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
 import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";
@@ -100,6 +101,7 @@ const TenantDetails = () => {
   const { data: ownAgency } = useAgency();
   const { data: receiptTemplates = [] } = useReceiptTemplates();
   const deleteTenant = useDeleteTenant();
+  const { data: allPayments = [] } = usePayments();
   const { hasPermission } = usePermissions();
   const canEdit = hasPermission("can_edit_tenants");
   const canDelete = hasPermission("can_delete_tenants");
@@ -415,7 +417,7 @@ const TenantDetails = () => {
 
             {/* Impayés et retards */}
             {(() => {
-              const overdueList = (tenant.payments || [])
+              const overdueList = (allPayments.filter((p: any) => p.tenant_id === tenant.id) as any[])
                 .filter((p) => {
                   if (p.status === 'paid' || p.status === 'cancelled') return false;
                   return isPast(new Date(p.due_date));

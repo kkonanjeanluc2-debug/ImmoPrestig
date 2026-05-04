@@ -417,7 +417,7 @@ const TenantDetails = () => {
 
             {/* Impayés et retards */}
             {(() => {
-              const overdueList = (tenant.payments || [])
+              const overdueList = (allPayments.filter((p: any) => p.tenant_id === tenant.id) as any[])
                 .filter((p) => {
                   if (p.status === 'paid' || p.status === 'cancelled') return false;
                   return isPast(new Date(p.due_date));

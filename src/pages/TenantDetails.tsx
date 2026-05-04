@@ -55,6 +55,7 @@ import { useAssignedUserName } from "@/hooks/useAssignedUserProfile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
+import { usePayments } from "@/hooks/usePayments";
 import { TenantEtatsDesLieuxTab } from "@/components/etat-des-lieux/TenantEtatsDesLieuxTab";
 import { TenantContractsTab } from "@/components/tenant/TenantContractsTab";
 import { TenantPortalAccessDialog } from "@/components/tenant/TenantPortalAccessDialog";

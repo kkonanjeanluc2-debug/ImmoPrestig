@@ -101,6 +101,7 @@ const TenantDetails = () => {
   const { data: ownAgency } = useAgency();
   const { data: receiptTemplates = [] } = useReceiptTemplates();
   const deleteTenant = useDeleteTenant();
+  const { data: allPayments = [] } = usePayments();
   const { hasPermission } = usePermissions();
   const canEdit = hasPermission("can_edit_tenants");
   const canDelete = hasPermission("can_delete_tenants");

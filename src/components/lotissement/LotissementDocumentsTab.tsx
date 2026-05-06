@@ -20,12 +20,14 @@ import {
   CheckCircle,
   Clock,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useLotissementDocuments, useDeleteLotissementDocument } from "@/hooks/useLotissementDocuments";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AddLotissementDocumentDialog } from "./AddLotissementDocumentDialog";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface LotissementDocumentsTabProps {
@@ -63,6 +65,32 @@ export function LotissementDocumentsTab({ lotissementId, lotissementName }: Loti
   const canCreate = hasPermission("can_create_lotissement_documents");
   const canDelete = hasPermission("can_delete_lotissements");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (fileUrl: string, docId: string) => {
+    setDownloadingId(docId);
+    try {
+      let url = fileUrl;
+
+      // If stored value is a path rather than full URL, create a fresh signed URL
+      if (!fileUrl.startsWith("http")) {
+        const { data, error } = await supabase.storage
+          .from("documents-achats")
+          .createSignedUrl(fileUrl, 60 * 5);
+        if (error || !data?.signedUrl) {
+          toast.error("Impossible d'accéder au fichier");
+          return;
+        }
+        url = data.signedUrl;
+      }
+
+      window.open(url, "_blank");
+    } catch {
+      toast.error("Erreur lors du téléchargement");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Supprimer le document "${name}" ?`)) return;
@@ -139,10 +167,18 @@ export function LotissementDocumentsTab({ lotissementId, lotissementName }: Loti
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       {doc.file_url && (
-                        <Button variant="ghost" size="icon" asChild>
-                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                            <Download className="h-4 w-4" />
-                          </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(doc.file_url!, doc.id)}
+                          disabled={downloadingId === doc.id}
+                        >
+                          {downloadingId === doc.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5 mr-1" />
+                          )}
+                          Télécharger
                         </Button>
                       )}
                       {canDelete && (

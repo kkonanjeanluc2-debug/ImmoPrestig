@@ -92,11 +92,16 @@ export function GenerateLotissementDocumentDialog({
   onOpenChange,
 }: GenerateLotissementDocumentDialogProps) {
   const { data: agency } = useAgency();
+  const { user } = useAuth();
+  const createLotissementDocument = useCreateLotissementDocument();
   const [selectedType, setSelectedType] = useState<DocumentType | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [signingStep, setSigningStep] = useState<"form" | "signatures">("form");
   const [currentSignerIndex, setCurrentSignerIndex] = useState(0);
   const [signerCategory, setSignerCategory] = useState<"members" | "witnesses">("members");
+  const [pvMode, setPvMode] = useState<"form" | "upload">("form");
+  const [pvUploadFile, setPvUploadFile] = useState<File | null>(null);
+  const [isUploadingPv, setIsUploadingPv] = useState(false);
 
   // Form states for each document type
   const [pvFamilleData, setPvFamilleData] = useState<PVFamilleData>(() => 

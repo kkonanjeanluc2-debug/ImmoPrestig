@@ -403,44 +403,34 @@ export function OwnerPayoutsSection({
                 </Select>
                 {isDuplicate && form.owner_id && (
                   <p className="text-xs text-destructive font-medium">
-                    ⚠️ Un reversement existe déjà pour {FRENCH_MONTHS[form.payout_month - 1]} {form.payout_year}
+                    ⚠️ Un reversement existe déjà pour {formatPeriodLabel(form.period_start, form.period_end)}
                   </p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Mois *</Label>
-                  <Select
-                    value={String(form.payout_month)}
-                    onValueChange={(v) => handleMonthChange(Number(v))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FRENCH_MONTHS.map((m, i) => (
-                        <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Début de période *</Label>
+                  <Input
+                    type="date"
+                    value={form.period_start}
+                    onChange={(e) => handlePeriodStartChange(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Année *</Label>
-                  <Select
-                    value={String(form.payout_year)}
-                    onValueChange={(v) => handleYearChange(Number(v))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
-                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Fin de période *</Label>
+                  <Input
+                    type="date"
+                    value={form.period_end}
+                    min={form.period_start}
+                    onChange={(e) => handlePeriodEndChange(e.target.value)}
+                  />
                 </div>
               </div>
+              {form.period_start && form.period_end && (
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Période : <span className="font-medium text-foreground">{formatPeriodLabel(form.period_start, form.period_end)}</span>
+                </p>
+              )}
               <div className="space-y-2">
                 <Label>Montant (F CFA) *</Label>
                 <Input

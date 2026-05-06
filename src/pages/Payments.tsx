@@ -33,7 +33,15 @@ import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
-import { differenceInDays, isFuture, isPast, format } from "date-fns";
+import { differenceInDays, differenceInMonths, isFuture, isPast, format } from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { usePayments } from "@/hooks/usePayments";
 import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";

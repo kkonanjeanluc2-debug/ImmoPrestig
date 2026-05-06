@@ -10,6 +10,8 @@ export interface PayoutReceiptData {
   payoutDate: string;
   payoutMonth: number;
   payoutYear: number;
+  periodStart?: string;
+  periodEnd?: string;
   paymentMethod: string;
   recipientPhone?: string | null;
   notes?: string | null;

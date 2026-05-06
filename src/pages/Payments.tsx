@@ -375,13 +375,15 @@ export default function Payments() {
                 { key: 'due_date', label: 'Échéance', format: (v) => new Date(v).toLocaleDateString('fr-FR') },
                 { key: 'paid_date', label: 'Date de paiement', format: (v) => v ? new Date(v).toLocaleDateString('fr-FR') : '' },
                 { key: 'status', label: 'Statut', format: (v, row: any) => {
-                  if (v === 'paid') return 'Payé';
-                  if (v === 'pending') return 'En attente';
-                  if (v === 'late') {
-                    const daysLate = differenceInDays(new Date(), new Date(row?.due_date));
-                    return daysLate >= 30 ? 'Impayé' : 'En retard';
-                  }
-                  return 'À venir';
+                  if (v === 'paid') return 'À jour';
+                  const due = new Date(row?.due_date);
+                  if (isFuture(due)) return 'À venir';
+                  const months = Math.max(
+                    differenceInMonths(new Date(), due),
+                    differenceInDays(new Date(), due) > 0 ? 1 : 0
+                  );
+                  if (months >= 1) return `${months} mois de retard`;
+                  return 'À jour';
                 }},
                 { key: 'method', label: 'Mode de paiement', format: (v) => v || '' },
               ]}

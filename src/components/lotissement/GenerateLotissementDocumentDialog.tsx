@@ -1315,10 +1315,21 @@ export function GenerateLotissementDocumentDialog({
                 Annuler
               </Button>
               {selectedType === "pv_famille" ? (
-                <Button onClick={startSigningProcess}>
-                  <PenTool className="h-4 w-4 mr-2" />
-                  Passer aux signatures
-                </Button>
+                pvMode === "upload" ? (
+                  <Button onClick={handleUploadPvFamille} disabled={isUploadingPv || !pvUploadFile}>
+                    {isUploadingPv ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    Importer le PDF
+                  </Button>
+                ) : (
+                  <Button onClick={startSigningProcess}>
+                    <PenTool className="h-4 w-4 mr-2" />
+                    Passer aux signatures
+                  </Button>
+                )
               ) : (
                 <Button onClick={handleGenerate} disabled={isGenerating}>
                   {isGenerating ? (

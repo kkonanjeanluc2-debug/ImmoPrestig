@@ -364,7 +364,44 @@ export function GenerateLotissementDocumentDialog({
     switch (selectedType) {
       case "pv_famille":
         return (
-          <ScrollArea className="h-[60vh] pr-4">
+          <div className="space-y-4">
+            <Tabs value={pvMode} onValueChange={(v) => setPvMode(v as "form" | "upload")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="form" className="gap-2">
+                  <PencilLine className="h-4 w-4" />
+                  Remplir le formulaire
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="gap-2">
+                  <Upload className="h-4 w-4" />
+                  Importer un PDF
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="upload" className="mt-4">
+                <div className="space-y-4 rounded-lg border border-dashed p-6">
+                  <div className="space-y-2">
+                    <Label>Fichier PDF du PV de Famille</Label>
+                    <Input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) => setPvUploadFile(e.target.files?.[0] || null)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Importez un PV de Famille déjà signé (PDF, max 10 Mo).
+                    </p>
+                  </div>
+                  {pvUploadFile && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <FileText className="h-4 w-4" />
+                      <span className="truncate">{pvUploadFile.name}</span>
+                      <span className="ml-auto text-xs">
+                        {(pvUploadFile.size / 1024 / 1024).toFixed(2)} Mo
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="form" className="mt-4">
+          <ScrollArea className="h-[55vh] pr-4">
             <div className="space-y-6">
               {/* Informations de la famille */}
               <div className="space-y-4">

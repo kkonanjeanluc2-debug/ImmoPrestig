@@ -10,6 +10,8 @@ export interface PayoutReceiptData {
   payoutDate: string;
   payoutMonth: number;
   payoutYear: number;
+  periodStart?: string;
+  periodEnd?: string;
   paymentMethod: string;
   recipientPhone?: string | null;
   notes?: string | null;
@@ -43,7 +45,23 @@ export const generatePayoutReceiptPDF = async (
   const contentWidth = pageWidth - margin * 2;
 
   // Header
-  const periodLabel = `${FRENCH_MONTHS[data.payoutMonth - 1]} ${data.payoutYear}`;
+  // Period label: prefer custom range when provided
+  let periodLabel = `${FRENCH_MONTHS[data.payoutMonth - 1]} ${data.payoutYear}`;
+  if (data.periodStart && data.periodEnd) {
+    const s = new Date(data.periodStart + "T00:00:00");
+    const e = new Date(data.periodEnd + "T00:00:00");
+    const sameMonth = s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear();
+    const isFullMonth =
+      sameMonth &&
+      s.getDate() === 1 &&
+      e.getDate() === new Date(s.getFullYear(), s.getMonth() + 1, 0).getDate();
+    if (isFullMonth) {
+      periodLabel = `${FRENCH_MONTHS[s.getMonth()]} ${s.getFullYear()}`;
+    } else {
+      const fmt = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+      periodLabel = `Du ${fmt(s)} au ${fmt(e)}`;
+    }
+  }
   let y = await addPDFHeader(doc, agency, "REÇU DE REVERSEMENT", periodLabel);
 
   y += 5;
@@ -168,6 +186,7 @@ export const generatePayoutReceiptPDF = async (
   addPDFFooter(doc, agency, "Reçu de reversement");
 
   // Download
-  const filename = `Recu_reversement_${data.ownerName.replace(/\s+/g, "_")}_${FRENCH_MONTHS[data.payoutMonth - 1]}_${data.payoutYear}.pdf`;
+  const safePeriod = periodLabel.replace(/[^\w]+/g, "_");
+  const filename = `Recu_reversement_${data.ownerName.replace(/\s+/g, "_")}_${safePeriod}.pdf`;
   doc.save(filename);
 };

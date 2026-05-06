@@ -3240,6 +3240,8 @@ export type Database = {
           payout_date: string
           payout_month: number
           payout_year: number
+          period_end: string | null
+          period_start: string | null
           recipient_phone: string | null
           status: string
           updated_at: string
@@ -3256,6 +3258,8 @@ export type Database = {
           payout_date?: string
           payout_month: number
           payout_year: number
+          period_end?: string | null
+          period_start?: string | null
           recipient_phone?: string | null
           status?: string
           updated_at?: string
@@ -3272,6 +3276,8 @@ export type Database = {
           payout_date?: string
           payout_month?: number
           payout_year?: number
+          period_end?: string | null
+          period_start?: string | null
           recipient_phone?: string | null
           status?: string
           updated_at?: string

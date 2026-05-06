@@ -13,22 +13,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  Users, 
-  Handshake, 
-  Wallet, 
-  Download, 
-  Plus, 
+import {
+  FileText,
+  Users,
+  Handshake,
+  Wallet,
+  Download,
+  Plus,
   Trash2,
   Loader2,
   PenTool,
   CheckCircle2,
   ArrowRight,
   ArrowLeft,
+  Upload,
+  PencilLine,
 } from "lucide-react";
 import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCreateLotissementDocument } from "@/hooks/useLotissementDocuments";
 import { SignatureTypeSelector } from "@/components/signature/SignatureTypeSelector";
 import {
   generatePVFamille,

@@ -16,8 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { useCreateLotissementDocument } from "@/hooks/useLotissementDocuments";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface AddLotissementDocumentDialogProps {
@@ -52,6 +54,9 @@ export function AddLotissementDocumentDialog({
   onOpenChange,
 }: AddLotissementDocumentDialogProps) {
   const createDocument = useCreateLotissementDocument();
+  const { user } = useAuth();
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     type: "titre_foncier",
@@ -63,6 +68,20 @@ export function AddLotissementDocumentDialog({
     notes: "",
   });
 
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      type: "titre_foncier",
+      status: "pending",
+      reference_number: "",
+      issued_by: "",
+      issued_date: "",
+      expiry_date: "",
+      notes: "",
+    });
+    setFile(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -71,7 +90,35 @@ export function AddLotissementDocumentDialog({
       return;
     }
 
+    if (file && file.size > 20 * 1024 * 1024) {
+      toast.error("Le fichier ne doit pas dépasser 20 Mo");
+      return;
+    }
+
+    setIsUploading(true);
     try {
+      let file_url: string | null = null;
+      let file_size: string | null = null;
+
+      if (file && user?.id) {
+        const safeName = file.name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-zA-Z0-9._-]/g, "-");
+        const filePath = `${user.id}/lotissement-documents/${Date.now()}-${safeName}`;
+        const { error: upErr } = await supabase.storage
+          .from("documents-achats")
+          .upload(filePath, file, { upsert: false, contentType: file.type });
+        if (upErr) throw upErr;
+
+        const { data: signed } = await supabase.storage
+          .from("documents-achats")
+          .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 5);
+
+        file_url = signed?.signedUrl || filePath;
+        file_size = String(file.size);
+      }
+
       await createDocument.mutateAsync({
         lotissement_id: lotissementId,
         name: formData.name.trim(),
@@ -82,28 +129,24 @@ export function AddLotissementDocumentDialog({
         issued_date: formData.issued_date || null,
         expiry_date: formData.expiry_date || null,
         notes: formData.notes.trim() || null,
+        file_url,
+        file_size,
       });
 
       toast.success("Document ajouté avec succès");
       onOpenChange(false);
-      setFormData({
-        name: "",
-        type: "titre_foncier",
-        status: "pending",
-        reference_number: "",
-        issued_by: "",
-        issued_date: "",
-        expiry_date: "",
-        notes: "",
-      });
-    } catch {
-      toast.error("Erreur lors de l'ajout du document");
+      resetForm();
+    } catch (err: any) {
+      console.error("Add document error:", err);
+      toast.error(err?.message || "Erreur lors de l'ajout du document");
+    } finally {
+      setIsUploading(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ajouter un document légal</DialogTitle>
         </DialogHeader>
@@ -117,6 +160,28 @@ export function AddLotissementDocumentDialog({
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="ex: Titre foncier N°12345"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="file">Fichier du document (PDF, image)</Label>
+            <Input
+              id="file"
+              type="file"
+              accept="application/pdf,image/*"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+            {file && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                <span className="truncate">{file.name}</span>
+                <span className="ml-auto text-xs">
+                  {(file.size / 1024 / 1024).toFixed(2)} Mo
+                </span>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Optionnel — max 20 Mo. Le fichier sera téléchargeable depuis la liste.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -215,8 +280,8 @@ export function AddLotissementDocumentDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={createDocument.isPending}>
-              {createDocument.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            <Button type="submit" disabled={isUploading || createDocument.isPending}>
+              {(isUploading || createDocument.isPending) && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Ajouter
             </Button>
           </div>

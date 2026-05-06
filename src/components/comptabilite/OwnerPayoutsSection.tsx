@@ -104,6 +104,8 @@ export function OwnerPayoutsSection({
   const [otpVerifying, setOtpVerifying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const now = new Date();
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+  const lastOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
   const [form, setForm] = useState({
     owner_id: "",
     amount: "",
@@ -111,26 +113,45 @@ export function OwnerPayoutsSection({
     payment_method: "especes",
     recipient_phone: "",
     notes: "",
-    payout_month: now.getMonth() + 1,
-    payout_year: now.getFullYear(),
+    period_start: firstOfMonth,
+    period_end: lastOfMonth,
   });
 
-  // Check if a payout already exists for this owner/month/year
+  // Derive month/year from period_start for backward compat
+  const periodStartDate = form.period_start ? new Date(form.period_start + "T00:00:00") : now;
+  const derivedMonth = periodStartDate.getMonth() + 1;
+  const derivedYear = periodStartDate.getFullYear();
+
+  const formatPeriodLabel = (start: string, end: string): string => {
+    if (!start || !end) return "";
+    const s = new Date(start + "T00:00:00");
+    const e = new Date(end + "T00:00:00");
+    const sameMonth = s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear();
+    const isFullMonth =
+      sameMonth &&
+      s.getDate() === 1 &&
+      e.getDate() === new Date(s.getFullYear(), s.getMonth() + 1, 0).getDate();
+    if (isFullMonth) return `${FRENCH_MONTHS[s.getMonth()]} ${s.getFullYear()}`;
+    const fmt = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+    return `${fmt(s)} → ${fmt(e)}`;
+  };
+
+  // Check if a payout already exists for this owner over the same exact period
   const isDuplicate = payouts.some(
     (p) =>
       p.owner_id === form.owner_id &&
-      p.payout_month === form.payout_month &&
-      p.payout_year === form.payout_year
+      ((p.period_start && p.period_end &&
+        p.period_start === form.period_start &&
+        p.period_end === form.period_end) ||
+        (!p.period_start &&
+          p.payout_month === derivedMonth &&
+          p.payout_year === derivedYear))
   );
 
-  // Compute net amount for a given owner and month/year
-  const computeNetAmount = (ownerId: string, month: number, year: number): string => {
+  // Compute net amount for a given owner and custom period
+  const computeNetAmount = (ownerId: string, periodStart: string, periodEnd: string): string => {
     const owner = owners.find((o) => o.id === ownerId) as OwnerWithManagementType | undefined;
-    if (!owner) return "";
-
-    const periodStart = `${year}-${String(month).padStart(2, "0")}-01`;
-    const lastDay = new Date(year, month, 0).getDate();
-    const periodEnd = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    if (!owner || !periodStart || !periodEnd) return "";
 
     const ownerProps = properties.filter((p) => p.owner_id === ownerId);
     const ownerPropIds = ownerProps.map((p) => p.id);
@@ -166,18 +187,18 @@ export function OwnerPayoutsSection({
   };
 
   const handleOwnerChange = (ownerId: string) => {
-    const amount = computeNetAmount(ownerId, form.payout_month, form.payout_year);
+    const amount = computeNetAmount(ownerId, form.period_start, form.period_end);
     setForm({ ...form, owner_id: ownerId, amount });
   };
 
-  const handleMonthChange = (month: number) => {
-    const amount = form.owner_id ? computeNetAmount(form.owner_id, month, form.payout_year) : form.amount;
-    setForm({ ...form, payout_month: month, amount });
+  const handlePeriodStartChange = (value: string) => {
+    const amount = form.owner_id ? computeNetAmount(form.owner_id, value, form.period_end) : form.amount;
+    setForm({ ...form, period_start: value, amount });
   };
 
-  const handleYearChange = (year: number) => {
-    const amount = form.owner_id ? computeNetAmount(form.owner_id, form.payout_month, year) : form.amount;
-    setForm({ ...form, payout_year: year, amount });
+  const handlePeriodEndChange = (value: string) => {
+    const amount = form.owner_id ? computeNetAmount(form.owner_id, form.period_start, value) : form.amount;
+    setForm({ ...form, period_end: value, amount });
   };
 
   const isCashPayment = form.payment_method === "especes";

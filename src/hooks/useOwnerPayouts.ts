@@ -74,6 +74,8 @@ export function useCreateOwnerPayout() {
       recipient_phone?: string;
       notes?: string;
       payment_proof_url?: string;
+      period_start?: string;
+      period_end?: string;
     }) => {
       if (!user) throw new Error("Non authentifié");
 

@@ -239,8 +239,10 @@ export function OwnerPayoutsSection({
         amount: Number(form.amount),
         payout_date: form.payout_date,
         payment_method: form.payment_method,
-        payout_month: form.payout_month,
-        payout_year: form.payout_year,
+        payout_month: derivedMonth,
+        payout_year: derivedYear,
+        period_start: form.period_start,
+        period_end: form.period_end,
         recipient_phone: form.recipient_phone || undefined,
         notes: form.notes || undefined,
         payment_proof_url: proofUrl,
@@ -253,6 +255,8 @@ export function OwnerPayoutsSection({
           setOtpCode("");
           setOtpVerified(false);
           const now = new Date();
+          const fom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+          const lom = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
           setForm({
             owner_id: "",
             amount: "",
@@ -260,8 +264,8 @@ export function OwnerPayoutsSection({
             payment_method: "especes",
             recipient_phone: "",
             notes: "",
-            payout_month: now.getMonth() + 1,
-            payout_year: now.getFullYear(),
+            period_start: fom,
+            period_end: lom,
           });
         },
       }

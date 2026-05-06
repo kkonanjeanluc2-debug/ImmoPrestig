@@ -13,22 +13,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  Users, 
-  Handshake, 
-  Wallet, 
-  Download, 
-  Plus, 
+import {
+  FileText,
+  Users,
+  Handshake,
+  Wallet,
+  Download,
+  Plus,
   Trash2,
   Loader2,
   PenTool,
   CheckCircle2,
   ArrowRight,
   ArrowLeft,
+  Upload,
+  PencilLine,
 } from "lucide-react";
 import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCreateLotissementDocument } from "@/hooks/useLotissementDocuments";
 import { SignatureTypeSelector } from "@/components/signature/SignatureTypeSelector";
 import {
   generatePVFamille,
@@ -87,11 +92,16 @@ export function GenerateLotissementDocumentDialog({
   onOpenChange,
 }: GenerateLotissementDocumentDialogProps) {
   const { data: agency } = useAgency();
+  const { user } = useAuth();
+  const createLotissementDocument = useCreateLotissementDocument();
   const [selectedType, setSelectedType] = useState<DocumentType | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [signingStep, setSigningStep] = useState<"form" | "signatures">("form");
   const [currentSignerIndex, setCurrentSignerIndex] = useState(0);
   const [signerCategory, setSignerCategory] = useState<"members" | "witnesses">("members");
+  const [pvMode, setPvMode] = useState<"form" | "upload">("form");
+  const [pvUploadFile, setPvUploadFile] = useState<File | null>(null);
+  const [isUploadingPv, setIsUploadingPv] = useState(false);
 
   // Form states for each document type
   const [pvFamilleData, setPvFamilleData] = useState<PVFamilleData>(() => 
@@ -155,6 +165,56 @@ export function GenerateLotissementDocumentDialog({
     }
     setCurrentSignerIndex(0);
     setSigningStep("signatures");
+  };
+
+  const handleUploadPvFamille = async () => {
+    if (!pvUploadFile) {
+      toast.error("Veuillez sélectionner un fichier PDF");
+      return;
+    }
+    if (!user?.id) {
+      toast.error("Vous devez être connecté");
+      return;
+    }
+    if (pvUploadFile.type !== "application/pdf") {
+      toast.error("Le fichier doit être un PDF");
+      return;
+    }
+    if (pvUploadFile.size > 10 * 1024 * 1024) {
+      toast.error("Le fichier ne doit pas dépasser 10 Mo");
+      return;
+    }
+    setIsUploadingPv(true);
+    try {
+      const safeName = pvUploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+      const filePath = `${user.id}/lotissement-pv-famille/${Date.now()}-${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from("documents-achats")
+        .upload(filePath, pvUploadFile, { upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: signed } = await supabase.storage
+        .from("documents-achats")
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 5);
+
+      await createLotissementDocument.mutateAsync({
+        lotissement_id: lotissementId,
+        name: `PV de Famille - ${lotissementName}`,
+        type: "pv_famille",
+        status: "valid",
+        file_url: signed?.signedUrl || filePath,
+        file_size: String(pvUploadFile.size),
+      });
+
+      toast.success("PV de Famille importé avec succès");
+      setPvUploadFile(null);
+      onOpenChange(false);
+    } catch (err: any) {
+      console.error("Upload PV error:", err);
+      toast.error(err?.message || "Erreur lors de l'importation");
+    } finally {
+      setIsUploadingPv(false);
+    }
   };
 
   const handleGenerate = async () => {
@@ -304,7 +364,44 @@ export function GenerateLotissementDocumentDialog({
     switch (selectedType) {
       case "pv_famille":
         return (
-          <ScrollArea className="h-[60vh] pr-4">
+          <div className="space-y-4">
+            <Tabs value={pvMode} onValueChange={(v) => setPvMode(v as "form" | "upload")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="form" className="gap-2">
+                  <PencilLine className="h-4 w-4" />
+                  Remplir le formulaire
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="gap-2">
+                  <Upload className="h-4 w-4" />
+                  Importer un PDF
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="upload" className="mt-4">
+                <div className="space-y-4 rounded-lg border border-dashed p-6">
+                  <div className="space-y-2">
+                    <Label>Fichier PDF du PV de Famille</Label>
+                    <Input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) => setPvUploadFile(e.target.files?.[0] || null)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Importez un PV de Famille déjà signé (PDF, max 10 Mo).
+                    </p>
+                  </div>
+                  {pvUploadFile && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <FileText className="h-4 w-4" />
+                      <span className="truncate">{pvUploadFile.name}</span>
+                      <span className="ml-auto text-xs">
+                        {(pvUploadFile.size / 1024 / 1024).toFixed(2)} Mo
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="form" className="mt-4">
+          <ScrollArea className="h-[55vh] pr-4">
             <div className="space-y-6">
               {/* Informations de la famille */}
               <div className="space-y-4">
@@ -520,6 +617,9 @@ export function GenerateLotissementDocumentDialog({
               </div>
             </div>
           </ScrollArea>
+              </TabsContent>
+            </Tabs>
+          </div>
         );
 
       case "convention":
@@ -1215,10 +1315,21 @@ export function GenerateLotissementDocumentDialog({
                 Annuler
               </Button>
               {selectedType === "pv_famille" ? (
-                <Button onClick={startSigningProcess}>
-                  <PenTool className="h-4 w-4 mr-2" />
-                  Passer aux signatures
-                </Button>
+                pvMode === "upload" ? (
+                  <Button onClick={handleUploadPvFamille} disabled={isUploadingPv || !pvUploadFile}>
+                    {isUploadingPv ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    Importer le PDF
+                  </Button>
+                ) : (
+                  <Button onClick={startSigningProcess}>
+                    <PenTool className="h-4 w-4 mr-2" />
+                    Passer aux signatures
+                  </Button>
+                )
               ) : (
                 <Button onClick={handleGenerate} disabled={isGenerating}>
                   {isGenerating ? (

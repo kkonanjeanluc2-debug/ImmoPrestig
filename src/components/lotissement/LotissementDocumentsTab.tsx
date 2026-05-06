@@ -20,12 +20,14 @@ import {
   CheckCircle,
   Clock,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useLotissementDocuments, useDeleteLotissementDocument } from "@/hooks/useLotissementDocuments";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AddLotissementDocumentDialog } from "./AddLotissementDocumentDialog";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface LotissementDocumentsTabProps {

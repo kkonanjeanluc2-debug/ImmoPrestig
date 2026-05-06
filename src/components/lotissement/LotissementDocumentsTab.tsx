@@ -167,10 +167,18 @@ export function LotissementDocumentsTab({ lotissementId, lotissementName }: Loti
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       {doc.file_url && (
-                        <Button variant="ghost" size="icon" asChild>
-                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                            <Download className="h-4 w-4" />
-                          </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(doc.file_url!, doc.id)}
+                          disabled={downloadingId === doc.id}
+                        >
+                          {downloadingId === doc.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5 mr-1" />
+                          )}
+                          Télécharger
                         </Button>
                       )}
                       {canDelete && (

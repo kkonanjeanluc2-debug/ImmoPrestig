@@ -88,10 +88,15 @@ export function CreateUnpaidCaseDialog({ open, onOpenChange, preselectedTenantId
     if (!firstPayment || !tenant || !activeTenantId) return;
 
     try {
+      // Virtual payments have ids like "auto-..." which are not valid UUIDs
+      const realPaymentId = firstPayment.id && !String(firstPayment.id).startsWith("auto-")
+        ? firstPayment.id
+        : null;
+
       await createCase.mutateAsync({
         tenant_id: activeTenantId,
         property_id: tenant?.property_id || null,
-        payment_id: firstPayment.id,
+        payment_id: realPaymentId,
         amount_due: totalAmount,
         due_date: earliestDueDate,
         days_late: maxDaysLate,
@@ -99,8 +104,9 @@ export function CreateUnpaidCaseDialog({ open, onOpenChange, preselectedTenantId
       });
       toast.success("Dossier d'impayé créé avec succès");
       onOpenChange(false);
-    } catch (err) {
-      toast.error("Erreur lors de la création du dossier");
+    } catch (err: any) {
+      console.error("CreateUnpaidCase error:", err);
+      toast.error(err?.message || "Erreur lors de la création du dossier");
     }
   };
 

@@ -15,6 +15,8 @@ export interface OwnerPayout {
   recipient_phone: string | null;
   notes: string | null;
   payment_proof_url: string | null;
+  period_start: string | null;
+  period_end: string | null;
   status: string;
   created_at: string;
   updated_at: string;

@@ -104,8 +104,9 @@ export function CreateUnpaidCaseDialog({ open, onOpenChange, preselectedTenantId
       });
       toast.success("Dossier d'impayé créé avec succès");
       onOpenChange(false);
-    } catch (err) {
-      toast.error("Erreur lors de la création du dossier");
+    } catch (err: any) {
+      console.error("CreateUnpaidCase error:", err);
+      toast.error(err?.message || "Erreur lors de la création du dossier");
     }
   };
 

@@ -1613,6 +1613,8 @@ export type Database = {
           lotissement_id: string
           next_steps: string | null
           parcelle_id: string | null
+          proof_size: string | null
+          proof_url: string | null
           result: string | null
           start_date: string
           status: string
@@ -1635,6 +1637,8 @@ export type Database = {
           lotissement_id: string
           next_steps?: string | null
           parcelle_id?: string | null
+          proof_size?: string | null
+          proof_url?: string | null
           result?: string | null
           start_date?: string
           status?: string
@@ -1657,6 +1661,8 @@ export type Database = {
           lotissement_id?: string
           next_steps?: string | null
           parcelle_id?: string | null
+          proof_size?: string | null
+          proof_url?: string | null
           result?: string | null
           start_date?: string
           status?: string

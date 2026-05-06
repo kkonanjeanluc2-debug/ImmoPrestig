@@ -186,6 +186,7 @@ export const generatePayoutReceiptPDF = async (
   addPDFFooter(doc, agency, "Reçu de reversement");
 
   // Download
-  const filename = `Recu_reversement_${data.ownerName.replace(/\s+/g, "_")}_${FRENCH_MONTHS[data.payoutMonth - 1]}_${data.payoutYear}.pdf`;
+  const safePeriod = periodLabel.replace(/[^\w]+/g, "_");
+  const filename = `Recu_reversement_${data.ownerName.replace(/\s+/g, "_")}_${safePeriod}.pdf`;
   doc.save(filename);
 };

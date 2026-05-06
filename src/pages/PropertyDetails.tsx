@@ -89,14 +89,20 @@ const PropertyDetails = () => {
     }
   };
 
-  const handleGeneratePropertyReport = async (month: number, year: number) => {
+  const handleGeneratePropertyReport = async (startDate: Date, endDate: Date) => {
     if (!property) return;
     setGeneratingPDF(true);
     try {
-      const selectedDate = new Date(year, month, 1);
-      const monthStart = startOfMonth(selectedDate);
-      const monthEnd = endOfMonth(selectedDate);
-      const periodLabel = format(selectedDate, "MMMM yyyy", { locale: fr });
+      const monthStart = startDate;
+      const monthEnd = endDate;
+      const isFullMonth =
+        startDate.getDate() === 1 &&
+        format(endOfMonth(startDate), "yyyy-MM-dd") === format(endDate, "yyyy-MM-dd") &&
+        startDate.getMonth() === endDate.getMonth() &&
+        startDate.getFullYear() === endDate.getFullYear();
+      const periodLabel = isFullMonth
+        ? format(startDate, "MMMM yyyy", { locale: fr })
+        : `Du ${format(startDate, "dd/MM/yyyy", { locale: fr })} au ${format(endDate, "dd/MM/yyyy", { locale: fr })}`;
 
       // Get tenants for this property
       const propertyTenants = tenants.filter(t => t.property_id === property.id);

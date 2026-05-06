@@ -162,17 +162,23 @@ const OwnerDetails = () => {
     }
   };
 
-  const handleGenerateMonthlyReport = async (month: number, year: number) => {
+  const handleGenerateMonthlyReport = async (startDate: Date, endDate: Date) => {
     if (!owner) return;
     
     setGeneratingPDF(true);
     try {
-      const selectedDate = new Date(year, month, 1);
-      const monthStart = startOfMonth(selectedDate);
-      const monthEnd = endOfMonth(selectedDate);
-      const periodMonth = month;
-      const periodYear = year;
-      const periodLabel = format(selectedDate, "MMMM yyyy", { locale: fr });
+      const monthStart = startDate;
+      const monthEnd = endDate;
+      const isFullMonth =
+        startDate.getDate() === 1 &&
+        format(endOfMonth(startDate), "yyyy-MM-dd") === format(endDate, "yyyy-MM-dd") &&
+        startDate.getMonth() === endDate.getMonth() &&
+        startDate.getFullYear() === endDate.getFullYear();
+      const periodMonth = startDate.getMonth();
+      const periodYear = startDate.getFullYear();
+      const periodLabel = isFullMonth
+        ? format(startDate, "MMMM yyyy", { locale: fr })
+        : `Du ${format(startDate, "dd/MM/yyyy", { locale: fr })} au ${format(endDate, "dd/MM/yyyy", { locale: fr })}`;
 
       // Helper to get unit number (Supabase may return array or object)
       const getUnitNumber = (tenant: any): string | null => {

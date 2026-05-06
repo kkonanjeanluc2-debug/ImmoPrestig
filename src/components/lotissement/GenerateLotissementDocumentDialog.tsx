@@ -167,6 +167,56 @@ export function GenerateLotissementDocumentDialog({
     setSigningStep("signatures");
   };
 
+  const handleUploadPvFamille = async () => {
+    if (!pvUploadFile) {
+      toast.error("Veuillez sélectionner un fichier PDF");
+      return;
+    }
+    if (!user?.id) {
+      toast.error("Vous devez être connecté");
+      return;
+    }
+    if (pvUploadFile.type !== "application/pdf") {
+      toast.error("Le fichier doit être un PDF");
+      return;
+    }
+    if (pvUploadFile.size > 10 * 1024 * 1024) {
+      toast.error("Le fichier ne doit pas dépasser 10 Mo");
+      return;
+    }
+    setIsUploadingPv(true);
+    try {
+      const safeName = pvUploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+      const filePath = `${user.id}/lotissement-pv-famille/${Date.now()}-${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from("documents-achats")
+        .upload(filePath, pvUploadFile, { upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: signed } = await supabase.storage
+        .from("documents-achats")
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 5);
+
+      await createLotissementDocument.mutateAsync({
+        lotissement_id: lotissementId,
+        name: `PV de Famille - ${lotissementName}`,
+        type: "pv_famille",
+        status: "valid",
+        file_url: signed?.signedUrl || filePath,
+        file_size: String(pvUploadFile.size),
+      });
+
+      toast.success("PV de Famille importé avec succès");
+      setPvUploadFile(null);
+      onOpenChange(false);
+    } catch (err: any) {
+      console.error("Upload PV error:", err);
+      toast.error(err?.message || "Erreur lors de l'importation");
+    } finally {
+      setIsUploadingPv(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!selectedType) return;
 

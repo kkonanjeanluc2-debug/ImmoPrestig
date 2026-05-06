@@ -33,7 +33,15 @@ import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
-import { differenceInDays, isFuture, isPast, format } from "date-fns";
+import { differenceInDays, differenceInMonths, isFuture, isPast, format } from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { usePayments } from "@/hooks/usePayments";
 import { useReceiptTemplates } from "@/hooks/useReceiptTemplates";
 import { PeriodFilter, PeriodValue, getDefaultPeriod } from "@/components/dashboard/PeriodFilter";
@@ -603,220 +611,186 @@ export default function Payments() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="divide-y divide-border">
-                      {filteredPayments.map((payment) => {
-                        const effectiveStatus = getEffectiveStatus(payment);
-                        const status = statusConfig[effectiveStatus as keyof typeof statusConfig] || statusConfig.pending;
-                        const StatusIcon = status.icon;
-                        const tenant = payment.tenant as any;
-                        const tenantName = tenant?.name || 'Locataire inconnu';
-                        const propertyTitle = tenant?.property?.title || 'Bien non assigné';
-                        const unitData = tenant?.unit;
-                        const unitNumber = Array.isArray(unitData) ? unitData[0]?.unit_number : unitData?.unit_number;
-                        const assignedTo = tenant?.property?.assigned_to;
-                        const gestionnaireName = assignedTo && gestionnaireProfiles ? gestionnaireProfiles.get(assignedTo) : undefined;
-                        const commissionInfo = getCommissionInfo(payment);
-                        
-                        // Check if payment is due within the next 7 days
-                        const dueDate = new Date(payment.due_date);
-                        const daysUntilDue = differenceInDays(dueDate, new Date());
-                        const isDueSoon = payment.status !== 'paid' && isFuture(dueDate) && daysUntilDue <= 7 && daysUntilDue >= 0;
-                        const isOverdue = payment.status !== 'paid' && isPast(dueDate) && daysUntilDue < 0;
-                        
-                        return (
-                          <div
-                            key={payment.id}
-                            className={cn(
-                              "p-4 sm:p-5 transition-colors",
-                              isDueSoon ? "bg-orange-500/5 hover:bg-orange-500/10 border-l-4 border-l-orange-500" : 
-                              isOverdue ? "bg-destructive/5 hover:bg-destructive/10 border-l-4 border-l-destructive" : 
-                              "hover:bg-muted/30"
-                            )}
-                          >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              <div className="flex items-start gap-3">
-                                <div className={cn(
-                                  "p-2 rounded-lg",
-                                  effectiveStatus === "paid" ? "bg-emerald/10" :
-                                  effectiveStatus === "impaye" ? "bg-destructive/10" :
-                                  effectiveStatus === "late" ? "bg-red-500/10" :
-                                  effectiveStatus === "pending" ? "bg-amber-500/10" : "bg-blue-500/10"
-                                )}>
-                                  <StatusIcon className={cn("h-4 w-4", status.className.split(' ').find(c => c.startsWith('text-')))} />
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="font-medium text-foreground">{tenantName}</p>
-                                    <Badge variant="outline" className={cn("text-xs", status.className)}>
-                                      {status.label}
-                                    </Badge>
-                                    {isDueSoon && (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/20 text-orange-600 dark:text-orange-400">
-                                        <AlertCircle className="h-3 w-3" />
-                                        {daysUntilDue === 0 ? "Aujourd'hui" : `Dans ${daysUntilDue} jour${daysUntilDue > 1 ? 's' : ''}`}
-                                      </span>
-                                    )}
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/40 hover:bg-muted/40">
+                            <TableHead className="font-semibold">Locataire</TableHead>
+                            <TableHead className="font-semibold">Bien</TableHead>
+                            <TableHead className="font-semibold">Échéance</TableHead>
+                            <TableHead className="font-semibold">Date paiement</TableHead>
+                            <TableHead className="font-semibold text-right">Montant</TableHead>
+                            <TableHead className="font-semibold">Statut</TableHead>
+                            <TableHead className="font-semibold">Mode</TableHead>
+                            <TableHead className="font-semibold text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredPayments.map((payment) => {
+                            const effectiveStatus = getEffectiveStatus(payment);
+                            const tenant = payment.tenant as any;
+                            const tenantName = tenant?.name || 'Locataire inconnu';
+                            const propertyTitle = tenant?.property?.title || 'Bien non assigné';
+                            const unitData = tenant?.unit;
+                            const unitNumber = Array.isArray(unitData) ? unitData[0]?.unit_number : unitData?.unit_number;
+                            const assignedTo = tenant?.property?.assigned_to;
+                            const gestionnaireName = assignedTo && gestionnaireProfiles ? gestionnaireProfiles.get(assignedTo) : undefined;
+                            const commissionInfo = getCommissionInfo(payment);
+
+                            const dueDate = new Date(payment.due_date);
+                            const isPaid = effectiveStatus === "paid";
+                            const monthsLate = !isPaid
+                              ? Math.max(differenceInMonths(new Date(), dueDate), differenceInDays(new Date(), dueDate) > 0 ? 1 : 0)
+                              : 0;
+
+                            // Status pill: "À jour" si payé, sinon "X mois de retard" (ou "À venir" si futur)
+                            let statusLabel = "À jour";
+                            let statusClass = "bg-emerald/10 text-emerald border-emerald/30";
+                            if (!isPaid) {
+                              if (isFuture(dueDate)) {
+                                statusLabel = "À venir";
+                                statusClass = "bg-blue-500/10 text-blue-600 border-blue-500/30";
+                              } else if (monthsLate > 0) {
+                                statusLabel = `${monthsLate} mois de retard`;
+                                statusClass = monthsLate >= 2
+                                  ? "bg-destructive/10 text-destructive border-destructive/30"
+                                  : "bg-red-500/10 text-red-600 border-red-500/30";
+                              } else {
+                                statusLabel = "En attente";
+                                statusClass = "bg-amber-500/10 text-amber-600 border-amber-500/30";
+                              }
+                            }
+
+                            const paidAmount = Number((payment as any).paid_amount || 0);
+                            const isPartial = !isPaid && paidAmount > 0;
+
+                            return (
+                              <TableRow key={payment.id} className="group">
+                                <TableCell>
+                                  <div className="font-medium text-foreground">{tenantName}</div>
+                                  {tenant?.phone && (
+                                    <div className="text-xs text-muted-foreground">{tenant.phone}</div>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1.5 text-sm">
+                                    <Home className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    <span className="truncate max-w-[200px]">{propertyTitle}</span>
                                   </div>
-                                  <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Home className="h-3 w-3" />
-                                      <span className="truncate max-w-[150px]">{propertyTitle}</span>
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <CalendarIcon className="h-3 w-3" />
-                                      Échéance: {dueDate.toLocaleDateString('fr-FR')}
-                                    </span>
-                                    {payment.paid_date && (
-                                      <span className="flex items-center gap-1 text-emerald">
-                                        <CheckCircle className="h-3 w-3" />
-                                        Payé le {new Date(payment.paid_date).toLocaleDateString('fr-FR')}
-                                      </span>
-                                    )}
-                                    {payment.method && (
-                                      <span className="text-muted-foreground">
-                                        via {payment.method}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {/* Partial payment progress */}
-                                  {Number((payment as any).paid_amount || 0) > 0 && payment.status !== 'paid' && (
-                                    <div className="mt-2 space-y-1">
-                                      <div className="flex items-center gap-2 text-xs">
-                                        <span className="text-emerald font-medium">
-                                          Payé : {formatCurrency(Number((payment as any).paid_amount))}
-                                        </span>
-                                        <span className="text-muted-foreground">•</span>
-                                        <span className="text-destructive font-medium">
-                                          Reste : {formatCurrency(Number(payment.amount) - Number((payment as any).paid_amount))}
-                                        </span>
-                                      </div>
-                                      <div className="w-full max-w-[200px] bg-muted rounded-full h-1.5">
-                                        <div 
-                                          className="bg-emerald h-1.5 rounded-full transition-all" 
-                                          style={{ width: `${Math.min((Number((payment as any).paid_amount) / Number(payment.amount)) * 100, 100)}%` }}
-                                        />
-                                      </div>
+                                  {unitNumber && (
+                                    <div className="text-xs text-muted-foreground mt-0.5">Porte {unitNumber}</div>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-sm whitespace-nowrap">
+                                  {format(dueDate, "dd/MM/yyyy")}
+                                </TableCell>
+                                <TableCell className="text-sm whitespace-nowrap">
+                                  {payment.paid_date ? format(new Date(payment.paid_date), "dd/MM/yyyy") : <span className="text-muted-foreground">—</span>}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="font-semibold whitespace-nowrap">{formatCurrency(Number(payment.amount))}</div>
+                                  {isPartial && (
+                                    <div className="text-xs text-emerald mt-0.5">
+                                      Payé : {formatCurrency(paidAmount)}
                                     </div>
                                   )}
-                                  {/* Display paid months */}
-                                  {(payment as any).payment_months && (payment as any).payment_months.length > 0 && (
-                                    <div className="flex flex-wrap items-center gap-1 mt-2">
-                                      <span className="text-xs text-muted-foreground">
-                                        {(payment as any)._consumedMonth ? "Mois consommé :" : "Mois :"}
-                                      </span>
-                                      {(payment as any).payment_months.map((month: string) => (
-                                        <Badge
-                                          key={month}
-                                          variant="secondary"
-                                          className={`text-xs py-0 ${(payment as any)._consumedMonth ? "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-200" : ""}`}
-                                        >
-                                          {(payment as any)._consumedMonth && (
-                                            <span className="mr-1">📅</span>
-                                          )}
-                                          {month}
-                                          {(payment as any)._consumedMonth && (
-                                            <span className="ml-1 text-[10px] opacity-75">(consommé)</span>
-                                          )}
-                                        </Badge>
-                                      ))}
-                                      {(payment as any)._paymentTiming === 'postpaid' && (
-                                        <Badge variant="outline" className="text-xs py-0 border-amber-400 text-amber-700 dark:text-amber-300">
-                                          Postpayé
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-between sm:justify-end gap-2 pl-11 sm:pl-0">
-                                <span className="text-lg font-bold text-foreground whitespace-nowrap">
-                                  {formatCurrency(Number(payment.amount))}
-                                </span>
-                                {/* Show receipt for paid OR partial payments */}
-                                {(payment.status === "paid" || Number((payment as any).paid_amount || 0) > 0) && (
-                                  <ReceiptActions
-                                    paymentId={payment.id}
-                                    tenantId={payment.tenant_id}
-                                    tenantName={tenantName}
-                                    tenantEmail={tenant?.email || null}
-                                    tenantPhone={tenant?.phone || null}
-                                    propertyTitle={propertyTitle}
-                                    propertyAddress={tenant?.property?.address}
-                                    amount={Number((payment as any).paid_amount || payment.amount)}
-                                    paidDate={payment.paid_date || payment.due_date}
-                                    dueDate={payment.due_date}
-                                    method={payment.method || undefined}
-                                    paymentMonths={(payment as any).payment_months || undefined}
-                                    isTenantView={isLocataire}
-                                    unitNumber={unitNumber || undefined}
-                                    gestionnaireName={gestionnaireName || undefined}
-                                    ownerName={owners.find(o => o.id === tenant?.property?.owner_id)?.name}
-                                    initialTemplate={receiptTemplates.find(t => t.id === owners.find(o => o.id === tenant?.property?.owner_id)?.receipt_template_id) || null}
-                                    totalRentAmount={Number(payment.amount)}
-                                    remainingAmount={Number(payment.amount) - Number((payment as any).paid_amount || payment.amount)}
-                                  />
-                                )}
-                                {payment.status !== "paid" && isLocataire && (
-                                  <TenantPayRentDialog
-                                    paymentId={payment.id}
-                                    amount={Number(payment.amount)}
-                                    paidAmount={Number((payment as any).paid_amount || 0)}
-                                    dueDate={payment.due_date}
-                                    propertyTitle={propertyTitle}
-                                    tenantPhone={tenant?.phone}
-                                    agencyUserId={payment.user_id}
-                                    isVirtual={(payment as any)._isVirtual || false}
-                                    tenantId={payment.tenant_id}
-                                    paymentMonths={(payment as any).payment_months || undefined}
-                                  />
-                                )}
-                                {payment.status !== "paid" && canSendReminders && !isLocataire && (
-                                    <SendReminderDialog
-                                      paymentId={payment.id}
-                                      tenantId={payment.tenant_id}
-                                      tenantName={tenantName}
-                                      tenantEmail={tenant?.email || null}
-                                      tenantPhone={tenant?.phone || null}
-                                      propertyTitle={propertyTitle}
-                                      amount={Number(payment.amount)}
-                                      dueDate={payment.due_date}
-                                      status={payment.status}
-                                    />
-                                )}
-                                {payment.status !== "paid" && canEdit && !isLocataire && (
-                                    <CollectPaymentDialog
-                                      paymentId={payment.id}
-                                      tenantName={tenantName}
-                                      tenantEmail={tenant?.email || null}
-                                      amount={Number(payment.amount)}
-                                      paidAmount={Number((payment as any).paid_amount || 0)}
-                                      dueDate={payment.due_date}
-                                      propertyTitle={propertyTitle}
-                                      currentMethod={payment.method}
-                                      commissionPercentage={commissionInfo.percentage}
-                                      commissionAmount={commissionInfo.amount}
-                                      paymentMonths={(payment as any).payment_months || undefined}
-                                      isVirtual={(payment as any)._isVirtual || false}
-                                      tenantId={payment.tenant_id}
-                                    />
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {filteredPayments.length === 0 && (
-                        <div className="p-8 text-center">
-                          <Wallet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground">
-                            {visiblePayments.length === 0 
-                              ? "Aucun paiement enregistré."
-                              : "Aucun paiement trouvé."}
-                          </p>
-                        </div>
-                      )}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={cn("font-medium whitespace-nowrap", statusClass)}>
+                                    {statusLabel}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground capitalize">
+                                  {payment.method || "—"}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center justify-end gap-1">
+                                    {(payment.status === "paid" || paidAmount > 0) && (
+                                      <ReceiptActions
+                                        paymentId={payment.id}
+                                        tenantId={payment.tenant_id}
+                                        tenantName={tenantName}
+                                        tenantEmail={tenant?.email || null}
+                                        tenantPhone={tenant?.phone || null}
+                                        propertyTitle={propertyTitle}
+                                        propertyAddress={tenant?.property?.address}
+                                        amount={Number(paidAmount || payment.amount)}
+                                        paidDate={payment.paid_date || payment.due_date}
+                                        dueDate={payment.due_date}
+                                        method={payment.method || undefined}
+                                        paymentMonths={(payment as any).payment_months || undefined}
+                                        isTenantView={isLocataire}
+                                        unitNumber={unitNumber || undefined}
+                                        gestionnaireName={gestionnaireName || undefined}
+                                        ownerName={owners.find(o => o.id === tenant?.property?.owner_id)?.name}
+                                        initialTemplate={receiptTemplates.find(t => t.id === owners.find(o => o.id === tenant?.property?.owner_id)?.receipt_template_id) || null}
+                                        totalRentAmount={Number(payment.amount)}
+                                        remainingAmount={Number(payment.amount) - Number(paidAmount || payment.amount)}
+                                      />
+                                    )}
+                                    {payment.status !== "paid" && isLocataire && (
+                                      <TenantPayRentDialog
+                                        paymentId={payment.id}
+                                        amount={Number(payment.amount)}
+                                        paidAmount={paidAmount}
+                                        dueDate={payment.due_date}
+                                        propertyTitle={propertyTitle}
+                                        tenantPhone={tenant?.phone}
+                                        agencyUserId={payment.user_id}
+                                        isVirtual={(payment as any)._isVirtual || false}
+                                        tenantId={payment.tenant_id}
+                                        paymentMonths={(payment as any).payment_months || undefined}
+                                      />
+                                    )}
+                                    {payment.status !== "paid" && canSendReminders && !isLocataire && (
+                                      <SendReminderDialog
+                                        paymentId={payment.id}
+                                        tenantId={payment.tenant_id}
+                                        tenantName={tenantName}
+                                        tenantEmail={tenant?.email || null}
+                                        tenantPhone={tenant?.phone || null}
+                                        propertyTitle={propertyTitle}
+                                        amount={Number(payment.amount)}
+                                        dueDate={payment.due_date}
+                                        status={payment.status}
+                                      />
+                                    )}
+                                    {payment.status !== "paid" && canEdit && !isLocataire && (
+                                      <CollectPaymentDialog
+                                        paymentId={payment.id}
+                                        tenantName={tenantName}
+                                        tenantEmail={tenant?.email || null}
+                                        amount={Number(payment.amount)}
+                                        paidAmount={paidAmount}
+                                        dueDate={payment.due_date}
+                                        propertyTitle={propertyTitle}
+                                        currentMethod={payment.method}
+                                        commissionPercentage={commissionInfo.percentage}
+                                        commissionAmount={commissionInfo.amount}
+                                        paymentMonths={(payment as any).payment_months || undefined}
+                                        isVirtual={(payment as any)._isVirtual || false}
+                                        tenantId={payment.tenant_id}
+                                      />
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                          {filteredPayments.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-12">
+                                <Wallet className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                                <p className="text-muted-foreground">
+                                  {visiblePayments.length === 0
+                                    ? "Aucun paiement enregistré."
+                                    : "Aucun paiement trouvé."}
+                                </p>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
                     </div>
                   </CardContent>
                 </Card>

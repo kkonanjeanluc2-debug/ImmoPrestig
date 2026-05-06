@@ -502,10 +502,10 @@ const OwnerDetails = () => {
         ).length;
 
         let displayStatus: string | undefined;
-        if (status === "paid" && unpaidMonths === 0) {
-          displayStatus = "A jour";
-        } else if (unpaidMonths > 0 && status !== "pending") {
+        if (unpaidMonths > 0) {
           displayStatus = `${unpaidMonths} mois de retard`;
+        } else {
+          displayStatus = "A jour";
         }
 
         return {

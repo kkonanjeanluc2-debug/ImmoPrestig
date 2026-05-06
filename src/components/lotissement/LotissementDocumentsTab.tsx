@@ -65,6 +65,32 @@ export function LotissementDocumentsTab({ lotissementId, lotissementName }: Loti
   const canCreate = hasPermission("can_create_lotissement_documents");
   const canDelete = hasPermission("can_delete_lotissements");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (fileUrl: string, docId: string) => {
+    setDownloadingId(docId);
+    try {
+      let url = fileUrl;
+
+      // If stored value is a path rather than full URL, create a fresh signed URL
+      if (!fileUrl.startsWith("http")) {
+        const { data, error } = await supabase.storage
+          .from("documents-achats")
+          .createSignedUrl(fileUrl, 60 * 5);
+        if (error || !data?.signedUrl) {
+          toast.error("Impossible d'accéder au fichier");
+          return;
+        }
+        url = data.signedUrl;
+      }
+
+      window.open(url, "_blank");
+    } catch {
+      toast.error("Erreur lors du téléchargement");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Supprimer le document "${name}" ?`)) return;

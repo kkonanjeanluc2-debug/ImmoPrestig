@@ -88,10 +88,15 @@ export function CreateUnpaidCaseDialog({ open, onOpenChange, preselectedTenantId
     if (!firstPayment || !tenant || !activeTenantId) return;
 
     try {
+      // Virtual payments have ids like "auto-..." which are not valid UUIDs
+      const realPaymentId = firstPayment.id && !String(firstPayment.id).startsWith("auto-")
+        ? firstPayment.id
+        : null;
+
       await createCase.mutateAsync({
         tenant_id: activeTenantId,
         property_id: tenant?.property_id || null,
-        payment_id: firstPayment.id,
+        payment_id: realPaymentId,
         amount_due: totalAmount,
         due_date: earliestDueDate,
         days_late: maxDaysLate,

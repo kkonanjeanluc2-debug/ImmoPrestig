@@ -223,6 +223,8 @@ export function GenerateLotissementDocumentDialog({
     setIsGenerating(true);
     try {
       let doc;
+      let fileName = "";
+      let docLabel = "";
 
       switch (selectedType) {
         case "pv_famille":
@@ -231,7 +233,8 @@ export function GenerateLotissementDocumentDialog({
             return;
           }
           doc = await generatePVFamille(pvFamilleData, lotissement, agency || null);
-          doc.save(`PV_Famille_${lotissementName.replace(/\s+/g, "_")}.pdf`);
+          fileName = `PV_Famille_${lotissementName.replace(/\s+/g, "_")}.pdf`;
+          docLabel = `PV de Famille - ${lotissementName}`;
           break;
 
         case "convention":
@@ -240,7 +243,8 @@ export function GenerateLotissementDocumentDialog({
             return;
           }
           doc = await generateConvention(conventionData, lotissement, agency || null);
-          doc.save(`Convention_${lotissementName.replace(/\s+/g, "_")}.pdf`);
+          fileName = `Convention_${lotissementName.replace(/\s+/g, "_")}.pdf`;
+          docLabel = `Convention - ${lotissementName}`;
           break;
 
         case "contrat_prefinancement":
@@ -249,11 +253,48 @@ export function GenerateLotissementDocumentDialog({
             return;
           }
           doc = await generateContratPrefinancement(prefinancementData, lotissement, agency || null);
-          doc.save(`Contrat_Prefinancement_${lotissementName.replace(/\s+/g, "_")}.pdf`);
+          fileName = `Contrat_Prefinancement_${lotissementName.replace(/\s+/g, "_")}.pdf`;
+          docLabel = `Contrat de Préfinancement - ${lotissementName}`;
           break;
       }
 
-      toast.success("Document généré avec succès");
+      if (!doc) return;
+
+      // Téléchargement local
+      doc.save(fileName);
+
+      // Enregistrement dans le stockage + table lotissement_documents
+      try {
+        if (!user?.id) {
+          toast.warning("Document téléchargé mais non enregistré (utilisateur non connecté)");
+          return;
+        }
+        const blob = doc.output("blob") as Blob;
+        const filePath = `${user.id}/lotissement-${selectedType}/${Date.now()}-${fileName}`;
+        const { error: upErr } = await supabase.storage
+          .from("documents-achats")
+          .upload(filePath, blob, { upsert: false, contentType: "application/pdf" });
+        if (upErr) throw upErr;
+
+        const { data: signed } = await supabase.storage
+          .from("documents-achats")
+          .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 5);
+
+        await createLotissementDocument.mutateAsync({
+          lotissement_id: lotissementId,
+          name: docLabel,
+          type: selectedType,
+          status: "valid",
+          file_url: signed?.signedUrl || filePath,
+          file_size: String(blob.size),
+        });
+
+        toast.success("Document généré et enregistré avec succès");
+        onOpenChange(false);
+      } catch (saveErr: any) {
+        console.error("Save document error:", saveErr);
+        toast.warning(`Document téléchargé mais non enregistré : ${saveErr?.message || "erreur inconnue"}`);
+      }
     } catch (error) {
       console.error("Error generating document:", error);
       toast.error("Erreur lors de la génération du document");

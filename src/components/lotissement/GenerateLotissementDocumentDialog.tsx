@@ -617,6 +617,9 @@ export function GenerateLotissementDocumentDialog({
               </div>
             </div>
           </ScrollArea>
+              </TabsContent>
+            </Tabs>
+          </div>
         );
 
       case "convention":

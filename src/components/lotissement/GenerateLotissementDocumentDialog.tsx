@@ -270,7 +270,11 @@ export function GenerateLotissementDocumentDialog({
           return;
         }
         const blob = doc.output("blob") as Blob;
-        const filePath = `${user.id}/lotissement-${selectedType}/${Date.now()}-${fileName}`;
+        const safeFileName = fileName
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-zA-Z0-9._-]/g, "-");
+        const filePath = `${user.id}/lotissement-${selectedType}/${Date.now()}-${safeFileName}`;
         const { error: upErr } = await supabase.storage
           .from("documents-achats")
           .upload(filePath, blob, { upsert: false, contentType: "application/pdf" });

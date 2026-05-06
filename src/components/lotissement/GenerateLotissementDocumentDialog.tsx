@@ -254,7 +254,7 @@ export function GenerateLotissementDocumentDialog({
           }
           doc = await generateContratPrefinancement(prefinancementData, lotissement, agency || null);
           fileName = `Contrat_Prefinancement_${lotissementName.replace(/\s+/g, "_")}.pdf`;
-          docLabel = `Contrat de Préfinancement - ${lotissementName}`;
+          docLabel = `Contrat - ${prefinancementData.prefinanceurName}`;
           break;
       }
 

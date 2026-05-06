@@ -16,8 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { useCreateDemarcheAdministrative } from "@/hooks/useDemarchesAdministratives";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface AddDemarcheDialogProps {
@@ -59,6 +61,9 @@ export function AddDemarcheDialog({
   onOpenChange,
 }: AddDemarcheDialogProps) {
   const createDemarche = useCreateDemarcheAdministrative();
+  const { user } = useAuth();
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     type: "demande_titre",
@@ -81,7 +86,35 @@ export function AddDemarcheDialog({
       return;
     }
 
+    if (proofFile && proofFile.size > 20 * 1024 * 1024) {
+      toast.error("Le fichier ne doit pas dépasser 20 Mo");
+      return;
+    }
+
+    setIsUploading(true);
     try {
+      let proof_url: string | null = null;
+      let proof_size: string | null = null;
+
+      if (proofFile && user?.id) {
+        const safeName = proofFile.name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-zA-Z0-9._-]/g, "-");
+        const filePath = `${user.id}/demarches/${Date.now()}-${safeName}`;
+        const { error: upErr } = await supabase.storage
+          .from("documents-achats")
+          .upload(filePath, proofFile, { upsert: false, contentType: proofFile.type });
+        if (upErr) throw upErr;
+
+        const { data: signed } = await supabase.storage
+          .from("documents-achats")
+          .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 5);
+
+        proof_url = signed?.signedUrl || filePath;
+        proof_size = String(proofFile.size);
+      }
+
       await createDemarche.mutateAsync({
         lotissement_id: lotissementId,
         parcelle_id: parcelleId || null,
@@ -96,10 +129,13 @@ export function AddDemarcheDialog({
         end_date: formData.end_date || null,
         cost: formData.cost ? parseFloat(formData.cost) : null,
         next_steps: formData.next_steps.trim() || null,
-      });
+        proof_url,
+        proof_size,
+      } as any);
 
       toast.success("Démarche ajoutée avec succès");
       onOpenChange(false);
+      setProofFile(null);
       setFormData({
         title: "",
         type: "demande_titre",
@@ -113,8 +149,11 @@ export function AddDemarcheDialog({
         cost: "",
         next_steps: "",
       });
-    } catch {
-      toast.error("Erreur lors de l'ajout de la démarche");
+    } catch (err: any) {
+      console.error("Add démarche error:", err);
+      toast.error(err?.message || "Erreur lors de l'ajout de la démarche");
+    } finally {
+      setIsUploading(false);
     }
   };
 

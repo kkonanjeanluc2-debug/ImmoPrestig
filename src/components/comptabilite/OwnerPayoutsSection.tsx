@@ -674,6 +674,8 @@ export function OwnerPayoutsSection({
                           payoutDate: payout.payout_date,
                           payoutMonth: payout.payout_month || 1,
                           payoutYear: payout.payout_year || new Date().getFullYear(),
+                          periodStart: payout.period_start || undefined,
+                          periodEnd: payout.period_end || undefined,
                           paymentMethod: payout.payment_method,
                           recipientPhone: payout.recipient_phone,
                           notes: payout.notes,
@@ -688,7 +690,9 @@ export function OwnerPayoutsSection({
                             {payout.owner?.name || "Propriétaire"}
                           </p>
                           <Badge variant="secondary" className="text-xs">
-                            {FRENCH_MONTHS[(payout.payout_month || 1) - 1]} {payout.payout_year}
+                            {payout.period_start && payout.period_end
+                              ? formatPeriodLabel(payout.period_start, payout.period_end)
+                              : `${FRENCH_MONTHS[(payout.payout_month || 1) - 1]} ${payout.payout_year}`}
                           </Badge>
                           <Badge
                             variant="outline"

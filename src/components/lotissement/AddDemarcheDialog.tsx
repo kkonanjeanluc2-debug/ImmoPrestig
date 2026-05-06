@@ -309,12 +309,34 @@ export function AddDemarcheDialog({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="proof">Preuve de la démarche (PDF, image)</Label>
+            <Input
+              id="proof"
+              type="file"
+              accept="application/pdf,image/*"
+              onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+            />
+            {proofFile && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                <span className="truncate">{proofFile.name}</span>
+                <span className="ml-auto text-xs">
+                  {(proofFile.size / 1024 / 1024).toFixed(2)} Mo
+                </span>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Optionnel — max 20 Mo. Récépissé, attestation, courrier, etc.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={createDemarche.isPending}>
-              {createDemarche.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            <Button type="submit" disabled={isUploading || createDemarche.isPending}>
+              {(isUploading || createDemarche.isPending) && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Ajouter
             </Button>
           </div>

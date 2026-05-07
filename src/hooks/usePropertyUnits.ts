@@ -114,11 +114,39 @@ export const useUpdatePropertyUnit = () => {
         .single();
 
       if (error) throw error;
+
+      // If the rent changed, propagate it to the active contract(s) of this unit
+      // so that future receipts/payments use the new amount immediately.
+      if (updates.rent_amount !== undefined && updates.rent_amount !== null) {
+        try {
+          const { data: activeContracts } = await supabase
+            .from("contracts")
+            .select("id, tenant_id")
+            .eq("unit_id", id)
+            .eq("status", "active")
+            .is("deleted_at", null);
+
+          if (activeContracts && activeContracts.length > 0) {
+            const contractIds = activeContracts.map((c: any) => c.id);
+            await supabase
+              .from("contracts")
+              .update({ rent_amount: updates.rent_amount })
+              .in("id", contractIds);
+          }
+        } catch (e) {
+          console.error("Failed to propagate rent change to contracts:", e);
+        }
+      }
+
       return data as PropertyUnit;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["property-units", data.property_id] });
       queryClient.invalidateQueries({ queryKey: ["property-units-all"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["property-tenants"] });
     },
   });
 };

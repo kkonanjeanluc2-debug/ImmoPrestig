@@ -105,6 +105,31 @@ export const useUpdateProperty = () => {
 
       if (error) throw error;
 
+      // If price (= rent for single-unit properties) changed, propagate to active
+      // contracts of this property that have no unit_id, so future receipts reflect
+      // the new rent immediately.
+      if ((updates as any).price !== undefined && (updates as any).price !== null) {
+        try {
+          const { data: activeContracts } = await supabase
+            .from("contracts")
+            .select("id")
+            .eq("property_id", id)
+            .is("unit_id", null)
+            .eq("status", "active")
+            .is("deleted_at", null);
+
+          if (activeContracts && activeContracts.length > 0) {
+            const contractIds = activeContracts.map((c: any) => c.id);
+            await supabase
+              .from("contracts")
+              .update({ rent_amount: (updates as any).price })
+              .in("id", contractIds);
+          }
+        } catch (e) {
+          console.error("Failed to propagate price change to contracts:", e);
+        }
+      }
+
       // Log activity
       if (user) {
         await logActivityDirect(
@@ -121,6 +146,9 @@ export const useUpdateProperty = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
     },
   });
 };

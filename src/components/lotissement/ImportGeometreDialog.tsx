@@ -621,7 +621,7 @@ export const ImportGeometreDialog = ({
 
         if (!plotNumber) continue;
         if (!isValidPlotNumberCandidate(plotNumber)) continue;
-        if (existingPlotNumbers.includes(String(plotNumber))) continue;
+        if (isExistingPlot(ilotName, String(plotNumber))) continue;
 
         // Now find the attributaire data from the table rows
         // Look for data rows (rows that start with a number in first cell)

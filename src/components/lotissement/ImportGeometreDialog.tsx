@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Trash2, Layers, Grid3X3, FileType, Info } from "lucide-react";
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Trash2, Layers, Grid3X3, FileType, Info, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateIlot } from "@/hooks/useIlots";
 import { useCreateParcelle } from "@/hooks/useParcelles";
@@ -73,6 +73,106 @@ export const ImportGeometreDialog = ({
   const handleClose = (open: boolean) => {
     if (!open) reset();
     onOpenChange(open);
+  };
+
+  const downloadTemplate = () => {
+    const htmlContent = `
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset='utf-8'>
+<title>Modèle Guide Lotissement</title>
+<style>
+  body { font-family: 'Arial', sans-serif; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+  td, th { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
+  .header { font-weight: bold; background-color: #f2f2f2; }
+</style>
+</head>
+<body>
+  <h1>Guide de Lotissement - Modèle d'Import</h1>
+  <p>Remplissez le tableau ci-dessous pour chaque lot du lotissement. Vous pouvez copier-coller ce bloc entier pour chaque lot supplémentaire.</p>
+  
+  <table>
+    <tr>
+      <td colspan="4"><strong>COMMUNE / VILLAGE :</strong> Abidjan</td>
+      <td colspan="4"><strong>LOTISSEMENT :</strong> Mon Lotissement</td>
+    </tr>
+    <tr>
+      <td colspan="2"><strong>ILOT :</strong> 1</td>
+      <td colspan="2"><strong>LOT :</strong> 1</td>
+      <td colspan="2"><strong>SUPERFICIE (m2) :</strong> 500</td>
+      <td colspan="2"><strong>AFFECTATION :</strong> HABITATION</td>
+    </tr>
+    <tr class="header">
+      <th>N°</th>
+      <th>NOM ET PRENOMS (ATTRIBUTAIRES)</th>
+      <th>ATTESTATION N°</th>
+      <th>ATTESTATION DATE</th>
+      <th>CONTACTS</th>
+      <th>NATURE PIECE</th>
+      <th>N° PIECE</th>
+      <th>DATE PIECE</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Jean Dupont</td>
+      <td>ATT-001/2023</td>
+      <td>01/01/2023</td>
+      <td>0102030405</td>
+      <td>CNI</td>
+      <td>C00123456</td>
+      <td>01/01/2020</td>
+    </tr>
+  </table>
+
+  <br>
+
+  <table>
+    <tr>
+      <td colspan="4"><strong>COMMUNE / VILLAGE :</strong> Abidjan</td>
+      <td colspan="4"><strong>LOTISSEMENT :</strong> Mon Lotissement</td>
+    </tr>
+    <tr>
+      <td colspan="2"><strong>ILOT :</strong> 1</td>
+      <td colspan="2"><strong>LOT :</strong> 2</td>
+      <td colspan="2"><strong>SUPERFICIE (m2) :</strong> 400</td>
+      <td colspan="2"><strong>AFFECTATION :</strong> HABITATION</td>
+    </tr>
+    <tr class="header">
+      <th>N°</th>
+      <th>NOM ET PRENOMS (ATTRIBUTAIRES)</th>
+      <th>ATTESTATION N°</th>
+      <th>ATTESTATION DATE</th>
+      <th>CONTACTS</th>
+      <th>NATURE PIECE</th>
+      <th>N° PIECE</th>
+      <th>DATE PIECE</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Marie Curie</td>
+      <td>ATT-002/2023</td>
+      <td>02/01/2023</td>
+      <td>0506070809</td>
+      <td>PASSEPORT</td>
+      <td>P00123456</td>
+      <td>02/01/2021</td>
+    </tr>
+  </table>
+
+</body>
+</html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'modele_guide_lotissement.doc';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // ─── Excel/CSV parser (existing logic) ──────────────────────────────
@@ -907,6 +1007,13 @@ export const ImportGeometreDialog = ({
                 className="hidden"
                 onChange={handleFileChange}
               />
+            </div>
+
+            <div className="flex justify-center pb-2">
+              <Button variant="outline" onClick={downloadTemplate} className="w-full sm:w-auto">
+                <Download className="h-4 w-4 mr-2" />
+                Télécharger le modèle Word (Guide de Lotissement)
+              </Button>
             </div>
 
             {/* DBF file input for shapefiles */}

@@ -45,6 +45,7 @@ export const ImportGeometreDialog = ({
   onOpenChange,
   existingIlotNames = [],
   existingPlotNumbers = [],
+  existingPlotsByIlot = {},
 }: ImportGeometreDialogProps) => {
   const [step, setStep] = useState<ImportStep>("upload");
   const [parsedIlots, setParsedIlots] = useState<ParsedGeometreIlot[]>([]);

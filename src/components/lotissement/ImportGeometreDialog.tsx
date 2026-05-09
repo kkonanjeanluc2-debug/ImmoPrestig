@@ -1393,3 +1393,19 @@ function parseNumber(value: unknown): number {
   }
   return 0;
 }
+
+// Normalise un texte pour le matching: supprime les accents, uniformise la
+// ponctuation/espacement, met en majuscules. Permet des variantes comme
+// "Îlot", "ILOTS", "Équipement", "Equipement.", "Parcelle  -  148,5"…
+function normalizeForMatch(text: string): string {
+  return (text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[\u00A0\u2000-\u200B]/g, " ") // nbsp & co -> space
+    .replace(/\s+/g, " ")
+    .toUpperCase();
+}
+
+// Sépcarateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
+// "·", "." répétés, ou simplement des espaces.
+const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)?";

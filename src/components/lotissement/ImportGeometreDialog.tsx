@@ -50,6 +50,7 @@ export const ImportGeometreDialog = ({
   const [step, setStep] = useState<ImportStep>("upload");
   const [parsedIlots, setParsedIlots] = useState<ParsedGeometreIlot[]>([]);
   const [parsedParcelles, setParsedParcelles] = useState<ParsedGeometreParcelle[]>([]);
+  const [detectedByIlot, setDetectedByIlot] = useState<Record<string, number>>({});
   const [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");

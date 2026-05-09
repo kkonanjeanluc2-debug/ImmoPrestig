@@ -1220,6 +1220,26 @@ export const ImportGeometreDialog = ({
               </Button>
             </div>
 
+            <Card className="border-muted">
+              <CardContent className="p-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={strictMatching}
+                    onChange={(e) => setStrictMatching(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                  />
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p className="font-semibold text-foreground">Correspondance stricte</p>
+                    <p>
+                      Ne crée que les lots dont le couple <strong>(îlot, numéro de lot)</strong> apparaît
+                      explicitement dans le fichier. Aucun héritage de l'îlot précédent, aucune interprétation positionnelle.
+                    </p>
+                  </div>
+                </label>
+              </CardContent>
+            </Card>
+
             {/* DBF file input for shapefiles */}
             <Card className="border-muted">
               <CardContent className="p-3">

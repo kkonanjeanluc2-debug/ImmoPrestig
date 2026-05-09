@@ -502,9 +502,10 @@ const LotissementDetails = () => {
         existingPlotNumbers={parcelles?.map(p => p.plot_number) || []}
         existingPlotsByIlot={(() => {
           const map: Record<string, string[]> = {};
-          const ilotById = new Map((ilotsData || []).map(i => [i.id, i.name]));
+          const ilotById: Record<string, string> = {};
+          (ilotsData || []).forEach(i => { ilotById[i.id] = i.name; });
           (parcelles || []).forEach(p => {
-            const ilotName = p.ilot_id ? ilotById.get(p.ilot_id) : undefined;
+            const ilotName = p.ilot_id ? ilotById[p.ilot_id] : undefined;
             if (!ilotName) return;
             const key = String(ilotName).trim().toLowerCase();
             if (!map[key]) map[key] = [];

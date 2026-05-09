@@ -705,9 +705,71 @@ export const ImportGeometreDialog = ({
       const rows = table.querySelectorAll("tr");
       if (rows.length < 2) continue;
 
-      const headerCells = rows[0].querySelectorAll("td, th");
-      const headers = Array.from(headerCells).map((cell) => cell.textContent?.trim() || "");
-      newWarnings.push(`Colonnes détectées : ${headers.filter(Boolean).join(", ")}`);
+      const tableRecords = getWordTableRecords(table, [
+        "numero", "numéro", "num", "n°", "lot", "lots", "parcelle",
+        "superficie", "surface", "prix", "ilot", "îlot", "ilots",
+        "proprietaire", "beneficiaire", "adresse", "contacts",
+      ]);
+      const headers = tableRecords.detectedColumns;
+      if (headers.length > 0) {
+        newWarnings.push(`Colonnes détectées${tableRecords.headerRowIndex >= 0 ? ` (ligne ${tableRecords.headerRowIndex + 1})` : ""} : ${headers.filter(Boolean).join(", ")}`);
+      }
+
+      const hasExplicitLotColumn = headers.some((header) => {
+        const key = normalizeExcelKey(header);
+        return ["lot", "lots", "parcelle", "parcelles", "numerolot", "nlot", "nolot", "numeroparcelle"].some((candidate) =>
+          isCompatiblePartialHeaderMatch(key, candidate) && !key.startsWith("ilot")
+        );
+      });
+
+      if (hasExplicitLotColumn) {
+        let standardImportedCount = 0;
+        const seenStandardRows = new Set<string>();
+
+        for (const [recordIndex, record] of tableRecords.records.entries()) {
+          if (shouldSkipExcelRow(record)) continue;
+
+          const plotNumber = findValue(record, ["lots", "lot", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
+          const areaValue = findValue(record, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]);
+          const area = parseNumber(areaValue);
+          const price = parseNumber(findValue(record, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
+          const ilotName = findValue(record, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
+          const proprietaireTerrien = findValue(record, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
+          const beneficiaire = findValue(record, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
+
+          if (!plotNumber) continue;
+          if (strictMatchingRef.current && !ilotName) continue;
+          if (!isValidPlotNumberCandidate(plotNumber)) continue;
+          if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) continue;
+
+          const dedupKey = `${ilotName ? normalizeForMatch(String(ilotName)) : ""}#${normalizePlotNumber(plotNumber)}`;
+          if (seenStandardRows.has(dedupKey)) continue;
+          seenStandardRows.add(dedupKey);
+
+          const parcelle: ParsedGeometreParcelle = {
+            plotNumber: String(plotNumber),
+            area,
+            price: price || 0,
+            ilotName: ilotName ? String(ilotName) : undefined,
+            proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
+            beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
+          };
+          parcelles.push(parcelle);
+          standardImportedCount++;
+
+          if (ilotName) {
+            const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
+            if (existingIlot) existingIlot.parcelles.push(parcelle);
+            else ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+          }
+        }
+
+        if (standardImportedCount > 0) {
+          newWarnings.push(`${standardImportedCount} lot(s) extrait(s) du tableau Word structuré`);
+          pendingHeader = null;
+          continue;
+        }
+      }
 
       // Try to read header info embedded in the first rows of the table itself.
       let rawBlockText = "";

@@ -491,8 +491,12 @@ export const ImportGeometreDialog = ({
           newWarnings.push(`Ligne ${idx + 2} ignorée : valeur "${String(plotNumber).slice(0, 40)}…" non reconnue comme numéro de lot`);
           return;
         }
-        if (existingPlotNumbers.includes(String(plotNumber))) {
-          newErrors.push(`Parcelle "${plotNumber}" existe déjà`);
+        if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) {
+          newErrors.push(
+            ilotName
+              ? `Parcelle "${plotNumber}" existe déjà dans l'îlot "${ilotName}"`
+              : `Parcelle "${plotNumber}" existe déjà`
+          );
           return;
         }
         if (isFilledCell(areaValue) && area <= 0) {

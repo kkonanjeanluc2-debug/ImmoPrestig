@@ -498,7 +498,8 @@ export const ImportGeometreDialog = ({
           if (!isValidPlotNumberCandidate(plotNumber)) continue;
           if (isExistingPlot(ilotName, String(plotNumber))) continue;
 
-          // Avoid pushing the same (ilot, plot) twice from the same file
+          // Avoid pushing the same (ilot, plot) twice from the same file, but only
+          // within the exact explicit pair. This preserves lots 01..06 in îlot 01.
           const dedupKey = `${(ilotName || "").toLowerCase()}#${normalizePlotNumber(plotNumber)}`;
           if (seenInImport.has(dedupKey)) continue;
           seenInImport.add(dedupKey);

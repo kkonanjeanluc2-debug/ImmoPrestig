@@ -964,6 +964,13 @@ export const ImportGeometreDialog = ({
           return;
       }
 
+      // Compute detected counts per ilot (from raw parse, before dedup)
+      const detected: Record<string, number> = {};
+      for (const p of result.parcelles) {
+        const key = p.ilotName ? String(p.ilotName).trim() : "(sans îlot)";
+        detected[key] = (detected[key] || 0) + 1;
+      }
+
       // Filter duplicate parcelles (scoped per ilot when known)
       const filteredParcelles = result.parcelles.filter(
         p => !isExistingPlot(p.ilotName, p.plotNumber)
@@ -987,6 +994,7 @@ export const ImportGeometreDialog = ({
       setWarnings(result.warnings);
       setParsedIlots(newIlots);
       setParsedParcelles(filteredParcelles);
+      setDetectedByIlot(detected);
       setStep("preview");
     } catch (err) {
       setErrors(["Erreur de lecture du fichier. Vérifiez le format."]);

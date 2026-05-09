@@ -783,7 +783,7 @@ export const ImportGeometreDialog = ({
           const proprietaireTerrien = findValue(record, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
           const beneficiaire = findValue(record, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
 
-          if (!plotNumber) {
+          if (!plotNumber && !strictMatchingRef.current) {
             const firstNonEmpty = Object.values(record).find(
               (val) => val !== null && val !== undefined && String(val).trim() !== ""
             );
@@ -791,6 +791,7 @@ export const ImportGeometreDialog = ({
           }
 
           if (!plotNumber) continue;
+          if (strictMatchingRef.current && !ilotName) continue;
           if (!isValidPlotNumberCandidate(plotNumber)) continue;
           if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) continue;
 

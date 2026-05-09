@@ -274,6 +274,13 @@ export const ImportGeometreDialog = ({
     }
 
     if (mainSheet) {
+      const rawRows = XLSX.utils.sheet_to_json<unknown[]>(mainSheet, {
+        header: 1,
+        raw: false,
+        defval: "",
+        blankrows: false,
+      }).filter((row) => Array.isArray(row) && row.some(isFilledCell));
+
       const {
         records: parcellesData,
         detectedColumns,
@@ -319,13 +326,13 @@ export const ImportGeometreDialog = ({
       // Tolerant of dotted fillers like "ILOT :....06...." and other punctuation.
       const HAS_ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}\\d`);
       const HAS_LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`);
-      const isGuideExcel = parcellesData.some((row) => {
-        const cellMatch = Object.values(row).some((val) => {
+      const isGuideExcel = rawRows.some((row) => {
+        const cellMatch = row.some((val) => {
           const text = normalizeForMatch(String(val || ""));
           return HAS_ILOT_RE.test(text) || HAS_LOT_RE.test(text);
         });
         if (cellMatch) return true;
-        const rowText = normalizeForMatch(Object.values(row).map(v => String(v || "")).join(" "));
+        const rowText = normalizeForMatch(row.map(v => String(v || "")).join(" "));
         return HAS_ILOT_RE.test(rowText) && HAS_LOT_RE.test(rowText);
       });
 

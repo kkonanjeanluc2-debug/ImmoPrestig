@@ -50,7 +50,6 @@ export const ImportGeometreDialog = ({
   const [step, setStep] = useState<ImportStep>("upload");
   const [parsedIlots, setParsedIlots] = useState<ParsedGeometreIlot[]>([]);
   const [parsedParcelles, setParsedParcelles] = useState<ParsedGeometreParcelle[]>([]);
-  const [detectedByIlot, setDetectedByIlot] = useState<Record<string, number>>({});
   const [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");
@@ -116,7 +115,6 @@ export const ImportGeometreDialog = ({
     setStep("upload");
     setParsedIlots([]);
     setParsedParcelles([]);
-    setDetectedByIlot({});
     setErrors([]);
     setWarnings([]);
     setFileName("");
@@ -707,71 +705,9 @@ export const ImportGeometreDialog = ({
       const rows = table.querySelectorAll("tr");
       if (rows.length < 2) continue;
 
-      const tableRecords = getWordTableRecords(table, [
-        "numero", "numéro", "num", "n°", "lot", "lots", "parcelle",
-        "superficie", "surface", "prix", "ilot", "îlot", "ilots",
-        "proprietaire", "beneficiaire", "adresse", "contacts",
-      ]);
-      const headers = tableRecords.detectedColumns;
-      if (headers.length > 0) {
-        newWarnings.push(`Colonnes détectées${tableRecords.headerRowIndex >= 0 ? ` (ligne ${tableRecords.headerRowIndex + 1})` : ""} : ${headers.filter(Boolean).join(", ")}`);
-      }
-
-      const hasExplicitLotColumn = headers.some((header) => {
-        const key = normalizeExcelKey(header);
-        return ["lot", "lots", "parcelle", "parcelles", "numerolot", "nlot", "nolot", "numeroparcelle"].some((candidate) =>
-          isCompatiblePartialHeaderMatch(key, candidate) && !key.startsWith("ilot")
-        );
-      });
-
-      if (hasExplicitLotColumn) {
-        let standardImportedCount = 0;
-        const seenStandardRows = new Set<string>();
-
-        for (const [recordIndex, record] of tableRecords.records.entries()) {
-          if (shouldSkipExcelRow(record)) continue;
-
-          const plotNumber = findValue(record, ["lots", "lot", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
-          const areaValue = findValue(record, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]);
-          const area = parseNumber(areaValue);
-          const price = parseNumber(findValue(record, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
-          const ilotName = findValue(record, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
-          const proprietaireTerrien = findValue(record, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
-          const beneficiaire = findValue(record, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
-
-          if (!plotNumber) continue;
-          if (strictMatchingRef.current && !ilotName) continue;
-          if (!isValidPlotNumberCandidate(plotNumber)) continue;
-          if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) continue;
-
-          const dedupKey = `${ilotName ? normalizeForMatch(String(ilotName)) : ""}#${normalizePlotNumber(plotNumber)}`;
-          if (seenStandardRows.has(dedupKey)) continue;
-          seenStandardRows.add(dedupKey);
-
-          const parcelle: ParsedGeometreParcelle = {
-            plotNumber: String(plotNumber),
-            area,
-            price: price || 0,
-            ilotName: ilotName ? String(ilotName) : undefined,
-            proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
-            beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
-          };
-          parcelles.push(parcelle);
-          standardImportedCount++;
-
-          if (ilotName) {
-            const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
-            if (existingIlot) existingIlot.parcelles.push(parcelle);
-            else ilots.push({ name: String(ilotName), parcelles: [parcelle] });
-          }
-        }
-
-        if (standardImportedCount > 0) {
-          newWarnings.push(`${standardImportedCount} lot(s) extrait(s) du tableau Word structuré`);
-          pendingHeader = null;
-          continue;
-        }
-      }
+      const headerCells = rows[0].querySelectorAll("td, th");
+      const headers = Array.from(headerCells).map((cell) => cell.textContent?.trim() || "");
+      newWarnings.push(`Colonnes détectées : ${headers.filter(Boolean).join(", ")}`);
 
       // Try to read header info embedded in the first rows of the table itself.
       let rawBlockText = "";
@@ -964,13 +900,6 @@ export const ImportGeometreDialog = ({
           return;
       }
 
-      // Compute detected counts per ilot (from raw parse, before dedup)
-      const detected: Record<string, number> = {};
-      for (const p of result.parcelles) {
-        const key = p.ilotName ? String(p.ilotName).trim() : "(sans îlot)";
-        detected[key] = (detected[key] || 0) + 1;
-      }
-
       // Filter duplicate parcelles (scoped per ilot when known)
       const filteredParcelles = result.parcelles.filter(
         p => !isExistingPlot(p.ilotName, p.plotNumber)
@@ -994,7 +923,6 @@ export const ImportGeometreDialog = ({
       setWarnings(result.warnings);
       setParsedIlots(newIlots);
       setParsedParcelles(filteredParcelles);
-      setDetectedByIlot(detected);
       setStep("preview");
     } catch (err) {
       setErrors(["Erreur de lecture du fichier. Vérifiez le format."]);
@@ -1101,19 +1029,13 @@ export const ImportGeometreDialog = ({
             parcelle.beneficiaire ? `Bénéficiaire: ${parcelle.beneficiaire}` : "",
           ].filter(Boolean).join(" | ") || undefined;
 
-          // Check if a parcelle with the same (ilot, plot_number) already exists (including soft-deleted).
-          // The same lot number can legitimately exist in several îlots.
-          let existingParcelleQuery = supabase
+          // Check if a parcelle with same plot_number already exists (including soft-deleted)
+          const { data: existing } = await supabase
             .from("parcelles")
             .select("id")
             .eq("lotissement_id", lotissementId)
-            .eq("plot_number", parcelle.plotNumber);
-
-          existingParcelleQuery = ilotId
-            ? existingParcelleQuery.eq("ilot_id", ilotId)
-            : existingParcelleQuery.is("ilot_id", null);
-
-          const { data: existing } = await existingParcelleQuery.maybeSingle();
+            .eq("plot_number", parcelle.plotNumber)
+            .maybeSingle();
 
           let result: any;
           if (existing) {
@@ -1430,54 +1352,6 @@ export const ImportGeometreDialog = ({
                 </Card>
               )}
 
-              {/* Recap per ilot: detected vs to import */}
-              {Object.keys(detectedByIlot).length > 0 && (() => {
-                const importedByIlot: Record<string, number> = {};
-                for (const p of parsedParcelles) {
-                  const key = p.ilotName ? String(p.ilotName).trim() : "(sans îlot)";
-                  importedByIlot[key] = (importedByIlot[key] || 0) + 1;
-                }
-                const keys = Object.keys(detectedByIlot).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
-                const totalDetected = Object.values(detectedByIlot).reduce((s, n) => s + n, 0);
-                const totalImported = Object.values(importedByIlot).reduce((s, n) => s + n, 0);
-                return (
-                  <Card className="border-primary/30 bg-primary/5">
-                    <CardContent className="p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                          <Layers className="h-4 w-4" />
-                          Récapitulatif par îlot
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {totalImported} / {totalDetected} à importer
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                        {keys.map((k) => {
-                          const det = detectedByIlot[k] || 0;
-                          const imp = importedByIlot[k] || 0;
-                          const skipped = det - imp;
-                          return (
-                            <div key={k} className="flex items-center justify-between p-2 bg-background/60 rounded text-xs">
-                              <span className="font-medium truncate">{k}</span>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <Badge variant="outline" className="text-[10px]">Détectés: {det}</Badge>
-                                <Badge variant="secondary" className="text-[10px]">À importer: {imp}</Badge>
-                                {skipped > 0 && (
-                                  <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700">
-                                    Ignorés: {skipped}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
-
               {/* Ilots preview */}
               {parsedIlots.length > 0 && (
                 <div>
@@ -1697,53 +1571,6 @@ function shouldSkipExcelRow(row: Record<string, unknown>): boolean {
   const headerMatches = values.filter((value) => headerTokens.includes(value)).length;
 
   return headerMatches >= 3;
-}
-
-function getWordTableRecords(
-  table: HTMLTableElement,
-  expectedHeaders: string[]
-): {
-  records: Record<string, unknown>[];
-  detectedColumns: string[];
-  headerRowIndex: number;
-} {
-  const rows = Array.from(table.querySelectorAll("tr"))
-    .map((row) => Array.from(row.querySelectorAll("td, th")).flatMap((cell) => {
-      const colspan = Math.max(parseInt(cell.getAttribute("colspan") || "1", 10) || 1, 1);
-      const text = cell.textContent?.trim() || "";
-      return Array.from({ length: colspan }, () => text);
-    }))
-    .filter((row) => row.some(isFilledCell));
-
-  if (rows.length === 0) {
-    return { records: [], detectedColumns: [], headerRowIndex: -1 };
-  }
-
-  const headerRowIndex = detectHeaderRowIndex(rows, expectedHeaders);
-  const headerSource = headerRowIndex >= 0 ? rows[headerRowIndex] : rows[0];
-  const maxColumns = Math.max(...rows.map((row) => row.length), 0);
-  const seenHeaders = new Map<string, number>();
-  const headers = Array.from({ length: maxColumns }, (_, index) => {
-    const rawHeader = headerSource[index];
-    const baseHeader = isFilledCell(rawHeader) ? String(rawHeader).trim() : `col_${index + 1}`;
-    const normalized = normalizeExcelKey(baseHeader) || `col${index + 1}`;
-    const count = seenHeaders.get(normalized) || 0;
-    seenHeaders.set(normalized, count + 1);
-    return count === 0 ? baseHeader : `${baseHeader}_${count + 1}`;
-  });
-
-  const dataRows = rows.slice(headerRowIndex >= 0 ? headerRowIndex + 1 : 0);
-  const records = dataRows
-    .filter((row) => row.some(isFilledCell))
-    .map((row) => {
-      const record: Record<string, unknown> = {};
-      headers.forEach((header, index) => {
-        record[header] = row[index] ?? "";
-      });
-      return record;
-    });
-
-  return { records, detectedColumns: headers, headerRowIndex };
 }
 
 function getWorksheetRecords(

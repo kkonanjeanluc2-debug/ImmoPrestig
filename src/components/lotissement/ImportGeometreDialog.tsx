@@ -411,6 +411,7 @@ export const ImportGeometreDialog = ({
           if (!cniNumber) cniNumber = takeNextFree();
 
           if (!plotNumber) continue;
+          if (!isValidPlotNumberCandidate(plotNumber)) continue;
           if (existingPlotNumbers.includes(String(plotNumber))) continue;
 
           const parcelle: ParsedGeometreParcelle = {

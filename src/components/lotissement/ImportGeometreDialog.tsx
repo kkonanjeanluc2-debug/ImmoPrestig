@@ -597,6 +597,7 @@ export const ImportGeometreDialog = ({
         const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
         if (!plotNumber) continue;
+        if (!isValidPlotNumberCandidate(plotNumber)) continue;
         if (existingPlotNumbers.includes(String(plotNumber))) continue;
 
         // Now find the attributaire data from the table rows

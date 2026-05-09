@@ -33,6 +33,8 @@ interface ImportGeometreDialogProps {
   onOpenChange: (open: boolean) => void;
   existingIlotNames?: string[];
   existingPlotNumbers?: string[];
+  /** Map ilot name (lowercased) -> list of existing plot_numbers in that ilot */
+  existingPlotsByIlot?: Record<string, string[]>;
 }
 
 type ImportStep = "upload" | "preview" | "importing" | "done";

@@ -82,84 +82,79 @@ export const ImportGeometreDialog = ({
 <meta charset='utf-8'>
 <title>Modèle Guide Lotissement</title>
 <style>
-  body { font-family: 'Arial', sans-serif; }
-  table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
-  td, th { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
-  .header { font-weight: bold; background-color: #f2f2f2; }
+  @page Section1 {
+    size: 29.7cm 21cm;
+    margin: 2cm 2cm 2cm 2cm;
+    mso-page-orientation: landscape;
+  }
+  div.Section1 { page: Section1; }
+  body { font-family: 'Times New Roman', serif; font-size: 11pt; }
+  table.main-table { border-collapse: collapse; width: 100%; margin-bottom: 30px; border: 1px solid black; }
+  table.main-table td { border: 1px solid black; padding: 8px; text-align: center; vertical-align: middle; }
+  .header { font-weight: normal; }
+  table.no-border-table { border-collapse: collapse; width: 100%; border: none; }
+  table.no-border-table td { border: none !important; padding: 2px; }
 </style>
 </head>
 <body>
-  <h1>Guide de Lotissement - Modèle d'Import</h1>
-  <p>Remplissez le tableau ci-dessous pour chaque lot du lotissement. Vous pouvez copier-coller ce bloc entier pour chaque lot supplémentaire.</p>
+<div class="Section1">
   
-  <table>
-    <tr>
-      <td colspan="4"><strong>COMMUNE / VILLAGE :</strong> Abidjan</td>
-      <td colspan="4"><strong>LOTISSEMENT :</strong> Mon Lotissement</td>
-    </tr>
-    <tr>
-      <td colspan="2"><strong>ILOT :</strong> 1</td>
-      <td colspan="2"><strong>LOT :</strong> 1</td>
-      <td colspan="2"><strong>SUPERFICIE (m2) :</strong> 500</td>
-      <td colspan="2"><strong>AFFECTATION :</strong> HABITATION</td>
+  <table class="main-table" border="1" cellspacing="0" cellpadding="8">
+    <tr style="background-color: #ebebeb;">
+      <td colspan="8" style="padding: 15px; border-bottom: 1px solid black; text-align: left;">
+        <table class="no-border-table" border="0" cellspacing="0" cellpadding="2" style="margin-bottom: 15px;">
+          <tr>
+            <td style="text-align: left; width: 33%;">COMMUNE DE DALOA</td>
+            <td style="text-align: center; width: 34%;">VILLAGE DE ZEBREGUHE</td>
+            <td style="text-align: right; width: 33%;">LOTISSEMENT : COCODY 2</td>
+          </tr>
+        </table>
+        <table class="no-border-table" border="0" cellspacing="0" cellpadding="2">
+          <tr>
+            <td style="text-align: left; width: 15%;">ILOT : <strong>148</strong></td>
+            <td style="text-align: left; width: 15%;">LOT : <strong>1025</strong></td>
+            <td style="text-align: left; width: 25%;">SUPERFICIE (m2) : <strong>473</strong></td>
+            <td style="text-align: left; width: 25%;">AFFECTATION : </td>
+            <td style="text-align: right; width: 20%;">ARRETE N° : </td>
+          </tr>
+        </table>
+      </td>
     </tr>
     <tr class="header">
-      <th>N°</th>
-      <th>NOM ET PRENOMS (ATTRIBUTAIRES)</th>
-      <th>ATTESTATION N°</th>
-      <th>ATTESTATION DATE</th>
-      <th>CONTACTS</th>
-      <th>NATURE PIECE</th>
-      <th>N° PIECE</th>
-      <th>DATE PIECE</th>
+      <td></td>
+      <td>ATTRIBUTAIRES</td>
+      <td colspan="2">ATTESTATION</td>
+      <td rowspan="2">ADRESSES ET<br>CONTACTS</td>
+      <td colspan="3">PIECES</td>
     </tr>
-    <tr>
+    <tr class="header">
+      <td>N°</td>
+      <td>NOM ET PRENOMS</td>
+      <td>N°</td>
+      <td>DATE</td>
+      <td>NATURE</td>
+      <td>N°</td>
+      <td>DATE</td>
+    </tr>
+    <tr style="font-weight: bold;">
       <td>1</td>
-      <td>Jean Dupont</td>
-      <td>ATT-001/2023</td>
-      <td>01/01/2023</td>
-      <td>0102030405</td>
+      <td>SERY PATRICE BLE</td>
+      <td></td>
+      <td></td>
+      <td>0544512039<br>0707232506</td>
       <td>CNI</td>
-      <td>C00123456</td>
-      <td>01/01/2020</td>
+      <td>C0036909461</td>
+      <td></td>
+    </tr>
+    <tr style="height: 30px;">
+      <td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr style="height: 30px;">
+      <td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
     </tr>
   </table>
 
-  <br>
-
-  <table>
-    <tr>
-      <td colspan="4"><strong>COMMUNE / VILLAGE :</strong> Abidjan</td>
-      <td colspan="4"><strong>LOTISSEMENT :</strong> Mon Lotissement</td>
-    </tr>
-    <tr>
-      <td colspan="2"><strong>ILOT :</strong> 1</td>
-      <td colspan="2"><strong>LOT :</strong> 2</td>
-      <td colspan="2"><strong>SUPERFICIE (m2) :</strong> 400</td>
-      <td colspan="2"><strong>AFFECTATION :</strong> HABITATION</td>
-    </tr>
-    <tr class="header">
-      <th>N°</th>
-      <th>NOM ET PRENOMS (ATTRIBUTAIRES)</th>
-      <th>ATTESTATION N°</th>
-      <th>ATTESTATION DATE</th>
-      <th>CONTACTS</th>
-      <th>NATURE PIECE</th>
-      <th>N° PIECE</th>
-      <th>DATE PIECE</th>
-    </tr>
-    <tr>
-      <td>1</td>
-      <td>Marie Curie</td>
-      <td>ATT-002/2023</td>
-      <td>02/01/2023</td>
-      <td>0506070809</td>
-      <td>PASSEPORT</td>
-      <td>P00123456</td>
-      <td>02/01/2021</td>
-    </tr>
-  </table>
-
+</div>
 </body>
 </html>
     `;

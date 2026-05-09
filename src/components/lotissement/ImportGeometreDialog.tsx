@@ -1641,6 +1641,53 @@ function shouldSkipExcelRow(row: Record<string, unknown>): boolean {
   return headerMatches >= 3;
 }
 
+function getWordTableRecords(
+  table: HTMLTableElement,
+  expectedHeaders: string[]
+): {
+  records: Record<string, unknown>[];
+  detectedColumns: string[];
+  headerRowIndex: number;
+} {
+  const rows = Array.from(table.querySelectorAll("tr"))
+    .map((row) => Array.from(row.querySelectorAll("td, th")).flatMap((cell) => {
+      const colspan = Math.max(parseInt(cell.getAttribute("colspan") || "1", 10) || 1, 1);
+      const text = cell.textContent?.trim() || "";
+      return Array.from({ length: colspan }, () => text);
+    }))
+    .filter((row) => row.some(isFilledCell));
+
+  if (rows.length === 0) {
+    return { records: [], detectedColumns: [], headerRowIndex: -1 };
+  }
+
+  const headerRowIndex = detectHeaderRowIndex(rows, expectedHeaders);
+  const headerSource = headerRowIndex >= 0 ? rows[headerRowIndex] : rows[0];
+  const maxColumns = Math.max(...rows.map((row) => row.length), 0);
+  const seenHeaders = new Map<string, number>();
+  const headers = Array.from({ length: maxColumns }, (_, index) => {
+    const rawHeader = headerSource[index];
+    const baseHeader = isFilledCell(rawHeader) ? String(rawHeader).trim() : `col_${index + 1}`;
+    const normalized = normalizeExcelKey(baseHeader) || `col${index + 1}`;
+    const count = seenHeaders.get(normalized) || 0;
+    seenHeaders.set(normalized, count + 1);
+    return count === 0 ? baseHeader : `${baseHeader}_${count + 1}`;
+  });
+
+  const dataRows = rows.slice(headerRowIndex >= 0 ? headerRowIndex + 1 : 0);
+  const records = dataRows
+    .filter((row) => row.some(isFilledCell))
+    .map((row) => {
+      const record: Record<string, unknown> = {};
+      headers.forEach((header, index) => {
+        record[header] = row[index] ?? "";
+      });
+      return record;
+    });
+
+  return { records, detectedColumns: headers, headerRowIndex };
+}
+
 function getWorksheetRecords(
   sheet: XLSX.WorkSheet,
   expectedHeaders: string[]

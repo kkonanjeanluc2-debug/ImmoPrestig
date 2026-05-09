@@ -540,15 +540,15 @@ export const ImportGeometreDialog = ({
 
       // Check if this is a guide format (table contains ILOT/LOT/SUPERFICIE header info)
       const isGuideFormat = (() => {
-        // Check the full table text for guide markers
+        const HAS_ILOT = new RegExp(`\\bILOTS?${LABEL_SEP}\\d`);
+        const HAS_LOT = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`);
         const fullTableText = normalizeForMatch(table.textContent || "");
-        if (/\bILOTS?\s*[:=\-]?\s*\d/.test(fullTableText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(fullTableText)) {
+        if (HAS_ILOT.test(fullTableText) && HAS_LOT.test(fullTableText)) {
           return true;
         }
-        // Also check row-by-row (ILOT and LOT may be in same row across cells)
         for (let i = 0; i < Math.min(rows.length, 5); i++) {
           const rowText = normalizeForMatch(Array.from(rows[i].querySelectorAll("td, th")).map(c => c.textContent || "").join(" "));
-          if (/\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(rowText)) {
+          if (HAS_ILOT.test(rowText) && HAS_LOT.test(rowText)) {
             return true;
           }
         }

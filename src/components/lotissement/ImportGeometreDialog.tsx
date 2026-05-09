@@ -101,9 +101,11 @@ export const ImportGeometreDialog = ({
         const list = existingPlotsByIlot[key];
         return Array.isArray(list) && list.some(p => normalizePlotNumber(p) === plot);
       }
-      return existingPlotNumbers.some(p => normalizePlotNumber(p) === plot);
+      // No ilot context: don't dedup globally — a same-numbered lot may legitimately
+      // exist in another ilot. Let per-ilot DB checks handle final uniqueness.
+      return false;
     },
-    [existingPlotNumbers, existingPlotsByIlot, normalizePlotNumber]
+    [existingPlotsByIlot, normalizePlotNumber]
   );
 
   const reset = () => {

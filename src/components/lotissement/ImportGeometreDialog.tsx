@@ -486,7 +486,7 @@ export const ImportGeometreDialog = ({
 
             if (!beneficiaireName) {
               beneficiaireName = takeNextFree((r) =>
-                /[A-Za-zÀ-ÿ]{3,}/.test(r) && !/^\d+[\.,]?\d*$/.test(r)
+                /[A-Za-zÀ-ÿ]{3,}/.test(r) && !/^\d+[.,]?\d*$/.test(r)
               );
             }
             if (!attestationNumber) attestationNumber = takeNextFree();
@@ -606,7 +606,7 @@ export const ImportGeometreDialog = ({
     }
 
     return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
-  }, [existingIlotNames, isExistingPlot]);
+  }, [existingIlotNames, isExistingPlot, normalizePlotNumber]);
 
   // ─── Word/DOCX parser ─────────────────────────────────────────────
   const parseWordFile = useCallback(async (file: File) => {

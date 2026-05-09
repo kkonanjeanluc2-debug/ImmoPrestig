@@ -351,6 +351,7 @@ export const ImportGeometreDialog = ({
 
         let lastIlotName: string | undefined;
         const seenInImport = new Set<string>();
+        const isStrict = strictMatchingRef.current;
 
         for (const row of parcellesData) {
           // Build (raw, normalized) pairs for each cell to preserve original case
@@ -365,9 +366,14 @@ export const ImportGeometreDialog = ({
           if (cellPairs.length === 0) continue;
 
           const concatNorm = cellPairs.map((p) => p.norm).join(" | ");
-          // Accept rows that have either an ILOT label OR a LOT label.
-          // Subsequent rows missing the ILOT will inherit `lastIlotName`.
-          if (!HAS_ILOT_RE.test(concatNorm) && !HAS_LOT_RE.test(concatNorm)) continue;
+          if (isStrict) {
+            // Strict: require BOTH ILOT and LOT labels explicitly on the row.
+            if (!HAS_ILOT_RE.test(concatNorm) || !HAS_LOT_RE.test(concatNorm)) continue;
+          } else {
+            // Permissive: accept rows that have either an ILOT or a LOT label.
+            // Subsequent rows missing the ILOT inherit `lastIlotName`.
+            if (!HAS_ILOT_RE.test(concatNorm) && !HAS_LOT_RE.test(concatNorm)) continue;
+          }
 
           let ilotName: string | undefined;
           let plotNumber: string | undefined;

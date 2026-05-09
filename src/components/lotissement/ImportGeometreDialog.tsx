@@ -754,7 +754,7 @@ export const ImportGeometreDialog = ({
     }
 
     return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
-  }, [existingPlotNumbers]);
+  }, [isExistingPlot]);
 
   // ─── Main file handler ──────────────────────────────────────────────
   const parseFile = useCallback(async (file: File, additionalDbf?: File | null) => {

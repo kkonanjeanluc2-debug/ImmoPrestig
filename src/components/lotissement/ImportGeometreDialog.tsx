@@ -263,36 +263,47 @@ export const ImportGeometreDialog = ({
       }
 
       // Detect if Excel data contains guide-format blocks (cells with ILOT/LOT patterns)
+      const guideIlotRe = new RegExp(`\\bI?LOTS?${LABEL_SEP}\\d`, "i");
+      const guideLotRe = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`, "i");
       const isGuideExcel = parcellesData.some((row) => {
-        // Check individual cells
         const cellMatch = Object.values(row).some((val) => {
-          const text = String(val || "");
-          return /\bILOT\s*[:]\s*\d/i.test(text) && /\bLOT\s*[:]\s*\d/i.test(text);
+          const text = normalizeForMatch(String(val || ""));
+          return /\bILOTS?\s*[:=\-]?\s*\d/.test(text) && /\bLOTS?\s*[:=\-]?\s*\d/.test(text);
         });
         if (cellMatch) return true;
-        // Check concatenated row text (ILOT and LOT may be in separate cells)
-        const rowText = Object.values(row).map(v => String(v || "")).join(" ");
-        return /\bILOT\s*[:]\s*\d/i.test(rowText) && /\bLOT\s*[:]\s*\d/i.test(rowText);
+        const rowText = normalizeForMatch(Object.values(row).map(v => String(v || "")).join(" "));
+        return /\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(rowText);
       });
 
       if (isGuideExcel) {
         newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
         for (const row of parcellesData) {
-          // Concatenate all cell values to extract header info
-          const rowText = Object.values(row).map(v => String(v || "")).join(" ");
-          
-          // Check if this row contains lot header info
-          if (!/\bILOT\s*[:]\s*\d/i.test(rowText) && !/\bLOT\s*[:]\s*\d/i.test(rowText)) continue;
+          // Concatenate all cell values to extract header info (normalized)
+          const rawRowText = Object.values(row).map(v => String(v || "")).join(" ");
+          const rowText = normalizeForMatch(rawRowText);
 
-          const ilotMatch = rowText.match(/\bILOT\s*[:]\s*(\d+)/i);
-          const lotMatch = rowText.match(/\bLOT\s*[:]\s*(\d+)/i);
-          const superficieMatch = rowText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
-          const affectationMatch = rowText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
+          // Check if this row contains lot header info
+          if (!/\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && !/\bLOTS?\s*[:=\-]?\s*\d/.test(rowText)) continue;
+
+          const ilotMatch = rowText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
+          const lotMatch = rowText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
+          const superficieMatch = rowText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
+          const parcelleAreaMatch = !superficieMatch
+            ? rowText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`))
+            : null;
+          const affectationMatch = rowText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
+          const equipementMatch = !affectationMatch
+            ? rowText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`))
+            : null;
 
           const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
           const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
-          const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
-          const affectationRaw = affectationMatch ? affectationMatch[1].trim() : undefined;
+          const area = superficieMatch
+            ? parseNumber(superficieMatch[1].replace(",", "."))
+            : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
+          const affectationRaw = affectationMatch
+            ? affectationMatch[1].trim()
+            : (equipementMatch ? equipementMatch[1].trim() : undefined);
           const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
           if (!plotNumber) continue;

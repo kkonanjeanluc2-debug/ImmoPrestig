@@ -346,6 +346,9 @@ export const ImportGeometreDialog = ({
           .replace(/^[\s.\-\u2013\u2014\u00B7\u2026]+/g, "")
           .trim();
 
+        let lastIlotName: string | undefined;
+        const seenInImport = new Set<string>();
+
         for (const row of parcellesData) {
           // Build (raw, normalized) pairs for each cell to preserve original case
           // for free-text fields (names, contacts) while still matching labels.
@@ -359,6 +362,8 @@ export const ImportGeometreDialog = ({
           if (cellPairs.length === 0) continue;
 
           const concatNorm = cellPairs.map((p) => p.norm).join(" | ");
+          // Accept rows that have either an ILOT label OR a LOT label.
+          // Subsequent rows missing the ILOT will inherit `lastIlotName`.
           if (!HAS_ILOT_RE.test(concatNorm) && !HAS_LOT_RE.test(concatNorm)) continue;
 
           let ilotName: string | undefined;
@@ -436,6 +441,13 @@ export const ImportGeometreDialog = ({
             }
           });
 
+          // Inherit ilot from previous row if this row only carries LOT info
+          if (!ilotName && lastIlotName) {
+            ilotName = lastIlotName;
+          } else if (ilotName) {
+            lastIlotName = ilotName;
+          }
+
           // For the simplified template (no header, columns in fixed order),
           // free unlabeled cells fill the remaining fields positionally.
           const freeCells = cellPairs
@@ -463,6 +475,11 @@ export const ImportGeometreDialog = ({
           if (!plotNumber) continue;
           if (!isValidPlotNumberCandidate(plotNumber)) continue;
           if (isExistingPlot(ilotName, String(plotNumber))) continue;
+
+          // Avoid pushing the same (ilot, plot) twice from the same file
+          const dedupKey = `${(ilotName || "").toLowerCase()}#${normalizePlotNumber(plotNumber)}`;
+          if (seenInImport.has(dedupKey)) continue;
+          seenInImport.add(dedupKey);
 
           const parcelle: ParsedGeometreParcelle = {
             plotNumber: String(plotNumber),

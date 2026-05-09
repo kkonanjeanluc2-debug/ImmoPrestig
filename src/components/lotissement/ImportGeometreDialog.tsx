@@ -33,6 +33,8 @@ interface ImportGeometreDialogProps {
   onOpenChange: (open: boolean) => void;
   existingIlotNames?: string[];
   existingPlotNumbers?: string[];
+  /** Map ilot name (lowercased) -> list of existing plot_numbers in that ilot */
+  existingPlotsByIlot?: Record<string, string[]>;
 }
 
 type ImportStep = "upload" | "preview" | "importing" | "done";
@@ -43,6 +45,7 @@ export const ImportGeometreDialog = ({
   onOpenChange,
   existingIlotNames = [],
   existingPlotNumbers = [],
+  existingPlotsByIlot = {},
 }: ImportGeometreDialogProps) => {
   const [step, setStep] = useState<ImportStep>("upload");
   const [parsedIlots, setParsedIlots] = useState<ParsedGeometreIlot[]>([]);
@@ -57,6 +60,22 @@ export const ImportGeometreDialog = ({
   const dbfInputRef = useRef<HTMLInputElement>(null);
   const createIlot = useCreateIlot();
   const createParcelle = useCreateParcelle();
+
+  // Per-ilot duplicate check. A plot number can repeat across different ilots,
+  // so we only consider it a duplicate if (ilot, plot) is already taken.
+  // When ilot is unknown, fallback to global plot-number list.
+  const isExistingPlot = useCallback(
+    (ilotName: string | undefined, plotNumber: string): boolean => {
+      const plot = String(plotNumber).trim();
+      if (ilotName) {
+        const key = String(ilotName).trim().toLowerCase();
+        const list = existingPlotsByIlot[key];
+        return Array.isArray(list) && list.map(p => String(p).trim()).includes(plot);
+      }
+      return existingPlotNumbers.map(p => String(p).trim()).includes(plot);
+    },
+    [existingPlotNumbers, existingPlotsByIlot]
+  );
 
   const reset = () => {
     setStep("upload");
@@ -412,7 +431,7 @@ export const ImportGeometreDialog = ({
 
           if (!plotNumber) continue;
           if (!isValidPlotNumberCandidate(plotNumber)) continue;
-          if (existingPlotNumbers.includes(String(plotNumber))) continue;
+          if (isExistingPlot(ilotName, String(plotNumber))) continue;
 
           const parcelle: ParsedGeometreParcelle = {
             plotNumber: String(plotNumber),
@@ -472,8 +491,12 @@ export const ImportGeometreDialog = ({
           newWarnings.push(`Ligne ${idx + 2} ignorée : valeur "${String(plotNumber).slice(0, 40)}…" non reconnue comme numéro de lot`);
           return;
         }
-        if (existingPlotNumbers.includes(String(plotNumber))) {
-          newErrors.push(`Parcelle "${plotNumber}" existe déjà`);
+        if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) {
+          newErrors.push(
+            ilotName
+              ? `Parcelle "${plotNumber}" existe déjà dans l'îlot "${ilotName}"`
+              : `Parcelle "${plotNumber}" existe déjà`
+          );
           return;
         }
         if (isFilledCell(areaValue) && area <= 0) {
@@ -508,7 +531,7 @@ export const ImportGeometreDialog = ({
     }
 
     return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
-  }, [existingIlotNames, existingPlotNumbers]);
+  }, [existingIlotNames, isExistingPlot]);
 
   // ─── Word/DOCX parser ─────────────────────────────────────────────
   const parseWordFile = useCallback(async (file: File) => {
@@ -598,7 +621,7 @@ export const ImportGeometreDialog = ({
 
         if (!plotNumber) continue;
         if (!isValidPlotNumberCandidate(plotNumber)) continue;
-        if (existingPlotNumbers.includes(String(plotNumber))) continue;
+        if (isExistingPlot(ilotName, String(plotNumber))) continue;
 
         // Now find the attributaire data from the table rows
         // Look for data rows (rows that start with a number in first cell)
@@ -702,7 +725,7 @@ export const ImportGeometreDialog = ({
 
           if (!plotNumber) continue;
           if (!isValidPlotNumberCandidate(plotNumber)) continue;
-          if (existingPlotNumbers.includes(String(plotNumber))) continue;
+          if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) continue;
 
           const parcelle: ParsedGeometreParcelle = {
             plotNumber: String(plotNumber),
@@ -731,7 +754,7 @@ export const ImportGeometreDialog = ({
     }
 
     return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
-  }, [existingPlotNumbers]);
+  }, [isExistingPlot]);
 
   // ─── Main file handler ──────────────────────────────────────────────
   const parseFile = useCallback(async (file: File, additionalDbf?: File | null) => {
@@ -770,9 +793,9 @@ export const ImportGeometreDialog = ({
           return;
       }
 
-      // Filter duplicate parcelles
+      // Filter duplicate parcelles (scoped per ilot when known)
       const filteredParcelles = result.parcelles.filter(
-        p => !existingPlotNumbers.includes(p.plotNumber)
+        p => !isExistingPlot(p.ilotName, p.plotNumber)
       );
       const duplicates = result.parcelles.length - filteredParcelles.length;
       if (duplicates > 0) {
@@ -798,7 +821,7 @@ export const ImportGeometreDialog = ({
       setErrors(["Erreur de lecture du fichier. Vérifiez le format."]);
       setStep("preview");
     }
-  }, [existingIlotNames, existingPlotNumbers, parseExcelFile, parseWordFile]);
+  }, [existingIlotNames, isExistingPlot, parseExcelFile, parseWordFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

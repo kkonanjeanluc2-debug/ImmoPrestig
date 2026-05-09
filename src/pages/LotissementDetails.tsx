@@ -500,6 +500,19 @@ const LotissementDetails = () => {
         onOpenChange={setShowImportGeometre}
         existingIlotNames={ilotsData?.map(i => i.name) || []}
         existingPlotNumbers={parcelles?.map(p => p.plot_number) || []}
+        existingPlotsByIlot={(() => {
+          const map: Record<string, string[]> = {};
+          const ilotById: Record<string, string> = {};
+          (ilotsData || []).forEach(i => { ilotById[i.id] = i.name; });
+          (parcelles || []).forEach(p => {
+            const ilotName = p.ilot_id ? ilotById[p.ilot_id] : undefined;
+            if (!ilotName) return;
+            const key = String(ilotName).trim().toLowerCase();
+            if (!map[key]) map[key] = [];
+            map[key].push(String(p.plot_number));
+          });
+          return map;
+        })()}
       />
       <AIAdvisorChat context="parcels" title="Conseiller Parcelles" />
     </DashboardLayout>

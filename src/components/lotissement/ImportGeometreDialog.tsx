@@ -50,6 +50,7 @@ export const ImportGeometreDialog = ({
   const [step, setStep] = useState<ImportStep>("upload");
   const [parsedIlots, setParsedIlots] = useState<ParsedGeometreIlot[]>([]);
   const [parsedParcelles, setParsedParcelles] = useState<ParsedGeometreParcelle[]>([]);
+  const [detectedByIlot, setDetectedByIlot] = useState<Record<string, number>>({});
   const [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");
@@ -115,6 +116,7 @@ export const ImportGeometreDialog = ({
     setStep("upload");
     setParsedIlots([]);
     setParsedParcelles([]);
+    setDetectedByIlot({});
     setErrors([]);
     setWarnings([]);
     setFileName("");
@@ -962,6 +964,13 @@ export const ImportGeometreDialog = ({
           return;
       }
 
+      // Compute detected counts per ilot (from raw parse, before dedup)
+      const detected: Record<string, number> = {};
+      for (const p of result.parcelles) {
+        const key = p.ilotName ? String(p.ilotName).trim() : "(sans îlot)";
+        detected[key] = (detected[key] || 0) + 1;
+      }
+
       // Filter duplicate parcelles (scoped per ilot when known)
       const filteredParcelles = result.parcelles.filter(
         p => !isExistingPlot(p.ilotName, p.plotNumber)
@@ -985,6 +994,7 @@ export const ImportGeometreDialog = ({
       setWarnings(result.warnings);
       setParsedIlots(newIlots);
       setParsedParcelles(filteredParcelles);
+      setDetectedByIlot(detected);
       setStep("preview");
     } catch (err) {
       setErrors(["Erreur de lecture du fichier. Vérifiez le format."]);
@@ -1419,6 +1429,54 @@ export const ImportGeometreDialog = ({
                   </CardContent>
                 </Card>
               )}
+
+              {/* Recap per ilot: detected vs to import */}
+              {Object.keys(detectedByIlot).length > 0 && (() => {
+                const importedByIlot: Record<string, number> = {};
+                for (const p of parsedParcelles) {
+                  const key = p.ilotName ? String(p.ilotName).trim() : "(sans îlot)";
+                  importedByIlot[key] = (importedByIlot[key] || 0) + 1;
+                }
+                const keys = Object.keys(detectedByIlot).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+                const totalDetected = Object.values(detectedByIlot).reduce((s, n) => s + n, 0);
+                const totalImported = Object.values(importedByIlot).reduce((s, n) => s + n, 0);
+                return (
+                  <Card className="border-primary/30 bg-primary/5">
+                    <CardContent className="p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                          <Layers className="h-4 w-4" />
+                          Récapitulatif par îlot
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {totalImported} / {totalDetected} à importer
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                        {keys.map((k) => {
+                          const det = detectedByIlot[k] || 0;
+                          const imp = importedByIlot[k] || 0;
+                          const skipped = det - imp;
+                          return (
+                            <div key={k} className="flex items-center justify-between p-2 bg-background/60 rounded text-xs">
+                              <span className="font-medium truncate">{k}</span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Badge variant="outline" className="text-[10px]">Détectés: {det}</Badge>
+                                <Badge variant="secondary" className="text-[10px]">À importer: {imp}</Badge>
+                                {skipped > 0 && (
+                                  <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700">
+                                    Ignorés: {skipped}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
 
               {/* Ilots preview */}
               {parsedIlots.length > 0 && (

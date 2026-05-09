@@ -701,6 +701,7 @@ export const ImportGeometreDialog = ({
           }
 
           if (!plotNumber) continue;
+          if (!isValidPlotNumberCandidate(plotNumber)) continue;
           if (existingPlotNumbers.includes(String(plotNumber))) continue;
 
           const parcelle: ParsedGeometreParcelle = {

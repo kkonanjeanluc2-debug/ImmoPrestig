@@ -793,9 +793,9 @@ export const ImportGeometreDialog = ({
           return;
       }
 
-      // Filter duplicate parcelles
+      // Filter duplicate parcelles (scoped per ilot when known)
       const filteredParcelles = result.parcelles.filter(
-        p => !existingPlotNumbers.includes(p.plotNumber)
+        p => !isExistingPlot(p.ilotName, p.plotNumber)
       );
       const duplicates = result.parcelles.length - filteredParcelles.length;
       if (duplicates > 0) {

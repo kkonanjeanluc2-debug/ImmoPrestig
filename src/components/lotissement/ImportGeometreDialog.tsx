@@ -448,14 +448,14 @@ export const ImportGeometreDialog = ({
       // Check if this is a guide format (table contains ILOT/LOT/SUPERFICIE header info)
       const isGuideFormat = (() => {
         // Check the full table text for guide markers
-        const fullTableText = table.textContent || "";
-        if (/\bILOT\s*[:]\s*\d/i.test(fullTableText) && /\bLOT\s*[:]\s*\d/i.test(fullTableText)) {
+        const fullTableText = normalizeForMatch(table.textContent || "");
+        if (/\bILOTS?\s*[:=\-]?\s*\d/.test(fullTableText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(fullTableText)) {
           return true;
         }
         // Also check row-by-row (ILOT and LOT may be in same row across cells)
         for (let i = 0; i < Math.min(rows.length, 5); i++) {
-          const rowText = Array.from(rows[i].querySelectorAll("td, th")).map(c => c.textContent || "").join(" ");
-          if (/\bILOT\s*[:]\s*\d/i.test(rowText) && /\bLOT\s*[:]\s*\d/i.test(rowText)) {
+          const rowText = normalizeForMatch(Array.from(rows[i].querySelectorAll("td, th")).map(c => c.textContent || "").join(" "));
+          if (/\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(rowText)) {
             return true;
           }
         }
@@ -472,20 +472,21 @@ export const ImportGeometreDialog = ({
 
         // Extract header info — scan each row for ILOT/LOT/SUPERFICIE/AFFECTATION
         // These values are in the header rows of each lot block table
-        let blockText = "";
+        let rawBlockText = "";
         for (let ri = 0; ri < Math.min(rows.length, 5); ri++) {
           const cells = Array.from(rows[ri].querySelectorAll("td, th"));
-          blockText += " " + cells.map(c => c.textContent || "").join(" ");
+          rawBlockText += " " + cells.map(c => c.textContent || "").join(" ");
         }
+        const blockText = normalizeForMatch(rawBlockText);
 
-        const ilotMatch = blockText.match(/\bILOT\s*[:]\s*(\d+)/i);
-        const lotMatch = blockText.match(/\bLOT\s*[:]\s*(\d+)/i);
-        const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+        const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
+        const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
+        const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
         // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
-        const parcelleAreaMatch = !superficieMatch ? blockText.match(/\bPARCELLE\s*[:]\s*\.*\s*(\d+[\.,]?\d*)/i) : null;
-        const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
+        const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
+        const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
         // Fallback : modèle simplifié où l'affectation est portée par "EQUIPEMENT : ..."
-        const equipementMatch = !affectationMatch ? blockText.match(/EQUIPEMENT\s*[:]\s*([^\n]*?)(?:\s{2,}|$)/i) : null;
+        const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
         const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
         const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;

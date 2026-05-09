@@ -264,35 +264,44 @@ export const ImportGeometreDialog = ({
 
       // Detect if Excel data contains guide-format blocks (cells with ILOT/LOT patterns)
       const isGuideExcel = parcellesData.some((row) => {
-        // Check individual cells
         const cellMatch = Object.values(row).some((val) => {
-          const text = String(val || "");
-          return /\bILOT\s*[:]\s*\d/i.test(text) && /\bLOT\s*[:]\s*\d/i.test(text);
+          const text = normalizeForMatch(String(val || ""));
+          return /\bILOTS?\s*[:=\-]?\s*\d/.test(text) && /\bLOTS?\s*[:=\-]?\s*\d/.test(text);
         });
         if (cellMatch) return true;
-        // Check concatenated row text (ILOT and LOT may be in separate cells)
-        const rowText = Object.values(row).map(v => String(v || "")).join(" ");
-        return /\bILOT\s*[:]\s*\d/i.test(rowText) && /\bLOT\s*[:]\s*\d/i.test(rowText);
+        const rowText = normalizeForMatch(Object.values(row).map(v => String(v || "")).join(" "));
+        return /\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(rowText);
       });
 
       if (isGuideExcel) {
         newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
         for (const row of parcellesData) {
-          // Concatenate all cell values to extract header info
-          const rowText = Object.values(row).map(v => String(v || "")).join(" ");
-          
-          // Check if this row contains lot header info
-          if (!/\bILOT\s*[:]\s*\d/i.test(rowText) && !/\bLOT\s*[:]\s*\d/i.test(rowText)) continue;
+          // Concatenate all cell values to extract header info (normalized)
+          const rawRowText = Object.values(row).map(v => String(v || "")).join(" ");
+          const rowText = normalizeForMatch(rawRowText);
 
-          const ilotMatch = rowText.match(/\bILOT\s*[:]\s*(\d+)/i);
-          const lotMatch = rowText.match(/\bLOT\s*[:]\s*(\d+)/i);
-          const superficieMatch = rowText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
-          const affectationMatch = rowText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
+          // Check if this row contains lot header info
+          if (!/\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && !/\bLOTS?\s*[:=\-]?\s*\d/.test(rowText)) continue;
+
+          const ilotMatch = rowText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
+          const lotMatch = rowText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
+          const superficieMatch = rowText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
+          const parcelleAreaMatch = !superficieMatch
+            ? rowText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`))
+            : null;
+          const affectationMatch = rowText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
+          const equipementMatch = !affectationMatch
+            ? rowText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`))
+            : null;
 
           const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
           const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
-          const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
-          const affectationRaw = affectationMatch ? affectationMatch[1].trim() : undefined;
+          const area = superficieMatch
+            ? parseNumber(superficieMatch[1].replace(",", "."))
+            : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
+          const affectationRaw = affectationMatch
+            ? affectationMatch[1].trim()
+            : (equipementMatch ? equipementMatch[1].trim() : undefined);
           const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
           if (!plotNumber) continue;
@@ -439,14 +448,14 @@ export const ImportGeometreDialog = ({
       // Check if this is a guide format (table contains ILOT/LOT/SUPERFICIE header info)
       const isGuideFormat = (() => {
         // Check the full table text for guide markers
-        const fullTableText = table.textContent || "";
-        if (/\bILOT\s*[:]\s*\d/i.test(fullTableText) && /\bLOT\s*[:]\s*\d/i.test(fullTableText)) {
+        const fullTableText = normalizeForMatch(table.textContent || "");
+        if (/\bILOTS?\s*[:=\-]?\s*\d/.test(fullTableText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(fullTableText)) {
           return true;
         }
         // Also check row-by-row (ILOT and LOT may be in same row across cells)
         for (let i = 0; i < Math.min(rows.length, 5); i++) {
-          const rowText = Array.from(rows[i].querySelectorAll("td, th")).map(c => c.textContent || "").join(" ");
-          if (/\bILOT\s*[:]\s*\d/i.test(rowText) && /\bLOT\s*[:]\s*\d/i.test(rowText)) {
+          const rowText = normalizeForMatch(Array.from(rows[i].querySelectorAll("td, th")).map(c => c.textContent || "").join(" "));
+          if (/\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(rowText)) {
             return true;
           }
         }
@@ -463,20 +472,21 @@ export const ImportGeometreDialog = ({
 
         // Extract header info — scan each row for ILOT/LOT/SUPERFICIE/AFFECTATION
         // These values are in the header rows of each lot block table
-        let blockText = "";
+        let rawBlockText = "";
         for (let ri = 0; ri < Math.min(rows.length, 5); ri++) {
           const cells = Array.from(rows[ri].querySelectorAll("td, th"));
-          blockText += " " + cells.map(c => c.textContent || "").join(" ");
+          rawBlockText += " " + cells.map(c => c.textContent || "").join(" ");
         }
+        const blockText = normalizeForMatch(rawBlockText);
 
-        const ilotMatch = blockText.match(/\bILOT\s*[:]\s*(\d+)/i);
-        const lotMatch = blockText.match(/\bLOT\s*[:]\s*(\d+)/i);
-        const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+        const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
+        const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
+        const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
         // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
-        const parcelleAreaMatch = !superficieMatch ? blockText.match(/\bPARCELLE\s*[:]\s*\.*\s*(\d+[\.,]?\d*)/i) : null;
-        const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
+        const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
+        const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
         // Fallback : modèle simplifié où l'affectation est portée par "EQUIPEMENT : ..."
-        const equipementMatch = !affectationMatch ? blockText.match(/EQUIPEMENT\s*[:]\s*([^\n]*?)(?:\s{2,}|$)/i) : null;
+        const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
         const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
         const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
@@ -1393,3 +1403,19 @@ function parseNumber(value: unknown): number {
   }
   return 0;
 }
+
+// Normalise un texte pour le matching: supprime les accents, uniformise la
+// ponctuation/espacement, met en majuscules. Permet des variantes comme
+// "Îlot", "ILOTS", "Équipement", "Equipement.", "Parcelle  -  148,5"…
+function normalizeForMatch(text: string): string {
+  return (text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[\u00A0\u2000-\u200B]/g, " ") // nbsp & co -> space
+    .replace(/\s+/g, " ")
+    .toUpperCase();
+}
+
+// Sépcarateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
+// "·", "." répétés, ou simplement des espaces.
+const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)?";

@@ -468,6 +468,10 @@ export const ImportGeometreDialog = ({
           newErrors.push(`Parcelle ligne ${idx + 2}: numéro manquant`);
           return;
         }
+        if (!isValidPlotNumberCandidate(plotNumber)) {
+          newWarnings.push(`Ligne ${idx + 2} ignorée : valeur "${String(plotNumber).slice(0, 40)}…" non reconnue comme numéro de lot`);
+          return;
+        }
         if (existingPlotNumbers.includes(String(plotNumber))) {
           newErrors.push(`Parcelle "${plotNumber}" existe déjà`);
           return;

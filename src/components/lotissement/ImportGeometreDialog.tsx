@@ -536,14 +536,18 @@ export const ImportGeometreDialog = ({
         const proprietaireTerrien = findValue(row, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
         const beneficiaire = findValue(row, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
 
-        // Fallback: use the first non-empty cell value as plot number
-        if (!plotNumber) {
+        // Fallback: use the first non-empty cell value as plot number (skipped in strict mode)
+        if (!plotNumber && !strictMatchingRef.current) {
           const firstNonEmptyValue = Object.values(row).find(
             (val) => val !== null && val !== undefined && String(val).trim() !== ""
           );
           if (firstNonEmptyValue !== undefined) {
             plotNumber = firstNonEmptyValue;
           }
+        }
+        // Strict: require an explicit ilot column value
+        if (strictMatchingRef.current && !ilotName) {
+          return;
         }
 
         if (!plotNumber) {

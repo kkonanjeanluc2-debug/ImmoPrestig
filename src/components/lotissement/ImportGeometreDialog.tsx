@@ -263,8 +263,6 @@ export const ImportGeometreDialog = ({
       }
 
       // Detect if Excel data contains guide-format blocks (cells with ILOT/LOT patterns)
-      const guideIlotRe = new RegExp(`\\bI?LOTS?${LABEL_SEP}\\d`, "i");
-      const guideLotRe = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`, "i");
       const isGuideExcel = parcellesData.some((row) => {
         const cellMatch = Object.values(row).some((val) => {
           const text = normalizeForMatch(String(val || ""));

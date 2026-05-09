@@ -61,6 +61,22 @@ export const ImportGeometreDialog = ({
   const createIlot = useCreateIlot();
   const createParcelle = useCreateParcelle();
 
+  // Per-ilot duplicate check. A plot number can repeat across different ilots,
+  // so we only consider it a duplicate if (ilot, plot) is already taken.
+  // When ilot is unknown, fallback to global plot-number list.
+  const isExistingPlot = useCallback(
+    (ilotName: string | undefined, plotNumber: string): boolean => {
+      const plot = String(plotNumber).trim();
+      if (ilotName) {
+        const key = String(ilotName).trim().toLowerCase();
+        const list = existingPlotsByIlot[key];
+        return Array.isArray(list) && list.map(p => String(p).trim()).includes(plot);
+      }
+      return existingPlotNumbers.map(p => String(p).trim()).includes(plot);
+    },
+    [existingPlotNumbers, existingPlotsByIlot]
+  );
+
   const reset = () => {
     setStep("upload");
     setParsedIlots([]);

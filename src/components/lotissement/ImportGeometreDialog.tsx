@@ -262,66 +262,156 @@ export const ImportGeometreDialog = ({
         newWarnings.push("Aucune colonne de superficie détectée : les parcelles seront importées avec une superficie à 0.");
       }
 
-      // Detect if Excel data contains guide-format blocks (cells with ILOT/LOT patterns)
+      // Detect if Excel data contains guide-format blocks (cells with ILOT/LOT labels).
+      // Tolerant of dotted fillers like "ILOT :....06...." and other punctuation.
+      const HAS_ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}\\d`);
+      const HAS_LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`);
       const isGuideExcel = parcellesData.some((row) => {
         const cellMatch = Object.values(row).some((val) => {
           const text = normalizeForMatch(String(val || ""));
-          return /\bILOTS?\s*[:=\-]?\s*\d/.test(text) && /\bLOTS?\s*[:=\-]?\s*\d/.test(text);
+          return HAS_ILOT_RE.test(text) || HAS_LOT_RE.test(text);
         });
         if (cellMatch) return true;
         const rowText = normalizeForMatch(Object.values(row).map(v => String(v || "")).join(" "));
-        return /\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && /\bLOTS?\s*[:=\-]?\s*\d/.test(rowText);
+        return HAS_ILOT_RE.test(rowText) && HAS_LOT_RE.test(rowText);
       });
 
       if (isGuideExcel) {
         newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
+        // Per-cell extractors: each column maps to its own field via its label.
+        const ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`);
+        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`);
+        const SUPERFICIE_RE = new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
+        const PARCELLE_RE = new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
+        const AFFECT_RE = new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}(.+)$`);
+        const EQUIP_RE = new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}(.+)$`);
+        const ATTRIB_RE = new RegExp(`(?:ATTRIBUTAIRES?|NOMS?\\s*ET\\s*PRENOMS?|NOMS?\\s*&\\s*PRENOMS?|NOM\\s*PRENOM)${LABEL_SEP}(.+)$`);
+        const ATTEST_RE = new RegExp(`ATTESTATIONS?${LABEL_SEP}(.+)$`);
+        const CONTACT_RE = new RegExp(`(?:CONTACTS?|TELS?|TELEPHONES?)${LABEL_SEP}(.+)$`);
+        const PIECE_RE = new RegExp(`(?:PIECES?|CNIS?|PIECE\\s*D.?IDENTITE)${LABEL_SEP}(.+)$`);
+
+        // Strip trailing dot/dash filler & spaces from a captured value.
+        const cleanValue = (s: string) => s
+          .replace(/[\s.\-\u2013\u2014\u00B7\u2026]+$/g, "")
+          .replace(/^[\s.\-\u2013\u2014\u00B7\u2026]+/g, "")
+          .trim();
+
         for (const row of parcellesData) {
-          // Concatenate all cell values to extract header info (normalized)
-          const rawRowText = Object.values(row).map(v => String(v || "")).join(" ");
-          const rowText = normalizeForMatch(rawRowText);
+          // Build (raw, normalized) pairs for each cell to preserve original case
+          // for free-text fields (names, contacts) while still matching labels.
+          const cellPairs = Object.values(row)
+            .map((v) => {
+              const raw = String(v ?? "").trim();
+              return { raw, norm: normalizeForMatch(raw) };
+            })
+            .filter((p) => p.raw.length > 0);
 
-          // Check if this row contains lot header info
-          if (!/\bILOTS?\s*[:=\-]?\s*\d/.test(rowText) && !/\bLOTS?\s*[:=\-]?\s*\d/.test(rowText)) continue;
+          if (cellPairs.length === 0) continue;
 
-          const ilotMatch = rowText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
-          const lotMatch = rowText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
-          const superficieMatch = rowText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
-          const parcelleAreaMatch = !superficieMatch
-            ? rowText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`))
-            : null;
-          const affectationMatch = rowText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
-          const equipementMatch = !affectationMatch
-            ? rowText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`))
-            : null;
+          const concatNorm = cellPairs.map((p) => p.norm).join(" | ");
+          if (!HAS_ILOT_RE.test(concatNorm) && !HAS_LOT_RE.test(concatNorm)) continue;
 
-          const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-          const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
-          const area = superficieMatch
-            ? parseNumber(superficieMatch[1].replace(",", "."))
-            : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
-          const affectationRaw = affectationMatch
-            ? affectationMatch[1].trim()
-            : (equipementMatch ? equipementMatch[1].trim() : undefined);
-          const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
+          let ilotName: string | undefined;
+          let plotNumber: string | undefined;
+          let area = 0;
+          let affectation: string | undefined;
+          let beneficiaireName: string | undefined;
+          let attestationNumber: string | undefined;
+          let contact: string | undefined;
+          let cniNumber: string | undefined;
+
+          // Track which cells are already consumed by a labelled match,
+          // so that unlabeled "free" cells can be assigned to the name field.
+          const consumed = new Set<number>();
+
+          cellPairs.forEach((pair, idx) => {
+            const { norm, raw } = pair;
+            // Extract value either after label (if present) or take whole cell.
+            const tryLabel = (re: RegExp): string | null => {
+              const m = norm.match(re);
+              if (!m) return null;
+              consumed.add(idx);
+              // Use the raw cell, strip the label prefix length-equivalent.
+              // Recompute on raw text using a case-insensitive variant.
+              const rawMatch = raw.match(new RegExp(re.source, "i"));
+              const captured = rawMatch ? rawMatch[1] : m[1];
+              return cleanValue(captured);
+            };
+
+            // ILOT
+            if (!ilotName) {
+              const m = norm.match(ILOT_RE);
+              if (m) { ilotName = m[1]; consumed.add(idx); return; }
+            }
+            // LOT (must avoid matching inside ILOT — \b handles it)
+            if (!plotNumber) {
+              const m = norm.match(LOT_RE);
+              if (m && !/\bILOTS?/.test(norm.slice(0, m.index ?? 0).slice(-2))) {
+                plotNumber = m[1]; consumed.add(idx); return;
+              }
+            }
+            // SUPERFICIE / PARCELLE (area)
+            if (!area) {
+              const sm = norm.match(SUPERFICIE_RE) || norm.match(PARCELLE_RE);
+              if (sm) {
+                area = parseNumber(sm[1].replace(",", "."));
+                consumed.add(idx);
+                return;
+              }
+            }
+            // AFFECTATION / EQUIPEMENT
+            if (!affectation) {
+              const v = tryLabel(AFFECT_RE) || tryLabel(EQUIP_RE);
+              if (v) { affectation = v; return; }
+            }
+            // ATTRIBUTAIRE
+            if (!beneficiaireName) {
+              const v = tryLabel(ATTRIB_RE);
+              if (v) { beneficiaireName = v; return; }
+            }
+            // ATTESTATION
+            if (!attestationNumber) {
+              const v = tryLabel(ATTEST_RE);
+              if (v) { attestationNumber = v; return; }
+            }
+            // CONTACT
+            if (!contact) {
+              const v = tryLabel(CONTACT_RE);
+              if (v) { contact = v; return; }
+            }
+            // PIECE / CNI
+            if (!cniNumber) {
+              const v = tryLabel(PIECE_RE);
+              if (v) { cniNumber = v; return; }
+            }
+          });
+
+          // For the simplified template (no header, columns in fixed order),
+          // free unlabeled cells fill the remaining fields positionally.
+          const freeCells = cellPairs
+            .map((p, i) => ({ ...p, i }))
+            .filter((p) => !consumed.has(p.i));
+
+          const takeNextFree = (predicate?: (raw: string) => boolean): string | undefined => {
+            const found = freeCells.find((c) => (!predicate || predicate(c.raw)));
+            if (!found) return undefined;
+            consumed.add(found.i);
+            const idx = freeCells.indexOf(found);
+            if (idx >= 0) freeCells.splice(idx, 1);
+            return found.raw;
+          };
+
+          if (!beneficiaireName) {
+            beneficiaireName = takeNextFree((r) =>
+              /[A-Za-zÀ-ÿ]{3,}/.test(r) && !/^\d+[\.,]?\d*$/.test(r)
+            );
+          }
+          if (!attestationNumber) attestationNumber = takeNextFree();
+          if (!contact) contact = takeNextFree((r) => /\d/.test(r));
+          if (!cniNumber) cniNumber = takeNextFree();
 
           if (!plotNumber) continue;
           if (existingPlotNumbers.includes(String(plotNumber))) continue;
-
-          // Try to extract attributaire info from other cells in same row
-          const allValues = Object.values(row).map(v => String(v || "").trim()).filter(Boolean);
-          // Find the cell that's NOT the block text and looks like a name
-          let beneficiaireName = "";
-          let contact = "";
-          let cniNumber = "";
-          let cniNature = "";
-          for (const val of allValues) {
-            if (/\bILOT\s*[:]/i.test(val) || /\bLOT\s*[:]/i.test(val) || /SUPERFICIE/i.test(val) || /AFFECTATION/i.test(val)) continue;
-            // Skip pure numbers that look like area/price
-            if (/^\d+[\.,]?\d*$/.test(val) && !beneficiaireName) continue;
-            if (!beneficiaireName && val.length > 2 && !/ILOT|LOT|COMMUNE|VILLAGE|SUPERFICIE|ATTESTATION|ATTRIBUT/i.test(val)) {
-              beneficiaireName = val;
-            }
-          }
 
           const parcelle: ParsedGeometreParcelle = {
             plotNumber: String(plotNumber),
@@ -329,7 +419,10 @@ export const ImportGeometreDialog = ({
             price: 0,
             ilotName: ilotName ? String(ilotName) : undefined,
             beneficiaire: beneficiaireName || undefined,
-            affectation: (affectation && affectation.length > 0) ? affectation : undefined,
+            contact: contact || undefined,
+            cniNumber: cniNumber || undefined,
+            attestationNumber: attestationNumber || undefined,
+            affectation: affectation || undefined,
           };
           parcelles.push(parcelle);
 

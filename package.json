@@ -60,7 +60,7 @@
     "input-otp": "^1.4.2",
     "jspdf": "^4.0.0",
     "jszip": "^3.10.1",
-    "kkiapay": "^2.0.38",
+    "kkiapay": "^1.0.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.462.0",
     "mammoth": "^1.12.0",

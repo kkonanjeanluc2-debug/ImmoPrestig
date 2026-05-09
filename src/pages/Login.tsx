@@ -42,7 +42,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [honeypot, setHoneypot] = useState(""); // Bot trap
-  const [attempts, setAttempts] = useState(0);
+  const [clientIp, setClientIp] = useState<string>("unknown");
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [agencyBranding, setAgencyBranding] = useState<{ agency_name: string; logo_url: string | null; login_image_url: string | null; slug: string; is_default?: boolean; } | null>(null);
   const { signIn } = useAuth();
@@ -79,10 +79,65 @@ const Login = () => {
 
     void loadAgencyBranding();
 
+    // Fetch client IP for rate limiting
+    fetch('https://api64.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.ip) {
+          setClientIp(data.ip);
+          checkRateLimit(data.ip);
+        }
+      })
+      .catch(err => {
+        console.warn('Could not fetch IP', err);
+        checkRateLimit('unknown');
+      });
+
     return () => {
       cancelled = true;
     };
   }, [agencySlug]);
+
+  const checkRateLimit = (ip: string) => {
+    try {
+      const stored = localStorage.getItem(`rl_${ip}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.lockedUntil && Date.now() < parsed.lockedUntil) {
+          setLockedUntil(parsed.lockedUntil);
+        } else if (parsed.lockedUntil && Date.now() >= parsed.lockedUntil) {
+          // Lockout expired, clear attempts
+          localStorage.removeItem(`rl_${ip}`);
+        }
+      }
+    } catch (e) {
+      console.error('Error reading rate limit', e);
+    }
+  };
+
+  const incrementAttempts = () => {
+    try {
+      const stored = localStorage.getItem(`rl_${clientIp}`);
+      let attempts = 0;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (!parsed.lockedUntil || Date.now() >= parsed.lockedUntil) {
+           attempts = parsed.attempts || 0;
+        }
+      }
+      attempts += 1;
+
+      if (attempts >= MAX_ATTEMPTS) {
+        const newLockedUntil = Date.now() + LOCKOUT_DURATION;
+        setLockedUntil(newLockedUntil);
+        localStorage.setItem(`rl_${clientIp}`, JSON.stringify({ attempts: 0, lockedUntil: newLockedUntil }));
+      } else {
+        localStorage.setItem(`rl_${clientIp}`, JSON.stringify({ attempts, lockedUntil: null }));
+      }
+    } catch (e) {
+      console.error('Error saving rate limit', e);
+    }
+  };
 
   const displayLogo = agencyBranding?.logo_url || platformLogo;
   const displayAppName = agencyBranding?.agency_name || platformAppName;
@@ -109,13 +164,13 @@ const Login = () => {
       return;
     }
 
-    // Rate limiting
+    // Rate limiting check
     if (lockedUntil && Date.now() < lockedUntil) {
       const secondsLeft = Math.ceil((lockedUntil - Date.now()) / 1000);
       toast({
         variant: "destructive",
         title: "Trop de tentatives",
-        description: `Veuillez patienter ${secondsLeft} secondes avant de réessayer.`,
+        description: `Veuillez patienter ${secondsLeft} secondes avant de réessayer. (IP: ${clientIp})`,
       });
       return;
     }
@@ -177,12 +232,7 @@ const Login = () => {
     const { error, data } = await signIn(loginEmail, password);
 
     if (error) {
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      if (newAttempts >= MAX_ATTEMPTS) {
-        setLockedUntil(Date.now() + LOCKOUT_DURATION);
-        setAttempts(0);
-      }
+      incrementAttempts();
       toast({
         variant: "destructive",
         title: "Erreur de connexion",
@@ -225,7 +275,8 @@ const Login = () => {
       return;
     }
 
-    setAttempts(0);
+    // Clear rate limit on successful login
+    localStorage.removeItem(`rl_${clientIp}`);
     setLockedUntil(null);
 
     toast({

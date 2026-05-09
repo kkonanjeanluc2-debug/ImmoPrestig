@@ -61,20 +61,49 @@ export const ImportGeometreDialog = ({
   const createIlot = useCreateIlot();
   const createParcelle = useCreateParcelle();
 
-  // Per-ilot duplicate check. A plot number can repeat across different ilots,
-  // so we only consider it a duplicate if (ilot, plot) is already taken.
-  // When ilot is unknown, fallback to global plot-number list.
+  // Strict plot-number normalization for reliable matching.
+  // Handles: case, accents, surrounding whitespace, internal spaces,
+  // common prefixes ("lot", "n°", "no", "#"), separators (-, _, /, ., space),
+  // and leading zeros on numeric segments.
+  // Examples (all normalized to "a12"):
+  //   "A12", "a 12", "A-12", "A_12", "A/12", "Lot A12", "N° A12", "A012"
+  // Examples (all normalized to "25"):
+  //   "25", "025", " 25 ", "Lot 25", "N°25", "#25", "Lot-025"
+  const normalizePlotNumber = useCallback((value: unknown): string => {
+    if (value === null || value === undefined) return "";
+    let s = String(value).trim().toLowerCase();
+    if (!s) return "";
+    // Remove diacritics
+    s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // Strip common prefixes (repeatedly)
+    s = s.replace(/^(?:lot|parcelle|n°|n º|n\s*o|no|num(?:ero)?|#)\s*[:\-_.]?\s*/gi, "");
+    // Remove all whitespace and separators
+    s = s.replace(/[\s\-_./\\]+/g, "");
+    // Strip leading zeros on pure-numeric strings or on leading numeric segment
+    if (/^\d+$/.test(s)) {
+      s = s.replace(/^0+/, "") || "0";
+    } else {
+      // Letter(s) + zero-padded number, e.g. "a012" -> "a12"
+      s = s.replace(/^([a-z]+)0+(\d)/, "$1$2");
+      // Number-then-letters: "012b" -> "12b"
+      s = s.replace(/^0+(\d)/, "$1");
+    }
+    return s;
+  }, []);
+
+  // Per-ilot duplicate check using normalized plot numbers.
   const isExistingPlot = useCallback(
     (ilotName: string | undefined, plotNumber: string): boolean => {
-      const plot = String(plotNumber).trim();
+      const plot = normalizePlotNumber(plotNumber);
+      if (!plot) return false;
       if (ilotName) {
         const key = String(ilotName).trim().toLowerCase();
         const list = existingPlotsByIlot[key];
-        return Array.isArray(list) && list.map(p => String(p).trim()).includes(plot);
+        return Array.isArray(list) && list.some(p => normalizePlotNumber(p) === plot);
       }
-      return existingPlotNumbers.map(p => String(p).trim()).includes(plot);
+      return existingPlotNumbers.some(p => normalizePlotNumber(p) === plot);
     },
-    [existingPlotNumbers, existingPlotsByIlot]
+    [existingPlotNumbers, existingPlotsByIlot, normalizePlotNumber]
   );
 
   const reset = () => {

@@ -360,10 +360,10 @@ export const ImportGeometreDialog = ({
         const seenInImport = new Set<string>();
         const isStrict = strictMatchingRef.current;
 
-        for (const row of parcellesData) {
+        for (const row of rawRows) {
           // Build (raw, normalized) pairs for each cell to preserve original case
           // for free-text fields (names, contacts) while still matching labels.
-          const cellPairs = Object.values(row)
+          const cellPairs = row
             .map((v) => {
               const raw = String(v ?? "").trim();
               return { raw, norm: normalizeForMatch(raw) };

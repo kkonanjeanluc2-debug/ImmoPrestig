@@ -1512,3 +1512,48 @@ function normalizeForMatch(text: string): string {
 // Sépcarateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
 // "·", "." répétés, ou simplement des espaces.
 const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)?";
+
+// Rejette tout numéro de lot qui n'est en réalité qu'un libellé du modèle
+// (ATTRIBUTAIRES, ILOT, LOT, PARCELLE, EQUIPEMENT, ATTESTATION, CONTACTS,
+// PIECE, NOM/PRENOMS, ARRETE, AFFECTATION, SUPERFICIE…) ou un blob bruité
+// contenant ces libellés. Accepte les références courtes type "A12", "B-3",
+// "1025", "Lot 25"…
+export function isValidPlotNumberCandidate(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  const raw = String(value).trim();
+  if (!raw) return false;
+  // Trop long → certainement pas un vrai numéro de lot
+  if (raw.length > 30) return false;
+  const norm = normalizeForMatch(raw)
+    .replace(/[\s.\-_:;,/\\\u2013\u2014\u00B7\u2026'"`]+/g, " ")
+    .trim();
+  if (!norm) return false;
+  // Doit contenir au moins un chiffre OU être une référence alphanumérique courte
+  if (!/[0-9]/.test(norm) && norm.length > 6) return false;
+  // Mots-clés interdits dans un numéro de lot
+  const FORBIDDEN = [
+    "ATTRIBUTAIRE", "ATTRIBUTAIRES",
+    "ATTESTATION", "ATTESTATIONS",
+    "CONTACT", "CONTACTS", "ADRESSE", "ADRESSES",
+    "PIECE", "PIECES", "CNI",
+    "NOM", "PRENOM", "PRENOMS",
+    "EQUIPEMENT", "EQUIPEMENTS", "EQUIPT",
+    "AFFECTATION", "AFFECT",
+    "SUPERFICIE", "SURFACE", "CONTENANCE",
+    "ARRETE",
+    "COMMUNE", "VILLAGE", "LOTISSEMENT",
+    "NATURE",
+  ];
+  const tokens = new Set(norm.split(" "));
+  for (const kw of FORBIDDEN) {
+    if (tokens.has(kw)) return false;
+  }
+  // Refuse aussi les blobs où apparaissent simultanément ILOT/LOT/PARCELLE
+  // (= une ligne de libellés non parsée correctement).
+  let hits = 0;
+  if (/\bILOTS?\b/.test(norm)) hits++;
+  if (/\bLOTS?\b/.test(norm)) hits++;
+  if (/\bPARCELLES?\b/.test(norm)) hits++;
+  if (hits >= 2) return false;
+  return true;
+}

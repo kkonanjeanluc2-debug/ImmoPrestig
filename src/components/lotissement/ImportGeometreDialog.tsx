@@ -116,6 +116,7 @@ export const ImportGeometreDialog = ({
     setStep("upload");
     setParsedIlots([]);
     setParsedParcelles([]);
+    setDetectedByIlot({});
     setErrors([]);
     setWarnings([]);
     setFileName("");

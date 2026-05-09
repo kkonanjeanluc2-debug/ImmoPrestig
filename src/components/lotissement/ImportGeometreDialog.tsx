@@ -56,6 +56,9 @@ export const ImportGeometreDialog = ({
   const [fileType, setFileType] = useState<GeometreFileType>("unknown");
   const [importProgress, setImportProgress] = useState({ done: 0, total: 0 });
   const [dbfFile, setDbfFile] = useState<File | null>(null);
+  const [strictMatching, setStrictMatching] = useState(false);
+  const strictMatchingRef = useRef(false);
+  strictMatchingRef.current = strictMatching;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dbfInputRef = useRef<HTMLInputElement>(null);
   const createIlot = useCreateIlot();
@@ -348,6 +351,7 @@ export const ImportGeometreDialog = ({
 
         let lastIlotName: string | undefined;
         const seenInImport = new Set<string>();
+        const isStrict = strictMatchingRef.current;
 
         for (const row of parcellesData) {
           // Build (raw, normalized) pairs for each cell to preserve original case
@@ -362,9 +366,14 @@ export const ImportGeometreDialog = ({
           if (cellPairs.length === 0) continue;
 
           const concatNorm = cellPairs.map((p) => p.norm).join(" | ");
-          // Accept rows that have either an ILOT label OR a LOT label.
-          // Subsequent rows missing the ILOT will inherit `lastIlotName`.
-          if (!HAS_ILOT_RE.test(concatNorm) && !HAS_LOT_RE.test(concatNorm)) continue;
+          if (isStrict) {
+            // Strict: require BOTH ILOT and LOT labels explicitly on the row.
+            if (!HAS_ILOT_RE.test(concatNorm) || !HAS_LOT_RE.test(concatNorm)) continue;
+          } else {
+            // Permissive: accept rows that have either an ILOT or a LOT label.
+            // Subsequent rows missing the ILOT inherit `lastIlotName`.
+            if (!HAS_ILOT_RE.test(concatNorm) && !HAS_LOT_RE.test(concatNorm)) continue;
+          }
 
           let ilotName: string | undefined;
           let plotNumber: string | undefined;
@@ -442,35 +451,41 @@ export const ImportGeometreDialog = ({
           });
 
           // Inherit ilot from previous row if this row only carries LOT info
-          if (!ilotName && lastIlotName) {
-            ilotName = lastIlotName;
-          } else if (ilotName) {
-            lastIlotName = ilotName;
+          // (disabled in strict mode)
+          if (!isStrict) {
+            if (!ilotName && lastIlotName) {
+              ilotName = lastIlotName;
+            } else if (ilotName) {
+              lastIlotName = ilotName;
+            }
           }
 
           // For the simplified template (no header, columns in fixed order),
           // free unlabeled cells fill the remaining fields positionally.
-          const freeCells = cellPairs
-            .map((p, i) => ({ ...p, i }))
-            .filter((p) => !consumed.has(p.i));
+          // Skip positional fallback in strict mode — only labelled values count.
+          if (!isStrict) {
+            const freeCells = cellPairs
+              .map((p, i) => ({ ...p, i }))
+              .filter((p) => !consumed.has(p.i));
 
-          const takeNextFree = (predicate?: (raw: string) => boolean): string | undefined => {
-            const found = freeCells.find((c) => (!predicate || predicate(c.raw)));
-            if (!found) return undefined;
-            consumed.add(found.i);
-            const idx = freeCells.indexOf(found);
-            if (idx >= 0) freeCells.splice(idx, 1);
-            return found.raw;
-          };
+            const takeNextFree = (predicate?: (raw: string) => boolean): string | undefined => {
+              const found = freeCells.find((c) => (!predicate || predicate(c.raw)));
+              if (!found) return undefined;
+              consumed.add(found.i);
+              const idx = freeCells.indexOf(found);
+              if (idx >= 0) freeCells.splice(idx, 1);
+              return found.raw;
+            };
 
-          if (!beneficiaireName) {
-            beneficiaireName = takeNextFree((r) =>
-              /[A-Za-zÀ-ÿ]{3,}/.test(r) && !/^\d+[\.,]?\d*$/.test(r)
-            );
+            if (!beneficiaireName) {
+              beneficiaireName = takeNextFree((r) =>
+                /[A-Za-zÀ-ÿ]{3,}/.test(r) && !/^\d+[\.,]?\d*$/.test(r)
+              );
+            }
+            if (!attestationNumber) attestationNumber = takeNextFree();
+            if (!contact) contact = takeNextFree((r) => /\d/.test(r));
+            if (!cniNumber) cniNumber = takeNextFree();
           }
-          if (!attestationNumber) attestationNumber = takeNextFree();
-          if (!contact) contact = takeNextFree((r) => /\d/.test(r));
-          if (!cniNumber) cniNumber = takeNextFree();
 
           if (!plotNumber) continue;
           if (!isValidPlotNumberCandidate(plotNumber)) continue;
@@ -521,14 +536,18 @@ export const ImportGeometreDialog = ({
         const proprietaireTerrien = findValue(row, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
         const beneficiaire = findValue(row, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
 
-        // Fallback: use the first non-empty cell value as plot number
-        if (!plotNumber) {
+        // Fallback: use the first non-empty cell value as plot number (skipped in strict mode)
+        if (!plotNumber && !strictMatchingRef.current) {
           const firstNonEmptyValue = Object.values(row).find(
             (val) => val !== null && val !== undefined && String(val).trim() !== ""
           );
           if (firstNonEmptyValue !== undefined) {
             plotNumber = firstNonEmptyValue;
           }
+        }
+        // Strict: require an explicit ilot column value
+        if (strictMatchingRef.current && !ilotName) {
+          return;
         }
 
         if (!plotNumber) {
@@ -764,7 +783,7 @@ export const ImportGeometreDialog = ({
           const proprietaireTerrien = findValue(record, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
           const beneficiaire = findValue(record, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
 
-          if (!plotNumber) {
+          if (!plotNumber && !strictMatchingRef.current) {
             const firstNonEmpty = Object.values(record).find(
               (val) => val !== null && val !== undefined && String(val).trim() !== ""
             );
@@ -772,6 +791,7 @@ export const ImportGeometreDialog = ({
           }
 
           if (!plotNumber) continue;
+          if (strictMatchingRef.current && !ilotName) continue;
           if (!isValidPlotNumberCandidate(plotNumber)) continue;
           if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) continue;
 
@@ -1199,6 +1219,26 @@ export const ImportGeometreDialog = ({
                 Télécharger le modèle Word (Guide de Lotissement)
               </Button>
             </div>
+
+            <Card className="border-muted">
+              <CardContent className="p-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={strictMatching}
+                    onChange={(e) => setStrictMatching(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                  />
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p className="font-semibold text-foreground">Correspondance stricte</p>
+                    <p>
+                      Ne crée que les lots dont le couple <strong>(îlot, numéro de lot)</strong> apparaît
+                      explicitement dans le fichier. Aucun héritage de l'îlot précédent, aucune interprétation positionnelle.
+                    </p>
+                  </div>
+                </label>
+              </CardContent>
+            </Card>
 
             {/* DBF file input for shapefiles */}
             <Card className="border-muted">

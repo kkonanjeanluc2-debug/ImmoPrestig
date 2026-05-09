@@ -451,35 +451,41 @@ export const ImportGeometreDialog = ({
           });
 
           // Inherit ilot from previous row if this row only carries LOT info
-          if (!ilotName && lastIlotName) {
-            ilotName = lastIlotName;
-          } else if (ilotName) {
-            lastIlotName = ilotName;
+          // (disabled in strict mode)
+          if (!isStrict) {
+            if (!ilotName && lastIlotName) {
+              ilotName = lastIlotName;
+            } else if (ilotName) {
+              lastIlotName = ilotName;
+            }
           }
 
           // For the simplified template (no header, columns in fixed order),
           // free unlabeled cells fill the remaining fields positionally.
-          const freeCells = cellPairs
-            .map((p, i) => ({ ...p, i }))
-            .filter((p) => !consumed.has(p.i));
+          // Skip positional fallback in strict mode — only labelled values count.
+          if (!isStrict) {
+            const freeCells = cellPairs
+              .map((p, i) => ({ ...p, i }))
+              .filter((p) => !consumed.has(p.i));
 
-          const takeNextFree = (predicate?: (raw: string) => boolean): string | undefined => {
-            const found = freeCells.find((c) => (!predicate || predicate(c.raw)));
-            if (!found) return undefined;
-            consumed.add(found.i);
-            const idx = freeCells.indexOf(found);
-            if (idx >= 0) freeCells.splice(idx, 1);
-            return found.raw;
-          };
+            const takeNextFree = (predicate?: (raw: string) => boolean): string | undefined => {
+              const found = freeCells.find((c) => (!predicate || predicate(c.raw)));
+              if (!found) return undefined;
+              consumed.add(found.i);
+              const idx = freeCells.indexOf(found);
+              if (idx >= 0) freeCells.splice(idx, 1);
+              return found.raw;
+            };
 
-          if (!beneficiaireName) {
-            beneficiaireName = takeNextFree((r) =>
-              /[A-Za-zÀ-ÿ]{3,}/.test(r) && !/^\d+[\.,]?\d*$/.test(r)
-            );
+            if (!beneficiaireName) {
+              beneficiaireName = takeNextFree((r) =>
+                /[A-Za-zÀ-ÿ]{3,}/.test(r) && !/^\d+[\.,]?\d*$/.test(r)
+              );
+            }
+            if (!attestationNumber) attestationNumber = takeNextFree();
+            if (!contact) contact = takeNextFree((r) => /\d/.test(r));
+            if (!cniNumber) cniNumber = takeNextFree();
           }
-          if (!attestationNumber) attestationNumber = takeNextFree();
-          if (!contact) contact = takeNextFree((r) => /\d/.test(r));
-          if (!cniNumber) cniNumber = takeNextFree();
 
           if (!plotNumber) continue;
           if (!isValidPlotNumberCandidate(plotNumber)) continue;

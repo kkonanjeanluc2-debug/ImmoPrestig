@@ -58,43 +58,37 @@ const UpdatePrompt = () => {
   const handleManualCheck = useCallback(async () => {
     setIsChecking(true);
     try {
-      // Check for SW update
-      if (swRegistration) {
-        await swRegistration.update();
-      }
-      
-      // Clear all caches
+      // 1. Vider tous les caches (Workbox + browser)
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
       }
 
-      // Short delay to let SW detect updates
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      if (needRefresh) {
-        handleUpdate();
-      } else {
-        toast.success("Application à jour", {
-          description: "Vous utilisez la dernière version. L'application va se recharger pour garantir la fraîcheur des données.",
-        });
-        // Force reload anyway to get fresh content
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+      // 2. Désinscrire TOUS les service workers (reset dur en cas de chunks périmés)
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(r => r.unregister()));
+        } catch (err) {
+          console.warn("SW unregister failed:", err);
+        }
       }
-    } catch (error) {
-      console.error("Manual update check failed:", error);
-      toast.error("Erreur lors de la vérification", {
-        description: "Rechargement de la page...",
+
+      toast.success("Cache vidé", {
+        description: "Rechargement de l'application...",
       });
+
+      // 3. Rechargement forcé sans cache
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 600);
+    } catch (error) {
+      console.error("Manual update check failed:", error);
+      window.location.reload();
     } finally {
       setIsChecking(false);
     }
-  }, [swRegistration, needRefresh]);
+  }, []);
 
   const handleDismiss = () => {
     setNeedRefresh(false);

@@ -472,12 +472,20 @@ export const ImportGeometreDialog = ({
         const ilotMatch = blockText.match(/\bILOT\s*[:]\s*(\d+)/i);
         const lotMatch = blockText.match(/\bLOT\s*[:]\s*(\d+)/i);
         const superficieMatch = blockText.match(/SUPERFICIE\s*\(?m2?\)?\s*[:]\s*(\d+[\.,]?\d*)/i);
+        // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
+        const parcelleAreaMatch = !superficieMatch ? blockText.match(/\bPARCELLE\s*[:]\s*\.*\s*(\d+[\.,]?\d*)/i) : null;
         const affectationMatch = blockText.match(/AFFECTATION\s*[:]\s*([^\n]*?)(?:\s{2,}|ARRETE|$)/i);
+        // Fallback : modèle simplifié où l'affectation est portée par "EQUIPEMENT : ..."
+        const equipementMatch = !affectationMatch ? blockText.match(/EQUIPEMENT\s*[:]\s*([^\n]*?)(?:\s{2,}|$)/i) : null;
 
         const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
         const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
-        const area = superficieMatch ? parseNumber(superficieMatch[1].replace(",", ".")) : 0;
-        const affectationRaw = affectationMatch ? affectationMatch[1].trim() : undefined;
+        const area = superficieMatch
+          ? parseNumber(superficieMatch[1].replace(",", "."))
+          : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
+        const affectationRaw = affectationMatch
+          ? affectationMatch[1].trim()
+          : (equipementMatch ? equipementMatch[1].trim() : undefined);
         const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
         if (!plotNumber) continue;

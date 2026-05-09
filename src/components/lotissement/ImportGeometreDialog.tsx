@@ -531,7 +531,7 @@ export const ImportGeometreDialog = ({
     }
 
     return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
-  }, [existingIlotNames, existingPlotNumbers]);
+  }, [existingIlotNames, isExistingPlot]);
 
   // ─── Word/DOCX parser ─────────────────────────────────────────────
   const parseWordFile = useCallback(async (file: File) => {

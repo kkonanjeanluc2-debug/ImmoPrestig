@@ -1029,13 +1029,19 @@ export const ImportGeometreDialog = ({
             parcelle.beneficiaire ? `Bénéficiaire: ${parcelle.beneficiaire}` : "",
           ].filter(Boolean).join(" | ") || undefined;
 
-          // Check if a parcelle with same plot_number already exists (including soft-deleted)
-          const { data: existing } = await supabase
+          // Check if a parcelle with the same (ilot, plot_number) already exists (including soft-deleted).
+          // The same lot number can legitimately exist in several îlots.
+          let existingParcelleQuery = supabase
             .from("parcelles")
             .select("id")
             .eq("lotissement_id", lotissementId)
-            .eq("plot_number", parcelle.plotNumber)
-            .maybeSingle();
+            .eq("plot_number", parcelle.plotNumber);
+
+          existingParcelleQuery = ilotId
+            ? existingParcelleQuery.eq("ilot_id", ilotId)
+            : existingParcelleQuery.is("ilot_id", null);
+
+          const { data: existing } = await existingParcelleQuery.maybeSingle();
 
           let result: any;
           if (existing) {

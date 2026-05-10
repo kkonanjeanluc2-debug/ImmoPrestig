@@ -623,128 +623,75 @@ export const ImportGeometreDialog = ({
 
     newWarnings.push(`${tables.length} tableau(x) détecté(s) dans le document`);
 
-    // Walk body children in order so orphan paragraphs carrying
-    // "ILOT : xx LOT : yy" (outside any table) propagate to the next data table.
-    const HAS_ILOT_RE_W = new RegExp(`\\bILOTS?${LABEL_SEP}\\d`);
-    const HAS_LOT_RE_W = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`);
-    const ILOT_VAL_RE = new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`);
-    const LOT_VAL_RE = new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`);
-    const SUPERFICIE_RE = new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
-    const PARCELLE_AREA_RE = new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
-    const AFFECTATION_RE = new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`);
-    const EQUIPEMENT_RE = new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`);
-
-    type PendingHeader = {
-      ilotName?: string;
-      plotNumber?: string;
-      area: number;
-      affectation?: string;
-    };
-
-    const extractHeaderFromText = (raw: string): PendingHeader | null => {
-      const text = normalizeForMatch(raw);
-      if (!HAS_ILOT_RE_W.test(text) && !HAS_LOT_RE_W.test(text)) return null;
-      const ilotMatch = text.match(ILOT_VAL_RE);
-      const lotMatch = text.match(LOT_VAL_RE);
-      const superficieMatch = text.match(SUPERFICIE_RE);
-      const parcelleAreaMatch = !superficieMatch ? text.match(PARCELLE_AREA_RE) : null;
-      const affectationMatch = text.match(AFFECTATION_RE);
-      const equipementMatch = !affectationMatch ? text.match(EQUIPEMENT_RE) : null;
-      const affectationRaw = affectationMatch
-        ? affectationMatch[1].trim()
-        : (equipementMatch ? equipementMatch[1].trim() : undefined);
-      const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw))
-        ? affectationRaw
-        : undefined;
-      return {
-        ilotName: ilotMatch ? ilotMatch[1].trim() : undefined,
-        plotNumber: lotMatch ? lotMatch[1].trim() : undefined,
-        area: superficieMatch
-          ? parseNumber(superficieMatch[1].replace(",", "."))
-          : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0),
-        affectation,
-      };
-    };
-
-    let pendingHeader: PendingHeader | null = null;
-    const bodyNodes = doc.body ? Array.from(doc.body.querySelectorAll("*")) : [];
-    // We only want top-level flow: paragraphs/headings + tables. Use direct walk.
-    const flowNodes: Element[] = [];
-    const visited = new WeakSet<Element>();
-    const collect = (root: Element) => {
-      for (const child of Array.from(root.children)) {
-        const tag = child.tagName.toLowerCase();
-        if (tag === "table") {
-          if (!visited.has(child)) { flowNodes.push(child); visited.add(child); }
-        } else if (/^(p|h[1-6]|div|section|article)$/.test(tag)) {
-          // Look inside containers but capture paragraph-level text directly
-          if (child.querySelector("table")) {
-            collect(child);
-          } else {
-            flowNodes.push(child);
-          }
-        } else {
-          collect(child);
-        }
-      }
-    };
-    if (doc.body) collect(doc.body);
-    void bodyNodes; // keep for reference
-
-    for (const node of flowNodes) {
-      if (node.tagName.toLowerCase() !== "table") {
-        // Paragraph-like: try to extract a header
-        const header = extractHeaderFromText(node.textContent || "");
-        if (header && (header.ilotName || header.plotNumber)) {
-          pendingHeader = header;
-        }
-        continue;
-      }
-
-      const table = node as HTMLTableElement;
+    for (const table of Array.from(tables)) {
       const rows = table.querySelectorAll("tr");
       if (rows.length < 2) continue;
 
+      // First row = headers
       const headerCells = rows[0].querySelectorAll("td, th");
       const headers = Array.from(headerCells).map((cell) => cell.textContent?.trim() || "");
+
       newWarnings.push(`Colonnes détectées : ${headers.filter(Boolean).join(", ")}`);
 
-      // Try to read header info embedded in the first rows of the table itself.
-      let rawBlockText = "";
-      for (let ri = 0; ri < Math.min(rows.length, 5); ri++) {
-        const cells = Array.from(rows[ri].querySelectorAll("td, th"));
-        rawBlockText += " " + cells.map(c => c.textContent || "").join(" ");
-      }
-      let header = extractHeaderFromText(rawBlockText);
-      const tableHasOwnHeader = !!(header && (header.ilotName || header.plotNumber));
-
-      // If the table has no embedded ILOT/LOT, fall back to the last orphan header.
-      if (!tableHasOwnHeader && pendingHeader) {
-        header = pendingHeader;
-      }
-
-      const isGuideFormat = !!(header && (header.ilotName || header.plotNumber));
-
-      if (isGuideFormat && header) {
-        if (tableHasOwnHeader) {
-          newWarnings.push("Format guide détecté — extraction des valeurs ILOT, LOT, SUPERFICIE, ATTRIBUTAIRES depuis les blocs");
-        } else {
-          newWarnings.push(`En-tête orpheline appliquée au tableau suivant (ILOT ${header.ilotName ?? "?"} / LOT ${header.plotNumber ?? "?"})`);
+      // Check if this is a guide format (table contains ILOT/LOT/SUPERFICIE header info)
+      const isGuideFormat = (() => {
+        const HAS_ILOT = new RegExp(`\\bILOTS?${LABEL_SEP}\\d`);
+        const HAS_LOT = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`);
+        const fullTableText = normalizeForMatch(table.textContent || "");
+        if (HAS_ILOT.test(fullTableText) && HAS_LOT.test(fullTableText)) {
+          return true;
         }
+        for (let i = 0; i < Math.min(rows.length, 5); i++) {
+          const rowText = normalizeForMatch(Array.from(rows[i].querySelectorAll("td, th")).map(c => c.textContent || "").join(" "));
+          if (HAS_ILOT.test(rowText) && HAS_LOT.test(rowText)) {
+            return true;
+          }
+        }
+        return false;
+      })();
 
-        const ilotName = header.ilotName;
-        const plotNumber = header.plotNumber;
-        const area = header.area;
-        const affectation = header.affectation;
+      if (isGuideFormat) {
+        newWarnings.push("Format guide détecté — extraction des valeurs ILOT, LOT, SUPERFICIE, ATTRIBUTAIRES depuis les blocs");
+        // Parse guide format: each table is one lot block with header info + attributaire data rows
+        // Structure:
+        // Row 0-1: Header rows (COMMUNE/VILLAGE/LOTISSEMENT, ILOT/LOT/SUPERFICIE/AFFECTATION/ARRETE)
+        // Row 2-3: Column headers (ATTRIBUTAIRES, ATTESTATION, ADRESSES, PIECES)
+        // Row 4+: Data rows (N°, NOM ET PRENOMS, attestation N°/DATE, contacts, nature/N°/date)
 
-        // Once we consumed the orphan header for a data table, clear it so it is not reused.
-        if (!tableHasOwnHeader) pendingHeader = null;
+        // Extract header info — scan each row for ILOT/LOT/SUPERFICIE/AFFECTATION
+        // These values are in the header rows of each lot block table
+        let rawBlockText = "";
+        for (let ri = 0; ri < Math.min(rows.length, 5); ri++) {
+          const cells = Array.from(rows[ri].querySelectorAll("td, th"));
+          rawBlockText += " " + cells.map(c => c.textContent || "").join(" ");
+        }
+        const blockText = normalizeForMatch(rawBlockText);
+
+        const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
+        const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
+        const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
+        // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
+        const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
+        const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
+        // Fallback : modèle simplifié où l'affectation est portée par "EQUIPEMENT : ..."
+        const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
+
+        const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
+        const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+        const area = superficieMatch
+          ? parseNumber(superficieMatch[1].replace(",", "."))
+          : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
+        const affectationRaw = affectationMatch
+          ? affectationMatch[1].trim()
+          : (equipementMatch ? equipementMatch[1].trim() : undefined);
+        const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
         if (!plotNumber) continue;
         if (!isValidPlotNumberCandidate(plotNumber)) continue;
         if (isExistingPlot(ilotName, String(plotNumber))) continue;
 
-        // Find attributaire data
+        // Now find the attributaire data from the table rows
+        // Look for data rows (rows that start with a number in first cell)
         let beneficiaireName = "";
         let contact = "";
         let cniNature = "";
@@ -753,6 +700,7 @@ export const ImportGeometreDialog = ({
         let attestationNumber = "";
         let attestationDate = "";
 
+        // Find the header row to determine column mapping
         let dataHeaderRowIdx = -1;
         for (let ri = 0; ri < rows.length; ri++) {
           const cells = rows[ri].querySelectorAll("td, th");
@@ -763,14 +711,20 @@ export const ImportGeometreDialog = ({
           }
         }
 
+        // Extract data from the first data row (row after headers, with N°=1)
         if (dataHeaderRowIdx >= 0) {
+          // The header may span 2 rows (merged cells), so check multiple rows after
           for (let ri = dataHeaderRowIdx + 1; ri < rows.length; ri++) {
             const cells = Array.from(rows[ri].querySelectorAll("td, th"));
             const cellTexts = cells.map(c => (c.textContent || "").trim());
+            
+            // Skip empty rows or header continuation rows
             const firstCell = cellTexts[0] || "";
             if (!firstCell || firstCell.toUpperCase().includes("N°") || firstCell.toUpperCase().includes("NATURE")) continue;
+            
+            // This should be data row with: N°, NOM ET PRENOMS, Attestation N°, Attestation Date, Contacts, Nature, N° pièce, Date pièce
             if (cellTexts.length >= 2 && !beneficiaireName) {
-              beneficiaireName = cellTexts[1] || "";
+              beneficiaireName = cellTexts[1] || ""; // NOM ET PRENOMS
               attestationNumber = cellTexts.length > 2 ? (cellTexts[2] || "") : "";
               attestationDate = cellTexts.length > 3 ? (cellTexts[3] || "") : "";
               contact = cellTexts.length > 4 ? (cellTexts[4] || "") : "";
@@ -800,11 +754,15 @@ export const ImportGeometreDialog = ({
 
         if (ilotName) {
           const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
-          if (existingIlot) existingIlot.parcelles.push(parcelle);
-          else ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+          if (existingIlot) {
+            existingIlot.parcelles.push(parcelle);
+          } else {
+            ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+          }
         }
       } else {
         // Standard table format
+        // Data rows
         for (let i = 1; i < rows.length; i++) {
           const cells = rows[i].querySelectorAll("td, th");
           const record: Record<string, unknown> = {};
@@ -849,8 +807,11 @@ export const ImportGeometreDialog = ({
 
           if (ilotName) {
             const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
-            if (existingIlot) existingIlot.parcelles.push(parcelle);
-            else ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+            if (existingIlot) {
+              existingIlot.parcelles.push(parcelle);
+            } else {
+              ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+            }
           }
         }
       }

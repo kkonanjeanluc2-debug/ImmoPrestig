@@ -3316,6 +3316,7 @@ export type Database = {
           phone: string | null
           profession: string | null
           receipt_template_id: string | null
+          show_name_on_receipt: boolean
           status: string
           updated_at: string
           user_id: string
@@ -3336,6 +3337,7 @@ export type Database = {
           phone?: string | null
           profession?: string | null
           receipt_template_id?: string | null
+          show_name_on_receipt?: boolean
           status?: string
           updated_at?: string
           user_id: string
@@ -3356,6 +3358,7 @@ export type Database = {
           phone?: string | null
           profession?: string | null
           receipt_template_id?: string | null
+          show_name_on_receipt?: boolean
           status?: string
           updated_at?: string
           user_id?: string

@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateSelect } from "@/components/ui/date-select";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Percent, User, CreditCard, FileText } from "lucide-react";
 import { useUpdateOwner, OwnerWithManagementType } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";
@@ -50,6 +51,7 @@ const ownerSchema = z.object({
   birth_place: z.string().trim().max(100).optional().or(z.literal("")),
   profession: z.string().trim().max(100).optional().or(z.literal("")),
   cni_number: z.string().trim().max(50).optional().or(z.literal("")),
+  show_name_on_receipt: z.boolean().default(true),
 });
 
 type OwnerFormData = z.infer<typeof ownerSchema>;
@@ -84,6 +86,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
       birth_place: "",
       profession: "",
       cni_number: "",
+      show_name_on_receipt: true,
     },
   });
 
@@ -104,6 +107,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         birth_place: (owner as any).birth_place || "",
         profession: (owner as any).profession || "",
         cni_number: (owner as any).cni_number || "",
+        show_name_on_receipt: (owner as any).show_name_on_receipt ?? true,
       });
     }
   }, [owner, form]);
@@ -127,7 +131,8 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         birth_place: data.birth_place || null,
         profession: data.profession || null,
         cni_number: data.cni_number || null,
-      });
+        show_name_on_receipt: data.show_name_on_receipt,
+      } as any);
 
       toast.success("Propriétaire modifié avec succès");
       onOpenChange(false);
@@ -463,6 +468,27 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
                 )}
               />
             )}
+
+            <FormField
+              control={form.control}
+              name="show_name_on_receipt"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Afficher le nom du bailleur sur la quittance
+                    </FormLabel>
+                    <FormDescription>
+                      Si désactivé, le nom de ce propriétaire n'apparaîtra pas sur les quittances de loyer générées.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

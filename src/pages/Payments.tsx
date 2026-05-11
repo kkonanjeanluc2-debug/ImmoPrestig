@@ -724,7 +724,7 @@ export default function Payments() {
                                         isTenantView={isLocataire}
                                         unitNumber={unitNumber || undefined}
                                         gestionnaireName={gestionnaireName || undefined}
-                                        ownerName={owners.find(o => o.id === tenant?.property?.owner_id)?.name}
+                                        ownerName={(() => { const o = owners.find(o => o.id === tenant?.property?.owner_id); return o && (o as any).show_name_on_receipt !== false ? o.name : undefined; })()}
                                         initialTemplate={receiptTemplates.find(t => t.id === owners.find(o => o.id === tenant?.property?.owner_id)?.receipt_template_id) || null}
                                         totalRentAmount={Number(payment.amount)}
                                         remainingAmount={Number(payment.amount) - Number(paidAmount || payment.amount)}

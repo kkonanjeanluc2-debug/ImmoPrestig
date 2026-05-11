@@ -1,0 +1,1 @@
+ALTER TABLE public.owners ADD COLUMN IF NOT EXISTS show_name_on_receipt boolean NOT NULL DEFAULT true;

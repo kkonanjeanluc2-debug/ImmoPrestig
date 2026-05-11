@@ -1075,8 +1075,11 @@ export const ImportGeometreDialog = ({
         case "word":
           result = await parseWordFile(file);
           break;
+        case "pdf":
+          result = await parsePdfFile(file);
+          break;
         default:
-          setErrors(["Format de fichier non reconnu. Formats acceptés : DXF, SHP, CSV, XLS, XLSX, DOCX"]);
+          setErrors(["Format de fichier non reconnu. Formats acceptés : DXF, SHP, CSV, XLS, XLSX, DOCX, PDF"]);
           setStep("preview");
           return;
       }

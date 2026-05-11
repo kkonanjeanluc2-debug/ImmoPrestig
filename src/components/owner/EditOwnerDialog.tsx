@@ -106,6 +106,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         birth_place: (owner as any).birth_place || "",
         profession: (owner as any).profession || "",
         cni_number: (owner as any).cni_number || "",
+        show_name_on_receipt: (owner as any).show_name_on_receipt ?? true,
       });
     }
   }, [owner, form]);

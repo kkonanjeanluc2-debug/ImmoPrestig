@@ -833,6 +833,217 @@ export const ImportGeometreDialog = ({
     return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
   }, [isExistingPlot]);
 
+  // ─── PDF parser (guide format) ────────────────────────────────────
+  // Loads pdfjs-dist on demand, extracts positioned text, reconstructs
+  // rows of cells, then applies the same ILOT/LOT block extraction as
+  // the Word parser.
+  const parsePdfFile = useCallback(async (file: File) => {
+    const newErrors: string[] = [];
+    const newWarnings: string[] = [];
+    const ilots: ParsedGeometreIlot[] = [];
+    const parcelles: ParsedGeometreParcelle[] = [];
+
+    const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+    // Use a worker compatible with the current build. Falls back to a
+    // CDN-hosted module worker for the matching version.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const v = (pdfjs as any).version || "5.7.284";
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.worker.min.mjs`;
+    } catch {
+      /* ignore worker setup errors — pdfjs will fall back to fake worker */
+    }
+
+    let pdf;
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+    } catch (err) {
+      newErrors.push(`Lecture du PDF impossible : ${err instanceof Error ? err.message : "format invalide"}`);
+      return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
+    }
+
+    newWarnings.push(`${pdf.numPages} page(s) détectée(s) dans le PDF`);
+
+    // Aggregate rows from all pages.
+    // A row = array of cell strings (left-to-right).
+    const allRows: string[][] = [];
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const content = await page.getTextContent();
+
+      // Items have transform [a, b, c, d, x, y] and string `str`.
+      interface Item { x: number; y: number; w: number; str: string; }
+      const items: Item[] = (content.items as any[])
+        .filter((it) => it && typeof it.str === "string" && it.str.length > 0)
+        .map((it) => ({
+          x: it.transform?.[4] ?? 0,
+          y: it.transform?.[5] ?? 0,
+          w: it.width ?? 0,
+          str: it.str,
+        }));
+
+      if (items.length === 0) continue;
+
+      // Group items by y (with tolerance) into rows.
+      const Y_TOL = 3; // points
+      items.sort((a, b) => b.y - a.y); // top to bottom
+
+      const rows: Item[][] = [];
+      for (const it of items) {
+        const row = rows.find((r) => Math.abs(r[0].y - it.y) <= Y_TOL);
+        if (row) row.push(it);
+        else rows.push([it]);
+      }
+
+      // Within each row, sort left-to-right and merge into cells based on x-gap.
+      for (const row of rows) {
+        row.sort((a, b) => a.x - b.x);
+        const cells: string[] = [];
+        let currentText = "";
+        let currentRight = -Infinity;
+        const X_GAP = 8; // points — bigger gap = new cell
+        for (const it of row) {
+          if (it.x - currentRight > X_GAP) {
+            if (currentText.trim()) cells.push(currentText.trim());
+            currentText = it.str;
+          } else {
+            // same cell — add space if needed
+            currentText += (currentText && !currentText.endsWith(" ") && !it.str.startsWith(" ") ? " " : "") + it.str;
+          }
+          currentRight = it.x + (it.w || 0);
+        }
+        if (currentText.trim()) cells.push(currentText.trim());
+        if (cells.length > 0) allRows.push(cells);
+      }
+    }
+
+    if (allRows.length === 0) {
+      newErrors.push("Aucun texte extractible dans le PDF (peut-être scanné). Convertissez-le en Word ou Excel.");
+      return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
+    }
+
+    // ── Scan rows for ILOT/LOT blocks (guide format) ─────────────
+    const hasIlot = new RegExp(`\\bILOTS?${LABEL_SEP}\\d`);
+    const hasLot = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`);
+    const getRowText = (cells: string[]) => cells.join(" ");
+    const isLotHeaderRow = (cells: string[]) => {
+      const text = normalizeForMatch(getRowText(cells));
+      return hasIlot.test(text) && hasLot.test(text);
+    };
+
+    let blocksFound = 0;
+    for (let blockStart = 0; blockStart < allRows.length; blockStart++) {
+      if (!isLotHeaderRow(allRows[blockStart])) continue;
+
+      const blockText = normalizeForMatch(getRowText(allRows[blockStart]));
+      const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
+      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
+      const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
+      const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
+      const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
+      const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
+
+      const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
+      const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+      const area = superficieMatch
+        ? parseNumber(superficieMatch[1].replace(",", "."))
+        : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
+      const affectationRaw = affectationMatch
+        ? affectationMatch[1].trim()
+        : (equipementMatch ? equipementMatch[1].trim() : undefined);
+      const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
+
+      if (!plotNumber) continue;
+      if (!isValidPlotNumberCandidate(plotNumber)) continue;
+      if (isExistingPlot(ilotName, String(plotNumber))) continue;
+
+      blocksFound++;
+
+      let blockEnd = allRows.length;
+      for (let next = blockStart + 1; next < allRows.length; next++) {
+        if (isLotHeaderRow(allRows[next])) {
+          blockEnd = next;
+          break;
+        }
+      }
+
+      // Look for "NOM ET PRENOMS" header row and pick the first data row beneath.
+      let beneficiaireName = "";
+      let contact = "";
+      let cniNature = "";
+      let cniNumber = "";
+      let cniDate = "";
+      let attestationNumber = "";
+      let attestationDate = "";
+
+      let dataHeaderRowIdx = -1;
+      for (let ri = blockStart + 1; ri < blockEnd; ri++) {
+        const rowText = normalizeForMatch(getRowText(allRows[ri]));
+        if (rowText.includes("NOM") && (rowText.includes("PRENOM") || rowText.includes("ATTRIBUT"))) {
+          dataHeaderRowIdx = ri;
+          break;
+        }
+      }
+
+      if (dataHeaderRowIdx >= 0) {
+        for (let ri = dataHeaderRowIdx + 1; ri < blockEnd; ri++) {
+          const cellTexts = allRows[ri];
+          const firstCell = cellTexts[0] || "";
+          const normalizedFirstCell = normalizeForMatch(firstCell);
+          if (!firstCell || normalizedFirstCell.includes("N°") || normalizedFirstCell.includes("NATURE")) continue;
+
+          if (cellTexts.length >= 2 && !beneficiaireName) {
+            beneficiaireName = cellTexts[1] || "";
+            attestationNumber = cellTexts.length > 2 ? (cellTexts[2] || "") : "";
+            attestationDate = cellTexts.length > 3 ? (cellTexts[3] || "") : "";
+            contact = cellTexts.length > 4 ? (cellTexts[4] || "") : "";
+            cniNature = cellTexts.length > 5 ? (cellTexts[5] || "") : "";
+            cniNumber = cellTexts.length > 6 ? (cellTexts[6] || "") : "";
+            cniDate = cellTexts.length > 7 ? (cellTexts[7] || "") : "";
+            break;
+          }
+        }
+      }
+
+      const parcelle: ParsedGeometreParcelle = {
+        plotNumber: String(plotNumber),
+        area,
+        price: 0,
+        ilotName: ilotName ? String(ilotName) : undefined,
+        beneficiaire: beneficiaireName || undefined,
+        contact: contact || undefined,
+        cniNature: cniNature || undefined,
+        cniNumber: cniNumber || undefined,
+        cniDate: cniDate || undefined,
+        attestationNumber: attestationNumber || undefined,
+        attestationDate: attestationDate || undefined,
+        affectation: (affectation && affectation.length > 0) ? affectation : undefined,
+      };
+      parcelles.push(parcelle);
+
+      if (ilotName) {
+        const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
+        if (existingIlot) {
+          existingIlot.parcelles.push(parcelle);
+        } else {
+          ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+        }
+      }
+    }
+
+    if (blocksFound > 0) {
+      newWarnings.push(`${blocksFound} bloc(s) ILOT/LOT extrait(s) du PDF`);
+    }
+
+    if (parcelles.length === 0 && ilots.length === 0) {
+      newErrors.push("Aucun bloc ILOT/LOT exploitable trouvé dans le PDF. Vérifiez que le PDF n'est pas une image scannée.");
+    }
+
+    return { ilots, parcelles, errors: newErrors, warnings: newWarnings };
+  }, [isExistingPlot]);
+
   // ─── Main file handler ──────────────────────────────────────────────
   const parseFile = useCallback(async (file: File, additionalDbf?: File | null) => {
     setErrors([]);
@@ -864,8 +1075,11 @@ export const ImportGeometreDialog = ({
         case "word":
           result = await parseWordFile(file);
           break;
+        case "pdf":
+          result = await parsePdfFile(file);
+          break;
         default:
-          setErrors(["Format de fichier non reconnu. Formats acceptés : DXF, SHP, CSV, XLS, XLSX, DOCX"]);
+          setErrors(["Format de fichier non reconnu. Formats acceptés : DXF, SHP, CSV, XLS, XLSX, DOCX, PDF"]);
           setStep("preview");
           return;
       }
@@ -898,7 +1112,7 @@ export const ImportGeometreDialog = ({
       setErrors(["Erreur de lecture du fichier. Vérifiez le format."]);
       setStep("preview");
     }
-  }, [existingIlotNames, isExistingPlot, parseExcelFile, parseWordFile]);
+  }, [existingIlotNames, isExistingPlot, parseExcelFile, parseWordFile, parsePdfFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -930,7 +1144,7 @@ export const ImportGeometreDialog = ({
       const name = f.name.toLowerCase();
       return name.endsWith(".dxf") || name.endsWith(".dwg") || name.endsWith(".shp") ||
         name.endsWith(".csv") || name.endsWith(".xls") || name.endsWith(".xlsx") ||
-        name.endsWith(".docx") || name.endsWith(".doc");
+        name.endsWith(".docx") || name.endsWith(".doc") || name.endsWith(".pdf");
     });
     const dbf = files.find(f => f.name.toLowerCase().endsWith(".dbf"));
 
@@ -1160,6 +1374,7 @@ export const ImportGeometreDialog = ({
     shapefile: "Shapefile (SIG)",
     excel: "Excel/CSV",
     word: "Word (DOCX/DOC)",
+    pdf: "PDF",
     unknown: "Inconnu",
   };
 
@@ -1187,7 +1402,7 @@ export const ImportGeometreDialog = ({
               <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
               <p className="text-sm font-medium mb-1">Glissez vos fichiers ici ou cliquez pour parcourir</p>
               <p className="text-xs text-muted-foreground mb-4">
-                Formats acceptés : DXF, SHP (+DBF), CSV, XLS, XLSX, DOCX
+                Formats acceptés : DXF, SHP (+DBF), CSV, XLS, XLSX, DOCX, PDF
               </p>
 
               <div className="flex flex-wrap justify-center gap-2 mb-4">
@@ -1211,12 +1426,16 @@ export const ImportGeometreDialog = ({
                   <FileType className="h-3 w-3 mr-1" />
                   DOCX
                 </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  <FileType className="h-3 w-3 mr-1" />
+                  PDF
+                </Badge>
               </div>
 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".dxf,.dwg,.shp,.dbf,.csv,.xls,.xlsx,.docx,.doc"
+                accept=".dxf,.dwg,.shp,.dbf,.csv,.xls,.xlsx,.docx,.doc,.pdf"
                 className="hidden"
                 onChange={handleFileChange}
               />

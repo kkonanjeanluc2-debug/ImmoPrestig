@@ -408,7 +408,7 @@ function calculateGeometryArea(geometry: any): number {
 }
 
 // ─── File type detection ──────────────────────────────────────────────
-export type GeometreFileType = "dxf" | "dwg" | "shapefile" | "excel" | "word" | "unknown";
+export type GeometreFileType = "dxf" | "dwg" | "shapefile" | "excel" | "word" | "pdf" | "unknown";
 
 export function detectFileType(file: File): GeometreFileType {
   const name = file.name.toLowerCase();
@@ -416,6 +416,7 @@ export function detectFileType(file: File): GeometreFileType {
   if (name.endsWith(".dwg")) return "dwg";
   if (name.endsWith(".shp")) return "shapefile";
   if (name.endsWith(".docx") || name.endsWith(".doc")) return "word";
+  if (name.endsWith(".pdf")) return "pdf";
   if (
     name.endsWith(".csv") ||
     name.endsWith(".xls") ||

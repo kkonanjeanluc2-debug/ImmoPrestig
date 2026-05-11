@@ -265,7 +265,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     });
 
     return entries;
-  }, [parcelles, ventes, ilots, beneficiaires, mutations]);
+  }, [parcelles, ventes, ilots, beneficiaires, mutations, prefinanceurs]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return guideEntries;

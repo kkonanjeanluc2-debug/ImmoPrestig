@@ -290,7 +290,7 @@ const Lotissements = () => {
                     </div>
                     {lotissement.total_area && (
                       <p className="text-sm text-muted-foreground mt-3">
-                        Superficie totale: {lotissement.total_area.toLocaleString("fr-FR")} m²
+                        Superficie totale: {lotissement.total_area.toLocaleString("fr-FR")} ha
                       </p>
                     )}
                   </CardContent>

@@ -413,6 +413,14 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                 >
                   Vendues ({parcelles.filter(p => p.status === "vendu").length})
                 </Button>
+                <Button
+                  variant={statusFilter === "prefinance" ? "default" : "outline"}
+                  size="sm"
+                  className={statusFilter !== "prefinance" ? "text-purple-600 border-purple-300 hover:bg-purple-50" : "bg-purple-600 hover:bg-purple-700"}
+                  onClick={() => setStatusFilter("prefinance")}
+                >
+                  Préfinancées ({parcelles.filter(p => p.status === "prefinance").length})
+                </Button>
               </div>
               {/* Attribution filter */}
               {parcelles.some(p => p.attribution) && (

@@ -1112,7 +1112,7 @@ export const ImportGeometreDialog = ({
       setErrors(["Erreur de lecture du fichier. Vérifiez le format."]);
       setStep("preview");
     }
-  }, [existingIlotNames, isExistingPlot, parseExcelFile, parseWordFile]);
+  }, [existingIlotNames, isExistingPlot, parseExcelFile, parseWordFile, parsePdfFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

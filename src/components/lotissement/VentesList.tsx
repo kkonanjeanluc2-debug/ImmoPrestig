@@ -143,7 +143,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
     }
   };
 
-  if (!ventes || ventes.length === 0) {
+  if (combinedVentes.length === 0) {
     return (
       <Card className="py-12">
         <CardContent className="text-center">

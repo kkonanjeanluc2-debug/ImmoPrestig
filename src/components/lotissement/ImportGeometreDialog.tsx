@@ -675,8 +675,8 @@ export const ImportGeometreDialog = ({
           if (!isLotHeaderRow(rows[blockStart])) continue;
 
           const blockText = normalizeForMatch(getRowText(rows[blockStart]));
-          const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
-          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
+          const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
+          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
           const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
           // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
           const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;

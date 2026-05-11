@@ -749,6 +749,14 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
         />
       )}
 
+      {prefinancingParcelle && (
+        <AssignPrefinanceurDialog
+          parcelle={prefinancingParcelle}
+          open={!!prefinancingParcelle}
+          onOpenChange={(open) => !open && setPrefinancingParcelle(null)}
+        />
+      )}
+
       <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

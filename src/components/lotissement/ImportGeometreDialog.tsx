@@ -1402,7 +1402,7 @@ export const ImportGeometreDialog = ({
               <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
               <p className="text-sm font-medium mb-1">Glissez vos fichiers ici ou cliquez pour parcourir</p>
               <p className="text-xs text-muted-foreground mb-4">
-                Formats acceptés : DXF, SHP (+DBF), CSV, XLS, XLSX, DOCX
+                Formats acceptés : DXF, SHP (+DBF), CSV, XLS, XLSX, DOCX, PDF
               </p>
 
               <div className="flex flex-wrap justify-center gap-2 mb-4">
@@ -1426,12 +1426,16 @@ export const ImportGeometreDialog = ({
                   <FileType className="h-3 w-3 mr-1" />
                   DOCX
                 </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  <FileType className="h-3 w-3 mr-1" />
+                  PDF
+                </Badge>
               </div>
 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".dxf,.dwg,.shp,.dbf,.csv,.xls,.xlsx,.docx,.doc"
+                accept=".dxf,.dwg,.shp,.dbf,.csv,.xls,.xlsx,.docx,.doc,.pdf"
                 className="hidden"
                 onChange={handleFileChange}
               />

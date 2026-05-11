@@ -104,10 +104,29 @@ export function MutationParcelleDialog({
     }
 
     try {
+      // For prefinance lots, the cedant is a prefinanceur (different table).
+      // We auto-create a mirroring acquereur to satisfy the FK on ancien_acquereur_id.
+      let ancienAcquereurId = currentOwnerId;
+      if (isPrefinance && !lastMutation) {
+        try {
+          const cedant = await createAcquereur.mutateAsync({
+            name: currentOwnerName,
+            phone: currentOwnerPhone || null,
+            cni_number: (vente.acquereur as any)?.cni_number || null,
+            email: null,
+            address: null,
+          });
+          ancienAcquereurId = cedant.id;
+        } catch {
+          toast.error("Erreur lors de la préparation du cédant");
+          return;
+        }
+      }
+
       await createMutation.mutateAsync({
-        vente_id: vente.id,
+        vente_id: isPrefinance ? (null as any) : vente.id,
         parcelle_id: vente.parcelle_id,
-        ancien_acquereur_id: currentOwnerId,
+        ancien_acquereur_id: ancienAcquereurId,
         nouvel_acquereur_id: nouvelAcquereurId,
         mutation_date: mutationDate,
         mutation_price: mutationPrice ? parseFloat(mutationPrice) : null,

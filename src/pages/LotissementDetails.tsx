@@ -247,6 +247,14 @@ const LotissementDetails = () => {
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardContent className="p-3 sm:pt-4">
+              <div className="text-center">
+                <p className="text-lg sm:text-2xl font-bold text-purple-600">{stats.prefinancees}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Préfinancées</p>
+              </div>
+            </CardContent>
+          </Card>
           <Card className="col-span-2 sm:col-span-1">
             <CardContent className="p-3 sm:pt-4">
               <div className="text-center">

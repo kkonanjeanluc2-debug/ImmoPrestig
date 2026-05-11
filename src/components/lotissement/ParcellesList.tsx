@@ -236,6 +236,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const getAttributionLabel = (attribution: string | null) => {
     if (attribution === "proprietaire") return lotissement?.proprietaire_name || "Propriétaire";
     if (attribution === "lotisseur") return lotissement?.lotisseur_name || "Lotisseur";
+    if (attribution === "prefinanceur") return "Préfinanceur";
     return null;
   };
 

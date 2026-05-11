@@ -39,12 +39,16 @@ interface SellParcelleDialogProps {
 
 export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId, defaultAcquereurId, defaultDownPayment }: SellParcelleDialogProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: acquereurs } = useAcquereurs();
   const { data: assignableUsers } = useAssignableUsers();
+  const { data: prefinanceurs } = usePrefinanceurs();
   const createAcquereur = useCreateAcquereur();
+  const createPrefinanceur = useCreatePrefinanceur();
   const createVente = useCreateVenteParcelle();
   const updateReservation = useUpdateReservationParcelle();
 
+  const [transactionType, setTransactionType] = useState<"vente" | "prefinancement">("vente");
   const [mode, setMode] = useState<"existing" | "new">(defaultAcquereurId ? "existing" : "existing");
   const [acquereurId, setAcquereurId] = useState(defaultAcquereurId || "");
   const [newAcquereur, setNewAcquereur] = useState({
@@ -57,6 +61,23 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     birth_place: "",
     profession: "",
   });
+
+  // Prefinanceur state
+  const [prefMode, setPrefMode] = useState<"existing" | "new">("existing");
+  const [prefinanceurId, setPrefinanceurId] = useState("");
+  const [newPrefinanceur, setNewPrefinanceur] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    cni_number: "",
+    rccm: "",
+    representant: "",
+    address: "",
+    type: "individu",
+    notes: "",
+  });
+  const [submittingPref, setSubmittingPref] = useState(false);
+
   const [paymentType, setPaymentType] = useState<PaymentType>("comptant");
   const [paymentMethod, setPaymentMethod] = useState<string>("especes");
   const [downPayment, setDownPayment] = useState(defaultDownPayment ? defaultDownPayment.toString() : "");

@@ -1160,6 +1160,7 @@ export const ImportGeometreDialog = ({
     shapefile: "Shapefile (SIG)",
     excel: "Excel/CSV",
     word: "Word (DOCX/DOC)",
+    pdf: "PDF",
     unknown: "Inconnu",
   };
 

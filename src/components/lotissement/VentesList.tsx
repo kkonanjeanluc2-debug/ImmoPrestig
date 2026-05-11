@@ -18,7 +18,7 @@ import { VenteWithDetails, useCancelVenteParcelle } from "@/hooks/useVentesParce
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";
 import { MutationParcelleDialog } from "./MutationParcelleDialog";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
-import { useParcelles } from "@/hooks/useParcelles";
+import { useParcelles, useUpdateParcelle } from "@/hooks/useParcelles";
 import { usePrefinanceurs } from "@/hooks/usePrefinanceurs";
 import { useIlots } from "@/hooks/useIlots";
 import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
@@ -50,6 +50,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const [cancelTarget, setCancelTarget] = useState<VenteWithDetails | null>(null);
   const [mutationTarget, setMutationTarget] = useState<VenteWithDetails | null>(null);
   const cancelVente = useCancelVenteParcelle();
+  const updateParcelle = useUpdateParcelle();
 
   // Build synthetic vente entries for prefinanced parcelles
   const prefinanceEntries = useMemo<VenteWithDetails[]>(() => {
@@ -273,36 +274,34 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     )}
                   </TableCell>
                   <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSelectedVente(vente)}
+                      title="Télécharger les documents"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
                     {!isPrefinance && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setSelectedVente(vente)}
-                          title="Télécharger les documents"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setMutationTarget(vente)}
-                          title="Mutation (revente à un tiers)"
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          <ArrowRightLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setCancelTarget(vente)}
-                          title="Annuler la vente"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <XCircle className="h-4 w-4" />
-                        </Button>
-                      </>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setMutationTarget(vente)}
+                        title="Mutation (revente à un tiers)"
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <ArrowRightLeft className="h-4 w-4" />
+                      </Button>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setCancelTarget(vente)}
+                      title={isPrefinance ? "Annuler le préfinancement" : "Annuler la vente"}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -323,10 +322,15 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
       <AlertDialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Annuler cette vente ?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {cancelTarget?.status === "prefinance" ? "Annuler ce préfinancement ?" : "Annuler cette vente ?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action va supprimer la vente du lot {cancelTarget?.parcelle?.plot_number}, 
-              toutes les échéances associées, et remettre le lot en statut "Disponible".
+              {cancelTarget?.status === "prefinance" ? (
+                <>Cette action va retirer le préfinanceur du lot {cancelTarget?.parcelle?.plot_number} et le remettre en statut "Disponible".</>
+              ) : (
+                <>Cette action va supprimer la vente du lot {cancelTarget?.parcelle?.plot_number}, toutes les échéances associées, et remettre le lot en statut "Disponible".</>
+              )}
               {cancelTarget?.down_payment && cancelTarget.down_payment > 0 && (
                 <span className="block mt-2 font-medium text-destructive">
                   Montant déjà payé à rembourser : {cancelTarget.down_payment.toLocaleString("fr-FR")} F CFA
@@ -341,6 +345,21 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
                 if (!cancelTarget) return;
+                if (cancelTarget.status === "prefinance") {
+                  updateParcelle.mutate(
+                    { id: cancelTarget.parcelle_id, status: "disponible", prefinanceur_id: null } as any,
+                    {
+                      onSuccess: () => {
+                        toast.success("Préfinancement annulé — lot remis en disponible");
+                        setCancelTarget(null);
+                      },
+                      onError: (err) => {
+                        toast.error("Erreur lors de l'annulation : " + (err as Error).message);
+                      },
+                    }
+                  );
+                  return;
+                }
                 cancelVente.mutate(
                   { venteId: cancelTarget.id, parcelleId: cancelTarget.parcelle_id },
                   {
@@ -355,7 +374,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                 );
               }}
             >
-              Oui, annuler la vente
+              {cancelTarget?.status === "prefinance" ? "Oui, annuler le préfinancement" : "Oui, annuler la vente"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

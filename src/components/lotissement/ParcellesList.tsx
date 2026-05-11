@@ -51,6 +51,7 @@ import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
 import { SellParcelleDialog } from "./SellParcelleDialog";
 import { ReserveParcelleDialog } from "./ReserveParcelleDialog";
+import { AssignPrefinanceurDialog } from "./AssignPrefinanceurDialog";
 import { ReservationParcelleCard } from "./ReservationParcelleCard";
 import { useReservationByParcelle } from "@/hooks/useReservationsParcelles";
 import { useLotissement } from "@/hooks/useLotissements";

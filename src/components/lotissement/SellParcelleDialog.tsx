@@ -22,7 +22,10 @@ import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useCreateVenteParcelle, PaymentType } from "@/hooks/useVentesParcelles";
 import { useUpdateReservationParcelle } from "@/hooks/useReservationsParcelles";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
+import { usePrefinanceurs, useCreatePrefinanceur } from "@/hooks/usePrefinanceurs";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface SellParcelleDialogProps {

@@ -3537,6 +3537,7 @@ export type Database = {
           plot_number: string
           position_x: number | null
           position_y: number | null
+          prefinanceur_id: string | null
           price: number
           status: Database["public"]["Enums"]["plot_status"]
           updated_at: string
@@ -3558,6 +3559,7 @@ export type Database = {
           plot_number: string
           position_x?: number | null
           position_y?: number | null
+          prefinanceur_id?: string | null
           price: number
           status?: Database["public"]["Enums"]["plot_status"]
           updated_at?: string
@@ -3579,6 +3581,7 @@ export type Database = {
           plot_number?: string
           position_x?: number | null
           position_y?: number | null
+          prefinanceur_id?: string | null
           price?: number
           status?: Database["public"]["Enums"]["plot_status"]
           updated_at?: string
@@ -3605,6 +3608,13 @@ export type Database = {
             columns: ["lotissement_id"]
             isOneToOne: false
             referencedRelation: "lotissements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parcelles_prefinanceur_id_fkey"
+            columns: ["prefinanceur_id"]
+            isOneToOne: false
+            referencedRelation: "prefinanceurs"
             referencedColumns: ["id"]
           },
         ]
@@ -4036,6 +4046,54 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: string | null
+        }
+        Relationships: []
+      }
+      prefinanceurs: {
+        Row: {
+          address: string | null
+          cni_number: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          rccm: string | null
+          representant: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          cni_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          rccm?: string | null
+          representant?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          cni_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          rccm?: string | null
+          representant?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -6009,7 +6067,7 @@ export type Database = {
         | "caissiere"
       interest_level: "faible" | "moyen" | "eleve"
       payment_type: "comptant" | "echelonne"
-      plot_status: "disponible" | "reserve" | "vendu"
+      plot_status: "disponible" | "reserve" | "vendu" | "prefinance"
       property_sale_status: "disponible" | "reserve" | "vendu"
       prospect_status:
         | "nouveau"
@@ -6177,7 +6235,7 @@ export const Constants = {
       ],
       interest_level: ["faible", "moyen", "eleve"],
       payment_type: ["comptant", "echelonne"],
-      plot_status: ["disponible", "reserve", "vendu"],
+      plot_status: ["disponible", "reserve", "vendu", "prefinance"],
       property_sale_status: ["disponible", "reserve", "vendu"],
       prospect_status: [
         "nouveau",

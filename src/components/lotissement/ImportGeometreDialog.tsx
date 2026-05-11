@@ -332,8 +332,8 @@ export const ImportGeometreDialog = ({
       if (isGuideExcel) {
         newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
         // Per-cell extractors: each column maps to its own field via its label.
-        const ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`);
-        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`);
+        const ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`);
+        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+[A-Z]?)`);
         const SUPERFICIE_RE = new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
         const PARCELLE_RE = new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
         const AFFECT_RE = new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}(.+)$`);

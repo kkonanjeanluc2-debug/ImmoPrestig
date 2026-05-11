@@ -188,12 +188,13 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                 </TableCell>
               </TableRow>
             ) : filteredVentes.map((vente) => {
-              const progress = vente.payment_type === "echelonne" 
+              const isPrefinance = vente.status === "prefinance";
+              const progress = vente.payment_type === "echelonne"
                 ? `${vente.paid_installments || 0}/${vente.total_installments || 0}`
                 : "Complet";
               const soldByName = getSoldByName((vente as any).sold_by);
               const paymentMethod = (vente as any).payment_method;
-              
+
               return (
                 <TableRow key={vente.id}>
                   <TableCell className="font-medium">
@@ -211,12 +212,22 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     {format(new Date(vente.sale_date), "dd MMM yyyy", { locale: fr })}
                   </TableCell>
                   <TableCell>
-                    {vente.total_price.toLocaleString("fr-FR")} F CFA
+                    {isPrefinance ? (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    ) : (
+                      <>{vente.total_price.toLocaleString("fr-FR")} F CFA</>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {vente.payment_type === "comptant" ? "Comptant" : "Échelonné"}
-                    </Badge>
+                    {isPrefinance ? (
+                      <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                        Préfinancement
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">
+                        {vente.payment_type === "comptant" ? "Comptant" : "Échelonné"}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     {paymentMethod ? (
@@ -239,13 +250,17 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     )}
                   </TableCell>
                   <TableCell>
-                    {vente.payment_type === "echelonne" ? (
+                    {isPrefinance ? (
+                      <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                        Préfinancé
+                      </Badge>
+                    ) : vente.payment_type === "echelonne" ? (
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[60px]">
-                          <div 
+                          <div
                             className="h-full bg-primary rounded-full"
-                            style={{ 
-                              width: `${((vente.paid_installments || 0) / (vente.total_installments || 1)) * 100}%` 
+                            style={{
+                              width: `${((vente.paid_installments || 0) / (vente.total_installments || 1)) * 100}%`
                             }}
                           />
                         </div>
@@ -258,32 +273,36 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedVente(vente)}
-                      title="Télécharger les documents"
-                    >
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setMutationTarget(vente)}
-                      title="Mutation (revente à un tiers)"
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <ArrowRightLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setCancelTarget(vente)}
-                      title="Annuler la vente"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
+                    {!isPrefinance && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedVente(vente)}
+                          title="Télécharger les documents"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setMutationTarget(vente)}
+                          title="Mutation (revente à un tiers)"
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <ArrowRightLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setCancelTarget(vente)}
+                          title="Annuler la vente"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               );

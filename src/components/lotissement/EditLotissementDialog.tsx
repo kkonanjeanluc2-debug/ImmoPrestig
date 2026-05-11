@@ -217,14 +217,15 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="total_area">Superficie totale (m²)</Label>
+            <Label htmlFor="total_area">Superficie totale (ha)</Label>
             <Input
               id="total_area"
               type="number"
               min="0"
+              step="0.01"
               value={formData.total_area}
               onChange={(e) => setFormData({ ...formData, total_area: e.target.value })}
-              placeholder="ex: 50000"
+              placeholder="ex: 5"
             />
           </div>
 

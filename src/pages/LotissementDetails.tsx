@@ -474,7 +474,7 @@ const LotissementDetails = () => {
         onOpenChange={setShowAddParcelle}
         existingNumbers={parcelles?.map(p => p.plot_number) || []}
         existingParcelles={parcelles || []}
-        lotissementTotalArea={lotissement?.total_area}
+        lotissementTotalArea={lotissement?.total_area ? lotissement.total_area * 10000 : null}
         existingParcellesArea={parcelles?.reduce((sum, p) => sum + (p.area || 0), 0) || 0}
       />
 
@@ -484,7 +484,7 @@ const LotissementDetails = () => {
         onOpenChange={setShowBulkAdd}
         existingNumbers={parcelles?.map(p => p.plot_number) || []}
         existingParcelles={parcelles?.map(p => ({ ilot_id: p.ilot_id, area: p.area })) || []}
-        lotissementTotalArea={lotissement?.total_area}
+        lotissementTotalArea={lotissement?.total_area ? lotissement.total_area * 10000 : null}
         existingParcellesArea={parcelles?.reduce((sum, p) => sum + (p.area || 0), 0) || 0}
       />
 

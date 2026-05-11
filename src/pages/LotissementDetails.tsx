@@ -87,8 +87,9 @@ const LotissementDetails = () => {
     const disponibles = parcelles?.filter(p => p.status === "disponible").length || 0;
     const vendues = parcelles?.filter(p => p.status === "vendu").length || 0;
     const reservees = parcelles?.filter(p => p.status === "reserve").length || 0;
-    
-    return { total, disponibles, vendues, reservees };
+    const prefinancees = parcelles?.filter(p => p.status === "prefinance").length || 0;
+
+    return { total, disponibles, vendues, reservees, prefinancees };
   }, [parcelles]);
 
   // Revenue filtered by period

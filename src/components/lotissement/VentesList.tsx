@@ -282,17 +282,15 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     >
                       <FileText className="h-4 w-4" />
                     </Button>
-                    {!isPrefinance && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setMutationTarget(vente)}
-                        title="Mutation (revente à un tiers)"
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        <ArrowRightLeft className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setMutationTarget(vente)}
+                      title="Mutation (revente à un tiers)"
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

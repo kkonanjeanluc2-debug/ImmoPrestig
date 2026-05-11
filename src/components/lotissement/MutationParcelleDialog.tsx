@@ -34,13 +34,18 @@ export function MutationParcelleDialog({
   open,
   onOpenChange,
 }: MutationParcelleDialogProps) {
+  const isPrefinance = vente.status === "prefinance" || (typeof vente.id === "string" && vente.id.startsWith("pref-"));
   const { data: acquereurs = [] } = useAcquereurs();
-  const { data: existingMutations = [] } = useMutationsParcelles(vente.id);
+  // No mutations fetch for prefinance (synthetic id, no FK)
+  const { data: existingMutations = [] } = useMutationsParcelles(isPrefinance ? undefined : vente.id);
   const createAcquereur = useCreateAcquereur();
   const createMutation = useCreateMutationParcelle();
 
-  // Current owner: last mutation's nouvel_acquereur, or the vente's acquirer
-  const lastMutation = existingMutations.length > 0 ? existingMutations[existingMutations.length - 1] : null;
+  // Current owner: last mutation's nouvel_acquereur, or the vente's acquirer (or prefinanceur)
+  const relevantMutations = isPrefinance
+    ? existingMutations.filter((m) => m.parcelle_id === vente.parcelle_id)
+    : existingMutations;
+  const lastMutation = relevantMutations.length > 0 ? relevantMutations[relevantMutations.length - 1] : null;
   const currentOwnerId = lastMutation ? lastMutation.nouvel_acquereur_id : vente.acquereur_id;
   const currentOwnerName = lastMutation?.nouvel_acquereur?.name || vente.acquereur?.name || "N/A";
   const currentOwnerPhone = lastMutation?.nouvel_acquereur?.phone || vente.acquereur?.phone || null;
@@ -99,10 +104,29 @@ export function MutationParcelleDialog({
     }
 
     try {
+      // For prefinance lots, the cedant is a prefinanceur (different table).
+      // We auto-create a mirroring acquereur to satisfy the FK on ancien_acquereur_id.
+      let ancienAcquereurId = currentOwnerId;
+      if (isPrefinance && !lastMutation) {
+        try {
+          const cedant = await createAcquereur.mutateAsync({
+            name: currentOwnerName,
+            phone: currentOwnerPhone || null,
+            cni_number: (vente.acquereur as any)?.cni_number || null,
+            email: null,
+            address: null,
+          });
+          ancienAcquereurId = cedant.id;
+        } catch {
+          toast.error("Erreur lors de la préparation du cédant");
+          return;
+        }
+      }
+
       await createMutation.mutateAsync({
-        vente_id: vente.id,
+        vente_id: isPrefinance ? (null as any) : vente.id,
         parcelle_id: vente.parcelle_id,
-        ancien_acquereur_id: currentOwnerId,
+        ancien_acquereur_id: ancienAcquereurId,
         nouvel_acquereur_id: nouvelAcquereurId,
         mutation_date: mutationDate,
         mutation_price: mutationPrice ? parseFloat(mutationPrice) : null,

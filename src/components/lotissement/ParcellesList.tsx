@@ -70,12 +70,14 @@ const STATUS_STYLES: Record<string, string> = {
   disponible: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
   reserve: "bg-amber-500/10 text-amber-600 border-amber-500/30",
   vendu: "bg-blue-500/10 text-blue-600 border-blue-500/30",
+  prefinance: "bg-purple-500/10 text-purple-600 border-purple-500/30",
 };
 
 const STATUS_LABELS: Record<string, string> = {
   disponible: "Disponible",
   reserve: "Réservé",
   vendu: "Vendu",
+  prefinance: "Préfinancé",
 };
 
 function ReservationModalList({ parcelleId, plotNumber, parcelle, lotissementId, open, onOpenChange }: { parcelleId: string; plotNumber: string; parcelle?: Parcelle; lotissementId: string; open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -617,6 +619,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       {parcelle.status === "disponible" && "Disponible"}
                       {parcelle.status === "reserve" && "Réservé"}
                       {parcelle.status === "vendu" && "Vendu"}
+                      {parcelle.status === "prefinance" && "Préfinancé"}
                     </Badge>
                   </TableCell>
                   {isAdmin && (

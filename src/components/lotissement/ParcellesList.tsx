@@ -575,6 +575,8 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                         ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1"
                         : parcelle.attribution === "lotisseur"
                         ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1"
+                        : parcelle.attribution === "prefinanceur"
+                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 hover:bg-purple-100 gap-1"
                         : "";
 
                       if (displayName && parcelle.attribution) {

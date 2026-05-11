@@ -658,106 +658,115 @@ export const ImportGeometreDialog = ({
         // Row 2-3: Column headers (ATTRIBUTAIRES, ATTESTATION, ADRESSES, PIECES)
         // Row 4+: Data rows (N°, NOM ET PRENOMS, attestation N°/DATE, contacts, nature/N°/date)
 
-        // Extract header info — scan each row for ILOT/LOT/SUPERFICIE/AFFECTATION
-        // These values are in the header rows of each lot block table
-        let rawBlockText = "";
-        for (let ri = 0; ri < Math.min(rows.length, 5); ri++) {
-          const cells = Array.from(rows[ri].querySelectorAll("td, th"));
-          rawBlockText += " " + cells.map(c => c.textContent || "").join(" ");
-        }
-        const blockText = normalizeForMatch(rawBlockText);
+        const hasIlot = new RegExp(`\\bILOTS?${LABEL_SEP}\\d`);
+        const hasLot = new RegExp(`\\bLOTS?${LABEL_SEP}\\d`);
+        const getRowCellTexts = (row: HTMLTableRowElement) =>
+          Array.from(row.querySelectorAll("td, th")).map((cell) => cell.textContent?.trim() || "");
+        const getRowText = (row: HTMLTableRowElement) => getRowCellTexts(row).join(" ");
+        const isLotHeaderRow = (row: HTMLTableRowElement) => {
+          const text = normalizeForMatch(getRowText(row));
+          return hasIlot.test(text) && hasLot.test(text);
+        };
 
-        const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
-        const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
-        const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
-        // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
-        const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
-        const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
-        // Fallback : modèle simplifié où l'affectation est portée par "EQUIPEMENT : ..."
-        const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
+        // Un même tableau Word peut contenir plusieurs blocs de lots lorsque le document
+        // continue sur une nouvelle page. On scanne donc chaque ligne ILOT+LOT au lieu de
+        // supposer qu'un tableau = un lot.
+        for (let blockStart = 0; blockStart < rows.length; blockStart++) {
+          if (!isLotHeaderRow(rows[blockStart])) continue;
 
-        const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-        const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
-        const area = superficieMatch
-          ? parseNumber(superficieMatch[1].replace(",", "."))
-          : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
-        const affectationRaw = affectationMatch
-          ? affectationMatch[1].trim()
-          : (equipementMatch ? equipementMatch[1].trim() : undefined);
-        const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
+          const blockText = normalizeForMatch(getRowText(rows[blockStart]));
+          const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+)`));
+          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+)`));
+          const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
+          // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
+          const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
+          const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
+          // Fallback : modèle simplifié où l'affectation est portée par "EQUIPEMENT : ..."
+          const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
-        if (!plotNumber) continue;
-        if (!isValidPlotNumberCandidate(plotNumber)) continue;
-        if (isExistingPlot(ilotName, String(plotNumber))) continue;
+          const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
+          const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+          const area = superficieMatch
+            ? parseNumber(superficieMatch[1].replace(",", "."))
+            : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
+          const affectationRaw = affectationMatch
+            ? affectationMatch[1].trim()
+            : (equipementMatch ? equipementMatch[1].trim() : undefined);
+          const affectation = (affectationRaw && affectationRaw.length > 0 && !/^ARRETE/i.test(affectationRaw)) ? affectationRaw : undefined;
 
-        // Now find the attributaire data from the table rows
-        // Look for data rows (rows that start with a number in first cell)
-        let beneficiaireName = "";
-        let contact = "";
-        let cniNature = "";
-        let cniNumber = "";
-        let cniDate = "";
-        let attestationNumber = "";
-        let attestationDate = "";
+          if (!plotNumber) continue;
+          if (!isValidPlotNumberCandidate(plotNumber)) continue;
+          if (isExistingPlot(ilotName, String(plotNumber))) continue;
 
-        // Find the header row to determine column mapping
-        let dataHeaderRowIdx = -1;
-        for (let ri = 0; ri < rows.length; ri++) {
-          const cells = rows[ri].querySelectorAll("td, th");
-          const rowText = Array.from(cells).map(c => (c.textContent || "").trim().toUpperCase()).join(" ");
-          if (rowText.includes("NOM") && (rowText.includes("PRENOM") || rowText.includes("ATTRIBUT"))) {
-            dataHeaderRowIdx = ri;
-            break;
-          }
-        }
-
-        // Extract data from the first data row (row after headers, with N°=1)
-        if (dataHeaderRowIdx >= 0) {
-          // The header may span 2 rows (merged cells), so check multiple rows after
-          for (let ri = dataHeaderRowIdx + 1; ri < rows.length; ri++) {
-            const cells = Array.from(rows[ri].querySelectorAll("td, th"));
-            const cellTexts = cells.map(c => (c.textContent || "").trim());
-            
-            // Skip empty rows or header continuation rows
-            const firstCell = cellTexts[0] || "";
-            if (!firstCell || firstCell.toUpperCase().includes("N°") || firstCell.toUpperCase().includes("NATURE")) continue;
-            
-            // This should be data row with: N°, NOM ET PRENOMS, Attestation N°, Attestation Date, Contacts, Nature, N° pièce, Date pièce
-            if (cellTexts.length >= 2 && !beneficiaireName) {
-              beneficiaireName = cellTexts[1] || ""; // NOM ET PRENOMS
-              attestationNumber = cellTexts.length > 2 ? (cellTexts[2] || "") : "";
-              attestationDate = cellTexts.length > 3 ? (cellTexts[3] || "") : "";
-              contact = cellTexts.length > 4 ? (cellTexts[4] || "") : "";
-              cniNature = cellTexts.length > 5 ? (cellTexts[5] || "") : "";
-              cniNumber = cellTexts.length > 6 ? (cellTexts[6] || "") : "";
-              cniDate = cellTexts.length > 7 ? (cellTexts[7] || "") : "";
+          let blockEnd = rows.length;
+          for (let next = blockStart + 1; next < rows.length; next++) {
+            if (isLotHeaderRow(rows[next])) {
+              blockEnd = next;
               break;
             }
           }
-        }
 
-        const parcelle: ParsedGeometreParcelle = {
-          plotNumber: String(plotNumber),
-          area,
-          price: 0,
-          ilotName: ilotName ? String(ilotName) : undefined,
-          beneficiaire: beneficiaireName || undefined,
-          contact: contact || undefined,
-          cniNature: cniNature || undefined,
-          cniNumber: cniNumber || undefined,
-          cniDate: cniDate || undefined,
-          attestationNumber: attestationNumber || undefined,
-          attestationDate: attestationDate || undefined,
-          affectation: (affectation && affectation.length > 0) ? affectation : undefined,
-        };
-        parcelles.push(parcelle);
+          // Now find the attributaire data from this lot block only.
+          let beneficiaireName = "";
+          let contact = "";
+          let cniNature = "";
+          let cniNumber = "";
+          let cniDate = "";
+          let attestationNumber = "";
+          let attestationDate = "";
 
-        if (ilotName) {
-          const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
-          if (existingIlot) {
-            existingIlot.parcelles.push(parcelle);
-          } else {
-            ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+          let dataHeaderRowIdx = -1;
+          for (let ri = blockStart + 1; ri < blockEnd; ri++) {
+            const rowText = normalizeForMatch(getRowText(rows[ri]));
+            if (rowText.includes("NOM") && (rowText.includes("PRENOM") || rowText.includes("ATTRIBUT"))) {
+              dataHeaderRowIdx = ri;
+              break;
+            }
+          }
+
+          if (dataHeaderRowIdx >= 0) {
+            for (let ri = dataHeaderRowIdx + 1; ri < blockEnd; ri++) {
+              const cellTexts = getRowCellTexts(rows[ri]);
+              const firstCell = cellTexts[0] || "";
+              const normalizedFirstCell = normalizeForMatch(firstCell);
+              if (!firstCell || normalizedFirstCell.includes("N°") || normalizedFirstCell.includes("NATURE")) continue;
+
+              if (cellTexts.length >= 2 && !beneficiaireName) {
+                beneficiaireName = cellTexts[1] || "";
+                attestationNumber = cellTexts.length > 2 ? (cellTexts[2] || "") : "";
+                attestationDate = cellTexts.length > 3 ? (cellTexts[3] || "") : "";
+                contact = cellTexts.length > 4 ? (cellTexts[4] || "") : "";
+                cniNature = cellTexts.length > 5 ? (cellTexts[5] || "") : "";
+                cniNumber = cellTexts.length > 6 ? (cellTexts[6] || "") : "";
+                cniDate = cellTexts.length > 7 ? (cellTexts[7] || "") : "";
+                break;
+              }
+            }
+          }
+
+          const parcelle: ParsedGeometreParcelle = {
+            plotNumber: String(plotNumber),
+            area,
+            price: 0,
+            ilotName: ilotName ? String(ilotName) : undefined,
+            beneficiaire: beneficiaireName || undefined,
+            contact: contact || undefined,
+            cniNature: cniNature || undefined,
+            cniNumber: cniNumber || undefined,
+            cniDate: cniDate || undefined,
+            attestationNumber: attestationNumber || undefined,
+            attestationDate: attestationDate || undefined,
+            affectation: (affectation && affectation.length > 0) ? affectation : undefined,
+          };
+          parcelles.push(parcelle);
+
+          if (ilotName) {
+            const existingIlot = ilots.find((il) => il.name.toLowerCase() === String(ilotName).toLowerCase());
+            if (existingIlot) {
+              existingIlot.parcelles.push(parcelle);
+            } else {
+              ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+            }
           }
         }
       } else {
@@ -1627,9 +1636,9 @@ function normalizeForMatch(text: string): string {
     .toUpperCase();
 }
 
-// Sépcarateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
-// "·", "." répétés, ou simplement des espaces.
-const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)?";
+// Séparateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
+// "·", ".", "…" répétés avec ou sans espaces: "LOT : ... 02".
+const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)*";
 
 // Rejette tout numéro de lot qui n'est en réalité qu'un libellé du modèle
 // (ATTRIBUTAIRES, ILOT, LOT, PARCELLE, EQUIPEMENT, ATTESTATION, CONTACTS,

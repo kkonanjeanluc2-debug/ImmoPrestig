@@ -120,6 +120,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
   const [sellingParcelle, setSellingParcelle] = useState<Parcelle | null>(null);
   const [reservingParcelle, setReservingParcelle] = useState<Parcelle | null>(null);
+  const [prefinancingParcelle, setPrefinancingParcelle] = useState<Parcelle | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewingReservation, setViewingReservation] = useState<Parcelle | null>(null);
   const [searchQuery, setSearchQuery] = useState("");

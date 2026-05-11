@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateLotissementDocument } from "@/hooks/useLotissementDocuments";
+import { useCreatePrefinanceur, usePrefinanceurs } from "@/hooks/usePrefinanceurs";
 import { SignatureTypeSelector } from "@/components/signature/SignatureTypeSelector";
 import {
   generatePVFamille,
@@ -94,6 +95,8 @@ export function GenerateLotissementDocumentDialog({
   const { data: agency } = useAgency();
   const { user } = useAuth();
   const createLotissementDocument = useCreateLotissementDocument();
+  const createPrefinanceur = useCreatePrefinanceur();
+  const { data: existingPrefinanceurs } = usePrefinanceurs();
   const [selectedType, setSelectedType] = useState<DocumentType | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [signingStep, setSigningStep] = useState<"form" | "signatures">("form");
@@ -292,6 +295,34 @@ export function GenerateLotissementDocumentDialog({
           file_url: signed?.signedUrl || filePath,
           file_size: String(blob.size),
         });
+
+        // Auto-register prefinanceur in the registry so it shows up in the existing list
+        if (selectedType === "contrat_prefinancement") {
+          try {
+            const nameTrim = prefinancementData.prefinanceurName.trim();
+            const cniTrim = (prefinancementData.prefinanceurCni || "").trim();
+            const rccmTrim = (prefinancementData.prefinanceurRccm || "").trim();
+            const nameLower = nameTrim.toLowerCase();
+            const dup = existingPrefinanceurs?.find((p) => {
+              if (p.name.trim().toLowerCase() === nameLower) return true;
+              if (cniTrim && p.cni_number && p.cni_number.toLowerCase() === cniTrim.toLowerCase()) return true;
+              if (rccmTrim && p.rccm && p.rccm.toLowerCase() === rccmTrim.toLowerCase()) return true;
+              return false;
+            });
+            if (!dup && nameTrim) {
+              await createPrefinanceur.mutateAsync({
+                name: nameTrim,
+                type: prefinancementData.prefinanceurType || "individu",
+                cni_number: cniTrim || null,
+                rccm: rccmTrim || null,
+                representant: (prefinancementData.prefinanceurRepresentant || "").trim() || null,
+                address: (prefinancementData.prefinanceurAddress || "").trim() || null,
+              });
+            }
+          } catch (regErr) {
+            console.warn("Could not auto-register prefinanceur:", regErr);
+          }
+        }
 
         toast.success("Document généré et enregistré avec succès");
         onOpenChange(false);

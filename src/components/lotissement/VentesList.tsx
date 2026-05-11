@@ -18,6 +18,9 @@ import { VenteWithDetails, useCancelVenteParcelle } from "@/hooks/useVentesParce
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";
 import { MutationParcelleDialog } from "./MutationParcelleDialog";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
+import { useParcelles } from "@/hooks/useParcelles";
+import { usePrefinanceurs } from "@/hooks/usePrefinanceurs";
+import { useIlots } from "@/hooks/useIlots";
 import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
 import {
   AlertDialog,
@@ -40,14 +43,65 @@ interface VentesListProps {
 export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const [selectedVente, setSelectedVente] = useState<VenteWithDetails | null>(null);
   const { data: assignableUsers } = useAssignableUsers();
+  const { data: parcelles } = useParcelles(lotissementId);
+  const { data: prefinanceurs = [] } = usePrefinanceurs();
+  const { data: ilots } = useIlots(lotissementId);
   const [searchQuery, setSearchQuery] = useState("");
   const [cancelTarget, setCancelTarget] = useState<VenteWithDetails | null>(null);
   const [mutationTarget, setMutationTarget] = useState<VenteWithDetails | null>(null);
   const cancelVente = useCancelVenteParcelle();
-  
+
+  // Build synthetic vente entries for prefinanced parcelles
+  const prefinanceEntries = useMemo<VenteWithDetails[]>(() => {
+    if (!parcelles) return [];
+    const ilotsMap = new Map<string, string>();
+    ilots?.forEach(i => ilotsMap.set(i.id, i.name));
+    return parcelles
+      .filter(p => p.status === "prefinance")
+      .map(p => {
+        const pref = p.prefinanceur_id ? prefinanceurs.find(pr => pr.id === p.prefinanceur_id) : null;
+        return {
+          id: `pref-${p.id}`,
+          user_id: p.user_id,
+          parcelle_id: p.id,
+          acquereur_id: pref?.id || "",
+          sale_date: p.updated_at,
+          total_price: 0,
+          payment_type: "comptant" as const,
+          payment_method: null,
+          down_payment: null,
+          monthly_payment: null,
+          total_installments: null,
+          paid_installments: null,
+          status: "prefinance",
+          notes: null,
+          sold_by: null,
+          created_at: p.created_at,
+          updated_at: p.updated_at,
+          parcelle: {
+            plot_number: p.plot_number,
+            area: p.area,
+            ilot_id: p.ilot_id,
+            beneficiaire_id: p.beneficiaire_id,
+            notes: p.notes,
+            ilot: p.ilot_id ? { name: ilotsMap.get(p.ilot_id) || "" } : null,
+          },
+          acquereur: pref ? {
+            name: pref.name,
+            phone: pref.phone,
+            cni_number: pref.cni_number,
+          } : undefined,
+        } as VenteWithDetails;
+      });
+  }, [parcelles, prefinanceurs, ilots]);
+
+  const combinedVentes = useMemo(
+    () => [...ventes, ...prefinanceEntries],
+    [ventes, prefinanceEntries]
+  );
+
   const filteredVentes = useMemo(() => {
-    return ventes.filter((v) => {
-      if (!v.parcelle?.lotissement?.name) return false;
+    return combinedVentes.filter((v) => {
       if (period) {
         const saleDate = new Date(v.sale_date);
         if (!isWithinInterval(saleDate, { start: period.from, end: period.to })) return false;
@@ -61,7 +115,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
       }
       return true;
     });
-  }, [ventes, period, searchQuery]);
+  }, [combinedVentes, period, searchQuery]);
 
   const getSoldByName = (soldBy: string | null | undefined) => {
     if (!soldBy) return null;
@@ -89,7 +143,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
     }
   };
 
-  if (!ventes || ventes.length === 0) {
+  if (combinedVentes.length === 0) {
     return (
       <Card className="py-12">
         <CardContent className="text-center">
@@ -134,12 +188,13 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                 </TableCell>
               </TableRow>
             ) : filteredVentes.map((vente) => {
-              const progress = vente.payment_type === "echelonne" 
+              const isPrefinance = vente.status === "prefinance";
+              const progress = vente.payment_type === "echelonne"
                 ? `${vente.paid_installments || 0}/${vente.total_installments || 0}`
                 : "Complet";
               const soldByName = getSoldByName((vente as any).sold_by);
               const paymentMethod = (vente as any).payment_method;
-              
+
               return (
                 <TableRow key={vente.id}>
                   <TableCell className="font-medium">
@@ -157,12 +212,22 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     {format(new Date(vente.sale_date), "dd MMM yyyy", { locale: fr })}
                   </TableCell>
                   <TableCell>
-                    {vente.total_price.toLocaleString("fr-FR")} F CFA
+                    {isPrefinance ? (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    ) : (
+                      <>{vente.total_price.toLocaleString("fr-FR")} F CFA</>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {vente.payment_type === "comptant" ? "Comptant" : "Échelonné"}
-                    </Badge>
+                    {isPrefinance ? (
+                      <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                        Préfinancement
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">
+                        {vente.payment_type === "comptant" ? "Comptant" : "Échelonné"}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     {paymentMethod ? (
@@ -185,13 +250,17 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     )}
                   </TableCell>
                   <TableCell>
-                    {vente.payment_type === "echelonne" ? (
+                    {isPrefinance ? (
+                      <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                        Préfinancé
+                      </Badge>
+                    ) : vente.payment_type === "echelonne" ? (
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[60px]">
-                          <div 
+                          <div
                             className="h-full bg-primary rounded-full"
-                            style={{ 
-                              width: `${((vente.paid_installments || 0) / (vente.total_installments || 1)) * 100}%` 
+                            style={{
+                              width: `${((vente.paid_installments || 0) / (vente.total_installments || 1)) * 100}%`
                             }}
                           />
                         </div>
@@ -204,32 +273,36 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedVente(vente)}
-                      title="Télécharger les documents"
-                    >
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setMutationTarget(vente)}
-                      title="Mutation (revente à un tiers)"
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <ArrowRightLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setCancelTarget(vente)}
-                      title="Annuler la vente"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
+                    {!isPrefinance && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedVente(vente)}
+                          title="Télécharger les documents"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setMutationTarget(vente)}
+                          title="Mutation (revente à un tiers)"
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <ArrowRightLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setCancelTarget(vente)}
+                          title="Annuler la vente"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               );

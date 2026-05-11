@@ -96,6 +96,54 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prefinancement flow
+    if (transactionType === "prefinancement") {
+      let prefId = prefinanceurId;
+      try {
+        setSubmittingPref(true);
+        if (prefMode === "new") {
+          if (!newPrefinanceur.name.trim()) {
+            toast.error("Le nom du préfinanceur est obligatoire");
+            setSubmittingPref(false);
+            return;
+          }
+          const created = await createPrefinanceur.mutateAsync({
+            name: newPrefinanceur.name.trim(),
+            phone: newPrefinanceur.phone.trim() || null,
+            email: newPrefinanceur.email.trim() || null,
+            cni_number: newPrefinanceur.cni_number.trim() || null,
+            rccm: newPrefinanceur.rccm.trim() || null,
+            representant: newPrefinanceur.representant.trim() || null,
+            address: newPrefinanceur.address.trim() || null,
+            type: newPrefinanceur.type,
+            notes: newPrefinanceur.notes.trim() || null,
+          });
+          prefId = created.id;
+        }
+        if (!prefId) {
+          toast.error("Veuillez sélectionner ou créer un préfinanceur");
+          setSubmittingPref(false);
+          return;
+        }
+        const { error } = await supabase
+          .from("parcelles")
+          .update({
+            status: "prefinance" as any,
+            prefinanceur_id: prefId,
+          } as any)
+          .eq("id", parcelle.id);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["parcelles"] });
+        toast.success("Préfinancement enregistré avec succès");
+        onOpenChange(false);
+      } catch (err: any) {
+        toast.error(err?.message || "Erreur lors de l'enregistrement du préfinancement");
+      } finally {
+        setSubmittingPref(false);
+      }
+      return;
+    }
+
     let buyerId = acquereurId;
 
     // Create new buyer if needed

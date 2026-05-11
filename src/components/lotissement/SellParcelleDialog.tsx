@@ -227,16 +227,175 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     }
   };
 
-  const isLoading = createAcquereur.isPending || createVente.isPending;
+  const isLoading = createAcquereur.isPending || createVente.isPending || submittingPref || createPrefinanceur.isPending;
+  const isPref = transactionType === "prefinancement";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Vendre la parcelle {parcelle.plot_number}</DialogTitle>
+          <DialogTitle>
+            {isPref ? "Préfinancement" : "Vendre"} la parcelle {parcelle.plot_number}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Transaction Type */}
+          <div className="space-y-3">
+            <Label>Type d'opération</Label>
+            <RadioGroup
+              value={transactionType}
+              onValueChange={(v) => setTransactionType(v as "vente" | "prefinancement")}
+              className="flex gap-4"
+            >
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="vente" id="tt-vente" />
+                <Label htmlFor="tt-vente" className="cursor-pointer">Vente</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="prefinancement" id="tt-pref" />
+                <Label htmlFor="tt-pref" className="cursor-pointer">Préfinancement</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {isPref && (
+            <div className="space-y-4">
+              <Label>Préfinanceur</Label>
+              <RadioGroup
+                value={prefMode}
+                onValueChange={(v) => setPrefMode(v as "existing" | "new")}
+                className="flex gap-4"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="existing" id="pref-existing" />
+                  <Label htmlFor="pref-existing" className="cursor-pointer">Existant</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="new" id="pref-new" />
+                  <Label htmlFor="pref-new" className="cursor-pointer">Nouveau</Label>
+                </div>
+              </RadioGroup>
+
+              {prefMode === "existing" ? (
+                <Select value={prefinanceurId} onValueChange={setPrefinanceurId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un préfinanceur" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {prefinanceurs?.length ? prefinanceurs.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          {p.name} {p.phone && `(${p.phone})`}
+                        </div>
+                      </SelectItem>
+                    )) : (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        Aucun préfinanceur enregistré
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="grid gap-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2 space-y-2">
+                      <Label>Type</Label>
+                      <Select
+                        value={newPrefinanceur.type}
+                        onValueChange={(v) => setNewPrefinanceur({ ...newPrefinanceur, type: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="individu">Individu</SelectItem>
+                          <SelectItem value="societe">Société</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="pref-name">
+                        {newPrefinanceur.type === "societe" ? "Raison sociale *" : "Nom complet *"}
+                      </Label>
+                      <Input
+                        id="pref-name"
+                        value={newPrefinanceur.name}
+                        onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pref-phone">Téléphone</Label>
+                      <Input
+                        id="pref-phone"
+                        value={newPrefinanceur.phone}
+                        onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, phone: e.target.value })}
+                        placeholder="+2250701020304"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pref-email">Email</Label>
+                      <Input
+                        id="pref-email"
+                        type="email"
+                        value={newPrefinanceur.email}
+                        onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, email: e.target.value })}
+                      />
+                    </div>
+                    {newPrefinanceur.type === "societe" ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="pref-rccm">RCCM</Label>
+                          <Input
+                            id="pref-rccm"
+                            value={newPrefinanceur.rccm}
+                            onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, rccm: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="pref-rep">Représentant</Label>
+                          <Input
+                            id="pref-rep"
+                            value={newPrefinanceur.representant}
+                            onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, representant: e.target.value })}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="pref-cni">N° CNI</Label>
+                        <Input
+                          id="pref-cni"
+                          value={newPrefinanceur.cni_number}
+                          onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, cni_number: e.target.value })}
+                        />
+                      </div>
+                    )}
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="pref-address">Adresse</Label>
+                      <Input
+                        id="pref-address"
+                        value={newPrefinanceur.address}
+                        onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, address: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="pref-notes">Notes</Label>
+                      <Input
+                        id="pref-notes"
+                        value={newPrefinanceur.notes}
+                        onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, notes: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isPref && (
+          <>
           {/* Buyer Selection */}
           <div className="space-y-4">
             <Label>Acquéreur</Label>

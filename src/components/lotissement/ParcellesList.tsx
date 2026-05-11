@@ -550,6 +550,8 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                         ? (lotissement?.proprietaire_name || "Propriétaire")
                         : parcelle.attribution === "lotisseur"
                         ? (lotissement?.lotisseur_name || "Lotisseur")
+                        : parcelle.attribution === "prefinanceur"
+                        ? "Préfinanceur"
                         : null;
 
                       // Get display name: prefer beneficiaire notes > linked beneficiaire > partie label

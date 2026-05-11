@@ -619,6 +619,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       {parcelle.status === "disponible" && "Disponible"}
                       {parcelle.status === "reserve" && "Réservé"}
                       {parcelle.status === "vendu" && "Vendu"}
+                      {parcelle.status === "prefinance" && "Préfinancé"}
                     </Badge>
                   </TableCell>
                   {isAdmin && (

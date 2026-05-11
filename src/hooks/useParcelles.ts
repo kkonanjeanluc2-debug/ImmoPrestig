@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { logActivityDirect } from "@/lib/activityLogger";
 import { useCurrentUserRole } from "@/hooks/useUserRoles";
 
-export type PlotStatus = "disponible" | "reserve" | "vendu";
+export type PlotStatus = "disponible" | "reserve" | "vendu" | "prefinance";
 
 export interface Parcelle {
   id: string;
@@ -23,6 +23,7 @@ export interface Parcelle {
   assigned_to: string | null;
   attribution: string | null;
   beneficiaire_id: string | null;
+  prefinanceur_id: string | null;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;

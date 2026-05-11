@@ -95,6 +95,8 @@ export function GenerateLotissementDocumentDialog({
   const { data: agency } = useAgency();
   const { user } = useAuth();
   const createLotissementDocument = useCreateLotissementDocument();
+  const createPrefinanceur = useCreatePrefinanceur();
+  const { data: existingPrefinanceurs } = usePrefinanceurs();
   const [selectedType, setSelectedType] = useState<DocumentType | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [signingStep, setSigningStep] = useState<"form" | "signatures">("form");

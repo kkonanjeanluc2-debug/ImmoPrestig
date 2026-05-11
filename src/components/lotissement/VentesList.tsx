@@ -50,6 +50,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const [cancelTarget, setCancelTarget] = useState<VenteWithDetails | null>(null);
   const [mutationTarget, setMutationTarget] = useState<VenteWithDetails | null>(null);
   const cancelVente = useCancelVenteParcelle();
+  const updateParcelle = useUpdateParcelle();
 
   // Build synthetic vente entries for prefinanced parcelles
   const prefinanceEntries = useMemo<VenteWithDetails[]>(() => {

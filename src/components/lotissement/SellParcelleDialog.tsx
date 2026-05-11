@@ -660,4 +660,3 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     </Dialog>
   );
 }
-}

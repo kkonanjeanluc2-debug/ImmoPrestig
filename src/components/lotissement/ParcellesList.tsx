@@ -46,6 +46,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { useBeneficiairesLots } from "@/hooks/useBeneficiairesLots";
 import { useAgency } from "@/hooks/useAgency";
+import { usePrefinanceurs } from "@/hooks/usePrefinanceurs";
 import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";

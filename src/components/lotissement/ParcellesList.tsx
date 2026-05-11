@@ -280,7 +280,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
 
   // Deletable parcelles in current filtered view (exclude "vendu")
   const deletableFilteredIds = useMemo(
-    () => filteredParcelles.filter(p => p.status !== "vendu").map(p => p.id),
+    () => filteredParcelles.filter(p => p.status !== "vendu" && p.attribution !== "prefinanceur").map(p => p.id),
     [filteredParcelles]
   );
 
@@ -511,7 +511,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   <TableRow key={parcelle.id} className={selectedIds.has(parcelle.id) ? "bg-muted/50" : ""}>
                     {canDelete && (
                       <TableCell className="w-10">
-                        {parcelle.status !== "vendu" ? (
+                        {parcelle.status !== "vendu" && parcelle.attribution !== "prefinanceur" ? (
                           <Checkbox
                             checked={selectedIds.has(parcelle.id)}
                             onCheckedChange={() => toggleSelect(parcelle.id)}
@@ -628,11 +628,17 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   <TableCell>{parcelle.area.toLocaleString("fr-FR")} m²</TableCell>
                   <TableCell>{parcelle.price.toLocaleString("fr-FR")} F CFA</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={STATUS_STYLES[parcelle.status]}>
-                      {parcelle.status === "disponible" && "Disponible"}
-                      {parcelle.status === "reserve" && "Réservé"}
-                      {parcelle.status === "vendu" && "Vendu"}
-                    </Badge>
+                    {parcelle.attribution === "prefinanceur" && parcelle.status === "disponible" ? (
+                      <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                        Préfinancement
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className={STATUS_STYLES[parcelle.status]}>
+                        {parcelle.status === "disponible" && "Disponible"}
+                        {parcelle.status === "reserve" && "Réservé"}
+                        {parcelle.status === "vendu" && "Vendu"}
+                      </Badge>
+                    )}
                   </TableCell>
                   {isAdmin && (
                     <TableCell>
@@ -663,7 +669,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {parcelle.status === "disponible" && (
+                      {parcelle.status === "disponible" && parcelle.attribution !== "prefinanceur" && (
                         <>
                           <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
                             <ShoppingCart className="h-4 w-4 mr-2" />
@@ -698,7 +704,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                           Modifier
                         </DropdownMenuItem>
                       )}
-                      {canDelete && parcelle.status !== "vendu" && (
+                      {canDelete && parcelle.status !== "vendu" && parcelle.attribution !== "prefinanceur" && (
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => setDeletingId(parcelle.id)}

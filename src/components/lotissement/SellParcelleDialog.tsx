@@ -643,9 +643,6 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
               </p>
             </div>
           )}
-
-            </div>
-          )}
           </>
           )}
 
@@ -658,14 +655,9 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
               {isPref ? "Confirmer le préfinancement" : "Confirmer la vente"}
             </Button>
           </div>
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Confirmer la vente
-            </Button>
-          </div>
         </form>
       </DialogContent>
     </Dialog>
   );
+}
 }

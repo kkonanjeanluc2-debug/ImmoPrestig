@@ -24,7 +24,7 @@ export interface BeneficiaireLotInsert {
   email?: string | null;
   lien_role?: string | null;
   cni_number?: string | null;
-  partie: "proprietaire" | "lotisseur";
+  partie: "proprietaire" | "lotisseur" | "prefinanceur";
   member_user_id?: string | null;
 }
 

@@ -43,14 +43,65 @@ interface VentesListProps {
 export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
   const [selectedVente, setSelectedVente] = useState<VenteWithDetails | null>(null);
   const { data: assignableUsers } = useAssignableUsers();
+  const { data: parcelles } = useParcelles(lotissementId);
+  const { data: prefinanceurs = [] } = usePrefinanceurs();
+  const { data: ilots } = useIlots(lotissementId);
   const [searchQuery, setSearchQuery] = useState("");
   const [cancelTarget, setCancelTarget] = useState<VenteWithDetails | null>(null);
   const [mutationTarget, setMutationTarget] = useState<VenteWithDetails | null>(null);
   const cancelVente = useCancelVenteParcelle();
-  
+
+  // Build synthetic vente entries for prefinanced parcelles
+  const prefinanceEntries = useMemo<VenteWithDetails[]>(() => {
+    if (!parcelles) return [];
+    const ilotsMap = new Map<string, string>();
+    ilots?.forEach(i => ilotsMap.set(i.id, i.name));
+    return parcelles
+      .filter(p => p.status === "prefinance")
+      .map(p => {
+        const pref = p.prefinanceur_id ? prefinanceurs.find(pr => pr.id === p.prefinanceur_id) : null;
+        return {
+          id: `pref-${p.id}`,
+          user_id: p.user_id,
+          parcelle_id: p.id,
+          acquereur_id: pref?.id || "",
+          sale_date: p.updated_at,
+          total_price: 0,
+          payment_type: "comptant" as const,
+          payment_method: null,
+          down_payment: null,
+          monthly_payment: null,
+          total_installments: null,
+          paid_installments: null,
+          status: "prefinance",
+          notes: null,
+          sold_by: null,
+          created_at: p.created_at,
+          updated_at: p.updated_at,
+          parcelle: {
+            plot_number: p.plot_number,
+            area: p.area,
+            ilot_id: p.ilot_id,
+            beneficiaire_id: p.beneficiaire_id,
+            notes: p.notes,
+            ilot: p.ilot_id ? { name: ilotsMap.get(p.ilot_id) || "" } : null,
+          },
+          acquereur: pref ? {
+            name: pref.name,
+            phone: pref.phone,
+            cni_number: pref.cni_number,
+          } : undefined,
+        } as VenteWithDetails;
+      });
+  }, [parcelles, prefinanceurs, ilots]);
+
+  const combinedVentes = useMemo(
+    () => [...ventes, ...prefinanceEntries],
+    [ventes, prefinanceEntries]
+  );
+
   const filteredVentes = useMemo(() => {
-    return ventes.filter((v) => {
-      if (!v.parcelle?.lotissement?.name) return false;
+    return combinedVentes.filter((v) => {
       if (period) {
         const saleDate = new Date(v.sale_date);
         if (!isWithinInterval(saleDate, { start: period.from, end: period.to })) return false;
@@ -64,7 +115,7 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
       }
       return true;
     });
-  }, [ventes, period, searchQuery]);
+  }, [combinedVentes, period, searchQuery]);
 
   const getSoldByName = (soldBy: string | null | undefined) => {
     if (!soldBy) return null;

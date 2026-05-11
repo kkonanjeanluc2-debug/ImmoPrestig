@@ -46,6 +46,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
 import { useBeneficiairesLots } from "@/hooks/useBeneficiairesLots";
 import { useAgency } from "@/hooks/useAgency";
+import { usePrefinanceurs } from "@/hooks/usePrefinanceurs";
 import { useAttestationTemplates } from "@/hooks/useAttestationTemplates";
 import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
@@ -111,6 +112,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const { data: lotissement } = useLotissement(lotissementId);
   const { data: beneficiaires = [] } = useBeneficiairesLots(lotissementId);
   const { data: agency } = useAgency();
+  const { data: prefinanceurs = [] } = usePrefinanceurs();
   const { data: attestationTemplates = [] } = useAttestationTemplates();
   const isAdmin = role !== "gestionnaire";
 
@@ -542,6 +544,18 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   </TableCell>
                   <TableCell>
                     {(() => {
+                      const prefinanceur = parcelle.status === "prefinance" && parcelle.prefinanceur_id
+                        ? prefinanceurs.find(p => p.id === parcelle.prefinanceur_id)
+                        : null;
+                      if (prefinanceur) {
+                        return (
+                          <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 hover:bg-purple-100 gap-1">
+                            <User className="h-3 w-3" />
+                            {prefinanceur.name}
+                          </Badge>
+                        );
+                      }
+
                       const beneficiaire = parcelle.beneficiaire_id
                         ? beneficiaires.find(b => b.id === parcelle.beneficiaire_id)
                         : null;

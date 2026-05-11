@@ -644,9 +644,20 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
             </div>
           )}
 
+            </div>
+          )}
+          </>
+          )}
+
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {isPref ? "Confirmer le préfinancement" : "Confirmer la vente"}
+            </Button>
+          </div>
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}

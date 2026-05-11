@@ -1,2 +1,0 @@
-ALTER TABLE public.beneficiaires_lots DROP CONSTRAINT IF EXISTS beneficiaires_lots_partie_check;
-ALTER TABLE public.beneficiaires_lots ADD CONSTRAINT beneficiaires_lots_partie_check CHECK (partie IN ('proprietaire', 'lotisseur', 'prefinanceur'));

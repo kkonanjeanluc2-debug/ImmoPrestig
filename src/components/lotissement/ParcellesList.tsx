@@ -37,7 +37,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2, Star, FileText, Wallet } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ShoppingCart, Layers, Search, X, User, BookmarkPlus, Building2, Star, FileText } from "lucide-react";
 import { Parcelle, useSoftDeleteParcelle } from "@/hooks/useParcelles";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,7 +51,6 @@ import { toast } from "sonner";
 import { EditParcelleDialog } from "./EditParcelleDialog";
 import { SellParcelleDialog } from "./SellParcelleDialog";
 import { ReserveParcelleDialog } from "./ReserveParcelleDialog";
-import { AssignPrefinanceurDialog } from "./AssignPrefinanceurDialog";
 import { ReservationParcelleCard } from "./ReservationParcelleCard";
 import { useReservationByParcelle } from "@/hooks/useReservationsParcelles";
 import { useLotissement } from "@/hooks/useLotissements";
@@ -120,7 +119,6 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
   const [sellingParcelle, setSellingParcelle] = useState<Parcelle | null>(null);
   const [reservingParcelle, setReservingParcelle] = useState<Parcelle | null>(null);
-  const [prefinancingParcelle, setPrefinancingParcelle] = useState<Parcelle | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewingReservation, setViewingReservation] = useState<Parcelle | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -236,7 +234,6 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const getAttributionLabel = (attribution: string | null) => {
     if (attribution === "proprietaire") return lotissement?.proprietaire_name || "Propriétaire";
     if (attribution === "lotisseur") return lotissement?.lotisseur_name || "Lotisseur";
-    if (attribution === "prefinanceur") return "Préfinanceur";
     return null;
   };
 
@@ -280,7 +277,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
 
   // Deletable parcelles in current filtered view (exclude "vendu")
   const deletableFilteredIds = useMemo(
-    () => filteredParcelles.filter(p => p.status !== "vendu" && p.attribution !== "prefinanceur").map(p => p.id),
+    () => filteredParcelles.filter(p => p.status !== "vendu").map(p => p.id),
     [filteredParcelles]
   );
 
@@ -511,7 +508,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   <TableRow key={parcelle.id} className={selectedIds.has(parcelle.id) ? "bg-muted/50" : ""}>
                     {canDelete && (
                       <TableCell className="w-10">
-                        {parcelle.status !== "vendu" && parcelle.attribution !== "prefinanceur" ? (
+                        {parcelle.status !== "vendu" ? (
                           <Checkbox
                             checked={selectedIds.has(parcelle.id)}
                             onCheckedChange={() => toggleSelect(parcelle.id)}
@@ -550,8 +547,6 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                         ? (lotissement?.proprietaire_name || "Propriétaire")
                         : parcelle.attribution === "lotisseur"
                         ? (lotissement?.lotisseur_name || "Lotisseur")
-                        : parcelle.attribution === "prefinanceur"
-                        ? "Préfinanceur"
                         : null;
 
                       // Get display name: prefer beneficiaire notes > linked beneficiaire > partie label
@@ -575,8 +570,6 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                         ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1"
                         : parcelle.attribution === "lotisseur"
                         ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 hover:bg-amber-100 gap-1"
-                        : parcelle.attribution === "prefinanceur"
-                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 hover:bg-purple-100 gap-1"
                         : "";
 
                       if (displayName && parcelle.attribution) {
@@ -612,14 +605,6 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                           </Badge>
                         );
                       }
-                      if (parcelle.attribution === "prefinanceur") {
-                        return (
-                          <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 hover:bg-purple-100 gap-1">
-                            <Wallet className="h-3 w-3" />
-                            {displayName || partieLabel}
-                          </Badge>
-                        );
-                      }
                       return displayName
                         ? <span className="text-sm">{displayName}</span>
                         : <span className="text-muted-foreground text-sm">-</span>;
@@ -628,17 +613,11 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   <TableCell>{parcelle.area.toLocaleString("fr-FR")} m²</TableCell>
                   <TableCell>{parcelle.price.toLocaleString("fr-FR")} F CFA</TableCell>
                   <TableCell>
-                    {parcelle.attribution === "prefinanceur" && parcelle.status === "disponible" ? (
-                      <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
-                        Préfinancement
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className={STATUS_STYLES[parcelle.status]}>
-                        {parcelle.status === "disponible" && "Disponible"}
-                        {parcelle.status === "reserve" && "Réservé"}
-                        {parcelle.status === "vendu" && "Vendu"}
-                      </Badge>
-                    )}
+                    <Badge variant="outline" className={STATUS_STYLES[parcelle.status]}>
+                      {parcelle.status === "disponible" && "Disponible"}
+                      {parcelle.status === "reserve" && "Réservé"}
+                      {parcelle.status === "vendu" && "Vendu"}
+                    </Badge>
                   </TableCell>
                   {isAdmin && (
                     <TableCell>
@@ -669,7 +648,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {parcelle.status === "disponible" && parcelle.attribution !== "prefinanceur" && (
+                      {parcelle.status === "disponible" && (
                         <>
                           <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
                             <ShoppingCart className="h-4 w-4 mr-2" />
@@ -678,10 +657,6 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                           <DropdownMenuItem onClick={() => setReservingParcelle(parcelle)}>
                             <BookmarkPlus className="h-4 w-4 mr-2" />
                             Réserver
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setPrefinancingParcelle(parcelle)}>
-                            <Wallet className="h-4 w-4 mr-2" />
-                            Préfinancement
                           </DropdownMenuItem>
                         </>
                       )}
@@ -704,7 +679,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                           Modifier
                         </DropdownMenuItem>
                       )}
-                      {canDelete && parcelle.status !== "vendu" && parcelle.attribution !== "prefinanceur" && (
+                      {canDelete && parcelle.status !== "vendu" && (
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => setDeletingId(parcelle.id)}
@@ -752,14 +727,6 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
           parcelle={reservingParcelle}
           open={!!reservingParcelle}
           onOpenChange={(open) => !open && setReservingParcelle(null)}
-        />
-      )}
-
-      {prefinancingParcelle && (
-        <AssignPrefinanceurDialog
-          parcelle={prefinancingParcelle}
-          open={!!prefinancingParcelle}
-          onOpenChange={(open) => !open && setPrefinancingParcelle(null)}
         />
       )}
 

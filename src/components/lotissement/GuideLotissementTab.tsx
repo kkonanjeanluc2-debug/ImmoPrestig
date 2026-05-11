@@ -102,21 +102,33 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
       let origNaturePiece = "";
       let origNumeroPiece = "";
 
-      if (parcelle.notes) {
-        const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
-        if (benMatch) origAttributaire = benMatch[1].trim();
-      }
+      // Prefinanceur takes priority when status is "prefinance"
+      const prefinanceur = parcelle.status === "prefinance" && (parcelle as any).prefinanceur_id
+        ? prefinanceursMap.get((parcelle as any).prefinanceur_id)
+        : null;
 
-      if (beneficiaire) {
-        if (!origAttributaire) origAttributaire = beneficiaire.nom;
-        origContact = beneficiaire.telephone || "";
-        origNaturePiece = beneficiaire.cni_number ? "CNI" : "";
-        origNumeroPiece = beneficiaire.cni_number || "";
-      }
+      if (prefinanceur) {
+        origAttributaire = prefinanceur.name;
+        origContact = prefinanceur.phone || "";
+        origNaturePiece = prefinanceur.cni_number ? "CNI" : (prefinanceur.rccm ? "RCCM" : "");
+        origNumeroPiece = prefinanceur.cni_number || prefinanceur.rccm || "";
+      } else {
+        if (parcelle.notes) {
+          const benMatch = parcelle.notes.match(/Bénéficiaire:\s*([^|]+)/);
+          if (benMatch) origAttributaire = benMatch[1].trim();
+        }
 
-      if (!origAttributaire && parcelle.notes) {
-        const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
-        if (propMatch) origAttributaire = propMatch[1].trim();
+        if (beneficiaire) {
+          if (!origAttributaire) origAttributaire = beneficiaire.nom;
+          origContact = beneficiaire.telephone || "";
+          origNaturePiece = beneficiaire.cni_number ? "CNI" : "";
+          origNumeroPiece = beneficiaire.cni_number || "";
+        }
+
+        if (!origAttributaire && parcelle.notes) {
+          const propMatch = parcelle.notes.match(/Propriétaire:\s*([^|]+)/);
+          if (propMatch) origAttributaire = propMatch[1].trim();
+        }
       }
 
       // If there are mutations, show the full chain

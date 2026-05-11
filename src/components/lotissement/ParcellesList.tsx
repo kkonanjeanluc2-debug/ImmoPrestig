@@ -628,11 +628,17 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   <TableCell>{parcelle.area.toLocaleString("fr-FR")} m²</TableCell>
                   <TableCell>{parcelle.price.toLocaleString("fr-FR")} F CFA</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={STATUS_STYLES[parcelle.status]}>
-                      {parcelle.status === "disponible" && "Disponible"}
-                      {parcelle.status === "reserve" && "Réservé"}
-                      {parcelle.status === "vendu" && "Vendu"}
-                    </Badge>
+                    {parcelle.attribution === "prefinanceur" && parcelle.status === "disponible" ? (
+                      <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                        Préfinancement
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className={STATUS_STYLES[parcelle.status]}>
+                        {parcelle.status === "disponible" && "Disponible"}
+                        {parcelle.status === "reserve" && "Réservé"}
+                        {parcelle.status === "vendu" && "Vendu"}
+                      </Badge>
+                    )}
                   </TableCell>
                   {isAdmin && (
                     <TableCell>

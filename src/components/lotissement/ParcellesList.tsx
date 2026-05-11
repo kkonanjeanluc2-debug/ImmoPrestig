@@ -280,7 +280,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
 
   // Deletable parcelles in current filtered view (exclude "vendu")
   const deletableFilteredIds = useMemo(
-    () => filteredParcelles.filter(p => p.status !== "vendu").map(p => p.id),
+    () => filteredParcelles.filter(p => p.status !== "vendu" && p.attribution !== "prefinanceur").map(p => p.id),
     [filteredParcelles]
   );
 

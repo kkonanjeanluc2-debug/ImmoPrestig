@@ -130,7 +130,8 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
         birth_place: data.birth_place || null,
         profession: data.profession || null,
         cni_number: data.cni_number || null,
-      });
+        show_name_on_receipt: data.show_name_on_receipt,
+      } as any);
 
       toast.success("Propriétaire modifié avec succès");
       onOpenChange(false);

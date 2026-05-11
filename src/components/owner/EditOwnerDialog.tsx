@@ -465,7 +465,28 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
-                )}
+            )}
+
+            <FormField
+              control={form.control}
+              name="show_name_on_receipt"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Afficher le nom du bailleur sur la quittance
+                    </FormLabel>
+                    <FormDescription>
+                      Si désactivé, le nom de ce propriétaire n'apparaîtra pas sur les quittances de loyer générées.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
               />
             )}
 

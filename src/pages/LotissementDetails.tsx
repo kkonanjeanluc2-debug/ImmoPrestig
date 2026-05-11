@@ -214,7 +214,7 @@ const LotissementDetails = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
           <Card>
             <CardContent className="p-3 sm:pt-4">
               <div className="text-center">

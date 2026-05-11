@@ -669,7 +669,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {parcelle.status === "disponible" && (
+                      {parcelle.status === "disponible" && parcelle.attribution !== "prefinanceur" && (
                         <>
                           <DropdownMenuItem onClick={() => setSellingParcelle(parcelle)}>
                             <ShoppingCart className="h-4 w-4 mr-2" />
@@ -704,7 +704,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                           Modifier
                         </DropdownMenuItem>
                       )}
-                      {canDelete && parcelle.status !== "vendu" && (
+                      {canDelete && parcelle.status !== "vendu" && parcelle.attribution !== "prefinanceur" && (
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => setDeletingId(parcelle.id)}

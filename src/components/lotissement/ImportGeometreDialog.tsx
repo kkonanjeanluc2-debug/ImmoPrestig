@@ -1636,9 +1636,9 @@ function normalizeForMatch(text: string): string {
     .toUpperCase();
 }
 
-// Sépcarateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
-// "·", "." répétés, ou simplement des espaces.
-const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)?";
+// Séparateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
+// "·", ".", "…" répétés avec ou sans espaces: "LOT : ... 02".
+const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)*";
 
 // Rejette tout numéro de lot qui n'est en réalité qu'un libellé du modèle
 // (ATTRIBUTAIRES, ILOT, LOT, PARCELLE, EQUIPEMENT, ATTESTATION, CONTACTS,

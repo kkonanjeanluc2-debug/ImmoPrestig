@@ -68,6 +68,9 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     const beneficiairesMap = new Map<string, typeof beneficiaires[0]>();
     beneficiaires.forEach(b => beneficiairesMap.set(b.id, b));
 
+    const prefinanceursMap = new Map<string, typeof prefinanceurs[0]>();
+    prefinanceurs.forEach(p => prefinanceursMap.set(p.id, p));
+
     // Group mutations by parcelle_id
     const mutationsByParcelle = new Map<string, typeof mutations>();
     mutations.forEach(m => {

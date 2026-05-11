@@ -85,6 +85,7 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
       birth_place: "",
       profession: "",
       cni_number: "",
+      show_name_on_receipt: true,
     },
   });
 

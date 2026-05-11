@@ -18,6 +18,9 @@ import { VenteWithDetails, useCancelVenteParcelle } from "@/hooks/useVentesParce
 import { DocumentsParcelleDialog } from "./DocumentsParcelleDialog";
 import { MutationParcelleDialog } from "./MutationParcelleDialog";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
+import { useParcelles } from "@/hooks/useParcelles";
+import { usePrefinanceurs } from "@/hooks/usePrefinanceurs";
+import { useIlots } from "@/hooks/useIlots";
 import type { PeriodValue } from "@/components/dashboard/PeriodFilter";
 import {
   AlertDialog,

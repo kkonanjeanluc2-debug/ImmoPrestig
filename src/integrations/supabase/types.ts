@@ -3007,7 +3007,7 @@ export type Database = {
           parcelle_id: string
           updated_at: string
           user_id: string
-          vente_id: string
+          vente_id: string | null
         }
         Insert: {
           ancien_acquereur_id: string
@@ -3020,7 +3020,7 @@ export type Database = {
           parcelle_id: string
           updated_at?: string
           user_id: string
-          vente_id: string
+          vente_id?: string | null
         }
         Update: {
           ancien_acquereur_id?: string
@@ -3033,7 +3033,7 @@ export type Database = {
           parcelle_id?: string
           updated_at?: string
           user_id?: string
-          vente_id?: string
+          vente_id?: string | null
         }
         Relationships: [
           {

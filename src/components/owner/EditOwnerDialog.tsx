@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateSelect } from "@/components/ui/date-select";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Percent, User, CreditCard, FileText } from "lucide-react";
 import { useUpdateOwner, OwnerWithManagementType } from "@/hooks/useOwners";
 import { useManagementTypes } from "@/hooks/useManagementTypes";

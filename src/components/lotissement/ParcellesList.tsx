@@ -673,6 +673,10 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                             <BookmarkPlus className="h-4 w-4 mr-2" />
                             Réserver
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setPrefinancingParcelle(parcelle)}>
+                            <Wallet className="h-4 w-4 mr-2" />
+                            Préfinancement
+                          </DropdownMenuItem>
                         </>
                       )}
                       {parcelle.status === "reserve" && (

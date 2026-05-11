@@ -34,13 +34,18 @@ export function MutationParcelleDialog({
   open,
   onOpenChange,
 }: MutationParcelleDialogProps) {
+  const isPrefinance = vente.status === "prefinance" || (typeof vente.id === "string" && vente.id.startsWith("pref-"));
   const { data: acquereurs = [] } = useAcquereurs();
-  const { data: existingMutations = [] } = useMutationsParcelles(vente.id);
+  // No mutations fetch for prefinance (synthetic id, no FK)
+  const { data: existingMutations = [] } = useMutationsParcelles(isPrefinance ? undefined : vente.id);
   const createAcquereur = useCreateAcquereur();
   const createMutation = useCreateMutationParcelle();
 
-  // Current owner: last mutation's nouvel_acquereur, or the vente's acquirer
-  const lastMutation = existingMutations.length > 0 ? existingMutations[existingMutations.length - 1] : null;
+  // Current owner: last mutation's nouvel_acquereur, or the vente's acquirer (or prefinanceur)
+  const relevantMutations = isPrefinance
+    ? existingMutations.filter((m) => m.parcelle_id === vente.parcelle_id)
+    : existingMutations;
+  const lastMutation = relevantMutations.length > 0 ? relevantMutations[relevantMutations.length - 1] : null;
   const currentOwnerId = lastMutation ? lastMutation.nouvel_acquereur_id : vente.acquereur_id;
   const currentOwnerName = lastMutation?.nouvel_acquereur?.name || vente.acquereur?.name || "N/A";
   const currentOwnerPhone = lastMutation?.nouvel_acquereur?.phone || vente.acquereur?.phone || null;

@@ -465,6 +465,8 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
+                )}
+              />
             )}
 
             <FormField
@@ -487,8 +489,6 @@ export function EditOwnerDialog({ owner, open, onOpenChange, onSuccess }: EditOw
                 </FormItem>
               )}
             />
-              />
-            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

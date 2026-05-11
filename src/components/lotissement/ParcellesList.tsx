@@ -612,6 +612,14 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                           </Badge>
                         );
                       }
+                      if (parcelle.attribution === "prefinanceur") {
+                        return (
+                          <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 hover:bg-purple-100 gap-1">
+                            <Wallet className="h-3 w-3" />
+                            {displayName || partieLabel}
+                          </Badge>
+                        );
+                      }
                       return displayName
                         ? <span className="text-sm">{displayName}</span>
                         : <span className="text-muted-foreground text-sm">-</span>;

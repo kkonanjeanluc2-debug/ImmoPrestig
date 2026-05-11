@@ -511,7 +511,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                   <TableRow key={parcelle.id} className={selectedIds.has(parcelle.id) ? "bg-muted/50" : ""}>
                     {canDelete && (
                       <TableCell className="w-10">
-                        {parcelle.status !== "vendu" ? (
+                        {parcelle.status !== "vendu" && parcelle.attribution !== "prefinanceur" ? (
                           <Checkbox
                             checked={selectedIds.has(parcelle.id)}
                             onCheckedChange={() => toggleSelect(parcelle.id)}

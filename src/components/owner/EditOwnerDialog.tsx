@@ -50,6 +50,7 @@ const ownerSchema = z.object({
   birth_place: z.string().trim().max(100).optional().or(z.literal("")),
   profession: z.string().trim().max(100).optional().or(z.literal("")),
   cni_number: z.string().trim().max(50).optional().or(z.literal("")),
+  show_name_on_receipt: z.boolean().default(true),
 });
 
 type OwnerFormData = z.infer<typeof ownerSchema>;

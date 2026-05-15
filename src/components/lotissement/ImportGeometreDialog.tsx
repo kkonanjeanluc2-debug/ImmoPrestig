@@ -1448,52 +1448,56 @@ export const ImportGeometreDialog = ({
               </Button>
             </div>
 
-            <Card className="border-muted">
-              <CardContent className="p-3">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={strictMatching}
-                    onChange={(e) => setStrictMatching(e.target.checked)}
-                    className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
-                  />
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <p className="font-semibold text-foreground">Correspondance stricte</p>
-                    <p>
-                      Ne crée que les lots dont le couple <strong>(îlot, numéro de lot)</strong> apparaît
-                      explicitement dans le fichier. Aucun héritage de l'îlot précédent, aucune interprétation positionnelle.
-                    </p>
-                  </div>
-                </label>
-              </CardContent>
-            </Card>
+            {false && (
+              <>
+                <Card className="border-muted">
+                  <CardContent className="p-3">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={strictMatching}
+                        onChange={(e) => setStrictMatching(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                      />
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p className="font-semibold text-foreground">Correspondance stricte</p>
+                        <p>
+                          Ne crée que les lots dont le couple <strong>(îlot, numéro de lot)</strong> apparaît
+                          explicitement dans le fichier. Aucun héritage de l'îlot précédent, aucune interprétation positionnelle.
+                        </p>
+                      </div>
+                    </label>
+                  </CardContent>
+                </Card>
 
-            {/* DBF file input for shapefiles */}
-            <Card className="border-muted">
-              <CardContent className="p-3">
-                <div className="flex items-start gap-2">
-                  <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <div className="text-xs text-muted-foreground space-y-2">
-                    <p><strong>Fichiers Shapefile :</strong> Glissez le .shp et le .dbf ensemble, ou ajoutez le .dbf séparément ci-dessous.</p>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => dbfInputRef.current?.click()}>
-                        Ajouter fichier .dbf
-                      </Button>
-                      {dbfFile && <span className="text-xs text-emerald-600">✓ {dbfFile.name}</span>}
+                {/* DBF file input for shapefiles */}
+                <Card className="border-muted">
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="text-xs text-muted-foreground space-y-2">
+                        <p><strong>Fichiers Shapefile :</strong> Glissez le .shp et le .dbf ensemble, ou ajoutez le .dbf séparément ci-dessous.</p>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => dbfInputRef.current?.click()}>
+                            Ajouter fichier .dbf
+                          </Button>
+                          {dbfFile && <span className="text-xs text-emerald-600">✓ {dbfFile.name}</span>}
+                        </div>
+                        <input
+                          ref={dbfInputRef}
+                          type="file"
+                          accept=".dbf"
+                          className="hidden"
+                          onChange={handleDbfChange}
+                        />
+                        <p className="mt-2"><strong>Fichiers DWG :</strong> Convertissez en DXF depuis AutoCAD avant d'importer.</p>
+                        <p><strong>Excel/CSV/Word :</strong> Colonnes attendues — numéro, superficie, prix, îlot (optionnel)</p>
+                      </div>
                     </div>
-                    <input
-                      ref={dbfInputRef}
-                      type="file"
-                      accept=".dbf"
-                      className="hidden"
-                      onChange={handleDbfChange}
-                    />
-                    <p className="mt-2"><strong>Fichiers DWG :</strong> Convertissez en DXF depuis AutoCAD avant d'importer.</p>
-                    <p><strong>Excel/CSV/Word :</strong> Colonnes attendues — numéro, superficie, prix, îlot (optionnel)</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         )}
 

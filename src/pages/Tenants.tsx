@@ -345,9 +345,10 @@ export default function Tenants() {
   const pendingPayments = tenants?.reduce((sum, t) => 
     sum + (t.payments?.filter(p => p.status === 'pending').length || 0)
   , 0) || 0;
-  const latePayments = tenants?.reduce((sum, t) => 
-    sum + (t.payments?.filter(p => p.status === 'late').length || 0)
-  , 0) || 0;
+  const latePayments = tenants?.filter(t => {
+    const status = getPaymentStatusLabel(t, undefined, agencyRentDueDay);
+    return status?.label.includes("Retard");
+  }).length || 0;
 
   const stats = [
     { title: "Total Locataires", value: totalTenants.toString(), icon: Users, color: "text-emerald" },

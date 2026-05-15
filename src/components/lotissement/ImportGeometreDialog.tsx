@@ -519,77 +519,77 @@ export const ImportGeometreDialog = ({
           }
         }
       } else {
-      parcellesData.forEach((row, idx) => {
-        if (shouldSkipExcelRow(row)) {
-          return;
-        }
-
-        // Try specific lot/parcelle columns first, before falling back to generic "n°" which may match "N° D'ORDRE"
-        let plotNumber = findValue(row, ["lots", "lot", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
-        if (!plotNumber) {
-          plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "ref", "reference", "référence", "id", "label", "name", "nom", "designation", "désignation"]);
-        }
-        const areaValue = findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]);
-        const area = parseNumber(areaValue);
-        const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
-        const ilotName = findValue(row, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
-        const proprietaireTerrien = findValue(row, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
-        const beneficiaire = findValue(row, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
-
-        // Fallback: use the first non-empty cell value as plot number (skipped in strict mode)
-        if (!plotNumber && !strictMatchingRef.current) {
-          const firstNonEmptyValue = Object.values(row).find(
-            (val) => val !== null && val !== undefined && String(val).trim() !== ""
-          );
-          if (firstNonEmptyValue !== undefined) {
-            plotNumber = firstNonEmptyValue;
+        parcellesData.forEach((row, idx) => {
+          if (shouldSkipExcelRow(row)) {
+            return;
           }
-        }
-        // Strict: require an explicit ilot column value
-        if (strictMatchingRef.current && !ilotName) {
-          return;
-        }
 
-        if (!plotNumber) {
-          newErrors.push(`Parcelle ligne ${idx + 2}: numéro manquant`);
-          return;
-        }
-        if (!isValidPlotNumberCandidate(plotNumber)) {
-          newWarnings.push(`Ligne ${idx + 2} ignorée : valeur "${String(plotNumber).slice(0, 40)}…" non reconnue comme numéro de lot`);
-          return;
-        }
-        if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) {
-          newErrors.push(
-            ilotName
-              ? `Parcelle "${plotNumber}" existe déjà dans l'îlot "${ilotName}"`
-              : `Parcelle "${plotNumber}" existe déjà`
-          );
-          return;
-        }
-        if (isFilledCell(areaValue) && area <= 0) {
-          newErrors.push(`Parcelle "${plotNumber}": superficie invalide`);
-          return;
-        }
-
-        const parcelle: ParsedGeometreParcelle = {
-          plotNumber: String(plotNumber),
-          area,
-          price: price || 0,
-          ilotName: ilotName ? String(ilotName) : undefined,
-          proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
-          beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
-        };
-        parcelles.push(parcelle);
-
-        if (ilotName) {
-          const existingIlot = ilots.find(i => i.name.toLowerCase() === String(ilotName).toLowerCase());
-          if (existingIlot) {
-            existingIlot.parcelles.push(parcelle);
-          } else {
-            ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+          // Try specific lot/parcelle columns first, before falling back to generic "n°" which may match "N° D'ORDRE"
+          let plotNumber = findValue(row, ["lots", "lot", "numero_lot", "numerolot", "nlot", "nolot", "parcelle", "numero_parcelle", "plot_number"]);
+          if (!plotNumber) {
+            plotNumber = findValue(row, ["numero", "numéro", "num", "n°", "no", "ref", "reference", "référence", "id", "label", "name", "nom", "designation", "désignation"]);
           }
-        }
-      });
+          const areaValue = findValue(row, ["superficie", "surface", "area", "m2", "m²", "sup", "contenance"]);
+          const area = parseNumber(areaValue);
+          const price = parseNumber(findValue(row, ["prix", "price", "montant", "cout", "coût", "valeur", "pu", "prixunitaire"]));
+          const ilotName = findValue(row, ["ilot", "îlot", "ilots", "nom_ilot", "nom ilot", "ilot_name", "block", "zone", "secteur", "section"]);
+          const proprietaireTerrien = findValue(row, ["proprietaire terrien", "proprietaireterrien", "proprietaire", "propriétaire", "owner"]);
+          const beneficiaire = findValue(row, ["beneficiaires", "beneficiaire", "bénéficiaire", "bénéficiaires", "membre", "collaborateur"]);
+
+          // Fallback: use the first non-empty cell value as plot number (skipped in strict mode)
+          if (!plotNumber && !strictMatchingRef.current) {
+            const firstNonEmptyValue = Object.values(row).find(
+              (val) => val !== null && val !== undefined && String(val).trim() !== ""
+            );
+            if (firstNonEmptyValue !== undefined) {
+              plotNumber = firstNonEmptyValue;
+            }
+          }
+          // Strict: require an explicit ilot column value
+          if (strictMatchingRef.current && !ilotName) {
+            return;
+          }
+
+          if (!plotNumber) {
+            newErrors.push(`Parcelle ligne ${idx + 2}: numéro manquant`);
+            return;
+          }
+          if (!isValidPlotNumberCandidate(plotNumber)) {
+            newWarnings.push(`Ligne ${idx + 2} ignorée : valeur "${String(plotNumber).slice(0, 40)}…" non reconnue comme numéro de lot`);
+            return;
+          }
+          if (isExistingPlot(ilotName ? String(ilotName) : undefined, String(plotNumber))) {
+            newErrors.push(
+              ilotName
+                ? `Parcelle "${plotNumber}" existe déjà dans l'îlot "${ilotName}"`
+                : `Parcelle "${plotNumber}" existe déjà`
+            );
+            return;
+          }
+          if (isFilledCell(areaValue) && area <= 0) {
+            newErrors.push(`Parcelle "${plotNumber}": superficie invalide`);
+            return;
+          }
+
+          const parcelle: ParsedGeometreParcelle = {
+            plotNumber: String(plotNumber),
+            area,
+            price: price || 0,
+            ilotName: ilotName ? String(ilotName) : undefined,
+            proprietaireTerrien: isFilledCell(proprietaireTerrien) ? String(proprietaireTerrien) : undefined,
+            beneficiaire: isFilledCell(beneficiaire) ? String(beneficiaire) : undefined,
+          };
+          parcelles.push(parcelle);
+
+          if (ilotName) {
+            const existingIlot = ilots.find(i => i.name.toLowerCase() === String(ilotName).toLowerCase());
+            if (existingIlot) {
+              existingIlot.parcelles.push(parcelle);
+            } else {
+              ilots.push({ name: String(ilotName), parcelles: [parcelle] });
+            }
+          }
+        });
       }
     }
 
@@ -1166,7 +1166,7 @@ export const ImportGeometreDialog = ({
         .select("id, name")
         .eq("lotissement_id", lotissementId)
         .is("deleted_at", null);
-      
+
       if (existingDbIlots) {
         for (const ilot of existingDbIlots) {
           ilotIdMap[ilot.name.toLowerCase()] = ilot.id;
@@ -1199,7 +1199,7 @@ export const ImportGeometreDialog = ({
       for (const parcelle of parsedParcelles) {
         try {
           const ilotId = parcelle.ilotName ? ilotIdMap[parcelle.ilotName.toLowerCase()] || null : null;
-          
+
           // Determine attribution based on file data
           let attribution: string | undefined;
           if (parcelle.proprietaireTerrien) {
@@ -1262,13 +1262,13 @@ export const ImportGeometreDialog = ({
 
       // Auto-create beneficiaires_lots and link parcelles
       const beneficiaireCache: Record<string, string> = {}; // name -> beneficiaire_id
-      
+
       // Load existing beneficiaires for this lotissement
       const { data: existingBeneficiaires } = await supabase
         .from("beneficiaires_lots")
         .select("id, nom, partie")
         .eq("lotissement_id", lotissementId);
-      
+
       if (existingBeneficiaires) {
         for (const b of existingBeneficiaires) {
           beneficiaireCache[`${b.partie}:${b.nom.toLowerCase().trim()}`] = b.id;
@@ -1276,7 +1276,7 @@ export const ImportGeometreDialog = ({
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       for (const { id: parcelleId, parcelle } of createdParcelles) {
         try {
           let beneficiaireId: string | null = null;

@@ -1,0 +1,1 @@
+ALTER TABLE public.acquereurs ADD COLUMN IF NOT EXISTS id_type TEXT DEFAULT 'cni';

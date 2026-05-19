@@ -1101,8 +1101,9 @@ export const ImportGeometreDialog = ({
 
       // For ilots: keep only NEW ones for creation, but don't treat existing as errors
       // Existing ilots will be reused during import (their IDs will be resolved)
+      const existingIlotKeys = new Set(existingIlotNames.map(normalizeIlotNameKey));
       const newIlots = result.ilots.filter(
-        i => !existingIlotNames.includes(i.name)
+        i => !existingIlotKeys.has(normalizeIlotNameKey(i.name))
       );
       const reusedIlots = result.ilots.length - newIlots.length;
       if (reusedIlots > 0) {
@@ -1176,6 +1177,7 @@ export const ImportGeometreDialog = ({
       if (existingDbIlots) {
         for (const ilot of existingDbIlots) {
           ilotIdMap[ilot.name.toLowerCase()] = ilot.id;
+          ilotIdMap[normalizeIlotNameKey(ilot.name)] = ilot.id;
         }
       }
 
@@ -1190,6 +1192,7 @@ export const ImportGeometreDialog = ({
             plots_count: ilot.parcelles.length || null,
           });
           ilotIdMap[ilot.name.toLowerCase()] = result.id;
+          ilotIdMap[normalizeIlotNameKey(ilot.name)] = result.id;
         } catch (ilotErr) {
           console.error(`Erreur création îlot ${ilot.name}:`, ilotErr);
         }
@@ -1204,7 +1207,9 @@ export const ImportGeometreDialog = ({
 
       for (const parcelle of parsedParcelles) {
         try {
-          const ilotId = parcelle.ilotName ? ilotIdMap[parcelle.ilotName.toLowerCase()] || null : null;
+          const ilotId = parcelle.ilotName
+            ? ilotIdMap[parcelle.ilotName.toLowerCase()] || ilotIdMap[normalizeIlotNameKey(parcelle.ilotName)] || null
+            : null;
 
           // Determine attribution based on file data
           let attribution: string | undefined;

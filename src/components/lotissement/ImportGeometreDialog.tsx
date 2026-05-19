@@ -100,8 +100,11 @@ export const ImportGeometreDialog = ({
       const plot = normalizePlotNumber(plotNumber);
       if (!plot) return false;
       if (ilotName) {
-        const key = String(ilotName).trim().toLowerCase();
-        const list = existingPlotsByIlot[key];
+        const rawKey = String(ilotName).trim().toLowerCase();
+        const normalizedKey = normalizeIlotNameKey(ilotName);
+        const list = existingPlotsByIlot[rawKey]
+          || existingPlotsByIlot[normalizedKey]
+          || Object.entries(existingPlotsByIlot).find(([key]) => normalizeIlotNameKey(key) === normalizedKey)?.[1];
         return Array.isArray(list) && list.some(p => normalizePlotNumber(p) === plot);
       }
       // No ilot context: don't dedup globally — a same-numbered lot may legitimately

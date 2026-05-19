@@ -181,6 +181,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
           name: newAcquereur.name.trim(),
           phone: phoneTrimmed || null,
           email: newAcquereur.email.trim() || null,
+          id_type: newAcquereur.id_type,
           cni_number: cniTrimmed || null,
           address: newAcquereur.address.trim() || null,
           birth_date: newAcquereur.birth_date || null,

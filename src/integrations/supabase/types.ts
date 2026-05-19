@@ -5900,6 +5900,15 @@ export type Database = {
         Args: { _sold_by: string; _user_id: string; _vente_user_id: string }
         Returns: boolean
       }
+      can_access_vente_parcelle_safe: {
+        Args: {
+          _parcelle_id: string
+          _sold_by: string
+          _user_id: string
+          _vente_user_id: string
+        }
+        Returns: boolean
+      }
       can_agency_add_member: { Args: { p_agency_id: string }; Returns: boolean }
       can_agency_add_tenant_portal: {
         Args: { p_agency_id: string }
@@ -5943,6 +5952,10 @@ export type Database = {
       }
       can_subscribe_realtime_topic: {
         Args: { _topic: string }
+        Returns: boolean
+      }
+      can_view_parcelle_for_own_sale: {
+        Args: { _owner_id: string; _parcelle_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_team_profile: {

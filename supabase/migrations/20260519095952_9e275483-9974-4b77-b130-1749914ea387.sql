@@ -1,0 +1,2 @@
+DELETE FROM parcelles WHERE ilot_id IN (SELECT id FROM ilots WHERE lotissement_id = 'd7ca4b6a-f3bc-422d-acc4-74202ab67185' AND created_at > '2026-05-19 09:55:00+00');
+DELETE FROM ilots WHERE lotissement_id = 'd7ca4b6a-f3bc-422d-acc4-74202ab67185' AND created_at > '2026-05-19 09:55:00+00';

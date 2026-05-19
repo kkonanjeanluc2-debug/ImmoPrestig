@@ -414,7 +414,7 @@ export const ImportGeometreDialog = ({
             if (!plotNumber) {
               const m = norm.match(LOT_RE);
               if (m && !/\bILOTS?/.test(norm.slice(0, m.index ?? 0).slice(-2))) {
-                plotNumber = m[1]; consumed.add(idx); return;
+                plotNumber = m[1].replace(/\s+/g, ""); consumed.add(idx); return;
               }
             }
             // SUPERFICIE / PARCELLE (area)

@@ -333,7 +333,10 @@ export const ImportGeometreDialog = ({
         newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
         // Per-cell extractors: each column maps to its own field via its label.
         const ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`);
-        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+[A-Z]?)`);
+        // Allow lot suffix letter even when separated by whitespace (e.g. "LOT : 46 A"),
+        // but only when the letter is NOT followed by another letter (so we don't grab the
+        // "S" of "SUPERFICIE" or other neighbouring words).
+        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`);
         const SUPERFICIE_RE = new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
         const PARCELLE_RE = new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
         const AFFECT_RE = new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}(.+)$`);
@@ -411,7 +414,7 @@ export const ImportGeometreDialog = ({
             if (!plotNumber) {
               const m = norm.match(LOT_RE);
               if (m && !/\bILOTS?/.test(norm.slice(0, m.index ?? 0).slice(-2))) {
-                plotNumber = m[1]; consumed.add(idx); return;
+                plotNumber = m[1].replace(/\s+/g, ""); consumed.add(idx); return;
               }
             }
             // SUPERFICIE / PARCELLE (area)
@@ -676,7 +679,7 @@ export const ImportGeometreDialog = ({
 
           const blockText = normalizeForMatch(getRowText(rows[blockStart]));
           const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
-          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
+          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`));
           const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
           // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
           const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
@@ -685,7 +688,7 @@ export const ImportGeometreDialog = ({
           const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
           const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-          const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+          const plotNumber = lotMatch ? lotMatch[1].replace(/\s+/g, "").trim() : undefined;
           const area = superficieMatch
             ? parseNumber(superficieMatch[1].replace(",", "."))
             : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
@@ -939,14 +942,14 @@ export const ImportGeometreDialog = ({
 
       const blockText = normalizeForMatch(getRowText(allRows[blockStart]));
       const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
-      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
+      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`));
       const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
       const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
       const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
       const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
       const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-      const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+      const plotNumber = lotMatch ? lotMatch[1].replace(/\s+/g, "").trim() : undefined;
       const area = superficieMatch
         ? parseNumber(superficieMatch[1].replace(",", "."))
         : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);

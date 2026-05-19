@@ -942,14 +942,14 @@ export const ImportGeometreDialog = ({
 
       const blockText = normalizeForMatch(getRowText(allRows[blockStart]));
       const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
-      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
+      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`));
       const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
       const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
       const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
       const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
       const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-      const plotNumber = lotMatch ? lotMatch[1].trim() : undefined;
+      const plotNumber = lotMatch ? lotMatch[1].replace(/\s+/g, "").trim() : undefined;
       const area = superficieMatch
         ? parseNumber(superficieMatch[1].replace(",", "."))
         : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);

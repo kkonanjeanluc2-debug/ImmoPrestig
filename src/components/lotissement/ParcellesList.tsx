@@ -544,9 +544,22 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
                       <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                    <TableCell>
                     {(() => {
+                      const acquereurName = parcelle.status === "vendu"
+                        ? ventesAcquereursMap?.get(parcelle.id)
+                        : null;
+                      if (acquereurName) {
+                        return (
+                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 gap-1">
+                            <User className="h-3 w-3" />
+                            {acquereurName}
+                          </Badge>
+                        );
+                      }
+
                       const prefinanceur = parcelle.status === "prefinance" && parcelle.prefinanceur_id
+
                         ? prefinanceurs.find(p => p.id === parcelle.prefinanceur_id)
                         : null;
                       if (prefinanceur) {

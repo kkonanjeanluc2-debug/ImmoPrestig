@@ -1865,6 +1865,13 @@ function normalizeForMatch(text: string): string {
     .toUpperCase();
 }
 
+function normalizeIlotNameKey(value: unknown): string {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (!raw) return "";
+  const digits = raw.replace(/\D/g, "").replace(/^0+/, "") || "0";
+  return digits || raw;
+}
+
 // Séparateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
 // "·", ".", "…" répétés avec ou sans espaces: "LOT : ... 02".
 const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)*";

@@ -139,6 +139,31 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
     );
   }, [ilots, searchQuery]);
 
+  // Détection des îlots parasites (noms type en-tête)
+  const parasiteIlots = useMemo(
+    () => (ilots || []).filter((i) => isParasiteIlotName(i.name)),
+    [ilots]
+  );
+
+  const handleCleanParasites = async () => {
+    if (parasiteIlots.length === 0) return;
+    if (!window.confirm(
+      `Envoyer ${parasiteIlots.length} îlot(s) parasite(s) à la corbeille ?\n\n` +
+      parasiteIlots.slice(0, 5).map(i => `• ${i.name}`).join("\n") +
+      (parasiteIlots.length > 5 ? `\n… et ${parasiteIlots.length - 5} de plus` : "")
+    )) return;
+    setIsBulkDeleting(true);
+    let successCount = 0;
+    for (const ilot of parasiteIlots) {
+      try {
+        await deleteIlot.mutateAsync({ id: ilot.id, name: ilot.name });
+        successCount++;
+      } catch { /* continue */ }
+    }
+    setIsBulkDeleting(false);
+    toast.success(`${successCount} îlot(s) parasite(s) envoyé(s) à la corbeille`);
+  };
+
   // Calculate totals from all ilots (not filtered)
   const totalParcelles = ilots?.reduce((sum, i) => sum + i.parcelles_count, 0) || 0;
   const totalVendues = ilots?.reduce((sum, i) => sum + i.parcelles_vendues, 0) || 0;

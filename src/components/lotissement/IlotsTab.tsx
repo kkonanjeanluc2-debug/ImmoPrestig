@@ -36,7 +36,14 @@ import {
   Search,
   X,
   User,
+  AlertTriangle,
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Détection des îlots dont le nom ressemble à un en-tête de tableau importé
+const PARASITE_REGEX = /(^\s*$)|(^-$)|(^(n°|num|numero|numéro|attributaires?|ilots?|lots?|designation|désignation|nom|prenom|prénom|reference|référence|surface|superficie|observations?)\s*$)|(ilot\s*:)|(lot\s*:)|(parcelle\s*:)|(equipement)/i;
+const isParasiteIlotName = (name?: string | null) =>
+  !!name && PARASITE_REGEX.test(name.trim());
 import { useIlotsWithStats, useSoftDeleteIlot, IlotWithStats } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";

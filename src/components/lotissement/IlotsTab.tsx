@@ -36,7 +36,14 @@ import {
   Search,
   X,
   User,
+  AlertTriangle,
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Détection des îlots dont le nom ressemble à un en-tête de tableau importé
+const PARASITE_REGEX = /(^\s*$)|(^-$)|(^(n°|num|numero|numéro|attributaires?|ilots?|lots?|designation|désignation|nom|prenom|prénom|reference|référence|surface|superficie|observations?)\s*$)|(ilot\s*:)|(lot\s*:)|(parcelle\s*:)|(equipement)/i;
+const isParasiteIlotName = (name?: string | null) =>
+  !!name && PARASITE_REGEX.test(name.trim());
 import { useIlotsWithStats, useSoftDeleteIlot, IlotWithStats } from "@/hooks/useIlots";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserProfiles } from "@/hooks/useAssignedUserProfile";
@@ -132,6 +139,31 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
     );
   }, [ilots, searchQuery]);
 
+  // Détection des îlots parasites (noms type en-tête)
+  const parasiteIlots = useMemo(
+    () => (ilots || []).filter((i) => isParasiteIlotName(i.name)),
+    [ilots]
+  );
+
+  const handleCleanParasites = async () => {
+    if (parasiteIlots.length === 0) return;
+    if (!window.confirm(
+      `Envoyer ${parasiteIlots.length} îlot(s) parasite(s) à la corbeille ?\n\n` +
+      parasiteIlots.slice(0, 5).map(i => `• ${i.name}`).join("\n") +
+      (parasiteIlots.length > 5 ? `\n… et ${parasiteIlots.length - 5} de plus` : "")
+    )) return;
+    setIsBulkDeleting(true);
+    let successCount = 0;
+    for (const ilot of parasiteIlots) {
+      try {
+        await deleteIlot.mutateAsync({ id: ilot.id, name: ilot.name });
+        successCount++;
+      } catch { /* continue */ }
+    }
+    setIsBulkDeleting(false);
+    toast.success(`${successCount} îlot(s) parasite(s) envoyé(s) à la corbeille`);
+  };
+
   // Calculate totals from all ilots (not filtered)
   const totalParcelles = ilots?.reduce((sum, i) => sum + i.parcelles_count, 0) || 0;
   const totalVendues = ilots?.reduce((sum, i) => sum + i.parcelles_vendues, 0) || 0;
@@ -223,6 +255,34 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Bandeau îlots parasites détectés */}
+          {parasiteIlots.length > 0 && canDelete && (
+            <Alert variant="destructive" className="border-amber-300 bg-amber-50 text-amber-900 [&>svg]:text-amber-600">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>
+                {parasiteIlots.length} îlot{parasiteIlots.length > 1 ? "s" : ""} parasite{parasiteIlots.length > 1 ? "s" : ""} détecté{parasiteIlots.length > 1 ? "s" : ""}
+              </AlertTitle>
+              <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-2">
+                <span className="text-sm">
+                  Noms ressemblant à des en-têtes de tableau importé :{" "}
+                  <span className="font-medium">
+                    {parasiteIlots.slice(0, 3).map(i => `"${i.name.length > 30 ? i.name.slice(0, 30) + "…" : i.name}"`).join(", ")}
+                    {parasiteIlots.length > 3 ? ` … +${parasiteIlots.length - 3}` : ""}
+                  </span>
+                </span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleCleanParasites}
+                  disabled={isBulkDeleting}
+                  className="shrink-0"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Tout envoyer à la corbeille
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
           {/* Search Bar */}
           {ilots && ilots.length > 0 && (
             <div className="relative max-w-sm">

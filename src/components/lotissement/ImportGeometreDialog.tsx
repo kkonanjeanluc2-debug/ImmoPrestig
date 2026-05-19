@@ -332,11 +332,11 @@ export const ImportGeometreDialog = ({
       if (isGuideExcel) {
         newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
         // Per-cell extractors: each column maps to its own field via its label.
-        const ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`);
+        const ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}${ILOT_VALUE_PATTERN}`);
         // Allow lot suffix letter even when separated by whitespace (e.g. "LOT : 46 A"),
         // but only when the letter is NOT followed by another letter (so we don't grab the
         // "S" of "SUPERFICIE" or other neighbouring words).
-        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`);
+        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}${LOT_VALUE_PATTERN}`);
         const SUPERFICIE_RE = new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
         const PARCELLE_RE = new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
         const AFFECT_RE = new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}(.+)$`);
@@ -408,13 +408,13 @@ export const ImportGeometreDialog = ({
             // ILOT
             if (!ilotName) {
               const m = norm.match(ILOT_RE);
-              if (m) { ilotName = m[1]; consumed.add(idx); return; }
+              if (m) { ilotName = cleanLotCode(m[1]); consumed.add(idx); return; }
             }
             // LOT (must avoid matching inside ILOT — \b handles it)
             if (!plotNumber) {
               const m = norm.match(LOT_RE);
               if (m && !/\bILOTS?/.test(norm.slice(0, m.index ?? 0).slice(-2))) {
-                plotNumber = m[1].replace(/\s+/g, ""); consumed.add(idx); return;
+                plotNumber = cleanLotCode(m[1]); consumed.add(idx); return;
               }
             }
             // SUPERFICIE / PARCELLE (area)
@@ -678,8 +678,8 @@ export const ImportGeometreDialog = ({
           if (!isLotHeaderRow(rows[blockStart])) continue;
 
           const blockText = normalizeForMatch(getRowText(rows[blockStart]));
-          const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
-          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`));
+          const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}${ILOT_VALUE_PATTERN}`));
+          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}${LOT_VALUE_PATTERN}`));
           const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
           // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
           const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
@@ -687,8 +687,8 @@ export const ImportGeometreDialog = ({
           // Fallback : modèle simplifié où l'affectation est portée par "EQUIPEMENT : ..."
           const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
-          const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-          const plotNumber = lotMatch ? lotMatch[1].replace(/\s+/g, "").trim() : undefined;
+          const ilotName = ilotMatch ? cleanLotCode(ilotMatch[1]) : undefined;
+          const plotNumber = lotMatch ? cleanLotCode(lotMatch[1]) : undefined;
           const area = superficieMatch
             ? parseNumber(superficieMatch[1].replace(",", "."))
             : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
@@ -941,15 +941,15 @@ export const ImportGeometreDialog = ({
       if (!isLotHeaderRow(allRows[blockStart])) continue;
 
       const blockText = normalizeForMatch(getRowText(allRows[blockStart]));
-      const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
-      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`));
+      const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}${ILOT_VALUE_PATTERN}`));
+      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}${LOT_VALUE_PATTERN}`));
       const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
       const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
       const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
       const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
-      const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-      const plotNumber = lotMatch ? lotMatch[1].replace(/\s+/g, "").trim() : undefined;
+      const ilotName = ilotMatch ? cleanLotCode(ilotMatch[1]) : undefined;
+      const plotNumber = lotMatch ? cleanLotCode(lotMatch[1]) : undefined;
       const area = superficieMatch
         ? parseNumber(superficieMatch[1].replace(",", "."))
         : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
@@ -1865,6 +1865,12 @@ function normalizeForMatch(text: string): string {
 // Séparateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
 // "·", ".", "…" répétés avec ou sans espaces: "LOT : ... 02".
 const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)*";
+const ILOT_VALUE_PATTERN = "(\\d+(?:\\s+\\d+)?)(?!\\s*\\d)";
+const LOT_VALUE_PATTERN = "(\\d+(?:\\s+\\d+)*(?:\\s*[A-Z](?![A-Z]))?)";
+
+function cleanLotCode(value: string): string {
+  return value.replace(/\\s+/g, "").trim();
+}
 
 // Rejette tout numéro de lot qui n'est en réalité qu'un libellé du modèle
 // (ATTRIBUTAIRES, ILOT, LOT, PARCELLE, EQUIPEMENT, ATTESTATION, CONTACTS,

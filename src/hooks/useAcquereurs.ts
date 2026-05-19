@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logActivityDirect } from "@/lib/activityLogger";
 
+export type IdType = "cni" | "passeport" | "permis" | "extrait";
+
 export interface Acquereur {
   id: string;
   user_id: string;
@@ -11,6 +13,7 @@ export interface Acquereur {
   phone: string | null;
   address: string | null;
   cni_number: string | null;
+  id_type: IdType | null;
   birth_date: string | null;
   birth_place: string | null;
   profession: string | null;
@@ -24,6 +27,7 @@ export interface AcquereurInsert {
   phone?: string | null;
   address?: string | null;
   cni_number?: string | null;
+  id_type?: IdType | null;
   birth_date?: string | null;
   birth_place?: string | null;
   profession?: string | null;

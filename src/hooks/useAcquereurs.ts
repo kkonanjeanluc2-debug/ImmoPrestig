@@ -13,7 +13,7 @@ export interface Acquereur {
   phone: string | null;
   address: string | null;
   cni_number: string | null;
-  id_type: IdType | null;
+  id_type: string | null;
   birth_date: string | null;
   birth_place: string | null;
   profession: string | null;

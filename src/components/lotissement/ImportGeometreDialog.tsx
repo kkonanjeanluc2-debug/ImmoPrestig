@@ -408,13 +408,13 @@ export const ImportGeometreDialog = ({
             // ILOT
             if (!ilotName) {
               const m = norm.match(ILOT_RE);
-              if (m) { ilotName = m[1]; consumed.add(idx); return; }
+              if (m) { ilotName = cleanLotCode(m[1]); consumed.add(idx); return; }
             }
             // LOT (must avoid matching inside ILOT — \b handles it)
             if (!plotNumber) {
               const m = norm.match(LOT_RE);
               if (m && !/\bILOTS?/.test(norm.slice(0, m.index ?? 0).slice(-2))) {
-                plotNumber = m[1].replace(/\s+/g, ""); consumed.add(idx); return;
+                plotNumber = cleanLotCode(m[1]); consumed.add(idx); return;
               }
             }
             // SUPERFICIE / PARCELLE (area)
@@ -687,8 +687,8 @@ export const ImportGeometreDialog = ({
           // Fallback : modèle simplifié où l'affectation est portée par "EQUIPEMENT : ..."
           const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
-          const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-          const plotNumber = lotMatch ? lotMatch[1].replace(/\s+/g, "").trim() : undefined;
+          const ilotName = ilotMatch ? cleanLotCode(ilotMatch[1]) : undefined;
+          const plotNumber = lotMatch ? cleanLotCode(lotMatch[1]) : undefined;
           const area = superficieMatch
             ? parseNumber(superficieMatch[1].replace(",", "."))
             : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
@@ -948,8 +948,8 @@ export const ImportGeometreDialog = ({
       const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));
       const equipementMatch = !affectationMatch ? blockText.match(new RegExp(`(?:EQUIPEMENTS?|EQUIPT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|$)`)) : null;
 
-      const ilotName = ilotMatch ? ilotMatch[1].trim() : undefined;
-      const plotNumber = lotMatch ? lotMatch[1].replace(/\s+/g, "").trim() : undefined;
+      const ilotName = ilotMatch ? cleanLotCode(ilotMatch[1]) : undefined;
+      const plotNumber = lotMatch ? cleanLotCode(lotMatch[1]) : undefined;
       const area = superficieMatch
         ? parseNumber(superficieMatch[1].replace(",", "."))
         : (parcelleAreaMatch ? parseNumber(parcelleAreaMatch[1].replace(",", ".")) : 0);
@@ -1865,6 +1865,12 @@ function normalizeForMatch(text: string): string {
 // Séparateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",
 // "·", ".", "…" répétés avec ou sans espaces: "LOT : ... 02".
 const LABEL_SEP = "\\s*(?:[:=\\-\\u2013\\u2014\\u00B7.\\u2026]+\\s*)*";
+const ILOT_VALUE_PATTERN = "(\\d+(?:\\s+\\d+)?)(?!\\s*\\d)";
+const LOT_VALUE_PATTERN = "(\\d+(?:\\s+\\d+)*(?:\\s*[A-Z](?![A-Z]))?)";
+
+function cleanLotCode(value: string): string {
+  return value.replace(/\\s+/g, "").trim();
+}
 
 // Rejette tout numéro de lot qui n'est en réalité qu'un libellé du modèle
 // (ATTRIBUTAIRES, ILOT, LOT, PARCELLE, EQUIPEMENT, ATTESTATION, CONTACTS,

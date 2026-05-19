@@ -83,11 +83,13 @@ const LotissementDetails = () => {
 
   // Calculate stats based on parcelle status
   const stats = useMemo(() => {
-    const total = parcelles?.length || 0;
-    const disponibles = parcelles?.filter(p => p.status === "disponible").length || 0;
-    const vendues = parcelles?.filter(p => p.status === "vendu").length || 0;
-    const reservees = parcelles?.filter(p => p.status === "reserve").length || 0;
-    const prefinancees = parcelles?.filter(p => p.status === "prefinance").length || 0;
+    // Compter uniquement les lots assignés à un îlot (exclut les lots orphelins)
+    const assigned = parcelles?.filter(p => !!p.ilot_id) || [];
+    const total = assigned.length;
+    const disponibles = assigned.filter(p => p.status === "disponible").length;
+    const vendues = assigned.filter(p => p.status === "vendu").length;
+    const reservees = assigned.filter(p => p.status === "reserve").length;
+    const prefinancees = assigned.filter(p => p.status === "prefinance").length;
 
     return { total, disponibles, vendues, reservees, prefinancees };
   }, [parcelles]);

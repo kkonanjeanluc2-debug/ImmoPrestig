@@ -120,14 +120,22 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const assignedUserIds = parcelles?.map(p => p.assigned_to) || [];
   const { data: userProfilesMap } = useUserProfiles(assignedUserIds);
 
-  // Fetch acquereurs for sold parcelles to display in Attribution column
-  const soldParcelleIds = useMemo(
-    () => (parcelles || []).filter(p => p.status === "vendu").map(p => p.id),
-    [parcelles]
-  );
+  // Fetch acquereurs for sold parcelles to display in Attribution column.
+  // Compute a stable, sorted list once per parcelles change so the query key
+  // and the .in() payload don't churn on every render.
+  const { soldParcelleIds, soldParcelleIdsKey } = useMemo(() => {
+    const ids = (parcelles || [])
+      .filter(p => p.status === "vendu")
+      .map(p => p.id)
+      .sort();
+    return { soldParcelleIds: ids, soldParcelleIdsKey: ids.join(",") };
+  }, [parcelles]);
+
   const { data: ventesAcquereursMap } = useQuery({
-    queryKey: ["parcelles-ventes-acquereurs", lotissementId, soldParcelleIds.sort().join(",")],
+    queryKey: ["parcelles-ventes-acquereurs", lotissementId, soldParcelleIdsKey],
     enabled: soldParcelleIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ventes_parcelles")

@@ -100,8 +100,11 @@ export const ImportGeometreDialog = ({
       const plot = normalizePlotNumber(plotNumber);
       if (!plot) return false;
       if (ilotName) {
-        const key = String(ilotName).trim().toLowerCase();
-        const list = existingPlotsByIlot[key];
+        const rawKey = String(ilotName).trim().toLowerCase();
+        const normalizedKey = normalizeIlotNameKey(ilotName);
+        const list = existingPlotsByIlot[rawKey]
+          || existingPlotsByIlot[normalizedKey]
+          || Object.entries(existingPlotsByIlot).find(([key]) => normalizeIlotNameKey(key) === normalizedKey)?.[1];
         return Array.isArray(list) && list.some(p => normalizePlotNumber(p) === plot);
       }
       // No ilot context: don't dedup globally — a same-numbered lot may legitimately
@@ -1098,8 +1101,9 @@ export const ImportGeometreDialog = ({
 
       // For ilots: keep only NEW ones for creation, but don't treat existing as errors
       // Existing ilots will be reused during import (their IDs will be resolved)
+      const existingIlotKeys = new Set(existingIlotNames.map(normalizeIlotNameKey));
       const newIlots = result.ilots.filter(
-        i => !existingIlotNames.includes(i.name)
+        i => !existingIlotKeys.has(normalizeIlotNameKey(i.name))
       );
       const reusedIlots = result.ilots.length - newIlots.length;
       if (reusedIlots > 0) {
@@ -1173,6 +1177,7 @@ export const ImportGeometreDialog = ({
       if (existingDbIlots) {
         for (const ilot of existingDbIlots) {
           ilotIdMap[ilot.name.toLowerCase()] = ilot.id;
+          ilotIdMap[normalizeIlotNameKey(ilot.name)] = ilot.id;
         }
       }
 
@@ -1187,6 +1192,7 @@ export const ImportGeometreDialog = ({
             plots_count: ilot.parcelles.length || null,
           });
           ilotIdMap[ilot.name.toLowerCase()] = result.id;
+          ilotIdMap[normalizeIlotNameKey(ilot.name)] = result.id;
         } catch (ilotErr) {
           console.error(`Erreur création îlot ${ilot.name}:`, ilotErr);
         }
@@ -1201,7 +1207,9 @@ export const ImportGeometreDialog = ({
 
       for (const parcelle of parsedParcelles) {
         try {
-          const ilotId = parcelle.ilotName ? ilotIdMap[parcelle.ilotName.toLowerCase()] || null : null;
+          const ilotId = parcelle.ilotName
+            ? ilotIdMap[parcelle.ilotName.toLowerCase()] || ilotIdMap[normalizeIlotNameKey(parcelle.ilotName)] || null
+            : null;
 
           // Determine attribution based on file data
           let attribution: string | undefined;
@@ -1216,13 +1224,19 @@ export const ImportGeometreDialog = ({
             parcelle.beneficiaire ? `Bénéficiaire: ${parcelle.beneficiaire}` : "",
           ].filter(Boolean).join(" | ") || undefined;
 
-          // Check if a parcelle with same plot_number already exists (including soft-deleted)
-          const { data: existing } = await supabase
+          // Check if a parcelle with same plot_number already exists in the same ilot
+          // (including soft-deleted). Lot numbers may legitimately repeat across ilots.
+          let existingQuery = supabase
             .from("parcelles")
             .select("id")
             .eq("lotissement_id", lotissementId)
-            .eq("plot_number", parcelle.plotNumber)
-            .maybeSingle();
+            .eq("plot_number", parcelle.plotNumber);
+
+          existingQuery = ilotId
+            ? existingQuery.eq("ilot_id", ilotId)
+            : existingQuery.is("ilot_id", null);
+
+          const { data: existing } = await existingQuery.maybeSingle();
 
           let result: any;
           if (existing) {
@@ -1860,6 +1874,13 @@ function normalizeForMatch(text: string): string {
     .replace(/[\u00A0\u2000-\u200B]/g, " ") // nbsp & co -> space
     .replace(/\s+/g, " ")
     .toUpperCase();
+}
+
+function normalizeIlotNameKey(value: unknown): string {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (!raw) return "";
+  const digits = raw.replace(/\D/g, "").replace(/^0+/, "") || "0";
+  return digits || raw;
 }
 
 // Séparateur tolérant entre un libellé et sa valeur: ":", "=", "-", "—",

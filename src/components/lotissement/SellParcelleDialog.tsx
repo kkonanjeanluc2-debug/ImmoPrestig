@@ -55,6 +55,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     name: "",
     phone: "",
     email: "",
+    id_type: "cni" as "cni" | "passeport" | "permis" | "extrait",
     cni_number: "",
     address: "",
     birth_date: "",

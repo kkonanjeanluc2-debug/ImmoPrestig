@@ -332,11 +332,11 @@ export const ImportGeometreDialog = ({
       if (isGuideExcel) {
         newWarnings.push("Format guide détecté dans le fichier Excel — extraction structurée des valeurs");
         // Per-cell extractors: each column maps to its own field via its label.
-        const ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`);
+        const ILOT_RE = new RegExp(`\\bILOTS?${LABEL_SEP}${ILOT_VALUE_PATTERN}`);
         // Allow lot suffix letter even when separated by whitespace (e.g. "LOT : 46 A"),
         // but only when the letter is NOT followed by another letter (so we don't grab the
         // "S" of "SUPERFICIE" or other neighbouring words).
-        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`);
+        const LOT_RE = new RegExp(`\\bLOTS?${LABEL_SEP}${LOT_VALUE_PATTERN}`);
         const SUPERFICIE_RE = new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
         const PARCELLE_RE = new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`);
         const AFFECT_RE = new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}(.+)$`);
@@ -678,8 +678,8 @@ export const ImportGeometreDialog = ({
           if (!isLotHeaderRow(rows[blockStart])) continue;
 
           const blockText = normalizeForMatch(getRowText(rows[blockStart]));
-          const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
-          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`));
+          const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}${ILOT_VALUE_PATTERN}`));
+          const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}${LOT_VALUE_PATTERN}`));
           const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
           // Fallback : modèle simplifié où la superficie est portée par le champ "PARCELLE : ..."
           const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
@@ -941,8 +941,8 @@ export const ImportGeometreDialog = ({
       if (!isLotHeaderRow(allRows[blockStart])) continue;
 
       const blockText = normalizeForMatch(getRowText(allRows[blockStart]));
-      const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}(\\d+[A-Z]?)`));
-      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}(\\d+(?:\\s*[A-Z](?![A-Z]))?)`));
+      const ilotMatch = blockText.match(new RegExp(`\\bILOTS?${LABEL_SEP}${ILOT_VALUE_PATTERN}`));
+      const lotMatch = blockText.match(new RegExp(`\\bLOTS?${LABEL_SEP}${LOT_VALUE_PATTERN}`));
       const superficieMatch = blockText.match(new RegExp(`(?:SUPERFICIE|SURFACE|CONTENANCE)\\s*\\(?M2?\\)?${LABEL_SEP}(\\d+[\\.,]?\\d*)`));
       const parcelleAreaMatch = !superficieMatch ? blockText.match(new RegExp(`\\bPARCELLES?${LABEL_SEP}(\\d+[\\.,]?\\d*)`)) : null;
       const affectationMatch = blockText.match(new RegExp(`(?:AFFECTATION|AFFECT)${LABEL_SEP}([^\\n]*?)(?:\\s{2,}|ARRETE|$)`));

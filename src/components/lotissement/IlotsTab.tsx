@@ -255,6 +255,34 @@ export function IlotsTab({ lotissementId, lotissementName }: IlotsTabProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Bandeau îlots parasites détectés */}
+          {parasiteIlots.length > 0 && canDelete && (
+            <Alert variant="destructive" className="border-amber-300 bg-amber-50 text-amber-900 [&>svg]:text-amber-600">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>
+                {parasiteIlots.length} îlot{parasiteIlots.length > 1 ? "s" : ""} parasite{parasiteIlots.length > 1 ? "s" : ""} détecté{parasiteIlots.length > 1 ? "s" : ""}
+              </AlertTitle>
+              <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-2">
+                <span className="text-sm">
+                  Noms ressemblant à des en-têtes de tableau importé :{" "}
+                  <span className="font-medium">
+                    {parasiteIlots.slice(0, 3).map(i => `"${i.name.length > 30 ? i.name.slice(0, 30) + "…" : i.name}"`).join(", ")}
+                    {parasiteIlots.length > 3 ? ` … +${parasiteIlots.length - 3}` : ""}
+                  </span>
+                </span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleCleanParasites}
+                  disabled={isBulkDeleting}
+                  className="shrink-0"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Tout envoyer à la corbeille
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
           {/* Search Bar */}
           {ilots && ilots.length > 0 && (
             <div className="relative max-w-sm">

@@ -132,7 +132,7 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   }, [parcelles]);
 
   const { data: ventesAcquereursMap } = useQuery({
-    queryKey: ["parcelles-ventes-acquereurs", lotissementId, soldParcelleIdsKey],
+    queryKey: parcellesKeys.ventesAcquereurs(lotissementId, soldParcelleIdsKey),
     enabled: soldParcelleIds.length > 0,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

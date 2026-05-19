@@ -207,9 +207,6 @@ const Pricing = () => {
         </div>
       </nav>
 
-
-
-
       <main>
         {/* ===== HERO SECTION ===== */}
         <section
@@ -286,7 +283,7 @@ const Pricing = () => {
               variants={fadeUp}
               custom={5}
             >
-              ✓ Gratuit pour toujours · ✓ Sans carte bancaire · ✓ Configuration en 2 min
+              ✓ Gratuit pendant 14 jours · ✓ Sans carte bancaire · ✓ Configuration en 2 min
             </motion.p>
           </div>
         </section>
@@ -673,13 +670,7 @@ const Pricing = () => {
               </p>
             </motion.div>
 
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeUp}
-              custom={1}
-            >
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}>
               <div className="mb-6">
                 <DashboardNavTabs mode="showcase" activeTab={showcaseTab} onTabChange={setShowcaseTab} />
               </div>
@@ -887,12 +878,14 @@ const Pricing = () => {
             <div className="px-6 pb-6">
               {/* Billing Toggle */}
               <div className="flex items-center justify-center gap-2 my-6 flex-wrap">
-                {([
-                  { key: "monthly" as const, label: "Mensuel" },
-                  { key: "quarterly" as const, label: "Trimestriel" },
-                  { key: "semi_annual" as const, label: "Semestriel" },
-                  { key: "yearly" as const, label: "Annuel" },
-                ] as const).map((opt) => (
+                {(
+                  [
+                    { key: "monthly" as const, label: "Mensuel" },
+                    { key: "quarterly" as const, label: "Trimestriel" },
+                    { key: "semi_annual" as const, label: "Semestriel" },
+                    { key: "yearly" as const, label: "Annuel" },
+                  ] as const
+                ).map((opt) => (
                   <button
                     key={opt.key}
                     onClick={() => setBillingCycle(opt.key)}
@@ -950,9 +943,10 @@ const Pricing = () => {
                       yearly: "par an",
                     };
                     const months: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
-                    const savingsPercent = billingCycle !== "monthly" && plan.price_monthly > 0
-                      ? Math.round((1 - price / (plan.price_monthly * months[billingCycle])) * 100)
-                      : 0;
+                    const savingsPercent =
+                      billingCycle !== "monthly" && plan.price_monthly > 0
+                        ? Math.round((1 - price / (plan.price_monthly * months[billingCycle])) * 100)
+                        : 0;
                     const features = Array.isArray(plan.features) ? plan.features : [];
 
                     return (
@@ -986,9 +980,7 @@ const Pricing = () => {
                               <span className="text-3xl font-bold">{formatPrice(price)}</span>
                               <span className="text-sm text-muted-foreground">{plan.currency}</span>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {periodLabel[billingCycle]}
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{periodLabel[billingCycle]}</p>
                             {savingsPercent > 0 && (
                               <Badge variant="secondary" className="mt-1 text-xs">
                                 Économisez {savingsPercent}%
@@ -1052,18 +1044,18 @@ const Pricing = () => {
 
               {/* Frais de paramétrage */}
               {showSetupFee && (
-              <div className="mt-6 mx-auto max-w-2xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-center">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span className="font-semibold">
-                    Frais de paramétrage pour paiements loyers en ligne + Formation : 150 000 FCFA
-                  </span>
+                <div className="mt-6 mx-auto max-w-2xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-center">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Check className="h-4 w-4 text-primary" />
+                    <span className="font-semibold">
+                      Frais de paramétrage pour paiements loyers en ligne + Formation : 150 000 FCFA
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Paiement unique incluant la configuration et l'accompagnement au démarrage pour prendre en main
+                    l'application, eventuellement.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Paiement unique incluant la configuration et l'accompagnement au démarrage pour prendre en main
-                  l'application, eventuellement.
-                </p>
-              </div>
               )}
             </div>
           </DialogContent>

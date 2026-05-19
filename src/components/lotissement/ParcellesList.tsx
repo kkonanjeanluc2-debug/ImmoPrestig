@@ -120,6 +120,29 @@ export function ParcellesList({ parcelles, lotissementId }: ParcellesListProps) 
   const assignedUserIds = parcelles?.map(p => p.assigned_to) || [];
   const { data: userProfilesMap } = useUserProfiles(assignedUserIds);
 
+  // Fetch acquereurs for sold parcelles to display in Attribution column
+  const soldParcelleIds = useMemo(
+    () => (parcelles || []).filter(p => p.status === "vendu").map(p => p.id),
+    [parcelles]
+  );
+  const { data: ventesAcquereursMap } = useQuery({
+    queryKey: ["parcelles-ventes-acquereurs", lotissementId, soldParcelleIds.sort().join(",")],
+    enabled: soldParcelleIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ventes_parcelles")
+        .select("parcelle_id, acquereur:acquereurs(id, name)")
+        .in("parcelle_id", soldParcelleIds);
+      if (error) throw error;
+      const map = new Map<string, string>();
+      (data || []).forEach((v: any) => {
+        if (v.acquereur?.name) map.set(v.parcelle_id, v.acquereur.name);
+      });
+      return map;
+    },
+  });
+
+
   const [editingParcelle, setEditingParcelle] = useState<Parcelle | null>(null);
   const [sellingParcelle, setSellingParcelle] = useState<Parcelle | null>(null);
   const [reservingParcelle, setReservingParcelle] = useState<Parcelle | null>(null);

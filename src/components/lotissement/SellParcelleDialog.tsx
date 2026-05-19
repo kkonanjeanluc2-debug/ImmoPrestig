@@ -468,12 +468,39 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cni">N° CNI</Label>
+                    <Label htmlFor="id_type">Type de pièce</Label>
+                    <Select
+                      value={newAcquereur.id_type}
+                      onValueChange={(v) => setNewAcquereur({ ...newAcquereur, id_type: v as any, cni_number: "" })}
+                    >
+                      <SelectTrigger id="id_type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cni">CNI</SelectItem>
+                        <SelectItem value="passeport">Passeport</SelectItem>
+                        <SelectItem value="permis">Permis de conduire</SelectItem>
+                        <SelectItem value="extrait">Extrait de naissance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cni">
+                      {newAcquereur.id_type === "cni" && "N° CNI"}
+                      {newAcquereur.id_type === "passeport" && "N° Passeport"}
+                      {newAcquereur.id_type === "permis" && "N° Permis de conduire"}
+                      {newAcquereur.id_type === "extrait" && "N° Extrait de naissance"}
+                    </Label>
                     <Input
                       id="cni"
                       value={newAcquereur.cni_number}
                       onChange={(e) => setNewAcquereur({ ...newAcquereur, cni_number: e.target.value })}
-                      placeholder="CI00123456789"
+                      placeholder={
+                        newAcquereur.id_type === "cni" ? "CI00123456789" :
+                        newAcquereur.id_type === "passeport" ? "23AA12345" :
+                        newAcquereur.id_type === "permis" ? "PC0123456" :
+                        "N° d'extrait"
+                      }
                     />
                   </div>
                   <div className="space-y-2">

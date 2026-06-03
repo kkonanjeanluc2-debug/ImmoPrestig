@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logActivityDirect } from "@/lib/activityLogger";
 
-export type IdType = "cni" | "passeport" | "permis" | "extrait";
+export type IdType = "cni" | "passeport" | "permis" | "extrait" | "carte_consulaire";
 
 export interface Acquereur {
   id: string;

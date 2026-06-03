@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ID_DOC_RULES, sanitizeIdNumber, validateIdNumber } from "@/lib/idDocumentValidation";
 
 interface SellParcelleDialogProps {
   parcelle: Parcelle;
@@ -154,10 +155,20 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
         return;
       }
 
+      // Validate id number format if provided
+      const cniTrimmedRaw = newAcquereur.cni_number.trim();
+      if (cniTrimmedRaw) {
+        const idErr = validateIdNumber(newAcquereur.id_type, cniTrimmedRaw);
+        if (idErr) {
+          toast.error(idErr);
+          return;
+        }
+      }
+
       // Check for duplicate acquéreur by name + phone or CNI
       const nameTrimmed = newAcquereur.name.trim().toLowerCase();
       const phoneTrimmed = newAcquereur.phone.trim();
-      const cniTrimmed = newAcquereur.cni_number.trim();
+      const cniTrimmed = cniTrimmedRaw;
       
       const duplicate = acquereurs?.find(a => {
         const nameMatch = a.name.toLowerCase() === nameTrimmed;
@@ -487,16 +498,16 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cni">
-                      {newAcquereur.id_type === "cni" && "N° CNI"}
-                      {newAcquereur.id_type === "passeport" && "N° Passeport"}
-                      {newAcquereur.id_type === "permis" && "N° Permis de conduire"}
-                      {newAcquereur.id_type === "extrait" && "N° Extrait de naissance"}
-                      {newAcquereur.id_type === "carte_consulaire" && "N° Carte consulaire"}
+                      {ID_DOC_RULES[newAcquereur.id_type].label}
                     </Label>
                     <Input
                       id="cni"
                       value={newAcquereur.cni_number}
-                      onChange={(e) => setNewAcquereur({ ...newAcquereur, cni_number: e.target.value })}
+                      maxLength={ID_DOC_RULES[newAcquereur.id_type].maxLength}
+                      onChange={(e) => setNewAcquereur({
+                        ...newAcquereur,
+                        cni_number: sanitizeIdNumber(newAcquereur.id_type, e.target.value),
+                      })}
                       placeholder={
                         newAcquereur.id_type === "cni" ? "CI00123456789" :
                         newAcquereur.id_type === "passeport" ? "23AA12345" :
@@ -505,6 +516,14 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                         "N° d'extrait"
                       }
                     />
+                    {(() => {
+                      const err = validateIdNumber(newAcquereur.id_type, newAcquereur.cni_number);
+                      return err ? (
+                        <p className="text-xs text-destructive">{err}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">{ID_DOC_RULES[newAcquereur.id_type].hint}</p>
+                      );
+                    })()}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="profession">Profession</Label>

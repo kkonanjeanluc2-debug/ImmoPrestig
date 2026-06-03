@@ -55,7 +55,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     name: "",
     phone: "",
     email: "",
-    id_type: "cni" as "cni" | "passeport" | "permis" | "extrait",
+    id_type: "cni" as "cni" | "passeport" | "permis" | "extrait" | "carte_consulaire",
     cni_number: "",
     address: "",
     birth_date: "",
@@ -481,6 +481,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                         <SelectItem value="passeport">Passeport</SelectItem>
                         <SelectItem value="permis">Permis de conduire</SelectItem>
                         <SelectItem value="extrait">Extrait de naissance</SelectItem>
+                        <SelectItem value="carte_consulaire">Carte consulaire</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -490,6 +491,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                       {newAcquereur.id_type === "passeport" && "N° Passeport"}
                       {newAcquereur.id_type === "permis" && "N° Permis de conduire"}
                       {newAcquereur.id_type === "extrait" && "N° Extrait de naissance"}
+                      {newAcquereur.id_type === "carte_consulaire" && "N° Carte consulaire"}
                     </Label>
                     <Input
                       id="cni"
@@ -499,6 +501,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                         newAcquereur.id_type === "cni" ? "CI00123456789" :
                         newAcquereur.id_type === "passeport" ? "23AA12345" :
                         newAcquereur.id_type === "permis" ? "PC0123456" :
+                        newAcquereur.id_type === "carte_consulaire" ? "N° carte consulaire" :
                         "N° d'extrait"
                       }
                     />

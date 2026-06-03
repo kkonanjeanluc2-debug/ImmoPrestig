@@ -250,11 +250,38 @@ export function MutationParcelleDialog({
                   />
                 </div>
                 <div>
-                  <Label>N° CNI</Label>
+                  <Label>Type de pièce</Label>
+                  <Select value={newIdType} onValueChange={(v) => { setNewIdType(v as any); setNewCni(""); }}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cni">CNI</SelectItem>
+                      <SelectItem value="passeport">Passeport</SelectItem>
+                      <SelectItem value="permis">Permis de conduire</SelectItem>
+                      <SelectItem value="extrait">Extrait de naissance</SelectItem>
+                      <SelectItem value="carte_consulaire">Carte consulaire</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2">
+                  <Label>
+                    {newIdType === "cni" && "N° CNI"}
+                    {newIdType === "passeport" && "N° Passeport"}
+                    {newIdType === "permis" && "N° Permis de conduire"}
+                    {newIdType === "extrait" && "N° Extrait de naissance"}
+                    {newIdType === "carte_consulaire" && "N° Carte consulaire"}
+                  </Label>
                   <Input
                     value={newCni}
                     onChange={(e) => setNewCni(e.target.value)}
-                    placeholder="Numéro CNI"
+                    placeholder={
+                      newIdType === "cni" ? "CI00123456789" :
+                      newIdType === "passeport" ? "23AA12345" :
+                      newIdType === "permis" ? "PC0123456" :
+                      newIdType === "carte_consulaire" ? "N° carte consulaire" :
+                      "N° d'extrait"
+                    }
                   />
                 </div>
               </div>

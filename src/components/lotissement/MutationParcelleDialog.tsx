@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { VenteWithDetails } from "@/hooks/useVentesParcelles";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useCreateMutationParcelle, useMutationsParcelles } from "@/hooks/useMutationsParcelles";
+import { ID_DOC_RULES, sanitizeIdNumber, validateIdNumber } from "@/lib/idDocumentValidation";
 
 interface MutationParcelleDialogProps {
   vente: VenteWithDetails;

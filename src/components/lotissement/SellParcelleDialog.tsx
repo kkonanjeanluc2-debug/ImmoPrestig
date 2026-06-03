@@ -155,10 +155,20 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
         return;
       }
 
+      // Validate id number format if provided
+      const cniTrimmedRaw = newAcquereur.cni_number.trim();
+      if (cniTrimmedRaw) {
+        const idErr = validateIdNumber(newAcquereur.id_type, cniTrimmedRaw);
+        if (idErr) {
+          toast.error(idErr);
+          return;
+        }
+      }
+
       // Check for duplicate acquéreur by name + phone or CNI
       const nameTrimmed = newAcquereur.name.trim().toLowerCase();
       const phoneTrimmed = newAcquereur.phone.trim();
-      const cniTrimmed = newAcquereur.cni_number.trim();
+      const cniTrimmed = cniTrimmedRaw;
       
       const duplicate = acquereurs?.find(a => {
         const nameMatch = a.name.toLowerCase() === nameTrimmed;

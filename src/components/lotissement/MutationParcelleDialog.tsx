@@ -88,6 +88,7 @@ export function MutationParcelleDialog({
         const created = await createAcquereur.mutateAsync({
           name: newName.trim(),
           phone: newPhone.trim() || null,
+          id_type: newIdType,
           cni_number: newCni.trim() || null,
           email: newEmail.trim() || null,
           address: newAddress.trim() || null,

@@ -14,11 +14,11 @@ interface Rule {
 export const ID_DOC_RULES: Record<IdDocType, Rule> = {
   cni: {
     label: "N° CNI",
-    // CI + 11 to 13 digits (ex: CI001234567890)
-    pattern: /^CI\d{11,13}$/,
-    minLength: 13,
+    // CI + 7 to 13 digits (ex: CI1234567)
+    pattern: /^CI\d{7,13}$/,
+    minLength: 9,
     maxLength: 15,
-    hint: "Format CNI: CI suivi de 11 à 13 chiffres (ex: CI001234567890)",
+    hint: "Format CNI: CI suivi de 7 à 13 chiffres (ex: CI1234567)",
     allowedChars: /[^A-Za-z0-9]/g,
     transform: (v) => v.toUpperCase(),
   },

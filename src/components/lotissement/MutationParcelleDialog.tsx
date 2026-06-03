@@ -61,6 +61,7 @@ export function MutationParcelleDialog({
   // New acquirer form
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newIdType, setNewIdType] = useState<"cni" | "passeport" | "permis" | "extrait" | "carte_consulaire">("cni");
   const [newCni, setNewCni] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newAddress, setNewAddress] = useState("");

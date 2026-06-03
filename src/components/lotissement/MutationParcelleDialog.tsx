@@ -273,16 +273,11 @@ export function MutationParcelleDialog({
                   </Select>
                 </div>
                 <div className="col-span-2">
-                  <Label>
-                    {newIdType === "cni" && "N° CNI"}
-                    {newIdType === "passeport" && "N° Passeport"}
-                    {newIdType === "permis" && "N° Permis de conduire"}
-                    {newIdType === "extrait" && "N° Extrait de naissance"}
-                    {newIdType === "carte_consulaire" && "N° Carte consulaire"}
-                  </Label>
+                  <Label>{ID_DOC_RULES[newIdType].label}</Label>
                   <Input
                     value={newCni}
-                    onChange={(e) => setNewCni(e.target.value)}
+                    maxLength={ID_DOC_RULES[newIdType].maxLength}
+                    onChange={(e) => setNewCni(sanitizeIdNumber(newIdType, e.target.value))}
                     placeholder={
                       newIdType === "cni" ? "CI00123456789" :
                       newIdType === "passeport" ? "23AA12345" :
@@ -291,6 +286,14 @@ export function MutationParcelleDialog({
                       "N° d'extrait"
                     }
                   />
+                  {(() => {
+                    const err = validateIdNumber(newIdType, newCni);
+                    return err ? (
+                      <p className="text-xs text-destructive mt-1">{err}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-1">{ID_DOC_RULES[newIdType].hint}</p>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">

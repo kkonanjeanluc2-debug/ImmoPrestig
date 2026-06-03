@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ID_DOC_RULES, sanitizeIdNumber, validateIdNumber } from "@/lib/idDocumentValidation";
 
 interface SellParcelleDialogProps {
   parcelle: Parcelle;

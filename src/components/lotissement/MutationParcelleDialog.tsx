@@ -149,6 +149,7 @@ export function MutationParcelleDialog({
     setNotes("");
     setNewName("");
     setNewPhone("");
+    setNewIdType("cni");
     setNewCni("");
     setNewEmail("");
     setNewAddress("");

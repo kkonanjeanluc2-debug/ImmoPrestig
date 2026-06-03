@@ -85,6 +85,13 @@ export function MutationParcelleDialog({
         toast.error("Le nom du nouvel acquéreur est requis");
         return;
       }
+      if (newCni.trim()) {
+        const idErr = validateIdNumber(newIdType, newCni.trim());
+        if (idErr) {
+          toast.error(idErr);
+          return;
+        }
+      }
       try {
         const created = await createAcquereur.mutateAsync({
           name: newName.trim(),

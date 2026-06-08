@@ -273,61 +273,77 @@ export function EditLotissementDialog({ lotissement, open, onOpenChange }: EditL
 
           <Separator className="my-2" />
 
-          {attestationTemplates.length > 0 && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                Modèle d'attestation d'attribution
-              </Label>
-              <Select
-                value={formData.attestation_template_id || "none"}
-                onValueChange={(v) => setFormData({ ...formData, attestation_template_id: v === "none" ? "" : v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un modèle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun modèle</SelectItem>
-                  {attestationTemplates.filter(t => (t as any).template_type !== "cession").map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name} {t.is_default ? "⭐" : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Ce modèle sera utilisé pour générer les attestations d'attribution
-              </p>
-            </div>
-          )}
+          {(() => {
+            const attributionTemplates = attestationTemplates.filter(
+              (t) => (t as any).template_type !== "cession"
+            );
+            const cessionTemplates = attestationTemplates.filter(
+              (t) => (t as any).template_type === "cession"
+            );
+            return (
+              <>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    Modèle d'attestation d'attribution
+                  </Label>
+                  <Select
+                    value={formData.attestation_template_id || "none"}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, attestation_template_id: v === "none" ? "" : v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un modèle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Aucun modèle</SelectItem>
+                      {attributionTemplates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} {t.is_default ? "⭐" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {attributionTemplates.length > 0
+                      ? "Ce modèle sera utilisé pour générer les attestations d'attribution de ce lotissement."
+                      : "Aucun modèle d'attribution disponible. Créez-en un depuis Paramètres › Modèles d'attestation."}
+                  </p>
+                </div>
 
-          {attestationTemplates.length > 0 && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-orange-500" />
-                Modèle d'attestation de cession
-              </Label>
-              <Select
-                value={formData.cession_template_id || "none"}
-                onValueChange={(v) => setFormData({ ...formData, cession_template_id: v === "none" ? "" : v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un modèle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun modèle</SelectItem>
-                  {attestationTemplates.filter(t => (t as any).template_type === "cession").map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name} {t.is_default ? "⭐" : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Ce modèle sera utilisé pour générer les attestations de cession
-              </p>
-            </div>
-          )}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-orange-500" />
+                    Modèle d'attestation de cession
+                  </Label>
+                  <Select
+                    value={formData.cession_template_id || "none"}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, cession_template_id: v === "none" ? "" : v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un modèle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Aucun modèle</SelectItem>
+                      {cessionTemplates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} {t.is_default ? "⭐" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {cessionTemplates.length > 0
+                      ? "Ce modèle sera utilisé pour générer les attestations de cession de ce lotissement."
+                      : "Aucun modèle de cession disponible. Créez-en un depuis Paramètres › Modèles d'attestation."}
+                  </p>
+                </div>
+              </>
+            );
+          })()}
 
           {guideTemplates.length > 0 && (
             <div className="space-y-2">

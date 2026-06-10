@@ -103,7 +103,8 @@ export function VentesList({ ventes, lotissementId, period }: VentesListProps) {
 
   const filteredVentes = useMemo(() => {
     return combinedVentes.filter((v) => {
-      if (period) {
+      // Les préfinancements ne sont pas filtrés par période (pas de revenus)
+      if (period && v.status !== "prefinance") {
         const saleDate = new Date(v.sale_date);
         if (!isWithinInterval(saleDate, { start: period.from, end: period.to })) return false;
       }

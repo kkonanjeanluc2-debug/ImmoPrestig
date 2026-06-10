@@ -282,26 +282,11 @@ export const useCancelVenteParcelle = () => {
 
   return useMutation({
     mutationFn: async ({ venteId, parcelleId }: { venteId: string; parcelleId: string }) => {
-      // 1. Delete all écheances for this vente
-      const { error: echeancesError } = await supabase
-        .from("echeances_parcelles")
-        .delete()
-        .eq("vente_id", venteId);
-      if (echeancesError) throw echeancesError;
-
-      // 2. Delete the vente itself
-      const { error: venteError } = await supabase
-        .from("ventes_parcelles")
-        .delete()
-        .eq("id", venteId);
-      if (venteError) throw venteError;
-
-      // 3. Reset parcelle status to disponible and clear beneficiaire
-      const { error: parcelleError } = await supabase
-        .from("parcelles")
-        .update({ status: "disponible" })
-        .eq("id", parcelleId);
-      if (parcelleError) throw parcelleError;
+      const { error } = await supabase.rpc("annuler_vente_parcelle", {
+        _vente_id: venteId,
+        _parcelle_id: parcelleId,
+      });
+      if (error) throw error;
 
       if (user) {
         await logActivityDirect(user.id, "delete", "vente_parcelle", "Vente annulée — lot remis en disponible", venteId);

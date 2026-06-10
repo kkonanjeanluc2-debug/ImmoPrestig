@@ -127,13 +127,10 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
           setSubmittingPref(false);
           return;
         }
-        const { error } = await supabase
-          .from("parcelles")
-          .update({
-            status: "prefinance" as any,
-            prefinanceur_id: prefId,
-          } as any)
-          .eq("id", parcelle.id);
+        const { error } = await supabase.rpc("enregistrer_prefinancement", {
+          _parcelle_id: parcelle.id,
+          _prefinanceur_id: prefId,
+        });
         if (error) throw error;
         queryClient.invalidateQueries({ queryKey: ["parcelles"] });
         toast.success("Préfinancement enregistré avec succès");

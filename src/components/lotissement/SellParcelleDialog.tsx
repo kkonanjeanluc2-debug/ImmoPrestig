@@ -25,12 +25,6 @@ import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import { usePrefinanceurs, useCreatePrefinanceur } from "@/hooks/usePrefinanceurs";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ID_DOC_RULES, sanitizeIdNumber, validateIdNumber } from "@/lib/idDocumentValidation";
@@ -133,7 +127,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
           setSubmittingPref(false);
           return;
         }
-        const { error } = await supabaseAdmin
+        const { error } = await supabase
           .from("parcelles")
           .update({
             status: "prefinance" as any,

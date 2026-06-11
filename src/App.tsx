@@ -2,7 +2,10 @@ import { Suspense, lazy, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createIDBPersister } from "@/lib/queryPersister";
+import { usePrefetchAllData } from "@/hooks/usePrefetchRoutes";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -113,13 +116,23 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes - navigation shows cached data instantly
-      gcTime: 30 * 60 * 1000, // 30 minutes - keep cache across page visits
+      gcTime: 24 * 60 * 60 * 1000, // 24h - cache survives reloads via the IDB persister
       refetchOnWindowFocus: false, // avoid refetch storms when switching tabs
       retry: 1,
       refetchOnReconnect: true,
     },
   },
 });
+
+// Persist the query cache to IndexedDB: after a reload the app paints
+// instantly from the last known data, then revalidates in the background.
+const queryPersister = createIDBPersister();
+
+// Warms the cache for every main route right after login (idle time).
+const DataPreloader = () => {
+  usePrefetchAllData();
+  return null;
+};
 
 // Skeleton-based loader for perceived instant loading
 const PageLoader = () => <PageSkeleton />;
@@ -139,9 +152,12 @@ const App = () => {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister: queryPersister, maxAge: 24 * 60 * 60 * 1000, buster: "v1" }}
+    >
       <TooltipProvider>
-        {showSplash && <WelcomeScreen onComplete={handleSplashComplete} minDuration={5000} />}
+        {showSplash && <WelcomeScreen onComplete={handleSplashComplete} minDuration={1500} />}
         <PWAInstallBanner />
         <UpdatePrompt />
         <OfflineIndicator />
@@ -150,6 +166,7 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             <InactivityHandler />
+            <DataPreloader />
             <StandaloneSlugGuard />
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
@@ -199,7 +216,7 @@ const App = () => {
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 };
 

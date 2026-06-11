@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,6 +63,31 @@ const routePrefetchMap: Record<string, (queryClient: any, userId?: string) => vo
     qc.prefetchQuery({ queryKey: ["agency"], queryFn: () => supabase.from("agencies").select("*").maybeSingle().then(r => r.data), staleTime: 5 * 60 * 1000 });
   },
 };
+
+// Warms the query cache for every main route shortly after login, so the
+// first click on any menu entry renders from cache instantly.
+export function usePrefetchAllData() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    const run = () => {
+      Object.values(routePrefetchMap).forEach((prefetchFn) => {
+        try {
+          prefetchFn(queryClient, user.id);
+        } catch {
+          // prefetch is best-effort
+        }
+      });
+    };
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(run, { timeout: 5000 });
+    } else {
+      setTimeout(run, 1500);
+    }
+  }, [queryClient, user]);
+}
 
 export function usePrefetchRoute() {
   const queryClient = useQueryClient();

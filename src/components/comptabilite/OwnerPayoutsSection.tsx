@@ -562,39 +562,37 @@ export function OwnerPayoutsSection({
                           Code vérifié — Reversement confirmé
                         </div>
                       )}
-                      {!otpVerified && (
-                        otpSkipped ? (
-                          <div className="space-y-1">
-                            <p className="text-xs text-amber-600 font-medium">
-                              ⚠️ Validation sans code OTP : le reversement sera enregistré sans confirmation du propriétaire.
-                            </p>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="w-full text-xs"
-                              onClick={() => setOtpSkipped(false)}
-                            >
-                              Revenir à la confirmation par code
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="w-full text-xs text-muted-foreground"
-                            onClick={() => setOtpSkipped(true)}
-                          >
-                            Valider sans code OTP
-                          </Button>
-                        )
-                      )}
                     </>
+                  ) : otpSkipped ? (
+                    <div className="space-y-1">
+                      <p className="text-xs text-amber-600 font-medium">
+                        ⚠️ Validation sans code OTP : le reversement sera enregistré sans confirmation du propriétaire.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => setOtpSkipped(false)}
+                      >
+                        Annuler
+                      </Button>
+                    </div>
                   ) : (
-                    <p className="text-xs text-destructive">
-                      ⚠️ Ce propriétaire n'a pas d'email configuré. Ajoutez un email dans sa fiche pour envoyer un code de confirmation.
-                    </p>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Ce propriétaire n'a pas d'adresse email configurée. Vous pouvez valider le reversement sans code de confirmation.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setOtpSkipped(true)}
+                      >
+                        Valider sans code OTP
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
@@ -650,7 +648,7 @@ export function OwnerPayoutsSection({
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
                   (needsProof && !proofFile) ||
-                  (isCashPayment && ownerEmail && !otpVerified && !otpSkipped) ||
+                  (isCashPayment && (ownerEmail ? !otpVerified : !otpSkipped)) ||
                   uploading ||
                   createPayout.isPending
                 }

@@ -78,6 +78,12 @@ async function sendViaResend(params: EmailRequest): Promise<EmailResponse> {
   }
 
   const response = await resend.emails.send(payload);
+  if (response.error) {
+    return {
+      success: false,
+      error: `Resend: ${response.error.message || JSON.stringify(response.error)}`,
+    };
+  }
   return { success: true, id: response.data?.id };
 }
 

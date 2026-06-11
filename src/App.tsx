@@ -112,9 +112,9 @@ function usePreloadPages() {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 1000, // 30 seconds - data revalidates quickly
-      gcTime: 10 * 60 * 1000, // 10 minutes - shorter garbage collection
-      refetchOnWindowFocus: true, // Refresh when user returns to tab
+      staleTime: 5 * 60 * 1000, // 5 minutes - navigation shows cached data instantly
+      gcTime: 30 * 60 * 1000, // 30 minutes - keep cache across page visits
+      refetchOnWindowFocus: false, // avoid refetch storms when switching tabs
       retry: 1,
       refetchOnReconnect: true,
     },

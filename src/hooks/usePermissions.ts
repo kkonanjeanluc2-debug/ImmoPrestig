@@ -126,9 +126,10 @@ export function usePermissions(): Permissions {
       } as MemberPermissions & { _role?: string; _memberId?: string };
     },
     enabled: !!user?.id,
-    refetchInterval: 5000,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
+    // Realtime (canal ci-dessous) invalide la requête dès qu'un admin modifie
+    // les permissions ; le polling n'est qu'un filet de sécurité.
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 
   const memberIdForRealtime = (customPermissions as (Partial<MemberPermissions> & { _memberId?: string }) | null)?._memberId;

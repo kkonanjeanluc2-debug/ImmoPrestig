@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ import {
 export function ProfileSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
@@ -33,42 +34,35 @@ export function ProfileSettings() {
     avatar_url: "",
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    setIsLoading(true);
-    try {
+  // Cached query: instant display from cache, silent background refresh
+  const { data: profileData, isLoading: isProfileFetching } = useQuery({
+    queryKey: ["profile-settings", user?.id],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("user_id", user!.id)
         .maybeSingle();
-
       if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      if (data) {
-        setProfile({
-          full_name: data.full_name || "",
-          email: data.email || user?.email || "",
-          avatar_url: data.avatar_url || "",
-        });
-      } else {
-        setProfile({
-          full_name: "",
-          email: user?.email || "",
-          avatar_url: "",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    } finally {
-      setIsLoading(false);
+  // Only show the spinner while there is nothing to display yet
+  const isLoading = isProfileFetching && profileData === undefined;
+
+  useEffect(() => {
+    if (profileData !== undefined) {
+      setProfile({
+        full_name: profileData?.full_name || "",
+        email: profileData?.email || user?.email || "",
+        avatar_url: profileData?.avatar_url || "",
+      });
     }
-  };
+  }, [profileData, user?.email]);
+
 
   const handleSave = async () => {
     if (!user) return;
@@ -85,6 +79,7 @@ export function ProfileSettings() {
 
       if (error) throw error;
 
+      queryClient.invalidateQueries({ queryKey: ["profile-settings", user.id] });
       toast({
         title: "Profil mis à jour",
         description: "Vos informations ont été enregistrées avec succès.",
@@ -121,6 +116,7 @@ export function ProfileSettings() {
 
       setProfile((prev) => ({ ...prev, email: newEmail }));
       setNewEmail("");
+      queryClient.invalidateQueries({ queryKey: ["profile-settings", user.id] });
 
       toast({
         title: "Email mis à jour",
@@ -184,6 +180,7 @@ export function ProfileSettings() {
         .update({ avatar_url: urlData.publicUrl })
         .eq("user_id", user.id);
 
+      queryClient.invalidateQueries({ queryKey: ["profile-settings", user.id] });
       toast({
         title: "Avatar mis à jour",
         description: "Votre photo de profil a été modifiée.",

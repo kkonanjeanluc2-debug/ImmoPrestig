@@ -102,6 +102,7 @@ export function OwnerPayoutsSection({
   const [otpCode, setOtpCode] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpSkipped, setOtpSkipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const now = new Date();
   const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
@@ -254,6 +255,7 @@ export function OwnerPayoutsSection({
           setOtpSent(false);
           setOtpCode("");
           setOtpVerified(false);
+          setOtpSkipped(false);
           const now = new Date();
           const fom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
           const lom = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
@@ -460,6 +462,7 @@ export function OwnerPayoutsSection({
                     setOtpSent(false);
                     setOtpCode("");
                     setOtpVerified(false);
+                    setOtpSkipped(false);
                   }}
                 >
                   <SelectTrigger>
@@ -559,6 +562,34 @@ export function OwnerPayoutsSection({
                           Code vérifié — Reversement confirmé
                         </div>
                       )}
+                      {!otpVerified && (
+                        otpSkipped ? (
+                          <div className="space-y-1">
+                            <p className="text-xs text-amber-600 font-medium">
+                              ⚠️ Validation sans code OTP : le reversement sera enregistré sans confirmation du propriétaire.
+                            </p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="w-full text-xs"
+                              onClick={() => setOtpSkipped(false)}
+                            >
+                              Revenir à la confirmation par code
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-xs text-muted-foreground"
+                            onClick={() => setOtpSkipped(true)}
+                          >
+                            Valider sans code OTP
+                          </Button>
+                        )
+                      )}
                     </>
                   ) : (
                     <p className="text-xs text-destructive">
@@ -619,7 +650,7 @@ export function OwnerPayoutsSection({
                   Number(form.amount) <= 0 ||
                   isDuplicate ||
                   (needsProof && !proofFile) ||
-                  (isCashPayment && ownerEmail && !otpVerified) ||
+                  (isCashPayment && ownerEmail && !otpVerified && !otpSkipped) ||
                   uploading ||
                   createPayout.isPending
                 }

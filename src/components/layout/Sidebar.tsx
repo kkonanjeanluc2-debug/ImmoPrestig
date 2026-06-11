@@ -68,13 +68,13 @@ const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
 };
 
 const ROLE_BADGE_COLORS: Record<AppRole, string> = {
-  super_admin: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  admin: "bg-emerald/20 text-emerald border-emerald/30",
-  gestionnaire: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  comptable: "bg-teal-500/20 text-teal-400 border-teal-500/30",
-  caissiere: "bg-pink-500/20 text-pink-400 border-pink-500/30",
-  lecture_seule: "bg-sand/20 text-sand border-sand/30",
-  locataire: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  super_admin: "bg-purple-50 text-purple-600 border-purple-200",
+  admin: "bg-emerald-50 text-emerald-600 border-emerald-200",
+  gestionnaire: "bg-blue-50 text-blue-600 border-blue-200",
+  comptable: "bg-teal-50 text-teal-600 border-teal-200",
+  caissiere: "bg-pink-50 text-pink-600 border-pink-200",
+  lecture_seule: "bg-amber-50 text-amber-600 border-amber-200",
+  locataire: "bg-orange-50 text-orange-600 border-orange-200",
 };
 
 const gestionLocativeItems: { name: string; href: string; icon: typeof Building2; hiddenForTenant: boolean; hiddenForGestionnaire: boolean; featureKey?: FeatureKey }[] = [
@@ -204,33 +204,33 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         to={item.href}
         onMouseEnter={() => prefetchRoute(item.href)}
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group relative",
+          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
           opts?.indent && "ml-2",
           isActive
-            ? "bg-white/15 text-white shadow-sm shadow-white/5 backdrop-blur-sm"
-            : "text-white/60 hover:bg-white/8 hover:text-white/90"
+            ? "bg-blue-50 text-blue-600"
+            : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
         )}
       >
         <div className="relative flex-shrink-0">
-          <item.icon className={cn(
-            "h-[18px] w-[18px] transition-all duration-200",
-            isActive ? "text-white" : "text-white/50 group-hover:text-white/80",
+          <item.icon strokeWidth={1.75} className={cn(
+            "h-5 w-5 transition-all duration-200",
+            isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600",
             !showText && "mx-auto"
           )} />
           {badgeCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 flex items-center justify-center px-0.5 ring-2 ring-navy">
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 flex items-center justify-center px-0.5 ring-2 ring-white">
               {badgeCount > 99 ? "99+" : badgeCount}
             </span>
           )}
         </div>
         {showText && (
           <span className={cn(
-            "text-[13px] transition-colors duration-200",
+            "text-sm transition-colors duration-200",
             isActive ? "font-semibold" : "font-medium"
           )}>{item.name}</span>
         )}
         {isActive && showText && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-emerald rounded-r-full" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-blue-600 rounded-r-full" />
         )}
       </NavLink>
     );
@@ -239,7 +239,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const renderSectionLabel = (label: string) => {
     if (!showText) return null;
     return (
-      <p className="px-3 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">
+      <p className="px-3 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
         {label}
       </p>
     );
@@ -252,16 +252,17 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   ) => (
     <Collapsible defaultOpen className="space-y-0.5">
       <CollapsibleTrigger className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 w-full group",
-        "text-white/70 hover:bg-white/5 hover:text-white/90"
+        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full group",
+        "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
       )}>
         {React.createElement(icon, {
-          className: cn("h-[18px] w-[18px] flex-shrink-0 text-white/50", !showText && "mx-auto")
+          strokeWidth: 1.75,
+          className: cn("h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-600", !showText && "mx-auto")
         })}
         {showText && (
           <>
-            <span className="font-semibold text-[13px] flex-1 text-left">{label}</span>
-            <ChevronDown className="h-3.5 w-3.5 text-white/30 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            <span className="font-semibold text-sm flex-1 text-left">{label}</span>
+            <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
           </>
         )}
       </CollapsibleTrigger>
@@ -278,7 +279,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         variant="ghost"
         size="icon"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-3 left-3 z-50 lg:hidden bg-navy text-white hover:bg-navy-light rounded-xl shadow-lg"
+        className="fixed top-3 left-3 z-50 lg:hidden bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 rounded-xl shadow-md"
       >
         <Menu className="h-5 w-5" />
       </Button>
@@ -295,7 +296,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
       <aside 
         className={cn(
           "fixed left-0 top-0 z-50 h-screen transition-all duration-300 ease-in-out flex flex-col",
-          "bg-gradient-to-b from-navy via-navy to-[hsl(220,50%,12%)]",
+          "bg-white border-r border-gray-200",
           "lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
           collapsed ? "lg:w-[68px]" : "lg:w-[260px]",
@@ -304,44 +305,44 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
       >
         {/* Logo Section */}
         <div className={cn(
-          "flex items-center justify-between px-4 h-[68px] border-b border-white/[0.06]",
+          "flex items-center justify-between px-4 h-[68px] border-b border-gray-100",
         )}>
           {showText ? (
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-9 w-9 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/10">
-                <img 
-                  src={platformLogo} 
-                  alt={platformAppName} 
+              <div className="h-9 w-9 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-gray-200">
+                <img
+                  src={platformLogo}
+                  alt={platformAppName}
                   className="h-full w-full object-cover"
                 />
               </div>
-              <span className="font-display text-[15px] text-white font-semibold truncate">
+              <span className="font-display text-[15px] text-gray-900 font-semibold truncate">
                 {platformAppName}
               </span>
             </div>
           ) : (
-            <div className="h-8 w-8 rounded-xl overflow-hidden mx-auto ring-1 ring-white/10">
-              <img 
-                src={platformLogo} 
-                alt={platformAppName} 
+            <div className="h-8 w-8 rounded-xl overflow-hidden mx-auto ring-1 ring-gray-200">
+              <img
+                src={platformLogo}
+                alt={platformAppName}
                 className="h-full w-full object-cover"
               />
             </div>
           )}
-          
+
           {/* Mobile Close Button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden text-white/60 hover:text-white hover:bg-white/10 rounded-xl h-8 w-8"
+            className="lg:hidden text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl h-8 w-8"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Navigation */}
-        <nav data-tour="sidebar-nav" className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <nav data-tour="sidebar-nav" className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
           {/* Super Admin Navigation */}
           {userRole?.role === "super_admin" ? (
             <>
@@ -353,21 +354,22 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
-                      isActive 
-                        ? "bg-purple-500/20 text-white shadow-sm backdrop-blur-sm" 
-                        : "text-white/60 hover:bg-white/8 hover:text-white/90"
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
+                      isActive
+                        ? "bg-purple-50 text-purple-600"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                     )}
                   >
-                    <item.icon className={cn(
-                      "h-[18px] w-[18px] flex-shrink-0",
+                    <item.icon strokeWidth={1.75} className={cn(
+                      "h-5 w-5 flex-shrink-0",
+                      isActive ? "text-purple-600" : "text-gray-400 group-hover:text-gray-600",
                       !showText && "mx-auto"
                     )} />
                     {showText && (
-                      <span className="font-medium text-[13px]">{item.name}</span>
+                      <span className={cn("text-sm", isActive ? "font-semibold" : "font-medium")}>{item.name}</span>
                     )}
                     {isActive && showText && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-purple-400 rounded-r-full" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-purple-600 rounded-r-full" />
                     )}
                   </NavLink>
                 );
@@ -443,7 +445,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               
               {/* Divider */}
               <div className={cn("py-3", showText ? "px-3" : "px-2")}>
-                <div className="border-t border-white/[0.06]" />
+                <div className="border-t border-gray-100" />
               </div>
               
               {/* Settings */}
@@ -466,7 +468,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               size="sm"
               onClick={handleInstallClick}
               className={cn(
-                "w-full rounded-xl bg-emerald/10 text-emerald hover:bg-emerald/20 border border-emerald/20",
+                "w-full rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200",
                 collapsed && !mobileOpen && "px-2"
               )}
             >
@@ -477,28 +479,28 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         )}
 
         {/* User Profile Section */}
-        <div className="border-t border-white/[0.06]">
+        <div className="border-t border-gray-100">
           {showText ? (
             <div className="p-3 space-y-3">
               {/* Agency/User Card */}
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.04]">
+              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50">
                 {userRole?.role === "super_admin" ? (
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
                     <Crown className="h-5 w-5 text-white" />
                   </div>
                 ) : (
-                  <Avatar className="h-10 w-10 rounded-xl border border-white/10 flex-shrink-0">
+                  <Avatar className="h-10 w-10 rounded-xl border border-gray-200 flex-shrink-0">
                     <AvatarImage src={agency?.logo_url || undefined} alt={agency?.name || "Logo"} className="object-cover" />
-                    <AvatarFallback className="bg-gradient-to-br from-emerald/30 to-emerald/10 text-emerald text-sm font-semibold rounded-xl">
+                    <AvatarFallback className="bg-blue-50 text-blue-600 text-sm font-semibold rounded-xl">
                       {agency?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}
                     </AvatarFallback>
                   </Avatar>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-white truncate">
+                  <p className="text-[13px] font-semibold text-gray-900 truncate">
                     {userRole?.role === "super_admin" ? "Super Admin" : (agency?.name || "Mon agence")}
                   </p>
-                  <p className="text-[11px] text-white/40 truncate">
+                  <p className="text-[11px] text-gray-500 truncate">
                     {userRole?.role === "super_admin" ? "Administrateur plateforme" : (agency?.account_type === "proprietaire" ? "Propriétaire" : "Agence")}
                   </p>
                 </div>
@@ -506,7 +508,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
 
               {/* Email & Role */}
               <div className="px-1 space-y-1.5">
-                <p className="text-[11px] text-white/40 truncate">
+                <p className="text-[11px] text-gray-400 truncate">
                   {user?.email}
                 </p>
                 {userRole && (
@@ -531,7 +533,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   await signOut();
                   navigate(getDedicatedLoginPath());
                 }}
-                className="w-full text-white/50 hover:text-white hover:bg-white/8 justify-start rounded-xl h-9"
+                className="w-full text-gray-500 hover:text-gray-900 hover:bg-gray-50 justify-start rounded-xl h-9"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 <span className="text-[13px]">Déconnexion</span>
@@ -544,9 +546,9 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   <Crown className="h-4 w-4 text-white" />
                 </div>
               ) : (
-                <Avatar className="h-8 w-8 rounded-xl border border-white/10">
+                <Avatar className="h-8 w-8 rounded-xl border border-gray-200">
                   <AvatarImage src={agency?.logo_url || undefined} alt={agency?.name || "Logo"} className="object-cover" />
-                  <AvatarFallback className="bg-gradient-to-br from-emerald/30 to-emerald/10 text-emerald text-xs font-semibold rounded-xl">
+                  <AvatarFallback className="bg-blue-50 text-blue-600 text-xs font-semibold rounded-xl">
                     {agency?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}
                   </AvatarFallback>
                 </Avatar>
@@ -570,7 +572,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   await signOut();
                   navigate(getDedicatedLoginPath());
                 }}
-                className="text-white/50 hover:text-white hover:bg-white/8 rounded-xl h-8 w-8"
+                className="text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-xl h-8 w-8"
                 title="Déconnexion"
               >
                 <LogOut className="h-4 w-4" />
@@ -580,12 +582,12 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         </div>
 
         {/* Collapse Toggle - Desktop only */}
-        <div className="p-2 border-t border-white/[0.06] hidden lg:block">
+        <div className="p-2 border-t border-gray-100 hidden lg:block">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onCollapsedChange(!collapsed)}
-            className="w-full text-white/40 hover:text-white/70 hover:bg-white/5 rounded-xl h-8"
+            className="w-full text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-xl h-8"
           >
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />

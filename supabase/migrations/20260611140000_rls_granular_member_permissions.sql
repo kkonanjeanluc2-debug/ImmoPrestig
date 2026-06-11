@@ -207,6 +207,10 @@ BEGIN
       ('owner_payouts', 'INSERT', 'can_create_owner_payouts')
     ) AS t(tbl, cmd, perm)
   LOOP
+    IF to_regclass('public.' || r.tbl) IS NULL THEN
+      RAISE NOTICE 'Table public.% absente : politique ignoree', r.tbl;
+      CONTINUE;
+    END IF;
     pol_name := format('perm %s %s', lower(r.cmd), r.perm);
     EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol_name, r.tbl);
     IF r.cmd = 'INSERT' THEN
@@ -227,3 +231,18 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+
+-- Vérification : la dernière ligne du résultat doit montrer
+-- fonction_dynamique = true et politiques_permissions > 90
+SELECT
+  EXISTS (
+    SELECT 1 FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname = 'has_member_permission_for_user'
+      AND p.prosrc LIKE '%to_jsonb%'
+  ) AS fonction_dynamique,
+  (SELECT count(*) FROM pg_policies
+   WHERE schemaname = 'public' AND policyname LIKE 'perm %') AS politiques_permissions,
+  (SELECT count(*) FROM public.member_permissions) AS lignes_member_permissions,
+  (SELECT count(*) FROM public.agency_members WHERE status = 'active') AS membres_actifs;

@@ -30,7 +30,9 @@ import {
   AlertTriangle as AlertTriangleIcon
 } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { fr } from "date-fns/locale";
 import { differenceInDays, differenceInMonths, isFuture, isPast, format } from "date-fns";
@@ -124,6 +126,22 @@ export default function Payments() {
   const showAdvancedTabs = !isLocataire && !isGestionnaire;
   const { hasFeature } = useFeatureAccess();
   const hasImpayes = hasFeature("gestion_impayes");
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+
+  // Detect return from GeniusPay redirect (success_url / cancel_url)
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus === "success") {
+      toast.success("Paiement confirmé ! Votre loyer est en cours de traitement.");
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      setSearchParams({}, { replace: true });
+    } else if (paymentStatus === "cancelled") {
+      toast.error("Paiement annulé.");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, queryClient, setSearchParams]);
 
   const { data: onlineAccountSetting } = usePlatformSetting("online_rent_account_enabled");
   const isAccountTabEnabled = onlineAccountSetting?.value !== "false";

@@ -1,7 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { PropertyCard } from "@/components/dashboard/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -12,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Grid3X3, List, Loader2, User, UserCheck, UserPlus, DoorOpen, Pencil, Eye, ChevronDown, ChevronRight, Users, Navigation } from "lucide-react";
+import { Search, Loader2, User, UserCheck, UserPlus, DoorOpen, Pencil, Eye, ChevronDown, ChevronRight, Users, Navigation } from "lucide-react";
 import { ExportDropdown } from "@/components/export/ExportDropdown";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -46,7 +45,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Properties = () => {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -290,30 +288,6 @@ const Properties = () => {
                 </SelectContent>
               </Select>
             )}
-            <div className="flex rounded-lg border border-border overflow-hidden">
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "rounded-none",
-                  viewMode === "grid" && "bg-muted"
-                )}
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "rounded-none",
-                  viewMode === "list" && "bg-muted"
-                )}
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -336,28 +310,8 @@ const Properties = () => {
           </div>
         )}
 
-        {/* Properties Grid/Table */}
+        {/* Properties Table */}
         {!isLoading && !error && filteredProperties.length > 0 && (
-          viewMode === "grid" ? (
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {filteredProperties.map((property, index) => (
-                <div 
-                  key={property.id} 
-                  style={{ animationDelay: `${index * 50}ms` }}
-                  className="animate-fade-in"
-                >
-                  <PropertyCard 
-                    property={property}
-                    onEdit={setEditingProperty}
-                    onDelete={setDeletingProperty}
-                    canEdit={canEdit}
-                    canDelete={canDelete}
-                    unitsSummary={unitsSummary[property.id]}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
             <div className="bg-card rounded-xl border border-border/50 shadow-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -716,7 +670,6 @@ const Properties = () => {
                 </table>
               </div>
             </div>
-          )
         )}
 
         {!isLoading && !error && filteredProperties.length === 0 && (

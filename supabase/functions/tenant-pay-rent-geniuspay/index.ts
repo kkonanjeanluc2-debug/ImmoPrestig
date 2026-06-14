@@ -158,6 +158,8 @@ Deno.serve(async (req) => {
 
     console.log(`Creating GeniusPay payment: amount=${Math.round(payAmount)}, sandbox=${isSandbox}`);
 
+    const webhookUrl = `${supabaseUrl}/functions/v1/geniuspay-webhook`;
+
     const requestBody = {
       amount: Math.round(payAmount),
       description: `Loyer ${dueMonth} - ${property?.title || ""}`,
@@ -172,6 +174,8 @@ Deno.serve(async (req) => {
         user_id: payment.user_id,
         type: "rent",
       },
+      callback_url: webhookUrl,
+      webhook_url: webhookUrl,
       success_url: `${appUrl}/payments?payment=success`,
       error_url: `${appUrl}/payments?payment=cancelled`,
     };

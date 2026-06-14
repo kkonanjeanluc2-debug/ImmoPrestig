@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTabSearchParam } from "@/hooks/useTabSearchParam";
 import { Trash2, RotateCcw, AlertTriangle, Users, Building2, Home, Clock, Map, Grid3X3, Layers, UserCheck, XCircle } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 const Trash = () => {
+  const [activeTrashTab, setTrashTab] = useTabSearchParam("tenants");
   const [confirmDelete, setConfirmDelete] = useState<{
     id: string;
     name: string;
@@ -228,7 +230,7 @@ const Trash = () => {
         </Alert>
 
         {/* Tabs */}
-        <Tabs defaultValue="tenants" className="space-y-4">
+        <Tabs value={activeTrashTab} onValueChange={setTrashTab} className="space-y-4">
           <TabsList className="h-auto flex-wrap gap-1 p-1 w-full lg:w-auto">
             <TabsTrigger value="tenants" className="gap-2">
               <Users className="h-4 w-4" />

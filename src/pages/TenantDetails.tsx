@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useTabSearchParam } from "@/hooks/useTabSearchParam";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useTenants, useDeleteTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,7 @@ const paymentStatusConfig = {
 const TenantDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [activeTenantTab, setTenantTab] = useTabSearchParam("payments");
   const { user } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useCurrentUserRole();
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
@@ -375,7 +377,7 @@ const TenantDetails = () => {
         </div>
 
         {/* Main Content with Tabs */}
-        <Tabs defaultValue="payments" className="w-full">
+        <Tabs value={activeTenantTab} onValueChange={setTenantTab} className="w-full">
           <TabsList className="flex flex-wrap h-auto gap-1 p-1 mb-6">
             <TabsTrigger value="payments" className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2">
               <Wallet className="h-4 w-4" />

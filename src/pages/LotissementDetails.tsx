@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { AIAdvisorChat } from "@/components/ai/AIAdvisorChat";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,8 @@ const LotissementDetails = () => {
   const { count: newProspectsCount, markAsSeen: markProspectsSeen } = useNewLotissementProspectsCount(id);
   // Prefetch ilots data for instant tab switching
   const { data: ilotsData } = useIlotsWithStats(id);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "parcelles";
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("list");
   const [showAddParcelle, setShowAddParcelle] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
@@ -273,8 +275,9 @@ const LotissementDetails = () => {
         <PeriodFilter value={revenuePeriod} onChange={setRevenuePeriod} />
 
         {/* Tabs */}
-        <Tabs defaultValue="parcelles" className="space-y-4" onValueChange={(val) => {
+        <Tabs value={activeTab} className="space-y-4" onValueChange={(val) => {
           if (val === "prospects") markProspectsSeen();
+          setSearchParams(prev => { prev.set("tab", val); return prev; }, { replace: true });
         }}>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

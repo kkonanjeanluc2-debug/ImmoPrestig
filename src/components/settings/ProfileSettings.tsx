@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUserProfile, useInvalidateUserProfile } from "@/hooks/useCurrentUserProfile";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, User, Mail, Check } from "lucide-react";
 import {
@@ -24,6 +25,7 @@ export function ProfileSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const invalidateProfile = useInvalidateUserProfile();
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
@@ -34,21 +36,8 @@ export function ProfileSettings() {
     avatar_url: "",
   });
 
-  // Cached query: instant display from cache, silent background refresh
-  const { data: profileData, isLoading: isProfileFetching } = useQuery({
-    queryKey: ["profile-settings", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-  });
+  // Shared cache with DashboardLayout — données déjà disponibles à l'arrivée sur cette page
+  const { data: profileData, isLoading: isProfileFetching } = useCurrentUserProfile();
 
   // Only show the spinner while there is nothing to display yet
   const isLoading = isProfileFetching && profileData === undefined;
@@ -79,7 +68,7 @@ export function ProfileSettings() {
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ["profile-settings", user.id] });
+      invalidateProfile();
       toast({
         title: "Profil mis à jour",
         description: "Vos informations ont été enregistrées avec succès.",
@@ -116,7 +105,7 @@ export function ProfileSettings() {
 
       setProfile((prev) => ({ ...prev, email: newEmail }));
       setNewEmail("");
-      queryClient.invalidateQueries({ queryKey: ["profile-settings", user.id] });
+      invalidateProfile();
 
       toast({
         title: "Email mis à jour",
@@ -180,7 +169,7 @@ export function ProfileSettings() {
         .update({ avatar_url: urlData.publicUrl })
         .eq("user_id", user.id);
 
-      queryClient.invalidateQueries({ queryKey: ["profile-settings", user.id] });
+      invalidateProfile();
       toast({
         title: "Avatar mis à jour",
         description: "Votre photo de profil a été modifiée.",

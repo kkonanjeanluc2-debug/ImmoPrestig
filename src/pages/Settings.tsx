@@ -62,8 +62,8 @@ const Settings = () => {
   // Check if user has access to any settings tab
   const hasAnySettingsAccess = canAccessAgencyTab || canAccessManagementTab || canAccessSubscriptionTab || canAccessNotificationsTab || canAccessWhatsappTab || canAccessSaleContractsTab || canAccessPromesseVenteTab || canAccessReservationFormsTab || canManageTeam || canManageAutomations || canManageBranding || canManageTemplates;
   
-  // Read tab from URL params
-  const [searchParams] = useSearchParams();
+  // Read + write tab via URL params so refresh stays on the same tab
+  const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get("tab");
 
   // Default tab: pick first accessible tab
@@ -94,7 +94,7 @@ const Settings = () => {
             </p>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchParams(prev => { prev.set("tab", val); return prev; }, { replace: true }); }} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4 h-auto gap-2 bg-transparent p-0 max-w-lg">
               <TabsTrigger
                 value="profile"
@@ -160,7 +160,7 @@ const Settings = () => {
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+        <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchParams(prev => { prev.set("tab", val); return prev; }, { replace: true }); }} className="space-y-4 sm:space-y-6">
           <TabsList data-tour="page-tabs" className="flex flex-wrap h-auto gap-1 p-1 overflow-x-auto">
             {canAccessAgencyTab && (
               <TabsTrigger

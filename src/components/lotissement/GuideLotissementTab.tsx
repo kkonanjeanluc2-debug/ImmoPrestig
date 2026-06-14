@@ -290,7 +290,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     { key: "nature_piece", label: "Nature Pièce" },
     { key: "numero_piece", label: "N° Pièce" },
     { key: "date_piece", label: "Date Pièce" },
-    { key: "status", label: "Statut", format: (v) => v === "vendu" ? "Vendu" : v === "reserve" ? "Réservé" : v === "cede" ? "Cédé" : v === "mute" ? "Muté" : "Disponible" },
+    { key: "status", label: "Statut", format: (v) => v === "vendu" ? "Vendu" : v === "reserve" ? "Réservé" : v === "cede" ? "Cédé" : v === "mute" ? "Muté" : v === "prefinance" ? "Préfinancé" : "Disponible" },
   ];
 
   const handleExportPDF = () => {
@@ -323,6 +323,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     if (s === "reserve") return "secondary";
     if (s === "cede") return "outline";
     if (s === "mute") return "default";
+    if (s === "prefinance") return "secondary";
     return "outline";
   };
 
@@ -331,6 +332,7 @@ export function GuideLotissementTab({ lotissementId, lotissementName, guideTempl
     if (s === "reserve") return "Réservé";
     if (s === "cede") return "Cédé";
     if (s === "mute") return "Muté";
+    if (s === "prefinance") return "Préfinancé";
     return "Disponible";
   };
 

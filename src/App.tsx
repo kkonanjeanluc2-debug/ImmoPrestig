@@ -19,6 +19,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import PageSkeleton from "@/components/PageSkeleton";
 import AppEntryRoute from "@/components/routing/AppEntryRoute";
 import StandaloneSlugGuard from "@/components/routing/StandaloneSlugGuard";
+import RouteRestorer from "@/components/routing/RouteRestorer";
 
 
 // Lazy load pages for code splitting
@@ -168,6 +169,7 @@ const App = () => {
             <InactivityHandler />
             <DataPreloader />
             <StandaloneSlugGuard />
+            <RouteRestorer />
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Routes>

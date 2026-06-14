@@ -16,7 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, User, CreditCard, Banknote, Smartphone, Building2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Loader2, Plus, User, CreditCard, Banknote, Smartphone, Building2, ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Parcelle } from "@/hooks/useParcelles";
 import { useAcquereurs, useCreateAcquereur } from "@/hooks/useAcquereurs";
 import { useCreateVenteParcelle, PaymentType } from "@/hooks/useVentesParcelles";
@@ -71,6 +74,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     name: "",
     phone: "",
     email: "",
+    id_type: "cni" as "cni" | "passeport" | "permis" | "extrait" | "carte_consulaire",
     cni_number: "",
     rccm: "",
     representant: "",
@@ -79,6 +83,8 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     notes: "",
   });
   const [submittingPref, setSubmittingPref] = useState(false);
+  const [acquereurOpen, setAcquereurOpen] = useState(false);
+  const [prefinanceurOpen, setPrefinanceurOpen] = useState(false);
 
   const [paymentType, setPaymentType] = useState<PaymentType>("comptant");
   const [paymentMethod, setPaymentMethod] = useState<string>("especes");
@@ -288,25 +294,46 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
               </RadioGroup>
 
               {prefMode === "existing" ? (
-                <Select value={prefinanceurId} onValueChange={setPrefinanceurId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un préfinanceur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {prefinanceurs?.length ? prefinanceurs.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          {p.name} {p.phone && `(${p.phone})`}
-                        </div>
-                      </SelectItem>
-                    )) : (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        Aucun préfinanceur enregistré
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
+                <Popover open={prefinanceurOpen} onOpenChange={setPrefinanceurOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={prefinanceurOpen}
+                      className="w-full justify-between font-normal"
+                    >
+                      {prefinanceurId
+                        ? prefinanceurs?.find(p => p.id === prefinanceurId)?.name ?? "Sélectionner un préfinanceur"
+                        : "Sélectionner un préfinanceur"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Rechercher un préfinanceur..." />
+                      <CommandList>
+                        <CommandEmpty>Aucun préfinanceur trouvé.</CommandEmpty>
+                        <CommandGroup>
+                          {prefinanceurs?.map(p => (
+                            <CommandItem
+                              key={p.id}
+                              value={`${p.name} ${p.phone ?? ""}`}
+                              onSelect={() => {
+                                setPrefinanceurId(p.id);
+                                setPrefinanceurOpen(false);
+                              }}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", prefinanceurId === p.id ? "opacity-100" : "opacity-0")} />
+                              <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                              <span>{p.name}</span>
+                              {p.phone && <span className="ml-1 text-muted-foreground text-sm">({p.phone})</span>}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               ) : (
                 <div className="grid gap-3 p-3 bg-muted/50 rounded-lg">
                   <div className="grid grid-cols-2 gap-3">
@@ -373,14 +400,53 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                         </div>
                       </>
                     ) : (
-                      <div className="space-y-2">
-                        <Label htmlFor="pref-cni">N° CNI</Label>
-                        <Input
-                          id="pref-cni"
-                          value={newPrefinanceur.cni_number}
-                          onChange={(e) => setNewPrefinanceur({ ...newPrefinanceur, cni_number: e.target.value })}
-                        />
-                      </div>
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="pref-id-type">Type de pièce</Label>
+                          <Select
+                            value={newPrefinanceur.id_type}
+                            onValueChange={(v) => setNewPrefinanceur({ ...newPrefinanceur, id_type: v as any, cni_number: "" })}
+                          >
+                            <SelectTrigger id="pref-id-type">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="cni">CNI</SelectItem>
+                              <SelectItem value="passeport">Passeport</SelectItem>
+                              <SelectItem value="permis">Permis de conduire</SelectItem>
+                              <SelectItem value="extrait">Extrait de naissance</SelectItem>
+                              <SelectItem value="carte_consulaire">Carte consulaire</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="pref-cni">{ID_DOC_RULES[newPrefinanceur.id_type].label}</Label>
+                          <Input
+                            id="pref-cni"
+                            value={newPrefinanceur.cni_number}
+                            maxLength={ID_DOC_RULES[newPrefinanceur.id_type].maxLength}
+                            onChange={(e) => setNewPrefinanceur({
+                              ...newPrefinanceur,
+                              cni_number: sanitizeIdNumber(newPrefinanceur.id_type, e.target.value),
+                            })}
+                            placeholder={
+                              newPrefinanceur.id_type === "cni" ? "CI00123456789" :
+                              newPrefinanceur.id_type === "passeport" ? "23AA12345" :
+                              newPrefinanceur.id_type === "permis" ? "PC0123456" :
+                              newPrefinanceur.id_type === "carte_consulaire" ? "N° carte consulaire" :
+                              "N° d'extrait"
+                            }
+                          />
+                          {(() => {
+                            const err = validateIdNumber(newPrefinanceur.id_type, newPrefinanceur.cni_number);
+                            return err ? (
+                              <p className="text-xs text-destructive">{err}</p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">{ID_DOC_RULES[newPrefinanceur.id_type].hint}</p>
+                            );
+                          })()}
+                        </div>
+                      </>
                     )}
                     <div className="col-span-2 space-y-2">
                       <Label htmlFor="pref-address">Adresse</Label>
@@ -429,21 +495,46 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
             </RadioGroup>
 
             {mode === "existing" ? (
-              <Select value={acquereurId} onValueChange={setAcquereurId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un acquéreur" />
-                </SelectTrigger>
-                <SelectContent>
-                  {acquereurs?.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        {a.name} {a.phone && `(${a.phone})`}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={acquereurOpen} onOpenChange={setAcquereurOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={acquereurOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {acquereurId
+                      ? acquereurs?.find(a => a.id === acquereurId)?.name ?? "Sélectionner un acquéreur"
+                      : "Sélectionner un acquéreur"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Rechercher un acquéreur..." />
+                    <CommandList>
+                      <CommandEmpty>Aucun acquéreur trouvé.</CommandEmpty>
+                      <CommandGroup>
+                        {acquereurs?.map(a => (
+                          <CommandItem
+                            key={a.id}
+                            value={`${a.name} ${a.phone ?? ""}`}
+                            onSelect={() => {
+                              setAcquereurId(a.id);
+                              setAcquereurOpen(false);
+                            }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", acquereurId === a.id ? "opacity-100" : "opacity-0")} />
+                            <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <span>{a.name}</span>
+                            {a.phone && <span className="ml-1 text-muted-foreground text-sm">({a.phone})</span>}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             ) : (
               <div className="grid gap-3 p-3 bg-muted/50 rounded-lg">
                 <div className="grid grid-cols-2 gap-3">

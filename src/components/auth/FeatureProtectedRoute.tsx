@@ -13,20 +13,27 @@ export function FeatureProtectedRoute({ feature, children }: FeatureProtectedRou
   const navigate = useNavigate();
   const { hasFeature, isLoading, requiredPlanForFeature } = useFeatureAccess();
   const hasRedirected = useRef(false);
-  const wasAccessible = useRef(false);
+
+  // Persist feature access in sessionStorage so a page refresh doesn't trigger
+  // a premature redirect before the subscription data reloads.
+  const sessionKey = `_feat_ok_${feature}`;
+  const wasAccessible = useRef(!!sessionStorage.getItem(sessionKey));
 
   const featureAllowed = hasFeature(feature);
 
-  // Track if feature was initially accessible to prevent redirect on refetch glitches
+  // Mark access as granted (in-memory + sessionStorage)
   useEffect(() => {
     if (!isLoading && featureAllowed) {
+      sessionStorage.setItem(sessionKey, "1");
       wasAccessible.current = true;
     }
-  }, [isLoading, featureAllowed]);
+  }, [isLoading, featureAllowed, sessionKey]);
 
+  // Redirect only when we're certain access is denied and it was never granted this session
   useEffect(() => {
     if (!isLoading && !featureAllowed && !hasRedirected.current && !wasAccessible.current) {
       hasRedirected.current = true;
+      sessionStorage.removeItem(sessionKey); // Clean up stale flag if any
       const requiredPlan = requiredPlanForFeature(feature);
       toast.error(`Fonctionnalité non disponible`, {
         description: `Cette fonctionnalité nécessite le forfait ${requiredPlan} ou supérieur.`,
@@ -37,7 +44,7 @@ export function FeatureProtectedRoute({ feature, children }: FeatureProtectedRou
       });
       navigate("/dashboard", { replace: true });
     }
-  }, [isLoading, featureAllowed, feature, navigate, requiredPlanForFeature]);
+  }, [isLoading, featureAllowed, feature, navigate, requiredPlanForFeature, sessionKey]);
 
   if (isLoading) {
     return (

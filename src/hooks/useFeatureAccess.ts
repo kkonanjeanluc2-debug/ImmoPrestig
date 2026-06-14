@@ -62,7 +62,7 @@ export interface FeatureAccessResult {
 }
 
 export function useFeatureAccess(): FeatureAccessResult {
-  const { data: subscription, isLoading } = useAgencySubscription();
+  const { data: subscription, isPending } = useAgencySubscription();
 
   return useMemo(() => {
     const planName = subscription?.plan?.name ?? "Gratuit";
@@ -105,10 +105,10 @@ export function useFeatureAccess(): FeatureAccessResult {
     return {
       hasFeature,
       hasFeatureByName,
-      isLoading,
+      isLoading: isPending,
       planName,
       planFeatures,
       requiredPlanForFeature,
     };
-  }, [subscription, isLoading]);
+  }, [subscription, isPending]);
 }

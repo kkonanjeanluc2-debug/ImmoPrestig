@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useTabSearchParam } from "@/hooks/useTabSearchParam";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useOwners, useDeleteOwner } from "@/hooks/useOwners";
 import { useProperties } from "@/hooks/useProperties";
@@ -68,6 +69,7 @@ import {
 const OwnerDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [activeOwnerTab, setOwnerTab] = useTabSearchParam("properties");
   const { data: owners = [], isLoading: ownersLoading } = useOwners();
   const { data: properties = [] } = useProperties();
   const { data: payments = [] } = usePayments();
@@ -739,7 +741,7 @@ const OwnerDetails = () => {
             <OwnerRevenueChart payments={payments} tenantIds={ownerTenantIds} />
 
             {/* Tabs for Properties, Tenants and Interventions */}
-            <Tabs defaultValue="properties" className="w-full">
+            <Tabs value={activeOwnerTab} onValueChange={setOwnerTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="properties" className="gap-2">
                   <Building2 className="h-4 w-4" />

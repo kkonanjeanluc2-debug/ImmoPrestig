@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserRole, ROLE_LABELS, AppRole } from "@/hooks/useUserRoles";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUserProfile } from "@/hooks/useCurrentUserProfile";
 import { useAgency } from "@/hooks/useAgency";
 import { usePrefetchRoute } from "@/hooks/usePrefetchRoutes";
 import {
@@ -61,21 +62,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
   const { data: userRole } = useCurrentUserRole();
   const navigate = useNavigate();
-  // Fetch user profile for display name
-  const { data: profile } = useQuery({
-    queryKey: ["user-profile", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("full_name, email")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
+  const { data: profile } = useCurrentUserProfile();
   
   const schedule = getSchedule();
   const isInPeriod = isInDNDPeriod();

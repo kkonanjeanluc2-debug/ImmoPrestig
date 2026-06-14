@@ -36,6 +36,20 @@ serve(async (req: Request) => {
 
     const userId = claimsData.claims.sub as string;
 
+    // Client service role réutilisé pour rate limit + insert
+    const serviceSupabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Rate limit : max 5 OTP actifs (non expirés) par utilisateur
+    const { count: activeCount } = await serviceSupabase
+      .from("payout_otp_codes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("expires_at", new Date().toISOString());
+    if ((activeCount ?? 0) >= 5) {
+      return new Response(JSON.stringify({ error: "Trop de demandes. Veuillez attendre l'expiration des codes précédents." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const { ownerName, ownerEmail, amount, payoutMonth, payoutYear, paymentMethod, agencyName, agencyEmail } = await req.json();
 
     if (!ownerName || !ownerEmail) {
@@ -47,9 +61,6 @@ serve(async (req: Request) => {
     const otpArray = new Uint32Array(1);
     crypto.getRandomValues(otpArray);
     const otp = String(100000 + (otpArray[0] % 900000)).padStart(6, "0");
-    
-    // Store OTP with 15 min expiry
-    const serviceSupabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15);

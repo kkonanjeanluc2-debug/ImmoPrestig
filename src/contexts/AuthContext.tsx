@@ -40,16 +40,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("[Auth] Event:", event, "Session:", !!session);
+        if (import.meta.env.DEV) console.log("[Auth] Event:", event, "Session:", !!session);
 
         // Ignore INITIAL_SESSION event if we already handled it via getSession
         if (event === 'INITIAL_SESSION' && initialSessionChecked) {
           return;
         }
-        
+
         // If token refresh failed, try to recover the session before logging out
         if (event === 'TOKEN_REFRESHED' && !session) {
-          console.warn("[Auth] Token refresh returned no session, attempting recovery...");
+          if (import.meta.env.DEV) console.warn("[Auth] Token refresh returned no session, attempting recovery...");
           const { data } = await supabase.auth.getSession();
           if (data.session) {
             setSession(data.session);
@@ -57,12 +57,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
           }
         }
-        
+
         // Don't immediately clear user on transient SIGNED_OUT if we had a session
         if (event === 'SIGNED_OUT' && user) {
           const { data } = await supabase.auth.getSession();
           if (data.session) {
-            console.log("[Auth] Recovered session after SIGNED_OUT event");
+            if (import.meta.env.DEV) console.log("[Auth] Recovered session after SIGNED_OUT event");
             setSession(data.session);
             setUser(data.session.user);
             return;
@@ -88,12 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const now = Math.floor(Date.now() / 1000);
         // Refresh if token expires in less than 5 minutes
         if (expiresAt - now < 300) {
-          console.log("[Auth] Proactively refreshing session...");
           const { data, error } = await supabase.auth.refreshSession();
-          if (error) {
+          if (error && import.meta.env.DEV) {
             console.error("[Auth] Proactive refresh failed:", error.message);
-          } else if (data.session) {
-            console.log("[Auth] Session refreshed successfully");
           }
         }
       }

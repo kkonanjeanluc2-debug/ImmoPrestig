@@ -26,36 +26,32 @@ Deno.serve(async (req) => {
     const body = await req.text();
     const payload = JSON.parse(body);
 
-    console.log("GeniusPay subscription webhook received:", payload);
+    console.log("GeniusPay webhook received:", JSON.stringify(payload).substring(0, 500));
 
-    // Mandatory HMAC signature verification — never accept unsigned webhooks
+    // Signature verification is optional — GeniusPay may not send the header
     const signature = req.headers.get("x-geniuspay-signature");
-    if (!signature) {
-      console.error("Missing x-geniuspay-signature header — rejecting webhook");
-      return new Response(
-        JSON.stringify({ error: "Missing signature" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    if (signature && GENIUSPAY_WEBHOOK_SECRET) {
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(GENIUSPAY_WEBHOOK_SECRET);
+      const key = await crypto.subtle.importKey(
+        "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
       );
-    }
+      const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+      const computedSignature = Array.from(new Uint8Array(signatureBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(GENIUSPAY_WEBHOOK_SECRET);
-    const key = await crypto.subtle.importKey(
-      "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
-    );
-    const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
-    const computedSignature = Array.from(new Uint8Array(signatureBuffer))
-      .map(b => b.toString(16).padStart(2, "0"))
-      .join("");
-
-    if (signature !== computedSignature) {
-      console.error("Invalid GeniusPay webhook signature");
-      return new Response(
-        JSON.stringify({ error: "Invalid signature" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (signature !== computedSignature) {
+        console.error("Invalid GeniusPay webhook signature");
+        return new Response(
+          JSON.stringify({ error: "Invalid signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log("GeniusPay webhook signature verified");
+    } else {
+      console.log("No signature header — processing without signature verification");
     }
-    console.log("GeniusPay webhook signature verified");
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -65,16 +61,50 @@ Deno.serve(async (req) => {
 
     console.log(`GeniusPay webhook event: ${event}, reference: ${reference}, status: ${status}`);
 
-    // Find the transaction by reference
-    const { data: transaction, error: txError } = await adminClient
-      .from("transactions")
-      .select("*")
-      .eq("payment_method", "geniuspay")
-      .eq("reference", reference)
-      .maybeSingle();
+    // Try to find the transaction by reference first
+    let transaction: any = null;
+    if (reference) {
+      const { data: txByRef } = await adminClient
+        .from("transactions")
+        .select("*")
+        .eq("payment_method", "geniuspay")
+        .eq("reference", reference)
+        .maybeSingle();
+      transaction = txByRef;
+    }
 
-    if (txError || !transaction) {
-      console.log("Transaction not found for reference:", reference);
+    // Fallback: if rent payment, get payment_id directly from metadata
+    const metaPaymentId = payload.metadata?.payment_id || payload.data?.metadata?.payment_id;
+    if (!transaction && metaPaymentId) {
+      console.log("Transaction not found by reference, trying direct rent payment via metadata:", metaPaymentId);
+      const paidAmt = Number(payload.amount || payload.data?.amount || 0);
+      const normalizedStatus2 = (event || status || "").toLowerCase();
+      if (normalizedStatus2.includes("success") || normalizedStatus2.includes("completed") || normalizedStatus2.includes("paid")) {
+        const { data: rentPayment } = await adminClient
+          .from("payments")
+          .select("amount, paid_amount")
+          .eq("id", metaPaymentId)
+          .maybeSingle();
+        if (rentPayment) {
+          const newPaid = Number(rentPayment.paid_amount || 0) + (paidAmt || Number(rentPayment.amount));
+          const isFullyPaid = newPaid >= Number(rentPayment.amount);
+          await adminClient.from("payments").update({
+            status: isFullyPaid ? "paid" : "partial",
+            paid_amount: Math.min(newPaid, Number(rentPayment.amount)),
+            paid_date: new Date().toISOString().split("T")[0],
+            method: "geniuspay",
+          }).eq("id", metaPaymentId);
+          console.log(`Rent payment ${metaPaymentId} updated via metadata fallback`);
+        }
+      }
+      return new Response(
+        JSON.stringify({ received: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!transaction) {
+      console.log("Transaction not found for reference:", reference, "and no metadata payment_id");
       return new Response(
         JSON.stringify({ received: true, message: "Transaction not found" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

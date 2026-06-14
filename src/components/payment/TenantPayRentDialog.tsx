@@ -154,12 +154,12 @@ export function TenantPayRentDialog({
     }
   };
 
-  const waitForPaymentUpdate = async (maxAttempts = 60) => {
+  const waitForPaymentUpdate = async (id: string, maxAttempts = 60) => {
     for (let i = 0; i < maxAttempts; i++) {
       const { data, error } = await supabase
         .from("payments")
         .select("status, paid_amount")
-        .eq("id", paymentId)
+        .eq("id", id)
         .single();
 
       // Consider success if status changed to paid OR paid_amount increased
@@ -303,7 +303,7 @@ export function TenantPayRentDialog({
           const verified = await verifyAndFinalizeKkiapayPayment(transactionId);
 
           // Attendre la propagation du statut avant de rafraîchir l'UI
-          const paid = verified ? await waitForPaymentUpdate() : false;
+          const paid = verified ? await waitForPaymentUpdate(currentPaymentId) : false;
 
           if (paid) {
             toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");
@@ -363,7 +363,7 @@ export function TenantPayRentDialog({
         originalPaidAmount.current = paidAmount;
 
         // Extended polling (2 minutes) + visibility listener as backup
-        const paid = await waitForPaymentUpdate(60);
+        const paid = await waitForPaymentUpdate(currentPaymentId, 60);
         if (paid) {
           waitingForExternalPayment.current = false;
           toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");

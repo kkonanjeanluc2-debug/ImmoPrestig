@@ -385,10 +385,14 @@ export function CollectPaymentDialog({
 
       setOpen(false);
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
+      const msg: string = error?.message || "";
+      const alreadyPaid = msg.includes("déjà été payé") || msg.includes("already paid");
       toast({
-        title: "Erreur",
-        description: "Impossible d'encaisser le paiement.",
+        title: alreadyPaid ? "Paiement déjà enregistré" : "Erreur",
+        description: alreadyPaid
+          ? "Ce mois a déjà été encaissé pour ce locataire. Rafraîchissez la liste pour voir le paiement."
+          : (msg || "Impossible d'encaisser le paiement."),
         variant: "destructive",
       });
     }

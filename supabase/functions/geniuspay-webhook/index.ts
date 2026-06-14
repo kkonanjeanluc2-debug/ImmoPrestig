@@ -102,47 +102,86 @@ Deno.serve(async (req) => {
 
     if (normalizedStatus === "completed") {
       const details = transaction.details as Record<string, unknown> || {};
-      const planId = details.plan_id as string;
-      const billingCycle = details.billing_cycle as string || "monthly";
+      const transactionType = details.type as string;
 
-      if (planId && transaction.user_id) {
-        // Get user agency
-        const { data: agency } = await adminClient
-          .from("agencies")
-          .select("id")
-          .eq("user_id", transaction.user_id)
-          .maybeSingle();
+      if (transactionType === "rent") {
+        // Handle rent payment: mark the corresponding payment record as paid
+        const rentPaymentId = details.payment_id as string;
+        if (rentPaymentId) {
+          const { data: existingPayment } = await adminClient
+            .from("payments")
+            .select("amount, paid_amount")
+            .eq("id", rentPaymentId)
+            .maybeSingle();
 
-        if (agency) {
-          const now = new Date();
-          const endsAt = new Date(now);
-          const cycleMonths: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
-          endsAt.setMonth(endsAt.getMonth() + (cycleMonths[billingCycle] || 1));
+          if (existingPayment) {
+            const newPaidAmount = Number(existingPayment.paid_amount || 0) + Number(transaction.amount || 0);
+            const isFullyPaid = newPaidAmount >= Number(existingPayment.amount);
 
-          await adminClient
-            .from("agency_subscriptions")
-            .upsert({
-              agency_id: agency.id,
-              plan_id: planId,
-              status: "active",
-              billing_cycle: billingCycle,
-              starts_at: now.toISOString(),
-              ends_at: endsAt.toISOString(),
-              updated_at: now.toISOString(),
-            }, { onConflict: "agency_id" });
+            await adminClient
+              .from("payments")
+              .update({
+                status: isFullyPaid ? "paid" : "partial",
+                paid_amount: newPaidAmount,
+                paid_date: new Date().toISOString().split("T")[0],
+                method: "geniuspay",
+              })
+              .eq("id", rentPaymentId);
 
-          console.log(`Subscription activated for agency ${agency.id}`);
+            await adminClient.from("notifications").insert({
+              user_id: transaction.user_id,
+              type: "payment",
+              title: "Paiement de loyer reçu",
+              message: `Un loyer de ${Number(transaction.amount).toLocaleString("fr-FR")} F CFA a été confirmé via GeniusPay.`,
+              entity_type: "payment",
+              entity_id: rentPaymentId,
+            });
+
+            console.log(`Rent payment ${rentPaymentId} marked as ${isFullyPaid ? "paid" : "partial"}`);
+          }
         }
-      }
+      } else {
+        // Handle subscription payment
+        const planId = details.plan_id as string;
+        const billingCycle = details.billing_cycle as string || "monthly";
 
-      // Notify user
-      await adminClient.from("notifications").insert({
-        user_id: transaction.user_id,
-        type: "payment",
-        title: "Paiement confirmé",
-        message: "Votre paiement d'abonnement via GeniusPay a été confirmé.",
-        entity_type: "subscription",
-      });
+        if (planId && transaction.user_id) {
+          const { data: agency } = await adminClient
+            .from("agencies")
+            .select("id")
+            .eq("user_id", transaction.user_id)
+            .maybeSingle();
+
+          if (agency) {
+            const now = new Date();
+            const endsAt = new Date(now);
+            const cycleMonths: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
+            endsAt.setMonth(endsAt.getMonth() + (cycleMonths[billingCycle] || 1));
+
+            await adminClient
+              .from("agency_subscriptions")
+              .upsert({
+                agency_id: agency.id,
+                plan_id: planId,
+                status: "active",
+                billing_cycle: billingCycle,
+                starts_at: now.toISOString(),
+                ends_at: endsAt.toISOString(),
+                updated_at: now.toISOString(),
+              }, { onConflict: "agency_id" });
+
+            console.log(`Subscription activated for agency ${agency.id}`);
+          }
+        }
+
+        await adminClient.from("notifications").insert({
+          user_id: transaction.user_id,
+          type: "payment",
+          title: "Paiement confirmé",
+          message: "Votre paiement d'abonnement via GeniusPay a été confirmé.",
+          entity_type: "subscription",
+        });
+      }
     }
 
     return new Response(

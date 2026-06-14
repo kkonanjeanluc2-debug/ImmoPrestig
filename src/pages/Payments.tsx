@@ -61,6 +61,7 @@ import { Navigate } from "react-router-dom";
 import { usePlatformSetting } from "@/hooks/usePlatformSettings";
 import { UnpaidCasesList } from "@/components/impayes/UnpaidCasesList";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { useRef } from "react";
 const statusConfig = {
   paid: { 
     label: "Payé", 
@@ -112,6 +113,7 @@ export default function Payments() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<"payments" | "impayes" | "commissions" | "account">("payments");
+  const paymentsListRef = useRef<HTMLDivElement>(null);
   const [periodFilter, setPeriodFilter] = useState<PeriodValue>(() => getDefaultPeriod({ mode: "full-period" }));
   const { hasPermission, role, isLoading: permLoading } = usePermissions();
   const canCreate = hasPermission("can_create_payments");
@@ -613,7 +615,7 @@ export default function Payments() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto" ref={paymentsListRef}>
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-muted/40 hover:bg-muted/40">
@@ -772,6 +774,10 @@ export default function Payments() {
                                         paymentMonths={(payment as any).payment_months || undefined}
                                         isVirtual={(payment as any)._isVirtual || false}
                                         tenantId={payment.tenant_id}
+                                        onSuccess={() => {
+                                          // Scroll to top of list so the newly paid entry is visible
+                                          paymentsListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                        }}
                                       />
                                     )}
                                   </div>

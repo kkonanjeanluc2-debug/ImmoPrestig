@@ -270,7 +270,8 @@ export const useCreatePayment = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      // refetchQueries force un rechargement immédiat (pas seulement marquer comme stale)
+      queryClient.refetchQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["comptabilite-payments"] });
     },
@@ -351,7 +352,7 @@ export const useUpdatePayment = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.refetchQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["unpaid-cases"] });

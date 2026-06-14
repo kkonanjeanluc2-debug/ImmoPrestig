@@ -226,6 +226,26 @@ Deno.serve(async (req) => {
 
     console.log(`GeniusPay rent checkout created for payment ${payment_id}, reference: ${paymentData.reference || paymentData.id}`);
 
+    // Record pending transaction so the webhook can update the payment status
+    try {
+      await adminClient.from("transactions").insert({
+        user_id: payment.user_id,
+        amount: Math.round(payAmount),
+        type: "rent",
+        status: "pending",
+        payment_method: "geniuspay",
+        reference: paymentData.reference || paymentData.id || "",
+        details: {
+          type: "rent",
+          payment_id: payment_id,
+          tenant_id: payment.tenant_id,
+          geniuspay_reference: paymentData.reference || paymentData.id,
+        },
+      });
+    } catch (txErr) {
+      console.error("Failed to record transaction (non-fatal):", txErr);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

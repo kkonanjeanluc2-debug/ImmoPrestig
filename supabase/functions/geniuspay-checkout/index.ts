@@ -69,6 +69,8 @@ Deno.serve(async (req) => {
       ? "https://sandbox.pay.genius.ci/api/v1/merchant/payments"
       : "https://pay.genius.ci/api/v1/merchant/payments";
 
+    const webhookUrl = `${supabaseUrl}/functions/v1/geniuspay-webhook`;
+
     // Create GeniusPay checkout session via API
     console.log(`GeniusPay checkout: sandbox=${isSandbox}, url=${baseUrl}, amount=${Math.round(amount)}`);
 
@@ -93,6 +95,8 @@ Deno.serve(async (req) => {
           billing_cycle: billing_cycle || "monthly",
           type: "subscription",
         },
+        callback_url: webhookUrl,
+        webhook_url: webhookUrl,
         success_url: `https://immoprestigeci.com/settings?payment=success`,
         cancel_url: `https://immoprestigeci.com/settings?payment=cancelled`,
       }),
@@ -121,21 +125,6 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // Record pending transaction
-    await adminClient.from("transactions").insert({
-      user_id: userId,
-      amount,
-      type: "subscription",
-      status: "pending",
-      payment_method: "geniuspay",
-      reference: paymentData.reference || paymentData.id || "",
-      details: {
-        plan_id,
-        billing_cycle,
-        geniuspay_reference: paymentData.reference || paymentData.id,
-      },
-    });
 
     return new Response(
       JSON.stringify({

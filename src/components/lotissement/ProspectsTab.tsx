@@ -494,8 +494,24 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
                               Vendu
                             </Badge>
                           ) : (() => {
-                            const canConvert = canEdit || (isGestionnaire && prospect.assigned_to === user?.id);
+                            const parcelleStatus = parcelles?.find(p => p.id === prospect.parcelle_id)?.status;
+                            const lotDejaVendu = parcelleStatus === "vendu";
+                            const canConvert = !lotDejaVendu && (canEdit || (isGestionnaire && prospect.assigned_to === user?.id));
                             const showMenu = canConvert || canDelete;
+
+                            if (lotDejaVendu) {
+                              return (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant="outline" className="bg-gray-100 text-gray-500 border-gray-300 cursor-default">
+                                      Lot vendu
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Ce lot a déjà été vendu à un autre prospect</TooltipContent>
+                                </Tooltip>
+                              );
+                            }
+
                             return showMenu ? (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>

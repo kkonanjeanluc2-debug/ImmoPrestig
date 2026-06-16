@@ -506,19 +506,49 @@ export function SubscriptionCheckoutDialog({
 
        // GeniusPay redirect
        if (provider === "geniuspay" && data?.success && data?.checkout_url) {
-         // Open in new tab for GeniusPay
+         const gpReference = data.reference as string | undefined;
          window.open(data.checkout_url, "_blank");
          toast({
            title: "Redirection vers GeniusPay",
            description: "Finalisez votre paiement dans l'onglet ouvert. Les données se mettront à jour automatiquement.",
          });
          onOpenChange(false);
-         
-         // Set external payment tracking
+
          if (plan) {
            waitingForExternalPayment.current = true;
            expectedPlanIdRef.current = plan.id;
-           pollSubscriptionUpdate(plan.id, 60);
+
+           // Poll: check DB first, then actively verify with GeniusPay API
+           const pollWithVerify = async (expectedPlanId: string, ref: string | undefined, maxAttempts = 30) => {
+             const userId = (await supabase.auth.getUser()).data.user?.id;
+             for (let i = 0; i < maxAttempts; i++) {
+               await new Promise(r => setTimeout(r, 4000));
+               await queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+               if (agency?.id) {
+                 const { data: updatedSub } = await supabase
+                   .from("agency_subscriptions").select("plan_id").eq("agency_id", agency.id).single();
+                 if (updatedSub?.plan_id === expectedPlanId) {
+                   waitingForExternalPayment.current = false;
+                   toast({ title: "Forfait activé !", description: "Votre forfait a été activé avec succès." });
+                   return true;
+                 }
+               }
+               // Every 3 iterations, actively verify with GeniusPay
+               if (ref && userId && i % 3 === 2) {
+                 const { data: vd } = await supabase.functions.invoke("geniuspay-verify-payment", {
+                   body: { reference: ref, type: "subscription", user_id: userId, plan_id: expectedPlanId, billing_cycle: billingCycle },
+                 });
+                 if (vd?.verified) {
+                   await queryClient.invalidateQueries({ queryKey: ["agency-subscription"] });
+                   waitingForExternalPayment.current = false;
+                   toast({ title: "Forfait activé !", description: "Votre forfait a été activé via GeniusPay." });
+                   return true;
+                 }
+               }
+             }
+             return false;
+           };
+           pollWithVerify(plan.id, gpReference);
          }
          return;
        }

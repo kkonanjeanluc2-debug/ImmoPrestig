@@ -354,6 +354,7 @@ export function TenantPayRentDialog({
       // GeniusPay redirect flow - open in new tab and poll for updates
       if (provider === "geniuspay" && data?.payment_url) {
         toast.success("Redirection vers le paiement... Revenez sur cette page après avoir payé.");
+        const geniuspayReference = data.reference as string | undefined;
         window.open(data.payment_url, "_blank");
         setIsLoading(false);
         setOpen(false);
@@ -362,8 +363,31 @@ export function TenantPayRentDialog({
         waitingForExternalPayment.current = true;
         originalPaidAmount.current = paidAmount;
 
-        // Extended polling (2 minutes) + visibility listener as backup
-        const paid = await waitForPaymentUpdate(currentPaymentId, 60);
+        // Poll: check DB first, then actively verify with GeniusPay API
+        const pollWithVerify = async (id: string, ref: string | undefined, maxAttempts = 30) => {
+          for (let i = 0; i < maxAttempts; i++) {
+            await new Promise((r) => setTimeout(r, 4000));
+
+            // Check DB (webhook may have fired)
+            const { data: p } = await supabase
+              .from("payments")
+              .select("status, paid_amount")
+              .eq("id", id)
+              .single();
+            if (p?.status === "paid" || Number(p?.paid_amount || 0) > paidAmount) return true;
+
+            // Every 3 iterations (~12s), actively ask GeniusPay for the status
+            if (ref && i % 3 === 2) {
+              const { data: vd } = await supabase.functions.invoke("geniuspay-verify-payment", {
+                body: { reference: ref, payment_id: id, type: "rent" },
+              });
+              if (vd?.verified) return true;
+            }
+          }
+          return false;
+        };
+
+        const paid = await pollWithVerify(currentPaymentId, geniuspayReference);
         if (paid) {
           waitingForExternalPayment.current = false;
           toast.success("Paiement effectué avec succès ! Vous pouvez maintenant télécharger votre quittance.");

@@ -17,14 +17,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Banknote, Smartphone, Building2, CreditCard, CheckCircle2 } from "lucide-react";
-import { useCreateAcquereur } from "@/hooks/useAcquereurs";
+import { Loader2, Banknote, Smartphone, Building2, CreditCard, CheckCircle2, User, TrendingUp, Calendar } from "lucide-react";
+import { useCreateAcquereur, IdType } from "@/hooks/useAcquereurs";
 import { useCreateVenteImmobiliere } from "@/hooks/useVentesImmobilieres";
 import { useUpdateVenteProspect, type VenteProspect } from "@/hooks/useVenteProspects";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { User } from "lucide-react";
+
+const ID_TYPE_LABELS: Record<IdType, string> = {
+  cni: "Carte Nationale d'Identité",
+  passeport: "Passeport",
+  permis: "Permis de conduire",
+  extrait: "Extrait de naissance",
+  carte_consulaire: "Carte consulaire",
+};
+
+const ID_TYPE_PLACEHOLDERS: Record<IdType, string> = {
+  cni: "CI00123456789",
+  passeport: "A12345678",
+  permis: "123456789",
+  extrait: "EXT-123456",
+  carte_consulaire: "CC-123456",
+};
 
 interface ConvertVenteProspectDialogProps {
   prospect: VenteProspect & { bien?: { id: string; title: string; address: string; property_type: string; price: number } | null };
@@ -43,6 +58,7 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
     name: "",
     phone: "",
     email: "",
+    id_type: "cni" as IdType,
     cni_number: "",
     address: "",
     birth_date: "",
@@ -56,12 +72,14 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
   const [totalInstallments, setTotalInstallments] = useState("12");
   const [salePrice, setSalePrice] = useState("0");
   const [soldBy, setSoldBy] = useState<string>("");
+  const [nextFollowupDate, setNextFollowupDate] = useState(prospect.next_followup_date?.split("T")[0] || "");
 
   useEffect(() => {
     setBuyerInfo({
       name: prospect.name || "",
       phone: prospect.phone || "",
       email: prospect.email || "",
+      id_type: "cni",
       cni_number: "",
       address: "",
       birth_date: "",
@@ -70,6 +88,7 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
     });
     setSalePrice(prospect.bien?.price?.toString() || "0");
     setSoldBy(user?.id || "");
+    setNextFollowupDate(prospect.next_followup_date?.split("T")[0] || "");
   }, [prospect, user]);
 
   const monthlyPayment = useMemo(() => {
@@ -79,6 +98,8 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
     const installments = parseInt(totalInstallments) || 1;
     return Math.ceil((total - down) / installments);
   }, [salePrice, downPayment, totalInstallments, paymentType]);
+
+  const hasBudget = prospect.budget_min != null || prospect.budget_max != null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,11 +115,11 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
     }
 
     try {
-      // 1. Create acquéreur
       const createdAcquereur = await createAcquereur.mutateAsync({
         name: buyerInfo.name.trim(),
         phone: buyerInfo.phone.trim() || null,
         email: buyerInfo.email.trim() || null,
+        id_type: buyerInfo.id_type || null,
         cni_number: buyerInfo.cni_number.trim() || null,
         address: buyerInfo.address.trim() || null,
         birth_date: buyerInfo.birth_date || null,
@@ -106,7 +127,6 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
         profession: buyerInfo.profession.trim() || null,
       });
 
-      // 2. Create the sale
       await createVente.mutateAsync({
         bien_id: prospect.bien_id,
         acquereur_id: createdAcquereur.id,
@@ -120,9 +140,12 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
         sold_by: soldBy || undefined,
       });
 
-      // 3. Update prospect status
       try {
-        await updateProspect.mutateAsync({ id: prospect.id, status: "converti" });
+        await updateProspect.mutateAsync({
+          id: prospect.id,
+          status: "converti",
+          next_followup_date: nextFollowupDate || null,
+        });
       } catch {
         console.warn("Could not update prospect status");
       }
@@ -158,6 +181,27 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Budget du prospect */}
+            {hasBudget && (
+              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <TrendingUp className="h-4 w-4 text-blue-600 shrink-0" />
+                <div className="flex gap-4 text-sm">
+                  {prospect.budget_min != null && (
+                    <span>
+                      <span className="text-muted-foreground">Budget min : </span>
+                      <span className="font-semibold text-blue-700">{prospect.budget_min.toLocaleString("fr-FR")} F</span>
+                    </span>
+                  )}
+                  {prospect.budget_max != null && (
+                    <span>
+                      <span className="text-muted-foreground">Budget max : </span>
+                      <span className="font-semibold text-blue-700">{prospect.budget_max.toLocaleString("fr-FR")} F</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Buyer Information */}
             <div className="space-y-4">
               <Label className="text-base font-medium">Informations acquéreur</Label>
@@ -175,13 +219,38 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
                     <Label htmlFor="cv-email">Email</Label>
                     <Input id="cv-email" type="email" value={buyerInfo.email} onChange={(e) => setBuyerInfo({ ...buyerInfo, email: e.target.value })} />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cv-cni">N° CNI</Label>
-                    <Input id="cv-cni" value={buyerInfo.cni_number} onChange={(e) => setBuyerInfo({ ...buyerInfo, cni_number: e.target.value })} />
+
+                  {/* Type de pièce + Numéro */}
+                  <div className="col-span-2 space-y-2">
+                    <Label>Pièce d'identité</Label>
+                    <div className="flex gap-2">
+                      <Select
+                        value={buyerInfo.id_type}
+                        onValueChange={(v) => setBuyerInfo({ ...buyerInfo, id_type: v as IdType })}
+                      >
+                        <SelectTrigger className="w-[180px] shrink-0">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(Object.keys(ID_TYPE_LABELS) as IdType[]).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {ID_TYPE_LABELS[type]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={buyerInfo.cni_number}
+                        onChange={(e) => setBuyerInfo({ ...buyerInfo, cni_number: e.target.value })}
+                        placeholder={ID_TYPE_PLACEHOLDERS[buyerInfo.id_type]}
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="cv-profession">Profession</Label>
-                    <Input id="cv-profession" value={buyerInfo.profession} onChange={(e) => setBuyerInfo({ ...buyerInfo, profession: e.target.value })} />
+                    <Input id="cv-profession" value={buyerInfo.profession} onChange={(e) => setBuyerInfo({ ...buyerInfo, profession: e.target.value })} placeholder="Commerçant" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cv-birth_date">Date de naissance</Label>
@@ -189,11 +258,11 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cv-birth_place">Lieu de naissance</Label>
-                    <Input id="cv-birth_place" value={buyerInfo.birth_place} onChange={(e) => setBuyerInfo({ ...buyerInfo, birth_place: e.target.value })} />
+                    <Input id="cv-birth_place" value={buyerInfo.birth_place} onChange={(e) => setBuyerInfo({ ...buyerInfo, birth_place: e.target.value })} placeholder="Abidjan" />
                   </div>
                   <div className="col-span-2 space-y-2">
                     <Label htmlFor="cv-address">Adresse</Label>
-                    <Input id="cv-address" value={buyerInfo.address} onChange={(e) => setBuyerInfo({ ...buyerInfo, address: e.target.value })} />
+                    <Input id="cv-address" value={buyerInfo.address} onChange={(e) => setBuyerInfo({ ...buyerInfo, address: e.target.value })} placeholder="Cocody, Abidjan" />
                   </div>
                 </div>
               </div>
@@ -270,6 +339,20 @@ export function ConvertVenteProspectDialog({ prospect, open, onOpenChange }: Con
                 </Select>
               </div>
             )}
+
+            {/* Prochain suivi */}
+            <div className="space-y-2">
+              <Label htmlFor="cv-nextFollowup" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                Date du prochain suivi
+              </Label>
+              <Input
+                id="cv-nextFollowup"
+                type="date"
+                value={nextFollowupDate}
+                onChange={(e) => setNextFollowupDate(e.target.value)}
+              />
+            </div>
 
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>

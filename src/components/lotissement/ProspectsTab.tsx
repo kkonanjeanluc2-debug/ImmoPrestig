@@ -37,6 +37,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -57,6 +70,8 @@ import {
   CheckCircle2,
   ShoppingCart,
   User,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 import { format, isAfter, isBefore, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -113,6 +128,7 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedParcelleId, setSelectedParcelleId] = useState<string | null>(null);
+  const [parcellePopoverOpen, setParcellePopoverOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [convertingProspect, setConvertingProspect] = useState<ParcelleProspect | null>(null);
@@ -261,21 +277,49 @@ export function ProspectsTab({ lotissementId, lotissementName }: ProspectsTabPro
             </div>
             {canCreate && availableParcelles.length > 0 && (
               <div className="flex items-center gap-2">
-                <Select
-                  value={selectedParcelleId || ""}
-                  onValueChange={(value) => setSelectedParcelleId(value)}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Choisir une parcelle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableParcelles.map((parcelle) => (
-                      <SelectItem key={parcelle.id} value={parcelle.id}>
-                        Lot {parcelle.plot_number}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={parcellePopoverOpen} onOpenChange={setParcellePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={parcellePopoverOpen}
+                      className="w-[180px] justify-between font-normal"
+                    >
+                      {selectedParcelleId
+                        ? `Lot ${availableParcelles.find(p => p.id === selectedParcelleId)?.plot_number}`
+                        : "Choisir une parcelle"}
+                      <ChevronsUpDown className="h-4 w-4 ml-2 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[200px] p-0">
+                    <Command>
+                      <CommandInput placeholder="N° de lot..." />
+                      <CommandList>
+                        <CommandEmpty>Aucun lot trouvé.</CommandEmpty>
+                        <CommandGroup>
+                          {availableParcelles.map((parcelle) => (
+                            <CommandItem
+                              key={parcelle.id}
+                              value={parcelle.plot_number?.toString() || parcelle.id}
+                              onSelect={() => {
+                                setSelectedParcelleId(parcelle.id);
+                                setParcellePopoverOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedParcelleId === parcelle.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              Lot {parcelle.plot_number}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <Button
                   onClick={() => setShowAddDialog(true)}
                   disabled={!selectedParcelleId}

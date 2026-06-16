@@ -97,6 +97,7 @@ export function TenantPayRentDialog({
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
+      setPayAmount(remainingAmount); // Sync with current remaining (prop may have changed)
       checkLatePayments();
     } else {
       setLatePayments([]);

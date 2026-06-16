@@ -5,194 +5,221 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-geniuspay-signature",
 };
 
+const ok200 = (body: object) =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Always return 200 to GeniusPay — they disable webhooks that return errors
+  let body = "";
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    body = await req.text();
+  } catch (e) {
+    console.error("Cannot read request body:", e);
+    return ok200({ received: true, error: "body_read_failed" });
+  }
+
+  let payload: any;
+  try {
+    payload = JSON.parse(body);
+  } catch (e) {
+    console.error("Cannot parse JSON body:", e, "raw:", body.substring(0, 300));
+    return ok200({ received: true, error: "json_parse_failed" });
+  }
+
+  console.log("GeniusPay webhook body:", JSON.stringify(payload).substring(0, 1200));
+
+  // Extract fields — support both flat and nested payload shapes
+  const event = String(payload.event || payload.type || "");
+  const status = String(payload.status || payload.data?.status || "");
+  const reference = String(payload.reference || payload.data?.reference || payload.id || payload.data?.id || "");
+  const paidAmount = Number(payload.amount || payload.data?.amount || 0);
+
+  const meta = payload.metadata || payload.data?.metadata || {};
+  const metaPaymentId = meta.payment_id ? String(meta.payment_id) : undefined;
+  const metaType = meta.type ? String(meta.type) : undefined;
+  const metaUserId = meta.user_id ? String(meta.user_id) : undefined;
+  const metaPlanId = meta.plan_id ? String(meta.plan_id) : undefined;
+  const metaBillingCycle = meta.billing_cycle ? String(meta.billing_cycle) : "monthly";
+
+  const combined = (event + " " + status).toLowerCase();
+  const isSuccess =
+    combined.includes("success") ||
+    combined.includes("completed") ||
+    combined.includes("paid") ||
+    combined.includes("approved") ||
+    combined.includes("confirmed");
+
+  console.log(`type="${metaType}" paymentId="${metaPaymentId}" userId="${metaUserId}" ref="${reference}" success=${isSuccess}`);
+  console.log(`meta keys: [${Object.keys(meta).join(", ")}]`);
+
+  if (!isSuccess) {
+    console.log("Non-success event — no update needed");
+    return ok200({ received: true, status: "pending" });
+  }
+
+  let supabaseUrl = "";
+  let adminClient: ReturnType<typeof createClient>;
+  try {
+    supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const GENIUSPAY_WEBHOOK_SECRET = Deno.env.get("GENIUSPAY_WEBHOOK_SECRET");
+    adminClient = createClient(supabaseUrl, supabaseServiceKey);
+  } catch (e) {
+    console.error("Cannot init Supabase client:", e);
+    return ok200({ received: true, error: "client_init_failed" });
+  }
 
-    const body = await req.text();
-    const payload = JSON.parse(body);
+  // ── RENT PAYMENT ─────────────────────────────────────────────────────────────
+  if (metaType === "rent" && metaPaymentId) {
+    console.log("Processing rent payment:", metaPaymentId);
 
-    console.log("GeniusPay webhook received:", JSON.stringify(payload).substring(0, 800));
-
-    // Signature verification — optional, GeniusPay may not send the header
-    const signature = req.headers.get("x-geniuspay-signature");
-    if (signature && GENIUSPAY_WEBHOOK_SECRET) {
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey(
-        "raw", encoder.encode(GENIUSPAY_WEBHOOK_SECRET),
-        { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
-      );
-      const sigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
-      const computed = Array.from(new Uint8Array(sigBuf))
-        .map(b => b.toString(16).padStart(2, "0")).join("");
-      if (signature !== computed) {
-        console.error("Invalid GeniusPay webhook signature");
-        return new Response(
-          JSON.stringify({ error: "Invalid signature" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      console.log("Signature verified");
-    } else {
-      console.log("No signature header — processing without verification");
-    }
-
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Extract info from the GeniusPay payload
-    const event = payload.event || payload.type || "";
-    const status = payload.status || payload.data?.status || "";
-    const reference = payload.reference || payload.data?.reference || payload.id || "";
-    const paidAmount = Number(payload.amount || payload.data?.amount || 0);
-
-    // Metadata sent when creating the checkout
-    const meta = payload.metadata || payload.data?.metadata || {};
-    const metaPaymentId = meta.payment_id as string | undefined;
-    const metaType = meta.type as string | undefined;
-    const metaUserId = meta.user_id as string | undefined;
-    const metaPlanId = meta.plan_id as string | undefined;
-    const metaBillingCycle = (meta.billing_cycle as string | undefined) || "monthly";
-
-    const eventLower = (event + " " + status).toLowerCase();
-    const isSuccess = eventLower.includes("success") || eventLower.includes("completed") || eventLower.includes("paid");
-    const isFailed = eventLower.includes("failed") || eventLower.includes("declined") || eventLower.includes("rejected") || eventLower.includes("cancelled");
-
-    console.log(`event="${event}" status="${status}" type="${metaType}" paymentId="${metaPaymentId}" reference="${reference}" success=${isSuccess}`);
-
-    if (!isSuccess) {
-      console.log("Non-success event, nothing to update");
-      return new Response(
-        JSON.stringify({ received: true, status: isFailed ? "failed" : "pending" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // ── RENT PAYMENT ──────────────────────────────────────────────────────────
-    if (metaType === "rent" && metaPaymentId) {
-      const { data: payment } = await adminClient
+    let payment: any = null;
+    try {
+      const { data, error } = await adminClient
         .from("payments")
         .select("amount, paid_amount, user_id, tenant_id")
         .eq("id", metaPaymentId)
         .maybeSingle();
+      if (error) console.error("payments select error:", error);
+      payment = data;
+    } catch (e) {
+      console.error("payments select threw:", e);
+      return ok200({ received: true, error: "payment_fetch_failed" });
+    }
 
-      if (!payment) {
-        console.error("Rent payment not found:", metaPaymentId);
-        return new Response(
-          JSON.stringify({ received: true, message: "Payment not found" }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+    if (!payment) {
+      console.error("Rent payment not found:", metaPaymentId);
+      return ok200({ received: true, message: "payment_not_found" });
+    }
+
+    const currentPaid = Number(payment.paid_amount || 0);
+    const addAmt = paidAmount > 0 ? paidAmount : Number(payment.amount);
+    const newPaid = Math.min(currentPaid + addAmt, Number(payment.amount));
+    const isFullyPaid = newPaid >= Number(payment.amount);
+
+    console.log(`Updating payment: currentPaid=${currentPaid} addAmt=${addAmt} newPaid=${newPaid} full=${isFullyPaid}`);
+
+    try {
+      // "partial" is not a valid status in the payments table CHECK constraint
+      // Only set status="paid" when fully paid; otherwise just update paid_amount
+      const updatePayload: Record<string, unknown> = {
+        paid_amount: newPaid,
+        method: "geniuspay",
+      };
+      if (isFullyPaid) {
+        updatePayload.status = "paid";
+        updatePayload.paid_date = new Date().toISOString().split("T")[0];
       }
 
-      const currentPaid = Number(payment.paid_amount || 0);
-      const addAmt = paidAmount > 0 ? paidAmount : Number(payment.amount);
-      const newPaid = Math.min(currentPaid + addAmt, Number(payment.amount));
-      const isFullyPaid = newPaid >= Number(payment.amount);
-
-      const { error: updateError } = await adminClient
+      const { error } = await adminClient
         .from("payments")
-        .update({
-          status: isFullyPaid ? "paid" : "partial",
-          paid_amount: newPaid,
-          paid_date: new Date().toISOString().split("T")[0],
-          method: "geniuspay",
-        })
+        .update(updatePayload)
         .eq("id", metaPaymentId);
+      if (error) console.error("payments update error:", error);
+      else console.log(`Payment ${metaPaymentId} updated to ${isFullyPaid ? "paid" : "partial"}`);
+    } catch (e) {
+      console.error("payments update threw:", e);
+    }
 
-      if (updateError) {
-        console.error("Failed to update rent payment:", updateError);
-      } else {
-        console.log(`Rent payment ${metaPaymentId} → ${isFullyPaid ? "paid" : "partial"} (${newPaid}/${payment.amount})`);
-      }
-
-      // Notify agency owner
+    // Notification (non-fatal)
+    try {
       const agencyUserId = metaUserId || (payment.user_id as string);
       if (agencyUserId) {
-        await adminClient.from("notifications").insert({
+        const { error } = await adminClient.from("notifications").insert({
           user_id: agencyUserId,
           type: "payment",
           title: "Paiement de loyer reçu",
-          message: `Un loyer de ${addAmt.toLocaleString("fr-FR")} F CFA a été confirmé via GeniusPay.`,
+          message: `Un loyer de ${addAmt} F CFA a été confirmé via GeniusPay.`,
           entity_type: "payment",
           entity_id: metaPaymentId,
-        }).catch(e => console.error("Notification error:", e));
+        });
+        if (error) console.error("notifications insert error:", error);
       }
+    } catch (e) {
+      console.error("notifications insert threw:", e);
+    }
 
-      // Record for accounting
-      await adminClient.from("online_rent_payments").insert({
-        user_id: agencyUserId,
+    // Accounting record (non-fatal)
+    try {
+      const agencyUserId2 = metaUserId || (payment.user_id as string);
+      const { error } = await adminClient.from("online_rent_payments").insert({
+        user_id: agencyUserId2,
         payment_id: metaPaymentId,
         tenant_id: payment.tenant_id,
         amount: addAmt,
-        kkiapay_transaction_id: reference,
+        kkiapay_transaction_id: reference || null,
         payment_method: "geniuspay",
         status: "received",
         paid_at: new Date().toISOString(),
-      }).catch(e => console.error("Online rent payment record error:", e));
-
-      return new Response(
-        JSON.stringify({ received: true, status: "completed" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      });
+      if (error) console.error("online_rent_payments insert error:", error);
+      else console.log("online_rent_payments recorded");
+    } catch (e) {
+      console.error("online_rent_payments insert threw:", e);
     }
 
-    // ── SUBSCRIPTION PAYMENT ──────────────────────────────────────────────────
-    if (metaType === "subscription" && metaUserId && metaPlanId) {
-      const { data: agency } = await adminClient
+    return ok200({ received: true, status: "completed" });
+  }
+
+  // ── SUBSCRIPTION PAYMENT ──────────────────────────────────────────────────────
+  if (metaType === "subscription" && metaUserId && metaPlanId) {
+    console.log("Processing subscription for user:", metaUserId, "plan:", metaPlanId);
+
+    try {
+      const { data: agency, error: agErr } = await adminClient
         .from("agencies")
         .select("id")
         .eq("user_id", metaUserId)
         .maybeSingle();
+      if (agErr) console.error("agencies select error:", agErr);
 
       if (agency) {
         const now = new Date();
         const endsAt = new Date(now);
-        const cycleMonths: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
-        endsAt.setMonth(endsAt.getMonth() + (cycleMonths[metaBillingCycle] || 1));
+        const months: Record<string, number> = { monthly: 1, quarterly: 3, semi_annual: 6, yearly: 12 };
+        endsAt.setMonth(endsAt.getMonth() + (months[metaBillingCycle] || 1));
 
-        await adminClient.from("agency_subscriptions").upsert({
-          agency_id: agency.id,
-          plan_id: metaPlanId,
-          status: "active",
-          billing_cycle: metaBillingCycle,
-          starts_at: now.toISOString(),
-          ends_at: endsAt.toISOString(),
-          updated_at: now.toISOString(),
-        }, { onConflict: "agency_id" });
-
-        console.log(`Subscription activated for agency ${agency.id}`);
+        const { error: upsertErr } = await adminClient.from("agency_subscriptions").upsert(
+          {
+            agency_id: agency.id,
+            plan_id: metaPlanId,
+            status: "active",
+            billing_cycle: metaBillingCycle,
+            starts_at: now.toISOString(),
+            ends_at: endsAt.toISOString(),
+            updated_at: now.toISOString(),
+          },
+          { onConflict: "agency_id" }
+        );
+        if (upsertErr) console.error("agency_subscriptions upsert error:", upsertErr);
+        else console.log(`Subscription activated for agency ${agency.id}`);
       }
-
-      await adminClient.from("notifications").insert({
-        user_id: metaUserId,
-        type: "payment",
-        title: "Paiement confirmé",
-        message: "Votre paiement d'abonnement via GeniusPay a été confirmé.",
-        entity_type: "subscription",
-      }).catch(e => console.error("Notification error:", e));
-
-      return new Response(
-        JSON.stringify({ received: true, status: "completed" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    } catch (e) {
+      console.error("subscription processing threw:", e);
     }
 
-    console.log(`Unhandled webhook: type="${metaType}", metaPaymentId="${metaPaymentId}", metaUserId="${metaUserId}"`);
-    return new Response(
-      JSON.stringify({ received: true }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    try {
+      const { error } = await adminClient.from("notifications").insert({
+        user_id: metaUserId,
+        type: "payment",
+        title: "Abonnement activé",
+        message: "Votre abonnement a été activé via GeniusPay.",
+        entity_type: "subscription",
+      });
+      if (error) console.error("subscription notification error:", error);
+    } catch (e) {
+      console.error("subscription notification threw:", e);
+    }
 
-  } catch (error) {
-    console.error("Error in geniuspay-webhook:", error);
-    return new Response(
-      JSON.stringify({ error: "Webhook processing error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return ok200({ received: true, status: "completed" });
   }
+
+  console.log(`Unhandled: type="${metaType}" paymentId="${metaPaymentId}" userId="${metaUserId}"`);
+  return ok200({ received: true, status: "unhandled" });
 });

@@ -17,14 +17,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, User, CreditCard, Banknote, Smartphone, Building2, CheckCircle2 } from "lucide-react";
+import { Loader2, User, CreditCard, Banknote, Smartphone, Building2, CheckCircle2, TrendingUp, Calendar } from "lucide-react";
 import { Parcelle } from "@/hooks/useParcelles";
 import { ParcelleProspect, useUpdateParcelleProspect } from "@/hooks/useParcelleProspects";
-import { useCreateAcquereur } from "@/hooks/useAcquereurs";
+import { useCreateAcquereur, IdType } from "@/hooks/useAcquereurs";
 import { useCreateVenteParcelle, PaymentType } from "@/hooks/useVentesParcelles";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+
+const ID_TYPE_LABELS: Record<IdType, string> = {
+  cni: "Carte Nationale d'Identité",
+  passeport: "Passeport",
+  permis: "Permis de conduire",
+  extrait: "Extrait de naissance",
+  carte_consulaire: "Carte consulaire",
+};
+
+const ID_TYPE_PLACEHOLDERS: Record<IdType, string> = {
+  cni: "CI00123456789",
+  passeport: "A12345678",
+  permis: "123456789",
+  extrait: "EXT-123456",
+  carte_consulaire: "CC-123456",
+};
 
 interface ConvertProspectDialogProps {
   prospect: ParcelleProspect;
@@ -40,11 +56,11 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
   const createVente = useCreateVenteParcelle();
   const updateProspect = useUpdateParcelleProspect();
 
-  // Pre-fill buyer info from prospect
   const [buyerInfo, setBuyerInfo] = useState({
     name: prospect.name || "",
     phone: prospect.phone || "",
     email: prospect.email || "",
+    id_type: "cni" as IdType,
     cni_number: "",
     address: "",
     birth_date: "",
@@ -58,13 +74,14 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
   const [totalInstallments, setTotalInstallments] = useState("12");
   const [salePrice, setSalePrice] = useState(parcelle?.price?.toString() || "0");
   const [soldBy, setSoldBy] = useState<string>((parcelle as any)?.assigned_to || user?.id || "");
+  const [nextFollowupDate, setNextFollowupDate] = useState(prospect.next_followup_date?.split("T")[0] || "");
 
-  // Reset form when prospect changes
   useEffect(() => {
     setBuyerInfo({
       name: prospect.name || "",
       phone: prospect.phone || "",
       email: prospect.email || "",
+      id_type: "cni",
       cni_number: "",
       address: "",
       birth_date: "",
@@ -72,6 +89,7 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
       profession: "",
     });
     setSalePrice(parcelle?.price?.toString() || "0");
+    setNextFollowupDate(prospect.next_followup_date?.split("T")[0] || "");
   }, [prospect, parcelle]);
 
   const monthlyPayment = useMemo(() => {
@@ -82,6 +100,8 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
     return Math.ceil((total - down) / installments);
   }, [salePrice, downPayment, totalInstallments, paymentType]);
 
+  const hasBudget = prospect.budget_min != null || prospect.budget_max != null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -91,11 +111,11 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
     }
 
     try {
-      // 1. Create the acquéreur from prospect data
       const createdAcquereur = await createAcquereur.mutateAsync({
         name: buyerInfo.name.trim(),
         phone: buyerInfo.phone.trim() || null,
         email: buyerInfo.email.trim() || null,
+        id_type: buyerInfo.id_type || null,
         cni_number: buyerInfo.cni_number.trim() || null,
         address: buyerInfo.address.trim() || null,
         birth_date: buyerInfo.birth_date || null,
@@ -103,7 +123,6 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
         profession: buyerInfo.profession.trim() || null,
       });
 
-      // 2. Create the sale (trigger will auto-update parcelle status to "vendu")
       await createVente.mutateAsync({
         parcelle_id: parcelle.id,
         acquereur_id: createdAcquereur.id,
@@ -117,15 +136,14 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
         sold_by: soldBy || undefined,
       });
 
-      // 3. Update prospect status to "converti"
       try {
         await updateProspect.mutateAsync({
           id: prospect.id,
           status: "converti" as any,
+          next_followup_date: nextFollowupDate || null,
         });
       } catch (statusError) {
         console.warn("Could not update prospect status:", statusError);
-        // Sale was created successfully, just the status update failed - not critical
       }
 
       toast.success("Prospect converti en vente avec succès !");
@@ -155,7 +173,28 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Buyer Information (pre-filled from prospect) */}
+          {/* Budget du prospect */}
+          {hasBudget && (
+            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-blue-600 shrink-0" />
+              <div className="flex gap-4 text-sm">
+                {prospect.budget_min != null && (
+                  <span>
+                    <span className="text-muted-foreground">Budget min : </span>
+                    <span className="font-semibold text-blue-700">{prospect.budget_min.toLocaleString("fr-FR")} F</span>
+                  </span>
+                )}
+                {prospect.budget_max != null && (
+                  <span>
+                    <span className="text-muted-foreground">Budget max : </span>
+                    <span className="font-semibold text-blue-700">{prospect.budget_max.toLocaleString("fr-FR")} F</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Buyer Information */}
           <div className="space-y-4">
             <Label className="text-base font-medium">Informations acquéreur</Label>
             <div className="grid gap-3 p-3 bg-muted/50 rounded-lg">
@@ -188,15 +227,35 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
                     placeholder="email@exemple.com"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cni">N° CNI</Label>
-                  <Input
-                    id="cni"
-                    value={buyerInfo.cni_number}
-                    onChange={(e) => setBuyerInfo({ ...buyerInfo, cni_number: e.target.value })}
-                    placeholder="CI00123456789"
-                  />
+
+                {/* Type de pièce + Numéro */}
+                <div className="col-span-2 space-y-2">
+                  <Label>Pièce d'identité</Label>
+                  <div className="flex gap-2">
+                    <Select
+                      value={buyerInfo.id_type}
+                      onValueChange={(v) => setBuyerInfo({ ...buyerInfo, id_type: v as IdType })}
+                    >
+                      <SelectTrigger className="w-[180px] shrink-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(ID_TYPE_LABELS) as IdType[]).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {ID_TYPE_LABELS[type]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      value={buyerInfo.cni_number}
+                      onChange={(e) => setBuyerInfo({ ...buyerInfo, cni_number: e.target.value })}
+                      placeholder={ID_TYPE_PLACEHOLDERS[buyerInfo.id_type]}
+                      className="flex-1"
+                    />
+                  </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="profession">Profession</Label>
                   <Input
@@ -259,15 +318,11 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
             >
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="comptant" id="comptant" />
-                <Label htmlFor="comptant" className="cursor-pointer">
-                  Comptant
-                </Label>
+                <Label htmlFor="comptant" className="cursor-pointer">Comptant</Label>
               </div>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="echelonne" id="echelonne" />
-                <Label htmlFor="echelonne" className="cursor-pointer">
-                  Échelonné
-                </Label>
+                <Label htmlFor="echelonne" className="cursor-pointer">Échelonné</Label>
               </div>
             </RadioGroup>
 
@@ -315,26 +370,22 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
               <SelectContent>
                 <SelectItem value="especes">
                   <div className="flex items-center gap-2">
-                    <Banknote className="h-4 w-4" />
-                    Espèces
+                    <Banknote className="h-4 w-4" />Espèces
                   </div>
                 </SelectItem>
                 <SelectItem value="virement">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    Virement bancaire
+                    <Building2 className="h-4 w-4" />Virement bancaire
                   </div>
                 </SelectItem>
                 <SelectItem value="mobile_money">
                   <div className="flex items-center gap-2">
-                    <Smartphone className="h-4 w-4" />
-                    Mobile Money
+                    <Smartphone className="h-4 w-4" />Mobile Money
                   </div>
                 </SelectItem>
                 <SelectItem value="cheque">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Chèque
+                    <CreditCard className="h-4 w-4" />Chèque
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -350,11 +401,11 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
                   <SelectValue placeholder="Sélectionner un commercial" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assignableUsers.map((user) => (
-                    <SelectItem key={user.user_id} value={user.user_id}>
+                  {assignableUsers.map((u) => (
+                    <SelectItem key={u.user_id} value={u.user_id}>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        {user.full_name || user.email} ({user.role})
+                        {u.full_name || u.email} ({u.role})
                       </div>
                     </SelectItem>
                   ))}
@@ -362,6 +413,20 @@ export function ConvertProspectDialog({ prospect, parcelle, open, onOpenChange }
               </Select>
             </div>
           )}
+
+          {/* Prochain suivi */}
+          <div className="space-y-2">
+            <Label htmlFor="nextFollowup" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              Date du prochain suivi
+            </Label>
+            <Input
+              id="nextFollowup"
+              type="date"
+              value={nextFollowupDate}
+              onChange={(e) => setNextFollowupDate(e.target.value)}
+            />
+          </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

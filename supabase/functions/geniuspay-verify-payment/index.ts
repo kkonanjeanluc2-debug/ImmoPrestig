@@ -144,12 +144,16 @@ Deno.serve(async (req) => {
         const newPaid = Math.min(currentPaid + addAmt, Number(payment.amount));
         const isFullyPaid = newPaid >= Number(payment.amount);
 
-        await adminClient.from("payments").update({
-          status: isFullyPaid ? "paid" : "partial",
+        // "partial" is not a valid status in the payments table CHECK constraint
+        const verifyUpdatePayload: Record<string, unknown> = {
           paid_amount: newPaid,
-          paid_date: new Date().toISOString().split("T")[0],
           method: "geniuspay",
-        }).eq("id", payment_id);
+        };
+        if (isFullyPaid) {
+          verifyUpdatePayload.status = "paid";
+          verifyUpdatePayload.paid_date = new Date().toISOString().split("T")[0];
+        }
+        await adminClient.from("payments").update(verifyUpdatePayload).eq("id", payment_id);
 
         await adminClient.from("online_rent_payments").insert({
           user_id: payment.user_id,

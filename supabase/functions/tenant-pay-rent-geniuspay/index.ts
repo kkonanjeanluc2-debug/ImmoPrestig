@@ -228,13 +228,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`GeniusPay rent checkout created for payment ${payment_id}, reference: ${paymentData.reference || paymentData.id}`);
+    const gpReference = paymentData.reference || paymentData.id || paymentData.uuid || paymentData.transaction_id || paymentData.payment_id || "";
+    console.log(`GeniusPay rent checkout created: payment=${payment_id} reference="${gpReference}" keys=[${Object.keys(paymentData).join(",")}]`);
 
     return new Response(
       JSON.stringify({
         success: true,
         payment_url: checkoutUrl,
-        reference: paymentData.reference || paymentData.id,
+        reference: gpReference,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

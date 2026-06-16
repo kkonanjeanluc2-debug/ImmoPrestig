@@ -71,27 +71,38 @@ Deno.serve(async (req) => {
       );
     }
 
-    const baseUrl = isSandbox
-      ? `https://sandbox.pay.genius.ci/api/v1/merchant/payments/${reference}`
-      : `https://pay.genius.ci/api/v1/merchant/payments/${reference}`;
+    // Try multiple URL formats (the correct one depends on GeniusPay's API)
+    const candidateUrls = isSandbox
+      ? [`https://sandbox.pay.genius.ci/api/v1/merchant/payments/${reference}`]
+      : [
+          `https://pay.genius.ci/api/v1/merchant/payments/${reference}`,
+          `https://geniuspay.ci/api/v1/merchant/payments/${reference}`,
+        ];
 
-    console.log(`Vérification paiement GeniusPay: ${reference} → ${baseUrl}`);
+    let gpResp: Response | null = null;
+    let raw = "";
+    for (const url of candidateUrls) {
+      console.log(`Vérification GeniusPay: ${reference} → GET ${url}`);
+      try {
+        const r = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "X-API-Key": publicKey!,
+            "X-API-Secret": secretKey!,
+          },
+        });
+        raw = await r.text();
+        console.log(`GeniusPay status (${r.status}) from ${url}:`, raw.substring(0, 600));
+        if (r.ok) { gpResp = r; break; }
+      } catch (fetchErr) {
+        console.error(`Fetch error for ${url}:`, fetchErr);
+      }
+    }
 
-    const gpResp = await fetch(baseUrl, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json",
-        "X-API-Key": publicKey,
-        "X-API-Secret": secretKey,
-      },
-    });
-
-    const raw = await gpResp.text();
-    console.log(`GeniusPay status (${gpResp.status}):`, raw.substring(0, 600));
-
-    if (!gpResp.ok) {
+    if (!gpResp || !gpResp.ok) {
       return new Response(
-        JSON.stringify({ verified: false, status: "unknown", debug: raw.substring(0, 200) }),
+        JSON.stringify({ verified: false, status: "unknown", debug: raw.substring(0, 300) }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

@@ -253,15 +253,27 @@ const Login = () => {
       const isAllowed = !accessError && accessData?.allowed === true;
 
       if (!isAllowed) {
-        await supabase.auth.signOut();
-        setIsLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Accès refusé",
-          description:
-            accessData?.message || "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
-        });
-        return;
+        // Allow agency owners and super admins even if they're on the wrong slug page
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user!.id)
+          .in("role", ["admin", "super_admin"])
+          .maybeSingle();
+
+        if (!roleData) {
+          await supabase.auth.signOut();
+          setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Accès refusé",
+            description:
+              accessData?.message || "Ces identifiants n'appartiennent pas à l'équipe de cette agence.",
+          });
+          return;
+        }
+        // Admin on wrong slug page — clear stored slug so next visit goes to /login
+        setDedicatedLoginSlug(null);
       }
     }
 

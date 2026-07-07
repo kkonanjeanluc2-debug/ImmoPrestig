@@ -219,7 +219,8 @@ export function OwnerPayoutsSection({
     try {
       if (proofFile) {
         const fileExt = proofFile.name.split(".").pop();
-        const filePath = `payout-proofs/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const agencyPrefix = agency?.id || "shared";
+        const filePath = `${agencyPrefix}/payout-proofs/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from("agency-logos")
           .upload(filePath, proofFile);

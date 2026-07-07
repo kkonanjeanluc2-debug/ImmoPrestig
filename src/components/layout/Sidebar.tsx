@@ -90,6 +90,7 @@ const gestionLocativeItems: { name: string; href: string; icon: typeof Building2
 
 const crmImmobilierItems: { name: string; href: string; icon: typeof Building2; featureKey: FeatureKey }[] = [
   { name: "Ventes Immobilières", href: "/ventes-immobilieres", icon: HandCoins, featureKey: "ventes_immobilieres" },
+  { name: "Promotions", href: "/promotions", icon: Building2, featureKey: "ventes_immobilieres" },
   { name: "Achats Immobiliers", href: "/achats-immobiliers", icon: ShoppingCart, featureKey: "achats_immobiliers" },
   { name: "Acquisitions", href: "/acquisitions", icon: PackagePlus, featureKey: "achats_immobiliers" },
 ];

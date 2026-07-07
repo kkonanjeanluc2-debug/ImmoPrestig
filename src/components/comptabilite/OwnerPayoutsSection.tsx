@@ -58,6 +58,7 @@ import { useProperties } from "@/hooks/useProperties";
 import { usePropertyInterventions } from "@/hooks/usePropertyInterventions";
 import { useTenants } from "@/hooks/useTenants";
 import { useAgency } from "@/hooks/useAgency";
+import { useAuth } from "@/contexts/AuthContext";
 import { generatePayoutReceiptPDF } from "@/lib/generatePayoutReceiptPDF";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -93,6 +94,7 @@ export function OwnerPayoutsSection({
   const createPayout = useCreateOwnerPayout();
   const deletePayout = useDeleteOwnerPayout();
   const { data: agency } = useAgency();
+  const { user } = useAuth();
 
   const [open, setOpen] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -219,8 +221,7 @@ export function OwnerPayoutsSection({
     try {
       if (proofFile) {
         const fileExt = proofFile.name.split(".").pop();
-        const agencyPrefix = agency?.id || "shared";
-        const filePath = `${agencyPrefix}/payout-proofs/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${user!.id}/payout-proofs/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from("agency-logos")
           .upload(filePath, proofFile);

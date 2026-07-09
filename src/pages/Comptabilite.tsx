@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +71,27 @@ const Comptabilite = () => {
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
   const { data: agency } = useAgency();
   const { hasPermission, role, isLoading } = usePermissions();
+
+  // Calculé directement depuis useExpenses (déjà chargé) pour afficher l'onglet Dépenses sans attendre useComptabilite
+  const localExpensesTotal = useMemo(
+    () => (expenses || []).reduce((sum, e) => sum + Number(e.amount), 0),
+    [expenses]
+  );
+  const LOCAL_EXP_COLORS = [
+    "#ef4444","#f97316","#eab308","#8b5cf6","#ec4899",
+    "#06b6d4","#84cc16","#f43f5e","#a855f7","#14b8a6",
+    "#6366f1","#d946ef","#0ea5e9","#22c55e","#f59e0b","#64748b",
+  ];
+  const localExpensesByCategory = useMemo(() => {
+    const catMap = new Map<string, number>();
+    (expenses || []).forEach(e =>
+      catMap.set(e.category, (catMap.get(e.category) || 0) + Number(e.amount))
+    );
+    return Array.from(catMap.entries())
+      .map(([name, value], i) => ({ name, value, color: LOCAL_EXP_COLORS[i % LOCAL_EXP_COLORS.length] }))
+      .sort((a, b) => b.value - a.value);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expenses]);
   const fromDateStr = period.from.toISOString().split("T")[0];
   const toDateStr = period.to.toISOString().split("T")[0];
   const { data: ownerPayouts = [] } = useOwnerPayouts(fromDateStr, toDateStr);
@@ -623,7 +644,7 @@ const Comptabilite = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="space-y-1 min-w-0">
                       <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Total dépenses</p>
-                      <p className="text-sm sm:text-lg font-bold text-foreground truncate">{formatCFA(data.totalExpenses)}</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground truncate">{formatCFA(localExpensesTotal)}</p>
                     </div>
                     <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-destructive/10 shrink-0 self-end sm:self-auto">
                       <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
@@ -651,7 +672,7 @@ const Comptabilite = () => {
                       <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Dép. moyenne</p>
                       <p className="text-sm sm:text-lg font-bold text-foreground truncate">
                         {expenses && expenses.length > 0
-                          ? formatCFA(Math.round(data.totalExpenses / expenses.length))
+                          ? formatCFA(Math.round(localExpensesTotal / expenses.length))
                           : "—"}
                       </p>
                     </div>
@@ -663,7 +684,11 @@ const Comptabilite = () => {
               </Card>
             </div>
 
-            {data.expensesByCategory.length > 0 && (
+            {expensesLoading ? (
+              <Card>
+                <CardContent className="p-6 text-center text-sm text-muted-foreground">Chargement des dépenses…</CardContent>
+              </Card>
+            ) : localExpensesByCategory.length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold">Dépenses par catégorie</CardTitle>
@@ -674,7 +699,7 @@ const Comptabilite = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={data.expensesByCategory.map((e) => ({
+                            data={localExpensesByCategory.map((e) => ({
                               ...e,
                               name: getCategoryLabel(e.name),
                             }))}
@@ -685,7 +710,7 @@ const Comptabilite = () => {
                             paddingAngle={2}
                             dataKey="value"
                           >
-                            {data.expensesByCategory.map((entry) => (
+                            {localExpensesByCategory.map((entry) => (
                               <Cell key={entry.name} fill={entry.color} />
                             ))}
                           </Pie>
@@ -702,8 +727,8 @@ const Comptabilite = () => {
                       </ResponsiveContainer>
                     </div>
                     <div className="space-y-2">
-                      {data.expensesByCategory.map((cat) => {
-                        const pct = data.totalExpenses > 0 ? (cat.value / data.totalExpenses) * 100 : 0;
+                      {localExpensesByCategory.map((cat) => {
+                        const pct = localExpensesTotal > 0 ? (cat.value / localExpensesTotal) * 100 : 0;
                         return (
                           <div key={cat.name} className="space-y-1">
                             <div className="flex items-center justify-between text-sm">

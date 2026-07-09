@@ -97,6 +97,7 @@ export const useCreatePropertyUnit = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["property-units", data.property_id] });
       queryClient.invalidateQueries({ queryKey: ["property-units-all"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units-summary"] });
     },
   });
 };
@@ -143,6 +144,7 @@ export const useUpdatePropertyUnit = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["property-units", data.property_id] });
       queryClient.invalidateQueries({ queryKey: ["property-units-all"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units-summary"] });
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["payments"] });
@@ -167,6 +169,7 @@ export const useDeletePropertyUnit = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["property-units", data.propertyId] });
       queryClient.invalidateQueries({ queryKey: ["property-units-all"] });
+      queryClient.invalidateQueries({ queryKey: ["property-units-summary"] });
     },
   });
 };

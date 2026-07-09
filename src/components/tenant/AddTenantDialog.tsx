@@ -733,8 +733,8 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
                         <FormControl>
                           <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
                             {field.value
-                              ? availableProperties.find(p => p.id === field.value)?.title || propertiesLoading ? "Chargement..." : "Choisir un bien"
-                              : propertiesLoading ? "Chargement..." : "Choisir un bien"}
+                              ? (availableProperties.find(p => p.id === field.value)?.title ?? (propertiesLoading ? "Chargement..." : "Choisir un bien"))
+                              : (propertiesLoading ? "Chargement..." : "Choisir un bien")}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>

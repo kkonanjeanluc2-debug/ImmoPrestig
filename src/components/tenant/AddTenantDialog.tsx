@@ -31,7 +31,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2, Calendar, Upload, X, Users } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Plus, Loader2, Home, ArrowRight, DoorOpen, Download, FileText, CheckCircle2, Calendar, Upload, X, Users, ChevronsUpDown, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Tooltip,
@@ -84,6 +86,9 @@ interface AddTenantDialogProps {
 export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPropertyId, preselectedUnitId }: AddTenantDialogProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string>("");
+  const [ownerPopoverOpen, setOwnerPopoverOpen] = useState(false);
+  const [propertyPopoverOpen, setPropertyPopoverOpen] = useState(false);
   const [rentType, setRentType] = useState<string>("mensuel");
   const [dailyRentDays, setDailyRentDays] = useState<string>("");
   const [dailyRentDiscount, setDailyRentDiscount] = useState<string>("0");
@@ -127,8 +132,9 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
   const { data: defaultTemplate } = useDefaultContractTemplate();
   const limits = useSubscriptionLimits();
 
-  // Filter only available properties (+ always include preselected)
-  const availableProperties = properties?.filter(p => p.status === 'disponible' || p.id === preselectedPropertyId) || [];
+  // Filter only available properties (+ always include preselected), then by selected owner
+  const availableProperties = (properties?.filter(p => p.status === 'disponible' || p.id === preselectedPropertyId) || [])
+    .filter(p => !selectedOwnerId || p.owner_id === selectedOwnerId);
   
   // Filter available units (only those with status 'disponible')
   const availableUnits = propertyUnits.filter(u => u.status === 'disponible');
@@ -187,6 +193,7 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
       refetchProperties();
       if (!preselectedPropertyId) {
         setSelectedPropertyId("");
+        setSelectedOwnerId("");
       }
       setRentType("mensuel");
       setDailyRentDays("");
@@ -659,50 +666,120 @@ export function AddTenantDialog({ onSuccess, defaultOpen = false, preselectedPro
             {/* Property Selection - FIRST */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Bien à louer</h3>
-              
+
+              {/* ── Sélection propriétaire ── */}
+              <div className="space-y-1.5">
+                <Label>Propriétaire</Label>
+                <Popover open={ownerPopoverOpen} onOpenChange={setOwnerPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                      {selectedOwnerId
+                        ? owners?.find(o => o.id === selectedOwnerId)?.name
+                        : "Tous les propriétaires"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Rechercher un propriétaire..." />
+                      <CommandList>
+                        <CommandEmpty>Aucun propriétaire trouvé</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="all"
+                            onSelect={() => {
+                              setSelectedOwnerId("");
+                              setOwnerPopoverOpen(false);
+                              // Reset bien selection when owner changes
+                              form.setValue("property_id", "");
+                              setSelectedPropertyId("");
+                            }}
+                          >
+                            <Check className={`mr-2 h-4 w-4 ${!selectedOwnerId ? "opacity-100" : "opacity-0"}`} />
+                            Tous les propriétaires
+                          </CommandItem>
+                          {owners?.map((owner) => (
+                            <CommandItem
+                              key={owner.id}
+                              value={owner.name}
+                              onSelect={() => {
+                                setSelectedOwnerId(owner.id);
+                                setOwnerPopoverOpen(false);
+                                // Reset bien selection when owner changes
+                                form.setValue("property_id", "");
+                                setSelectedPropertyId("");
+                              }}
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${selectedOwnerId === owner.id ? "opacity-100" : "opacity-0"}`} />
+                              {owner.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* ── Sélection bien ── */}
               <FormField
                 control={form.control}
                 name="property_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sélectionner un bien *</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setSelectedPropertyId(value);
-                        form.setValue("unit_id", "");
-                        const selectedProp = availableProperties.find(p => p.id === value);
-                        if (selectedProp && !hasUnits) {
-                          form.setValue('rent_amount', selectedProp.price.toString());
-                        }
-                      }} 
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={propertiesLoading ? "Chargement..." : "Choisir un bien"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background border z-50">
-                      {availableProperties.length === 0 ? (
-                          <div className="p-2 text-sm text-muted-foreground text-center">
-                            Aucun bien disponible
-                          </div>
-                        ) : (
-                          availableProperties.map((property) => (
-                            <SelectItem key={property.id} value={property.id}>
-                              <div className="flex flex-col">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span>{property.title}</span>
-                                  <span className="text-xs font-medium text-emerald">{property.price.toLocaleString('fr-FR')} F</span>
-                                </div>
-                                <span className="text-xs text-muted-foreground">{property.address}</span>
-                              </div>
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={propertyPopoverOpen} onOpenChange={setPropertyPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                            {field.value
+                              ? availableProperties.find(p => p.id === field.value)?.title || propertiesLoading ? "Chargement..." : "Choisir un bien"
+                              : propertiesLoading ? "Chargement..." : "Choisir un bien"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Rechercher par nom ou adresse..." />
+                          <CommandList>
+                            <CommandEmpty>
+                              {selectedOwnerId
+                                ? "Aucun bien disponible pour ce propriétaire"
+                                : "Aucun bien disponible"}
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {availableProperties.map((property) => (
+                                <CommandItem
+                                  key={property.id}
+                                  value={`${property.title} ${property.address || ""}`}
+                                  onSelect={() => {
+                                    field.onChange(property.id);
+                                    setSelectedPropertyId(property.id);
+                                    form.setValue("unit_id", "");
+                                    if (!hasUnits) {
+                                      form.setValue('rent_amount', property.price.toString());
+                                    }
+                                    setPropertyPopoverOpen(false);
+                                  }}
+                                >
+                                  <Check className={`mr-2 h-4 w-4 shrink-0 ${field.value === property.id ? "opacity-100" : "opacity-0"}`} />
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium truncate">{property.title}</span>
+                                      <span className="text-xs text-emerald-600 shrink-0">{property.price.toLocaleString('fr-FR')} F</span>
+                                    </div>
+                                    {property.address && (
+                                      <span className="text-xs text-muted-foreground truncate">{property.address}</span>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}

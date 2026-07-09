@@ -493,7 +493,7 @@ const Properties = () => {
                                     </Popover>
                                   );
                                 })()
-                              ) : tenantName ? (
+                              ) : tenantName && effectiveStatus !== "disponible" ? (
                                 <div className="flex items-center gap-1.5 text-foreground">
                                   <User className="h-3.5 w-3.5 text-muted-foreground" />
                                   {tenantName}

@@ -411,8 +411,8 @@ export function CollectPaymentDialog({
           Encaisser
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[92vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-emerald" />
             Confirmer l'encaissement
@@ -422,7 +422,7 @@ export function CollectPaymentDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="flex-1 overflow-y-auto space-y-4 py-4 pr-1 min-h-0">
           {/* Late payments warning */}
           {checkingLate ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -611,7 +611,7 @@ export function CollectPaymentDialog({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 sm:gap-0 shrink-0 pt-2 border-t">
           <Button variant="outline" onClick={() => setOpen(false)}>
             Annuler
           </Button>

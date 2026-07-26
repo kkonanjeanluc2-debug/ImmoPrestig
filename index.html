@@ -247,7 +247,135 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Contenu statique SEO — remplacé par React au montage -->
+      <style>
+        #ip-seo{font-family:system-ui,sans-serif;max-width:860px;margin:32px auto;padding:0 20px;color:#111827}
+        #ip-seo h1{font-size:1.9rem;font-weight:700;color:#1F3A93;margin:0 0 12px}
+        #ip-seo h2{font-size:1.15rem;font-weight:600;color:#374151;margin:22px 0 6px}
+        #ip-seo p{color:#4B5563;line-height:1.65;margin:0 0 10px;font-size:.95rem}
+        #ip-seo ul{color:#4B5563;padding-left:18px;margin:0 0 14px;font-size:.95rem}
+        #ip-seo li{margin-bottom:3px}
+        #ip-seo .badges{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+        #ip-seo .badge{background:#EFF6FF;color:#1F3A93;padding:4px 10px;border-radius:20px;font-size:.8rem;font-weight:500}
+        #ip-seo .ctas{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px}
+        #ip-seo .btn{display:inline-block;padding:11px 26px;border-radius:6px;text-decoration:none;font-weight:600;font-size:.95rem}
+        #ip-seo .btn-primary{background:#1F3A93;color:#fff}
+        #ip-seo .btn-outline{border:2px solid #1F3A93;color:#1F3A93}
+        #ip-seo .section{margin-top:28px;padding-top:20px;border-top:1px solid #E5E7EB}
+        #ip-seo .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:12px 0}
+        #ip-seo .card{background:#F9FAFB;padding:14px 16px;border-radius:8px;border:1px solid #E5E7EB}
+        #ip-seo .card h3{font-size:1rem;font-weight:600;color:#1F3A93;margin:0 0 6px}
+        #ip-seo .card p{font-size:.85rem;margin:0}
+        #ip-seo footer-note{display:block;margin-top:30px;font-size:.8rem;color:#9CA3AF;text-align:center}
+      </style>
+      <div id="ip-seo">
+        <h1>ImmoPrestige — Logiciel de gestion immobilière et locative N°1 en Afrique</h1>
+        <p>
+          <strong>ImmoPrestige</strong> est la solution complète de <strong>gestion immobilière</strong>,
+          <strong>gestion locative</strong>, <strong>lotissements</strong> et ventes immobilières
+          conçue pour les agences et propriétaires en <strong>Côte d'Ivoire</strong> et en Afrique.
+          Gérez vos biens, vos locataires, vos loyers et vos lots depuis une seule application.
+        </p>
+        <div class="badges">
+          <span class="badge">Gestion immobilière</span>
+          <span class="badge">Gestion locative</span>
+          <span class="badge">Lotissement</span>
+          <span class="badge">Côte d'Ivoire</span>
+          <span class="badge">ImmoPrestige</span>
+          <span class="badge">CRM immobilier</span>
+          <span class="badge">Paiement Mobile Money</span>
+        </div>
+        <div class="ctas">
+          <a href="/signup" class="btn btn-primary">Essayez 14 jours gratuitement — Sans carte bancaire</a>
+          <a href="/login" class="btn btn-outline">Se connecter</a>
+        </div>
+
+        <div class="section">
+          <h2>Gestion locative simplifiée pour propriétaires et agences immobilières</h2>
+          <p>
+            Automatisez la <strong>gestion locative</strong> de vos biens immobiliers. Suivi des loyers,
+            génération automatique de quittances de loyer, contrats de bail numériques avec signature
+            électronique, rappels de paiement par WhatsApp et email. Idéal pour les propriétaires
+            bailleurs et agences de gestion locative en Côte d'Ivoire, Sénégal et Cameroun.
+          </p>
+          <ul>
+            <li>Gestion des locataires et suivi des loyers en temps réel</li>
+            <li>Quittances de loyer générées automatiquement</li>
+            <li>Contrats de bail numériques avec signature électronique</li>
+            <li>États des lieux digitaux et inventaires</li>
+            <li>Suivi et relance automatique des impayés</li>
+            <li>Rappels WhatsApp et email automatiques</li>
+            <li>Point mensuel du bailleur</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h2>Gestion de lotissements — Module complet pour promoteurs immobiliers</h2>
+          <p>
+            Le module <strong>lotissement</strong> le plus complet d'Afrique. Créez et gérez vos
+            lotissements, îlots et parcelles. Suivez les ventes de terrains, les échéanciers de
+            paiement, les démarches administratives et les documents juridiques. Parfait pour les
+            promoteurs immobiliers et lotisseurs en Côte d'Ivoire.
+          </p>
+          <ul>
+            <li>Création d'îlots et parcelles en masse</li>
+            <li>PV de familles et conventions de vente</li>
+            <li>Contrats de préfinancement signés numériquement</li>
+            <li>Signatures numériques intégrées</li>
+            <li>Suivi des démarches administratives</li>
+            <li>Traçabilité complète de chaque étape</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h2>CRM Immobilier — Ventes et achats immobiliers</h2>
+          <p>
+            Gérez toutes vos <strong>ventes immobilières</strong> avec un CRM immobilier puissant.
+            Suivi des prospects et acquéreurs, offres d'achat, négociations, encaissements et
+            mutations notariales. L'outil indispensable pour les agences immobilières en Afrique.
+          </p>
+        </div>
+
+        <div class="section">
+          <h2>Pourquoi choisir ImmoPrestige ?</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Application mobile</h3>
+              <p>PWA disponible sur Android et iOS. Gérez tout depuis votre smartphone.</p>
+            </div>
+            <div class="card">
+              <h3>Paiements locaux</h3>
+              <p>Orange Money, Wave, MTN Money, Moov Money et cartes bancaires intégrés.</p>
+            </div>
+            <div class="card">
+              <h3>Données sécurisées</h3>
+              <p>Chiffrement de bout en bout, hébergement cloud fiable et sauvegardes automatiques.</p>
+            </div>
+            <div class="card">
+              <h3>Plan gratuit</h3>
+              <p>Commencez sans carte bancaire. Essai gratuit 14 jours, aucun engagement.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Questions fréquentes sur ImmoPrestige</h2>
+          <h3 style="font-size:.95rem;font-weight:600;color:#374151;margin:14px 0 4px">Qu'est-ce qu'ImmoPrestige ?</h3>
+          <p>ImmoPrestige est un logiciel de gestion immobilière et locative en ligne, conçu pour les agences immobilières, propriétaires et bailleurs en Côte d'Ivoire et en Afrique. Il centralise la gestion des biens, locataires, loyers, contrats et lotissements.</p>
+          <h3 style="font-size:.95rem;font-weight:600;color:#374151;margin:14px 0 4px">ImmoPrestige est-il gratuit ?</h3>
+          <p>Oui, ImmoPrestige propose un plan gratuit pour démarrer sans engagement et sans carte bancaire. Des forfaits payants sont disponibles pour les besoins plus importants.</p>
+          <h3 style="font-size:.95rem;font-weight:600;color:#374151;margin:14px 0 4px">Comment gérer un lotissement avec ImmoPrestige ?</h3>
+          <p>ImmoPrestige offre un module complet : création d'îlots et parcelles, gestion des ventes de terrains, suivi des échéanciers, démarches administratives et signatures numériques.</p>
+          <h3 style="font-size:.95rem;font-weight:600;color:#374151;margin:14px 0 4px">ImmoPrestige fonctionne-t-il en Côte d'Ivoire ?</h3>
+          <p>Oui, ImmoPrestige est spécialement conçu pour le marché ivoirien et africain avec le Franc CFA (FCFA) et les moyens de paiement locaux (Orange Money, Wave, MTN Money).</p>
+        </div>
+
+        <p style="margin-top:28px;font-size:.8rem;color:#9CA3AF;text-align:center">
+          © ImmoPrestige — Logiciel de gestion immobilière pour la Côte d'Ivoire, le Sénégal, le Cameroun et toute l'Afrique.
+        </p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

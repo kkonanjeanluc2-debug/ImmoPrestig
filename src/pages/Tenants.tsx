@@ -94,38 +94,54 @@ function getPaymentStatusLabel(tenant: TenantWithDetails, isExpelled?: boolean, 
   const payments = tenant.payments || [];
   
   const now = new Date();
-  const contractStart = new Date(activeContract.start_date);
+  // Parse date strings without timezone shift (YYYY-MM-DD → local Date)
+  const parseLocalDate = (s: string): Date => {
+    const parts = s.split('-').map(Number);
+    return new Date(parts[0], (parts[1] ?? 1) - 1, parts[2] ?? 1);
+  };
+  const contractStart = parseLocalDate(activeContract.start_date);
   const rentDueDay = rentDueDayParam || 5;
   const paymentTiming = (tenant as any).payment_timing || 'prepaid';
   const gracePrepaid = Number((tenant as any).grace_period_days_prepaid ?? 0) || 0;
   const gracePostpaid = Number((tenant as any).grace_period_days_postpaid ?? 0) || 0;
   const graceDays = paymentTiming === 'postpaid' ? gracePostpaid : gracePrepaid;
-  
-  // Helper: check if a specific month is covered by any payment
+
+  const FRENCH_MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+  // Normalize a payment_months entry to "YYYY-MM", supports both ISO and French formats
+  const normalizeMonthKey = (m: string): string | null => {
+    const trimmed = m.trim();
+    if (/^\d{4}-\d{2}$/.test(trimmed)) return trimmed;
+    const parts = trimmed.split(" ");
+    if (parts.length === 2) {
+      // Normalize unicode (NFC) for accented chars like "Février"
+      const name = parts[0].normalize('NFC');
+      const idx = FRENCH_MONTHS.findIndex(mn => mn.normalize('NFC') === name);
+      if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}`;
+    }
+    return null;
+  };
+
+  // Helper: check if a specific month ("YYYY-MM") is covered by any payment
   const isMonthPaid = (monthKey: string) => {
     return payments.some(p => {
-      if (p.status !== 'paid' && p.status !== 'partial') return false;
-      
-      // Check payment_months array (multi-month payments)
+      // Accept "paid" status, or payments where paid_amount >= amount
+      // (handles cases where status field wasn't updated after full collection)
+      const paidAmount = Number((p as any).paid_amount ?? 0);
+      const totalAmount = Number((p as any).amount ?? 0);
+      const isFullyPaid = p.status === 'paid'
+        || (totalAmount > 0 && paidAmount >= totalAmount);
+      if (!isFullyPaid) return false;
+
+      // Check payment_months array (multi-month payments) — handles both ISO and French formats
       const pm = (p as any).payment_months as string[] | null;
       if (pm && Array.isArray(pm) && pm.length > 0) {
-        return pm.some((m: string) => {
-          // Handle both "2025-04" and "Avril 2025" formats
-          if (/^\d{4}-\d{2}$/.test(m)) return m === monthKey;
-          const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-          const parts = m.split(" ");
-          if (parts.length === 2) {
-            const idx = MONTHS.indexOf(parts[0]);
-            if (idx >= 0) return `${parts[1]}-${String(idx + 1).padStart(2, '0')}` === monthKey;
-          }
-          return false;
-        });
+        return pm.some((m: string) => normalizeMonthKey(m) === monthKey);
       }
-      
-      // Fallback: match by due_date month
-      const pDate = new Date(p.due_date);
-      const pKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}`;
-      return pKey === monthKey;
+
+      // Fallback: match by due_date month (parse as local date to avoid UTC shift)
+      const dueDateYM = typeof p.due_date === 'string' ? p.due_date.substring(0, 7) : null;
+      return dueDateYM === monthKey;
     });
   };
   

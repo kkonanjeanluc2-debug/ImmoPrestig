@@ -80,6 +80,28 @@ export function useProformaInvoices(tenantId?: string) {
   });
 }
 
+/** Retourne l'ID de l'agence de l'utilisateur courant.
+ *  Fonctionne pour les propriétaires (agencies.user_id) ET les membres (agency_members). */
+async function getUserAgencyId(userId: string): Promise<string | null> {
+  // Cas 1 : propriétaire de l'agence
+  const { data: owned } = await supabase
+    .from("agencies")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (owned?.id) return owned.id;
+
+  // Cas 2 : membre d'une agence
+  const { data: membership } = await supabase
+    .from("agency_members")
+    .select("agency_id")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .limit(1)
+    .maybeSingle();
+  return membership?.agency_id ?? null;
+}
+
 export function useCreateProforma() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -90,20 +112,13 @@ export function useCreateProforma() {
 
       const isDefinitive = data.invoice_type === "definitive";
 
-      // Get agency to generate number
-      const { data: agency } = await supabase
-        .from("agencies")
-        .select("id")
-        .or(`user_id.eq.${user.id}`)
-        .limit(1)
-        .single();
-
+      const agencyId = await getUserAgencyId(user.id);
       const year = new Date().getFullYear();
       let invoiceNumber = isDefinitive ? `F-${year}-001` : `PF-${year}-001`;
-      if (agency) {
+      if (agencyId) {
         const rpcName = isDefinitive ? "get_next_invoice_number" : "get_next_proforma_number";
         const { data: numData } = await supabase.rpc(rpcName, {
-          _agency_id: agency.id,
+          _agency_id: agencyId,
         });
         if (numData) invoiceNumber = numData;
       }
@@ -167,18 +182,11 @@ export function useConvertToInvoice() {
 
       if (fetchError || !proforma) throw new Error("Proforma introuvable");
 
-      // Get agency for invoice number
-      const { data: agency } = await supabase
-        .from("agencies")
-        .select("id")
-        .or(`user_id.eq.${user.id}`)
-        .limit(1)
-        .single();
-
+      const agencyId = await getUserAgencyId(user.id);
       let invoiceNumber = `F-${new Date().getFullYear()}-001`;
-      if (agency) {
+      if (agencyId) {
         const { data: numData } = await supabase.rpc("get_next_invoice_number", {
-          _agency_id: agency.id,
+          _agency_id: agencyId,
         });
         if (numData) invoiceNumber = numData;
       }

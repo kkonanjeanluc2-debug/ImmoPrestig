@@ -486,7 +486,7 @@ export function DocumentsParcelleDialog({
                       }
                     }
                   }
-                  // Fallback: fresh lotissement data, then cached data
+                  // Fallback 1: fresh lotissement data, then cached data
                   if (!ancienBeneficiaire?.nom) {
                     const proprietaireName = freshLotissement?.proprietaire_name
                       || freshLotissement?.chef_village_name
@@ -496,6 +496,21 @@ export function DocumentsParcelleDialog({
                     if (proprietaireName) {
                       ancienBeneficiaire = {
                         nom: proprietaireName,
+                        cni_number: ancienBeneficiaire?.cni_number,
+                        telephone: ancienBeneficiaire?.telephone,
+                      };
+                    }
+                  }
+                  // Fallback 2: extract cedant name hardcoded in template content
+                  // e.g. "et M **GOORE BI BALE ALAIN**, Propriétaire terrien"
+                  if (!ancienBeneficiaire?.nom && usedTemplate?.content) {
+                    const templateCedantMatch = usedTemplate.content.match(
+                      /et\s+M\.?\s+\*\*([^*\n]+)\*\*/i
+                    );
+                    const cedantFromTemplate = templateCedantMatch?.[1]?.trim();
+                    if (cedantFromTemplate && !cedantFromTemplate.startsWith('{')) {
+                      ancienBeneficiaire = {
+                        nom: cedantFromTemplate,
                         cni_number: ancienBeneficiaire?.cni_number,
                         telephone: ancienBeneficiaire?.telephone,
                       };

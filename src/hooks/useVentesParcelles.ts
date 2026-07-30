@@ -63,6 +63,7 @@ export interface VenteWithDetails extends VenteParcelle {
       chef_signature_url?: string;
       attestation_template_id?: string;
       cession_template_id?: string;
+      proprietaire_name?: string | null;
     };
   };
   acquereur?: {
@@ -92,7 +93,7 @@ export const useVentesParcelles = (lotissementId?: string) => {
               notes,
               lotissement_id,
               ilot:ilots(name),
-              lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, cession_template_id)
+              lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, cession_template_id, proprietaire_name)
             ),
             acquereur:acquereurs(name, phone, cni_number, email, address, birth_date, birth_place, profession)
           `)
@@ -115,7 +116,7 @@ export const useVentesParcelles = (lotissementId?: string) => {
             beneficiaire_id,
             notes,
             ilot:ilots(name),
-            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, cession_template_id)
+            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, cession_template_id, proprietaire_name)
           ),
           acquereur:acquereurs(name, phone, cni_number, email, address, birth_date, birth_place, profession)
         `)
@@ -146,7 +147,7 @@ export const useVenteParcelle = (id: string) => {
             price,
             ilot_id,
             ilot:ilots(name),
-            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id)
+            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, proprietaire_name)
           ),
           acquereur:acquereurs(*)
         `)

@@ -245,6 +245,7 @@ export function DocumentsParcelleDialog({
   const paidEcheances = echeances?.filter((e) => e.status === "paid") || [];
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -709,5 +710,6 @@ export function DocumentsParcelleDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

@@ -4,11 +4,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FileText, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAgency } from "@/hooks/useAgency";
@@ -43,11 +40,6 @@ export function DocumentsParcelleDialog({
   const { data: attestationTemplates = [] } = useAttestationTemplates();
   const { data: venteMutations = [] } = useMutationsParcelles(vente.id);
   const [generating, setGenerating] = useState<string | null>(null);
-  const [cessionFormOpen, setCessionFormOpen] = useState(false);
-  const [cessionCedantNom, setCessionCedantNom] = useState("");
-  const [cessionCedantCni, setCessionCedantCni] = useState("");
-  const [cessionCedantTel, setCessionCedantTel] = useState("");
-  const [cessionBenefAddress, setCessionBenefAddress] = useState("");
 
   // Find attribution template
   const lotissementTemplateId = (vente.parcelle?.lotissement as any)?.attestation_template_id;
@@ -385,30 +377,135 @@ export function DocumentsParcelleDialog({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                const lotissement = vente.parcelle?.lotissement as any;
-                const lastMut = venteMutations.length > 0 ? venteMutations[venteMutations.length - 1] : null;
-                // Pre-fill cédant from mutations or lotissement proprietaire
-                let autoNom = "";
-                let autoCni = "";
-                let autoTel = "";
-                if (lastMut) {
-                  autoNom = lastMut.ancien_acquereur?.name || "";
-                  autoCni = lastMut.ancien_acquereur?.cni_number || "";
-                  autoTel = lastMut.ancien_acquereur?.phone || "";
+              onClick={async () => {
+                setGenerating("attestation_cession");
+                try {
+                  const lotissement = vente.parcelle?.lotissement as any;
+                  const ilotName = (vente.parcelle as any)?.ilot?.name || null;
+                  const usedTemplate = cessionTemplate;
+                  const templateData: AttestationTemplateData | null = usedTemplate ? {
+                    district: usedTemplate.district,
+                    commune: usedTemplate.commune,
+                    village: usedTemplate.village,
+                    header_ministere: (usedTemplate as any).header_ministere || null,
+                    header_region: (usedTemplate as any).header_region || null,
+                    header_departement: (usedTemplate as any).header_departement || null,
+                    header_republique: (usedTemplate as any).header_republique || null,
+                    header_devise: (usedTemplate as any).header_devise || null,
+                    lotissement_origin_name: usedTemplate.lotissement_origin_name,
+                    arrete_approbation: usedTemplate.arrete_approbation,
+                    content: usedTemplate.content,
+                    banner_color_1: (usedTemplate as any).banner_color_1 || null,
+                    banner_color_2: (usedTemplate as any).banner_color_2 || null,
+                    banner_gradient: (usedTemplate as any).banner_gradient || false,
+                    doc_bg_color_1: (usedTemplate as any).doc_bg_color_1 || null,
+                    doc_bg_color_2: (usedTemplate as any).doc_bg_color_2 || null,
+                    doc_bg_gradient: (usedTemplate as any).doc_bg_gradient || false,
+                    village_logo_url: (usedTemplate as any).village_logo_url || null,
+                    right_logo_url: (usedTemplate as any).right_logo_url || null,
+                    header_line_color: (usedTemplate as any).header_line_color || null,
+                    title_border_color: (usedTemplate as any).title_border_color || null,
+                    title_bg_color: (usedTemplate as any).title_bg_color || null,
+                    watermark_type: (usedTemplate as any).watermark_type || 'none',
+                    watermark_text: (usedTemplate as any).watermark_text || null,
+                    watermark_image_url: (usedTemplate as any).watermark_image_url || null,
+                    watermark_angle: (usedTemplate as any).watermark_angle || 'diagonal',
+                    watermark_opacity: (usedTemplate as any).watermark_opacity ?? 0.1,
+                    watermark_repeat: (usedTemplate as any).watermark_repeat ?? true,
+                    watermark_position_x: (usedTemplate as any).watermark_position_x ?? null,
+                    watermark_position_y: (usedTemplate as any).watermark_position_y ?? null,
+                    watermark_rotation: (usedTemplate as any).watermark_rotation ?? null,
+                    page_border_enabled: (usedTemplate as any).page_border_enabled || false,
+                    page_border_color: (usedTemplate as any).page_border_color || '#8B4513',
+                    page_border_style: (usedTemplate as any).page_border_style || 'geometric',
+                  } : null;
+                  const chefImages: AttestationChefImages = {
+                    stamp_url: lotissement?.chef_stamp_url || null,
+                    signature_url: lotissement?.chef_signature_url || null,
+                  };
+
+                  // Resolve cedant (ancienBeneficiaire)
+                  let ancienBeneficiaire: AncienBeneficiaireInfo | null = null;
+                  const lastMut = venteMutations.length > 0 ? venteMutations[venteMutations.length - 1] : null;
+                  if (lastMut) {
+                    ancienBeneficiaire = {
+                      nom: lastMut.ancien_acquereur?.name || "",
+                      cni_number: lastMut.ancien_acquereur?.cni_number || undefined,
+                      telephone: lastMut.ancien_acquereur?.phone || undefined,
+                    };
+                  } else {
+                    // Check parcelle notes
+                    const notes = (vente.parcelle as any)?.notes || "";
+                    const benMatch = notes.match(/Bénéficiaire:\s*([^|]+)/);
+                    const nameFromNotes = benMatch?.[1]?.trim();
+                    if (nameFromNotes) ancienBeneficiaire = { nom: nameFromNotes };
+                    // Check beneficiaire_id
+                    const beneficiaireId = (vente.parcelle as any)?.beneficiaire_id;
+                    if (beneficiaireId) {
+                      const { data: benData } = await supabase
+                        .from("beneficiaires_lots")
+                        .select("nom, cni_number, telephone")
+                        .eq("id", beneficiaireId)
+                        .single();
+                      if (benData) {
+                        ancienBeneficiaire = {
+                          nom: ancienBeneficiaire?.nom || benData.nom,
+                          cni_number: benData.cni_number,
+                          telephone: benData.telephone,
+                        };
+                      }
+                    }
+                  }
+                  // Fallback: lotissement proprietaire_name or chef_village_name
+                  if (!ancienBeneficiaire?.nom) {
+                    const proprietaireName = lotissement?.proprietaire_name
+                      || lotissement?.chef_village_name
+                      || "";
+                    if (proprietaireName) {
+                      ancienBeneficiaire = {
+                        nom: proprietaireName,
+                        cni_number: ancienBeneficiaire?.cni_number,
+                        telephone: ancienBeneficiaire?.telephone,
+                      };
+                    }
+                  }
+
+                  // Resolve beneficiary (use mutation's nouvel_acquereur if any, else original buyer)
+                  const cessionAcquereurInfo = lastMut?.nouvel_acquereur ? {
+                    name: lastMut.nouvel_acquereur.name || "N/A",
+                    phone: lastMut.nouvel_acquereur.phone,
+                    email: lastMut.nouvel_acquereur.email || null,
+                    address: lastMut.nouvel_acquereur.address || null,
+                    cni_number: lastMut.nouvel_acquereur.cni_number || null,
+                    birth_date: lastMut.nouvel_acquereur.birth_date || null,
+                    birth_place: lastMut.nouvel_acquereur.birth_place || null,
+                    profession: lastMut.nouvel_acquereur.profession || null,
+                  } : acquereurInfo;
+
+                  const doc = await generateAttestationVillageoise(
+                    parcelleInfo,
+                    lotissementInfo,
+                    cessionAcquereurInfo,
+                    agencyInfo,
+                    lastMut ? lastMut.mutation_date : vente.sale_date,
+                    undefined,
+                    lotissement?.chef_village_name || undefined,
+                    templateData,
+                    lotissement?.chef_village_titre || undefined,
+                    ilotName,
+                    chefImages,
+                    ancienBeneficiaire,
+                    0,
+                    true
+                  );
+                  downloadPDF(doc, `attestation-cession-${parcelleInfo.plot_number}.pdf`);
+                  toast.success("Attestation de cession générée");
+                } catch (error) {
+                  console.error("Error generating PDF:", error);
+                  toast.error("Erreur lors de la génération du PDF");
+                } finally {
+                  setGenerating(null);
                 }
-                // Fallback: lotissement proprietaire or chef du village
-                if (!autoNom) {
-                  autoNom = lotissement?.proprietaire_name || lotissement?.chef_village_name || "";
-                }
-                // Pre-fill beneficiary address
-                const lastMutBenef = lastMut?.nouvel_acquereur;
-                const autoAddress = (lastMutBenef?.address || (vente.acquereur as any)?.address || "");
-                setCessionCedantNom(autoNom);
-                setCessionCedantCni(autoCni);
-                setCessionCedantTel(autoTel);
-                setCessionBenefAddress(autoAddress);
-                setCessionFormOpen(true);
               }}
               disabled={generating === "attestation_cession"}
             >
@@ -576,140 +673,6 @@ export function DocumentsParcelleDialog({
       </DialogContent>
     </Dialog>
 
-    {/* Formulaire pré-génération attestation de cession */}
-    <Dialog open={cessionFormOpen} onOpenChange={setCessionFormOpen}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Attestation de cession — vérification des données</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <p className="text-sm text-muted-foreground">
-            Vérifiez et complétez les informations avant de générer le document.
-          </p>
-          <div className="space-y-3">
-            <p className="text-sm font-semibold">Propriétaire terrien (cédant)</p>
-            <div className="space-y-1">
-              <Label htmlFor="cedant-nom" className="text-xs">Nom complet</Label>
-              <Input id="cedant-nom" value={cessionCedantNom} onChange={e => setCessionCedantNom(e.target.value)} placeholder="Ex: GOORE BI BALE ALAIN" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="cedant-cni" className="text-xs">CNI / Passeport n°</Label>
-              <Input id="cedant-cni" value={cessionCedantCni} onChange={e => setCessionCedantCni(e.target.value)} placeholder="Ex: CI00123456" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="cedant-tel" className="text-xs">Téléphone</Label>
-              <Input id="cedant-tel" value={cessionCedantTel} onChange={e => setCessionCedantTel(e.target.value)} placeholder="Ex: 0700000000" />
-            </div>
-          </div>
-          <div className="space-y-3 border-t pt-3">
-            <p className="text-sm font-semibold">Bénéficiaire — adresse domicile</p>
-            <div className="space-y-1">
-              <Label htmlFor="benef-address" className="text-xs">Domicilié à</Label>
-              <Input id="benef-address" value={cessionBenefAddress} onChange={e => setCessionBenefAddress(e.target.value)} placeholder="Ex: Cocody, Abidjan" />
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setCessionFormOpen(false)}>Annuler</Button>
-          <Button
-            disabled={generating === "attestation_cession"}
-            onClick={async () => {
-              setCessionFormOpen(false);
-              setGenerating("attestation_cession");
-              try {
-                const lotissement = vente.parcelle?.lotissement as any;
-                const ilotName = (vente.parcelle as any)?.ilot?.name || null;
-                const usedTemplate = cessionTemplate;
-                const templateData: AttestationTemplateData | null = usedTemplate ? {
-                  district: usedTemplate.district,
-                  commune: usedTemplate.commune,
-                  village: usedTemplate.village,
-                  header_ministere: (usedTemplate as any).header_ministere || null,
-                  header_region: (usedTemplate as any).header_region || null,
-                  header_departement: (usedTemplate as any).header_departement || null,
-                  header_republique: (usedTemplate as any).header_republique || null,
-                  header_devise: (usedTemplate as any).header_devise || null,
-                  lotissement_origin_name: usedTemplate.lotissement_origin_name,
-                  arrete_approbation: usedTemplate.arrete_approbation,
-                  content: usedTemplate.content,
-                  banner_color_1: (usedTemplate as any).banner_color_1 || null,
-                  banner_color_2: (usedTemplate as any).banner_color_2 || null,
-                  banner_gradient: (usedTemplate as any).banner_gradient || false,
-                  doc_bg_color_1: (usedTemplate as any).doc_bg_color_1 || null,
-                  doc_bg_color_2: (usedTemplate as any).doc_bg_color_2 || null,
-                  doc_bg_gradient: (usedTemplate as any).doc_bg_gradient || false,
-                  village_logo_url: (usedTemplate as any).village_logo_url || null,
-                  right_logo_url: (usedTemplate as any).right_logo_url || null,
-                  header_line_color: (usedTemplate as any).header_line_color || null,
-                  title_border_color: (usedTemplate as any).title_border_color || null,
-                  title_bg_color: (usedTemplate as any).title_bg_color || null,
-                  watermark_type: (usedTemplate as any).watermark_type || 'none',
-                  watermark_text: (usedTemplate as any).watermark_text || null,
-                  watermark_image_url: (usedTemplate as any).watermark_image_url || null,
-                  watermark_angle: (usedTemplate as any).watermark_angle || 'diagonal',
-                  watermark_opacity: (usedTemplate as any).watermark_opacity ?? 0.1,
-                  watermark_repeat: (usedTemplate as any).watermark_repeat ?? true,
-                  watermark_position_x: (usedTemplate as any).watermark_position_x ?? null,
-                  watermark_position_y: (usedTemplate as any).watermark_position_y ?? null,
-                  watermark_rotation: (usedTemplate as any).watermark_rotation ?? null,
-                  page_border_enabled: (usedTemplate as any).page_border_enabled || false,
-                  page_border_color: (usedTemplate as any).page_border_color || '#8B4513',
-                  page_border_style: (usedTemplate as any).page_border_style || 'geometric',
-                } : null;
-                const chefImages: AttestationChefImages = {
-                  stamp_url: lotissement?.chef_stamp_url || null,
-                  signature_url: lotissement?.chef_signature_url || null,
-                };
-                // Use form values for cedant
-                const ancienBeneficiaire: AncienBeneficiaireInfo | null = cessionCedantNom ? {
-                  nom: cessionCedantNom,
-                  cni_number: cessionCedantCni || undefined,
-                  telephone: cessionCedantTel || undefined,
-                } : null;
-                // Use form value for beneficiary address
-                const lastMut = venteMutations.length > 0 ? venteMutations[venteMutations.length - 1] : null;
-                const baseBenef = lastMut?.nouvel_acquereur ? {
-                  name: lastMut.nouvel_acquereur.name || "N/A",
-                  phone: lastMut.nouvel_acquereur.phone,
-                  email: lastMut.nouvel_acquereur.email || null,
-                  address: cessionBenefAddress || lastMut.nouvel_acquereur.address || null,
-                  cni_number: lastMut.nouvel_acquereur.cni_number || null,
-                  birth_date: lastMut.nouvel_acquereur.birth_date || null,
-                  birth_place: lastMut.nouvel_acquereur.birth_place || null,
-                  profession: lastMut.nouvel_acquereur.profession || null,
-                } : { ...acquereurInfo, address: cessionBenefAddress || acquereurInfo.address };
-                const doc = await generateAttestationVillageoise(
-                  parcelleInfo,
-                  lotissementInfo,
-                  baseBenef,
-                  agencyInfo,
-                  lastMut ? lastMut.mutation_date : vente.sale_date,
-                  undefined,
-                  lotissement?.chef_village_name || undefined,
-                  templateData,
-                  lotissement?.chef_village_titre || undefined,
-                  ilotName,
-                  chefImages,
-                  ancienBeneficiaire,
-                  0,
-                  true
-                );
-                downloadPDF(doc, `attestation-cession-${parcelleInfo.plot_number}.pdf`);
-                toast.success("Attestation de cession générée");
-              } catch (error) {
-                console.error("Error generating cession PDF:", error);
-                toast.error("Erreur lors de la génération du PDF");
-              } finally {
-                setGenerating(null);
-              }
-            }}
-          >
-            {generating === "attestation_cession" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Générer le PDF
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
     </>
   );
 }

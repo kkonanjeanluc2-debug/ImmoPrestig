@@ -99,6 +99,8 @@ function AttestationPreview({
   pageBorderEnabled,
   pageBorderStyle,
   formData,
+  agencyName,
+  agencyCity,
 }: {
   content: string;
   templateType: string;

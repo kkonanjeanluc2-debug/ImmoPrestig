@@ -44,6 +44,7 @@ import { buildAttestationTemplateContent } from "@/lib/attestationTemplateConten
 import { BORDER_MOTIF_OPTIONS, isMotifBorderStyle } from "@/lib/attestationBorderMotifs";
 import { supabase } from "@/integrations/supabase/client";
 import { WatermarkPositionEditor } from "./WatermarkPositionEditor";
+import { useAgency } from "@/hooks/useAgency";
 
 const SAMPLE_DATA: Record<string, string> = {
   "{numero_lot}": "A-001",
@@ -113,24 +114,30 @@ function AttestationPreview({
   pageBorderEnabled?: boolean | null;
   pageBorderStyle?: string | null;
   formData?: Partial<AttestationTemplateInsert>;
+  agencyName?: string | null;
+  agencyCity?: string | null;
 }) {
-  // Merge form values over sample data so the preview reflects what the user typed
+  // Merge form values + real agency data over sample data
   const effectiveSampleData = useMemo((): Record<string, string> => {
     const f = formData || {};
     return {
       ...SAMPLE_DATA,
-      ...(f.commune           ? { "{commune}": f.commune }                         : {}),
-      ...(f.village           ? { "{village}": f.village }                         : {}),
-      ...(f.district          ? { "{district}": f.district }                       : {}),
-      ...(f.header_ministere  ? { "{header_ministere}": f.header_ministere, "{ministere}": f.header_ministere }  : {}),
-      ...(f.header_region     ? { "{header_region}": f.header_region, "{region}": f.header_region }              : {}),
-      ...(f.header_departement? { "{header_departement}": f.header_departement, "{departement}": f.header_departement } : {}),
-      ...(f.header_republique ? { "{header_republique}": f.header_republique, "{republique}": f.header_republique }     : {}),
-      ...(f.header_devise     ? { "{header_devise}": f.header_devise, "{devise}": f.header_devise }               : {}),
-      ...(f.arrete_approbation? { "{arrete_approbation}": f.arrete_approbation }   : {}),
-      ...(f.lotissement_origin_name ? { "{nom_lotissement}": f.lotissement_origin_name } : {}),
+      // Vraie agence (nom et ville) — remplace les données d'exemple
+      ...(agencyName ? { "{nom_agence}": agencyName } : {}),
+      ...(agencyCity ? { "{ville}": agencyCity }       : {}),
+      // Valeurs saisies dans le formulaire du modèle
+      ...(f.commune            ? { "{commune}": f.commune }                                                          : {}),
+      ...(f.village            ? { "{village}": f.village }                                                          : {}),
+      ...(f.district           ? { "{district}": f.district }                                                        : {}),
+      ...(f.header_ministere   ? { "{header_ministere}": f.header_ministere, "{ministere}": f.header_ministere }     : {}),
+      ...(f.header_region      ? { "{header_region}": f.header_region,       "{region}": f.header_region }           : {}),
+      ...(f.header_departement ? { "{header_departement}": f.header_departement, "{departement}": f.header_departement } : {}),
+      ...(f.header_republique  ? { "{header_republique}": f.header_republique, "{republique}": f.header_republique } : {}),
+      ...(f.header_devise      ? { "{header_devise}": f.header_devise,          "{devise}": f.header_devise }        : {}),
+      ...(f.arrete_approbation ? { "{arrete_approbation}": f.arrete_approbation }                                    : {}),
+      ...(f.lotissement_origin_name ? { "{nom_lotissement}": f.lotissement_origin_name }                             : {}),
     };
-  }, [formData]);
+  }, [formData, agencyName, agencyCity]);
 
   const previewContent = useMemo(() => {
     if (!content) return "";
@@ -357,6 +364,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
   const createMutation = useCreateAttestationTemplate();
   const updateMutation = useUpdateAttestationTemplate();
   const deleteMutation = useDeleteAttestationTemplate();
+  const { data: agency } = useAgency();
   const isCession = templateType === "cession";
   const defaultContent = isCession ? DEFAULT_CESSION_TEMPLATE : DEFAULT_ATTESTATION_TEMPLATE;
   const variables = isCession ? CESSION_VARIABLES : ATTESTATION_VARIABLES;
@@ -1549,6 +1557,8 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
                     pageBorderEnabled={form.page_border_enabled}
                     pageBorderStyle={form.page_border_style}
                     formData={form}
+                    agencyName={agency?.name}
+                    agencyCity={agency?.city}
                   />
                 </div>
               </div>

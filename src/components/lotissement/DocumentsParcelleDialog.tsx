@@ -382,6 +382,36 @@ export function DocumentsParcelleDialog({
                 try {
                   const lotissement = vente.parcelle?.lotissement as any;
                   const ilotName = (vente.parcelle as any)?.ilot?.name || null;
+
+                  // Fetch fresh acquéreur data directly from DB (bypasses stale cache)
+                  const { data: freshAcquereur } = await supabase
+                    .from("acquereurs")
+                    .select("name, phone, email, address, cni_number, birth_date, birth_place, profession")
+                    .eq("id", vente.acquereur_id)
+                    .maybeSingle();
+
+                  // Fetch fresh lotissement data (chef_village_name, proprietaire_name)
+                  const parcelleLotissementId = (vente.parcelle as any)?.lotissement_id;
+                  const { data: freshLotissement } = parcelleLotissementId
+                    ? await supabase
+                        .from("lotissements")
+                        .select("chef_village_name, chef_village_titre, proprietaire_name, chef_stamp_url, chef_signature_url")
+                        .eq("id", parcelleLotissementId)
+                        .maybeSingle()
+                    : { data: null };
+
+                  // Build enriched acquereurInfo with fresh data
+                  const enrichedAcquereurInfo = {
+                    name: freshAcquereur?.name || acquereurInfo.name,
+                    phone: freshAcquereur?.phone ?? acquereurInfo.phone,
+                    email: freshAcquereur?.email ?? acquereurInfo.email,
+                    address: freshAcquereur?.address ?? acquereurInfo.address,
+                    cni_number: freshAcquereur?.cni_number ?? acquereurInfo.cni_number,
+                    birth_date: freshAcquereur?.birth_date ?? acquereurInfo.birth_date,
+                    birth_place: freshAcquereur?.birth_place ?? acquereurInfo.birth_place,
+                    profession: freshAcquereur?.profession ?? acquereurInfo.profession,
+                  };
+
                   const usedTemplate = cessionTemplate;
                   const templateData: AttestationTemplateData | null = usedTemplate ? {
                     district: usedTemplate.district,
@@ -420,8 +450,8 @@ export function DocumentsParcelleDialog({
                     page_border_style: (usedTemplate as any).page_border_style || 'geometric',
                   } : null;
                   const chefImages: AttestationChefImages = {
-                    stamp_url: lotissement?.chef_stamp_url || null,
-                    signature_url: lotissement?.chef_signature_url || null,
+                    stamp_url: freshLotissement?.chef_stamp_url || lotissement?.chef_stamp_url || null,
+                    signature_url: freshLotissement?.chef_signature_url || lotissement?.chef_signature_url || null,
                   };
 
                   // Resolve cedant (ancienBeneficiaire)
@@ -456,9 +486,11 @@ export function DocumentsParcelleDialog({
                       }
                     }
                   }
-                  // Fallback: lotissement proprietaire_name or chef_village_name
+                  // Fallback: fresh lotissement data, then cached data
                   if (!ancienBeneficiaire?.nom) {
-                    const proprietaireName = lotissement?.proprietaire_name
+                    const proprietaireName = freshLotissement?.proprietaire_name
+                      || freshLotissement?.chef_village_name
+                      || lotissement?.proprietaire_name
                       || lotissement?.chef_village_name
                       || "";
                     if (proprietaireName) {
@@ -470,7 +502,7 @@ export function DocumentsParcelleDialog({
                     }
                   }
 
-                  // Resolve beneficiary (use mutation's nouvel_acquereur if any, else original buyer)
+                  // Resolve beneficiary with fresh data (mutation's nouvel_acquereur if any, else enriched buyer)
                   const cessionAcquereurInfo = lastMut?.nouvel_acquereur ? {
                     name: lastMut.nouvel_acquereur.name || "N/A",
                     phone: lastMut.nouvel_acquereur.phone,
@@ -480,7 +512,7 @@ export function DocumentsParcelleDialog({
                     birth_date: lastMut.nouvel_acquereur.birth_date || null,
                     birth_place: lastMut.nouvel_acquereur.birth_place || null,
                     profession: lastMut.nouvel_acquereur.profession || null,
-                  } : acquereurInfo;
+                  } : enrichedAcquereurInfo;
 
                   const doc = await generateAttestationVillageoise(
                     parcelleInfo,
@@ -489,9 +521,9 @@ export function DocumentsParcelleDialog({
                     agencyInfo,
                     lastMut ? lastMut.mutation_date : vente.sale_date,
                     undefined,
-                    lotissement?.chef_village_name || undefined,
+                    freshLotissement?.chef_village_name || lotissement?.chef_village_name || undefined,
                     templateData,
-                    lotissement?.chef_village_titre || undefined,
+                    freshLotissement?.chef_village_titre || lotissement?.chef_village_titre || undefined,
                     ilotName,
                     chefImages,
                     ancienBeneficiaire,

@@ -8,7 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -98,6 +97,7 @@ function AttestationPreview({
   watermarkRotation,
   pageBorderEnabled,
   pageBorderStyle,
+  formData,
 }: {
   content: string;
   templateType: string;
@@ -112,10 +112,29 @@ function AttestationPreview({
   watermarkRotation?: number | null;
   pageBorderEnabled?: boolean | null;
   pageBorderStyle?: string | null;
+  formData?: Partial<AttestationTemplateInsert>;
 }) {
+  // Merge form values over sample data so the preview reflects what the user typed
+  const effectiveSampleData = useMemo((): Record<string, string> => {
+    const f = formData || {};
+    return {
+      ...SAMPLE_DATA,
+      ...(f.commune           ? { "{commune}": f.commune }                         : {}),
+      ...(f.village           ? { "{village}": f.village }                         : {}),
+      ...(f.district          ? { "{district}": f.district }                       : {}),
+      ...(f.header_ministere  ? { "{header_ministere}": f.header_ministere, "{ministere}": f.header_ministere }  : {}),
+      ...(f.header_region     ? { "{header_region}": f.header_region, "{region}": f.header_region }              : {}),
+      ...(f.header_departement? { "{header_departement}": f.header_departement, "{departement}": f.header_departement } : {}),
+      ...(f.header_republique ? { "{header_republique}": f.header_republique, "{republique}": f.header_republique }     : {}),
+      ...(f.header_devise     ? { "{header_devise}": f.header_devise, "{devise}": f.header_devise }               : {}),
+      ...(f.arrete_approbation? { "{arrete_approbation}": f.arrete_approbation }   : {}),
+      ...(f.lotissement_origin_name ? { "{nom_lotissement}": f.lotissement_origin_name } : {}),
+    };
+  }, [formData]);
+
   const previewContent = useMemo(() => {
     if (!content) return "";
-    return buildAttestationTemplateContent(content, SAMPLE_DATA, {
+    return buildAttestationTemplateContent(content, effectiveSampleData, {
       ancienBeneficiaire: templateType === "cession"
         ? {
             nom: SAMPLE_DATA["{cedant_nom}"],
@@ -124,7 +143,7 @@ function AttestationPreview({
           }
         : null,
     });
-  }, [content, templateType]);
+  }, [content, templateType, effectiveSampleData]);
 
   const previewPageWidth = 210;
   const previewPageHeight = 297;
@@ -687,7 +706,7 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingTemplate ? "Modifier le modèle" : "Nouveau modèle d'attestation"}
@@ -1486,50 +1505,54 @@ export function AttestationTemplateManager({ templateType = "attribution" }: { t
               </div>
             </div>
 
-            {/* Editor and Preview Tabs */}
-            <Tabs defaultValue="editor" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="editor" className="gap-2">
-                  <Edit className="h-4 w-4" />
-                  Éditeur
-                </TabsTrigger>
-                <TabsTrigger value="preview" className="gap-2">
-                  <Eye className="h-4 w-4" />
-                  Aperçu en temps réel
-                </TabsTrigger>
-              </TabsList>
+            {/* Editor + Live Preview — côte à côte */}
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Éditeur */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Edit className="h-4 w-4 text-muted-foreground" />
+                    <Label className="font-semibold">Éditeur</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    # titre &nbsp;·&nbsp; ## sous-titre &nbsp;·&nbsp; **gras** &nbsp;·&nbsp; --- séparateur
+                  </p>
+                  <Textarea
+                    value={form.content}
+                    onChange={(e) => updateField("content", e.target.value)}
+                    placeholder="Contenu de l'attestation..."
+                    className="min-h-[420px] font-mono text-sm resize-none"
+                  />
+                </div>
 
-              <TabsContent value="editor" className="space-y-2 mt-4">
-                <Label>Contenu de l'attestation</Label>
-                <p className="text-sm text-muted-foreground">
-                  Utilisez # pour les titres, ## pour les sous-titres, **texte** pour le gras, --- pour un séparateur
-                </p>
-                <Textarea
-                  value={form.content}
-                  onChange={(e) => updateField("content", e.target.value)}
-                  placeholder="Contenu de l'attestation villageoise..."
-                  className="min-h-[400px] font-mono text-sm"
-                />
-              </TabsContent>
-
-              <TabsContent value="preview" className="mt-4">
-                <AttestationPreview
-                  content={form.content}
-                  templateType={templateType}
-                  watermarkType={form.watermark_type}
-                  watermarkText={form.watermark_text}
-                  watermarkImageUrl={form.watermark_image_url}
-                  watermarkAngle={form.watermark_angle}
-                  watermarkOpacity={form.watermark_opacity}
-                  watermarkRepeat={form.watermark_repeat}
-                  watermarkPositionX={form.watermark_position_x}
-                  watermarkPositionY={form.watermark_position_y}
-                  watermarkRotation={form.watermark_rotation}
-                  pageBorderEnabled={form.page_border_enabled}
-                  pageBorderStyle={form.page_border_style}
-                />
-              </TabsContent>
-            </Tabs>
+                {/* Aperçu en temps réel */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Label className="font-semibold">Aperçu en temps réel</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Variables remplacées par les valeurs du formulaire + données d'exemple pour les champs du lot.
+                  </p>
+                  <AttestationPreview
+                    content={form.content}
+                    templateType={templateType}
+                    watermarkType={form.watermark_type}
+                    watermarkText={form.watermark_text}
+                    watermarkImageUrl={form.watermark_image_url}
+                    watermarkAngle={form.watermark_angle}
+                    watermarkOpacity={form.watermark_opacity}
+                    watermarkRepeat={form.watermark_repeat}
+                    watermarkPositionX={form.watermark_position_x}
+                    watermarkPositionY={form.watermark_position_y}
+                    watermarkRotation={form.watermark_rotation}
+                    pageBorderEnabled={form.page_border_enabled}
+                    pageBorderStyle={form.page_border_style}
+                    formData={form}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>

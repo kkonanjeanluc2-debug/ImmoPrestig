@@ -42,6 +42,12 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
   const [proprietaireName, setProprietaireName] = useState(
     lotissement.proprietaire_name ?? ""
   );
+  const [proprietaireTelephone, setProprietaireTelephone] = useState(
+    (lotissement as any).proprietaire_telephone ?? ""
+  );
+  const [proprietaireCni, setProprietaireCni] = useState(
+    (lotissement as any).proprietaire_cni ?? ""
+  );
   const [lotisseurName, setLotisseurName] = useState(
     lotissement.lotisseur_name ?? ""
   );
@@ -52,6 +58,12 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
   useEffect(() => {
     if (!proprietaireName && lotissement.proprietaire_name) {
       setProprietaireName(lotissement.proprietaire_name);
+    }
+    if (!proprietaireTelephone && (lotissement as any).proprietaire_telephone) {
+      setProprietaireTelephone((lotissement as any).proprietaire_telephone);
+    }
+    if (!proprietaireCni && (lotissement as any).proprietaire_cni) {
+      setProprietaireCni((lotissement as any).proprietaire_cni);
     }
     if (!lotisseurName && agency?.name) {
       setLotisseurName(agency.name);
@@ -84,6 +96,8 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
         repartition_proprietaire: proprietairePercent,
         repartition_lotisseur: lotisseurPercent,
         proprietaire_name: proprietaireName || null,
+        proprietaire_telephone: proprietaireTelephone || null,
+        proprietaire_cni: proprietaireCni || null,
         lotisseur_name: lotisseurName || null,
       } as any);
       toast.success("Configuration de répartition sauvegardée");
@@ -108,6 +122,8 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
         repartition_proprietaire: proprietairePercent,
         repartition_lotisseur: lotisseurPercent,
         proprietaire_name: proprietaireName || null,
+        proprietaire_telephone: proprietaireTelephone || null,
+        proprietaire_cni: proprietaireCni || null,
         lotisseur_name: lotisseurName || null,
       } as any);
 
@@ -187,7 +203,7 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Nom du Propriétaire
+                Nom du Propriétaire terrien
               </Label>
               <Input
                 placeholder="Nom du propriétaire du terrain"
@@ -204,6 +220,26 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
                 placeholder="Nom du lotisseur / société"
                 value={lotisseurName}
                 onChange={(e) => setLotisseurName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Propriétaire contact info — used in cession attestation */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Téléphone du Propriétaire terrien</Label>
+              <Input
+                placeholder="Ex: 0700000000"
+                value={proprietaireTelephone}
+                onChange={(e) => setProprietaireTelephone(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">CNI / Pièce d'identité du Propriétaire terrien</Label>
+              <Input
+                placeholder="Ex: CI0012345678"
+                value={proprietaireCni}
+                onChange={(e) => setProprietaireCni(e.target.value)}
               />
             </div>
           </div>

@@ -64,6 +64,8 @@ export interface VenteWithDetails extends VenteParcelle {
       attestation_template_id?: string;
       cession_template_id?: string;
       proprietaire_name?: string | null;
+      proprietaire_telephone?: string | null;
+      proprietaire_cni?: string | null;
     };
   };
   acquereur?: {
@@ -93,7 +95,7 @@ export const useVentesParcelles = (lotissementId?: string) => {
               notes,
               lotissement_id,
               ilot:ilots(name),
-              lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, cession_template_id, proprietaire_name)
+              lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, cession_template_id, proprietaire_name, proprietaire_telephone, proprietaire_cni)
             ),
             acquereur:acquereurs(name, phone, cni_number, email, address, birth_date, birth_place, profession)
           `)
@@ -116,7 +118,7 @@ export const useVentesParcelles = (lotissementId?: string) => {
             beneficiaire_id,
             notes,
             ilot:ilots(name),
-            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, cession_template_id, proprietaire_name)
+            lotissement:lotissements(name, location, city, chef_village_name, chef_village_titre, chef_stamp_url, chef_signature_url, attestation_template_id, cession_template_id, proprietaire_name, proprietaire_telephone, proprietaire_cni)
           ),
           acquereur:acquereurs(name, phone, cni_number, email, address, birth_date, birth_place, profession)
         `)

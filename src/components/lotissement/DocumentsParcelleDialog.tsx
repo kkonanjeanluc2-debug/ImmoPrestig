@@ -390,12 +390,12 @@ export function DocumentsParcelleDialog({
                     .eq("id", vente.acquereur_id)
                     .maybeSingle();
 
-                  // Fetch fresh lotissement data (chef_village_name, proprietaire_name)
+                  // Fetch fresh lotissement data (including proprietaire contact)
                   const parcelleLotissementId = (vente.parcelle as any)?.lotissement_id;
                   const { data: freshLotissement } = parcelleLotissementId
                     ? await supabase
                         .from("lotissements")
-                        .select("chef_village_name, chef_village_titre, proprietaire_name, chef_stamp_url, chef_signature_url")
+                        .select("chef_village_name, chef_village_titre, proprietaire_name, proprietaire_telephone, proprietaire_cni, chef_stamp_url, chef_signature_url")
                         .eq("id", parcelleLotissementId)
                         .maybeSingle()
                     : { data: null };
@@ -486,18 +486,24 @@ export function DocumentsParcelleDialog({
                       }
                     }
                   }
+                  // Propriétaire terrien contact fields (stored on the lotissement)
+                  const proprietaireTel = (freshLotissement as any)?.proprietaire_telephone
+                    || (lotissement as any)?.proprietaire_telephone || undefined;
+                  const proprietaireCni = (freshLotissement as any)?.proprietaire_cni
+                    || (lotissement as any)?.proprietaire_cni || undefined;
+
                   // Fallback 1: fresh lotissement data, then cached data
                   if (!ancienBeneficiaire?.nom) {
-                    const proprietaireName = freshLotissement?.proprietaire_name
-                      || freshLotissement?.chef_village_name
+                    const proprietaireName = (freshLotissement as any)?.proprietaire_name
+                      || (freshLotissement as any)?.chef_village_name
                       || lotissement?.proprietaire_name
                       || lotissement?.chef_village_name
                       || "";
                     if (proprietaireName) {
                       ancienBeneficiaire = {
                         nom: proprietaireName,
-                        cni_number: ancienBeneficiaire?.cni_number,
-                        telephone: ancienBeneficiaire?.telephone,
+                        cni_number: proprietaireCni,
+                        telephone: proprietaireTel,
                       };
                     }
                   }
@@ -511,10 +517,17 @@ export function DocumentsParcelleDialog({
                     if (cedantFromTemplate && !cedantFromTemplate.startsWith('{')) {
                       ancienBeneficiaire = {
                         nom: cedantFromTemplate,
-                        cni_number: ancienBeneficiaire?.cni_number,
-                        telephone: ancienBeneficiaire?.telephone,
+                        cni_number: proprietaireCni,
+                        telephone: proprietaireTel,
                       };
                     }
+                  }
+                  // Apply proprietaire contact to ancienBeneficiaire even if name was found via mutations
+                  if (ancienBeneficiaire && !ancienBeneficiaire.telephone && proprietaireTel) {
+                    ancienBeneficiaire = { ...ancienBeneficiaire, telephone: proprietaireTel };
+                  }
+                  if (ancienBeneficiaire && !ancienBeneficiaire.cni_number && proprietaireCni) {
+                    ancienBeneficiaire = { ...ancienBeneficiaire, cni_number: proprietaireCni };
                   }
 
                   // Resolve beneficiary with fresh data (mutation's nouvel_acquereur if any, else enriched buyer)

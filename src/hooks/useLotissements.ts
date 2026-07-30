@@ -18,6 +18,8 @@ export interface Lotissement {
   repartition_proprietaire: number | null;
   repartition_lotisseur: number | null;
   proprietaire_name: string | null;
+  proprietaire_telephone: string | null;
+  proprietaire_cni: string | null;
   lotisseur_name: string | null;
   chef_village_name: string | null;
   chef_village_titre: string | null;
@@ -41,6 +43,8 @@ export interface LotissementInsert {
   repartition_proprietaire?: number | null;
   repartition_lotisseur?: number | null;
   proprietaire_name?: string | null;
+  proprietaire_telephone?: string | null;
+  proprietaire_cni?: string | null;
   lotisseur_name?: string | null;
   chef_village_name?: string | null;
   chef_village_titre?: string | null;

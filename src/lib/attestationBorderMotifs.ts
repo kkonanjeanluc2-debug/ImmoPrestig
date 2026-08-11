@@ -99,6 +99,40 @@ const setFill = (doc: jsPDF, color: [number, number, number]) =>
 const setDraw = (doc: jsPDF, color: [number, number, number]) =>
   doc.setDrawColor(color[0], color[1], color[2]);
 
+type Point = [number, number];
+
+const shade = (color: [number, number, number], factor: number): [number, number, number] => [
+  Math.max(0, Math.min(255, Math.round(color[0] * factor))),
+  Math.max(0, Math.min(255, Math.round(color[1] * factor))),
+  Math.max(0, Math.min(255, Math.round(color[2] * factor))),
+];
+
+const lerp = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+const addVec = (p: Point, v: Point, scale = 1): Point => [p[0] + v[0] * scale, p[1] + v[1] * scale];
+
+// Fill an arbitrary convex polygon (fan-triangulated from its first vertex)
+const fillPolygon = (doc: jsPDF, points: Point[], color: [number, number, number]) => {
+  setFill(doc, color);
+  for (let i = 1; i < points.length - 1; i++) {
+    doc.triangle(
+      points[0][0], points[0][1],
+      points[i][0], points[i][1],
+      points[i + 1][0], points[i + 1][1],
+      "F",
+    );
+  }
+};
+
+const strokePolygon = (doc: jsPDF, points: Point[], color: [number, number, number], lineWidth: number) => {
+  setDraw(doc, color);
+  doc.setLineWidth(lineWidth);
+  for (let i = 0; i < points.length; i++) {
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[(i + 1) % points.length];
+    doc.line(x1, y1, x2, y2);
+  }
+};
+
 /**
  * Draw a single motif centered at (cx, cy) with a given size (mm).
  * All motifs are designed to fit within a `size x size` square.
@@ -327,21 +361,51 @@ export const drawMotif = (
       break;
     }
     case "parpaing": {
-      // Concrete block (parpaing) front face with 3 hollow cells
-      setFill(doc, palette.primary);
-      doc.rect(cx - size * 0.42, cy - size * 0.28, size * 0.84, size * 0.56, "F");
-      setDraw(doc, palette.secondary);
-      doc.setLineWidth(0.3);
-      doc.rect(cx - size * 0.42, cy - size * 0.28, size * 0.84, size * 0.56);
-      // 3 hollow cells
-      setFill(doc, palette.accent);
-      const holeW = size * 0.2;
-      const holeH = size * 0.36;
-      const gap = size * 0.06;
-      const startX = cx - (holeW * 3 + gap * 2) / 2;
+      // Isometric concrete block (parpaing), lying on its side, 3 hollow cells on the top
+      // face — same pose as a real breeze block photo (front face + receding top + end face).
+      const depth: Point = [size * 0.24, -size * 0.17];
+
+      const fbl: Point = [cx - size * 0.36, cy + size * 0.26];
+      const fbr: Point = [cx + size * 0.14, cy + size * 0.26];
+      const ftr: Point = [cx + size * 0.14, cy - size * 0.08];
+      const ftl: Point = [cx - size * 0.36, cy - size * 0.08];
+
+      const ttl = addVec(ftl, depth);
+      const ttr = addVec(ftr, depth);
+      const sbr = addVec(fbr, depth);
+
+      // End face (right side, in shadow — darkest tone)
+      fillPolygon(doc, [fbr, ftr, ttr, sbr], shade(palette.primary, 0.62));
+      // Top face (catches the most light — lightest tone)
+      fillPolygon(doc, [ftl, ftr, ttr, ttl], shade(palette.primary, 1.18));
+      // Front face (base tone)
+      fillPolygon(doc, [fbl, fbr, ftr, ftl], palette.primary);
+
+      strokePolygon(doc, [fbl, fbr, ftr, ftl], palette.secondary, 0.22);
+      strokePolygon(doc, [ftl, ftr, ttr, ttl], palette.secondary, 0.18);
+      strokePolygon(doc, [fbr, ftr, ttr, sbr], palette.secondary, 0.18);
+
+      // 3 hollow cells recessed into the top face
+      const cellColor = shade(palette.accent, 1);
+      const margin = 0.08;
+      const gap = 0.06;
+      const cellW = (1 - margin * 2 - gap * 2) / 3;
       for (let i = 0; i < 3; i++) {
-        const hx = startX + i * (holeW + gap);
-        doc.rect(hx, cy - holeH / 2, holeW, holeH, "F");
+        const t0 = margin + i * (cellW + gap);
+        const t1 = t0 + cellW;
+        const p0 = addVec(lerp(ftl, ftr, t0), depth, 0.12);
+        const p1 = addVec(lerp(ftl, ftr, t1), depth, 0.12);
+        const p2 = addVec(lerp(ftl, ftr, t1), depth, 0.85);
+        const p3 = addVec(lerp(ftl, ftr, t0), depth, 0.85);
+        fillPolygon(doc, [p0, p1, p2, p3], cellColor);
+      }
+
+      // Subtle concrete-grain speckles on the front face
+      setFill(doc, shade(palette.secondary, 0.9));
+      const speckles: Point[] = [[0.18, 0.3], [0.35, 0.55], [0.55, 0.2], [0.72, 0.6], [0.85, 0.35]];
+      for (const [fx, fy] of speckles) {
+        const p = lerp(lerp(fbl, fbr, fx), lerp(ftl, ftr, fx), 1 - fy);
+        doc.circle(p[0], p[1], size * 0.014, "F");
       }
       break;
     }

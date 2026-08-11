@@ -2,6 +2,7 @@ export interface AttestationCessionInfo {
   nom?: string | null;
   cni_number?: string | null;
   telephone?: string | null;
+  adresse?: string | null;
 }
 
 export const formatAttestationPhone = (phone?: string | null): string => {

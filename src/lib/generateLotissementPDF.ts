@@ -1117,6 +1117,7 @@ export interface AncienBeneficiaireInfo {
   nom: string;
   cni_number?: string | null;
   telephone?: string | null;
+  adresse?: string | null;
 }
 
 export const generateAttestationVillageoise = async (
@@ -2024,6 +2025,7 @@ const _generateAttestationVillageoiseInternal = async (
       '{cedant_nom}': ancienBeneficiaire?.nom || '___',
       '{cedant_cni}': ancienBeneficiaire?.cni_number || '___',
       '{cedant_telephone}': formatAttestationPhone(ancienBeneficiaire?.telephone) || '___',
+      '{cedant_adresse}': ancienBeneficiaire?.adresse || '___',
     };
 
     const finalContent = buildAttestationTemplateContent(templateContent, variableData, {

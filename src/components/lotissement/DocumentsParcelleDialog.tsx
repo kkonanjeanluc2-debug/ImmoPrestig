@@ -320,7 +320,7 @@ export function DocumentsParcelleDialog({
                   if (beneficiaireId) {
                     const { data: benData } = await supabase
                       .from("beneficiaires_lots")
-                      .select("nom, cni_number, telephone")
+                      .select("nom, cni_number, telephone, adresse")
                       .eq("id", beneficiaireId)
                       .single();
 
@@ -329,6 +329,7 @@ export function DocumentsParcelleDialog({
                         nom: ancienBeneficiaire?.nom || benData.nom,
                         cni_number: benData.cni_number,
                         telephone: benData.telephone,
+                        adresse: (benData as any).adresse,
                       };
                     }
                   }
@@ -395,7 +396,7 @@ export function DocumentsParcelleDialog({
                   const { data: freshLotissement } = parcelleLotissementId
                     ? await supabase
                         .from("lotissements")
-                        .select("chef_village_name, chef_village_titre, proprietaire_name, proprietaire_telephone, proprietaire_cni, chef_stamp_url, chef_signature_url")
+                        .select("chef_village_name, chef_village_titre, proprietaire_name, proprietaire_telephone, proprietaire_cni, proprietaire_adresse, chef_stamp_url, chef_signature_url")
                         .eq("id", parcelleLotissementId)
                         .maybeSingle()
                     : { data: null };
@@ -462,6 +463,7 @@ export function DocumentsParcelleDialog({
                       nom: lastMut.ancien_acquereur?.name || "",
                       cni_number: lastMut.ancien_acquereur?.cni_number || undefined,
                       telephone: lastMut.ancien_acquereur?.phone || undefined,
+                      adresse: lastMut.ancien_acquereur?.address || undefined,
                     };
                   } else {
                     // Check parcelle notes
@@ -474,7 +476,7 @@ export function DocumentsParcelleDialog({
                     if (beneficiaireId) {
                       const { data: benData } = await supabase
                         .from("beneficiaires_lots")
-                        .select("nom, cni_number, telephone")
+                        .select("nom, cni_number, telephone, adresse")
                         .eq("id", beneficiaireId)
                         .single();
                       if (benData) {
@@ -482,6 +484,7 @@ export function DocumentsParcelleDialog({
                           nom: ancienBeneficiaire?.nom || benData.nom,
                           cni_number: benData.cni_number,
                           telephone: benData.telephone,
+                          adresse: (benData as any).adresse,
                         };
                       }
                     }
@@ -491,6 +494,8 @@ export function DocumentsParcelleDialog({
                     || (lotissement as any)?.proprietaire_telephone || undefined;
                   const proprietaireCni = (freshLotissement as any)?.proprietaire_cni
                     || (lotissement as any)?.proprietaire_cni || undefined;
+                  const proprietaireAdresse = (freshLotissement as any)?.proprietaire_adresse
+                    || (lotissement as any)?.proprietaire_adresse || undefined;
 
                   // Fallback 1: fresh lotissement data, then cached data
                   if (!ancienBeneficiaire?.nom) {
@@ -504,6 +509,7 @@ export function DocumentsParcelleDialog({
                         nom: proprietaireName,
                         cni_number: proprietaireCni,
                         telephone: proprietaireTel,
+                        adresse: proprietaireAdresse,
                       };
                     }
                   }
@@ -519,6 +525,7 @@ export function DocumentsParcelleDialog({
                         nom: cedantFromTemplate,
                         cni_number: proprietaireCni,
                         telephone: proprietaireTel,
+                        adresse: proprietaireAdresse,
                       };
                     }
                   }
@@ -528,6 +535,9 @@ export function DocumentsParcelleDialog({
                   }
                   if (ancienBeneficiaire && !ancienBeneficiaire.cni_number && proprietaireCni) {
                     ancienBeneficiaire = { ...ancienBeneficiaire, cni_number: proprietaireCni };
+                  }
+                  if (ancienBeneficiaire && !ancienBeneficiaire.adresse && proprietaireAdresse) {
+                    ancienBeneficiaire = { ...ancienBeneficiaire, adresse: proprietaireAdresse };
                   }
 
                   // Resolve beneficiary with fresh data (mutation's nouvel_acquereur if any, else enriched buyer)

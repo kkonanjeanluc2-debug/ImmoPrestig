@@ -79,6 +79,7 @@ const SAMPLE_DATA: Record<string, string> = {
   "{cedant_nom}": "TRAORE Abdoulaye",
   "{cedant_cni}": "CI-9876543210",
   "{cedant_telephone}": "+225 05 06 07 08 09",
+  "{cedant_adresse}": "Yopougon, Abidjan",
   "{ancien_beneficiaire_nom}": "KONE Mamadou",
   "{ancien_beneficiaire_cni}": "CI-1122334455",
   "{ancien_beneficiaire_telephone}": "+225 01 02 03 04 05",
@@ -149,6 +150,7 @@ function AttestationPreview({
             nom: SAMPLE_DATA["{cedant_nom}"],
             cni_number: SAMPLE_DATA["{cedant_cni}"],
             telephone: SAMPLE_DATA["{cedant_telephone}"],
+            adresse: SAMPLE_DATA["{cedant_adresse}"],
           }
         : null,
     });

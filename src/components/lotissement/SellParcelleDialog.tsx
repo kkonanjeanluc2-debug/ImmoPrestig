@@ -27,6 +27,7 @@ import { useUpdateReservationParcelle } from "@/hooks/useReservationsParcelles";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import { usePrefinanceurs, useCreatePrefinanceur } from "@/hooks/usePrefinanceurs";
 import { useLotissement, useUpdateLotissement } from "@/hooks/useLotissements";
+import { useBeneficiairesLots, useUpdateBeneficiaireLot } from "@/hooks/useBeneficiairesLots";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,6 +55,8 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
   const updateReservation = useUpdateReservationParcelle();
   const { data: lotissement } = useLotissement(parcelle.lotissement_id);
   const updateLotissement = useUpdateLotissement();
+  const { data: beneficiairesLots } = useBeneficiairesLots(parcelle.lotissement_id);
+  const updateBeneficiaireLot = useUpdateBeneficiaireLot();
 
   const [transactionType, setTransactionType] = useState<"vente" | "prefinancement">("vente");
   const [mode, setMode] = useState<"existing" | "new">(defaultAcquereurId ? "existing" : "existing");
@@ -96,21 +99,44 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
   const [salePrice, setSalePrice] = useState(parcelle.price.toString());
   const [soldBy, setSoldBy] = useState<string>((parcelle as any).assigned_to || user?.id || "");
 
-  // Cédant (propriétaire terrien) — pre-filled from the lotissement, editable here so it
-  // can be corrected or filled in on the spot if missing when generating the attestation de cession
+  // Cédant (propriétaire terrien) — auto pre-filled from whichever source the attestation
+  // de cession will actually read: the family member (bénéficiaire) this specific lot was
+  // attributed to if any, otherwise the lotissement's generic propriétaire terrien.
+  // Editable here so it can be corrected or filled in on the spot if missing.
   const [cedantName, setCedantName] = useState("");
   const [cedantPhone, setCedantPhone] = useState("");
   const [cedantCni, setCedantCni] = useState("");
+  const [cedantAddress, setCedantAddress] = useState("");
   const [cedantLoaded, setCedantLoaded] = useState(false);
+  const [cedantBeneficiaireId, setCedantBeneficiaireId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (lotissement && !cedantLoaded) {
+    if (cedantLoaded) return;
+
+    if (parcelle.beneficiaire_id) {
+      // Wait for the beneficiaires list to load before deciding
+      if (beneficiairesLots === undefined) return;
+      const linked = beneficiairesLots.find((b) => b.id === parcelle.beneficiaire_id);
+      if (linked) {
+        setCedantName(linked.nom || "");
+        setCedantPhone(linked.telephone || "");
+        setCedantCni(linked.cni_number || "");
+        setCedantAddress(linked.adresse || "");
+        setCedantBeneficiaireId(linked.id);
+        setCedantLoaded(true);
+        return;
+      }
+    }
+
+    if (lotissement) {
       setCedantName(lotissement.proprietaire_name || "");
       setCedantPhone(lotissement.proprietaire_telephone || "");
       setCedantCni(lotissement.proprietaire_cni || "");
+      setCedantAddress(lotissement.proprietaire_adresse || "");
+      setCedantBeneficiaireId(null);
       setCedantLoaded(true);
     }
-  }, [lotissement, cedantLoaded]);
+  }, [parcelle.beneficiaire_id, beneficiairesLots, lotissement, cedantLoaded]);
 
   const monthlyPayment = useMemo(() => {
     if (paymentType !== "echelonne") return 0;
@@ -255,27 +281,55 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
         });
       }
 
-      // Persist cédant (propriétaire terrien) info on the lotissement if it was
-      // added or corrected here, so the attestation de cession picks it up later
-      if (parcelle.lotissement_id) {
+      // Persist cédant info if it was added or corrected here, so the attestation de
+      // cession picks it up later — on the linked bénéficiaire if this lot has one,
+      // otherwise on the lotissement's generic propriétaire terrien.
+      {
         const trimmedName = cedantName.trim();
         const trimmedPhone = cedantPhone.trim();
         const trimmedCni = cedantCni.trim();
-        const cedantChanged =
-          trimmedName !== (lotissement?.proprietaire_name || "") ||
-          trimmedPhone !== (lotissement?.proprietaire_telephone || "") ||
-          trimmedCni !== (lotissement?.proprietaire_cni || "");
+        const trimmedAddress = cedantAddress.trim();
 
-        if (cedantChanged) {
-          try {
-            await updateLotissement.mutateAsync({
-              id: parcelle.lotissement_id,
-              proprietaire_name: trimmedName || null,
-              proprietaire_telephone: trimmedPhone || null,
-              proprietaire_cni: trimmedCni || null,
-            });
-          } catch {
-            toast.error("Vente enregistrée, mais erreur lors de la mise à jour du cédant");
+        if (cedantBeneficiaireId) {
+          const linked = beneficiairesLots?.find((b) => b.id === cedantBeneficiaireId);
+          const cedantChanged =
+            trimmedPhone !== (linked?.telephone || "") ||
+            trimmedCni !== (linked?.cni_number || "") ||
+            trimmedAddress !== (linked?.adresse || "") ||
+            (!!trimmedName && trimmedName !== (linked?.nom || ""));
+
+          if (cedantChanged) {
+            try {
+              await updateBeneficiaireLot.mutateAsync({
+                id: cedantBeneficiaireId,
+                ...(trimmedName ? { nom: trimmedName } : {}),
+                telephone: trimmedPhone || null,
+                cni_number: trimmedCni || null,
+                adresse: trimmedAddress || null,
+              });
+            } catch {
+              toast.error("Vente enregistrée, mais erreur lors de la mise à jour du cédant");
+            }
+          }
+        } else if (parcelle.lotissement_id) {
+          const cedantChanged =
+            trimmedName !== (lotissement?.proprietaire_name || "") ||
+            trimmedPhone !== (lotissement?.proprietaire_telephone || "") ||
+            trimmedCni !== (lotissement?.proprietaire_cni || "") ||
+            trimmedAddress !== (lotissement?.proprietaire_adresse || "");
+
+          if (cedantChanged) {
+            try {
+              await updateLotissement.mutateAsync({
+                id: parcelle.lotissement_id,
+                proprietaire_name: trimmedName || null,
+                proprietaire_telephone: trimmedPhone || null,
+                proprietaire_cni: trimmedCni || null,
+                proprietaire_adresse: trimmedAddress || null,
+              });
+            } catch {
+              toast.error("Vente enregistrée, mais erreur lors de la mise à jour du cédant");
+            }
           }
         }
       }
@@ -287,7 +341,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     }
   };
 
-  const isLoading = createAcquereur.isPending || createVente.isPending || submittingPref || createPrefinanceur.isPending || updateLotissement.isPending;
+  const isLoading = createAcquereur.isPending || createVente.isPending || submittingPref || createPrefinanceur.isPending || updateLotissement.isPending || updateBeneficiaireLot.isPending;
   const isPref = transactionType === "prefinancement";
 
   return (
@@ -703,7 +757,9 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
             <div>
               <Label>Cédant (Propriétaire terrien)</Label>
               <p className="text-xs text-muted-foreground">
-                Utilisé pour l'attestation de cession. Modifiez-le ou renseignez-le si absent.
+                {cedantBeneficiaireId
+                  ? "Ce lot est attribué à un membre de la famille du propriétaire — ses informations sont préremplies. Modifiez-les si besoin."
+                  : "Utilisé pour l'attestation de cession. Préremplies si déjà connues, modifiez-les ou renseignez-les si absentes."}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg">
@@ -732,6 +788,15 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                   value={cedantCni}
                   onChange={(e) => setCedantCni(e.target.value)}
                   placeholder="CI00123456789"
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="cedantAddress">Domicile</Label>
+                <Input
+                  id="cedantAddress"
+                  value={cedantAddress}
+                  onChange={(e) => setCedantAddress(e.target.value)}
+                  placeholder="Ex: Cocody, Abidjan"
                 />
               </div>
             </div>

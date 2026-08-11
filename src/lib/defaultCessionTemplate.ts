@@ -25,6 +25,8 @@ Monsieur/Madame **{cedant_nom}**
 
 Contact : **{cedant_telephone}**
 
+Domicilié à : **{cedant_adresse}**
+
 CNI n° **{cedant_cni}**
 
 ---
@@ -59,6 +61,7 @@ export const CESSION_VARIABLES = [
   { variable: "{cedant_nom}", description: "Nom du propriétaire terrien" },
   { variable: "{cedant_cni}", description: "N° CNI du propriétaire terrien" },
   { variable: "{cedant_telephone}", description: "Téléphone du propriétaire terrien" },
+  { variable: "{cedant_adresse}", description: "Domicile du propriétaire terrien" },
   { variable: "{date_vente}", description: "Date de la cession" },
   { variable: "{ville}", description: "Ville (pour 'Fait à...')" },
   { variable: "{nom_agence}", description: "Nom de l'agence/promoteur" },

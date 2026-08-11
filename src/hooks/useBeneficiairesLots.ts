@@ -11,6 +11,7 @@ export interface BeneficiaireLot {
   email: string | null;
   lien_role: string | null;
   cni_number: string | null;
+  adresse: string | null;
   partie: "proprietaire" | "lotisseur";
   member_user_id: string | null;
   created_at: string;
@@ -24,8 +25,13 @@ export interface BeneficiaireLotInsert {
   email?: string | null;
   lien_role?: string | null;
   cni_number?: string | null;
+  adresse?: string | null;
   partie: "proprietaire" | "lotisseur";
   member_user_id?: string | null;
+}
+
+export interface BeneficiaireLotUpdate extends Partial<BeneficiaireLotInsert> {
+  id: string;
 }
 
 export const useBeneficiairesLots = (lotissementId: string) => {
@@ -64,6 +70,26 @@ export const useCreateBeneficiaireLot = () => {
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["beneficiaires-lots", vars.lotissement_id] });
+    },
+  });
+};
+
+export const useUpdateBeneficiaireLot = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: BeneficiaireLotUpdate) => {
+      const { data, error } = await supabase
+        .from("beneficiaires_lots")
+        .update(updates as any)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["beneficiaires-lots", data?.lotissement_id] });
     },
   });
 };

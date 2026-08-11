@@ -48,6 +48,9 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
   const [proprietaireCni, setProprietaireCni] = useState(
     (lotissement as any).proprietaire_cni ?? ""
   );
+  const [proprietaireAdresse, setProprietaireAdresse] = useState(
+    (lotissement as any).proprietaire_adresse ?? ""
+  );
   const [lotisseurName, setLotisseurName] = useState(
     lotissement.lotisseur_name ?? ""
   );
@@ -64,6 +67,9 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
     }
     if (!proprietaireCni && (lotissement as any).proprietaire_cni) {
       setProprietaireCni((lotissement as any).proprietaire_cni);
+    }
+    if (!proprietaireAdresse && (lotissement as any).proprietaire_adresse) {
+      setProprietaireAdresse((lotissement as any).proprietaire_adresse);
     }
     if (!lotisseurName && agency?.name) {
       setLotisseurName(agency.name);
@@ -98,6 +104,7 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
         proprietaire_name: proprietaireName || null,
         proprietaire_telephone: proprietaireTelephone || null,
         proprietaire_cni: proprietaireCni || null,
+        proprietaire_adresse: proprietaireAdresse || null,
         lotisseur_name: lotisseurName || null,
       } as any);
       toast.success("Configuration de répartition sauvegardée");
@@ -124,6 +131,7 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
         proprietaire_name: proprietaireName || null,
         proprietaire_telephone: proprietaireTelephone || null,
         proprietaire_cni: proprietaireCni || null,
+        proprietaire_adresse: proprietaireAdresse || null,
         lotisseur_name: lotisseurName || null,
       } as any);
 
@@ -240,6 +248,14 @@ export function LotRepartitionTab({ lotissement, parcelles }: LotRepartitionTabP
                 placeholder="Ex: CI0012345678"
                 value={proprietaireCni}
                 onChange={(e) => setProprietaireCni(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label className="text-xs text-muted-foreground">Domicile du Propriétaire terrien</Label>
+              <Input
+                placeholder="Ex: Cocody, Abidjan"
+                value={proprietaireAdresse}
+                onChange={(e) => setProprietaireAdresse(e.target.value)}
               />
             </div>
           </div>

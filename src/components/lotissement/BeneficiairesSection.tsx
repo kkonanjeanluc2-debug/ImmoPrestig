@@ -58,6 +58,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
   const [email, setEmail] = useState("");
   const [lienRole, setLienRole] = useState("");
   const [cniNumber, setCniNumber] = useState("");
+  const [adresse, setAdresse] = useState("");
 
   const activeMembers = agencyMembers.filter(m => m.status === "active");
 
@@ -84,6 +85,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
         email: email.trim() || null,
         lien_role: lienRole.trim() || null,
         cni_number: cniNumber.trim() || null,
+        adresse: adresse.trim() || null,
         partie,
       });
       toast.success("Bénéficiaire ajouté");
@@ -117,6 +119,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
         email: familyMember.email || null,
         lien_role: familyMember.lien_role || null,
         cni_number: familyMember.cni_number || null,
+        adresse: familyMember.adresse || null,
         partie,
       });
       toast.success(`${familyMember.nom} ajouté`);
@@ -220,6 +223,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
     setEmail("");
     setLienRole("");
     setCniNumber("");
+    setAdresse("");
     setSelectedFamilyId("");
     setSelectedMemberId("");
   };
@@ -263,6 +267,7 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
                       {b.telephone && <span>{b.telephone}</span>}
                       {b.email && <span>{b.email}</span>}
                       {b.cni_number && <span>CNI: {b.cni_number}</span>}
+                      {b.adresse && <span>{b.adresse}</span>}
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -410,6 +415,10 @@ export function BeneficiairesSection({ lotissement, parcelles, partie }: Benefic
                   <Label>N° CNI</Label>
                   <Input value={cniNumber} onChange={e => setCniNumber(e.target.value)} placeholder="Numéro de pièce" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Domicile</Label>
+                <Input value={adresse} onChange={e => setAdresse(e.target.value)} placeholder="Ex: Cocody, Abidjan" />
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => { setShowAddDialog(false); resetForm(); }}>

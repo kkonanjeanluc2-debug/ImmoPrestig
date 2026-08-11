@@ -20,6 +20,7 @@ export interface Lotissement {
   proprietaire_name: string | null;
   proprietaire_telephone: string | null;
   proprietaire_cni: string | null;
+  proprietaire_adresse: string | null;
   lotisseur_name: string | null;
   chef_village_name: string | null;
   chef_village_titre: string | null;
@@ -45,6 +46,7 @@ export interface LotissementInsert {
   proprietaire_name?: string | null;
   proprietaire_telephone?: string | null;
   proprietaire_cni?: string | null;
+  proprietaire_adresse?: string | null;
   lotisseur_name?: string | null;
   chef_village_name?: string | null;
   chef_village_titre?: string | null;

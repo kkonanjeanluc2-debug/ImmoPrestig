@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ import { useCreateVenteParcelle, PaymentType } from "@/hooks/useVentesParcelles"
 import { useUpdateReservationParcelle } from "@/hooks/useReservationsParcelles";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 import { usePrefinanceurs, useCreatePrefinanceur } from "@/hooks/usePrefinanceurs";
+import { useLotissement, useUpdateLotissement } from "@/hooks/useLotissements";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,6 +52,8 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
   const createPrefinanceur = useCreatePrefinanceur();
   const createVente = useCreateVenteParcelle();
   const updateReservation = useUpdateReservationParcelle();
+  const { data: lotissement } = useLotissement(parcelle.lotissement_id);
+  const updateLotissement = useUpdateLotissement();
 
   const [transactionType, setTransactionType] = useState<"vente" | "prefinancement">("vente");
   const [mode, setMode] = useState<"existing" | "new">(defaultAcquereurId ? "existing" : "existing");
@@ -92,6 +95,22 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
   const [totalInstallments, setTotalInstallments] = useState("12");
   const [salePrice, setSalePrice] = useState(parcelle.price.toString());
   const [soldBy, setSoldBy] = useState<string>((parcelle as any).assigned_to || user?.id || "");
+
+  // Cédant (propriétaire terrien) — pre-filled from the lotissement, editable here so it
+  // can be corrected or filled in on the spot if missing when generating the attestation de cession
+  const [cedantName, setCedantName] = useState("");
+  const [cedantPhone, setCedantPhone] = useState("");
+  const [cedantCni, setCedantCni] = useState("");
+  const [cedantLoaded, setCedantLoaded] = useState(false);
+
+  useEffect(() => {
+    if (lotissement && !cedantLoaded) {
+      setCedantName(lotissement.proprietaire_name || "");
+      setCedantPhone(lotissement.proprietaire_telephone || "");
+      setCedantCni(lotissement.proprietaire_cni || "");
+      setCedantLoaded(true);
+    }
+  }, [lotissement, cedantLoaded]);
 
   const monthlyPayment = useMemo(() => {
     if (paymentType !== "echelonne") return 0;
@@ -236,6 +255,31 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
         });
       }
 
+      // Persist cédant (propriétaire terrien) info on the lotissement if it was
+      // added or corrected here, so the attestation de cession picks it up later
+      if (parcelle.lotissement_id) {
+        const trimmedName = cedantName.trim();
+        const trimmedPhone = cedantPhone.trim();
+        const trimmedCni = cedantCni.trim();
+        const cedantChanged =
+          trimmedName !== (lotissement?.proprietaire_name || "") ||
+          trimmedPhone !== (lotissement?.proprietaire_telephone || "") ||
+          trimmedCni !== (lotissement?.proprietaire_cni || "");
+
+        if (cedantChanged) {
+          try {
+            await updateLotissement.mutateAsync({
+              id: parcelle.lotissement_id,
+              proprietaire_name: trimmedName || null,
+              proprietaire_telephone: trimmedPhone || null,
+              proprietaire_cni: trimmedCni || null,
+            });
+          } catch {
+            toast.error("Vente enregistrée, mais erreur lors de la mise à jour du cédant");
+          }
+        }
+      }
+
       toast.success("Vente enregistrée avec succès");
       onOpenChange(false);
     } catch {
@@ -243,7 +287,7 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
     }
   };
 
-  const isLoading = createAcquereur.isPending || createVente.isPending || submittingPref || createPrefinanceur.isPending;
+  const isLoading = createAcquereur.isPending || createVente.isPending || submittingPref || createPrefinanceur.isPending || updateLotissement.isPending;
   const isPref = transactionType === "prefinancement";
 
   return (
@@ -652,6 +696,45 @@ export function SellParcelleDialog({ parcelle, open, onOpenChange, reservationId
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Cédant (propriétaire terrien) */}
+          <div className="space-y-3">
+            <div>
+              <Label>Cédant (Propriétaire terrien)</Label>
+              <p className="text-xs text-muted-foreground">
+                Utilisé pour l'attestation de cession. Modifiez-le ou renseignez-le si absent.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg">
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="cedantName">Nom complet</Label>
+                <Input
+                  id="cedantName"
+                  value={cedantName}
+                  onChange={(e) => setCedantName(e.target.value)}
+                  placeholder="Nom du propriétaire terrien"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cedantPhone">Téléphone</Label>
+                <Input
+                  id="cedantPhone"
+                  value={cedantPhone}
+                  onChange={(e) => setCedantPhone(e.target.value)}
+                  placeholder="+2250701020304"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cedantCni">CNI / Pièce d'identité</Label>
+                <Input
+                  id="cedantCni"
+                  value={cedantCni}
+                  onChange={(e) => setCedantCni(e.target.value)}
+                  placeholder="CI00123456789"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Sale Price */}

@@ -7,7 +7,21 @@ export interface AttestationCessionInfo {
 
 export const formatAttestationPhone = (phone?: string | null): string => {
   if (!phone) return "";
-  return (phone.match(/\d{10}/g) || [phone]).join(" / ");
+  // Numbers may be given as several entries separated by "/", each possibly
+  // prefixed with the Côte d'Ivoire country code (+225 / 00225 / 225).
+  const numbers = phone
+    .split(/\s*\/\s*/)
+    .map((part) => {
+      let digits = part.replace(/\D/g, "");
+      // Strip the country code so it isn't mistaken for part of the 10-digit local number
+      if (digits.length > 10 && digits.startsWith("225")) {
+        digits = digits.slice(3);
+      }
+      return digits;
+    })
+    .filter((digits) => digits.length === 10);
+
+  return numbers.length > 0 ? numbers.join(" / ") : phone;
 };
 
 export const buildAttestationTemplateContent = (

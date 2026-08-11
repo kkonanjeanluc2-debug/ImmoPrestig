@@ -10,7 +10,11 @@ export type BorderMotif =
   | "orange"
   | "feuille"
   | "banane"
-  | "cafe";
+  | "cafe"
+  | "maison"
+  | "brique"
+  | "brique_industrielle"
+  | "parpaing";
 
 export interface BorderMotifOption {
   value: BorderMotif;
@@ -30,6 +34,10 @@ export const BORDER_MOTIF_OPTIONS: BorderMotifOption[] = [
   { value: "feuille", label: "Feuille", emoji: "🌿", description: "Feuille verte" },
   { value: "banane", label: "Banane", emoji: "🍌", description: "Banane jaune" },
   { value: "cafe", label: "Café", emoji: "☕", description: "Grain de café" },
+  { value: "maison", label: "Maison", emoji: "🏠", description: "Petite maison" },
+  { value: "brique", label: "Brique", emoji: "🧱", description: "Motif de brique" },
+  { value: "brique_industrielle", label: "Brique industrielle", emoji: "🏭", description: "Brique moderne, style industriel/loft" },
+  { value: "parpaing", label: "Parpaing", emoji: "🔲", description: "Bloc de béton (parpaing) à 3 alvéoles" },
 ];
 
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -73,6 +81,14 @@ const getMotifPalette = (motif: BorderMotif, baseColor: string): Palette => {
       return { primary: [240, 210, 60], secondary: [180, 150, 30], accent: [120, 90, 40] };
     case "cafe":
       return { primary: [110, 60, 30], secondary: [70, 40, 20], accent: [200, 160, 110] };
+    case "maison":
+      return { primary: [170, 60, 50], secondary: [110, 70, 40], accent: [245, 235, 215] };
+    case "brique":
+      return { primary: [178, 79, 53], secondary: [225, 215, 200], accent: [130, 55, 35] };
+    case "brique_industrielle":
+      return { primary: [95, 95, 98], secondary: [55, 55, 58], accent: [170, 170, 174] };
+    case "parpaing":
+      return { primary: [168, 168, 163], secondary: [110, 110, 105], accent: [75, 75, 72] };
     default:
       return { primary: base, secondary: base, accent: base };
   }
@@ -260,6 +276,73 @@ export const drawMotif = (
       setDraw(doc, palette.secondary);
       doc.setLineWidth(0.6);
       doc.line(cx, cy - size * 0.3, cx, cy + size * 0.3);
+      break;
+    }
+    case "maison": {
+      // Walls
+      setFill(doc, palette.accent);
+      doc.rect(cx - size * 0.3, cy - size * 0.05, size * 0.6, size * 0.4, "F");
+      // Roof
+      setFill(doc, palette.primary);
+      doc.triangle(
+        cx - size * 0.38, cy - size * 0.05,
+        cx + size * 0.38, cy - size * 0.05,
+        cx, cy - size * 0.42,
+        "F",
+      );
+      // Door
+      setFill(doc, palette.secondary);
+      doc.rect(cx - size * 0.08, cy + size * 0.13, size * 0.16, size * 0.22, "F");
+      // Window
+      doc.rect(cx + size * 0.13, cy + size * 0.02, size * 0.12, size * 0.12, "F");
+      break;
+    }
+    case "brique": {
+      // Small running-bond brick pattern (two rows, offset)
+      setFill(doc, palette.primary);
+      doc.rect(cx - size * 0.4, cy - size * 0.22, size * 0.38, size * 0.18, "F");
+      doc.rect(cx + size * 0.02, cy - size * 0.22, size * 0.38, size * 0.18, "F");
+      doc.rect(cx - size * 0.2, cy - size * 0.02, size * 0.38, size * 0.18, "F");
+      // Mortar joints
+      setDraw(doc, palette.secondary);
+      doc.setLineWidth(0.35);
+      doc.rect(cx - size * 0.4, cy - size * 0.22, size * 0.38, size * 0.18);
+      doc.rect(cx + size * 0.02, cy - size * 0.22, size * 0.38, size * 0.18);
+      doc.rect(cx - size * 0.2, cy - size * 0.02, size * 0.38, size * 0.18);
+      break;
+    }
+    case "brique_industrielle": {
+      // Modern loft look: grey stacked-bond blocks (aligned, not staggered) with thin steel-toned seams
+      setFill(doc, palette.primary);
+      doc.rect(cx - size * 0.35, cy - size * 0.22, size * 0.7, size * 0.2, "F");
+      doc.rect(cx - size * 0.35, cy, size * 0.7, size * 0.2, "F");
+      setDraw(doc, palette.secondary);
+      doc.setLineWidth(0.3);
+      doc.rect(cx - size * 0.35, cy - size * 0.22, size * 0.7, size * 0.2);
+      doc.rect(cx - size * 0.35, cy, size * 0.7, size * 0.2);
+      // Thin steel highlight seam
+      setDraw(doc, palette.accent);
+      doc.setLineWidth(0.2);
+      doc.line(cx - size * 0.35, cy - size * 0.02, cx + size * 0.35, cy - size * 0.02);
+      break;
+    }
+    case "parpaing": {
+      // Concrete block (parpaing) front face with 3 hollow cells
+      setFill(doc, palette.primary);
+      doc.rect(cx - size * 0.42, cy - size * 0.28, size * 0.84, size * 0.56, "F");
+      setDraw(doc, palette.secondary);
+      doc.setLineWidth(0.3);
+      doc.rect(cx - size * 0.42, cy - size * 0.28, size * 0.84, size * 0.56);
+      // 3 hollow cells
+      setFill(doc, palette.accent);
+      const holeW = size * 0.2;
+      const holeH = size * 0.36;
+      const gap = size * 0.06;
+      const startX = cx - (holeW * 3 + gap * 2) / 2;
+      for (let i = 0; i < 3; i++) {
+        const hx = startX + i * (holeW + gap);
+        doc.rect(hx, cy - holeH / 2, holeW, holeH, "F");
+      }
       break;
     }
   }

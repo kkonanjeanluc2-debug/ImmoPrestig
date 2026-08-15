@@ -1317,14 +1317,21 @@ const _generateAttestationVillageoiseInternal = async (
     yPos += normalized.length * lineHeight + extraAfter;
   };
 
+  // ***text*** renders bold AND in a larger font size (e.g. names, lot/îlot numbers) — a step
+  // up from **text** which is bold only, at the surrounding paragraph's font size.
   const writeMixedMarkdownLine = (line: string, lineHeight = 4.8) => {
-    const segments = line.split(/(\*\*[^*]+\*\*)/).filter(Boolean).map((segment) => ({
-      bold: segment.startsWith('**') && segment.endsWith('**'),
-      text: segment.startsWith('**') && segment.endsWith('**') ? segment.slice(2, -2) : segment,
-    }));
+    const baseSize = doc.getFontSize();
+    const largeSize = baseSize + 3;
 
-    const wrappedLines: Array<Array<{ text: string; bold: boolean }>> = [];
-    let currentLine: Array<{ text: string; bold: boolean }> = [];
+    const segments = line.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*)/).filter(Boolean).map((segment) => {
+      const large = segment.startsWith('***') && segment.endsWith('***');
+      const bold = large || (segment.startsWith('**') && segment.endsWith('**'));
+      const text = large ? segment.slice(3, -3) : bold ? segment.slice(2, -2) : segment;
+      return { bold, large, text };
+    });
+
+    const wrappedLines: Array<Array<{ text: string; bold: boolean; large: boolean }>> = [];
+    let currentLine: Array<{ text: string; bold: boolean; large: boolean }> = [];
     let currentWidth = 0;
 
     const flushCurrentLine = () => {
@@ -1335,6 +1342,7 @@ const _generateAttestationVillageoiseInternal = async (
     };
 
     for (const segment of segments) {
+      doc.setFontSize(segment.large ? largeSize : baseSize);
       const tokens = segment.text.split(/(\s+)/).filter((token) => token.length > 0);
       for (const token of tokens) {
         doc.setFont('helvetica', segment.bold ? 'bold' : 'normal');
@@ -1342,25 +1350,29 @@ const _generateAttestationVillageoiseInternal = async (
         if (currentLine.length > 0 && currentWidth + tokenWidth > contentWidth) {
           flushCurrentLine();
         }
-        currentLine.push({ text: token, bold: segment.bold });
+        currentLine.push({ text: token, bold: segment.bold, large: segment.large });
         currentWidth += tokenWidth;
       }
     }
     flushCurrentLine();
 
     for (const wrappedLine of wrappedLines) {
-      ensureSpace(lineHeight + 2);
+      const hasLarge = wrappedLine.some((p) => p.large);
+      const effectiveLineHeight = hasLarge ? Math.max(lineHeight, largeSize * 0.42) : lineHeight;
+      ensureSpace(effectiveLineHeight + 2);
       let cursorX = margin;
       for (const piece of wrappedLine) {
+        doc.setFontSize(piece.large ? largeSize : baseSize);
         doc.setFont('helvetica', piece.bold ? 'bold' : 'normal');
         doc.text(piece.text, cursorX, yPos);
         cursorX += doc.getTextWidth(piece.text);
       }
-      yPos += lineHeight;
+      yPos += effectiveLineHeight;
     }
 
     yPos += 0.5;
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(baseSize);
   };
 
   // Draw decorative page border

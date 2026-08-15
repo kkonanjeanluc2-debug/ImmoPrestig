@@ -277,12 +277,14 @@ function AttestationPreview({
       if (t.startsWith("### ")) return <h3 key={i} className="text-base font-medium mt-4 mb-2">{t.substring(4)}</h3>;
       if (t === "---") return <hr key={i} className="my-4 border-border" />;
       if (t === "") return <div key={i} className="h-3" />;
-      // Handle bold
-      const parts = t.split(/(\*\*[^*]+\*\*)/g);
+      // Handle bold (**text**) and bold+large (***text***)
+      const parts = t.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*)/g);
       return (
         <p key={i} className="text-sm leading-relaxed mb-1">
           {parts.map((p, j) =>
-            p.startsWith("**") && p.endsWith("**")
+            p.startsWith("***") && p.endsWith("***")
+              ? <strong key={j} className="text-base">{p.slice(3, -3)}</strong>
+              : p.startsWith("**") && p.endsWith("**")
               ? <strong key={j}>{p.slice(2, -2)}</strong>
               : p.startsWith("_") && p.endsWith("_")
               ? <em key={j}>{p.slice(1, -1)}</em>

@@ -7,7 +7,7 @@ N°…………..
 
 Je, soussigné(e), **{nom_agence}**, Promoteur du lotissement **{nom_lotissement}**, atteste que :
 
-Monsieur / Madame / Mademoiselle **{beneficiaire_nom}**
+Monsieur / Madame / Mademoiselle ***{beneficiaire_nom}***
 
 Contact(s) : **{beneficiaire_telephone}** / Profession : **{beneficiaire_profession}**
 
@@ -15,13 +15,13 @@ Domicilié à : **{beneficiaire_adresse}**
 
 CNI/Passeport n° **{beneficiaire_cni}**
 
-Est bénéficiaire du lot n° : **{numero_lot}** Ilot : **{ilot}** du lotissement **{nom_lotissement}** (Commune de **{commune}**)
+Est bénéficiaire du lot n° : ***{numero_lot}*** Ilot : ***{ilot}*** du lotissement **{nom_lotissement}** (Commune de **{commune}**)
 
 ---
 
 Cédé par :
 
-Monsieur/Madame **{cedant_nom}**
+Monsieur/Madame ***{cedant_nom}***
 
 Contact : **{cedant_telephone}**
 
@@ -71,5 +71,9 @@ export const CESSION_VARIABLES = [
   {
     variable: "<!-- signature: size=11 spacing=22 gap=4 bold=true italic=false font=helvetica color=#1A365D align=center -->",
     description: "Mise en forme des signatures (taille, espacement vertical 'spacing', décalage haut 'gap', gras, italique, police, couleur hex, alignement). Place cette ligne juste avant la ligne des signatures.",
+  },
+  {
+    variable: "***texte***",
+    description: "Gras ET grande taille (au lieu de **texte** qui est gras seulement) — à utiliser pour les noms et numéros de lot/îlot afin qu'ils ressortent davantage.",
   },
 ];

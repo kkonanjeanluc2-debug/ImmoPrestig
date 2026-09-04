@@ -148,78 +148,28 @@ export const useExpireContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      contractId, 
-      propertyId, 
-      unitId 
-    }: { 
-      contractId: string; 
-      propertyId: string; 
+    mutationFn: async ({
+      contractId,
+      propertyId,
+      unitId
+    }: {
+      contractId: string;
+      propertyId: string;
       unitId?: string | null;
     }) => {
-      // Get the contract to find the tenant
-      const { data: contract, error: fetchError } = await supabase
-        .from("contracts")
-        .select("tenant_id")
-        .eq("id", contractId)
-        .single();
+      // Runs server-side as a SECURITY DEFINER function so the contract, tenant,
+      // and property/unit status updates all happen atomically, regardless of
+      // whether the caller's role has direct RLS UPDATE rights on properties/
+      // property_units (e.g. caissière/comptable can update the contract via
+      // can_access_contract_via_property but not properties/property_units
+      // directly — see migration 20260812120000_expire_contract_rpc.sql).
+      const { error } = await supabase.rpc("expire_contract", {
+        _contract_id: contractId,
+        _property_id: propertyId,
+        _unit_id: unitId || null,
+      });
 
-      if (fetchError) throw fetchError;
-
-      // Update contract status to expired
-      const { error: contractError } = await supabase
-        .from("contracts")
-        .update({ status: "expired" })
-        .eq("id", contractId);
-
-      if (contractError) throw contractError;
-
-      // Mark tenant as "ancien" (former tenant) - keep property_id/unit_id for reference
-      if (contract?.tenant_id) {
-        const { error: tenantError } = await supabase
-          .from("tenants")
-          .update({ status: "ancien" })
-          .eq("id", contract.tenant_id);
-
-        if (tenantError) console.error("Error updating tenant status:", tenantError);
-      }
-
-      // If contract has a unit, update unit status to disponible
-      if (unitId) {
-        const { error: unitError } = await supabase
-          .from("property_units")
-          .update({ status: "disponible" })
-          .eq("id", unitId);
-
-        if (unitError) throw unitError;
-
-        // Check if there are other occupied units for this property
-        const { data: occupiedUnits, error: checkError } = await supabase
-          .from("property_units")
-          .select("id")
-          .eq("property_id", propertyId)
-          .eq("status", "loué");
-
-        if (checkError) throw checkError;
-
-        // Only update property to disponible if no more occupied units
-        if (!occupiedUnits || occupiedUnits.length === 0) {
-          const { error: propertyError } = await supabase
-            .from("properties")
-            .update({ status: "disponible" })
-            .eq("id", propertyId);
-
-          if (propertyError) throw propertyError;
-        }
-      } else {
-        // No unit - just update property status to disponible
-        const { error: propertyError } = await supabase
-          .from("properties")
-          .update({ status: "disponible" })
-          .eq("id", propertyId);
-
-        if (propertyError) throw propertyError;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts"] });

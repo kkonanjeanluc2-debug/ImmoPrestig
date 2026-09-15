@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -97,6 +97,11 @@ export function CollectPaymentDialog({
   const createPayment = useCreatePayment();
   const { data: agency } = useAgency();
   const { toast } = useToast();
+  // Synchronous guard against double-clicks: React state (isLoading below) only
+  // disables the button after a re-render, which is too late for two clicks
+  // fired within the same event loop tick — that raced two createPayment
+  // inserts and produced duplicate payment rows for the same month.
+  const isSubmittingRef = useRef(false);
 
   const handleTemplateChange = useCallback((templateId: string | null, template: ReceiptTemplate | null) => {
     setSelectedTemplateId(templateId);
@@ -246,6 +251,8 @@ export function CollectPaymentDialog({
   const isBlocked = hasBlockingLatePayments || tenantEvicted;
 
   const handleCollect = async () => {
+    if (isSubmittingRef.current) return;
+
     if (collectAmount <= 0 || collectAmount > remaining) {
       toast({
         title: "Montant invalide",
@@ -258,7 +265,8 @@ export function CollectPaymentDialog({
     const paidDate = new Date().toISOString().split("T")[0];
     const newPaidAmount = paidAmount + collectAmount;
     const isFullyPaid = newPaidAmount >= amount;
-    
+
+    isSubmittingRef.current = true;
     try {
       let realPaymentId = paymentId;
 
@@ -395,13 +403,15 @@ export function CollectPaymentDialog({
           : (msg || "Impossible d'encaisser le paiement."),
         variant: "destructive",
       });
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 
   const formatCurrency = (value: number) =>
     value.toLocaleString("fr-FR") + " F CFA";
 
-  const isLoading = updatePayment.isPending || isSendingReceipt;
+  const isLoading = updatePayment.isPending || createPayment.isPending || isSendingReceipt;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

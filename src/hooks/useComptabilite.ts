@@ -179,7 +179,7 @@ function isDateWithinPeriod(value: string | null | undefined, fromDate: string, 
   return !!date && date >= fromDate && date <= toDate;
 }
 
-export function useComptabilite(periodFrom: Date, periodTo: Date) {
+export function useComptabilite(periodFrom: Date, periodTo: Date, enabled = true) {
   const { user } = useAuth();
   const { data: allPayments } = usePayments();
   const fromDate = periodFrom.toISOString().split("T")[0];
@@ -200,7 +200,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
 
       return periodPayments || [];
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   const { data: echeancesVentes } = useQuery({
@@ -215,7 +215,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   // Fetch ALL pending échéances (no period filter) for "en attente" totals
@@ -229,7 +229,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -245,7 +245,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   const { data: echeancesAchats } = useQuery({
@@ -260,7 +260,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   const { data: allPendingAchats } = useQuery({
@@ -273,7 +273,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -289,7 +289,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   const { data: echeancesParcelles } = useQuery({
@@ -304,7 +304,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   const { data: allPendingParcelles } = useQuery({
@@ -317,7 +317,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -332,7 +332,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -346,7 +346,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -360,7 +360,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -376,7 +376,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   // Fetch reservations_vente deposits
@@ -392,7 +392,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   // Fetch reservations_parcelles deposits
@@ -408,7 +408,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   // Fetch online rent payments not linked to a regular payment
@@ -425,7 +425,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
    // Fetch cautions (security deposits) within the selected period.
@@ -446,7 +446,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
        }
        return data || [];
      },
-     enabled: !!user,
+     enabled: enabled && !!user,
    });
 
   const { data: expenses } = useQuery({
@@ -460,7 +460,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   // Fetch issued invoices (definitive or converted) within the period — accrual basis on issue date
@@ -477,7 +477,7 @@ export function useComptabilite(periodFrom: Date, periodTo: Date) {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
   const managerUserIds = useMemo(() => {
     const ids = new Set<string>();

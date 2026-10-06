@@ -198,10 +198,12 @@ export default function Rapports() {
     }
   }, [permLoading, isAdmin, hasPermission, navigate]);
 
-  // Individual report for gestionnaires
+  // Individual report for gestionnaires — admins only ever display `allReports`
+  // below, so skip this redundant fetch (same dataset, fetched twice) for them.
   const { data: myReport, isLoading: myReportLoading } = useActivityReport(
     period.from,
-    period.to
+    period.to,
+    !isAdmin
   );
 
   // All managers report for admins
@@ -368,8 +370,9 @@ export default function Rapports() {
               />
             )}
 
-            {/* Empty state */}
-            {!isAdmin && !myReport && !isLoading && (
+            {/* Empty state — covers both admins (no team report data for the
+                period, or the agency lookup found nothing) and gestionnaires */}
+            {!isLoading && ((isAdmin && !totals) || (!isAdmin && !myReport)) && (
               <Card>
                 <CardContent className="py-12 text-center">
                   <UserCheck className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />

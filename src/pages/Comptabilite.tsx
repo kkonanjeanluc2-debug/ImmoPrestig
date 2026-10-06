@@ -67,7 +67,14 @@ const Comptabilite = () => {
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const periodLabel = getPeriodLabel(period);
-  const { data, totalRevenue } = useComptabilite(period.from, period.to);
+  // useComptabilite fires ~19 Supabase queries (several with deep nested joins) to
+  // build the overview/revenus/trésorerie/SYSCOHADA figures. None of that data is
+  // used by the Dépenses, Factures, Reversements or Journal tabs, but it was being
+  // fetched unconditionally on every mount — competing for bandwidth with those
+  // tabs' own (much lighter) queries and making them feel stuck. Only fetch it
+  // when a tab that actually needs it is active.
+  const needsOverviewData = ["overview", "revenus", "tresorerie", "syscohada"].includes(activeTab);
+  const { data, totalRevenue } = useComptabilite(period.from, period.to, needsOverviewData);
   const { data: expenses, isLoading: expensesLoading } = useExpenses(period.from, period.to);
   const { data: agency } = useAgency();
   const { hasPermission, role, isLoading } = usePermissions();

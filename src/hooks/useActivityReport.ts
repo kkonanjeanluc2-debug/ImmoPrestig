@@ -36,102 +36,95 @@ export interface ActivityReportData {
  * to match the dashboard logic exactly.
  */
 async function fetchAllReportData(periodFrom: string, periodTo: string) {
-  // 1. All properties (to map assigned_to)
-  const { data: properties } = await supabase
-    .from("properties")
-    .select("id, assigned_to")
-    .is("deleted_at", null);
-
-  // 2. All tenants (to link property → tenant)
-  const { data: tenants } = await supabase
-    .from("tenants")
-    .select("id, property_id")
-    .is("deleted_at", null);
-
-  // 3. All payments in period
-  const { data: payments } = await supabase
-    .from("payments")
-    .select("id, tenant_id, amount, status, paid_amount, due_date, paid_date, payment_months")
-    .or(
-      `and(status.eq.paid,paid_date.gte.${periodFrom},paid_date.lte.${periodTo}),and(status.neq.paid,due_date.gte.${periodFrom},due_date.lte.${periodTo}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${periodFrom},paid_date.lte.${periodTo})`
-    );
-
-  // 4. Contracts created in period
-  const { data: contracts } = await supabase
-    .from("contracts")
-    .select("id, property_id, created_at")
-    .is("deleted_at", null)
-    .gte("created_at", periodFrom)
-    .lte("created_at", periodTo + "T23:59:59");
-
-  // 5. Vente prospects
-  const { data: prospects } = await supabase
-    .from("vente_prospects")
-    .select("id, status, user_id")
-    .gte("created_at", periodFrom)
-    .lte("created_at", periodTo + "T23:59:59");
-
-  // 6. Ventes immobilières with bien info for assigned_to
-  const { data: ventesImmo } = await supabase
-    .from("ventes_immobilieres")
-    .select("id, total_price, sale_date, sold_by, down_payment, payment_type, bien_id")
-    .gte("sale_date", periodFrom)
-    .lte("sale_date", periodTo);
-
-  // 6b. Biens vente for assigned_to mapping
-  const { data: biensVente } = await supabase
-    .from("biens_vente")
-    .select("id, assigned_to")
-    .is("deleted_at", null);
-
-  // 7. Échéances ventes paid in period
-  const { data: echeancesVentes } = await supabase
-    .from("echeances_ventes")
-    .select("id, vente_id, amount, status, paid_date, paid_amount")
-    .eq("status", "paid")
-    .gte("paid_date", periodFrom)
-    .lte("paid_date", periodTo);
-
-  // 8. Ventes parcelles
-  const { data: ventesParcelles } = await supabase
-    .from("ventes_parcelles")
-    .select("id, total_price, sale_date, sold_by, down_payment, payment_type, parcelle_id")
-    .gte("sale_date", periodFrom)
-    .lte("sale_date", periodTo);
-
-  // 8b. Parcelles for assigned_to mapping
-  const { data: parcelles } = await supabase
-    .from("parcelles")
-    .select("id, assigned_to");
-
-  // 9. Échéances parcelles paid in period
-  const { data: echeancesParcelles } = await supabase
-    .from("echeances_parcelles")
-    .select("id, vente_id, amount, status, paid_date, paid_amount")
-    .eq("status", "paid")
-    .gte("paid_date", periodFrom)
-    .lte("paid_date", periodTo);
-
-  // 10. Achats immobiliers
-  const { data: achatsImmo } = await supabase
-    .from("achats_immobiliers")
-    .select("id, sale_price, sale_date, bien_id, down_payment, payment_type")
-    .gte("sale_date", periodFrom)
-    .lte("sale_date", periodTo);
-
-  // 10b. Biens achat for assigned_to mapping
-  const { data: biensAchat } = await supabase
-    .from("biens_achat")
-    .select("id, assigned_to")
-    .is("deleted_at", null);
-
-  // 11. Échéances achats paid in period
-  const { data: echeancesAchats } = await supabase
-    .from("echeances_achats")
-    .select("id, achat_id, amount, status, paid_date, paid_amount")
-    .or(`status.eq.paye,status.eq.paid`)
-    .gte("paid_date", periodFrom)
-    .lte("paid_date", periodTo);
+  // All independent reads — fire them together instead of awaiting one at a
+  // time, which was serializing 14 round-trips (several seconds) into every
+  // Rapports/activity-report load.
+  const [
+    { data: properties },
+    { data: tenants },
+    { data: payments },
+    { data: contracts },
+    { data: prospects },
+    { data: ventesImmo },
+    { data: biensVente },
+    { data: echeancesVentes },
+    { data: ventesParcelles },
+    { data: parcelles },
+    { data: echeancesParcelles },
+    { data: achatsImmo },
+    { data: biensAchat },
+    { data: echeancesAchats },
+  ] = await Promise.all([
+    // 1. All properties (to map assigned_to)
+    supabase.from("properties").select("id, assigned_to").is("deleted_at", null),
+    // 2. All tenants (to link property → tenant)
+    supabase.from("tenants").select("id, property_id").is("deleted_at", null),
+    // 3. All payments in period
+    supabase
+      .from("payments")
+      .select("id, tenant_id, amount, status, paid_amount, due_date, paid_date, payment_months")
+      .or(
+        `and(status.eq.paid,paid_date.gte.${periodFrom},paid_date.lte.${periodTo}),and(status.neq.paid,due_date.gte.${periodFrom},due_date.lte.${periodTo}),and(status.neq.paid,paid_amount.gt.0,paid_date.gte.${periodFrom},paid_date.lte.${periodTo})`
+      ),
+    // 4. Contracts created in period
+    supabase
+      .from("contracts")
+      .select("id, property_id, created_at")
+      .is("deleted_at", null)
+      .gte("created_at", periodFrom)
+      .lte("created_at", periodTo + "T23:59:59"),
+    // 5. Vente prospects
+    supabase
+      .from("vente_prospects")
+      .select("id, status, user_id")
+      .gte("created_at", periodFrom)
+      .lte("created_at", periodTo + "T23:59:59"),
+    // 6. Ventes immobilières with bien info for assigned_to
+    supabase
+      .from("ventes_immobilieres")
+      .select("id, total_price, sale_date, sold_by, down_payment, payment_type, bien_id")
+      .gte("sale_date", periodFrom)
+      .lte("sale_date", periodTo),
+    // 6b. Biens vente for assigned_to mapping
+    supabase.from("biens_vente").select("id, assigned_to").is("deleted_at", null),
+    // 7. Échéances ventes paid in period
+    supabase
+      .from("echeances_ventes")
+      .select("id, vente_id, amount, status, paid_date, paid_amount")
+      .eq("status", "paid")
+      .gte("paid_date", periodFrom)
+      .lte("paid_date", periodTo),
+    // 8. Ventes parcelles
+    supabase
+      .from("ventes_parcelles")
+      .select("id, total_price, sale_date, sold_by, down_payment, payment_type, parcelle_id")
+      .gte("sale_date", periodFrom)
+      .lte("sale_date", periodTo),
+    // 8b. Parcelles for assigned_to mapping
+    supabase.from("parcelles").select("id, assigned_to"),
+    // 9. Échéances parcelles paid in period
+    supabase
+      .from("echeances_parcelles")
+      .select("id, vente_id, amount, status, paid_date, paid_amount")
+      .eq("status", "paid")
+      .gte("paid_date", periodFrom)
+      .lte("paid_date", periodTo),
+    // 10. Achats immobiliers
+    supabase
+      .from("achats_immobiliers")
+      .select("id, sale_price, sale_date, bien_id, down_payment, payment_type")
+      .gte("sale_date", periodFrom)
+      .lte("sale_date", periodTo),
+    // 10b. Biens achat for assigned_to mapping
+    supabase.from("biens_achat").select("id, assigned_to").is("deleted_at", null),
+    // 11. Échéances achats paid in period
+    supabase
+      .from("echeances_achats")
+      .select("id, achat_id, amount, status, paid_date, paid_amount")
+      .or(`status.eq.paye,status.eq.paid`)
+      .gte("paid_date", periodFrom)
+      .lte("paid_date", periodTo),
+  ]);
 
   return {
     properties: properties || [],
@@ -319,7 +312,7 @@ export async function fetchAllManagersReportForPrefetch(userId: string, periodFr
   return reports.sort((a, b) => b.totalRevenue - a.totalRevenue);
 }
 
-export function useActivityReport(periodFrom: string, periodTo: string) {
+export function useActivityReport(periodFrom: string, periodTo: string, enabled = true) {
   const { user } = useAuth();
 
   return useQuery({
@@ -342,7 +335,7 @@ export function useActivityReport(periodFrom: string, periodTo: string) {
         role: roleRes.data?.role || "gestionnaire",
       } as ActivityReportData;
     },
-    enabled: !!user?.id && !!periodFrom && !!periodTo,
+    enabled: enabled && !!user?.id && !!periodFrom && !!periodTo,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -352,34 +345,65 @@ export function useAllManagersReport(periodFrom: string, periodTo: string) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["all-managers-report", periodFrom, periodTo],
+    queryKey: ["all-managers-report", user?.id, periodFrom, periodTo],
     queryFn: async () => {
       if (!user?.id) return [];
 
-      // Get agency
-      const { data: agency } = await supabase
+      // Start the heavy, agency-independent fetch immediately so it runs
+      // concurrently with resolving which agency this user belongs to,
+      // instead of waiting for that lookup to finish first.
+      const rawDataPromise = fetchAllReportData(periodFrom, periodTo);
+
+      // Resolve the agency: ownership (agencies.user_id) first, then
+      // membership (agency_members) — an admin invited as a team member
+      // isn't necessarily the agency's own `user_id`, and treating
+      // ownership as the only path silently returned an empty report list
+      // (and a blank Rapports page) for them.
+      const { data: owned } = await supabase
         .from("agencies")
         .select("id, user_id")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (!agency) return [];
+      let agencyId = owned?.id ?? null;
+      let ownerUserId = owned?.user_id ?? null;
+
+      if (!agencyId) {
+        const { data: membership } = await supabase
+          .from("agency_members")
+          .select("agency_id")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+        if (membership?.agency_id) {
+          const { data: agencyRow } = await supabase
+            .from("agencies")
+            .select("user_id")
+            .eq("id", membership.agency_id)
+            .maybeSingle();
+          agencyId = membership.agency_id;
+          ownerUserId = agencyRow?.user_id ?? null;
+        }
+      }
+
+      if (!agencyId || !ownerUserId) return [];
 
       // Get all team members
       const { data: members } = await supabase
         .from("agency_members")
         .select("user_id, role")
-        .eq("agency_id", agency.id)
+        .eq("agency_id", agencyId)
         .eq("status", "active");
 
       // Include agency owner + all members
-      const userIds = [...new Set([agency.user_id, ...(members?.map(m => m.user_id) || [])])];
+      const userIds = [...new Set([ownerUserId, ...(members?.map(m => m.user_id) || [])])];
 
-      // Fetch profiles, roles, and all report data in parallel
+      // Fetch profiles and roles in parallel; rawData was already in flight.
       const [profilesRes, rolesRes, rawData] = await Promise.all([
         supabase.from("profiles").select("user_id, full_name").in("user_id", userIds),
         supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
-        fetchAllReportData(periodFrom, periodTo),
+        rawDataPromise,
       ]);
 
       const profileMap = new Map(profilesRes.data?.map(p => [p.user_id, p.full_name || "Utilisateur"]) || []);

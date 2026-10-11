@@ -160,8 +160,39 @@ const replaceVariables = (
     .replace(/{adresse}/g, addressParts.join(", "));
 };
 
-const createReceiptDocument = async (data: ReceiptData, templateOverride?: ReceiptTemplates): Promise<jsPDF> => {
-  const doc = await createPDFDocument();
+export type ReceiptPaperSize = "A4" | "A5" | "A6";
+
+const PAPER_SIZES_MM: Record<ReceiptPaperSize, [number, number]> = {
+  A4: [210, 297],
+  A5: [148, 210],
+  A6: [105, 148],
+};
+
+// The layout below is drawn in mm on a 210-unit-wide page. For smaller paper
+// we keep those coordinates and shrink the user unit instead (jsPDF accepts a
+// numeric unit = points per unit), and scale font sizes by the same ratio,
+// so A5/A6 are an exact proportional reduction of the A4 receipt.
+const createScaledReceiptPdf = async (paperSize: ReceiptPaperSize): Promise<jsPDF> => {
+  if (paperSize === "A4") return createPDFDocument();
+
+  const [widthMm, heightMm] = PAPER_SIZES_MM[paperSize];
+  const ratio = widthMm / 210;
+  const doc = await createPDFDocument({
+    unit: (72 / 25.4) * ratio as unknown as "mm",
+    format: [210, (heightMm / widthMm) * 210],
+  });
+  const originalSetFontSize = doc.setFontSize.bind(doc);
+  doc.setFontSize = (size: number) => originalSetFontSize(size * ratio);
+  doc.setFontSize(16);
+  return doc;
+};
+
+const createReceiptDocument = async (
+  data: ReceiptData,
+  templateOverride?: ReceiptTemplates,
+  paperSize: ReceiptPaperSize = "A4",
+): Promise<jsPDF> => {
+  const doc = await createScaledReceiptPdf(paperSize);
   const pageWidth = doc.internal.pageSize.getWidth();
   const templates = templateOverride || getReceiptTemplates();
   
@@ -593,10 +624,51 @@ const createReceiptDocument = async (data: ReceiptData, templateOverride?: Recei
   return doc;
 };
 
-export const generateRentReceipt = async (data: ReceiptData, template?: ReceiptTemplate | null): Promise<void> => {
+const printPdf = (doc: jsPDF) => {
+  doc.autoPrint();
+  const blobUrl = doc.output("bloburl").toString();
+
+  // Print from a hidden iframe so it works without a popup (which browsers
+  // tend to block after an async PDF generation).
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.src = blobUrl;
+  iframe.onload = () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch {
+      window.open(blobUrl, "_blank");
+    }
+    setTimeout(() => {
+      iframe.remove();
+      URL.revokeObjectURL(blobUrl);
+    }, 60_000);
+  };
+  document.body.appendChild(iframe);
+};
+
+export const generateRentReceipt = async (
+  data: ReceiptData,
+  template?: ReceiptTemplate | null,
+  options?: { paperSize?: ReceiptPaperSize; action?: "download" | "print" },
+): Promise<void> => {
+  const paperSize = options?.paperSize ?? "A4";
   const legacyTemplate = template ? convertDbTemplateToLegacy(template) : undefined;
-  const doc = await createReceiptDocument(data, legacyTemplate);
-  const fileName = `quittance_${data.tenantName.replace(/\s+/g, "_")}_${data.period.replace(/\s+/g, "_")}.pdf`;
+  const doc = await createReceiptDocument(data, legacyTemplate, paperSize);
+
+  if (options?.action === "print") {
+    printPdf(doc);
+    return;
+  }
+
+  const sizeSuffix = paperSize === "A4" ? "" : `_${paperSize}`;
+  const fileName = `quittance_${data.tenantName.replace(/\s+/g, "_")}_${data.period.replace(/\s+/g, "_")}${sizeSuffix}.pdf`;
   doc.save(fileName);
 };
 

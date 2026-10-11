@@ -1,4 +1,4 @@
-import jsPDF from "jspdf";
+import jsPDF, { type jsPDFOptions } from "jspdf";
 
 let fontsLoaded = false;
 let regularFontBase64: string | null = null;
@@ -55,9 +55,9 @@ const registerFonts = (doc: jsPDF) => {
  * Creates a jsPDF instance with Unicode font support (accents, special characters).
  * Overrides the default helvetica with Roboto so all existing code works unchanged.
  */
-export const createPDFDocument = async (): Promise<jsPDF> => {
+export const createPDFDocument = async (options?: jsPDFOptions): Promise<jsPDF> => {
   await loadFonts();
-  const doc = new jsPDF();
+  const doc = new jsPDF(options);
   registerFonts(doc);
   return doc;
 };

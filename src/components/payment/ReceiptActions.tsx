@@ -13,6 +13,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,8 +23,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateEmailLog } from "@/hooks/useEmailLogs";
 import { useLogWhatsAppMessage } from "@/hooks/useWhatsAppLogs";
 import { useAgency } from "@/hooks/useAgency";
-import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle } from "lucide-react";
-import { generateRentReceipt, generateRentReceiptBase64WithTemplate, getPaymentPeriod, getPaymentPeriodsFromMonths } from "@/lib/generateReceipt";
+import { Loader2, FileText, Mail, Download, ChevronDown, MessageCircle, Printer } from "lucide-react";
+import { generateRentReceipt, generateRentReceiptBase64WithTemplate, getPaymentPeriod, getPaymentPeriodsFromMonths, type ReceiptPaperSize } from "@/lib/generateReceipt";
+
+const PAPER_SIZES: { value: ReceiptPaperSize; label: string }[] = [
+  { value: "A4", label: "A4 (210 × 297 mm)" },
+  { value: "A5", label: "A5 (148 × 210 mm)" },
+  { value: "A6", label: "A6 (105 × 148 mm)" },
+];
 import { generateReceiptMessage, openWhatsApp, formatPhoneForWhatsApp } from "@/lib/whatsapp";
 import { ReceiptTemplateSelector } from "./ReceiptTemplateSelector";
 import { useReceiptTemplates, type ReceiptTemplate } from "@/hooks/useReceiptTemplates";
@@ -164,15 +173,17 @@ export function ReceiptActions({
     } : undefined,
   });
 
-  const handleDownload = async () => {
+  const handleDownload = async (paperSize: ReceiptPaperSize = "A4", action: "download" | "print" = "download") => {
     setIsDownloading(true);
     try {
       const receiptNumber = await getOrAssignReceiptNumber();
-      await generateRentReceipt(getReceiptData(receiptNumber), selectedTemplate);
-      toast({
-        title: "Quittance générée",
-        description: "Le PDF a été téléchargé avec succès.",
-      });
+      await generateRentReceipt(getReceiptData(receiptNumber), selectedTemplate, { paperSize, action });
+      if (action === "download") {
+        toast({
+          title: "Quittance générée",
+          description: `Le PDF (${paperSize}) a été téléchargé avec succès.`,
+        });
+      }
     } catch (error) {
       toast({
         title: "Erreur",
@@ -284,13 +295,51 @@ export function ReceiptActions({
     });
   };
 
-  // Simplified view for tenants - just download button
+  const renderFormatItems = (action: "download" | "print") =>
+    PAPER_SIZES.map((size) => (
+      <DropdownMenuItem
+        key={`${action}-${size.value}`}
+        onClick={() => handleDownload(size.value, action)}
+        disabled={isDownloading}
+      >
+        {size.label}
+      </DropdownMenuItem>
+    ));
+
+  const renderDownloadAndPrintMenus = () => (
+    <>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger disabled={isDownloading}>
+          {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          Télécharger PDF
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent className="bg-popover">{renderFormatItems("download")}</DropdownMenuSubContent>
+      </DropdownMenuSub>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger disabled={isDownloading}>
+          <Printer className="h-4 w-4 mr-2" />
+          Imprimer
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent className="bg-popover">{renderFormatItems("print")}</DropdownMenuSubContent>
+      </DropdownMenuSub>
+    </>
+  );
+
+  // Simplified view for tenants - download/print only
   if (isTenantView) {
     return (
-      <Button size="sm" variant="outline" className="text-xs" onClick={handleDownload} disabled={isDownloading}>
-        {isDownloading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
-        Quittance
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="outline" className="text-xs" disabled={isDownloading}>
+            {isDownloading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
+            Quittance
+            <ChevronDown className="h-3 w-3 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="bg-popover">
+          {renderDownloadAndPrintMenus()}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 
@@ -305,10 +354,7 @@ export function ReceiptActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="bg-popover">
-          <DropdownMenuItem onClick={handleDownload} disabled={isDownloading}>
-            {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-            Télécharger PDF
-          </DropdownMenuItem>
+          {renderDownloadAndPrintMenus()}
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => setDialogOpen(true)}

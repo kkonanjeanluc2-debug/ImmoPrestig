@@ -93,6 +93,11 @@ export function CollectPaymentDialog({
   const [tenantEvicted, setTenantEvicted] = useState(false);
   const remaining = amount - paidAmount;
   const [collectAmount, setCollectAmount] = useState<number>(remaining);
+  const todayStr = () => new Date().toISOString().split("T")[0];
+  // Defaults to today, but can be backdated so a month that was really paid on
+  // time (and is only being recorded now) doesn't land in the current month's
+  // owner report as a late payment.
+  const [paidDateInput, setPaidDateInput] = useState<string>(todayStr);
   const updatePayment = useUpdatePayment();
   const createPayment = useCreatePayment();
   const { data: agency } = useAgency();
@@ -241,6 +246,7 @@ export function CollectPaymentDialog({
     setOpen(isOpen);
     if (isOpen) {
       setCollectAmount(remaining);
+      setPaidDateInput(todayStr());
       checkLatePayments();
     } else {
       setLatePayments([]);
@@ -262,7 +268,16 @@ export function CollectPaymentDialog({
       return;
     }
 
-    const paidDate = new Date().toISOString().split("T")[0];
+    if (!paidDateInput || paidDateInput > todayStr()) {
+      toast({
+        title: "Date invalide",
+        description: "La date d'encaissement ne peut pas être dans le futur.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const paidDate = paidDateInput;
     const newPaidAmount = paidAmount + collectAmount;
     const isFullyPaid = newPaidAmount >= amount;
 
@@ -539,13 +554,21 @@ export function CollectPaymentDialog({
                 </div>
               </>
             )}
-            <Separator className="my-2" />
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Date</span>
-              <span className="font-medium">
-                {new Date().toLocaleDateString("fr-FR")}
-              </span>
-            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paid-date">Date d'encaissement</Label>
+            <Input
+              id="paid-date"
+              type="date"
+              max={todayStr()}
+              value={paidDateInput}
+              onChange={(e) => setPaidDateInput(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Pour un mois déjà réglé à temps mais saisi aujourd'hui, indiquez la date réelle
+              d'encaissement : il ne sera alors pas compté comme retard dans le point du propriétaire.
+            </p>
           </div>
 
           {/* Amount to collect */}

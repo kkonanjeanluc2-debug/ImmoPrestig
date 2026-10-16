@@ -479,15 +479,28 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setFontSize(8);
       doc.setFont("helvetica", "bold");
       doc.text("Locataire", 18, yPos + 5.5);
-      doc.text("Mois couverts", 85, yPos + 5.5);
-      doc.text("Montant", 170, yPos + 5.5);
+      doc.text("Mois couvert", 85, yPos + 5.5);
+      doc.text("Montant", 165, yPos + 5.5);
       yPos += 8;
 
       doc.setTextColor(...textColor);
       doc.setFont("helvetica", "normal");
 
+      // One line per covered month (like the late-months table), splitting the
+      // payment evenly; the last month absorbs any rounding remainder so the
+      // lines still add up to the amount actually received.
+      const monthLines = rows.flatMap((row) => {
+        const months = row.monthsCovered.length > 0 ? row.monthsCovered : ["—"];
+        const perMonth = Math.floor(row.amount / months.length);
+        return months.map((month, i) => ({
+          tenantName: row.tenantName,
+          month,
+          amount: i === months.length - 1 ? row.amount - perMonth * (months.length - 1) : perMonth,
+        }));
+      });
+
       let propSubtotal = 0;
-      rows.forEach((row, index) => {
+      monthLines.forEach((line, index) => {
         checkPageBreak(9);
         if (index % 2 === 0) {
           doc.setFillColor(...lightGray);
@@ -495,18 +508,15 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
         }
 
         doc.setFontSize(8);
-        const tenantName = row.tenantName.length > 22 ? row.tenantName.substring(0, 20) + "..." : row.tenantName;
-        const monthsLabel = row.monthsCovered.length > 3
-          ? `${row.monthsCovered.length} mois`
-          : row.monthsCovered.join(", ");
-        const monthsDisplay = monthsLabel.length > 28 ? monthsLabel.substring(0, 26) + "..." : monthsLabel;
+        const tenantName = line.tenantName.length > 22 ? line.tenantName.substring(0, 20) + "..." : line.tenantName;
+        const monthDisplay = line.month.length > 32 ? line.month.substring(0, 30) + "..." : line.month;
 
         doc.text(tenantName, 18, yPos + 6);
-        doc.text(monthsDisplay, 85, yPos + 6);
-        doc.text(formatAmountForPDF(row.amount), 170, yPos + 6);
+        doc.text(monthDisplay, 85, yPos + 6);
+        doc.text(formatAmountForPDF(line.amount), 165, yPos + 6);
 
-        propSubtotal += row.amount;
-        totalAdvance += row.amount;
+        propSubtotal += line.amount;
+        totalAdvance += line.amount;
         yPos += 9;
       });
 
@@ -517,7 +527,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
       doc.setFontSize(8);
       doc.setFont("helvetica", "bold");
       doc.text(`Sous-total ${displayPropTitle}`, 18, yPos + 5.5);
-      doc.text(formatAmountForPDF(propSubtotal), 170, yPos + 5.5);
+      doc.text(formatAmountForPDF(propSubtotal), 165, yPos + 5.5);
       yPos += 8;
       yPos += 3;
     });
@@ -529,7 +539,7 @@ export const generateOwnerMonthlyReport = async (data: OwnerMonthlyReportData): 
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text("TOTAL AVANCES", 18, yPos + 6);
-    doc.text(formatAmountForPDF(totalAdvance), 170, yPos + 6);
+    doc.text(formatAmountForPDF(totalAdvance), 165, yPos + 6);
     yPos += 9;
   }
 

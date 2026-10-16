@@ -51,7 +51,7 @@ import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { generateOwnerMonthlyReport } from "@/lib/generateOwnerMonthlyReport";
-import { getTenantCollectedAmountForPeriod } from "@/lib/monthlyPaymentTotals";
+import { getTenantCollectedAmountForPeriod, wasPaymentCollectedInPeriod } from "@/lib/monthlyPaymentTotals";
 import { generateManagementContractPDF } from "@/lib/generateManagementContract";
 import { useManagementContractTemplates, useDefaultManagementContractTemplate } from "@/hooks/useManagementContractTemplates";
 import { supabase } from "@/integrations/supabase/client";
@@ -335,11 +335,11 @@ const OwnerDetails = () => {
             if (p.tenant_id !== tenant.id) return false;
             const hasPaid = p.status === "paid" || (p.paid_amount && p.paid_amount > 0);
             if (!hasPaid) return false;
-            const paidDate = p.paid_date?.substring(0, 10);
-            const createdDate = p.created_at?.substring(0, 10);
-            const paidThisMonth = (paidDate && paidDate >= monthStartStr && paidDate <= monthEndStr) ||
-              (createdDate && createdDate >= monthStartStr && createdDate <= monthEndStr);
-            if (!paidThisMonth) return false;
+            // Same rule as the "Payé" column: the encashment date decides the
+            // month; created_at is only a fallback when no paid_date exists.
+            // (Previously a payment recorded this month but encashed at an
+            // earlier date still showed up here as an advance.)
+            if (!wasPaymentCollectedInPeriod(p, monthStartStr, monthEndStr)) return false;
             const dueDate = p.due_date?.substring(0, 10);
             const pm = (p as any).payment_months as string[] | null;
             const isMultiMonth = pm && Array.isArray(pm) && pm.length > 1;

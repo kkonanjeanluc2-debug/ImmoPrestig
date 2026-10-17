@@ -11,6 +11,7 @@ import { useTenants } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 import { useBiensVente } from "@/hooks/useBiensVente";
 import { useOwners } from "@/hooks/useOwners";
+import { toast } from "sonner";
 
 interface Props {
   preselectedTenantId?: string;
@@ -170,8 +171,23 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
   const totalAmount = subtotal + taxAmount;
 
   const handleSubmit = () => {
-    if (!tenantName.trim()) return;
-    if (items.some(i => !i.description.trim() || i.total <= 0)) return;
+    if (!tenantName.trim()) {
+      toast.error("Renseignez le nom du destinataire");
+      return;
+    }
+
+    // Previously any line with an empty description (the grey placeholder looks
+    // filled in) or a leftover blank line made the button silently do nothing.
+    // Blank lines are now dropped and a missing description gets a default label.
+    const defaultLabel = prestationType || description.trim() || (invoiceCategory === "bien" ? "Bien immobilier" : "Prestation");
+    const validItems = items
+      .filter(i => i.description.trim() || i.total > 0)
+      .map(i => ({ ...i, description: i.description.trim() || defaultLabel }));
+
+    if (validItems.length === 0 || validItems.some(i => i.total <= 0)) {
+      toast.error("Chaque ligne de facturation doit avoir un montant supérieur à 0");
+      return;
+    }
 
     const categoryNotes: string[] = [];
     if (invoiceCategory === "bien") {
@@ -195,7 +211,7 @@ export function CreateProformaDialog({ preselectedTenantId, trigger, editInvoice
       property_name: propertyName,
       unit_number: unitNumber,
       description: description || (invoiceCategory === "bien" ? "Facture bien immobilier" : "Facture prestation"),
-      items,
+      items: validItems,
       subtotal,
       tax_rate: taxRate,
       tax_amount: taxAmount,
